@@ -89,61 +89,72 @@ have.
 
 ## Seen in the atlas
 
-**[Mnemopi](../../systems/mnemopi/) has the most considered forgetting model
-here, and the reason is a second parameter.** Every other decaying system on this
-page picks a rate: an exponential half-life, an Ebbinghaus curve, a decay
-constant. Mnemopi gives each of fourteen memory types a Weibull `k` (shape) and
-`eta` (scale, in hours) — `profile` at k=0.3/eta=8760, `relationship` at
-0.35/8760, `preference` at 0.4/4380, `fact` at 0.8/720, `context` at 0.85/360,
-`observation` at 0.9/480 — with a comment stating the intent: higher eta is
-slower decay, lower k is more long-term retention.
+### Read these first
 
-The shape is what a single rate cannot express. A `k` below 1 gives a heavy tail:
-a profile fact fades slowly *and keeps fading slowly*, so it never quite leaves,
-while `observation` at k=0.9 approaches memoryless and is gone on schedule. That
-is the difference between "how fast" and "how stubbornly", and it is the
-instrument the [Helm](../../systems/helm/) report is asking for when it says a
-preference should not fall down the ranking for being old while an event should,
-and that one ranking function for both is usually an unexamined decision.
+- [Daimon](../../systems/daimon/) — per-type linear decay with an escalating boost for overdue open questions, applied to proactive recall and lidded by trust class.
+- [Helm](../../systems/helm/) — retrieval only slows loss, `log1p(access_count)` subtracted from stale weeks, and only never-corroborated rows decay at all.
+- [NOOA Memory](../../systems/nooa-memory/) — retrieval bumps a `strength` counter that slows Ebbinghaus decay and leaves `confidence` untouched, and injected memories are not reinforced.
+- [Graphify](../../systems/graphify/) — a 30-day half-life on outcomes decides a contested verdict, while the corroboration band comes from a count of distinct results.
+- [memory-lancedb-pro](../../systems/memory-lancedb-pro/) — three injections never confirmed as used suppress a memory from auto-recall for thirty minutes, a negative signal fed only by the automatic path.
 
-The cost is twenty-eight hand-set parameters with no committed derivation, and
-one of them is wrong in a way the model itself reveals: `commitment` is given
-k=1.0, exactly exponential, so an outstanding obligation decays memorylessly
-rather than persisting until it is discharged.
+### Every instance
 
-Three systems added since this page was written show what the pattern looks like
-done carefully, and one shows the failure it warns about.
+**[Daimon](../../systems/daimon/) applies its decay, and every factor can be
+read off the scoring file.** Proactive recall multiplies
+FTS5 relevance by `effective_weight`, which is `importance/10 × tiered recency ×
+per-type linear decay`, with rates from 0.005 a day for a strong belief to 0.05
+for an active topic (`plugin/daimon_briefing/scoring.py`). One type is exempt
+from the usual conclusion: an open question past its fourteen-day expected
+lifespan gets an **escalating** boost, `1 + overdue_days**1.5 / 100`, capped at
+3.0. For an open loop, staleness means *unresolved*, not *irrelevant*, and
+burying it is exactly wrong. Any system with a per-type decay table should ask
+which of its types this applies to; most have at least one.
 
-[Redis Agent Memory Server](../../systems/redis-agent-memory-server/) has the
-most developed retention policy in the atlas. `select_ids_for_forgetting`
-combines TTL and inactivity so a recently-used memory survives its nominal age
-**unless** it exceeds a hard-age multiple (default 12×), honours pinning and
-per-type allowlists, and prunes to a budget using a recency composite with **two
-half-lives** — 7 days on last access, 30 on creation. Separating "recently used"
-decay from "recently learned" decay is the refinement most systems miss.
+Three smaller guards in the same file generalize. A `first_seen` stamp more than
+300 seconds in the future — further than ordinary clock skew explains — is
+treated as *neutral* rather than maximally fresh, so a teammate's mis-stamped
+item cannot outrank local work — a bug that only exists once memory crosses
+machines. Decay is floored at 0.1 rather than allowed to reach zero, so ordering
+may bury an item but arithmetic never erases it. And the finished weight is
+lidded by trust class after every accumulation term — 0.7 for an inferred item,
+3.0 for a verified verbatim quote — so no combination of importance, recency and
+escalation lifts an inferred claim into the band a verified one occupies.
+
+[Mnemopi](../../systems/mnemopi/) shows the design this page would ask for and
+then does not run it. `weibull.ts` gives each of fourteen memory types a Weibull
+`k` (shape) and `eta` (scale, in hours) — `profile` at k=0.3/eta=8760,
+`preference` at 0.4/4380, `fact` at 0.8/720, `observation` at 0.9/480 — and a
+`k` below 1 is the heavy tail a single rate cannot express: a profile fact that
+fades slowly *and keeps fading slowly*. It is the instrument the
+[Helm](../../systems/helm/) report asks for when it says a preference should not
+fall down the ranking for being old while an event should. But at the pinned
+commit the table's only importer is a test. Recall ages every type alike:
+`scoreCandidate` in `beam/recall.ts` multiplies the base score by
+`0.7 + 0.3 · exp(−age / 72 h)`, and the polyphonic temporal voice scores
+`exp(−age_days / 7) × importance`; neither reads the memory's type. Twenty-eight
+hand-set parameters, one of them — `commitment` at k=1.0, exactly exponential —
+wrong on its own terms, and none of them reaches a ranking. Before crediting a
+system with per-type decay, find the read path that calls the curve.
+
+[Redis Agent Memory Server](../../systems/redis-agent-memory-server/) has a
+composite retention policy worth copying and ships it switched off.
+`select_ids_for_forgetting` combines TTL and inactivity so a recently-used memory
+survives its nominal age **unless** it exceeds a hard-age multiple (default
+12×), honours pinning and per-type allowlists, and prunes to a budget using a
+recency composite with **two half-lives** — 7 days on last access, 30 on
+creation. Separating "recently used" decay from "recently learned" decay is the
+refinement most systems miss. The periodic job that runs it returns without
+scanning unless `forgetting_enabled` is set, and that setting defaults to
+`False`, with the age, inactivity and budget thresholds all defaulting to `None`
+(`V0/agent_memory_server/config.py:485-490`).
 
 [Mercury](../../systems/mercury-agent/) makes the same distinction in the schema
 rather than the policy: `confidence`, `importance`, and `durability` are three
 independent fields. How much a memory matters and how long it should last are
-different questions, and one column cannot answer both. Mercury also keeps a
-`subconscious` tier — retained but below active recall — so demotion is available
-where most systems only have deletion.
-
-[Daimon](../../systems/daimon/) contributes the inversion this page has been
-missing. Its weight is `importance/10 × tiered recency × per-type linear decay`,
-and one type is exempt from the usual conclusion: an open question past a
-fourteen-day expected lifespan gets an **escalating** boost, `age**1.5 / 100`,
-capped so a fresh item still outranks an escalated one. For an open loop,
-staleness means *unresolved*, not *irrelevant*, and burying it is exactly wrong.
-Any system with a per-type decay table should ask which of its types this
-applies to; most have at least one.
-
-Two smaller guards in the same file generalize. A `first_seen` stamp further in
-the future than ordinary clock skew explains is treated as *neutral* rather than
-maximally fresh, so a teammate's mis-stamped item cannot outrank genuine local
-work — a bug that only exists once memory crosses machines. And decay is floored
-rather than allowed to reach zero, so ordering may bury an item but arithmetic
-never erases it.
+different questions, and one column cannot answer both. Mercury's schema also
+declares a `subconscious` scope below active recall; what moves a memory into or
+out of it is an open question in the report, so the tier is a place demotion
+could go, not a demotion path the code is known to take.
 
 [OpenViking](../../systems/openviking/) computes hotness as
 `sigmoid(log1p(active_count)) * exp(-ln2 · age / half_life)` and states plainly
@@ -171,10 +182,16 @@ narrow and reusable: **a reinforcement signal that is itself caused by
 reachability is a feedback loop, not a measurement**, and the way to find one is
 to ask which of your inputs the previous ranking already decided.
 
-[Verel](../../systems/verel/) remains the reference for the separation itself.
-[Atomic Agent](../../systems/atomic-agent/) suggests the safest implementation
-shape: keep votes as append-only events and derive the score, so a reinforcement
-rule can be changed or recomputed rather than baked irreversibly into a column.
+[Verel](../../systems/verel/) is the reference for the separation itself.
+The safest implementation shape is to keep reinforcement as append-only events
+and derive the score, so a rule can be changed and recomputed rather than baked
+irreversibly into a column. [Atomic Agent](../../systems/atomic-agent/) writes
+the events and stops short of the derivation: `applyVote` stores the clamped new
+score in the target row's `vote_score` column in the same transaction that
+inserts the `vote_events` row, the consolidator multiplies every stored score by
+a decay factor in place, and `vote_events` is an audit log FIFO-capped at
+`eventLogMaxRows`, 50,000 by default (`src/memory/voting/vote-store.ts`). The
+score cannot be rebuilt from the log.
 
 [Memora](../../systems/memora/) sits on the correct side of the line and still
 shows the hazard: `calculate_importance(created_at, base_importance,
@@ -182,14 +199,19 @@ access_count)` is a ranking signal rather than a confidence, but retrieval
 increments `access_count`, which raises the score, which makes future retrieval
 more likely — the self-amplifying loop with no counterweight visible.
 
-[LoongFlow](../../systems/loongflow/) is the one system here that answers
-reinforcement collapse structurally rather than by tuning a rate. Its
-evolutionary memory samples from a Boltzmann distribution over scores at a
-temperature raised when the population's measured diversity falls, so a store
-converging on the same few items automatically loosens selection until variety
-returns. It is a narrow instance — recall there feeds a search loop, not belief —
-but it is worth noting that the usual fix for reinforcement runaway is a decay
-constant, and this one is a feedback controller.
+[LoongFlow](../../systems/loongflow/) wires a feedback controller to
+reinforcement collapse and gives it the wrong sign. Its evolutionary memory
+samples parents from a Boltzmann distribution, `exp((score − max) / T)`, at a
+temperature set from the population's measured diversity — and the target
+temperature is `base_temp × 2 × diversity`, clamped to `[0.5, 2.0]` and blended
+80/20 with the current value (`evolution/boltzmann.py:80-87`). A population
+converging on the same few solutions therefore gets a *lower* temperature and
+greedier selection, which converges it further; only the clamp and a 0.2 chance
+per call of a uniformly random pick keep variety in. It is a narrow instance —
+recall there feeds a search loop, not belief — and the transferable point is the
+test nobody wrote: a controller meant to loosen selection as diversity falls
+needs an assertion on its direction, and here no test exercises the diversity
+function at all.
 
 [NOOA Memory](../../systems/nooa-memory/) is the only system here that closes the
 reinforcement loop rather than noting it. Retrieval bumps a `strength` counter

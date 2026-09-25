@@ -104,9 +104,9 @@ out the rest of memory.">
 documents, or sources so one dense neighborhood does not crowd out the
 rest of memory.</p>
                                         <div class="document-meta">
-            <a class="meta-pill stance-pill stance-mixed" href="../../patterns/#how-established-is-any-of-this">
+            <a class="meta-pill stance-pill stance-reporting" href="../../patterns/#how-established-is-any-of-this">
               <span>Epistemic status</span>
-              <strong>Reporting, with one advocacy claim</strong>
+              <strong>Reporting an established practice</strong>
             </a>
           </div>
                             </div>
@@ -195,40 +195,51 @@ validates.</p>
 one-fact-per-record. Diversity control matters most when chunking can
 produce many near-identical neighbours.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/swafra/">Swafra</a> remains the compact
-illustration — best chunk per source title, so one document cannot fill
-the context.</p>
-<p>Two later systems generalize the idea beyond source documents.</p>
-<p><a href="../../systems/openviking/">OpenViking</a>'s
-<code>type_quota_recall.py</code> (519 lines) enforces per-memory-type
-quotas in the result set, so a prolific memory <em>kind</em> cannot
-crowd out every other kind of context. Diversity keyed on type rather
-than document is the right generalization once a system has several
-memory kinds.</p>
-<p><a href="../../systems/llamaindex/">LlamaIndex</a> achieves it by
-construction: each memory block gets its own share of the long-term
-token budget and truncates itself to fit. Static content, retrieved
-vectors, and extracted facts each keep a guaranteed slice, and no single
-contributor can consume the whole budget by ranking well.</p>
-<p><a href="../../systems/open-cowork/">open-cowork</a> separates core
-memory from experience memory at the <em>extractor</em> level, with
-independent stores — which makes budget separation between them a
-natural next step rather than a special case.</p>
-<p><a href="../../systems/agentmemory/">agentmemory</a> applies
-per-session diversity within weighted RRF, and <a
-href="../../systems/hindsight/">Hindsight</a> balances four retrieval
-arms through task-specific fusion.</p>
+<p><a href="../../systems/swafra/">Swafra</a> is the compact
+illustration: after ranking and a graph walk it keeps the best chunk per
+source title and orders sources by that chunk's score, so one document
+cannot fill the context. It has no second pass, so depth is never bought
+back.</p>
+<p><a href="../../systems/agentmemory/">agentmemory</a> caps results at
+three per session inside its weighted-RRF hybrid search — a per-source
+cap with the session as the source.</p>
+<p><a href="../../systems/openviking/">OpenViking</a> keys the quota on
+memory category rather than document: its context assembler
+(<code>retrieve/context_assembler/gather.py</code>) runs one search per
+bucket — events, entities, preferences, experiences, resources, skills —
+and cuts each to its quota before merging, so a prolific memory
+<em>kind</em> cannot crowd out the rest. The quotas apply only when a
+caller or a purpose preset supplies them; otherwise retrieval is one
+flat top-<em>k</em>. Diversity keyed on category rather than document is
+the right generalization once a system has several memory kinds.</p>
+<p><a href="../../systems/hindsight/">Hindsight</a> applies the same
+idea one level earlier, by retrieval arm: per-arm caps keep graph
+fan-out from monopolizing the candidate pool.</p>
+<p>The common form in the corpus is maximal marginal relevance, which
+diversifies by content similarity rather than by source identity — <a
+href="../../systems/clawmem/">ClawMem</a> (<code>src/mmr.ts</code>), <a
+href="../../systems/second-brain-cloudflare/">Second Brain</a> (λ =
+0.7), <a href="../../systems/sonder-runtime/">Sonder Runtime</a> (λ =
+0.5), <a
+href="../../systems/claude-total-memory/">total-agent-memory</a> and <a
+href="../../systems/hippo-memory/">Hippo</a> all rerank with it. MMR
+penalizes adjacent chunks of one file only as far as they resemble what
+is already picked; a per-source cap catches them by identity whatever
+they say.</p>
 <p>The tradeoff sharpens with these examples: a quota guarantees breadth
-and forfeits depth. When a question genuinely needs three passages from
-one document, or four facts of one kind, a strict quota is the mechanism
-standing in the way — which is why every implementation here needs an
-escape hatch, and why <a
-href="../../systems/llamaindex/">LlamaIndex</a>'s per-block
-<code>atruncate</code> returning <code>Optional</code> is a good shape:
-a block may decline to shrink and be dropped whole rather than emit
-something misleading. The shape needs an implementation behind it — none
-of LlamaIndex's shipped blocks overrides the default, so the only
-behaviour that ships is the drop.</p>
+and forfeits depth. When a question needs three passages from one
+document, or four facts of one kind, a strict quota is the mechanism
+standing in the way — which is why a quota needs an escape hatch, and
+why Swafra's one-per-source rule, which has none, is the illustration
+rather than the model. <a
+href="../../systems/llamaindex/">LlamaIndex</a>'s <code>atruncate</code>
+returning <code>Optional</code> is a good shape for the hatch on the
+budget side: a block may shrink itself, or return <code>None</code> and
+be dropped whole rather than emit something misleading. The shape has no
+implementation behind it — none of the shipped blocks overrides the
+default, blocks are shed lowest-priority first rather than given a share
+each, and the default priority of 0 means never truncated, so with
+default blocks nothing is cut at all.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Repeated adjacent chunks from one source.</li>

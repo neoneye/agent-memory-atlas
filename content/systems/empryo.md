@@ -179,9 +179,11 @@ re-embedding the corpus is a local loop with no cost and no provider.
 (`global | project | none`) and `readScope` (`global | project | all | none`)
 separately, with a comment stating the default: writes go to `project`,
 described as *"safer than global"*. `filterScopes` applies the read side by
-selecting which database adapters participate. Being able to read broadly while
-writing narrowly is the [explicit write destination](../../patterns/explicit-write-destination/)
-pattern, with the safe default chosen.
+selecting which database adapters participate. Reading broadly while writing
+narrowly is the separation [scope as a first-class key](../../patterns/scope-as-a-first-class-key/)
+asks for; a write that names no scope gets the safe default rather than a
+refusal, which is what [explicit write destination](../../patterns/explicit-write-destination/)
+argues against.
 
 **There is no background worker.** Similarity edges and hint state are computed
 on the write and read paths.
@@ -431,6 +433,8 @@ upsert at `:298`, supersede at `:660`, read filters at `:807`).
 **Licence** — `LICENSE` (Business Source License 1.1).
 
 ## History
+
+**2026-09-25** — [`64ea2ec8d1cbf393c6fc419f968a0a7d097881c9`](https://github.com/proxysoul/Empryo/commit/64ea2ec8d1cbf393c6fc419f968a0a7d097881c9) — same pin. Section 6 called the read-broad, write-narrow split an instance of explicit write destination; that pattern refuses a write with no named destination, and Empryo defaults it, so the paragraph now links scope as a first-class key for the split and names the default as the difference. No mark moved.
 
 **2026-09-18** — [`64ea2ec8d1cbf393c6fc419f968a0a7d097881c9`](https://github.com/proxysoul/Empryo/commit/64ea2ec8d1cbf393c6fc419f968a0a7d097881c9) — re-pinned from `f771fc2`; 7 files and +2,292 lines, re-screened at the new pin. **Human review withdrawn**, against the [rubric's narrowed wording](../../methodology/atlas-rubric/#human-review-surface). The MemoryBrowser is real and useful — per-row pin and unpin, a soft delete with a `restore` beside it so a person's removal is reversible, and a cleanup tab that groups similarity clusters as connected components of the similar-edge graph. All of it acts on memories that are already stored. The schema is the short answer: `memories` carries `pinned`, `hidden`, `superseded_by`, a `source` constrained to `user` or `agent`, and no pending or proposed state at all, so a written memory is live immediately and `hidden=0` — which appears in every index and twenty-six times across the read paths — is a soft delete applied afterwards rather than an admission gate. Curation is not review; nothing waits for anyone. The only approval prompt in the tree is `onWebSearchApproval`, which gates a tool call rather than a memory. `scope_enforced` holds.
 

@@ -32,14 +32,13 @@ import sys
 import tempfile
 from pathlib import Path
 
-#: slug -> the marker that opens its block on the index page. The reporting,
-#: advocacy and mixed buckets are bullets; the category-bound case is a
-#: paragraph, because it was added later and argued for at length.
+#: slug -> the marker that opens its block on the index page. All three are
+#: bullets. A fourth, category-bound, was retired on 2026-09-25 when both of its
+#: pages turned out to recur outside the category that defined them.
 BUCKETS = {
     "reporting": "- **Reporting an established practice.**",
-    "advocacy": "- **Advocacy — one or two instances.**",
+    "advocacy": "- **Advocacy — a handful of instances.**",
     "mixed": "- **Reporting, with one advocacy claim.**",
-    "category-bound": "**A fourth case, added later and needing its own label.**",
 }
 
 PATTERN_LINK = re.compile(r"\]\(\./([a-z0-9-]+)/\)")
@@ -126,7 +125,7 @@ def self_test() -> int:
         victim = scratch / "content" / "patterns" / "rejected-value-tombstone.md"
         victim.write_text(
             victim.read_text(encoding="utf-8").replace(
-                "stance: advocacy", "stance: reporting", 1
+                "stance: mixed", "stance: reporting", 1
             ),
             encoding="utf-8",
         )

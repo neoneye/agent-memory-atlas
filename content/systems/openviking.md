@@ -79,22 +79,23 @@ are one addressing scheme rather than two code paths.
 Retrieval lifecycle:
 
 ```mermaid
-%% caption: the query is embedded once and reused down a recursive directory walk, with per-type quotas before hotness is blended into the score
+%% caption: the query is embedded once and reused down a recursive directory walk with hotness blended in; when quotas are set, the context assembler runs one such search per category bucket and cuts each result to its quota
 flowchart TB
+    QA["context assembler<br/><i>quotas set, or a purpose preset</i>"] -->|"one search per<br/>category bucket"| Q
     Q["TypedQuery + RequestContext<br/><i>tenant, permissions</i>"] --> DIR["resolve start directories<br/><i>explicit target_dirs, or defaults by context_type</i>"]
     DIR --> EMB["embed the query <b>once</b><br/><i>dense + optional sparse</i>"]
     EMB --> WALK["recursive directory walk<br/>QUICK or THINKING<br/><i>THINKING adds a rerank</i>"]
     WALK --> FIL["level filter L0 / L1 / L2,<br/>scope_dsl FilterExpr constraints"]
-    FIL --> QUO["per-type quota recall"]
-    QUO --> BL["blend semantic score with hotness<br/><i>frequency × recency</i>"]
+    FIL --> BL["blend semantic score with hotness<br/><i>frequency × recency</i>"]
     BL --> R["QueryResult<br/><i>matched_contexts, searched_directories</i>"]
+    R --> QUO["cut each bucket to its quota,<br/>merge and rank<br/><i>context_assembler/gather.py</i>"]
 
     style QUO fill:#e7efe9,stroke:#3d6b59
     style R fill:#e7efe9,stroke:#3d6b59
 ```
 
-Two details worth taking. **Per-type quotas** stop one memory kind from filling the
-budget, which is the same problem
+Two details worth taking. **Per-category quotas** in the context assembler stop one
+memory kind from filling the budget, which is the same problem
 [source-diverse context](../../patterns/source-diverse-context/) solves for
 sources. And the result reports `searched_directories` alongside the matches, so a
 caller can see where recall *looked* and not only what it found — an explainability
@@ -105,7 +106,7 @@ affordance almost nothing else here offers.
 Selected modules under `openviking/`:
 
 - `session/memory/` (8,649 lines): the memory core — `core.py`, `extract_loop.py`, `memory_updater.py`, `streaming_memory_updater.py`, `memory_type_registry.py`, `memory_isolation_handler.py`, `graph_view.py`, `merge_op/`, `page_id_map.py`, and several context providers.
-- `retrieve/` (1,607 lines): `hierarchical_retriever.py`, `type_quota_recall.py`, `intent_analyzer.py`, `memory_lifecycle.py`, `retrieval_stats.py`.
+- `retrieve/` (3,044 lines): `hierarchical_retriever.py`, `intent_analyzer.py`, `memory_lifecycle.py`, `retrieval_stats.py`, and `context_assembler/` — `gather.py` for the per-category quota fan-out, `params.py` for quota defaults and purpose presets, plus budget, tiers, expansion and rendering.
 - `storage/`, `core/context.py`, `server/identity.py`: collection schemas with a `level` field, context levels, and the `RequestContext` used for tenant and permission filtering.
 - `pyagfs/`, `src/` (C++), `crates/` (Rust): the agent-filesystem layer and native index/store backends.
 - `resource/`, `ingest/`, `parse/`, `connector/`: multimodal ingestion and external sources.
@@ -122,9 +123,9 @@ flowchart TD
   Files --> Graph["graph_view links/backlinks"]
   Query["TypedQuery +<br/>RequestContext"] --> HR["HierarchicalRetriever"]
   Index --> HR
-  HR --> Quota["type_quota_recall"]
-  Quota --> Hot["hotness_score blend"]
+  HR --> Hot["hotness_score blend"]
   Hot --> Result["QueryResult"]
+  Result --> Quota["context_assembler<br/>per-category quota"]
 ```
 
 ## 4. Essential Implementation Paths
@@ -160,9 +161,9 @@ The risk is the one that pattern names: `active_count` increments on retrieval, 
 
 Combined with tenant-aware `RequestContext` filtering in the retriever, this is one of the stronger scope stories in the atlas — comparable to [Honcho](../honcho/)'s workspace/peer/session model, expressed as paths.
 
-### Type-quota recall (`retrieve/type_quota_recall.py`)
+### Per-category quotas (`retrieve/context_assembler/gather.py`)
 
-519 lines enforcing per-memory-type quotas in the result set. This is a [source-diverse context](../../patterns/source-diverse-context/) variant keyed on type rather than source document: it prevents one prolific memory type from crowding out every other kind of context.
+`gather_candidates` runs one search per category bucket — `events`, `entities`, `preferences` and `experiences` among memories, plus `resources` and `skills` — over-fetches, deduplicates, and cuts each bucket to its quota before the buckets are merged and ranked. Quotas come from the caller or from a purpose preset in `params.py` (`normalize_quotas`); with neither, retrieval is one flat top-`limit` search and no quota applies. This is a [source-diverse context](../../patterns/source-diverse-context/) variant keyed on category rather than source document: it prevents one prolific memory kind from crowding out every other kind of context.
 
 ### Extraction and merging
 
@@ -199,7 +200,7 @@ Two things are worth calling out for anyone borrowing it:
 
 ## 7. Write Mechanics
 
-Writes arrive from session extraction (`extract_loop`), direct SDK/CLI/API calls, and ingestion of external resources through `connector/`, `ingest/`, and `parse/`. The isolation handler resolves the write target — user space or peer sub-space — before anything is persisted, so scope is decided at write time rather than inferred at read time. This is the atlas's [explicit write destination](../../patterns/explicit-write-destination/) discipline, enforced structurally.
+Writes arrive from session extraction (`extract_loop`), direct SDK/CLI/API calls, and ingestion of external resources through `connector/`, `ingest/`, and `parse/`. The isolation handler resolves the write target — user space or peer sub-space — before anything is persisted, so scope is decided at write time rather than inferred at read time. This is the write half of [scope as a first-class key](../../patterns/scope-as-a-first-class-key/), resolved by the handler rather than named by the caller.
 
 `streaming_memory_updater.py` supports incremental update as content arrives rather than only at session end.
 
@@ -293,7 +294,7 @@ Do not copy:
 - Memory core: `openviking/session/memory/` (`core.py`, `extract_loop.py`, `memory_updater.py`, `streaming_memory_updater.py`, `merge_op/`).
 - Types and schema generation: `openviking/session/memory/memory_type_registry.py`, `schema_model_generator.py`, `dataclass.py`.
 - Isolation and scoping: `openviking/session/memory/memory_isolation_handler.py`, `openviking/core/peer_id.py`, `openviking/server/identity.py`.
-- Retrieval: `openviking/retrieve/hierarchical_retriever.py`, `type_quota_recall.py`, `intent_analyzer.py`, `retrieval_stats.py`.
+- Retrieval: `openviking/retrieve/hierarchical_retriever.py`, `context_assembler/gather.py`, `context_assembler/params.py`, `intent_analyzer.py`, `retrieval_stats.py`.
 - Lifecycle: `openviking/retrieve/memory_lifecycle.py`.
 - Storage and levels: `openviking/storage/collection_schemas.py`, `openviking/core/context.py`.
 - Links graph: `openviking/session/memory/graph_view.py`.
@@ -302,6 +303,8 @@ Do not copy:
 - Tests: `tests/session/memory/`, `tests/test_memory_lifecycle.py`, `tests/integration/test_agent_memory_e2e.py`.
 
 ## History
+
+**2026-09-25** — [`192b813e7e3106680a5534e2d4c9bcf6d2390abd`](https://github.com/volcengine/OpenViking/commit/192b813e7e3106680a5534e2d4c9bcf6d2390abd) — same commit, one path corrected. The per-type quota was cited to `retrieve/type_quota_recall.py`, which exists at the first pin and not at this one. At this pin the quota lives in `retrieve/context_assembler/gather.py`: one search per category bucket, each cut to its quota, applied only when a caller or purpose preset supplies quotas. Hotness is blended inside each search, before the cut, and both retrieval diagrams now show that order. The `retrieve/` line count is re-measured at 3,044. The write-target paragraph links scope as a first-class key instead of explicit write destination, whose page is limited to write APIs where the caller must name the destination. No mark moved.
 
 **2026-09-15** — [`192b813e7e3106680a5534e2d4c9bcf6d2390abd`](https://github.com/volcengine/OpenViking/commit/192b813e7e3106680a5534e2d4c9bcf6d2390abd) — second reading, 549 commits on. Screened again: a dependency surface inside the seven-day cooldown, so nothing was installed and nothing was run. `scope_enforced` was re-tested at the producer and holds, and now carries the evidence record it had been asserted without. The first reading located scope in `memory_isolation_handler.py`, which grew by 248 lines since; what that file resolves is *write* targets — which user and peer spaces an extracted memory may land in — and its `get_read_scope` is called only from the extraction loop. The read-path predicate is one layer down: `_SingleAccountBackend` is bound to `ctx.account_id` and ANDs `account_id` onto every query, and the one unbound backend is reachable only after a root-role check.
 

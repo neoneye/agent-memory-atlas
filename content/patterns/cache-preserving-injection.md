@@ -11,9 +11,9 @@ stance: reporting
 > [patterns index](./) declines context-window pruning as a prompt-assembly
 > concern rather than a memory one, and that decision stands. This page is the
 > part of that territory which is not about token budgets: **where you inject
-> memory constrains what your memory system is allowed to be**, and one system
-> in the atlas redesigned its entire write path around that constraint rather
-> than around anything about recall.
+> memory constrains what your memory system is allowed to be**, and systems in
+> the atlas have shaped their write paths around that constraint rather than
+> around anything about recall.
 
 ## Intent
 
@@ -34,9 +34,8 @@ byte onward is re-processed, which for a memory-augmented agent is usually the
 whole prompt.
 
 This is invisible in exactly the way that matters. Retrieval quality is
-unaffected, tests pass, and the only signal is the bill. Five reports in this
-atlas record a system in this state, and none of the five projects appears to
-have noticed:
+unaffected, tests pass, and the only signal is the bill. These reports record a
+system in this state, and none of the projects appears to have noticed:
 
 - [Helm](../../systems/helm/) — *"Prompt-prefix caching is invalidated on every
   turn, by construction."* `INDEX.md` is stable and arrives through an import,
@@ -52,6 +51,11 @@ have noticed:
 - [OpenCode](../../systems/opencode/) — no memory of its own, but everything a
   plugin injects goes through `experimental.chat.system.transform` into the
   system prompt, so the *contract* hands every plugin author this failure.
+- [MemoraX Code](../../systems/memorax-code/),
+  [OpenMasq](../../systems/openmasq/), [PLUR1BUS](../../systems/plur1bus/) and
+  [Mnemosyne](../../systems/mnemosyne/) — per-turn recall injected into the
+  prompt, each recorded in its report as invalidating the prefix cache on every
+  turn whose recalled set changes.
 
 The cost is not a rounding error, and it compounds with the thing memory systems
 are for. The more memory you inject, the larger the prefix you are invalidating.
@@ -107,9 +111,9 @@ guaranteed miss into a guaranteed hit without changing what the model reads.
 
 The second-order effect is the interesting one. Once prompt cost is a static,
 known quantity, a memory budget becomes enforceable — which is what lets
-[Hermes Agent](../../systems/hermes-agent/) take the position almost nothing
-else in this atlas takes: memory is **hard-bounded and frozen, because the
-prompt cache matters more than completeness.** `MEMORY.md` is capped at 2,200
+[Hermes Agent](../../systems/hermes-agent/) take the position that memory is
+**hard-bounded and frozen, because the prompt cache matters more than
+completeness.** `MEMORY.md` is capped at 2,200
 characters and `USER.md` at 1,375. When an `add` would exceed the cap the write
 is *refused*, and the tool returns the current entries with an instruction to
 consolidate and retry within the same turn. Compaction is not a background
@@ -167,8 +171,26 @@ on how to write one.
 
 ## Seen in the atlas
 
-- **[Hermes Agent](../../systems/hermes-agent/)** — the frozen snapshot, and the
-  only system here whose memory *design* follows from the cache constraint.
+- **[Hermes Agent](../../systems/hermes-agent/)** — the frozen snapshot, with a
+  capacity policy and a write-refusal path that follow from the cache
+  constraint.
+- **[Nuum](../../systems/nuum/)** — the memory section frozen per epoch in
+  `prompt-cache.json` so the system-prompt prefix stays byte-identical between
+  turns. An explicit `update_state` write bumps the epoch; the extractor that
+  runs after every turn does not, and `run.test.ts` pins both halves. The cost
+  is the same boundary seen from the store: what the extractor writes or
+  removes changes the files at once and the frozen prompt only at compaction or
+  the next explicit write.
+- **[Reasonix](../../systems/reasonix/)** — split by position, with the cache as
+  the stated design constraint. The cached system prompt carries only a short
+  memory policy and the standing instruction documents; the memory index and
+  pinned fact bodies ride a host-generated `<session-context>` snapshot, a write
+  appends one complete replacement snapshot on the next user turn, and an
+  unchanged snapshot is deduplicated by digest.
+- **[Hipocampus](../../systems/hipocampus/)** — size caps on the always-loaded
+  files justified in the spec as a caching decision: *"stable content maximizes
+  prompt cache hit rate"*, with about 3K tokens of `ROOT.md` per session chosen
+  to sit inside the prompt cache.
 - **[Memobase](../../systems/memobase/)** — the profile is injected at the front,
   which the report notes is friendlier to prefix caching than the alternative.
 - **[Graphify](../../systems/graphify/)** — assembles context in a way the report
@@ -180,8 +202,8 @@ on how to write one.
   accident of lifecycle: its `<session_knowledge>` block is emitted once at
   `SessionStart` and once at `PreCompact` and never re-rendered mid-session, so
   it lands in the cached prefix. Nothing in that tree says this was reasoned
-  about, which is worth noting — it is the one arrangement here that could
-  silently stop being true if a maintainer added a per-turn refresh.
+  about, so it is the one arrangement here that could silently stop being true
+  if a maintainer added a per-turn refresh.
 - **[Khabeer](../../systems/khabeer/)** — that failure, with the intent written
   down. A port of Hermes whose specification states the frozen-snapshot rule in
   so many words, and whose runtime rebuilds the system prompt from the memory
@@ -189,12 +211,6 @@ on how to write one.
   Anthropic path. Everything else in the Hermes store came across; the one
   property this pattern names did not, because the function that renders the
   block is called `systemPromptSnapshot` and holds no state.
-- **[Nuum](../../systems/nuum/)** — the frozen section with a rule for who may
-  break it. The memory render is kept per epoch in `prompt-cache.json`; an
-  explicit `update_state` write bumps the epoch, and the per-turn extractor
-  does not, both halves pinned in `run.test.ts`. The cost is the same boundary
-  seen from the store: a fact the extractor removes from disk stays in the
-  frozen prompt until compaction or the next explicit write.
 - **[Helm](../../systems/helm/)**, **[CSM](../../systems/csm/)**,
   **[RisuAI](../../systems/risuai/)**, **[SillyTavern](../../systems/sillytavern/)**
   — the counter-examples, each invalidating on every turn.
@@ -230,7 +246,7 @@ sits between a coding agent and its provider, examined on 2026-08-09 at
 [`d7fd2c4e3ec4a9e354f98227546e3f75b5c0f1c6`](https://github.com/fkiene/llmtrim/commit/d7fd2c4e3ec4a9e354f98227546e3f75b5c0f1c6).
 It gets no report here, because its store is in-process only, size-capped and
 explicitly never written to disk — nothing survives the session, which is the
-inclusion bar. `crates/llmtrim-core/src/memo.rs` is worth reading anyway, for
+inclusion bar. `crates/llmtrim-core/src/memo.rs` matters to this page for
 three reasons.
 
 **It names the failure precisely, and the failure is caused by compression
@@ -266,17 +282,20 @@ whenever that stage is on, rather than reaching into the stage to freeze its
 dictionary. A caching optimisation that knows which of its own components it
 cannot safely apply to is rarer than it should be.
 
-The same repository shows the other half of the trade. [headroom](https://github.com/headroomlabs-ai/headroom),
+A second proxy shows the other half of the trade. [headroom](https://github.com/headroomlabs-ai/headroom),
 examined at
 [`675d13f08d42455c8fa17bda878c1a11b905cee4`](https://github.com/headroomlabs-ai/headroom/commit/675d13f08d42455c8fa17bda878c1a11b905cee4),
 implements what it calls CCR — Compress-Cache-Retrieve — where a dropped payload
 is stashed in SQLite keyed by the hash that goes into the prompt, and a retrieval
 tool call trades the hash back for the original: *"lossy on the wire, lossless
-end-to-end."* It is a dereference table rather than a memory, and it is not
-reported here for that reason, but the shape is the one a memory system reaches
-for when a recalled item is too big to inject — put the handle in the prefix and
-let the model ask for the body, which is what
-[Ollama](../../systems/ollama/)'s agent did above with a name instead of a hash.
+end-to-end."* CCR is a dereference table rather than a memory. The
+[Headroom report](../../systems/headroom/) covers the repository's separate
+cross-agent memory subsystem, and places CCR in the compression product beside a
+`CacheAligner` that flags content which would bust a provider's prefix cache and
+never rewrites the prompt. The CCR shape is the one a memory system reaches for
+when a recalled item is too big to inject — put the handle in the prefix and let
+the model ask for the body, which is what [Ollama](../../systems/ollama/)'s agent
+did above with a name instead of a hash.
 
 ## Tests before relying on it
 

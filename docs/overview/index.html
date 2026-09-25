@@ -1814,17 +1814,16 @@ semantic retrieval at all.</p>
 <h3 id="cross-session-and-cross-agent-persistence">Cross-Session and
 Cross-Agent Persistence</h3>
 <p><code>memory-engine</code> has the most developed access model in the
-atlas, and it is the only one where an <strong>agent is a
-principal</strong> rather than a process acting with someone else's
-authority. Grants are <code>(space, principal, ltree path, level)</code>
+atlas. Grants are <code>(space, principal, ltree path, level)</code>
 over read/write/owner; <code>core.build_tree_access</code> materializes
 the caller's grants into a jsonb passed <em>into</em> the search SQL, so
 visibility and ranking are one query rather than a post-filter that
 would make <code>LIMIT</code> mean different things for different
-callers. Delegation is safe because <code>agent_tree_access</code>
-clamps an agent to <code>least(agent, owner)</code> at every path — a
-member may grant their own agents freely, and an over-grant clamps down
-instead of escalating. Row-level security was tried and rejected for
+callers. Delegation is safe because a restricted API key declares a
+ceiling, and <code>build_tree_access</code> intersects it against the
+member's live grants with <code>least()</code> at every path — a member
+may mint narrow keys freely, and an over-declaration clamps down instead
+of escalating. Row-level security was tried and rejected for
 performance, with the reason recorded beside the replacement and a
 benchmark query retained to keep watching it. <code>honcho</code> has
 the richest multi-actor model: workspace, peer, session, collections,
@@ -2305,7 +2304,7 @@ extractors in <code>persona/cognitive_modules/retrieve.py</code>.</li>
 retrieval.</li>
 <li><code>openviking</code>:
 <code>openviking/retrieve/hierarchical_retriever.py</code>,
-<code>type_quota_recall.py</code>,
+<code>openviking/retrieve/context_assembler/gather.py</code>,
 <code>memory_lifecycle.py</code>.</li>
 <li><code>redis-agent-memory-server</code>:
 <code>search_long_term_memories()</code> and

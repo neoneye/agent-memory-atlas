@@ -109,16 +109,16 @@ key and a clean demonstration of what the key alone does not buy. Every read is
 `global`, `agent:<id>`, `project:<path>` — are documented in the tool
 description where the writing model reads them. The scope is also the model's
 own tool argument. Its MCP server is mounted per agent at a URL carrying
-`agentId`, `handleMcpRequest` receives that value, and the server already
-injects it into every tool that declares an `agentId` parameter — the memory
-tools declare `scope` instead, and nothing maps one to the other. So one
+`agentId`, `handleMcpRequest` receives that value, and on every `tools/call`
+the server copies it into the arguments as `agentId` when the caller has not set
+one — but the memory tools read `scope`, and nothing maps one to the other. So one
 employee reads another's private scope by naming it, in an app whose premise is
 several agents running at once. **Where the transport carries an identity,
 resolve the namespace from it and treat a caller-supplied scope as a request to
 validate.**
 
-**[Pydantic AI Harness](../../systems/pydantic-ai-harness/) adds the step the
-rest of this list is missing: it checks that the filter worked.** Two mechanisms,
+**[Pydantic AI Harness](../../systems/pydantic-ai-harness/) adds the step most
+of this list is missing: it checks that the filter worked.** Two mechanisms,
 both small. The namespace is `str | Callable[[RunContext], str]`, resolved by
 application code and documented as *"never exposed as a tool argument"* — so a
 model given `write_memory` and `search_memory` has no parameter in which to name
@@ -127,8 +127,10 @@ verifies every path the backend returned against the prefix it requested and
 raises `RuntimeError('memory backend returned a path outside the requested
 scope')` on a mismatch.
 
-That second line is what nothing else here has. Every system on this page
-composes a scope into a query and trusts the store to have honoured it; the
+That second line is rare on this page. Most systems here compose a scope into a
+query and trust the store to have honoured it —
+[Scope Recall](../../systems/scope-recall-hermes/)'s re-read of every vector hit
+under the scope predicate, below, is a second re-check of the same kind. The
 `MemoryStore` Protocol is public and third-party implementations are expected,
 so this one treats its own backend as untrusted and re-checks the boundary on the
 way back. A custom store that forgets the prefix produces a loud crash instead of
@@ -143,7 +145,9 @@ a setter, `ChatAgent` propagates it down, `write_records` stamps it onto every
 record, `to_dict` and `from_dict` round-trip it, and `__repr__` prints it. Then
 `ChatHistoryBlock.retrieve` calls `self.storage.load()` and returns the store,
 and `VectorDBBlock.retrieve` issues `VectorDBQuery(query_vector=..., top_k=limit)`
-with no filter. The key is correct, present on every record, and read by nothing.
+with no filter. The key is correct, present on every record, and read by no core
+read path; only two adapters consult it — Memanto puts it in the recall URL, and
+the Mem0 adapter filters `user_id` on it.
 
 What supplies isolation instead is *construction*: each agent is normally handed
 its own storage object — a separate JSON file, a separate Qdrant collection — so
@@ -152,8 +156,8 @@ enforced by nothing, and the stored key makes it harder to notice, because a
 reader auditing the code finds `agent_id` everywhere and reasonably concludes the
 scoping is done.
 
-**[CrewAI](../../systems/crewai/) is the only system here that makes scope a
-path, and it is worth copying if your tenancy is hierarchical.** A record's
+**[CrewAI](../../systems/crewai/) makes scope a path the caller holds as a view,
+and it is worth copying if your tenancy is hierarchical.** A record's
 scope is `/company/team/user`, matching is by prefix, and the caller holds a
 `MemoryScope` — a view of the store rooted at a subtree, with `subscope()` to
 descend and a `read_only` flag — rather than passing a key on every call. That
@@ -179,15 +183,17 @@ function scopedPredicate(agentId: string, filter?: MemoryQueryFilter): string {
 }
 ```
 
-Every `query`, `list`, and `delete` builds its WHERE clause through this helper,
-with the comment stating the intent: scope and user filter are composed into one
+`query` and `delete` build their WHERE clause through this helper, and `list`,
+`search` and `count` apply the same `memoryAgentPredicate` directly, with the
+comment on `query` stating the intent: scope and user filter are composed into one
 predicate **so scope cannot be lost**. An unscoped read is not expressible, and
 deletes are scoped the same way. Most systems apply scope as a filter somewhere
 in the read path; making it structurally inseparable survives refactoring.
 
-**[Membase](../../systems/membase/) is the only system here whose scope key is
-authenticated rather than asserted.** Every other scope on this page is a string
-the caller supplies and the store believes. Membase's account key is an Ethereum
+**[Membase](../../systems/membase/) authenticates its scope key with a signature
+rather than accepting it as asserted.** Most scopes on this page are strings the
+caller supplies and the store believes; the rest derive the key from an
+authenticated session or run context, as OpenCompany and Pydantic AI Harness do. Membase's account key is an Ethereum
 address, every call to its remote hub carries a secp256k1 signature over a
 timestamped digest, and the client will not file a memory under any owner but the
 one that signature recovers to:
@@ -209,9 +215,10 @@ implementation, whose read path is the weakest the atlas has catalogued.
 
 [MateClaw](../../systems/mateclaw/) extends the idea across a plugin boundary:
 its `MemoryProvider` SPI declares `prefetch(agentId, query, ownerKey)` and
-`syncTurn(..., ownerKey)`, so scope crosses into third-party backends. It is the
-only one of four host contracts in the atlas that carries scope at all — see
-[pluggable memory provider](../pluggable-memory-provider/).
+`syncTurn(..., ownerKey)`, so scope crosses into third-party backends — as a
+paired overload, so a provider can still be called unscoped. Of the host
+contracts read for [pluggable memory provider](../pluggable-memory-provider/),
+it and ADK's are the ones that declare scope.
 
 [Gini](../../systems/gini-agent/) applies `agent_id` across all four recall
 channels and the HTTP API, and documents the decision as an ADR naming the bug it
@@ -299,7 +306,7 @@ rare is not what makes it worth copying.
 
 The counterexamples are as instructive as the implementations.
 [Holographic](../../systems/holographic/) describes itself as a "single-user
-memory store" and has no scope column at all; `category` partitions banks, not
+Hermes memory plugin" and has no scope column at all; `category` partitions banks, not
 access. [CowAgent](../../systems/cowagent/) defaults `scope` to `'shared'`, the
 same hazard the atlas flags in [agentmemory](../../systems/agentmemory/) — the
 safe value should be the one nobody has to remember to set.
@@ -309,12 +316,12 @@ users switch projects — an invitation to assume isolation that does not exist.
 [A-MEM](../../systems/a-mem/) and [Swafra](../../systems/swafra/) remain global
 corpora.
 
-[Memory Engine](../../systems/memory-engine/) is the only system in the atlas
-that makes the **agent** a scope principal rather than a process borrowing the
-user's authority. Grants are `(space, principal, ltree path, level)`, and
-delegation is safe because `agent_tree_access` clamps an agent to
-`least(agent, owner)` at every path — so a member can grant their own agents
-freely and an over-grant clamps down rather than escalating. It also evaluates
+[Memory Engine](../../systems/memory-engine/) makes a delegated credential a
+**ceiling** rather than a grant. Grants are `(space, principal, ltree path,
+level)`, and a restricted API key declares per-space and per-path maxima that
+`build_tree_access` intersects against the member's live grants with `least()` at
+every path — so a member can mint narrow keys freely and an over-declaration
+clamps down rather than escalating. It also evaluates
 authorization *inside* the ranking query rather than as a post-filter, which is
 what keeps `LIMIT` meaning the same thing for a caller with narrow grants and
 one with wide ones. Its design notes record that row-level security was tried
@@ -419,8 +426,8 @@ only in prose is a good reminder that a scope *format* and a scope *resolution
 order* are different pieces of work, and the second one is easy to assume you
 have done.
 
-**[gh-aw](../../systems/gh-aw/) is the only scope in this atlas that is
-directional, and the only one enforced by a filesystem rather than a query.** Its
+**[gh-aw](../../systems/gh-aw/) has a directional scope, enforced by a git
+branch checkout rather than a query.** Its
 cache-memory store is a git repository with one branch per integrity level —
 `merged`, `approved`, `unapproved`, `none` — and the pre-agent step checks out the
 branch matching this run's level, then merges *down* from strictly higher levels
@@ -430,8 +437,8 @@ lower-integrity data."* Legacy files of unknown provenance are committed to
 `none` alone, explicitly to prevent trust escalation.
 
 Two things generalise from it. The first is that **a scope need not be a
-partition.** Every other entry on this page divides memory into disjoint boxes and
-asks which box you are in; this one orders the boxes and allows reads in one
+partition.** Most entries on this page divide memory into disjoint boxes and ask
+which box you are in; this one orders the boxes and allows reads in one
 direction, which is the right shape whenever some of your sessions are less
 trusted than others rather than merely different from them — a public demo beside
 an authenticated user, a fork PR beside a merged commit.
@@ -887,7 +894,8 @@ property, one of which could never have failed.
 That is also why the red-team plugin above is worth more than its convenience:
 it drives a *running system* from the outside, so there is no harness to diverge.
 
-Two systems in this atlas wrote that test by hand and earn a mark for it;
+Systems here that wrote that test by hand earn `negative_eval` for it — MIRIX,
+Honcho, Scope Recall and Strands above among them.
 [vLLM Semantic Router](../../systems/vllm-semantic-router/)'s version stores a PIN
 and a password for two users and checks both the storage layer and the live
 retrieval path. That anyone can now generate the same case against a running

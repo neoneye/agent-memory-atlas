@@ -99,7 +99,7 @@ hardest for is a verb a person can type.">
     <main>
       <section class="document-hero">
         <div class="document-hero-inner">
-          <p class="eyebrow">The tombstone nothing can create</p>
+          <p class="eyebrow">A tombstone that outlives the merge</p>
           <h1>memoir-cli</h1>
           <p class="document-deck">A published format spec whose merge
 semantics get deletion right, shipped in a federation over other tools'
@@ -175,18 +175,22 @@ losing copy in eight lines with fourteen lines of comment naming the
 resurrection bug, and the cap logic partitions tombstones out of the
 visible budget because they <em>"keep their original (recent) date"</em>
 and were winning cap slots from real entries.</p>
-<p><strong>And nothing in the shipped product can create an absolute
-tombstone.</strong> The only assignment of <code>hidden = true</code>
-outside the merge function is
-<code>scripts/cleanup-junk-decisions-2026-07.mjs</code>, a dated one-off
-whose own header says <em>"NOT wired into any CLI command or
-package.json script"</em>, whose match strings are placeholders a human
-is expected to fill in, and which is absent from
-<code>package.json</code>'s <code>files</code> array and therefore from
-the npm package entirely. Three read paths filter <code>hidden</code>,
-the validator enforces its invariant, a test suite asserts its exclusion
-across three surfaces, and the spec makes it normative for Full
-conformance. No user can produce one.</p>
+<p><strong>The absolute tombstone has two shipped writers, one for a
+person and one for the model.</strong>
+<code>memoir forget "substring" [--purge] [--yes]</code>
+(<code>src/commands/forget.js</code>) resolves the decision, prints it,
+states that hiding cannot be undone, and calls <code>hideDecision</code>
+to set <code>hidden</code> and <code>hidden_at</code>;
+<code>--purge</code> redacts the text in place while keeping a sha256
+identity. The MCP tool <code>memoir_forget</code>
+(<code>src/mcp.js:583</code>) reaches the same
+<code>hideDecision</code>, and its description calls the result <em>"an
+absolute tombstone; there is no un-forget"</em>. Three read paths filter
+<code>hidden</code>, the validator enforces its invariant, a test suite
+asserts its exclusion across three surfaces, and the spec makes it
+normative for Full conformance. The key is the decision text, so a
+paraphrase of a hidden decision is a different identity and is not
+suppressed.</p>
 <p>Elsewhere the engineering is uneven in an ordinary way. The secret
 scanner is 27 patterns deep and its per-pattern length floor exists
 because a global floor of eight characters let
@@ -241,7 +245,7 @@ than a field. <code>push.js</code> calls
 <code>addNote(text, { why: \</code>auto-captured: ${context}`
 })<code>, so a regex-extracted decision is distinguishable from a user's own only by string-matching the beginning of a prose rationale that is otherwise meant to hold the reason. The extractor's own </code>type<code>—</code>rename<code>, </code>tech<code>, </code>design<code>, </code>stack<code>, </code>user-note`
 — does distinguish them, and is discarded before the write.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — why removal has to be a record, and which of the two records a user can actually create</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: why removal has to be a record, and which of the two records a user can actually create
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — why removal has to be a record, and what writes each of the two records</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: why removal has to be a record, and what writes each of the two records
 stateDiagram-v2
     [*] --&gt; Live: explicit MCP write, or regex auto-capture
     Live --&gt; Rotated: cap rotation, oldest by date
@@ -251,11 +255,8 @@ stateDiagram-v2
     Completed --&gt; Live: a re-add whose added postdates done_at
     Completed --&gt; Suppressed_temporally: any copy whose added predates done_at
 
-    Live --&gt; Hidden: sets hidden true and hidden_at
-    Hidden --&gt; Hidden: monotonic, inherited by the date winner
-
-    state &quot;no shipped writer&quot; as Gap
-    Gap --&gt; Hidden: only scripts/cleanup-junk-decisions, unshipped</code></pre></details></figure>
+    Live --&gt; Hidden: memoir forget or memoir_forget sets hidden and hidden_at
+    Hidden --&gt; Hidden: monotonic, inherited by the date winner</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>There is no server and no database. memoir is an npm package
 (<code>memoir-cli</code>) exposing three binaries — a CLI, an MCP stdio
@@ -593,15 +594,16 @@ nothing scans or bounds the <em>content</em> an MCP tool writes, so a
 model instructed by a poisoned file to remember something writes it
 verbatim into a file the host loads on every future session.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
-<p>Fifteen MCP tools across four groups: retrieval and storage
+<p>Sixteen MCP tools across four groups: retrieval and storage
 (<code>memoir_recall</code>, <code>memoir_remember</code>,
 <code>memoir_list</code>, <code>memoir_read</code>), working set
 (<code>memoir_set_goal</code>, <code>memoir_add_next</code>,
 <code>memoir_complete_next</code>, <code>memoir_note</code>,
 <code>memoir_ask</code>, <code>memoir_session</code>,
-<code>memoir_why</code>), management (<code>memoir_consolidate</code>,
-<code>memoir_status</code>, <code>memoir_profiles</code>), and
-retraction (<code>memoir_forget</code>).</p>
+<code>memoir_why</code>, <code>memoir_resume</code>), management
+(<code>memoir_consolidate</code>, <code>memoir_status</code>,
+<code>memoir_profiles</code>), and retraction
+(<code>memoir_forget</code>).</p>
 <p>The model has substantial agency: it can write entries into any host
 tool's memory directory, add and complete actions, record decisions —
 and, since 3.12, retract one. <code>memoir_forget</code> is registered
@@ -891,6 +893,17 @@ writer? That needs the hosts running, not the repository.</li>
 <code>test-schema-migration.mjs</code>,
 <code>test-session-lock.mjs</code>.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — audited at the unchanged pin <a
+href="https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37"><code class="commit-id" title="8de614336ec01582bf8ed97e3717714955653b37">8de61433…</code></a>;
+nothing upstream moved, so the corrections are ours. The executive
+summary, the eyebrow, the lifecycle diagram and the
+<code>update_delete</code> row still said no shipped surface could
+create the absolute tombstone; <code>memoir forget</code>
+(<code>src/commands/forget.js</code>) and <code>memoir_forget</code>
+(<code>src/mcp.js:583</code>) both call <code>hideDecision</code>, and
+the body now says so. The tool count was fourteen in the matrix and
+fifteen in section 8; <code>src/mcp.js</code> registers sixteen,
+<code>memoir_resume</code> included. No mark moved.</p>
 <p><strong>2026-09-19</strong> — audited at the unchanged pin <a
 href="https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37"><code class="commit-id" title="8de614336ec01582bf8ed97e3717714955653b37">8de61433…</code></a>;
 nothing upstream moved, so both corrections are ours. Section 8 carried

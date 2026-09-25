@@ -4,7 +4,7 @@ eyebrow: Pattern · Context assembly
 description: Select context across sessions, documents, or sources so one dense neighborhood does not crowd out the rest of memory.
 root: ../..
 page_kind: pattern
-stance: mixed
+stance: reporting
 ---
 
 ## Intent
@@ -83,39 +83,48 @@ matters most when chunking can produce many near-identical neighbours.
 
 ## Seen in the atlas
 
-[Swafra](../../systems/swafra/) remains the compact illustration — best chunk per
-source title, so one document cannot fill the context.
+[Swafra](../../systems/swafra/) is the compact illustration: after ranking and a
+graph walk it keeps the best chunk per source title and orders sources by that
+chunk's score, so one document cannot fill the context. It has no second pass,
+so depth is never bought back.
 
-Two later systems generalize the idea beyond source documents.
+[agentmemory](../../systems/agentmemory/) caps results at three per session inside
+its weighted-RRF hybrid search — a per-source cap with the session as the source.
 
-[OpenViking](../../systems/openviking/)'s `type_quota_recall.py` (519 lines)
-enforces per-memory-type quotas in the result set, so a prolific memory *kind*
-cannot crowd out every other kind of context. Diversity keyed on type rather than
-document is the right generalization once a system has several memory kinds.
+[OpenViking](../../systems/openviking/) keys the quota on memory category rather
+than document: its context assembler (`retrieve/context_assembler/gather.py`) runs
+one search per bucket — events, entities, preferences, experiences, resources,
+skills — and cuts each to its quota before merging, so a prolific memory *kind*
+cannot crowd out the rest. The quotas apply only when a caller or a purpose preset
+supplies them; otherwise retrieval is one flat top-*k*. Diversity keyed on category
+rather than document is the right generalization once a system has several memory
+kinds.
 
-[LlamaIndex](../../systems/llamaindex/) achieves it by construction: each memory
-block gets its own share of the long-term token budget and truncates itself to
-fit. Static content, retrieved vectors, and extracted facts each keep a
-guaranteed slice, and no single contributor can consume the whole budget by
-ranking well.
+[Hindsight](../../systems/hindsight/) applies the same idea one level earlier, by
+retrieval arm: per-arm caps keep graph fan-out from monopolizing the candidate pool.
 
-[open-cowork](../../systems/open-cowork/) separates core memory from experience
-memory at the *extractor* level, with independent stores — which makes budget
-separation between them a natural next step rather than a special case.
-
-[agentmemory](../../systems/agentmemory/) applies per-session diversity within
-weighted RRF, and [Hindsight](../../systems/hindsight/) balances four retrieval
-arms through task-specific fusion.
+The common form in the corpus is maximal marginal relevance, which diversifies by
+content similarity rather than by source identity —
+[ClawMem](../../systems/clawmem/) (`src/mmr.ts`),
+[Second Brain](../../systems/second-brain-cloudflare/) (λ = 0.7),
+[Sonder Runtime](../../systems/sonder-runtime/) (λ = 0.5),
+[total-agent-memory](../../systems/claude-total-memory/) and
+[Hippo](../../systems/hippo-memory/) all rerank with it. MMR penalizes adjacent
+chunks of one file only as far as they resemble what is already picked; a
+per-source cap catches them by identity whatever they say.
 
 The tradeoff sharpens with these examples: a quota guarantees breadth and
-forfeits depth. When a question genuinely needs three passages from one document,
-or four facts of one kind, a strict quota is the mechanism standing in the way —
-which is why every implementation here needs an escape hatch, and why
-[LlamaIndex](../../systems/llamaindex/)'s per-block `atruncate` returning
-`Optional` is a good shape: a block may decline to shrink and be dropped whole
-rather than emit something misleading. The shape needs an implementation
-behind it — none of LlamaIndex's shipped blocks overrides the default, so the
-only behaviour that ships is the drop.
+forfeits depth. When a question needs three passages from one document, or four
+facts of one kind, a strict quota is the mechanism standing in the way — which is
+why a quota needs an escape hatch, and why Swafra's one-per-source rule, which has
+none, is the illustration rather than the model.
+[LlamaIndex](../../systems/llamaindex/)'s `atruncate` returning `Optional` is a
+good shape for the hatch on the budget side: a block may shrink itself, or return
+`None` and be dropped whole rather than emit something misleading. The shape has
+no implementation behind it — none of the shipped blocks overrides the default,
+blocks are shed lowest-priority first rather than given a share each, and the
+default priority of 0 means never truncated, so with default blocks nothing is
+cut at all.
 
 ## Tests to require
 

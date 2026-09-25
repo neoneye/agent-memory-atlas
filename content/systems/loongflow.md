@@ -25,7 +25,7 @@ matrix:
   background: "Auto-compression between tiers"
   trust: "Score on each solution; no trust state on messages"
   strengths: "The only stochastic recall in the atlas, and the Boltzmann selector is tested as a distribution rather than a value — repeated draws asserted to favour higher scores, and low temperature asserted to concentrate more than high"
-  risks: "Two unrelated memory models under one package; the diversity function that makes the temperature adaptive is named in no test, its docstring says sigmoid where the arithmetic is linear, and its `sample_size` samples solutions while documenting pairs"
+  risks: "Two unrelated memory models under one package; the temperature falls as diversity falls, so selection tightens on a converging population; the diversity function that makes the temperature adaptive is named in no test, its docstring says sigmoid where the arithmetic is linear, and its `sample_size` samples solutions while documenting pairs"
 ---
 
 ## 1. Executive Summary
@@ -51,8 +51,19 @@ def _calculate_diversity(solutions, sample_size=50) -> float:
     """Normalized diversity score between 0 (identical) and 1 (max diversity)"""
 ```
 
-Two details in those twenty lines are worth a reader's attention before they
+Three details in those twenty lines deserve a reader's attention before they
 copy them.
+
+**The temperature moves the wrong way.** `_adaptive_temperature_by_diversity`
+computes `new_temp = base_temp * adjustment_factor` with
+`adjustment_factor = 1 + (2 * diversity - 1)` (`boltzmann.py:80-83`), and
+selection weights are `np.exp((scores - max_score) / temperature)`. Lower
+diversity therefore gives a lower temperature and a sharper, greedier selection:
+a population collapsing toward sameness is pushed further toward its best few
+members, and a varied one is loosened. What keeps variety in is the `min_temp`
+clamp (0.5 by default) and `exploration_rate`, a 0.2 chance per call in
+`select_parents_with_dynamic_temperature` of returning a uniformly random
+solution.
 
 **The adjustment is linear and the comment says sigmoid.** The line above it
 reads *"Sigmoid adjustment for smoother transitions"*; the arithmetic is
@@ -68,7 +79,7 @@ followed by a double loop over the sample — so the default 50 yields up to 1,2
 pairwise comparisons, not 50. An adopter tuning the parameter for cost would be
 off by a square.
 
-**Every other system in this atlas retrieves deterministically.** Rank by some blend of similarity, recency, and importance; take the top *k*. LoongFlow's evolutionary memory deliberately returns a *worse* remembered solution some of the time, with the probability governed by a temperature that rises when the population has collapsed toward sameness and falls when it is already varied.
+**Every other system in this atlas retrieves deterministically.** Rank by some blend of similarity, recency, and importance; take the top *k*. LoongFlow's evolutionary memory deliberately returns a *worse* remembered solution some of the time, with the probability governed by a temperature set from the population's measured diversity — one that falls as the population collapses toward sameness and rises when it is varied, so the controller amplifies convergence rather than countering it.
 
 That is an explicit exploration/exploitation trade applied to recall, and it has no counterpart anywhere else in this atlas. It is closest in spirit to [Voyager](../voyager/)'s skill library and [Verel](../verel/)'s induced rules — remembered attempts that shape future attempts — but where those retrieve greedily, this samples.
 
@@ -96,7 +107,7 @@ Selection lifecycle:
 %% caption: measured diversity sets the selection temperature, blending in a fifth of the current value for stability, so the population's own spread decides how greedy the next pick is
 flowchart TB
     P["population of scored solutions"] --> D["_calculate_diversity<br/><i>samples 50 pairs → 0 identical .. 1 max</i>"]
-    D --> T["_adaptive_temperature_by_diversity<br/>(current, min, max, base)<br/><i>blends 20% of the current temperature<br/>for stability</i>"]
+    D --> T["_adaptive_temperature_by_diversity<br/>(current, min, max, base)<br/>new = base × 2 × diversity, clamped<br/><i>lower diversity → lower temperature</i><br/><i>blends 20% of the current temperature<br/>for stability</i>"]
     T --> B["_boltzmann_selection_with_weights(scores, temperature)"]
     B -->|"low temperature"| G["nearly greedy — picks the best"]
     B -->|"high temperature"| F["flatter — picks broadly"]
@@ -147,9 +158,9 @@ flowchart TD
 
 `_calculate_diversity` samples up to 50 solutions and compares them pairwise, returning a normalized score where 0 is a population of identical solutions and 1 is maximally varied. The sampling is deliberate — the docstring notes it exists "to reduce computation", since exhaustive pairwise comparison over a large population is quadratic.
 
-`_adaptive_temperature_by_diversity` maps that score to a temperature within `[min_temp, max_temp]`, and — the detail worth noting — **blends 20% of the current temperature into the result** for stability. Without that, a noisy diversity estimate would make the temperature oscillate, and selection behaviour would swing between greedy and random between rounds.
+`_adaptive_temperature_by_diversity` maps that score to a temperature within `[min_temp, max_temp]` as `base_temp * 2 * diversity`, and **blends 20% of the current temperature into the result** for stability. Without that, a noisy diversity estimate would make the temperature oscillate, and selection behaviour would swing between greedy and random between rounds.
 
-The feedback loop is the point: a population that has converged gets a higher temperature, which makes selection flatter, which admits weaker solutions, which restores variety. A varied population gets a lower temperature and selection sharpens toward the best.
+The feedback loop runs with the sign that reinforces collapse. A population that has converged gets a lower temperature, which sharpens selection toward the best, which converges it further; a varied population gets a higher temperature and flatter selection. The loop that restores variety — converged population, higher temperature, weaker solutions admitted — needs the mapping inverted, for instance `base_temp * 2 * (1 - diversity)`. At this commit only the `min_temp` clamp and the `exploration_rate` random pick stop selection going fully greedy.
 
 ### Boltzmann selection
 
@@ -201,7 +212,7 @@ Both are libraries inside the LoongFlow agent SDK rather than a service or plugi
 
 Strengths:
 
-- **Stochastic recall with a principled control signal** — the only instance in the atlas.
+- **Stochastic recall with a measured control signal** — the only instance in the atlas, though the signal's sign is inverted (§4).
 - **Temperature smoothing** (20% of current) preventing round-to-round oscillation.
 - **Sampled diversity** keeping the control loop cheap on large populations.
 - **Bounded temperature** with explicit `min_temp` and `max_temp`.
@@ -235,8 +246,9 @@ for `diversity` across `tests/` returns nothing. Every Boltzmann case passes an
 explicit temperature, so `_calculate_diversity` and
 `_adaptive_temperature_by_diversity` — the pair that distinguishes this system
 from every other retrieval in the atlas — are exercised by nothing, which is why
-the linear-versus-sigmoid mismatch and the pairs-versus-solutions sampling in
-section 3 could both be introduced without a failure.
+the inverted temperature direction, the linear-versus-sigmoid mismatch and the
+pairs-versus-solutions sampling in section 1 could all be introduced without a
+failure.
 
 **One file named like a test contains none.**
 `grade/compressor/test_message_compression.py` is 292 lines whose docstring says
@@ -256,7 +268,7 @@ parameter, and which nothing in the repository appears to have run.
 ### Steal
 
 - **Sample rather than rank, when recall feeds exploration.** If remembered items inform *what to try next* rather than *what is true*, deterministic top-*k* guarantees you never revisit the alternatives. Boltzmann selection makes the exploration/exploitation trade explicit and tunable.
-- **Drive the temperature from a measured property of the store**, not a schedule. Diversity collapse is the condition that should loosen selection, and it is directly measurable.
+- **Drive the temperature from a measured property of the store**, not a schedule. Diversity collapse is the condition that should loosen selection, and it is directly measurable — so assert the direction in a test; the shipped mapping tightens selection as diversity falls.
 - **Smooth the control signal.** Blending in a fraction of the current temperature turns a noisy estimate into stable behaviour.
 - **Sample the diversity estimate** rather than computing it exhaustively.
 - **Bound the control parameter** so no feedback excursion makes selection fully random or fully greedy.
@@ -272,7 +284,7 @@ parameter, and which nothing in the repository appears to have run.
 
 Borrow:
 
-- The diversity-to-temperature loop, including the smoothing and the bounds, wherever memory feeds a search or generate-and-test process.
+- The diversity-to-temperature loop, including the smoothing and the bounds, wherever memory feeds a search or generate-and-test process — with the mapping inverted, so that falling diversity raises the temperature.
 - The idea that recall need not be deterministic when its consumer is exploration.
 
 Do not copy:
@@ -297,6 +309,8 @@ Do not copy:
 - Tests: `tests/agentsdk/memory`.
 
 ## History
+
+**2026-09-25** — [`945c78bc1554f8281aac40320b3599bd68d528d7`](https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7) — audited at the unchanged pin. The report had the temperature direction inverted. `_adaptive_temperature_by_diversity` sets `base_temp * 2 * diversity` before clamping and blending (`evolution/boltzmann.py:80-87`), and selection weights are `exp((score - max) / T)`, so a converging population gets a lower temperature and greedier selection. §1, the selection diagram, §4, §9, §10 and §11 now state that, the frontmatter risks name it, and §10's pointer to the two docstring defects names §1 rather than §3. No mark moved.
 
 **2026-09-17** — [`945c78bc1554f8281aac40320b3599bd68d528d7`](https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7) — re-read at the same commit, still the tip; the last commit upstream is 9 April 2026. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path, fifteen unpinned dependency surfaces, nothing inside the cooldown; `AGENTS.md` and `CLAUDE.md` were read as data. Nothing was installed or run.
 

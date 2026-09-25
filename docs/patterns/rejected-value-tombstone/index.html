@@ -104,9 +104,9 @@ known-wrong belief.">
 memory so automatic extraction cannot silently reintroduce a known-wrong
 belief.</p>
                                         <div class="document-meta">
-            <a class="meta-pill stance-pill stance-advocacy" href="../../patterns/#how-established-is-any-of-this">
+            <a class="meta-pill stance-pill stance-mixed" href="../../patterns/#how-established-is-any-of-this">
               <span>Epistemic status</span>
-              <strong>Advocacy — one or two instances</strong>
+              <strong>Reporting, with one advocacy claim</strong>
             </a>
           </div>
                             </div>
@@ -124,30 +124,31 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong>
-58 systems of 627
-carry it, and almost no two arrived the same way: one invented it under
-adversarial pressure, one adopted it from the first, one arrived at a
-weaker form independently, one was driven to it by a regulation, several
-built it only after their report named its absence — one of them adding
-it in the same release that closed a scope hole the same report found —
-<strong>one has it as a side effect of a lookup that forgot to exclude
-the rejected row</strong>, one made that same collision deliberate, one
-began as that side effect and was rebuilt as an explicit refusal, one
-built it as ordinary plumbing in its write gate, and one hardened it
-against key rotation. Sorted by mechanism rather than by mark,
-twenty-one refuse the write — <a
-href="#sorted-by-what-actually-stops-the-value">the table below</a> says
-which, and what the rest do instead. There is no consensus behind this
-page and no library that provides the mechanism. There is now a
-<strong>vocabulary</strong>: <a
+<p><strong>Reported:</strong> a durable record keyed on the rejected
+<em>value</em> rather than on the row, and consulted on the write path,
+recurs across the corpus. 58 systems of
+627 carry the mark, and <a
+href="#sorted-by-what-actually-stops-the-value">the table below</a>
+sorts the holders this page discusses by what actually stops the value.
+The idea's history runs from invention to independent arrival: Verel
+built it under adversarial pressure, RainBox adopted it from Verel, and
+the systems after them reached it by other routes — content-addressed
+ids, a regulation, ordinary plumbing in a write gate, a report that
+named its absence, a lookup that forgot to exclude the rejected row, a
+hardening against key rotation.</p>
+<p><strong>Argued:</strong> the form that survives the red-team walk — a
+normalised value, scoped where the rejection is scoped, consulted on
+<em>every</em> automated write path including background ones. Holders
+stop short of it on normalisation, on scope or on reach, and the rest of
+this page is the argument for closing all three. There is a
+<strong>vocabulary</strong> for it: <a
 href="https://arxiv.org/abs/2605.26252">arXiv:2605.26252</a> states it
 as a correctness condition — <em>no superseded value becomes
 current</em> — and proves that append-only storage cannot satisfy it,
 which is this page's argument in one line and from the database side.
-One vision paper with a prototype is not adoption. Everything below is
-still an argument, and the provenance is traced under <em>Seen in the
-atlas</em> so you can weigh it as one.</p>
+One vision paper with a prototype is not adoption, and no library
+provides the mechanism. The provenance is traced under <em>Seen in the
+atlas</em>.</p>
 </blockquote>
 <h2 id="intent">Intent</h2>
 <p>Remember not only what the system currently believes, but also which
@@ -203,15 +204,17 @@ different row saying the same wrong thing.</p>
 used here with that collision acknowledged rather than hidden. What
 matters is the key, not the word.</p>
 <p><strong>A third collision is inside the corpus rather than outside
-it.</strong> <a href="../../systems/plur1bus/">PLUR1BUS</a> ships
-<code>tombstoned</code> as one of seven record statuses, reachable by an
-authorized human command, and a record in that state scores
-<code>-Infinity</code> and never reaches recall. That is a well-built
-soft delete under this pattern's name: it is keyed on the record, so
-re-capturing the same sentence produces a new card in
-<code>candidate</code> that nothing checks against what was tombstoned.
-The system that uses the word is not thereby the system that has the
-mechanism, which is the reason this table exists.</p>
+it.</strong> <a href="../../systems/plur1bus/">PLUR1BUS</a> uses the
+word for both kinds in one system. <code>tombstoned</code> is one of
+seven record statuses, reachable by an authorized human command, and a
+record in that state scores <code>-Infinity</code> and never reaches
+recall — a soft delete keyed on the record. Beside it,
+<code>/forget</code> writes a SHA-256 fingerprint of the NFKC-normalised
+text, never the plaintext, to an append-only registry, and
+<code>findBlockingTombstoneForCapture</code> checks it as step zero of
+both capture callsites, so the forgotten sentence is refused when it is
+captured again. Only the second is this pattern. The word alone does not
+say which one a system has, which is the reason this table exists.</p>
 <h2 id="the-problem">The problem</h2>
 <p>Deleting or superseding a wrong memory removes it from normal recall,
 but it does not stop the same value from returning. A later
@@ -289,42 +292,45 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>58 systems of
-627 in the atlas have this.</strong> That is still
-the most striking negative result in the atlas, and it is the reason
-this page exists.</p>
+627 in the atlas carry the mark.</strong> The
+entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
 pruning. <a href="../../systems/rainbox/">RainBox</a> stores
 <code>MemoryRejectedValue</code> rows when claims are rejected or
 superseded, and model writes check them before asserting. <a
-href="../../systems/daimon/">Daimon</a> is the third and the weakest,
-and it is instructive precisely because of <em>how</em> it is weaker. <a
-href="../../systems/provem/">Provem</a> is the fourth and the first to
-arrive at it from regulation rather than from a failure, discussed
-below. <a href="../../systems/memsem/">memsem</a> is the fifth, refuses
-the write like the first two rather than filtering the read like the
-middle two, and puts the mechanism behind a human decision — discussed
-below. <a href="../../systems/perseus-vault/">Perseus Vault</a> is the
-sixth and the only one that refuses a value without storing it —
-discussed below. <a
-href="../../systems/universal-memory-engine/">Universal Memory
-Engine</a> is the ninth and the plainest — a suppression table the write
-gate consults at four points, discussed below. <a
-href="../../systems/noosphere/">Noosphere</a> is the most rigorous — its
-tombstone is keyed on an HMAC subject hash and checked across every
-retained key version, so rotating the key cannot resurrect a revocation,
-at the price of a ninety-one-one-day expiry discussed below. <a
+href="../../systems/daimon/">Daimon</a> holds it more weakly, and it is
+instructive precisely because of <em>how</em> it is weaker. <a
+href="../../systems/provem/">Provem</a> arrives at it from regulation
+rather than from a failure, discussed below. <a
+href="../../systems/memsem/">memsem</a> refuses the write like Verel and
+RainBox rather than filtering the read like Daimon and Provem, and puts
+the mechanism behind a human decision — discussed below. <a
+href="../../systems/perseus-vault/">Perseus Vault</a> refuses a value by
+its digest without storing it — discussed below. <a
+href="../../systems/plur1bus/">PLUR1BUS</a> does the same with a SHA-256
+fingerprint of the normalised text, checked as step zero of every
+capture. <a href="../../systems/universal-memory-engine/">Universal
+Memory Engine</a> keeps a suppression table the write gate consults at
+four points, discussed below. <a
+href="../../systems/noosphere/">Noosphere</a> keys its tombstone on an
+HMAC subject hash and checks it across every retained key version, so
+rotating the key cannot resurrect a revocation, at the price of a
+ninety-day expiry discussed below. <a
 href="../../systems/wenlan/">Wenlan</a> puts one on the
 <em>suggestion</em> layer rather than the fact layer: a dismissed
 mind-map node keeps its row so its fingerprint stays occupied, and every
 insert is <code>ON CONFLICT … DO NOTHING</code>. <a
-href="../../systems/breadcrumbs/">breadcrumbs</a> is the smallest — a
-JSON file of rejected values that the fact setter raises on — and it is
-the only one in a repository that also argues, correctly, against
-applying the same mechanism to its other store. Its commit describes the
-mechanism as closing <em>"the two remaining code-shaped gaps from the
-Agent Memory Atlas round-2 evaluation"</em>. Discussed at length
-below.</p>
+href="../../systems/breadcrumbs/">breadcrumbs</a> keeps a JSON file of
+rejected values that the fact setter raises on, in a repository that
+also argues, correctly, against applying the same mechanism to its other
+store. Its commit describes the mechanism as closing <em>"the two
+remaining code-shaped gaps from the Agent Memory Atlas round-2
+evaluation"</em>. Discussed at length below. <a
+href="../../systems/memora/">Memora</a>, <a
+href="../../systems/memoir-cli/">memoir</a> and <a
+href="../../systems/scope-recall-hermes/">Scope Recall</a> are discussed
+below with the systems they are most easily confused with.</p>
 <p><strong>Where it came from: an adversary, not a designer.</strong>
 Verel's git history dates the mechanism to 28 June 2026, inside a
 numbered red-team sequence, and the commit that introduces it describes
@@ -401,23 +407,20 @@ here, refusal in Verel — normalization is the part that decides whether
 it works, and it is the part that looks finished long before it is.
 Round 8 is the same for the fourth: a tombstone that expires is not a
 tombstone.</p>
-<p><strong>The two systems are not independent inventions, and the count
-should be read accordingly.</strong> RainBox's git history dates its
-tombstone to 29 June 2026, the same day as the comparative survey that
-later became this atlas — a survey whose RainBox report stated plainly
-that "it does not implement Verel-style rejected-value tombstones", and
-whose recommendations listed "keep rejected tombstones". So the field
-has produced this mechanism <strong>once</strong>, in Verel, and copied
-it once — into the system belonging to the person who ran the
-survey.</p>
-<p>That makes the negative result stronger rather than weaker. Two of
-627 would suggest a hard idea that a few teams reach
-independently. One of 627, plus one adoption by a
-reader who went looking, suggests an idea that is <em>not</em> being
-reached at all — and that the way it spread was somebody reading another
-project's source.</p>
-<p><strong>The third is an independent arrival, and it stops short in
-the two places this page predicts.</strong> <a
+<p><strong>Verel and RainBox are not independent inventions.</strong>
+RainBox's git history dates its tombstone to 29 June 2026, the same day
+as the comparative survey that later became this atlas — a survey whose
+RainBox report stated plainly that "it does not implement Verel-style
+rejected-value tombstones", and whose recommendations listed "keep
+rejected tombstones". So the idea's first two appearances are one
+invention and one adoption, by the person who ran the survey, and the
+way it first spread was somebody reading another project's source. The
+arrivals that followed came by other routes, and they are what makes
+this a recurring mechanism rather than one project's idea: Daimon
+through content-addressed ids, Provem through a regulation, Universal
+Memory Engine as ordinary plumbing in its write gate.</p>
+<p><strong>Daimon is an independent arrival, and it stops short in the
+two places this page predicts.</strong> <a
 href="../../systems/daimon/">Daimon</a>'s <code>daimon forget</code>
 deletes the item from the live checkpoint and appends a
 <code>forgotten:&lt;content-hash&gt;</code> event to an append-only log.
@@ -447,12 +450,6 @@ collision over-blocks, the fail-safe direction for a deletion
 guarantee"</em>. That is the round-9 lesson implemented, not missed.
 What still separates Daimon from Verel and RainBox is the write path,
 above — not the key.</p>
-<p>Recorded rather than silently edited, because the failure is
-instructive: a pattern page argues from reports, the reports get
-re-read, and nothing connects the two. This one was caught by <a
-href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md">re-deriving
-the strong-form subset</a>, which is a thing nobody does on a
-schedule.</p>
 <p><em>And the same system runs a second negative store beside it, which
 is the sharpest illustration on this page of what the tombstone property
 actually buys.</em> Daimon's <code>refutations.jsonl</code> records an
@@ -472,47 +469,45 @@ property. Being on the path is.</p>
 <p>Everything else stops at supersession, archival, or deletion —
 mechanisms that remove a value from view without recording that it was
 <em>judged wrong</em>:</p>
-<p><strong>The fourth arrival came from a regulation, and it has the
-most forgiving key.</strong> <a
-href="../../systems/provem/">Provem</a>'s
+<p><strong>Provem arrived from a regulation, and its key is a token
+subset.</strong> <a href="../../systems/provem/">Provem</a>'s
 <code>forget(term, scope)</code> deletes the matching records, appends
 the term's <strong>token set</strong> to a per-tenant
 <code>erased_terms</code> registry, and writes an erasure certificate
 into the audit log. Every later recall computes the record's tokens and
 excludes it with reason <code>"erased"</code> if any registered set is a
 subset.</p>
-<p>Two things separate it from the three above. Its key is a
+<p>Two things separate it from Verel, RainBox and Daimon. Its key is a
 <em>normalized token subset</em> rather than an exact string or a
 canonicalised value, so a later record that restates the erased term
 inside different surrounding text is still caught — the round-9 lesson
 on this page, that normalization is where the work is, taken further
 than Daimon's canonical key takes it, at the cost of a false-positive
 surface nobody has measured. And it is <strong>tenant-scoped</strong>,
-so an erasure for one customer cannot silently censor another — the only
-instance here that treats the scope of a rejection as part of its
-identity.</p>
+so an erasure for one customer cannot silently censor another — scope is
+part of the rejection's identity, as it is in memsem's project key and
+Argos's user scope.</p>
 <p>It shares Daimon's limitation exactly: suppression at read, not
 refusal at write. A re-ingested erased value still lands in the backing
 store and is stopped on the way out. For a system whose stated purpose
 is GDPR Article 17 that is the sharper version of the same criticism —
 the regulation is about what you hold, and this mechanism governs what
 you serve.</p>
-<p><strong>The fifth is the only one here whose tombstone a person has
-to arm.</strong> <a href="../../systems/memsem/">memsem</a> parks an
-uncertain fact in a <code>memory_candidates</code> table that no read
-path joins; rejecting it writes a row into
-<code>memory_suppressions</code> keyed on the normalised subject,
-predicate, object and project, and <code>blockedBySuppression()</code>
-is the first effective statement in <code>add()</code>. A suppressed
-value is refused outright — no row written, no rival faded — and
-<code>memory_add_many</code>, the tool the extraction sub-agent is
-instructed to call, inherits the same check. Lifting it takes an
-explicit <code>memory_unsuppress</code>, which is audited. The key is
-<code>trim().toLowerCase()</code>, which is the case-and-space class
-rather than Verel's NFKC canonicalisation, and <code>expires_at</code>
-exists in the schema with nothing writing it, so round 8's lesson — a
-tombstone that expires is not a tombstone — is passed by omission rather
-than by decision.</p>
+<p><strong>memsem's tombstone is one a person has to arm.</strong> <a
+href="../../systems/memsem/">memsem</a> parks an uncertain fact in a
+<code>memory_candidates</code> table that no read path joins; rejecting
+it writes a row into <code>memory_suppressions</code> keyed on the
+normalised subject, predicate, object and project, and
+<code>blockedBySuppression()</code> is the first effective statement in
+<code>add()</code>. A suppressed value is refused outright — no row
+written, no rival faded — and <code>memory_add_many</code>, the tool the
+extraction sub-agent is instructed to call, inherits the same check.
+Lifting it takes an explicit <code>memory_unsuppress</code>, which is
+audited. The key is <code>trim().toLowerCase()</code>, which is the
+case-and-space class rather than Verel's NFKC canonicalisation, and
+<code>expires_at</code> exists in the schema with nothing writing it, so
+round 8's lesson — a tombstone that expires is not a tombstone — is
+passed by omission rather than by decision.</p>
 <p><strong>What it shows is that the check and the trigger are
 separable, and that building the check is the easier half.</strong>
 memsem's other correction path is supersession by attenuation: a
@@ -531,10 +526,11 @@ paid off by repetition; a check that refuses is not. memsem carries both
 mechanisms in the same file, which makes the comparison unusually clean
 — and leaves the open question of whether an automatic judgement should
 be allowed to write a tombstone at all, or whether a rejection is by
-definition something a person does. <strong>The sixth stores the digest
-and not the value, which answers a tradeoff on this page rather than
-inheriting it.</strong> <a href="../../systems/perseus-vault/">Perseus
-Vault</a>'s <code>rejected_value_tombstones</code> is keyed on
+definition something a person does. <strong>Perseus Vault stores the
+digest and not the value, which answers a tradeoff on this page rather
+than inheriting it.</strong> <a
+href="../../systems/perseus-vault/">Perseus Vault</a>'s
+<code>rejected_value_tombstones</code> is keyed on
 <code>(workspace_hash, subject, predicate, value_sha256)</code> and
 carries a reason, an evidence reference, an author id and an optional
 expiry. The value is never written — only its SHA-256, over a form that
@@ -543,19 +539,19 @@ lower-cased, so a re-indented body, a re-ordered object and a case
 variant all land on the same tombstone.</p>
 <p>That directly addresses the <em>Tradeoffs</em> entry above — <em>"the
 tombstone itself can contain sensitive data and must follow deletion
-policy"</em> — which is a real problem for every other holder: a
-rejection record for a leaked secret is a copy of the secret. A digest
-refuses the value without retaining it, and the project states the
-property in those terms.</p>
+policy"</em> — which is a real problem for any holder that stores the
+value: a rejection record for a leaked secret is a copy of the secret. A
+digest refuses the value without retaining it, and the project states
+the property in those terms.</p>
 <p><strong>And it closes the hole a digest leaves, which is the one this
 page has not had an answer for.</strong> A digest refuses the value it
 was written for. A consolidation pass that summarises the rejected
 source writes a body with a different digest and the check never fires —
-so the strongest tombstone in the corpus was defeatable by the system's
-own maintenance loop. The fix shares one suppression check between
-ordinary reads and maintenance scans, on the ground stated in the code:
-<em>"a derived body is not safe merely because its own digest differs
-from a rejected source body's digest."</em> Derived bodies carry source
+so a digest-keyed tombstone was defeatable by the system's own
+maintenance loop. The fix shares one suppression check between ordinary
+reads and maintenance scans, on the ground stated in the code: <em>"a
+derived body is not safe merely because its own digest differs from a
+rejected source body's digest."</em> Derived bodies carry source
 references in three JSON fields, described as <em>"intentionally
 hash-free provenance references, not a new authority mechanism"</em> —
 so suppression propagates without the tombstone ever holding the
@@ -581,17 +577,17 @@ is journaled into the same hash-chained ledger, which is the shape the
 tradeoff list above asks for when a trusted human correction has to win.
 And the lookup matches on <strong>predicate and digest without the
 subject</strong>, so a rejected value is refused under any key in scope
-— deliberate, named in a test, and the most aggressive reading of the
-normalization tradeoff any holder here takes, with a correspondingly
-larger false-positive surface.</p>
+— deliberate, named in a test, and an aggressive reading of the
+normalization tradeoff, with a correspondingly larger false-positive
+surface.</p>
 <p>The open edge is reach rather than existence: the comment names
 connectors and derived writers, and no committed test walks the
 background consolidation passes, which is the condition under which
 record-keyed removal stops holding and the one this page cares most
 about.</p>
-<p><strong>The seventh nobody appears to have built.</strong> <a
-href="../../systems/mnemosyne/">Mnemosyne</a> gives every extracted fact
-a primary key of <code>compute_fact_id</code> — a SHA-256 over the
+<p><strong><a href="../../systems/mnemosyne/">Mnemosyne</a> has one
+nobody appears to have built.</strong> It gives every extracted fact a
+primary key of <code>compute_fact_id</code> — a SHA-256 over the
 NFC-normalized, length-prefixed subject, predicate and object. A fact
 that loses a conflict gets <code>superseded_by</code> set, and every
 read filters <code>superseded_by IS NULL</code>. The part that makes it
@@ -622,7 +618,7 @@ different session is a new row with no expiry. And the confidence on the
 tombstoned row keeps climbing with each re-mention, so anything that
 ever did clear the flag would resurrect the value stronger than it was
 rejected.</p>
-<p><strong>The eighth is the seventh's mechanism in a different
+<p><strong>Nova AI began as Mnemosyne's mechanism in a different
 language, and it is the better instance.</strong> <a
 href="../../systems/nova-ai/">Nova AI</a> is a symbolic concept graph
 with no model anywhere in it. <code>weerleg</code> — refute — sets
@@ -631,18 +627,18 @@ timestamp in that record's own audit log; the reasoning query and the
 disambiguation candidate list both filter it out, while
 <code>get_senses()</code> deliberately keeps showing it, so a person
 inspecting the graph sees exactly what the reasoner refuses to use. That
-split — invisible to inference, visible to audit — is the cleanest
-expression of this pattern's intent in the corpus.</p>
-<p><strong>And it is the one case in the corpus where the accident
-became a design, which is the strongest evidence this page has for its
-own advice.</strong> Until August 2026 Nova held the property the way <a
-href="../../systems/mnemosyne/">Mnemosyne</a> still does: the
-deduplication loop in <code>add_sense</code> matched an incoming
-definition by definition text and did not exclude rejected rows, and the
-status branch below it promoted only when <code>source == "user"</code>.
-Automatic re-derivation landed on the refusal and left it standing — but
-a person re-teaching the same sentence set <code>confirmed</code> and
-lifted it with nothing recorded and nothing asked.</p>
+split — invisible to inference, visible to audit — is a clean expression
+of this pattern's intent.</p>
+<p><strong>And in Nova the accident became a design, which is good
+evidence for this page's advice.</strong> Until August 2026 Nova held
+the property the way <a href="../../systems/mnemosyne/">Mnemosyne</a>
+still does: the deduplication loop in <code>add_sense</code> matched an
+incoming definition by definition text and did not exclude rejected
+rows, and the status branch below it promoted only when
+<code>source == "user"</code>. Automatic re-derivation landed on the
+refusal and left it standing — but a person re-teaching the same
+sentence set <code>confirmed</code> and lifted it with nothing recorded
+and nothing asked.</p>
 <p><code>core/semantic.py:204</code> now tests the rejected status
 <em>first</em> and returns <code>{"blocked": "rejected", …}</code>
 without touching the stored sense. The signal is carried up to the layer
@@ -661,8 +657,8 @@ to the lookup.</strong> Nova's author reached the opposite tidy-up.
 Mnemosyne still claims the behaviour nowhere and pins it with no test.
 If you have this shape, write the test before someone helpfully filters
 it.</p>
-<p><strong>The ninth is the write gate itself, and it is the plainest
-instance on this page.</strong> <a
+<p><strong>Universal Memory Engine puts it in the write gate itself, as
+plain plumbing.</strong> <a
 href="../../systems/universal-memory-engine/">Universal Memory
 Engine</a> extracts candidates and resolves them through a gate before
 anything becomes a node. Rejecting a candidate with
@@ -679,15 +675,15 @@ appear to have read the argument.</p>
 future rather than waiting to be re-derived — the answer to the failure
 the <a href="../../systems/memoryops-ai/">MemoryOps AI</a> entry below
 describes, in the same paragraph of the same kind of system.</p>
-<p><strong><a href="../../systems/openmake-llm/">OpenMake LLM</a> is the
-smallest instance, and it arrived by removing a filter.</strong> Its
-memory is one table of sentences with an <code>is_active</code> flag; a
-delete flips the flag and leaves the row. The duplicate check that the
-regex extractor, the per-message LLM extractor and the CLI backfill all
-run before writing reads the user's newest 500 rows through a query with
-no <code>is_active</code> clause, so a sentence the person deleted
-matches its own tombstone and the write is refused — by normalised text,
-by containment, or by a token-overlap threshold of 0.75 whose measured
+<p><strong><a href="../../systems/openmake-llm/">OpenMake LLM</a> is a
+small instance, and it arrived by removing a filter.</strong> Its memory
+is one table of sentences with an <code>is_active</code> flag; a delete
+flips the flag and leaves the row. The duplicate check that the regex
+extractor, the per-message LLM extractor and the CLI backfill all run
+before writing reads the user's newest 500 rows through a query with no
+<code>is_active</code> clause, so a sentence the person deleted matches
+its own tombstone and the write is refused — by normalised text, by
+containment, or by a token-overlap threshold of 0.75 whose measured
 scores are in the config comments. The settings tab, where the person
 types a sentence by hand, does no check at all, which is the right
 boundary: the tombstone binds the machines and not the author. The test
@@ -721,12 +717,13 @@ deletion of the same value overwrites the first row's reason and
 time.</p>
 <h3 id="sorted-by-what-actually-stops-the-value">Sorted by what actually
 stops the value</h3>
-<p>Counting holders of the mark conflates four different mechanisms.
-Sorted by the one question that separates them — <em>does anything read
-the rejection before the write completes?</em> — and re-derived report
-by report in <a
+<p>The mark covers four different mechanisms. The table sorts the
+holders this page discusses — a selection, not every system carrying the
+mark — by the one question that separates them: <em>does anything read
+the rejection before the write completes?</em> The method is set out in
+<a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md">this
-note</a>:</p>
+note</a>.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -762,7 +759,9 @@ href="../../systems/veracium/">Veracium</a>, <a
 href="../../systems/openmake-llm/">OpenMake LLM</a>, <a
 href="../../systems/argos/">Argos</a>, <a
 href="../../systems/no-human/">no_human</a>, <a
-href="../../systems/sage-memory/">SAGE</a></td>
+href="../../systems/sage-memory/">SAGE</a>, <a
+href="../../systems/memora/">Memora</a>, <a
+href="../../systems/scope-recall-hermes/">Scope Recall</a></td>
 <td>The write is refused. No row, or no activation</td>
 </tr>
 <tr>
@@ -791,15 +790,14 @@ every read, consulted by one emitter</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Twenty-four of the thirty, then, implement the strong
-form</strong> — value-keyed, normalized, consulted before the write,
-refusing activation. The collided form is the rarer one, and Nova AI
-shows why the distinction is worth drawing: its refusal held by a
-missing filter, which its author then replaced with an explicit check, a
-<code>blocked</code> return value and six tests. A property nothing
-claims is one a tidy-up can delete. The mark is still broader than this
-page's argument, and a reader deciding what to build should use the
-table rather than the count.</p>
+<p><strong>The Consulted row, then, is the strong form</strong> —
+value-keyed, consulted before the write, refusing activation. The
+collided form is the rarer one, and Nova AI shows why the distinction is
+worth drawing: its refusal held by a missing filter, which its author
+then replaced with an explicit check, a <code>blocked</code> return
+value and six tests. A property nothing claims is one a tidy-up can
+delete. The mark is broader than this page's argument, and a reader
+deciding what to build should use the table rather than the count.</p>
 <p><strong><a href="../../systems/memory-compiler/">Memory Compiler</a>
 is the cheapest complete instance, and the one that shows where the cost
 actually lands.</strong> Its store is four Markdown files; the tombstone
@@ -938,19 +936,25 @@ cannot prevent the same rejected content from being distilled again.</p>
 ends in a human choosing <code>remove_both</code>, which is a
 deliberate, reasoned, human judgement that two memories are wrong — and
 it deletes them. The next night's extraction pass runs over the same
-sessions with nothing to consult, so the most carefully made correction
-in the atlas can be undone by a scheduled job. The lesson generalizes:
-the quality of the <em>decision</em> does not matter if the decision
-leaves no trace the write path can check.</p>
-<p><a href="../../systems/memora/">Memora</a> comes closest to the shape
-without arriving at it. Its supersession pass classifies memory pairs
-into a defined vocabulary — including <code>contradicts</code> as an
-edge between two named memories — and hides rather than deletes the
-superseded row, so the decision is reversible. But the edge is between
-two <em>ids</em>, not keyed on the rejected <em>value</em>, and Memora
-ingests documents and images: re-ingesting the same source produces a
-new row that nothing blocks. Rich relation modelling is not a substitute
-for negative memory.</p>
+sessions with nothing to consult, so a carefully made correction can be
+undone by a scheduled job. The lesson generalizes: the quality of the
+<em>decision</em> does not matter if the decision leaves no trace the
+write path can check.</p>
+<p><a href="../../systems/memora/">Memora</a> shows the two halves side
+by side. Its supersession pass classifies memory pairs into a defined
+vocabulary — including <code>contradicts</code> as an edge between two
+named memories — and hides rather than deletes the superseded row, so
+the decision is reversible; that edge is between two <em>ids</em>, and
+rich relation modelling is not by itself negative memory. Retirement is
+the value-keyed half. It writes a <code>tombstones</code> row keyed on
+<code>content_tombstone_hash(content)</code>, which normalises case and
+whitespace, with no foreign key, so the schema comment's <em>"Tombstones
+survive the deleted row"</em> holds literally; both automatic ingest
+paths consult it — <code>absorb_memory</code> skips a tombstoned digest
+and records <code>action: tombstoned</code> with the retirement reason,
+and import skips the entry. <code>memory_create</code> is exempt by
+design, so the gate binds the automatic paths and not the operator, and
+a paraphrase has a different digest and passes.</p>
 <p><strong><a href="../../systems/memora-engine/">Memora Engine</a> is
 both near-misses at once.</strong> Its deduplication is MemoryOps AI's
 lookup — lowercased, whitespace-collapsed text compared against memories
@@ -1006,37 +1010,36 @@ commit gate tested across nine cases — so even here, the negative half
 is the half nobody covered. The mechanism is not hard. It is reached
 when a concrete re-assertion loop makes the need undeniable, and memory
 systems have exactly that loop and mostly have not noticed.</p>
-<p><a href="../../systems/noosphere/">Noosphere</a> is the strongest
-implementation of the form this page argues for, and it answers a
-question the others never had to. Its key is an <strong>HMAC</strong> of
-the capture, not a plain digest — so rotating the secret would make
-every stored key uncomputable from new input and silently readmit every
-value the system had ever refused. The check therefore computes the
-candidate's digest under <strong>every retained key version</strong> and
-matches the tombstone against the whole set, with the reasoning in the
-comment: <em>"A tombstone from any retained key version blocks
-recreation. Historical keys remain in the bounded keyring until their
-tombstones and source TTLs have expired."</em> The check runs inside a
-serializable transaction after the lineage rows are locked, and the
-write is refused with a 409.</p>
+<p><a href="../../systems/noosphere/">Noosphere</a> implements the form
+this page argues for, and it answers a question a plain digest never has
+to. Its key is an <strong>HMAC</strong> of the capture, not a plain
+digest — so rotating the secret would make every stored key uncomputable
+from new input and silently readmit every value the system had ever
+refused. The check therefore computes the candidate's digest under
+<strong>every retained key version</strong> and matches the tombstone
+against the whole set, with the reasoning in the comment: <em>"A
+tombstone from any retained key version blocks recreation. Historical
+keys remain in the bounded keyring until their tombstones and source
+TTLs have expired."</em> The check runs inside a serializable
+transaction after the lineage rows are locked, and the write is refused
+with a 409.</p>
 <p><strong>If your value key is derived under a secret, this is a fifth
 property the strong form needs</strong>, and it is invisible when it
 fails: the tombstone table stays full, the check keeps running, and
 nothing ever matches again.</p>
-<p>It also introduces the first deliberate <strong>expiry</strong> in
-this atlas's tombstones. Retaining the historical keys is what makes the
-check work, so the keyring is bounded by the tombstone's
-ninety-one-one-day TTL. That is a defensible trade for a privacy
-revocation whose source data expires anyway, and it means the guarantee
-is <em>not again for ninety-one-one days</em> rather than <em>never
-again</em> — a distinction worth making explicitly wherever this shape
-is copied.</p>
+<p>Its tombstone also carries a deliberate <strong>expiry</strong>.
+Retaining the historical keys is what makes the check work, so the
+keyring is bounded by the tombstone's ninety-day TTL. That is a
+defensible trade for a privacy revocation whose source data expires
+anyway, and it means the guarantee is <em>not again for ninety days</em>
+rather than <em>never again</em> — a distinction worth making explicitly
+wherever this shape is copied.</p>
 <h3 id="the-tombstone-that-must-not-retain-what-it-protects">The
 tombstone that must not retain what it protects</h3>
-<p>Every implementation above keys the tombstone on the value, and
-stores the value to do it. For a rejected fact that is fine. For an
-erased <em>person</em> it is a contradiction: a record whose purpose is
-to prove someone was removed, holding their name.</p>
+<p>A tombstone that stores the value in order to key on it is fine for a
+rejected fact. For an erased <em>person</em> it is a contradiction: a
+record whose purpose is to prove someone was removed, holding their
+name.</p>
 <p><a href="../../systems/fireweed-mcp/">Fireweed MCP</a> keys on a
 digest instead. <code>name_fingerprint</code> is a SHA-256 over the
 whitespace-normalized lowercased name, written into the durable
@@ -1046,8 +1049,8 @@ refusal still works — an identical claim naming the erased subject is
 turned away with <code>previously_erased</code> — and the store holds no
 copy of the name to do it. The cost is the ordinary cost of a digest
 key: it matches exactly or not at all, so a spelling variant walks
-straight past, which is the same limitation every value-keyed tombstone
-on this page has and is merely more visible here.</p>
+straight past, which is the limitation every exact-match key has and is
+merely more visible here.</p>
 <p><strong>The second half is what makes it a tombstone rather than a
 ban, and it is the part to copy.</strong>
 <code>acknowledge_erasure=true</code> admits the claim anyway. The
@@ -1106,11 +1109,11 @@ can pass vacuously.</p>
 <h3
 id="the-one-that-answered-the-question-twice-differently-in-two-stores">The
 one that answered the question twice, differently, in two stores</h3>
-<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> is the only
-project in the corpus that reaches the value-keyed question, answers
-<em>no</em> for one store on grounds this page has to take seriously,
-and <em>yes</em> for another. Both answers are in the same repository
-and neither is a compromise.</p>
+<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> reaches the
+value-keyed question twice in one repository, answers <em>no</em> for
+one store on grounds this page has to take seriously, and <em>yes</em>
+for another. Both answers are in the same repository and neither is a
+compromise.</p>
 <p>Take the <em>no</em> first, because it is the argument. The
 conclusions ledger's correction model is ordinary supersession: a newer
 JSONL line names the older one through <code>obsoleted_by</code>, keyed
@@ -1167,62 +1170,60 @@ crosses that line without the schema changing, and nothing signals the
 crossing. That is a better argument for the pattern than a prevalence
 count, and it came from the project that stated the objection to it
 best.</p>
-<p><strong>And then there is the case that argues this page's thesis
-better than any system carrying the mark, and does not carry
-it.</strong> <a href="../../systems/memoir-cli/">memoir</a> publishes a
-format spec whose merge section derives the mechanism from first
-principles, for the reason this page states in its intent: under
-union-by-identity across replicas, <em>removal cannot be an
-absence</em>, because any replica still holding the item re-unions it on
-the next merge. So a removal must be a record — and the spec gets the
-hard half right, which most implementations do not. <strong>The record
-must be monotonic and date-independent.</strong> If either side of a
-merge carries <code>hidden: true</code>, the merged copy carries it
-<em>regardless of which copy has the newer date</em>, because
-tombstoning legitimately does not touch the item's date and the
-tombstoned copy therefore usually <em>loses</em> the newest-wins
-comparison. <em>"Suppression must be monotonic or it is not
-suppression."</em> The implementation matches: <code>unionByText</code>
-resolves by date, then makes a second pass re-applying the tombstone
-from the losing copy onto the winner, and partitions tombstones out of
-the visible cap so a suppression cannot evict a live memory while
-enforcing itself.</p>
-<p>It then splits the mechanism in two, which nothing else here does and
-which the tradeoff list above implies. A suppressed decision gets an
-<strong>absolute</strong> tombstone because the text is junk
-permanently; a completed action gets a <strong>temporal</strong> one,
-suppressed only against copies whose <code>added</code> predates the
-<code>done_at</code>, because <em>"'Fix the flaky test' can legitimately
-be finished and later added again."</em> <strong>"Implementations MUST
-NOT substitute one class for the other."</strong> That distinction is
-the answer to the objection that a value-keyed tombstone is too blunt
-for anything that can recur.</p>
-<p>The mark is withheld because <strong>no shipped surface can create
-the absolute one.</strong> The only assignment of
-<code>hidden = true</code> outside the merge function is a dated one-off
-script whose own header says it is not wired into any command, whose
-match strings are placeholders, and which the package manifest excludes
-from publication. Fourteen MCP tools write memory and none retracts it.
-Everything downstream of the writer is built — three read paths filter
-it, the validator enforces its timestamp by spec section number, a test
-asserts its exclusion at three surfaces including a live protocol call —
-which makes this the most complete instance of the pattern in the atlas
-<em>and</em> an unusable one. Read it as the strongest available
-evidence that the idea is reachable by reasoning rather than by a red
-team, and as a reminder that a mechanism is only as real as its
-narrowest surface.</p>
+<p><strong>And then there is the case that derives this page's thesis
+from first principles.</strong> <a
+href="../../systems/memoir-cli/">memoir</a> publishes a format spec
+whose merge section derives the mechanism from first principles, for the
+reason this page states in its intent: under union-by-identity across
+replicas, <em>removal cannot be an absence</em>, because any replica
+still holding the item re-unions it on the next merge. So a removal must
+be a record — and the spec gets the hard half right, which most
+implementations do not. <strong>The record must be monotonic and
+date-independent.</strong> If either side of a merge carries
+<code>hidden: true</code>, the merged copy carries it <em>regardless of
+which copy has the newer date</em>, because tombstoning legitimately
+does not touch the item's date and the tombstoned copy therefore usually
+<em>loses</em> the newest-wins comparison. <em>"Suppression must be
+monotonic or it is not suppression."</em> The implementation matches:
+<code>unionByText</code> resolves by date, then makes a second pass
+re-applying the tombstone from the losing copy onto the winner, and
+partitions tombstones out of the visible cap so a suppression cannot
+evict a live memory while enforcing itself.</p>
+<p>It then splits the mechanism in two, which the tradeoff list above
+implies. A suppressed decision gets an <strong>absolute</strong>
+tombstone because the text is junk permanently; a completed action gets
+a <strong>temporal</strong> one, suppressed only against copies whose
+<code>added</code> predates the <code>done_at</code>, because <em>"'Fix
+the flaky test' can legitimately be finished and later added
+again."</em> <strong>"Implementations MUST NOT substitute one class for
+the other."</strong> That distinction is the answer to the objection
+that a value-keyed tombstone is too blunt for anything that can
+recur.</p>
+<p>The absolute one has a writer for a person and one for the model.
+<code>memoir forget "substring" [--purge]</code> resolves the decision,
+states that hiding cannot be undone, and calls <code>hideDecision</code>
+to set <code>hidden</code> and <code>hidden_at</code>, with
+<code>--purge</code> redacting the text while keeping a sha256 identity;
+the MCP tool <code>memoir_forget</code> reaches the same
+<code>hideDecision</code>. Downstream, three read paths filter it, the
+validator enforces its timestamp by spec section number, and a test
+asserts its exclusion at three surfaces including a live protocol call.
+The limit is the key: retraction is keyed on the decision text, so a
+paraphrase of a hidden decision is a different identity and is not
+suppressed. Read it as evidence that the idea is reachable by reasoning
+rather than by a red team.</p>
 <p><a href="../../systems/open-second-brain/">Open Second Brain</a> is
-the newest independent arrival and the first with a <strong>scope
-dimension</strong>, which is this page's standing objection answered in
-code. Its nightly consolidation pass promotes repeated corrections into
-preferences; <code>o2b brain reject --reason &lt;text&gt;</code> retires
-one and writes <code>user_rejected_reason</code> into the retired file —
-set <em>only</em> for a user rejection and left undefined for the
-automatic retirements beside it. On the next pass that retired rule
-becomes a <strong>suppressor</strong>: signals on its topic are
-swallowed before candidate planning, with the reasoning in the source —
-<em>"the user explicitly rejected the rule — re-growing it from fresh
-signals is exactly what they were asking us not to do."</em></p>
+an independent arrival with a <strong>scope dimension</strong>, which is
+this page's standing objection answered in code. Its nightly
+consolidation pass promotes repeated corrections into preferences;
+<code>o2b brain reject --reason &lt;text&gt;</code> retires one and
+writes <code>user_rejected_reason</code> into the retired file — set
+<em>only</em> for a user rejection and left undefined for the automatic
+retirements beside it. On the next pass that retired rule becomes a
+<strong>suppressor</strong>: signals on its topic are swallowed before
+candidate planning, with the reasoning in the source — <em>"the user
+explicitly rejected the rule — re-growing it from fresh signals is
+exactly what they were asking us not to do."</em></p>
 <p>Three details are worth taking. <strong>The block is scoped rather
 than blanket</strong>: an unscoped suppressor swallows every signal on
 the topic, a scoped one only signals sharing its scope, and a signal
@@ -1254,16 +1255,18 @@ claim containing a recorded pattern is refused with the reason
 reason gets past. The two tables have no edge between them, which is the
 first tradeoff on this list in its plainest form: erasing a claim for
 being wrong does not record it, and recording it does not erase it.</p>
-<p><a href="../../systems/scope-recall-hermes/">Scope Recall</a>
-declines the pattern in writing. The store's dedupe comment says an
-archived row must not suppress a distinct new candidate, the digest's
-match reads only visible rows, and a review's reject is the same
-<code>archived</code> that forgetting produces. Its privacy purge writes
-tombstones keyed on scope and row id and stores a
-<code>content_hash</code> no write path reads. Re-assertion is handed to
-the candidate review instead: a refused fact said again returns as a new
-candidate, and stays out of recall only as long as the digest default
-stays <code>candidate</code> and nobody promotes it.</p>
+<p><a href="../../systems/scope-recall-hermes/">Scope Recall</a> keys
+its suppression on the claim rather than the row.
+<code>_inherits_suppression</code> runs inside <code>put_source</code>
+for every incoming source event and asks whether the text contains a
+suppressed claim's subject, predicate, <code>value_text</code> and every
+one of its conditions in the same scope; if it does, the event is
+written already suppressed, and a claim derived from it is suppressed
+with it. So a statement suppressed once and said again in an unrelated
+later turn does not return. The match is literal containment, so a
+paraphrase passes, and the committed test exercises the other branch of
+the same condition — a restatement that cites the suppressed source; no
+test in the tree captures an uncited restatement.</p>
 <p><a href="../../systems/uteke/">Uteke</a> asserts the opposite of a
 tombstone in a committed test. Its dedup gate checks each index hit
 against the database and skips rows that are deprecated or gone, which
@@ -1390,15 +1393,15 @@ and corroborate it. Verel's round-7 finding is that this walks a
 rejected value back to verified in three steps, and it is the concrete
 attack this pattern exists to stop.</li>
 <li>Age the store past every TTL and prune you have, then run the
-laundering sequence again. Verel's round 8 was exactly this, at
-ninety-one-one idle days.</li>
+laundering sequence again. Verel's round 8 was exactly this, at about
+ninety idle days.</li>
 <li>Attack the key normalization with unicode look-alikes and case and
 whitespace variants. Verel's round 9 was an NFKC bypass of
 <code>strip().lower()</code>.</li>
 <li>Reject a value, rerun extraction, and prove it stays inactive. Every
 system in the atlas that carries this mechanism should have this test;
 Daimon, which has 4,388 others, does not, and neither does Mnemosyne,
-with 51,407 lines of them. Both hold the property by accident. Nova AI
+with 65,228 lines of them. Both hold the property by accident. Nova AI
 is the counter-case and the cheapest one to copy:
 <code>tests/test_tombstone.py</code> is 246 lines, isolates a store in a
 temporary directory, and asserts that a re-asserted rejected definition

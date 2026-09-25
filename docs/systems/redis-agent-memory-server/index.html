@@ -6,8 +6,8 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A vendor-neutral memory service
 splitting TTL-scoped working memory from extracted long-term memory,
-with pluggable extraction strategies, layered deduplication, and the
-most explicit forgetting policy in the atlas.">
+with pluggable extraction strategies, layered deduplication, and an
+explicit composite forgetting policy that ships switched off.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
@@ -16,7 +16,7 @@ Server — Agent Memory Atlas">
     <meta property="og:description" content="A vendor-neutral memory
 service splitting TTL-scoped working memory from extracted long-term
 memory, with pluggable extraction strategies, layered deduplication, and
-the most explicit forgetting policy in the atlas.">
+an explicit composite forgetting policy that ships switched off.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Redis Agent Memory
@@ -24,7 +24,7 @@ Server — Agent Memory Atlas">
     <meta name="twitter:description" content="A vendor-neutral memory
 service splitting TTL-scoped working memory from extracted long-term
 memory, with pluggable extraction strategies, layered deduplication, and
-the most explicit forgetting policy in the atlas.">
+an explicit composite forgetting policy that ships switched off.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Redis Agent Memory Server — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -46,7 +46,7 @@ the most explicit forgetting policy in the atlas.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Redis Agent Memory Server",
-      "description": "A vendor-neutral memory service splitting TTL-scoped working memory from extracted long-term memory, with pluggable extraction strategies, layered deduplication, and the most explicit forgetting policy in the atlas.",
+      "description": "A vendor-neutral memory service splitting TTL-scoped working memory from extracted long-term memory, with pluggable extraction strategies, layered deduplication, and an explicit composite forgetting policy that ships switched off.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -105,8 +105,8 @@ the most explicit forgetting policy in the atlas.">
           <h1>Redis Agent Memory Server</h1>
           <p class="document-deck">A vendor-neutral memory service
 splitting TTL-scoped working memory from extracted long-term memory,
-with pluggable extraction strategies, layered deduplication, and the
-most explicit forgetting policy in the atlas.</p>
+with pluggable extraction strategies, layered deduplication, and an
+explicit composite forgetting policy that ships switched off.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/redis/agent-memory-server">
               <span>Source</span>
@@ -174,12 +174,16 @@ semantic dedupe are separate functions, and the semantic path is guarded
 by <code>_semantic_merge_group_is_cohesive</code> before an LLM is
 allowed to merge a cluster — a check against the common failure where
 semantic dedupe silently fuses related-but-distinct facts.</p>
-<p><strong>The most developed forgetting policy in the atlas.</strong>
+<p><strong>A composite forgetting policy, off by default.</strong>
 <code>select_ids_for_forgetting</code> combines TTL, inactivity,
 pinning, per-type allowlists, and budget-based pruning, with separate
 half-lives for last-access (7 days) and creation (30 days), and a "hard
 age multiplier" so a recently-used memory survives its nominal TTL
-unless it is extremely old.</p>
+unless it is extremely old. The periodic job that applies it is a no-op
+until an operator sets <code>forgetting_enabled</code>, which defaults
+to <code>False</code>, and gives it thresholds, which default to
+<code>None</code>
+(<code>V0/agent_memory_server/config.py:485-490</code>).</p>
 <p>The notable gap is epistemic rather than operational: memory types
 are cognitive (<code>episodic</code>, <code>semantic</code>,
 <code>message</code>) rather than evidential, forgetting is real
@@ -247,15 +251,15 @@ flowchart TB
     D3 --&gt; IDX[&quot;index_long_term_memories()&quot;]
     IDX --&gt; LT[(&quot;long-term memory&lt;br/&gt;namespace-scoped vector records&quot;)]
     LT --&gt; SR[&quot;search_long_term_memories()&lt;br/&gt;recency reranking, update_last_accessed()&quot;]
-    LT --&gt; PER[&quot;periodic: compact_long_term_memories(),&lt;br/&gt;select_ids_for_forgetting() → delete&quot;]
+    LT --&gt; PER[&quot;periodic: compact_long_term_memories(),&lt;br/&gt;select_ids_for_forgetting() → delete&lt;br/&gt;forgetting a no-op unless forgetting_enabled&lt;br/&gt;(default False)&quot;]
     PER --&gt; LT
 
     style PER fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Three dedup passes in series — hash, then id, then semantic — is the
 most thorough dedup chain in the atlas. The highlighted loop is the
-other half: this is one of very few systems here with a
-<em>scheduled</em> forgetting pass rather than only an on-demand
-delete.</p>
+other half: a <em>scheduled</em> forgetting pass is registered beside
+the on-demand delete, and it deletes nothing until an operator turns it
+on.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Largest modules under <code>V0/agent_memory_server/</code>:</p>
 <ul>
@@ -376,6 +380,18 @@ creation. Separating "recently used" decay from "recently learned" decay
 is a refinement over the single global half-life used by <a
 href="../openviking/">OpenViking</a> and the unconditional age decay the
 atlas criticizes in <a href="../swafra/">Swafra</a>.</p>
+<p><strong>It ships disabled.</strong>
+<code>periodic_forget_long_term_memories</code> is a Docket perpetual
+task that runs every <code>forgetting_every_minutes</code> (60) and
+builds its policy from settings, but it returns
+<code>{"scanned": 0, "deleted": 0, ...}</code> without scanning while
+<code>forgetting_enabled</code> is <code>False</code>, its default
+(<code>long_term_memory.py:2489-2516</code>,
+<code>config.py:485</code>). <code>forgetting_max_age_days</code>,
+<code>forgetting_max_inactive_days</code> and
+<code>forgetting_budget_keep_top_n</code> all default to
+<code>None</code>, so flipping the switch alone leaves the policy with
+no threshold to apply.</p>
 <p>Note what this is: a deletion policy. There is no tombstone, so a
 forgotten memory can be re-extracted from a retained conversation.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
@@ -572,8 +588,9 @@ behaviour.</li>
 <p>Borrow:</p>
 <ul>
 <li>The working/long-term split with TTL-native session expiry.</li>
-<li><code>select_ids_for_forgetting</code> more or less wholesale; it is
-the best-specified retention policy in the atlas.</li>
+<li><code>select_ids_for_forgetting</code> more or less wholesale, and
+decide its defaults: this one ships with
+<code>forgetting_enabled = False</code> and no thresholds.</li>
 <li>The dedupe chain, especially
 <code>_semantic_merge_group_is_cohesive</code>.</li>
 <li>The debounce-and-trail extraction scheduler.</li>
@@ -634,6 +651,18 @@ descriptive filters.</li>
 <code>V0/tests/integration/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/redis/agent-memory-server/commit/8683648f4756dd5ee5c0e600f5c22be4625f43dc"><code class="commit-id" title="8683648f4756dd5ee5c0e600f5c22be4625f43dc">8683648f…</code></a>
+— audited at the unchanged pin. The report described a scheduled
+forgetting pass without saying it is off:
+<code>forgetting_enabled</code> defaults to <code>False</code> and the
+age, inactivity and budget thresholds to <code>None</code>
+(<code>V0/agent_memory_server/config.py:485-490</code>), and
+<code>periodic_forget_long_term_memories</code> returns without scanning
+while the flag is off (<code>long_term_memory.py:2514-2516</code>). The
+description, §1, the pipeline diagram, §4's forgetting section, the
+frontmatter background field and the Fit list now say so, and the corpus
+superlatives about the policy are removed. No mark moved.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/redis/agent-memory-server/commit/8683648f4756dd5ee5c0e600f5c22be4625f43dc"><code class="commit-id" title="8683648f4756dd5ee5c0e600f5c22be4625f43dc">8683648f…</code></a>
 — two commits on, 2026-08-18, both documentation: the published Pages

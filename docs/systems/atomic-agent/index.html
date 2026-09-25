@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A memory system built like a
-specification — numbered invariants cited from the schema, append-only
-vote events with derived scores, and features shipped off by default
+specification — numbered invariants cited from the schema, a vote log
+kept beside scores updated in place, and features shipped off by default
 until an evaluation campaign says otherwise.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -14,16 +14,16 @@ until an evaluation campaign says otherwise.">
     <meta property="og:title" content="Atomic
 Agent — Agent Memory Atlas">
     <meta property="og:description" content="A memory system built like
-a specification — numbered invariants cited from the schema, append-only
-vote events with derived scores, and features shipped off by default
+a specification — numbered invariants cited from the schema, a vote log
+kept beside scores updated in place, and features shipped off by default
 until an evaluation campaign says otherwise.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Atomic
 Agent — Agent Memory Atlas">
     <meta name="twitter:description" content="A memory system built like
-a specification — numbered invariants cited from the schema, append-only
-vote events with derived scores, and features shipped off by default
+a specification — numbered invariants cited from the schema, a vote log
+kept beside scores updated in place, and features shipped off by default
 until an evaluation campaign says otherwise.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Atomic Agent — Agent Memory Atlas</title>
@@ -46,7 +46,7 @@ until an evaluation campaign says otherwise.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Atomic Agent",
-      "description": "A memory system built like a specification \u2014 numbered invariants cited from the schema, append-only vote events with derived scores, and features shipped off by default until an evaluation campaign says otherwise.",
+      "description": "A memory system built like a specification \u2014 numbered invariants cited from the schema, a vote log kept beside scores updated in place, and features shipped off by default until an evaluation campaign says otherwise.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -104,8 +104,8 @@ until an evaluation campaign says otherwise.">
           <p class="eyebrow">Evaluated memory fabric</p>
           <h1>Atomic Agent</h1>
           <p class="document-deck">A memory system built like a
-specification — numbered invariants cited from the schema, append-only
-vote events with derived scores, and features shipped off by default
+specification — numbered invariants cited from the schema, a vote log
+kept beside scores updated in place, and features shipped off by default
 until an evaluation campaign says otherwise.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/AtomicBot-ai/atomic-agent">
@@ -173,15 +173,31 @@ invariant 20, invariant 21 — so a reader can trace a column to the rule
 that governs it. Across the atlas, nothing else has invariants as
 first-class, referenced artifacts.</p>
 <p>Three mechanisms stand out.</p>
-<p><strong>Votes are append-only events with derived scores.</strong>
+<p><strong>Votes are logged beside a score that is not derived from
+them.</strong>
 <code>vote_events(id, kind, target_id, direction, session_id, turn_index, created_at)</code>
-is the log; <code>vote_score</code> columns on <code>memories</code>,
-<code>lessons</code>, and <code>profile_facts</code> are derived and
-indexed. This is precisely what this atlas recommends — "keep retrieval
-events append-only; derive counters from events" — and the direct
-opposite of <a href="../holographic/">Holographic</a>, where a rating
-mutates the score that gates retrieval and enough ratings silently
-delete a fact.</p>
+is the log, and <code>applyVote</code> writes it in the same transaction
+as the score (<code>src/memory/voting/vote-store.ts:282-345</code>). The
+indexed <code>vote_score</code> columns on <code>memories</code>,
+<code>lessons</code> and <code>profile_facts</code> are incremented and
+clamped in place, decayed in bulk by each consolidator tick, and outlive
+the events, which <code>evictOldestEvents</code> deletes oldest-first
+past <code>memory.voting.eventLogMaxRows</code>, 50,000 by default
+(<code>vote-store.ts:9-29</code>). So the score cannot be recomputed
+from the log.</p>
+<p>The score is also read back into belief when the options that enable
+it are set: utility-weighted eviction deletes memories ordered by
+<code>vote_score ASC</code> first
+(<code>memory-store.ts:331-345</code>), a lesson with a negative score
+and <code>success_count = 0</code> is deprecated at the next tick
+(<code>lessons/lesson-store.ts:521-551</code>,
+<code>consolidator/consolidator-job.ts:473-490</code>), and the profile
+renderer hides a fact at or below minus
+<code>profileFilterThreshold</code>
+(<code>profile-renderer.ts:53-62</code>). That is closer to <a
+href="../holographic/">Holographic</a>, where a rating mutates the score
+that gates retrieval and enough ratings silently delete a fact, than to
+the "derive counters from events" shape the schema resembles.</p>
 <p><strong>Procedures are advisory and never executed.</strong>
 Invariant 20 states that the runtime never auto-executes a procedure;
 they are "advisory text the agent reads and either follows or
@@ -307,7 +323,7 @@ flowchart TB
     CL --&gt; ONE[&quot;ONE LLM call per cluster&lt;br/&gt;emits a lesson and, optionally, a procedure&quot;]
     ONE --&gt; LK[&quot;links generated between&lt;br/&gt;&lt;i&gt;surfaced ids only&lt;/i&gt;&quot;]
     LK --&gt; RF[&quot;reflection, vote-aware,&lt;br/&gt;on a separate prompt slot&quot;]
-    RF --&gt; VE[&quot;vote_events appended&lt;br/&gt;vote_score derived&quot;]
+    RF --&gt; VE[&quot;vote_events appended&lt;br/&gt;vote_score updated in place&quot;]
     VE --&gt; DEP[&quot;deprecation flips status&lt;br/&gt;&lt;i&gt;the row is retained&lt;/i&gt;&quot;]
 
     style ONE fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
@@ -348,8 +364,8 @@ flowchart TD
   Links --&gt; Retr
   Retr --&gt; Ctx[&quot;memory-context-provider&quot;]
   Ctx --&gt; Refl[&quot;vote-aware reflection&lt;br/&gt;(separate slot, KV&lt;br/&gt;cache untouched)&quot;]
-  Refl --&gt; VE[&quot;vote_events (append-only)&quot;]
-  VE --&gt; Score[&quot;derived vote_score&quot;]
+  Refl --&gt; VE[&quot;vote_events&lt;br/&gt;(FIFO-capped log)&quot;]
+  Refl --&gt; Score[&quot;vote_score,&lt;br/&gt;updated in place&quot;]
   Score --&gt; Retr</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
@@ -364,19 +380,24 @@ their rules implicitly in code, so a later contributor cannot tell an
 intentional constraint from an accident. Numbered invariants with stable
 references make the difference visible, and make a violation reviewable
 as a violation rather than as a diff.</p>
-<h3 id="append-only-votes">Append-only votes</h3>
+<h3 id="logged-votes">Logged votes</h3>
 <p><code>vote_events</code> records direction, target kind and id,
-session, turn index, and timestamp. <code>vote_score</code> is a
-derived, indexed column on each votable kind. Because the events are
-retained, a scoring change can be recomputed from history, a suspicious
-pattern can be audited, and no single vote is destructive.</p>
-<p>Set against the atlas's other feedback designs, this is the
-disciplined end of the range. Holographic mutates trust directly and
-deletes by threshold. <a href="../rainbox/">RainBox</a> keeps feedback
-as a review signal behind a human gate. <a
-href="../metaclaw/">MetaClaw</a> lets telemetry tune retrieval policy
-through a promotion gate. Atomic Agent keeps the raw signal and derives
-from it — which preserves the option to do any of the others later.</p>
+session, turn index, and timestamp, with <code>target_id</code>
+deliberately a soft pointer so the record of a vote outlives an evicted
+target. <code>vote_score</code> is an indexed column on each votable
+kind, written beside the event rather than derived from it: a vote
+against a score already at the clamp writes no event, the per-tick decay
+writes none, and the log is FIFO-capped. The log can show a suspicious
+recent pattern; it cannot replay a changed scoring rule over the whole
+history.</p>
+<p>Set against the atlas's other feedback designs, the schema sits at
+the disciplined end of the range and the store does not. Holographic
+mutates trust directly and deletes by threshold. <a
+href="../rainbox/">RainBox</a> keeps feedback as a review signal behind
+a human gate. <a href="../metaclaw/">MetaClaw</a> lets telemetry tune
+retrieval policy through a promotion gate. Atomic Agent keeps a bounded
+raw signal and a live score that, when its options are on, orders
+deletion, deprecates lessons and hides profile facts.</p>
 <p>The voting subsystem is also unusually complete for what could have
 been a thumbs-up counter: a grammar, a response format, a parser with
 tests, a runner, a store, and a reflection path that consumes votes.</p>
@@ -428,9 +449,10 @@ key surfaced in the schema sections read; for a single-user agent that
 may be by design.</li>
 <li><strong>No rejected-value tombstone</strong>, so deprecation does
 not prevent re-derivation.</li>
-<li><strong><code>vote_score</code> semantics are undocumented</strong>
-in what was read — whether it can influence anything other than ranking
-is the line this atlas cares about, and it was not established.</li>
+<li><strong><code>vote_score</code> reaches more than ranking.</strong>
+When enabled it orders utility-weighted eviction, deprecates negatively
+voted lessons with no recorded success, and hides profile facts —
+telemetry acting on belief, gated only by configuration.</li>
 </ul>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p><code>retrieve/</code> plus embeddings and links, with v2.5 adding a
@@ -455,8 +477,9 @@ Trust</h2>
 <ul>
 <li><strong>Numbered invariants cited from code</strong> into a design
 document.</li>
-<li><strong>Append-only vote events</strong> with derived, indexed
-scores.</li>
+<li><strong>Vote events written atomically with the score
+change</strong>, with a soft target pointer so the record outlives the
+row.</li>
 <li><strong>A supersession chain enforced by a partial unique
 index</strong>, so two active rows for one key are rejected at insert
 rather than by convention — the storage-layer guard for a numbered
@@ -516,9 +539,10 @@ reported would be a first here.</p>
 <li><strong>Number your invariants and cite them from the code.</strong>
 A schema comment pointing at "§13.7 invariant 7" turns an implicit rule
 into a reviewable one, and is nearly free.</li>
-<li><strong>Votes as append-only events, scores as derived
-columns.</strong> Keeps the raw signal, permits recomputation, and
-leaves every downstream policy choice open.</li>
+<li><strong>Write the vote event in the same transaction as the score
+change.</strong> Then decide whether the score is a projection — if it
+is meant to be, keep the log uncapped and log the decay, which this
+store does not.</li>
 <li><strong>Advisory-only procedures.</strong> If you store how-to
 knowledge but do not want the trust boundary of executing it, say so as
 an invariant rather than by omission.</li>
@@ -547,8 +571,8 @@ elaborate.</li>
 <ul>
 <li>The invariant-numbering practice — the highest value-per-effort idea
 here.</li>
-<li>The <code>vote_events</code> table shape and derived-score
-approach.</li>
+<li>The <code>vote_events</code> table shape, with the score derived
+from it rather than kept beside it.</li>
 <li>The surfaced-id allowlist.</li>
 <li>The default-off-pending-evaluation discipline.</li>
 </ul>
@@ -579,9 +603,8 @@ is the right default for a personal vault and the wrong one anywhere a
 <ul>
 <li>What did the E9–E12 experiments conclude? The machinery exists; the
 answers are not committed.</li>
-<li>Can <code>vote_score</code> influence anything beyond ranking? If it
-can reach confidence, the Holographic failure is reachable from
-here.</li>
+<li>Which of the vote-driven eviction, deprecation and profile-hiding
+options are on in the shipped configuration?</li>
 <li>What prevents a deprecated lesson from being re-distilled from the
 same cluster?</li>
 <li>What is the scope model for a multi-user deployment?</li>
@@ -612,6 +635,21 @@ ledger), <code>eval-memory/PLAN.md</code>,
 <code>eval-memory/config/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/AtomicBot-ai/atomic-agent/commit/ae12759ad5185cd53ee81eb82c6d0f24763310a9"><code class="commit-id" title="ae12759ad5185cd53ee81eb82c6d0f24763310a9">ae12759a…</code></a>
+— same commit. The report described <code>vote_score</code> as derived
+from <code>vote_events</code> and recomputable from them. It is not:
+<code>applyVote</code> updates the score in place beside the event, a
+clamp hit and the per-tick decay write no event, and
+<code>evictOldestEvents</code> FIFO-caps the log at 50,000 by default
+(<code>src/memory/voting/vote-store.ts:9-29</code>,
+<code>:282-345</code>). The open question whether the score reaches
+beyond ranking is answered from the code: when enabled it orders
+utility-weighted eviction (<code>memory-store.ts:331-345</code>),
+deprecates negatively voted lessons
+(<code>lessons/lesson-store.ts:521-551</code>), and hides profile facts
+(<code>profile-renderer.ts:53-62</code>). Description, trust field, both
+diagrams and the vote sections are corrected. No mark moved.</p>
 <p><strong>2026-09-13</strong> — <a
 href="https://github.com/AtomicBot-ai/atomic-agent/commit/ae12759ad5185cd53ee81eb82c6d0f24763310a9"><code class="commit-id" title="ae12759ad5185cd53ee81eb82c6d0f24763310a9">ae12759a…</code></a>
 — 801 commits past the previous pin, of which <code>src/memory/</code>

@@ -36,7 +36,7 @@ The layering will be familiar from [Hermes Agent](../hermes-agent/) and [llm-wik
 
 **Two independent cursors.** `memory/.cursor` marks how far the Consolidator has written into `history.jsonl`; `memory/.dream_cursor` marks how far Dream has consumed it. Producer and consumer advance separately, so a slow or failed Dream never blocks consolidation and never silently skips material.
 
-**Dream refuses to advance when its own tools failed.** `DreamRunProgress` watches for tool events with `phase == "error"` during a Dream run, and a nominally-completed run that hit tool errors is treated as unsafe to advance the cursor. A partially-failed consolidation therefore gets retried rather than banked — the inverse of the trap [Magic Context](../magic-context/) had to engineer its way out of, reached by a different route.
+**Dream refuses to advance unless the run completed.** `MemoryStore.dream_run_completed` reads the response's `_stop_reason` and returns true only for `completed`; both callers — the manual `dream` command in `nanobot/command/builtin.py` and the cron job in `nanobot/cli/gateway_runtime.py` — advance `.dream_cursor` only on true, and `tests/agent/test_dream.py` pins that `error`, `tool_error`, `max_iterations`, `cancelled` and missing metadata all block. A partially-failed consolidation therefore gets retried rather than banked — the inverse of the trap [Magic Context](../magic-context/) had to engineer its way out of, reached by a different route.
 
 **It filters its own generated sessions out of its memory input.** `_INTERNAL_HISTORY_SESSION_PREFIXES = ("cron:", "dream:")` and `_INTERNAL_HISTORY_SESSION_KEYS = {"heartbeat"}` exclude nanobot's own scheduled and consolidation sessions from history. This is the fourth independent implementation in the atlas of a guard against the harness's own output becoming evidence, after [OpenClaw](../openclaw/)'s envelope sanitization, [Holographic](../holographic/)'s compaction-summary exclusion, and Pi-adjacent cases — strong confirmation that this is a general failure mode, not a quirk.
 
@@ -65,7 +65,7 @@ workspace/
 Two stages, deliberately separated:
 
 ```mermaid
-%% caption: the dream pass advances its cursor only when no tool errored, so a failed consolidation is retried against the same history rather than skipped
+%% caption: the dream pass advances its cursor only when the run's stop reason is completed, so a failed consolidation is retried against the same history rather than skipped
 flowchart TB
     subgraph S1["Stage 1 — Consolidator, pressure-driven"]
         P["context window under pressure"] --> SL["summarize the oldest safe slice"]
@@ -76,9 +76,9 @@ flowchart TB
         RD["read new history.jsonl entries<br/>since .dream_cursor"] --> ED
         DUR["current SOUL.md, USER.md, MEMORY.md<br/><i>each capped at 8,000 chars in-prompt</i>"] --> ED
         ED["edit the durable files<br/>surgically, in one pass"] --> GC["git commit, message grounded in<br/>the actual working-tree delta"]
-        GC --> C2{"any tool errors?"}
-        C2 -->|no| ADV["advance .dream_cursor"]
-        C2 -->|yes| HOLD["leave .dream_cursor where it is"]
+        GC --> C2{"stop reason completed?"}
+        C2 -->|yes| ADV["advance .dream_cursor"]
+        C2 -->|"no: error, tool_error,<br/>max_iterations, cancelled"| HOLD["leave .dream_cursor where it is"]
     end
     C1 --> RD
 
@@ -87,7 +87,7 @@ flowchart TB
 ```
 
 Two cursors, and the second one is the interesting piece. `.dream_cursor` advances
-**only if the pass had no tool errors**, so a run that half-worked is retried
+**only if the run's stop reason is `completed`**, so a run that half-worked is retried
 rather than banked — the
 [recoverable background work](../../patterns/recoverable-background-work/)
 pattern, with the cursor as the unit of progress.
@@ -96,7 +96,7 @@ The documentation is explicit that `history.jsonl` "is not the final memory. It 
 
 ## 3. Architecture
 
-- `nanobot/agent/memory.py` (1,210 lines) — `MemoryStore` ("pure file I/O for memory files"), `DreamRunProgress`, cursor management, legacy-history migration, git integration.
+- `nanobot/agent/memory.py` (1,236 lines) — `MemoryStore` ("pure file I/O for memory files"), the `dream_run_completed` gate, cursor management, legacy-history migration, git integration.
 - `nanobot/templates/memory/MEMORY.md` — the seed template.
 - `docs/memory.md`, `docs/guides/ai-agent-memory.md` — design documentation.
 - Workspace `prompts/dream.md` — user-editable instructions steering Dream's behaviour.
@@ -133,11 +133,16 @@ There is also a first-start guard: rather than pulling a user's entire historica
 ### The failure-aware Dream gate
 
 ```python
-class DreamRunProgress:
-    """Track tool failures that make a nominally completed Dream run unsafe to advance."""
+@staticmethod
+def dream_run_completed(resp: object | None) -> bool:
+    """Return True when the Dream agent reached a normal terminal response."""
+    metadata = getattr(resp, "metadata", None)
+    if not isinstance(metadata, dict):
+        return False
+    return cast(dict[str, Any], metadata).get("_stop_reason") == "completed"
 ```
 
-The callback inspects `tool_events` for any entry whose `phase` is `"error"`. If Dream "completed" but a tool failed underneath it, the durable files may have been edited from incomplete input, so the cursor holds and the material is reprocessed next run.
+Both callers advance `.dream_cursor` only when this returns true (`nanobot/command/builtin.py:497-499`, `nanobot/cli/gateway_runtime.py:591-593`); otherwise they report `dream_incompletion_reason` — *"memory cursor was not advanced"* — and the material is reprocessed next run. A run that stopped on a tool error, the iteration cap or a cancellation may have edited the durable files from incomplete input, so it is not recorded as done. In the manual command the git commit of the file delta happens either way, in a `finally` block.
 
 This is the [recoverable background work](../../patterns/recoverable-background-work/) pattern applied to the *cursor* rather than to a retry queue: the safest way to make failed derivation retryable is to not record it as done.
 
@@ -267,6 +272,8 @@ Do not copy:
 - Documentation: `docs/memory.md`, `docs/guides/ai-agent-memory.md`.
 
 ## History
+
+**2026-09-25** — [`1c3c68262f194cc66651c9ee9d415db5b0ef5f3f`](https://github.com/HKUDS/nanobot/commit/1c3c68262f194cc66651c9ee9d415db5b0ef5f3f) — audited at the unchanged pin. §1, the Dream diagram, §2, §3 and §4 named `DreamRunProgress` and a `phase == "error"` check, which this pin does not contain. The gate is `MemoryStore.dream_run_completed` (`nanobot/agent/memory.py:617-624`), true only for `_stop_reason == "completed"`, consulted by both callers before advancing `.dream_cursor`; `tests/agent/test_dream.py` pins that `error`, `tool_error`, `max_iterations`, `cancelled` and missing metadata block. The behaviour the report credits holds. `memory.py` is 1,236 lines. No mark moved.
 
 **2026-09-15** — [`1c3c68262f194cc66651c9ee9d415db5b0ef5f3f`](https://github.com/HKUDS/nanobot/commit/1c3c68262f194cc66651c9ee9d415db5b0ef5f3f) — second reading, 725 commits on. Screened again: no auto-run surface, three build-time execution points, three dependency surfaces inside the cooldown; nothing was installed and nothing was run. `nanobot/agent/memory.py` was restructured — 511 lines added and 487 removed — without changing what the report measures: memory is still one workspace's files, and no mark is earned in either direction. `DreamRunProgress` is gone. Archiving moved into a new `MemoryArchiver`, whose docstring draws its boundary by what it cannot import — *it may read a captured transcript batch and append to history.jsonl, but it cannot mutate provider continuation state or advance a session watermark* — and which writes a raw checkpoint of the transcript when the provider cannot resume its conversation state, so a failed summarisation degrades to the unsummarised batch rather than to a gap. `Consolidator` gained a path that summarises a provider's own compaction output into the journal.
 

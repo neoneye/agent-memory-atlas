@@ -222,7 +222,7 @@ predicate is <code>IS NULL</code> rather than a comparison with now.</p>
 flowchart TD
   A[&quot;add_episode: content, name, source&quot;] --&gt; Q[&quot;SQLite episodes row, status queued&quot;]
   Q --&gt; S[&quot;sweep claims a batch; created_at is not loaded&quot;]
-  S --&gt; W[&quot;Graphiti.add_episode, reference_time =&lt;br/&gt;the queue row&#39;s created_at, else the sweep clock&quot;]
+  S --&gt; W[&quot;Graphiti.add_episode, reference_time =&lt;br/&gt;the sweep clock, since created_at is unset&quot;]
   W --&gt; X[&quot;model extracts entities and fact edges&quot;]
   X --&gt; V{&quot;response validates against the Pydantic model?&quot;}
   V --&gt;|yes| E[&quot;fact edge: valid_at and invalid_at from the text, created_at now&quot;]
@@ -292,15 +292,16 @@ column.</li>
 <li><strong>Sweep.</strong> <code>run_cron_sweep</code>
 (<code>pipeline/cron.py:29-136</code>) reaps rows stuck in
 <code>processing</code> past the timeout
-(<code>queue.py:310-370</code>), claims a batch (<code>:165-222</code>),
-and runs <code>EpisodeWorker.process_record</code> under a semaphore.
+(<code>queue.py:310-370</code>), claims a batch (<code>:207</code>), and
+runs <code>EpisodeWorker.process_record</code> under a semaphore.
 <code>_execute_ingestion</code> (<code>pipeline/worker.py:48-81</code>)
 builds a fresh Graphiti instance per episode and calls
 <code>add_episode</code> with <code>reference_time</code> taken from
 <code>record.created_at</code> — which <code>claim_next_batch</code>
-neither selects nor sets (<code>queue.py:175-176</code>,
-<code>:205-217</code>), so the fallback <code>datetime.now()</code> at
-<code>worker.py:66</code> is always the value used.</li>
+neither selects nor passes to the record it builds
+(<code>queue.py:217-218</code>, <code>:248-259</code>), so the fallback
+<code>datetime.now()</code> at <code>worker.py:66</code> is always the
+value used.</li>
 <li><strong>Failure routing.</strong> <code>should_retry</code>
 (<code>pipeline/retry.py:28-49</code>) sends <code>TypeError</code>,
 <code>ValueError</code>, <code>KeyError</code> and any
@@ -669,6 +670,18 @@ rg -n -i &#39;arxiv|bibtex|@article|@misc|citation|doi\.org&#39; -g &#39;!uv.loc
 # in graphiti-core v0.29.3:
 rg -n &#39;clone\(database&#39; graphiti_core/graphiti.py                   # add_episode and add_episode_bulk switch graph by group id; search does not</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/Maple-Aikon/janus-graph/commit/5a66516fd795ca178870b90253bedb0a6a0e5aac"><code class="commit-id" title="5a66516fd795ca178870b90253bedb0a6a0e5aac">5a66516f…</code></a>
+— same pin, one correction. The <code>bitemporal</code> evidence record
+and the 2026-09-18 entry below said the worker prefers the enqueue time
+as Graphiti's reference time. It does not: <code>worker.py:66-71</code>
+reads <code>record.created_at</code>, and <code>claim_next_batch</code>,
+the only source of the records the sweep processes, neither selects that
+column (<code>queue.py:217-218</code>) nor passes it to the
+<code>EpisodeRecord</code> it builds (<code>:248-259</code>), so the
+sweep clock is always used — as section 4 said. The evidence record, the
+section 2 diagram and two queue anchors in section 4 are corrected to
+that. No mark moved; nothing was installed or run.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/Maple-Aikon/janus-graph/commit/5a66516fd795ca178870b90253bedb0a6a0e5aac"><code class="commit-id" title="5a66516fd795ca178870b90253bedb0a6a0e5aac">5a66516f…</code></a>
 — re-pinned from <code>987c34c</code>; 32 files and +4,936 lines,

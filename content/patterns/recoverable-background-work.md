@@ -47,19 +47,18 @@ Expose freshness to callers; do not make asynchronous derivation look immediatel
 
 **The failure this pattern does not cover is the job that succeeds and starves
 the write path.** Recoverability protects work that fails; it says nothing about
-a maintenance pass that shares one deadline with capture and runs first.
-[PLUR1BUS](../../systems/plur1bus/) is the worked case: its embedding drain was
-bounded by item count and not by time, ran ahead of capture inside the same
-sixty-second budget, and on a full backlog spent the whole budget — so capture
-was aborted every turn, with the only observable a log line announcing the 276
-texts it was about to drop, followed by the timeout about thirty milliseconds
-later. Nothing was lost irrecoverably and nothing needed a dead-letter path; the
-queue was doing its job. The rule is ordering, not durability: **a maintenance
-pass and the write path it serves must not share one budget, and where they
-must, the write path goes first and maintenance takes the remainder.** The
-repair also needs the loop to honour a deadline and report that it stopped
-early, or the abort surfaces deep inside the embedder instead of at the loop
-boundary.
+a maintenance pass that shares one deadline with capture and runs first. A
+drain bounded by item count rather than by time can spend the whole budget on a
+full backlog and abort the capture it was meant to serve, with every queued item
+intact. The rule is ordering, not durability: **a maintenance pass and the
+write path it serves must not share one budget, and where they must, the write
+path goes first and maintenance takes the remainder**, inside a loop that
+honours a deadline and reports that it stopped early.
+[PLUR1BUS](../../systems/plur1bus/) keeps the two apart: capture is queued per
+agent and runs after the turn ends, and embeddings go to
+`embedding-queue.jsonl`, drained by a cron — so a memory can be lexically
+retrievable before it is vector-retrievable, which is the freshness gap that
+separation costs.
 
 ## Cost to adopt
 
@@ -81,9 +80,10 @@ work that happens away from the user.
 [nanobot](../../systems/nanobot/) contributes the cheapest correct mechanism in
 the atlas, and it is worth trying before any retry queue. Its `Dream`
 consolidation runs against an append-only archive tracked by a **consumption
-cursor**, and `DreamRunProgress` watches for tool events with `phase == "error"`.
-A run that nominally completed but hit tool errors **does not advance the
-cursor** — so the material is simply reprocessed next time. No retry queue, no
+cursor**, and `MemoryStore.dream_run_completed` advances that cursor only when
+the run's stop reason is `completed`. A run that ends on `error`, `tool_error`,
+`max_iterations` or `cancelled` **does not advance the cursor** — so the
+material is simply reprocessed next time. No retry queue, no
 dead-letter table, no partial state to reconcile: the work is not recorded as
 done, so it is not done.
 
@@ -122,14 +122,12 @@ your *output format* and versioning your *unit of work*.
 [Cognee](../../systems/cognee/) stamps artifacts with pipeline provenance, rolls
 failed runs back, and recovers stale non-terminal runs at startup.
 [llm-wiki-memory](../../systems/llm-wiki-memory/) retains failed inputs for
-redistillation. [Hindsight](../../systems/hindsight/) gives consolidation capped
-retries with deterministic-error filtering.
+redistillation. [Hindsight](../../systems/hindsight/) queues consolidation with
+capped exponential backoff and per-bank dedup.
 [Redis Agent Memory Server](../../systems/redis-agent-memory-server/) debounces
 and defers extraction, so a failure delays work rather than losing it.
 [Mastra](../../systems/mastra-observational-memory/) persists buffers with
 durable range markers before activation.
-[TencentDB](../../systems/tencentdb-agent-memory/) checkpoints capture, but its
-JSONL/store update path is not atomic.
 [Basic Memory](../../systems/basic-memory/) rebuilds projections through startup
 reconciliation.
 
@@ -193,7 +191,7 @@ coverage rather than against a false zero. Any background pass that upserts a
 full row from a partial computation needs the same question asked of it — which
 columns does this pass have no input for, and what happens to them.
 
-[Janus-Graph](../../systems/janus-graph/) builds almost every piece of this pattern and shows two failures it cannot see. The input is durable before extraction — an `add_episode` is one SQLite insert and payloads are kept after `done` — and the sweep has a reaper for stuck rows, an attempt cap and a dead-letter table with a replay verb. But a schema-repair wrapper between the model and Graphiti answers a malformed item with an empty list, so the job *succeeds* with nothing extracted and is marked done, and nothing distinguishes an empty success from a real one. And the nightly run labelled DLQ auto-repair requeues every dead-lettered episode without resetting its attempt count or closing its dead-letter row, so a poison input costs one model pass a night indefinitely. A dead-letter path that re-feeds itself is as unread as one nobody opens.
+[Janus-Graph](../../systems/janus-graph/) builds almost every piece of this pattern and shows two failures it cannot see. The input is durable before extraction — an `add_episode` is one SQLite insert and payloads are kept after `done` — and the sweep has a reaper for stuck rows, an attempt cap and a dead-letter table with a replay verb. But a schema-repair wrapper between the model and Graphiti answers a malformed item with an empty list, so the job *succeeds* with nothing extracted and is marked done, and nothing distinguishes an empty success from a real one. And the nightly run labelled DLQ auto-repair requeues up to a hundred dead-lettered episodes per run without resetting its attempt count or closing its dead-letter row, so a poison input costs one model pass a night indefinitely. A dead-letter path that re-feeds itself is as unread as one nobody opens.
 
 [RushDB](../../systems/rushdb/) has the failure this pattern exists to prevent, in one line. A record write is synchronous, then the embedding work is queued fire-and-forget with an empty catch at all three write paths. The once-a-minute backfill only ever reads indexes already flagged pending, so a rejected mark is not retried, not logged and not reconciled — the record is stored, queryable by `where`, and permanently invisible to semantic recall. The contract package's bounded in-process cache of recent episodes papers over the ordinary one-minute lag and dies with the process, and it holds episodes only, so a newly written fact is unrecallable until the cron catches up.
 

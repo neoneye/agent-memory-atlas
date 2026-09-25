@@ -1,7 +1,7 @@
 ---
 title: Redis Agent Memory Server
 eyebrow: Working/long-term memory service
-description: A vendor-neutral memory service splitting TTL-scoped working memory from extracted long-term memory, with pluggable extraction strategies, layered deduplication, and the most explicit forgetting policy in the atlas.
+description: A vendor-neutral memory service splitting TTL-scoped working memory from extracted long-term memory, with pluggable extraction strategies, layered deduplication, and an explicit composite forgetting policy that ships switched off.
 root: ../..
 page_kind: system
 source_name: redis/agent-memory-server
@@ -24,7 +24,7 @@ matrix:
   update_delete: "Exact delete; composite forgetting policy; no tombstones"
   scoping: "Namespace, user_id and session_id as optional caller-supplied filters and key segments; the authenticated user never constrains a query, auth is off by default, and an empty namespace-filtered semantic search is retried without the namespace"
   integration: "REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin"
-  background: "Debounced extraction, compaction, dedupe, forgetting sweeps"
+  background: "Debounced extraction, compaction, dedupe, forgetting sweeps (off by default)"
   trust: "Session linkage and per-message extraction flags; no trust state"
   strengths: "Best-specified retention policy in the atlas; cohesion-gated semantic merge"
   risks: "Deletion is not durable against re-extraction; access-driven reinforcement"
@@ -45,7 +45,7 @@ Three things make it worth a report of its own rather than a footnote to Redis.
 
 **Layered deduplication.** Hash-exact, ID-based, and semantic dedupe are separate functions, and the semantic path is guarded by `_semantic_merge_group_is_cohesive` before an LLM is allowed to merge a cluster — a check against the common failure where semantic dedupe silently fuses related-but-distinct facts.
 
-**The most developed forgetting policy in the atlas.** `select_ids_for_forgetting` combines TTL, inactivity, pinning, per-type allowlists, and budget-based pruning, with separate half-lives for last-access (7 days) and creation (30 days), and a "hard age multiplier" so a recently-used memory survives its nominal TTL unless it is extremely old.
+**A composite forgetting policy, off by default.** `select_ids_for_forgetting` combines TTL, inactivity, pinning, per-type allowlists, and budget-based pruning, with separate half-lives for last-access (7 days) and creation (30 days), and a "hard age multiplier" so a recently-used memory survives its nominal TTL unless it is extremely old. The periodic job that applies it is a no-op until an operator sets `forgetting_enabled`, which defaults to `False`, and gives it thresholds, which default to `None` (`V0/agent_memory_server/config.py:485-490`).
 
 The notable gap is epistemic rather than operational: memory types are cognitive (`episodic`, `semantic`, `message`) rather than evidential, forgetting is real deletion with no tombstone, and there is no candidate/verified/rejected state — so a memory deleted by policy or by a user can be re-extracted from the same conversation on the next pass with nothing to prevent it.
 
@@ -81,16 +81,16 @@ flowchart TB
     D3 --> IDX["index_long_term_memories()"]
     IDX --> LT[("long-term memory<br/>namespace-scoped vector records")]
     LT --> SR["search_long_term_memories()<br/>recency reranking, update_last_accessed()"]
-    LT --> PER["periodic: compact_long_term_memories(),<br/>select_ids_for_forgetting() → delete"]
+    LT --> PER["periodic: compact_long_term_memories(),<br/>select_ids_for_forgetting() → delete<br/>forgetting a no-op unless forgetting_enabled<br/>(default False)"]
     PER --> LT
 
     style PER fill:#f4e2bd,stroke:#b8860b
 ```
 
 Three dedup passes in series — hash, then id, then semantic — is the most
-thorough dedup chain in the atlas. The highlighted loop is the other half: this is
-one of very few systems here with a *scheduled* forgetting pass rather than only
-an on-demand delete.
+thorough dedup chain in the atlas. The highlighted loop is the other half: a
+*scheduled* forgetting pass is registered beside the on-demand delete, and it
+deletes nothing until an operator turns it on.
 
 ## 3. Architecture
 
@@ -164,6 +164,8 @@ The policy accepts `max_age_days`, `max_inactive_days`, `budget`, `memory_type_a
 Its central rule is a genuine improvement over naive TTL: when both age and inactivity thresholds are configured, a memory is deleted only if it is **both** older than `max_age_days` **and** inactive longer than `max_inactive_days` — unless it exceeds `max_age_days * hard_age_multiplier`, at which point it goes regardless. Recent use buys a memory time, but not forever.
 
 Budget pruning then keeps the top N by a recency composite with `semantic_weight: 0.0`, `recency_weight: 1.0`, `freshness_weight: 0.6`, `novelty_weight: 0.4`, and **two half-lives**: 7 days on last access, 30 days on creation. Separating "recently used" decay from "recently learned" decay is a refinement over the single global half-life used by [OpenViking](../openviking/) and the unconditional age decay the atlas criticizes in [Swafra](../swafra/).
+
+**It ships disabled.** `periodic_forget_long_term_memories` is a Docket perpetual task that runs every `forgetting_every_minutes` (60) and builds its policy from settings, but it returns `{"scanned": 0, "deleted": 0, ...}` without scanning while `forgetting_enabled` is `False`, its default (`long_term_memory.py:2489-2516`, `config.py:485`). `forgetting_max_age_days`, `forgetting_max_inactive_days` and `forgetting_budget_keep_top_n` all default to `None`, so flipping the switch alone leaves the policy with no threshold to apply.
 
 Note what this is: a deletion policy. There is no tombstone, so a forgotten memory can be re-extracted from a retained conversation.
 
@@ -286,7 +288,7 @@ that supplies neither. Coverage is unusually well aligned with the risky logic �
 Borrow:
 
 - The working/long-term split with TTL-native session expiry.
-- `select_ids_for_forgetting` more or less wholesale; it is the best-specified retention policy in the atlas.
+- `select_ids_for_forgetting` more or less wholesale, and decide its defaults: this one ships with `forgetting_enabled = False` and no thresholds.
 - The dedupe chain, especially `_semantic_merge_group_is_cohesive`.
 - The debounce-and-trail extraction scheduler.
 - The strategy ABC if you expect extraction policy to vary by deployment.
@@ -321,6 +323,8 @@ Do not copy:
 - Tests: `V0/tests/test_forgetting.py`, `test_extraction*.py`, `test_working_memory_*.py`, `test_contextual_grounding*.py`, `V0/tests/integration/`.
 
 ## History
+
+**2026-09-25** — [`8683648f4756dd5ee5c0e600f5c22be4625f43dc`](https://github.com/redis/agent-memory-server/commit/8683648f4756dd5ee5c0e600f5c22be4625f43dc) — audited at the unchanged pin. The report described a scheduled forgetting pass without saying it is off: `forgetting_enabled` defaults to `False` and the age, inactivity and budget thresholds to `None` (`V0/agent_memory_server/config.py:485-490`), and `periodic_forget_long_term_memories` returns without scanning while the flag is off (`long_term_memory.py:2514-2516`). The description, §1, the pipeline diagram, §4's forgetting section, the frontmatter background field and the Fit list now say so, and the corpus superlatives about the policy are removed. No mark moved.
 
 **2026-09-15** — [`8683648f4756dd5ee5c0e600f5c22be4625f43dc`](https://github.com/redis/agent-memory-server/commit/8683648f4756dd5ee5c0e600f5c22be4625f43dc) — two commits on, 2026-08-18, both documentation: the published Pages site was retired and restored as an Agent Memory landing, and README links point at `V0/docs/`. Screened before reading: one auto-run surface (`.devcontainer/devcontainer.json`), three build-time execution points and two unpinned surfaces; nothing was installed or run. The code is unchanged, so this reading is a producer test of the first reading's marks at the new pin. `scope_enforced` is withdrawn: namespace and user filters are optional and caller-supplied, the authenticated user never constrains a query, auth defaults off, and an empty namespace-filtered semantic search is retried without the namespace. `negative_eval` is added and was missed: a committed test asserts a deleted session is absent from the listing it was present in.
 

@@ -97,18 +97,26 @@ weak dense prior (passage nodes at 0.05) and reads relevance off a Personalized
 PageRank diffusion. Multi-hop association becomes a property of the diffusion
 rather than of a traversal policy or a weighted sum.
 
-[LlamaIndex](../../systems/llamaindex/) composes instead of fusing: each memory
-block contributes independently under its own share of a token budget, and each
-truncates itself when over. The assembled context is easier to reason about than
-a single fused ranking, because every contributor's share is separately visible.
+[LlamaIndex](../../systems/llamaindex/) composes instead of fusing: chat history
+takes a fixed ratio of one token budget and the memory blocks contribute
+independently into the remainder. The composition has a hole where the budget
+should be enforced. `atruncate` is a contract no shipped block implements, the
+default `priority` of `0` means *never truncate*, and a block the orchestrator
+does truncate is dropped whole, so with default blocks the budget holds only if
+chat history absorbs the overrun.
 
 [Hindsight](../../systems/hindsight/) runs four arms with task-specific fusion and
 cross-encoder reranking; [MemPalace](../../systems/mempalace/) contributes the
 reusable rule that extracted indexes *boost* drawer ranking but never gate direct
-evidence retrieval; [mem0](../../systems/mem0/), [Honcho](../../systems/honcho/),
-[Basic Memory](../../systems/basic-memory/), [agentmemory](../../systems/agentmemory/),
-[CowAgent](../../systems/cowagent/), [Magic Context](../../systems/magic-context/),
-and [OpenViking](../../systems/openviking/) all fuse lexical and semantic signals.
+evidence retrieval; [mem0](../../systems/mem0/),
+[Basic Memory](../../systems/basic-memory/), [agentmemory](../../systems/agentmemory/)
+and [Magic Context](../../systems/magic-context/) all fuse lexical and semantic
+signals. [CowAgent](../../systems/cowagent/) has both arms over its chunk index,
+and how they are combined is not traced in its report.
+[OpenViking](../../systems/openviking/) embeds each query once into dense and
+optional sparse vectors; its report does not call the sparse side lexical. [Honcho](../../systems/honcho/) keeps the arms
+apart: message search is ILIKE over the content or an embedding query, never
+both in one ranking.
 
 Two cautions have strengthened with evidence. **Naming is not fusing** —
 [Claude-Mem](../../systems/claude-mem/)'s ordinary text search selects semantic
@@ -120,13 +128,16 @@ where [Moltis](../../systems/moltis/) makes the same situation explicit with a
 `keyword_only()` constructor and a `has_embeddings()` predicate callers can
 branch on.
 
-Nobody has shown their weights are right. [MetaClaw](../../systems/metaclaw/) is
-the only system in the atlas that could — it replays candidate policies against
-past turns and promotes one only on non-regression across eight metrics.
-Everyone else, including [Generative Agents](../../systems/generative-agents/)
-with its hand-tuned `gw = [0.5, 3, 2]`, ships constants nobody has defended —
-starting with the fusion constant itself, which no report in this atlas records a
-system sweeping.
+Few systems defend their weights. [MetaClaw](../../systems/metaclaw/) replays
+candidate policies against past turns and promotes one only on non-regression
+across eight metrics. [Somnigraph](../../systems/somnigraph/) sets a separate
+RRF constant per arm — about eight for FTS5, about seven for vectors — and a
+vector weight by a named tuning study, each constant carrying its previous value
+in a comment. [Uteke](../../systems/uteke/) tunes its fusion weights on a
+LongMemEval subset and writes the tuning set and plateau beside the constant.
+Most others, [Generative Agents](../../systems/generative-agents/) with its
+hand-tuned `gw = [0.5, 3, 2]` among them, ship constants nobody has defended,
+most often RRF's `k = 60`.
 
 [Helm](../../systems/helm/) is the smallest correct instance — both arms and the
 fusion are about sixty lines of JavaScript over rows already in memory, with no
@@ -144,10 +155,11 @@ perfect ranker over the wrong 500 rows is still wrong, and no amount of fusion
 tuning recovers a candidate that was never scored.
 
 Helm is also the atlas's plainest example of **silent tier degradation**. The
-semantic arm is a cached MiniLM embedding if the model is on disk, TF-IDF cosine
-if it is not, and nothing at all if the import throws — three materially
-different retrieval qualities behind one output shape, one `catch {}`, and no
-signal to the caller. If a channel can degrade, the result should say which
+semantic arm is a cached MiniLM embedding if the model is on disk, and TF-IDF
+cosine if it is not or if the import throws, because the TF-IDF scores are
+computed first and an empty `catch {}` keeps them; with no model and fewer than
+three active facts the arm is all zeros. Three materially different retrieval qualities sit behind one
+output shape, with no signal to the caller. If a channel can degrade, the result should say which
 channel ran.
 
 **[Qwen MM Plugins](../../systems/qwen-mm-plugins/) closes a failure mode this

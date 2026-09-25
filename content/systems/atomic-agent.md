@@ -1,7 +1,7 @@
 ---
 title: Atomic Agent
 eyebrow: Evaluated memory fabric
-description: A memory system built like a specification — numbered invariants cited from the schema, append-only vote events with derived scores, and features shipped off by default until an evaluation campaign says otherwise.
+description: A memory system built like a specification — numbered invariants cited from the schema, a vote log kept beside scores updated in place, and features shipped off by default until an evaluation campaign says otherwise.
 root: ../..
 page_kind: system
 source_name: AtomicBot-ai/atomic-agent
@@ -23,7 +23,7 @@ matrix:
   scoping: "A `working_dir` column filtered on the read path when the caller asks — `scope` defaults to `all`, and on the `memory.notes.recall` tool the model chooses it"
   integration: "Agent runtime with a separate reflection slot"
   background: "Consolidator, reflection, neighbour evolution, vote runner"
-  trust: "Append-only `vote_events` with derived `vote_score`; surfaced-id allowlist"
+  trust: "A FIFO-capped `vote_events` log written in the same transaction as an in-place, decayed `vote_score`, which drives eviction order, lesson deprecation and profile hiding when those options are on; surfaced-id allowlist"
   strengths: "Numbered invariants cited from code, features default-off until evaluated, and a supersession chain enforced by a partial unique index rather than by convention"
   risks: "Large opt-in surface; evaluation campaign results not committed; three timestamp columns that always carry the same value, so the history is versions rather than validity"
 ---
@@ -42,7 +42,9 @@ And the design document is not decorative. The SQL schema comments cite **number
 
 Three mechanisms stand out.
 
-**Votes are append-only events with derived scores.** `vote_events(id, kind, target_id, direction, session_id, turn_index, created_at)` is the log; `vote_score` columns on `memories`, `lessons`, and `profile_facts` are derived and indexed. This is precisely what this atlas recommends — "keep retrieval events append-only; derive counters from events" — and the direct opposite of [Holographic](../holographic/), where a rating mutates the score that gates retrieval and enough ratings silently delete a fact.
+**Votes are logged beside a score that is not derived from them.** `vote_events(id, kind, target_id, direction, session_id, turn_index, created_at)` is the log, and `applyVote` writes it in the same transaction as the score (`src/memory/voting/vote-store.ts:282-345`). The indexed `vote_score` columns on `memories`, `lessons` and `profile_facts` are incremented and clamped in place, decayed in bulk by each consolidator tick, and outlive the events, which `evictOldestEvents` deletes oldest-first past `memory.voting.eventLogMaxRows`, 50,000 by default (`vote-store.ts:9-29`). So the score cannot be recomputed from the log.
+
+The score is also read back into belief when the options that enable it are set: utility-weighted eviction deletes memories ordered by `vote_score ASC` first (`memory-store.ts:331-345`), a lesson with a negative score and `success_count = 0` is deprecated at the next tick (`lessons/lesson-store.ts:521-551`, `consolidator/consolidator-job.ts:473-490`), and the profile renderer hides a fact at or below minus `profileFilterThreshold` (`profile-renderer.ts:53-62`). That is closer to [Holographic](../holographic/), where a rating mutates the score that gates retrieval and enough ratings silently delete a fact, than to the "derive counters from events" shape the schema resembles.
 
 **Procedures are advisory and never executed.** Invariant 20 states that the runtime never auto-executes a procedure; they are "advisory text the agent reads and either follows or consciously deviates from." [Voyager](../voyager/) stores executable skills and gains an empirical verification gate; Atomic Agent stores procedural knowledge and deliberately gives up execution to avoid the trust boundary that comes with it. Both positions are defensible, and having both in the atlas makes the [skills as procedural memory](../../patterns/skills-as-procedural-memory/) tradeoff concrete.
 
@@ -119,7 +121,7 @@ flowchart TB
     CL --> ONE["ONE LLM call per cluster<br/>emits a lesson and, optionally, a procedure"]
     ONE --> LK["links generated between<br/><i>surfaced ids only</i>"]
     LK --> RF["reflection, vote-aware,<br/>on a separate prompt slot"]
-    RF --> VE["vote_events appended<br/>vote_score derived"]
+    RF --> VE["vote_events appended<br/>vote_score updated in place"]
     VE --> DEP["deprecation flips status<br/><i>the row is retained</i>"]
 
     style ONE fill:#f4e2bd,stroke:#b8860b
@@ -156,8 +158,8 @@ flowchart TD
   Links --> Retr
   Retr --> Ctx["memory-context-provider"]
   Ctx --> Refl["vote-aware reflection<br/>(separate slot, KV<br/>cache untouched)"]
-  Refl --> VE["vote_events (append-only)"]
-  VE --> Score["derived vote_score"]
+  Refl --> VE["vote_events<br/>(FIFO-capped log)"]
+  Refl --> Score["vote_score,<br/>updated in place"]
   Score --> Retr
 ```
 
@@ -169,11 +171,11 @@ The schema does not merely implement rules; it cites them. Reading `memory-schem
 
 This matters more than it sounds. Most systems in this atlas encode their rules implicitly in code, so a later contributor cannot tell an intentional constraint from an accident. Numbered invariants with stable references make the difference visible, and make a violation reviewable as a violation rather than as a diff.
 
-### Append-only votes
+### Logged votes
 
-`vote_events` records direction, target kind and id, session, turn index, and timestamp. `vote_score` is a derived, indexed column on each votable kind. Because the events are retained, a scoring change can be recomputed from history, a suspicious pattern can be audited, and no single vote is destructive.
+`vote_events` records direction, target kind and id, session, turn index, and timestamp, with `target_id` deliberately a soft pointer so the record of a vote outlives an evicted target. `vote_score` is an indexed column on each votable kind, written beside the event rather than derived from it: a vote against a score already at the clamp writes no event, the per-tick decay writes none, and the log is FIFO-capped. The log can show a suspicious recent pattern; it cannot replay a changed scoring rule over the whole history.
 
-Set against the atlas's other feedback designs, this is the disciplined end of the range. Holographic mutates trust directly and deletes by threshold. [RainBox](../rainbox/) keeps feedback as a review signal behind a human gate. [MetaClaw](../metaclaw/) lets telemetry tune retrieval policy through a promotion gate. Atomic Agent keeps the raw signal and derives from it — which preserves the option to do any of the others later.
+Set against the atlas's other feedback designs, the schema sits at the disciplined end of the range and the store does not. Holographic mutates trust directly and deletes by threshold. [RainBox](../rainbox/) keeps feedback as a review signal behind a human gate. [MetaClaw](../metaclaw/) lets telemetry tune retrieval policy through a promotion gate. Atomic Agent keeps a bounded raw signal and a live score that, when its options are on, orders deletion, deprecates lessons and hides profile facts.
 
 The voting subsystem is also unusually complete for what could have been a thumbs-up counter: a grammar, a response format, a parser with tests, a runner, a store, and a reflection path that consumes votes.
 
@@ -207,7 +209,7 @@ Gaps:
 
 - **Scoping was not traced.** No user, project, or tenant key surfaced in the schema sections read; for a single-user agent that may be by design.
 - **No rejected-value tombstone**, so deprecation does not prevent re-derivation.
-- **`vote_score` semantics are undocumented** in what was read — whether it can influence anything other than ranking is the line this atlas cares about, and it was not established.
+- **`vote_score` reaches more than ranking.** When enabled it orders utility-weighted eviction, deprecates negatively voted lessons with no recorded success, and hides profile facts — telemetry acting on belief, gated only by configuration.
 
 ## 6. Retrieval Mechanics
 
@@ -226,7 +228,7 @@ The consolidator clusters material and distils it; the one-call-per-cluster inva
 Strengths:
 
 - **Numbered invariants cited from code** into a design document.
-- **Append-only vote events** with derived, indexed scores.
+- **Vote events written atomically with the score change**, with a soft target pointer so the record outlives the row.
 - **A supersession chain enforced by a partial unique index**, so two active rows for one key are rejected at insert rather than by convention — the storage-layer guard for a numbered invariant in the design document.
 - **Surfaced-id allowlist** closing the rank-as-identity failure.
 - **Procedures never auto-executed**, stated as an invariant.
@@ -256,7 +258,7 @@ Nothing was run for this review. The campaign structure — a plan document, acc
 ### Steal
 
 - **Number your invariants and cite them from the code.** A schema comment pointing at "§13.7 invariant 7" turns an implicit rule into a reviewable one, and is nearly free.
-- **Votes as append-only events, scores as derived columns.** Keeps the raw signal, permits recomputation, and leaves every downstream policy choice open.
+- **Write the vote event in the same transaction as the score change.** Then decide whether the score is a projection — if it is meant to be, keep the log uncapped and log the decay, which this store does not.
 - **Advisory-only procedures.** If you store how-to knowledge but do not want the trust boundary of executing it, say so as an invariant rather than by omission.
 - **Bound distillation cost explicitly** — one LLM call per cluster even when producing two artifacts.
 - **Isolate expensive prompts to a separate slot** so the main conversation's cache survives.
@@ -275,7 +277,7 @@ Nothing was run for this review. The campaign structure — a plan document, acc
 Borrow:
 
 - The invariant-numbering practice — the highest value-per-effort idea here.
-- The `vote_events` table shape and derived-score approach.
+- The `vote_events` table shape, with the score derived from it rather than kept beside it.
 - The surfaced-id allowlist.
 - The default-off-pending-evaluation discipline.
 
@@ -293,7 +295,7 @@ It also takes no scope argument and exports the whole corpus, which is the right
 ## 12. Open Questions
 
 - What did the E9–E12 experiments conclude? The machinery exists; the answers are not committed.
-- Can `vote_score` influence anything beyond ranking? If it can reach confidence, the Holographic failure is reachable from here.
+- Which of the vote-driven eviction, deprecation and profile-hiding options are on in the shipped configuration?
 - What prevents a deprecated lesson from being re-distilled from the same cluster?
 - What is the scope model for a multi-user deployment?
 - Are the numbered invariants tested anywhere, or only documented and cited?
@@ -309,6 +311,8 @@ It also takes no scope argument and exports the whole corpus, which is the right
 - Design and evaluation: `MEMORY_FABRIC_V2.md` (§14 acceptance criteria), `MEMORY_FABRIC_V2.5.md` (implementation ledger), `eval-memory/PLAN.md`, `eval-memory/config/`.
 
 ## History
+
+**2026-09-25** — [`ae12759ad5185cd53ee81eb82c6d0f24763310a9`](https://github.com/AtomicBot-ai/atomic-agent/commit/ae12759ad5185cd53ee81eb82c6d0f24763310a9) — same commit. The report described `vote_score` as derived from `vote_events` and recomputable from them. It is not: `applyVote` updates the score in place beside the event, a clamp hit and the per-tick decay write no event, and `evictOldestEvents` FIFO-caps the log at 50,000 by default (`src/memory/voting/vote-store.ts:9-29`, `:282-345`). The open question whether the score reaches beyond ranking is answered from the code: when enabled it orders utility-weighted eviction (`memory-store.ts:331-345`), deprecates negatively voted lessons (`lessons/lesson-store.ts:521-551`), and hides profile facts (`profile-renderer.ts:53-62`). Description, trust field, both diagrams and the vote sections are corrected. No mark moved.
 
 **2026-09-13** — [`ae12759ad5185cd53ee81eb82c6d0f24763310a9`](https://github.com/AtomicBot-ai/atomic-agent/commit/ae12759ad5185cd53ee81eb82c6d0f24763310a9) — 801 commits past the previous pin, of which `src/memory/` took about 2,000 added lines. **`bitemporal` is withdrawn, and it was wrong when awarded rather than overtaken.** `valid_from`, `created_at` and `updated_at` are written with the same `now` on every insert; `profile-store.ts:32-38` and `memory-schema.ts:196-201` both say so in comments that stand unchanged at `d69332c589733e38ae7393dd81fcbc5a375d02fb`, and a grep for `asOf`, `as_of`, `pointInTime`, `validAt` and their variants returns nothing across `src/` at either commit. The supersession chain is real valid-time history and the report says so; a second axis is not there. The `scoping: "Not traced"` gap is closed in the other direction: `working_dir` is a real read-path filter that fails closed, but `scope` defaults to `all` and `src/tools/memory/notes-recall.ts:48` takes it from the model's own arguments, so `scope_enforced` is withheld with the reason recorded. Two features arrived: a one-way read-only Obsidian export, and a regression pin on the reflection decorators' fire-safety contract. The screen reports `FRESH` on `package.json` and `package-lock.json` within the cooldown, so nothing was installed and no test was run.
 

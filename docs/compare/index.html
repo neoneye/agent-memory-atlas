@@ -2656,8 +2656,10 @@ caller asks — <code>scope</code> defaults to <code>all</code>, and on
 the <code>memory.notes.recall</code> tool the model chooses it</td>
 <td>Agent runtime with a separate reflection slot</td>
 <td>Consolidator, reflection, neighbour evolution, vote runner</td>
-<td>Append-only <code>vote_events</code> with derived
-<code>vote_score</code>; surfaced-id allowlist</td>
+<td>A FIFO-capped <code>vote_events</code> log written in the same
+transaction as an in-place, decayed <code>vote_score</code>, which
+drives eviction order, lesson deprecation and profile hiding when those
+options are on; surfaced-id allowlist</td>
 <td>Numbered invariants cited from code, features default-off until
 evaluated, and a supersession chain enforced by a partial unique index
 rather than by convention</td>
@@ -9227,8 +9229,9 @@ consolidates and integrates beliefs</td>
 <td><code>update_belief</code> and <code>adjust_confidence</code>;
 <code>remove_belief</code> rewrites the category file and clears both
 runtime indexes; <code>archive_belief</code> sets mass to 0.01 and tags
-it; the journal records none of it, and memories have no delete path at
-all</td>
+it, and its snapshot reaches the journal through the same sync path as
+any belief write; the journal records no removal, and memories have no
+delete path at all</td>
 <td>None. No user, project, agent or tenant key exists anywhere in the
 memory layer</td>
 <td>A continuous four-state pulse loop,
@@ -9270,7 +9273,7 @@ prompt</td>
 <td>A launchd/systemd think tick, a weekly deep review, consolidation
 with decay and prune, and index regeneration</td>
 <td>A confidence float with a 0.7 cap on a first observation that rises
-only on independent repeats</td>
+only on repeats of the same value, independent or not</td>
 <td>The evidence gate, decay slowed by access, and episode-noise gates
 anchored by tests that name the pollution that forced them</td>
 <td>Confidence never reaches the model, three readers ignore the expiry
@@ -12402,10 +12405,12 @@ pressure</td>
 is tested as a distribution rather than a value — repeated draws
 asserted to favour higher scores, and low temperature asserted to
 concentrate more than high</td>
-<td>Two unrelated memory models under one package; the diversity
-function that makes the temperature adaptive is named in no test, its
-docstring says sigmoid where the arithmetic is linear, and its
-<code>sample_size</code> samples solutions while documenting pairs</td>
+<td>Two unrelated memory models under one package; the temperature falls
+as diversity falls, so selection tightens on a converging population;
+the diversity function that makes the temperature adaptive is named in
+no test, its docstring says sigmoid where the arithmetic is linear, and
+its <code>sample_size</code> samples solutions while documenting
+pairs</td>
 </tr>
 <tr>
 <td><code>loreai</code></td>
@@ -13223,7 +13228,9 @@ dated JSON on disk</td>
 <code>as_of_date</code> read</td>
 <td>Direct store, batch write, and LLM extraction from conversation</td>
 <td>Update and delete APIs; conflicts resolved by keep_old, keep_new,
-keep_both, remove_both, or manual</td>
+keep_both, remove_both, expire_old, expire_new, expire_both, or manual —
+the expire actions retire the losing memory reversibly, the others that
+remove one delete it</td>
 <td><code>agent_id</code> throughout the API surface; per-agent conflict
 reports</td>
 <td>FastAPI service, CLI, web UI, MCP, plus LangGraph, CrewAI, Claude
@@ -14082,19 +14089,21 @@ coverage-squared multiplier and prefix/plural folding, returning matched
 passages rather than files. A depth-3 <code>$HOME</code> crawl backs it,
 behind a 60-second index cache that a fresh CLI process never hits. No
 scope filter</td>
-<td>Synchronous. Explicit writes through 14 MCP tools; auto-capture
+<td>Synchronous. Explicit writes through 16 MCP tools; auto-capture
 parses Claude Code's own JSONL transcripts with regex extractors behind
 a quality gate, redacting secrets against 27 patterns first</td>
 <td>Union-merge with newest-wins per identity, and two tombstone classes
 — <code>hidden</code> monotonic for decisions, <code>done_at</code>
-temporal for next actions. Both are honored on merge; only the temporal
-one has a shipped writer</td>
+temporal for next actions. Both are honored on merge and both have
+shipped writers — <code>memoir forget</code> and
+<code>memoir_forget</code> for the absolute one,
+<code>memoir_complete_next</code> for the temporal one</td>
 <td>A project identity — a hash of the git remote or the home-relative
 path — stamped on each item and applied by <code>memoryVisibility</code>
 on every recall and session view, with <code>shared</code> visible
 everywhere and <code>allProjects</code> as the opt-out; profiles select
 a sync destination, not a memory scope</td>
-<td>An MCP server with 14 tools, an installer that configures 11 host
+<td>An MCP server with 16 tools, an installer that configures 11 host
 tools, and a marker-delimited block injected into
 <code>~/.claude/CLAUDE.md</code> and three other always-loaded
 files</td>
@@ -15980,8 +15989,8 @@ client and worth knowing before installing it</td>
 <tr>
 <td><code>mnemopi</code></td>
 <td>A typed memory — one of fourteen types, each carrying a
-<code>veracity</code> provenance class and a type-specific decay
-curve</td>
+<code>veracity</code> provenance class; a per-type Weibull decay table
+exists and recall does not read it</td>
 <td>Bun SQLite, one database per named bank under
 <code>~/.hermes/mnemopi/data/banks/</code>, with optional local ONNX
 embeddings</td>
@@ -16005,16 +16014,18 @@ protocol</td>
 plus SHMR clustering with similarity and harmony thresholds</td>
 <td>Veracity as a provenance class — stated, inferred, tool, imported,
 unknown — mapped to a fixed weight</td>
-<td>Per-type Weibull decay with a shape as well as a scale, a dry-run
-consolidation pass, a triple store that supersedes by closing a validity
-interval, and 456 committed cases of which 158 assert an absence</td>
+<td>A per-type Weibull decay table with a shape as well as a scale, as a
+design to wire; a dry-run consolidation pass, a triple store that
+supersedes by closing a validity interval, and 456 committed cases of
+which 158 assert an absence</td>
 <td><code>unknown</code> provenance is weighted 0.8, above
 <code>tool</code> at 0.5 and <code>inferred</code> at 0.7, so a memory
 with no known origin outranks one whose origin is known; the extraction
 path writes triples with raw SQL and never reaches the only code that
 closes a predecessor's interval, so self-derived facts never supersede;
-and <code>memoria_facts</code> declares a whole fact-versioning column
-set that nothing in the repository writes or reads</td>
+<code>memoria_facts</code> declares a whole fact-versioning column set
+that nothing in the repository writes or reads; and the Weibull table is
+imported only by a test, so every type ages on one recency curve</td>
 </tr>
 <tr>
 <td><code>mnemora</code></td>
@@ -21180,7 +21191,8 @@ filters and key segments; the authenticated user never constrains a
 query, auth is off by default, and an empty namespace-filtered semantic
 search is retried without the namespace</td>
 <td>REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin</td>
-<td>Debounced extraction, compaction, dedupe, forgetting sweeps</td>
+<td>Debounced extraction, compaction, dedupe, forgetting sweeps (off by
+default)</td>
 <td>Session linkage and per-message extraction flags; no trust
 state</td>
 <td>Best-specified retention policy in the atlas; cohesion-gated

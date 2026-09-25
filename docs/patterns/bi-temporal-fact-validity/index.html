@@ -197,12 +197,15 @@ itself.</p>
 anyone will ask about. Most personal preferences do not need as-of
 queries.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/graphiti/">Graphiti</a> remains the fullest
-treatment — edges carry both transaction time and real-world validity,
-and a fact is invalidated by closing an interval rather than erasing
-history.</p>
-<p>The useful new finding is that <strong>you do not need a graph
-database for this.</strong></p>
+<p>The <code>bitemporal</code> mark asks only that validity time be
+tracked separately from record time; this pattern also asks that a read
+path query it, so a carrier of the mark is not necessarily an instance
+of the pattern.</p>
+<p><a href="../../systems/graphiti/">Graphiti</a> puts both axes on
+graph edges — each edge carries transaction time and real-world
+validity, and a fact is invalidated by closing an interval rather than
+erasing history.</p>
+<p><strong>You do not need a graph database for this.</strong></p>
 <p><a href="../../systems/gini-agent/">Gini</a> gets most of the value
 from three columns on an ordinary SQLite row:</p>
 <pre class="sql"><code>occurred_start TEXT, occurred_end TEXT,   -- when it was true
@@ -212,9 +215,9 @@ relative range and matches units whose occurred window overlaps it — and
 only participates when the query actually contains a temporal
 expression, so it does not dilute fusion elsewhere. A memory recorded on
 Friday about Tuesday's deploy answers a question about Tuesday.</p>
-<p><a href="../../systems/genome/">GENOME</a> is the instance that
-writes the interval arithmetic down, which is the part everyone else
-leaves implicit and gets wrong once.
+<p><a href="../../systems/genome/">GENOME</a> writes the interval
+arithmetic down in the docstring, which is the part that is easy to
+leave implicit and get wrong once.
 <code>facts_valid_at(entity, T)</code> returns facts where
 <code>valid_from &lt;= T &lt; valid_until</code>, and the docstring
 names the convention — SQL:2011 application-time periods,
@@ -357,16 +360,15 @@ future; comparing against the query instant is the correct predicate. It
 still earns the mark, because the engine's edges carry a model-extracted
 validity that can precede their row, and the wrapper reads that axis on
 every search.</p>
-<p><a href="../../systems/utopia/">Utopia</a> is the fullest version of
-this pattern here, and its discipline is on the read side.
-<code>valid_from</code>/<code>valid_to</code> carry a precision column
-<em>per endpoint</em>, replacing a single default that made a fact with
-no date at all look measured to the day, and the end precision admits
-<code>unknown</code>, so <em>"former CEO"</em> — an ending stated
-without a date — is distinguishable from <em>still holding</em>. Every
-read predicate for both axes is assembled in two modules,
-<code>world_axis.rs</code> and <code>record_axis.rs</code>, on the
-stated argument that a defence spread across fifty read sites fails
+<p><a href="../../systems/utopia/">Utopia</a> puts its discipline on the
+read side. <code>valid_from</code>/<code>valid_to</code> carry a
+precision column <em>per endpoint</em>, replacing a single default that
+made a fact with no date at all look measured to the day, and the end
+precision admits <code>unknown</code>, so <em>"former CEO"</em> — an
+ending stated without a date — is distinguishable from <em>still
+holding</em>. Every read predicate for both axes is assembled in two
+modules, <code>world_axis.rs</code> and <code>record_axis.rs</code>, on
+the stated argument that a defence spread across fifty read sites fails
 silently when one is missed; both take an instant, and the record axis
 is reversed for chunks, documents and entity merges as well, so a replay
 at a past date sees the graph as it stood, merges undone and deleted

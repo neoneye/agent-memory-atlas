@@ -1,7 +1,7 @@
 ---
 title: "Mnemopi"
-eyebrow: "A decay curve per memory type"
-description: "Fourteen memory types, each with its own Weibull shape and scale, recalled by four scored voices — and a provenance weight that trusts an unattributed memory more than one it knows came from a tool."
+eyebrow: "A decay table per memory type that recall never reads"
+description: "Fourteen memory types with a per-type Weibull decay table that no recall path calls, recalled by four scored voices — and a provenance weight that trusts an unattributed memory more than one it knows came from a tool."
 root: ../..
 page_kind: system
 source_name: "can1357/oh-my-pi"
@@ -18,7 +18,7 @@ stack_storage: "sqlite"
 stack_retrieval: "vector, graph"
 stack_source: "seeded"
 matrix:
-  memory_unit: "A typed memory — one of fourteen types, each carrying a `veracity` provenance class and a type-specific decay curve"
+  memory_unit: "A typed memory — one of fourteen types, each carrying a `veracity` provenance class; a per-type Weibull decay table exists and recall does not read it"
   storage: "Bun SQLite, one database per named bank under `~/.hermes/mnemopi/data/banks/`, with optional local ONNX embeddings"
   retrieval: "Polyphonic — four scored voices (vector, graph, fact, temporal) combined per memory, with MMR and an episodic graph beside them"
   write: "Regex type patterns assign a type, a base confidence and one of nine priority classes with no model call; an LLM path is optional"
@@ -27,8 +27,8 @@ matrix:
   integration: "The memory engine behind the oh-my-pi coding agent, with retain, reflect, render and edit tools and a `memory://` protocol"
   background: "`sleep` and `sleepAllSessions` consolidation, plus SHMR clustering with similarity and harmony thresholds"
   trust: "Veracity as a provenance class — stated, inferred, tool, imported, unknown — mapped to a fixed weight"
-  strengths: "Per-type Weibull decay with a shape as well as a scale, a dry-run consolidation pass, a triple store that supersedes by closing a validity interval, and 456 committed cases of which 158 assert an absence"
-  risks: "`unknown` provenance is weighted 0.8, above `tool` at 0.5 and `inferred` at 0.7, so a memory with no known origin outranks one whose origin is known; the extraction path writes triples with raw SQL and never reaches the only code that closes a predecessor's interval, so self-derived facts never supersede; and `memoria_facts` declares a whole fact-versioning column set that nothing in the repository writes or reads"
+  strengths: "A per-type Weibull decay table with a shape as well as a scale, as a design to wire; a dry-run consolidation pass, a triple store that supersedes by closing a validity interval, and 456 committed cases of which 158 assert an absence"
+  risks: "`unknown` provenance is weighted 0.8, above `tool` at 0.5 and `inferred` at 0.7, so a memory with no known origin outranks one whose origin is known; the extraction path writes triples with raw SQL and never reaches the only code that closes a predecessor's interval, so self-derived facts never supersede; `memoria_facts` declares a whole fact-versioning column set that nothing in the repository writes or reads; and the Weibull table is imported only by a test, so every type ages on one recency curve"
 ---
 
 ## 1. Executive Summary
@@ -39,23 +39,31 @@ own README as a Bun/TypeScript port of the Mnemosyne engine. The package is
 cases across the memory package and the coding agent that consumes it. It is the
 densest memory engine in this batch and one of the densest in the atlas.
 
-**Its distinguishing mechanism is a decay curve per memory type, with a shape
-parameter and not just a half-life.** `WEIBULL_PARAMS` gives each of fourteen
-types a `k` (shape) and an `eta` (scale, in hours): `profile` at k=0.3 and
-eta=8760 — a year, with a very heavy tail — `relationship` at 0.35/8760,
-`preference` at 0.4/4380, down through `fact` at 0.8/720 to `context` at
-0.85/360 and `observation` at 0.9/480. The comment states the intent plainly:
-higher eta is slower decay, lower k is more long-term retention.
+**Its most distinctive code is a decay curve per memory type, with a shape
+parameter and not just a half-life — and no recall path calls it.**
+`WEIBULL_PARAMS` in `src/core/weibull.ts` gives each of fourteen types a `k`
+(shape) and an `eta` (scale, in hours): `profile` at k=0.3 and eta=8760 — a
+year, with a very heavy tail — `relationship` at 0.35/8760, `preference` at
+0.4/4380, down through `fact` at 0.8/720 to `context` at 0.85/360 and
+`observation` at 0.9/480. The comment states the intent plainly: higher eta is
+slower decay, lower k is more long-term retention.
 
-That directly answers a criticism this atlas makes elsewhere. The
-[Helm](../helm/) report argues that a preference should not fall down the
-ranking for being old while an event should, and that one ranking function for
-both is a decision usually made unexamined. Mnemopi makes it fourteen times,
-explicitly, with a two-parameter family that separates *how fast* a memory fades
-from *how heavy its tail is* — which is a genuinely better instrument than the
-single exponential or Ebbinghaus curve used by
+As a design it answers the [Helm](../helm/) report's argument that a preference
+should not fall down the ranking for being old while an event should, and that
+one ranking function for both is a decision usually made unexamined: a
+two-parameter family separates *how fast* a memory fades from *how heavy its
+tail is*, which the single exponential or Ebbinghaus curve used by
 [PowerMem](../powermem/), [NOOA](../nooa-memory/) and
-[LivingFeed](../livingfeed/).
+[LivingFeed](../livingfeed/) cannot express.
+
+As shipped, one ranking function serves both. `WEIBULL_PARAMS`,
+`weibullDecayFactor` and `weibullBoost` are imported by
+`test/weibull-mmr-intent.test.ts` and by nothing under `src/`. Beam recall's
+`scoreCandidate` (`src/core/beam/recall.ts:740-756`) multiplies every
+candidate's base score by `0.7 + 0.3 · exp(−age / 72 h)`, and the polyphonic
+temporal voice scores `exp(−age_days / 7) × importance`
+(`src/core/polyphonic-recall.ts:380`). Neither reads `memory_type`, so a profile
+fact and an observation of the same age lose the same share of their score.
 
 **And there is a number in it worth stopping on.** `VERACITY_WEIGHTS` maps
 provenance to trust: `stated: 1.0`, `inferred: 0.7`, `tool: 0.5`,
@@ -68,8 +76,9 @@ write is to stay unattributed.
 
 ## 2. Mental Model
 
-Memory is typed, graded by where it came from, and forgotten on a schedule that
-depends on its type. There is no correction and no rejection: the fourteen types
+Memory is typed, graded by where it came from, and ranked lower as it ages on
+one recency curve shared by every type. There is no correction and no rejection:
+the fourteen types
 include `COMMITMENT`, `GOAL`, `INSTRUCTION`, `ERROR` and `ARTIFACT`, and none of
 them carries a status. A memory stops mattering by decaying, not by being marked
 wrong.
@@ -81,31 +90,32 @@ withholds a memory from being treated as true; they scale a weight. It is a
 provenance grade, and the atlas's distinction between "how sure" and "may this be
 acted on" lands on the first side.
 
-**Commitments decay memorylessly, which is the one place the type table is
-backwards.** `commitment: { k: 1.0, eta: 240.0 }` — a Weibull with k=1 is exactly
-an exponential, so a commitment's survival probability has no memory of how long
-it has been outstanding, and it is gone in about ten days regardless. A
-commitment is the one memory type where the right behaviour is to persist
-undiminished until it is discharged and then stop entirely, which is a lifecycle
-rather than a curve. Mnemopi has the vocabulary for prospective memory —
-`COMMITMENT` and `GOAL` as first-class types — and gives them decay where
+**The table is backwards for commitments, and the shipped curve is no better.**
+`commitment: { k: 1.0, eta: 240.0 }` — a Weibull with k=1 is exactly an
+exponential, so were the table wired, a commitment's survival would have no
+memory of how long it has been outstanding. As shipped, a commitment ages on the
+same 72-hour recency curve as every other type. A commitment is the one memory
+type where the right behaviour is to persist undiminished until it is discharged
+and then stop entirely, which is a lifecycle rather than a curve. Mnemopi has the
+vocabulary for prospective memory — `COMMITMENT` and `GOAL` as first-class types
+— and gives them decay where
 [NOOA](../nooa-memory/) and [Gobii](../gobii/) give them an open/done state. It
 is the third arrangement of that category's three requirements and it satisfies
 none of them.
 
 ```mermaid
-%% caption: type is decided by regex with no model call, and each type carries its own Weibull decay and a veracity weight — where labelling something inferred or tool-derived lowers its standing below leaving it unknown
+%% caption: type is decided by regex with no model call and a veracity weight is attached — where labelling something inferred or tool-derived lowers its standing below leaving it unknown; the per-type Weibull table sits beside the path, read only by a test, while recall ages every type on one curve
 flowchart TB
     In["remember()"] --> Ty["Regex type patterns<br/>→ one of 14 types + priority<br/>(no model call)"]
-    Ty --> Wb["Weibull curve per type<br/>profile k=0.3 η=8760<br/>fact k=0.8 η=720<br/>observation k=0.9 η=480"]
     Ty --> Ver["Veracity weight<br/>stated 1.0 · unknown 0.8<br/>inferred 0.7 · imported 0.6 · tool 0.5"]
-    Wb --> Bank[("Bank = one SQLite file")]
-    Ver --> Bank
+    Ver --> Bank[("Bank = one SQLite file")]
+    Wb["weibull.ts: Weibull curve per type<br/>profile k=0.3 η=8760<br/>fact k=0.8 η=720<br/>observation k=0.9 η=480"] -.->|"imported only by"| WT["test/weibull-mmr-intent.test.ts"]
+    Bank --> SC["beam scoreCandidate<br/>score × (0.7 + 0.3 · exp(−age / 72 h))<br/>same curve for every type"]
     Bank --> P["Polyphonic recall"]
     P --> V1["vector"] --> Comb["combinedScore<br/>+ voiceScores kept per voice"]
     P --> V2["graph"] --> Comb
     P --> V3["fact"] --> Comb
-    P --> V4["temporal"] --> Comb
+    P --> V4["temporal<br/>exp(−age_days / 7) × importance"] --> Comb
     Bank -.->|"sleep(dryRun)"| Sl["SHMR clustering<br/>similarity + harmony thresholds"]
     Ver -.->|"unknown 0.8 outranks tool 0.5"| Inv["labelling provenance<br/>honestly lowers standing"]
 ```
@@ -313,7 +323,8 @@ non-global row from another channel fails all three visibility disjuncts, which
 is the boundary test the scope mark asks for and most systems here do not write.
 
 No memory benchmark, no retrieval-quality measurement and no published numbers.
-Given fourteen decay curves with twenty-eight hand-set parameters, four recall
+Given a fourteen-curve decay table with twenty-eight hand-set parameters that
+recall does not read, four recall
 voices with a combination rule, and five veracity weights, the absence of any
 committed evaluation is the gap: none of those fifty-odd constants is traced to
 a measurement in the repository, and the `sleep(dryRun)` affordance that would
@@ -323,10 +334,11 @@ let the consolidation half be scored is unused.
 
 ### Steal
 
-- **Give each memory type its own decay shape, not just its own half-life.** A
-  Weibull `k` below 1 buys a heavy tail — a profile fact that fades slowly and
-  then keeps fading slowly — which a single exponential cannot express. This is
-  the best-argued forgetting model in the atlas.
+- **Give each memory type its own decay shape, not just its own half-life — and
+  call it from recall.** A Weibull `k` below 1 buys a heavy tail — a profile fact
+  that fades slowly and then keeps fading slowly — which a single exponential
+  cannot express. Here the table is the design to borrow; the wiring is yours to
+  write, since no recall path at this pin reads it.
 - **Keep the per-voice scores on the result.** `voiceScores` telling you a
   memory came from the temporal lane and not the vector one is the difference
   between tuning retrieval and guessing at it.
@@ -348,8 +360,11 @@ let the consolidation half be scored is unused.
   `tool: 0.5` means honest labelling costs standing. If unlabelled rows need a
   neutral prior, give them one *below* every labelled class, or exclude them
   from the weighting entirely.
-- **An exponential curve on a commitment.** k=1.0 makes a commitment's survival
-  memoryless; obligations need a lifecycle, not a half-life.
+- **An exponential curve on a commitment.** The table's k=1.0 would make a
+  commitment's survival memoryless, and the shipped 72-hour curve does the same
+  to every type; obligations need a lifecycle, not a half-life.
+- **A decay table no read path calls.** A per-type curve that only a test imports
+  looks like per-type forgetting in a code review and ranks nothing.
 - **Fifty tuning constants and no evaluation.** Twenty-eight Weibull parameters,
   five veracity weights, five SHMR thresholds — all defensible, none measured,
   and the environment-variable overrides mean two deployments cannot be compared
@@ -357,10 +372,11 @@ let the consolidation half be scored is unused.
 
 ### Fit
 
-Take this if you want the most carefully modelled *forgetting* in the atlas and
-you can live without correction. The type taxonomy and per-type curves are the
-right instrument for a long-running personal assistant where the failure you
-actually hit is an old context note crowding out a stable preference.
+Take this for the type taxonomy, the per-voice scores and the temporal lane, if
+you can live without correction. The per-type curves are the right instrument
+for a long-running personal assistant where the failure you actually hit is an
+old context note crowding out a stable preference — once they are wired into
+recall, which at this pin they are not.
 
 Look elsewhere if memory must be correctable or provable. There is no
 supersession chain exposed at the facade, no rejection, no audit, and the trust
@@ -373,6 +389,9 @@ model grades where a memory came from rather than whether it holds.
   whose effect is counter to its evident purpose.
 - **Where did fifty tuning constants come from?** The Weibull table is precise
   enough to look derived and there is no derivation in the repository.
+- **Is the Weibull table meant to reach recall?** Its test asserts it
+  *"exposes parameters for memory types used by recall"*; recall's two decay
+  terms are type-blind constants, 72 hours and 7 days.
 - **Has `sleep(dryRun)` ever been used to score consolidation?** The affordance
   is there; nothing consumes it.
 - **How do the four voices combine?** `combinedScore` is computed and the
@@ -401,7 +420,7 @@ model grades where a memory came from rather than whether it holds.
 | `src/core/polyphonic-recall.ts` | 563 | Four scored voices |
 | `src/core/extraction.ts` | 491 | Optional LLM extraction |
 | `src/core/patterns.ts` | 484 | Type pattern table |
-| `src/core/weibull.ts` | — | Fourteen types, twenty-eight parameters |
+| `src/core/weibull.ts` | — | Fourteen types, twenty-eight parameters; imported only by `test/weibull-mmr-intent.test.ts` |
 | `src/core/veracity-consolidation.ts` | — | Provenance weights and fact triples |
 | `src/core/typed-memory.ts` | — | Fourteen types, nine priority classes |
 | `src/core/beam/` | 5,354 | `store`, `recall` (`buildWhere`), `consolidate` (`insertKg`), `schema`, `helpers` |
@@ -410,6 +429,8 @@ model grades where a memory came from rather than whether it holds.
 | `test/` | 456 cases, 75 files | Precision regressions, concurrency, voices, visibility |
 
 ## History
+
+**2026-09-25** — [`c5a8e0e09296290c2fd3ef053391081acc691ded`](https://github.com/can1357/oh-my-pi/commit/c5a8e0e09296290c2fd3ef053391081acc691ded) — audited at the unchanged pin. The report presented the per-type Weibull table as the live forgetting curve. At this commit `WEIBULL_PARAMS`, `weibullDecayFactor` and `weibullBoost` are imported only by `test/weibull-mmr-intent.test.ts`; beam recall's `scoreCandidate` applies `0.7 + 0.3 · exp(−age / 72 h)` and the polyphonic temporal voice `exp(−age_days / 7) × importance`, neither reading the memory type. The eyebrow, description, matrix, §1, §2, the diagram, §10, §11 and §12 now say so, and two corpus superlatives about the forgetting model are removed. No mark moved.
 
 **2026-09-15** — [`c5a8e0e09296290c2fd3ef053391081acc691ded`](https://github.com/can1357/oh-my-pi/commit/c5a8e0e09296290c2fd3ef053391081acc691ded) — 4,363 monorepo commits on, 2026-09-15, package at 18.2.0; four merged changes touch `packages/mnemopi`. Screened on a sparse checkout of the package and the root manifests: one auto-run surface, five build-time execution points, five unpinned surfaces, 28 dependency surfaces inside the cooldown and an agent-instruction file read as data; nothing was installed or run. Lexical recall no longer lets superseded or validity-retired rows occupy FTS `LIMIT` slots — the candidate queries now join the live table with a correlated `EXISTS` — with `fts-superseded.test.ts` pinning that a live row is returned at `k=1` beside a better-matching superseded one; the recall cache is invalidated when a memory is retired and when embeddings commit; and the metric-fact key's lookbehind stops at the nearest line, cell or sentence boundary. `scope_enforced` is withdrawn: the MCP recall tool lets the model pass an author filter without a channel, which drops the session predicate, or name any channel. `bitemporal` and `negative_eval` kept. Two marks.
 

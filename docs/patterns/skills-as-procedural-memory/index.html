@@ -104,9 +104,9 @@ that it actually worked.">
 procedure rather than as a fact, and gate the write on evidence that it
 actually worked.</p>
                                         <div class="document-meta">
-            <a class="meta-pill stance-pill stance-reporting" href="../../patterns/#how-established-is-any-of-this">
+            <a class="meta-pill stance-pill stance-mixed" href="../../patterns/#how-established-is-any-of-this">
               <span>Epistemic status</span>
-              <strong>Reporting an established practice</strong>
+              <strong>Reporting, with one advocacy claim</strong>
             </a>
           </div>
                             </div>
@@ -128,6 +128,14 @@ actually worked.</p>
 works out how to do something, keep the procedure itself — a script, a
 function, a checklist — so the next attempt starts from a working
 solution rather than from a description of one.</p>
+<p>The page makes two kinds of claim. Skill libraries — procedures the
+agent or a person writes down, advertised by name and description, with
+bodies loaded on demand — are reported practice, and common across this
+atlas. The <strong>outcome-verified write gate</strong> is argued, and
+rests on two systems: <a href="../../systems/voyager/">Voyager</a>
+writes an executable skill only after the environment confirms it
+worked, and <a href="../../systems/acontext/">Acontext</a> holds a
+partial version of the gate.</p>
 <h2 id="the-problem">The problem</h2>
 <p>Most agent memory remembers propositions: the user prefers dark mode,
 the deploy failed at step three, the schema has a <code>tenant_id</code>
@@ -196,9 +204,9 @@ confident-looking provenance.</li>
 skill library is durable, agent-authored, retrieved-by-similarity code.
 Outside a sandbox, in any setting where inputs are not trusted, this is
 an obvious attack surface.</li>
-<li><strong>Libraries need pruning, and nobody has a good
-policy.</strong> Without a utility signal — reuse count, success rate on
-reuse, composition depth — the library accumulates near-duplicate
+<li><strong>Libraries need pruning, and pruning needs a utility
+signal.</strong> Without one — reuse count, success rate on reuse,
+composition depth — the library accumulates near-duplicate
 one-offs.</li>
 <li><strong>Retrieving the wrong procedure is worse than retrieving the
 wrong fact.</strong> An irrelevant fact is noise the model can ignore;
@@ -254,14 +262,26 @@ Voyager buys empirical verification by making skills executable and
 accepts the trust boundary that follows; Atomic Agent gives up
 verification to avoid it. Both are defensible, and the choice is the
 pattern's central tradeoff.</p>
+<p><a href="../../systems/acontext/">Acontext</a> carries the gate over
+prose skills. Its <code>tasks</code> table constrains
+<code>status IN ('success', 'failed', 'running', 'pending')</code> as a
+database CHECK, the task-update path queues a learning task only on a
+terminal status, and <code>test_running_does_not_append</code>,
+<code>test_pending_does_not_append</code> and
+<code>test_no_status_does_not_append</code> assert the gate holds. Two
+things make it partial: a <code>failed</code> task triggers distillation
+as well as a <code>success</code> does, so the gate is on the task
+having ended rather than on its having worked, and the skill written is
+a Markdown <code>SKILL.md</code>, so nothing re-executes it to check
+that it still does.</p>
 <p>ScienceClaw, an <a href="../../systems/openclaw/">OpenClaw</a>
-derivative, demonstrates the scale end: it ships 285 skills against
-OpenClaw's ~54, and its README states that "the agent writes new
+derivative outside the corpus and read without a pinned report,
+demonstrates the scale end: its README states that "the agent writes new
 <code>SKILL.md</code> files at runtime without any redeployment."
-Runtime skill authoring at that volume is what the pattern looks like
-when the library is the product — and it sharpens the unanswered pruning
-question, because nothing in the atlas has a utility signal that would
-work across 285 entries.</p>
+Runtime skill authoring is what the pattern looks like when the library
+is the product, and it is where pruning stops being optional — the
+utility signals below are the answers this atlas has to that
+question.</p>
 <p><a href="../../systems/memos/">MemOS</a> mounts skill memory as one
 cube type among several, and <a
 href="../../systems/agentmemory/">agentmemory</a> keeps procedural
@@ -269,26 +289,25 @@ records alongside semantic ones; in both, procedure is one kind in a
 broader taxonomy rather than a design centre, and neither gates on
 execution.</p>
 <p><a href="../../systems/openviking/">OpenViking</a> unifies memory,
-resources, and <strong>skills</strong> in one filesystem hierarchy,
-which is the most integrated treatment in the atlas — skills are
-retrievable through the same tiered mechanism as everything else.</p>
+resources, and <strong>skills</strong> in one filesystem hierarchy —
+skills are retrievable through the same tiered mechanism as everything
+else.</p>
 <p><a href="../../systems/verel/">Verel</a> approaches the same
 territory from the opposite direction: it clusters <em>failures</em>
 into induced candidate rules and requires promotion gates before they
 become trusted. Read together with Voyager, the two halves of the
 missing system are visible — Voyager verifies successes and discards
 failures; Verel mines failures and gates promotion.</p>
-<p><a href="../../systems/sesa/">SESA</a> closes the pruning question
-this page has been holding open, and shows what it costs. Its skill bank
-writes a card <strong>only from a failure</strong> — the exact inversion
-of Voyager's gate — and then measures every card it hands out:
+<p><a href="../../systems/sesa/">SESA</a> answers the pruning question
+with a trained reward, and shows what it costs. Its skill bank writes a
+card <strong>only from a failure</strong> — the exact inversion of
+Voyager's gate — and then measures every card it hands out:
 <code>retrieved_count</code>, <code>helpful_count</code> and
 <code>hurt_count</code>, all three written by the same rollout reward
 that trains the model. A card whose net score has gone negative after at
-least three retrievals is <strong>deleted</strong>, not demoted. That is
-the utility signal the ScienceClaw entry above says nothing here has,
-and the reason it works is a precondition worth stating plainly: SESA is
-a training loop, so the outcome is a scored answer rather than a guess
+least three retrievals is <strong>deleted</strong>, not demoted. The
+reason it works is a precondition worth stating plainly: SESA is a
+training loop, so the outcome is a scored answer rather than a guess
 about whether the user was pleased. A library without that signal cannot
 borrow the mechanism, only the wish for it.</p>
 <p>Two failures sit beside it and both generalise. The eviction leaves
@@ -301,6 +320,17 @@ retrieved cards receive the outcome of one rollout, so a harmful card is
 rewarded whenever it rides along with two good ones. The similarity
 score that would support weighted attribution is computed on every
 retrieval and attached to each card, and no caller reads it.</p>
+<p><a href="../../systems/agentic-context-engine/">Agentic Context
+Engine</a> keeps the same counters outside a training loop and refuses
+to let them delete anything. Every skill carries
+<code>used_count</code>, <code>helpful_count</code>,
+<code>harmful_count</code> and <code>neutral_count</code>, moved by
+<code>tag_skill</code> calls from a model that judges each injected
+skill against the run's outcome, and the prompt governing that model
+tells it to use them <em>"as one input among several … never as a hard
+removal trigger"</em>, because a heavily-used skill accumulates harm
+counts while still being net-positive. SESA acts on the signal
+mechanically; this one treats it as evidence for a judgement.</p>
 <p><a href="../../systems/neo4j-agent-memory/">Neo4j Agent Memory</a>
 supplies the half this pattern's gate leaves out. Its reasoning tier
 records traces through a context manager, so on a raised exception the
@@ -354,24 +384,23 @@ memory policy — query before create, confirm before update or obsolete,
 announce every save — shipped as procedures the agent loads, and the
 server has no way to know whether it did.</p>
 <p><a href="../../systems/hivemind-activeloop/">Hivemind
-(Activeloop)</a> answers the pruning question this page leaves open
-without a training reward, and then throws the answer away. Its write
-gate is the weak kind — a model curator reading ten recent sessions,
-told to keep a pattern only if it recurs across three exchanges and is
-not already covered, with nothing executed. The interesting half is
-after the write. A <code>PreToolUse</code> on an org skill arms a
-three-message judgment window; the user's next prompt spawns a worker
-that rebuilds the transcript around the invocation, appends the
-reaction, and asks a judge one question phrased against sycophancy —
-<em>"Ignore whether the user seemed happy or polite — a
-praised-but-wrong answer is a FAILURE"</em> — with an unparseable or
-errored verdict returning success, so the judge can miss a failure and
-never invent one. That is a reuse-quality signal derived from ordinary
-human reaction rather than a scored rollout, and it is the piece a
-library outside a training loop can borrow. The edit it produces is
-bounded the way this page's supersession tradeoff asks for: at most
-three anchored operations, a protected region the fast pass may not
-touch, and a new version appended rather than an overwrite.</p>
+(Activeloop)</a> answers the pruning question without a training reward,
+and then throws the answer away. Its write gate is the weak kind — a
+model curator reading ten recent sessions, told to keep a pattern only
+if it recurs across three exchanges and is not already covered, with
+nothing executed. The interesting half is after the write. A
+<code>PreToolUse</code> on an org skill arms a three-message judgment
+window; the user's next prompt spawns a worker that rebuilds the
+transcript around the invocation, appends the reaction, and asks a judge
+one question phrased against sycophancy — <em>"Ignore whether the user
+seemed happy or polite — a praised-but-wrong answer is a FAILURE"</em> —
+with an unparseable or errored verdict returning success, so the judge
+can miss a failure and never invent one. That is a reuse-quality signal
+derived from ordinary human reaction rather than a scored rollout, and
+it is the piece a library outside a training loop can borrow. The edit
+it produces is bounded the way this page's supersession tradeoff asks
+for: at most three anchored operations, a protected region the fast pass
+may not touch, and a new version appended rather than an overwrite.</p>
 <p>Two failures sit beside it. The new version is published to the whole
 organisation under a comment reading <em>"No approval gate by design:
 detect → improve → publish, directly"</em>, and auto-pull writes every

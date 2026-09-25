@@ -71,7 +71,9 @@ ANY_CLAIM = re.compile(SUPERLATIVE, re.I)
 #: atlas's own. Seventy-six of the 535 were one or the other. The ceiling is a
 #: measurement of the prose and inherits every defect of the thing measuring it,
 #: which is the argument for a self-test that carries the fixtures that were wrong.
-CORPUS_CLAIM_CEILING = 459
+#: Lowered to 433 on 2026-09-25, when the pattern-page audit narrowed or removed
+#: the contradicted "only" and "first" claims on twenty-one pages.
+CORPUS_CLAIM_CEILING = 433
 
 
 #: A superlative the atlas *quotes* from the repository under review is that

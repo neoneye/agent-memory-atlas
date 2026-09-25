@@ -84,11 +84,12 @@ audit trails that disagree are worse than one.
 
 ### Every instance
 
-**[Aura](../../systems/aura/) and [aimee](../../systems/aimee/) are the two that
-are tamper-evident, and between them they mark the upper bound of this pattern.**
-Every other audit on this page is append-only by file handle: opened `O_APPEND`,
-never rewritten by the code that owns it, and completely silent about an edit
-made by anything else. Aura keeps a SHA-256 hash
+**[Aura](../../systems/aura/) and [aimee](../../systems/aimee/) are tamper-evident,
+and between them they mark the upper bound of this pattern.** So is
+[Midas](../../systems/midas/), below, whose rows carry their own chain. Most other
+audits on this page are append-only by file handle, by grant or by trigger: never
+rewritten by the code that owns them, and unable to show an edit made by anything
+with enough access to bypass that. Aura keeps a SHA-256 hash
 chain beside its receipt store, one JSONL line per receipt:
 
 ```text
@@ -141,10 +142,12 @@ closes the concatenation ambiguity that lets two different records hash alike;
 `ts` is deliberately excluded from the hashed material, so a clock correction
 does not break the chain.
 
-**[Palazzo](../../systems/palazzo/) is the only implementation here where the
-log entry is a precondition rather than a consequence.** Every other audit on
-this page is written because a mutation happened. Palazzo's write-ahead log has
-two methods, and the destructive paths call the second one:
+**[Palazzo](../../systems/palazzo/) makes the log entry a precondition of deletion
+rather than a consequence of it, and writes the rule into the method's contract.**
+Most audits on this page are written because a mutation happened;
+[breadcrumbs](../../systems/breadcrumbs/), below, also writes its row before the
+overwrite, and aimee's append aborts the mutation it fails to record. Palazzo's
+write-ahead log has two methods, and the destructive paths call the second one:
 
 ```rust
 /// Like `log`, but errors when the entry cannot be durably appended —
@@ -159,7 +162,8 @@ The split is the design. Ordinary writes use best-effort `log`, which warns and
 continues; deletion uses `log_strict`, which fails the operation. A lost store
 line is an inconvenience; a lost delete line is the erasure of the record that
 the erasure happened, and that is the one case where continuing is worse than
-stopping. `delete_happy_path_wal_logs_then_deletes` pins the ordering.
+stopping. `delete_aborts_before_qdrant_when_wal_unconfigured` pins the refusal:
+with no WAL path the delete errors, and no delete request reaches Qdrant.
 
 The second detail is what goes in the entry. Palazzo writes a text preview of
 every point before deleting it, so the log says what was removed. Compare
@@ -202,10 +206,10 @@ finished.
 *coverage* question comes before the tamper-evidence question.** Its
 `CognitiveJournal` is append-only JSONL, one SHA-256 per line, and its module
 docstring calls it *"the single source of truth for all Helix memories, beliefs,
-and thought snapshots"*. Every belief write appends a full snapshot to it. Both
-paths that remove a belief — `remove_belief`, which rewrites the category file
-and clears the runtime indexes, and `archive_belief`, which pins mass at `0.01` —
-append nothing. So the log is a complete record of everything the system has
+and thought snapshots"*. Every belief write appends a full snapshot to it, and
+so does `archive_belief`, which pins mass at `0.01` and tags the belief through
+the same sync path. `remove_belief`, which rewrites the category file and clears
+the runtime indexes, appends nothing. So the log is a complete record of everything the system has
 believed **except what it was asked to forget**, which is the one entry an audit
 exists for.
 
@@ -218,23 +222,36 @@ is the failure mode on the opposite side of the retention question from
 [Palazzo](../../systems/palazzo/)'s. **Check what your log does on delete before
 you check whether anyone could forge it.**
 
-[Atomic Agent](../../systems/atomic-agent/) is now the clearest implementation,
-and its shape is the one to copy:
+[Atomic Agent](../../systems/atomic-agent/) has the table this page asks for and
+not the property that makes it worth having:
 
 ```sql
 vote_events (id, kind, target_id, direction, session_id, turn_index, created_at)
--- and, derived from it:
+-- and, on each votable row:
 memories.vote_score, lessons.vote_score, profile_facts.vote_score  (indexed)
 ```
 
-The events are the record; the scores are a projection. A scoring rule can be
-changed and recomputed, a suspicious voting pattern can be audited, and no single
-vote is destructive. Set against the alternatives the atlas has collected —
-[Holographic](../../systems/holographic/) mutating a trust score in place until a
-fact falls below the retrieval floor, [RainBox](../../systems/rainbox/) holding
-feedback behind a human gate, [MetaClaw](../../systems/metaclaw/) letting
-telemetry tune retrieval policy through a promotion gate — the append-only log is
-the option that preserves every one of those choices for later.
+`applyVote` updates the score and inserts the event in one transaction, so an
+applied vote is never unrecorded. The score is not a projection of the events,
+though. It is incremented and clamped in place, a vote against a score already at
+the clamp writes no event, each consolidator tick multiplies every score by a
+decay factor in bulk `UPDATE`s that write no event, and `evictOldestEvents` deletes
+the oldest events once the table passes `memory.voting.eventLogMaxRows`, 50,000
+by default. A changed scoring rule cannot be replayed over that history. And
+the score is read back into belief, behind options that switch each use on:
+utility-weighted eviction deletes memories ordered by `vote_score ASC` ahead of
+recall count, a lesson with a negative score and no recorded success is
+deprecated at the next consolidator tick, and the profile renderer hides a fact
+whose score falls to minus the configured threshold. Set against the alternatives the
+atlas has collected — [Holographic](../../systems/holographic/) mutating a trust
+score in place until a fact falls below the retrieval floor,
+[RainBox](../../systems/rainbox/) holding feedback behind a human gate,
+[MetaClaw](../../systems/metaclaw/) letting telemetry tune retrieval policy
+through a promotion gate — a complete vote log with the score derived from it is
+the option that preserves every one of those choices for later. Atomic Agent's
+schema has that shape; its store keeps a capped log beside a score that behaves
+like Holographic's, which is the crossing of the dashed edge above that this
+page warns against.
 
 [Magic Context](../../systems/magic-context/) keeps dedicated mutation logs
 (`storage-memory-mutation-log.ts`, `storage-m0-mutation-log.ts`) alongside
@@ -320,9 +337,9 @@ drops the earliest accesses, which are the ones explaining how a memory became
 established. Both arrangements are defensible; only one of them is usually
 chosen deliberately.
 
-[CSM](../../systems/csm/) is the atlas's only implementation of the third bullet
-below — *distinguish considered, returned, and injected memories* — and it is
-worth copying whole. Alongside a conventional mutation stream (`memory_events`
+[CSM](../../systems/csm/) implements the third bullet below — *distinguish
+considered, returned, and injected memories* — with a recorded reason for every
+candidate, and it is worth copying whole. Alongside a conventional mutation stream (`memory_events`
 for created/deleted/retention-cleanup, `memory_merges` for each merge with its
 normalized hash) it writes a second pair of tables for **assembly**:
 `context_injection_events` holds one row per injected block with an idempotency
@@ -335,10 +352,13 @@ closed set — `importance_rank`, `recent_session`, `explicit_preference`,
 `empty_source`.
 
 The distinction that makes it useful is between the last three. A mutation log
-tells you the memory exists; a recall log tells you it was found; only this tells
-you it was found, ranked fourth, and lost to a layer budget — which is the
-actual answer to "why didn't the agent know that?" and the one no other audit
-shape in this atlas can produce. The `builder_version` and `config_hash` matter
+tells you the memory exists; a recall log tells you it was found; this tells you
+it was found, ranked fourth, and lost to a layer budget — which is the actual
+answer to "why didn't the agent know that?". [RainBox](../../systems/rainbox/)
+records the same fact without the reason: `build_profile_block` writes a
+`considered` row for every selected profile fact and an `injected` row only for
+those that fit the character budget, so the trimmed set is recoverable as the
+difference between the two stages, without a per-item reason code. The `builder_version` and `config_hash` matter
 for the same reason: without them, an old row cannot be read against the
 selection rules that produced it. The cost is one row per considered item per
 turn, which is the highest write volume of any audit design here, and CSM
@@ -397,9 +417,13 @@ event.
 
 **What that costs is visible in the same repository, one function away.**
 `build_context(as_of=…)` replays the store as of a past moment by filtering
-facts on a `recorded_at` stamp — and renders each surviving fact's *current*
-status and oracle, because the promotion that changed them left no event to
-replay and no stamp to compare. The timeline query is only as deep as the log
+facts on a `recorded_at` stamp. With no promotion event to replay, it reads the
+trust axis from a second stamp on the row: `verify_fact` writes `verified_at`,
+and a fact whose `verified_at` is missing or later than `as_of` renders as
+`asserted`, so the replay never shows an oracle that did not exist at the
+replayed moment. What the row cannot hold is a sequence — a second `verify_fact`
+overwrites the stamp, the verifier and the evidence, and no event keeps the
+first. The timeline query is only as deep as what is stamped or logged
 underneath it. Decide which transitions the log covers by asking which ones you
 would need to reconstruct, not by asking which ones happen to pass through the
 function you instrumented.

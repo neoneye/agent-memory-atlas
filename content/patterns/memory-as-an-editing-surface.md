@@ -4,7 +4,7 @@ eyebrow: Pattern · Control
 description: Treat the memory store as a document a person edits, not a database a person is shown.
 root: ../..
 page_kind: pattern
-stance: category-bound
+stance: reporting
 ---
 
 ## Intent
@@ -99,9 +99,8 @@ shared memory with an unauthenticated editor is worse than no editor.
 **[SillyTavern](../../systems/sillytavern/)** is the extreme case: the editor is
 the *only* write path. Nothing extracts, so there is no automatic path to
 correct — a person authors entries, keys and activation settings directly. It
-carries no rubric mechanism in this atlas and is plausibly the most-exercised
-memory implementation in existence, and those two facts are the same fact. Users
-tolerate hand-authoring because it means the memory is exactly what they decided.
+carries no rubric mechanism in this atlas, and that is the design rather than a
+gap: hand-authoring means the memory is exactly what the person decided.
 
 **[RisuAI](../../systems/risuai/)**'s HypaV3 modal is the most complete editor
 over *machine-written* memory here, and carries all five verbs: edit text,
@@ -132,12 +131,27 @@ that acquired an agent, rather than an agent that acquired an editor. Its
 conflict handling is last-write-wins by editing, which is what happens when the
 human path is assumed to be the only one.
 
+The pattern is not confined to companion clients.
+[kube-coder](../../systems/kube-coder/)'s dashboard has a create/edit form over
+the same rows its MCP tools serve. [llm-wiki-memory](../../systems/llm-wiki-memory/)'s
+web editor writes **through the engine** rather than over the file, pinned by
+*"PUT edits the body through the engine (re-read reflects it)"*.
+[openyak](../../systems/openyak/) lets a person replace the workspace document
+with a `PUT`, delete it, or force a regeneration with `POST /refresh`, over the
+same text the model reads. And [grok-build](../../systems/grok-build/) keeps
+Markdown files under `~/.grok/memory/` as the source of truth, with the SQLite
+index derived from them.
+
 Elsewhere in the atlas, `human_review` is held by a minority of systems, and most
 of those are approval of a queue rather than editing of the store — a reviewer
 says yes or no to what the extractor proposed and cannot rewrite it.
 
-**One sighting outside the corpus takes the pattern to its limit: an editing
-surface with nothing behind it.** Cline's **Memory Bank** — six markdown files in
+**The pattern at its limit is an editing surface with nothing behind it.**
+In the corpus, [memory-compiler](../../systems/memory-compiler/) keeps its memory
+in four Markdown files — diffable, reviewable in a pull request, correctable
+in any editor — and [opensre](../../systems/opensre/)'s `/memory list` tells the
+user they may *"edit or delete the files directly"*. Outside the corpus, Cline's
+**Memory Bank** — six markdown files in
 the user's own repository, read at the start of a session and rewritten at the
 end — carries every verb on this page for free. A person edits the file, and
 that edit *is* the memory; the model's write goes through the same file with the
@@ -157,13 +171,17 @@ making the memory a document in the first place — and pays for it in the one
 place a document cannot help: **nothing consults the file before a write.** A
 deletion holds until the next update pass re-derives the same paragraph from the
 same conversation, because no record survives saying it was removed on purpose.
-That is the [rejected-value tombstone](../rejected-value-tombstone/) gap, arrived
-at from the direction of having no database at all, and it is the argument that
+OpenSRE has the same gap inside the corpus: `/memory forget` unlinks the file,
+nothing records that the value was rejected, and extraction runs over the last
+thirty turns after every recorded turn, so the statement that produced the memory
+is still in the window the next pass reads. That is the
+[rejected-value tombstone](../rejected-value-tombstone/) gap, arrived at from the
+direction of having no database at all, and it is the argument that
 editability and negative memory are separate properties rather than two views of
 one.
 
 **[Windie Sandbox](../../systems/windie-sandbox/) is the pattern taken as far as
-it goes, and it shows the property this page has not been asking for: whether the
+it goes, and it shows a property the five verbs do not cover: whether the
 editor keeps what it replaced.** The whole product is an editing surface — the
 conversation is a SQLite tree of messages addressed by id, and a person can
 replace a message's text, splice one out, truncate a subtree, or fork a branch at
@@ -194,8 +212,8 @@ In [marm-memory](../../systems/marm-memory/) the bundled console is not the seco
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.
 - Delete a unit, re-feed the source material that produced it, and assert it does
-  not come back. This distinguishes an editor from a suggestion box, and almost
-  nothing in this atlas has it.
+  not come back. This distinguishes an editor from a suggestion box, and it is
+  the property the [tombstone](../rejected-value-tombstone/) mark measures.
 - Assert a pinned unit survives eviction, decay and budget pressure.
 - Merge two units and assert provenance is the union, not the newer one.
 - Reject a previewed regeneration and assert the store is byte-identical.
@@ -205,8 +223,8 @@ In [marm-memory](../../systems/marm-memory/) the bundled console is not the seco
 - Edit a unit, then assert the previous value is still readable from somewhere —
   a version row, a mutation event, a sibling node. If nothing answers, the editor
   is a one-way door, and the user who wanted to compare two phrasings has lost
-  the first one. Windie Sandbox passes every other test on this list and has no
-  answer to this one.
+  the first one. Windie Sandbox refuses a mutation a running session depends on
+  and deletes a stale summary with the edit, and has no answer to this one.
 
 ## Related
 

@@ -1,7 +1,7 @@
 # Are the patterns patterns?
 
-**Status:** audit complete. Two fixes are applied (the exemplar picks and the
-check below). Everything else is a proposed fix, waiting on a decision.
+**Status:** audit complete, and all five proposals applied on 2026-09-25 (see
+[Applied](#applied) at the end). Three mark questions stay open.
 **Method:** seven read-only reviewers, three patterns each, all at `4f9fa4874`
 on 2026-09-25. Every pattern page was judged on four tests:
 
@@ -243,3 +243,26 @@ ratchet counts them without verifying any.
    `content/patterns/` for the slug. Longer term, a check that a pattern
    page never calls a system an instance of a mark it lacks, outside a marked
    counterexample, extends today's exemplar check to the whole catalogue.
+
+## Applied
+
+All five proposals were carried out on 2026-09-25, by the same seven reviewers, each editing only its own pages and reports:
+
+- **Pages.** Every verified error is corrected on its page. Superlatives fell from 459 to 433 and filler phrases from 1,481 to 1,472, and both ceilings are lowered to match.
+- **Reports.** Eighteen reports are corrected at their unchanged pins, each with a History entry. Five more than the fifteen listed above surfaced during the fixes: Atomic Agent, Memory Engine, Hermes Agent, Empryo and qwen-code. The rows of that list not fixed are the three mark questions under *Still open*.
+- **Stances:**
+  - The tombstone moves to `mixed`.
+  - Editing surfaces and source-diverse context move to `reporting`.
+  - Pluggable provider, skills, retrieval hysteresis and promotion between tiers move to `mixed`.
+  - Explicit write destination moves to `advocacy`.
+  - The `category-bound` bucket is retired. The build label reads *Advocacy — a handful of instances*.
+- **Overlaps.** Both pages were narrowed rather than folded, which keeps their URLs and the pattern count:
+  - explicit-write-destination now covers only refusing a write with no named destination (llm-wiki-memory, Memory Engine, Membrane).
+  - promotion-between-tiers now covers only movement between storage tiers, and says where the line to the trust-state page runs.
+- **Re-read checklist.** `reanalyze-memory-system` now requires a grep for the slug across the patterns, families, verdicts and overview pages whenever a mark or mechanism moves.
+
+**Still open:**
+- ELAI's `bitemporal`, and the `human_review` marks of llm-wiki-memory and openyak. These are mark decisions, not corrections.
+- Several unverified superlatives that nothing contradicts. The reviewers listed them and left them.
+- The meta-narrative that was already on the scope page.
+

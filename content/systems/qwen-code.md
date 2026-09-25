@@ -165,8 +165,8 @@ docstring records a performance decision alongside the safety one: "the cheap
 path check runs first, so non-memory writes pay only a single path compare."
 
 The atlas's [explicit write destination](../../patterns/explicit-write-destination/)
-pattern argues that shared writes deserve confirmation. This is the stronger
-form — a class of shared write that is *refused* — and the unconditional
+pattern refuses a write that names no destination. This goes further on the
+shared side — a class of shared write that is *refused* outright — and the unconditional
 behaviour is the detail that makes it trustworthy. A guard that a feature flag
 can switch off protects you only while the flag is set the way you remember.
 
@@ -579,6 +579,8 @@ re-extracts continuously that is the gap that will find you.
   `docs/design/2026-07-11-managed-memory-microcompaction.md`.
 
 ## History
+
+**2026-09-25** — [`537311b8a5d85fd12ab2cff84b418e3a908ca830`](https://github.com/QwenLM/qwen-code/commit/537311b8a5d85fd12ab2cff84b418e3a908ca830) — same pin. The comparison with explicit write destination described that pattern as asking for confirmation of shared writes; the pattern page states it as refusing a write with no named destination, and the sentence now compares against that. No mark moved.
 
 **2026-09-19** — re-pinned to [`537311b8a5d85fd12ab2cff84b418e3a908ca830`](https://github.com/QwenLM/qwen-code/commit/537311b8a5d85fd12ab2cff84b418e3a908ca830), 80 commits on. Both marks stand. `human_review` was producer-tested rather than carried forward, and a pair of functions new since the last reading needed the check: `acceptPendingSkillFromTask` and `rejectPendingSkillFromTask` (`packages/core/src/memory/manager.ts:1103`, `:1111`) are named for the task record they look a staged skill up in, not for a caller that could be a task, and their only callers are the two handlers in the CLI review dialog. The staging itself is structural rather than a flag — `.qwen/pending-skills/` is a sibling of `.qwen/skills/` so the loader scanning the skills root cannot reach it, which the code states in as many words. The record now names the limit every coding agent carries: a general `shell` tool could move the directory, which is not the same as an approve verb on the tool surface. `negative_eval` stands with `excludedFilePaths` re-anchored. Screened again first; nothing was installed and no suite was run.
 

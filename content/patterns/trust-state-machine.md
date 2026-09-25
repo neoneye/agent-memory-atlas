@@ -91,34 +91,42 @@ not do is act on it. Every state is rendered as a label beside the text and no
 read path filters, ranks or omits, so the mark is withheld: the vocabulary is
 right and nothing downstream is bound to it.
 
-[Magic Context](../../systems/magic-context/) contributes the sharpest
-refinement: it keeps **two independent axes** rather than one column. `status` is
-`active | permanent | archived` — where a memory sits in its lifecycle — and
+[Magic Context](../../systems/magic-context/) keeps **two independent axes**
+rather than one column, and only one of them is a state in this page's sense.
+`status` is `active | permanent | archived` — where a memory sits in its
+lifecycle — and ten reads of the memories table narrow on it.
 `verificationStatus` is `unverified | verified | stale | flagged` — what is known
-about its truth. A memory can be `active` and `stale` at once, which a single
-enum cannot express. Anyone building a trust model should start here.
+about its truth, written by a measurement against the files a memory describes —
+and it appears in no `WHERE` clause: it is surfaced to a reader and gates
+nothing. A memory can be `active` and `stale` at once, which a single enum
+cannot express; the axis that says so is the one no read path consults.
 
-[Gini](../../systems/gini-agent/) has the richest single enum —
-`proposed | active | archived | rejected | conflicted` — and `conflicted` is
-unusual: most systems either resolve contradictions silently or handle them
-outside the data model. Gini also carries a `network` of
-`world | experience | opinion | observation`, so *what kind of claim* it is stays
-separate from *how much it is believed*.
+[Gini](../../systems/gini-agent/) declares a five-value enum —
+`proposed | active | archived | rejected | conflicted` — behind a `CHECK`
+constraint, and all four recall channels admit only `active`. The only native
+write of a non-default value is `archived`, for observation rows; `proposed`,
+`rejected` and `conflicted` are produced by no engine path and arrive only
+through a migration importer, where the filter honours them. Gini also carries a
+`network` of `world | experience | opinion | observation`, so *what kind of
+claim* it is stays separate from *how much it is believed*.
 
 [Verel](../../systems/verel/) remains the reference for how states participate in
 recall, promotion, consolidation, and pruning, and for separating epistemic
 confidence from retrieval strength. [RainBox](../../systems/rainbox/) ties the
 transitions to an actor model and an operator review queue.
 
-[Daimon](../../systems/daimon/) is the smallest useful trust model in the atlas —
-two states, `verbatim` and `inferred` — and the only one where a transition is
-made by *code disproving the model*. The item ships with the class the extractor
-chose; then the quote is matched against the transcript and a miss forces the
-item down to `inferred`, and an outcome claim with no tool-result citation is
-forced down even when its quote matched. Everywhere else in this atlas a state
-change is a policy decision about a claim. Here it is a measurement, which is why
-two states are enough: the interesting question was never "how sure is the
-model" but "is the model's own evidence real".
+[Daimon](../../systems/daimon/) is a near-miss on this page's definition, by
+design, and the reasons are stated in its source. Its `verbatim` / `inferred`
+field is a provenance label fixed at write: the item ships with the class the
+extractor chose, the quote is matched against the transcript and a miss forces
+the item down to `inferred`, and an outcome claim with no tool-result citation
+is forced down even when its quote matched. That is code disproving the model
+rather than a policy decision about a claim — and it records how a line was
+obtained, not a judgement that can later be revised. Supersession, overturn and
+contradiction then act as multiplicative demotions, and the project's comments
+rule out the filter explicitly: an overturned item is still evidence, so it
+*"ranks down and renders flagged rather than disappearing."* No read withholds
+an item on either field, which is why the report carries no `trust_state`.
 
 Its second state machine answers a different question, and the answer is the
 best one in this atlas to *how do you know a human approved it*. A refutation —
@@ -149,11 +157,11 @@ rejection recorded in the wrong stream would hide the item instead of demoting
 it, which its own source comments call out as the reason the two logs are kept
 apart.
 
-Two later systems show the states are only half the work. Gini models
-`conflicted` with no visible resolution workflow, and
+Two systems show the states are only half the work. Gini declares
+`conflicted` and no engine path ever writes it, and
 [MateClaw](../../systems/mateclaw/) ships a dedicated `ContradictionDetector`
-with nothing found downstream of it. Detection without a path to resolution
-leaves the operator holding a list.
+and a member-gated resolve endpoint whose recorded verdict nothing reads. A conflict state nothing enters, and
+detection without a path to resolution, both leave the operator holding a list.
 
 Counterexamples remain instructive. [Holographic](../../systems/holographic/)
 collapses truth and reachability into one `trust_score` that feedback mutates
@@ -164,59 +172,59 @@ they are estimates rather than states that change with evidence.
 factual promotion state; [Claude-Mem](../../systems/claude-mem/) and
 [A-MEM](../../systems/a-mem/) activate generated content with none at all.
 
-[Graphify](../../systems/graphify/) is the cheapest working instance here and the
-one to copy if you are starting: three states — `preferred`, `tentative`,
-`contested` — none of them supplied by a model, all three *derived* on each run
-from a directory of outcome-tagged Q&A files. `tentative` is the state that earns
-the pattern: a source cited by one successful answer is recorded and shown but
-not promoted, and only a **second distinct result** moves it to `preferred`. The
-threshold is a parameter with a test asserting it is not hardcoded, and the
-docstring gives the reason in six words — *"one save can't mint a trusted
-lesson."* `contested` is entered by the mere presence of both a positive and a
-negative signal, then given a verdict by the sign of a 30-day-half-life score, so
-contradiction changes the state immediately while recency decides which way it
-reads.
+[Graphify](../../systems/graphify/) is the label without the state. Its three
+bands — `preferred`, `tentative`, `contested` — are none of them supplied by a
+model; all three are *derived* on each run from a directory of outcome-tagged
+Q&A files, from a signed, time-decayed score and a count threshold. A source
+cited by one successful answer is `tentative`, and only a **second distinct
+result** moves it to `preferred`; the threshold is a parameter with a test
+asserting it is not hardcoded, and the docstring gives the reason — *"one save
+can't mint a trusted lesson."* `contested` is entered by the presence of both a
+positive and a negative signal, then given a verdict by the sign of a
+30-day-half-life score. Every consumer then annotates and nothing withholds: the
+band is appended to the node line the model reads, printed, coloured and
+collected into a start-here list, and the code that loads the overlay says it is
+there to annotate *"display-only"*. So a `tentative` node is shown exactly as a
+`preferred` one is, with a different suffix — named bands on a confidence score,
+used for ordering and advice, which is why the report withholds `trust_state`.
 
-Two things generalize past it. The states are **stored on a derived sidecar and
-recomputed wholesale**, never written back into the structural store — so the
-trust layer is disposable and rebuildable, which is what makes changing the
-threshold or the half-life a safe experiment rather than a migration. And the
-state **reaches the model as a suffix on the thing it qualifies**
+Two design choices carry over to a real state machine. The bands are **stored on
+a derived sidecar and recomputed wholesale**, never written back into the
+structural store — so the layer is disposable and rebuildable, and changing the
+threshold or the half-life is an experiment rather than a migration. And the
+band **reaches the model as a suffix on the thing it qualifies**
 (`learning=contested:stale` beside the node), rather than as a separate block a
-reader has to correlate. A trust state that a reader must join by hand is a trust
-state most readers will not use.
+reader has to correlate.
 
-[CLIO](../../systems/clio/) shows what full enforcement looks like, and then what
-happens when the input to it is wrong. Its two states — `unverified` and
-`trusted` — cost an entry something in **three independent channels**: a `0.3x`
-multiplier in the ranking function, a literal `[UNVERIFIED]` badge appended to
-the entry as it is rendered into the system prompt, and a halved age-out with
-doubled confidence decay in the consolidation pass. Scoring, presentation and
-lifetime. Most implementations here pick one, and picking one is how a trust
-state becomes decorative: a tier that only filters is invisible to the model, and
+[CLIO](../../systems/clio/) is a tier that costs something and withholds
+nothing. Its two states — `unverified` and `trusted` — act in **three
+independent channels**: a `0.3x` multiplier in the scoring function, a literal
+`[UNVERIFIED]` badge on the entry as it is rendered into the system prompt, and a
+30-day age-out against 90 with doubled confidence decay in the consolidation
+pass. Scoring, presentation and lifetime — and no filter, so a `0.3`-weighted
+entry still reaches the prompt. That is the ranking side of the line the rubric
+draws, and the report carries no `trust_state` for it. The three channels are
+the part to take: a tier that only filters is invisible to the model, and
 a tier that only badges is invisible to the ranker.
 
-Its promotion rule is the strictest in the atlas — two corroborations from
-**distinct** `agent:session` pairs, with the source *identities* stored as an
-array rather than a count so independence is checkable, and the unconditional
-override withheld from the model's tool list and wired only to a human slash
-command. Automatic path with a threshold, manual path behind a person, and the
-model able to reach neither directly. That is the shape.
+Promotion needs two corroborations from **distinct** `agent:session` pairs, with
+the source *identities* stored as an array rather than a count so independence
+is checkable, and the unconditional override is wired only to the `/memory
+promote` slash command a person types. The identity is where it gives way. Both
+shipped entry points assign `CLIO_AGENT_ID` and `CLIO_SESSION_ID` at startup, and
+the library falls back to `'unknown'` for anything that embeds it without
+them — a fallback a committed regression test pins deliberately beside a second
+subtest asserting that two distinct sources promote. And `add_corroboration` is
+an operation of the model's own `memory` tool whose schema exposes
+`source_agent` and `source_session` as optional strings, passed straight into the
+sybil key, so two calls naming two sources promote an entry to `[TRUSTED]`
+without a second agent or a person.
 
-**And it cannot fire.** Both identity components default to `'unknown'` from
-environment variables that nothing in the repository ever assigns, so every
-corroboration produces the same source key, the sybil dedup rejects the second
-one as a duplicate, and the counter stops at one. Every entry stays `unverified`
-at `0.3x` — a uniform penalty, which reorders nothing. No test covers it.
-
-Three lessons, in descending order of how often they apply. **A trust threshold
-is only as good as the identity it counts**: if independence is the property, the
-identity must come from the runtime, not from a default and not from a caller-supplied
-argument. **A silent fallback converts missing configuration into a
-policy change** — `// 'unknown'` is the whole defect. And **test the property,
-not the functions**: every function in CLIO's tier system is correct in
-isolation, and one test asserting that two corroborations promote an entry would
-have failed on the first run.
+Two lessons generalize. **A trust threshold is only as good as the identity it
+counts**: if independence is the property, the identity must come from the
+runtime, not from a default and not from a caller-supplied argument. And **a
+silent fallback converts missing configuration into a policy change** —
+`// 'unknown'` is a defect for every caller that does not set the variables.
 
 [Memory Palace](../../systems/memory-palace/) is the atlas's clearest *procedural*
 instance and the one where the state reaches the read path hardest.
@@ -240,7 +248,7 @@ a supersede to `pending_confirmation` — and no state machine to receive it:
 nothing reads or clears that value, so the correction is simply dropped. A trust
 state needs both the field and a transition somebody can make.
 
-[Midas](../../systems/midas/) is worth reading here as a deliberate non-instance.
+[Midas](../../systems/midas/) is a deliberate non-instance.
 Its `provenance` field is a discrete four-value enum consulted on the decision
 path, and it is not a trust state: it records where a memory came from, not what
 anyone believes about it. Separating *authority* from *credence* turns out to be
@@ -330,7 +338,7 @@ content came from, `ConfirmationAuthority` for who signed off, and
 approved it" have separate answers and both are stored.
 
 **[Hats](../../systems/one-agent-many-hats/) puts a staging arm between `draft`
-and `active`, which is the only instance of the shape in this corpus.** A lesson
+and `active`, which no other system on this page has.** A lesson
 distilled from a failed run enters at `draft` with confidence 0.5, becomes
 `canary` on first injection, and while it is unproven `inCanarySlice` — an FNV-1a
 hash of `runId:lessonId` against a 0.5 share (`src/memory/lessons.ts`) — decides
@@ -350,9 +358,12 @@ by a whole-file rewrite, and the runtime's hash-chained audit log is never told.
 implementations mostly lack: **a claim can be taken out of service without
 anyone deciding it is wrong.** `dispute` moves a record to `disputed` and sets
 `conflict.state` to `unresolved`, and the eligibility filter excludes it — so a
-contested memory stops being answerable while the adjudication stays open. Every
-other state machine in this corpus forces a winner at the moment of conflict,
-which is the moment there is least information.
+contested memory stops being answerable while the adjudication stays open,
+instead of forcing a winner at the moment of conflict, which is the moment there
+is least information. [Caura](../../systems/caura/) and
+[dense-mem](../../systems/dense-mem/) hold the same position with their own
+values: Caura's `conflicted` and dense-mem's `disputed` both fall outside the
+status set their recall reads admit.
 
 Two details are worth copying beside it. The transition is written *before* the
 mutation: `append_transition` appends `{transaction_id, operation, recorded_at,
@@ -371,13 +382,13 @@ has ever superseded anything. A state machine whose interesting transitions have
 not run is a design, and the difference between a design and a mechanism is
 visible only in the data.
 
-[Scope Recall](../../systems/scope-recall-hermes/) binds its state to filtering in one place. `ordinary_recall_lifecycle_visible_sql` is generated once and used by every lexical lane, by the vector re-check and by the FTS integrity counts, and background digest output is written `candidate` by default; the scheduled adjudicator may archive it but not promote it. What it leaves open is the question this page asks first — who may set the state. The promote that moves a row from `candidate` to `promoted` is in the model's default tool profile, so the state withholds a memory until the agent decides to release it.
+[Scope Recall](../../systems/scope-recall-hermes/) answers the question this page asks first — who may set the state — by giving the answer to no caller. `claim_versions.state` is a SQL `CHECK` over `proposed`, `active`, `disputed`, `superseded` and `retracted`, and `select_effective` never returns a `proposed` or a `retracted` version, so the state decides whether a memory may answer rather than where it ranks. No promote, approve or apply verb exists on either adapter's tool surface: a proposal becomes `active` because `qualify` finds an authority-bearing root among the sources it cites, and stays `proposed` otherwise. The candidate evaluator may re-propose a claim against fresh sources, and its prompt ends *"Do not choose a fact state: Core qualification owns that decision"* — enforced by the code never reading a state from the model's reply.
 
-[Utopia](../../systems/utopia/) is the version of this pattern where the states are tables rather than an enum column, and the reasoning is worth reading before choosing either. A claim sits in `pending_facts`, `facts`, `derived_facts` or `rejected_facts`; confirm and reject move it. The source rejects the status-column version explicitly: roughly fifty queries select live facts by `invalidated_at IS NULL`, so a forgotten predicate would put an unconfirmed fact on the graph, while a forgotten `UNION` only makes the queue invisible — *"failing in the direction where the mistake is visible"*. The same judgement was made once before for derived facts, after a first attempt with a flag on `facts` let the low-confidence review queue offer deductions for confirmation and let the temporal engine close a human assertion with a machine conclusion. Beside the states sits a `confidence` float that gates automatic interval closing and fills the low-confidence queue and filters no retrieval result at all — with a comment saying a person's verdict is not expressed as a number, it goes in the ledger.
+[Utopia](../../systems/utopia/) is the version of this pattern where the states are tables rather than an enum column, and its source argues the choice in terms that apply to either. A claim sits in `pending_facts`, `facts`, `derived_facts` or `rejected_facts`; confirm and reject move it. The source rejects the status-column version explicitly: roughly fifty queries select live facts by `invalidated_at IS NULL`, so a forgotten predicate would put an unconfirmed fact on the graph, while a forgotten `UNION` only makes the queue invisible — *"failing in the direction where the mistake is visible"*. The same judgement was made once before for derived facts, after a first attempt with a flag on `facts` let the low-confidence review queue offer deductions for confirmation and let the temporal engine close a human assertion with a machine conclusion. Beside the states sits a `confidence` float that gates automatic interval closing and fills the low-confidence queue and filters no retrieval result at all — with a comment saying a person's verdict is not expressed as a number, it goes in the ledger.
 
 **[GrayMatter](../../systems/graymatter/) declares the vocabulary and wires nothing to it.** Its confidence field holds `verified`, `inferred` or `unverified`, validated at the write path and rejected otherwise — the shape this page asks for, including a state that should withhold a memory from being treated as true. Every reader displays it: the explain receipt copies it, the TUI prints it, the note exporter writes it into frontmatter. It appears in no ranking, no filter and no consolidation decision, and the field's own comment concedes *"it never affects ranking, decay or pruning."* Its only producer sits on the Go library interface and on no MCP tool or CLI command, so an agent cannot mark its own inference unverified even for display. The result is a store of claims wearing the vocabulary of a store of beliefs.
 
-**[Membrane](../../systems/membrane/) has the enum and not the predicate, which is the failure this page exists to name.** Its revision status is `active · contested · retracted`, declared with per-value doc comments citing the specification, and four code paths write it: contest, retract, supersede and a semantic re-activation. A search for reads of that field at the tree root returns those writes and one erasure in the audit path — no filter, no ranking term, and no projection into the response. What retrieval sees instead is the salience of zero that retraction and merge set at the same moment, and that only excludes anything when the caller passes a positive minimum, which both SDKs default to zero and the project's own lifecycle eval raises so its retraction scenario passes. Contest sets the state and leaves salience alone, so the one status that means *withhold this pending resolution* changes nothing a reader can observe. The repair is a line: a status predicate wherever the salience floor is applied.
+**[Membrane](../../systems/membrane/) has the enum and not the predicate, which is the failure this page exists to name.** Its revision status is `active · contested · retracted`, declared with per-value doc comments citing the specification, and four code paths write it: contest, retract, supersede and a semantic re-activation. A search for reads of that field at the tree root returns those writes, one erasure in the audit path and the copy into the gRPC response — no filter and no ranking term, so a retracted record comes back labelled `retracted` and only a caller who reads the label knows. What retrieval sees instead is the salience of zero that retraction and merge set at the same moment, and that only excludes anything when the caller passes a positive minimum, which both SDKs default to zero and the project's own lifecycle eval raises so its retraction scenario passes. Contest sets the state and leaves salience alone, so the one status that means *withhold this pending resolution* changes nothing about what retrieval returns. The repair is a line: a status predicate wherever the salience floor is applied.
 
 ## Tests to require
 

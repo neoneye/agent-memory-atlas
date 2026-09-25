@@ -20,7 +20,9 @@ split on blank lines. Blocks opening with `#`, `|`, `>` or `<` are skipped. A
 block of list items is split into one unit per item, because a bullet can carry
 the same wall as a paragraph. Words are whitespace tokens. Sentences split on
 `[.!?]` followed by whitespace and a capital, a backtick or `*`, which
-over-splits on abbreviations, so the sentence count is a floor.
+over-splits on abbreviations, so the sentence count is a floor. (The
+first version required a capital, backtick or `*` next, and merged sentences
+that open with a link or a section sign; corrected the day it shipped.)
 
 **The hole this does not close:** within a report that has a baseline, one long
 paragraph can replace another at the same count. Nothing here says whether a
@@ -45,7 +47,10 @@ FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.S)
 FENCE = re.compile(r"^```.*?^```[ \t]*$", re.S | re.M)
 LIST_ITEM = re.compile(r"^(?:[-*+]|\d+\.)\s+")
 SKIP = ("#", "|", ">", "<")
-SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-Z*`])")
+#: A sentence ends at [.!?], optionally closed by `**`, `*`, a quote or a
+#: bracket, before whitespace and anything that does not start lowercase — so a
+#: link, a section sign or a figure opening the next sentence still splits.
+SENTENCE_END = re.compile(r"(?<=[.!?])(?:\*\*|\*|[\"”’)\]])?\s+(?=[^a-z\s])")
 
 
 def units(text: str):
@@ -124,6 +129,8 @@ def self_test() -> int:
          f"- {words(80)}.\n- {words(80)}.\n", (0, 2)),
         ("a paragraph under History counts",
          f"## History\n\n**2026-09-25** {words(151)}.\n", (1, 1)),
+        ("a sentence opening with a link still splits",
+         f"{words(40)}. [A](x) {words(40)}. **B.** {words(40)}.\n", (0, 0)),
         ("three 55-word sentences are short",
          f"{words(55)}. A {words(54)}. A {words(54)}.\n", (1, 0)),
     ]
@@ -141,7 +148,7 @@ def self_test() -> int:
     if lowered({"old": (4, 1)}, {"old": (3, 5)}) != {"old": (3, 1)}:
         print("self-test failed: --lower raised an entry", file=sys.stderr)
         return 1
-    print("self-test: 9 controls passed")
+    print("self-test: 10 controls passed")
     return 0
 
 

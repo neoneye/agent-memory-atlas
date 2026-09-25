@@ -216,9 +216,14 @@ how good the parsers are.</p>
 <li><strong>Written.</strong> An event is inserted with
 <code>session_id</code>, <code>project_dir</code>,
 <code>created_at</code>, an <code>attribution_source</code> and an
-<code>attribution_confidence</code>. It is never edited afterwards;
-there is no <code>UPDATE</code> on <code>session_events</code> in the
-tree.</li>
+<code>attribution_confidence</code>. Its content is never edited
+afterwards. The one <code>UPDATE</code> on <code>session_events</code>
+in the tree re-keys rows: <code>renameSession</code> in
+<code>src/adapters/openclaw/session-db.ts</code> rewrites
+<code>session_id</code> in one transaction across the session tables
+when OpenClaw re-keys a session on gateway restart (called from
+<code>src/adapters/openclaw/plugin.ts:693</code>), so the accumulated
+events survive the re-key unchanged.</li>
 <li><strong>Selected, or not.</strong> At the next
 <code>SessionStart</code> the events for <em>that session id</em> are
 grouped by category and rendered. Some categories are filtered on their
@@ -651,6 +656,17 @@ fall into the <code>[]</code> branch — safe, but silently empty.</li>
 <code>tests/adapters/base-adapter-memory.test.ts</code> ·
 <code>tests/benchmark-results-v04.json</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/mksglu/context-mode/commit/f889a0537dc1fd264bb5e39299db8f9be1ef3fb6"><code class="commit-id" title="f889a0537dc1fd264bb5e39299db8f9be1ef3fb6">f889a053…</code></a>
+— audited at the unchanged pin. §2's state machine said there is no
+<code>UPDATE</code> on <code>session_events</code> in the tree. There is
+one: <code>renameSessionEvents</code> in
+<code>src/adapters/openclaw/session-db.ts:80</code>, run by
+<code>renameSession</code> (<code>:123-129</code>) from
+<code>src/adapters/openclaw/plugin.ts:693</code> when OpenClaw re-keys a
+session on gateway restart. It rewrites <code>session_id</code> and no
+content, so the finding that nothing corrects an event stands in its
+narrower form. No mark moved.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/mksglu/context-mode/commit/f889a0537dc1fd264bb5e39299db8f9be1ef3fb6"><code class="commit-id" title="f889a0537dc1fd264bb5e39299db8f9be1ef3fb6">f889a053…</code></a>
 — second reading. Fifty-six commits since the previous pin, every one

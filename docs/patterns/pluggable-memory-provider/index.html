@@ -104,9 +104,9 @@ trust, correction, and deletion before the first plugin ships.">
 memory backends behind one interface, and decide who owns trust,
 correction, and deletion before the first plugin ships.</p>
                                         <div class="document-meta">
-            <a class="meta-pill stance-pill stance-reporting" href="../../patterns/#how-established-is-any-of-this">
+            <a class="meta-pill stance-pill stance-mixed" href="../../patterns/#how-established-is-any-of-this">
               <span>Epistemic status</span>
-              <strong>Reporting an established practice</strong>
+              <strong>Reporting, with one advocacy claim</strong>
             </a>
           </div>
                             </div>
@@ -128,6 +128,14 @@ correction, and deletion before the first plugin ships.</p>
 interface, many backends, chosen by configuration. Then answer the
 question the interface makes urgent — when memory lives in someone
 else's store, who is responsible for forgetting?</p>
+<p>The page makes two kinds of claim. The first half is reported
+practice: host runtimes that mount memory behind one lifecycle contract
+are common in this atlas, from Hermes and OpenClaw to ADK, AutoGen, Agno
+and Strands. The second half is argued: carrying <strong>scope and
+deletion across that contract</strong>. ADK and MateClaw declare scope;
+the Pydantic AI Harness declares a targeted delete; no contract read
+here declares both. That half rests on one or two instances, and the
+page is arguing for it rather than reporting it.</p>
 <h2 id="the-problem">The problem</h2>
 <p>A host runtime that hard-codes its memory model forces every user
 into one set of trade-offs. A local Markdown store cannot do
@@ -230,16 +238,22 @@ rather than in each backend.</p>
 interface with one implementation is a guess about the future.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
 <p><a href="../../systems/hermes-agent/">Hermes Agent</a> has the most
-explicit contract: a <code>MemoryProvider</code> ABC with roughly
-seventeen lifecycle members covering initialization, prompt blocks,
-prefetch, per-turn sync, tool schemas and dispatch, session end and
-switch, pre-compression extraction, delegation observation, config, and
-backup paths, with a <code>MemoryManager</code> that mounts exactly one
-external provider. First-party adapters ship in-tree for Honcho, Mem0,
-Hindsight, Supermemory, OpenViking, ByteRover, RetainDB, and the
-built-in Holographic plugin — so the adapters are reviewable even when a
-backing service is not. The contract has <strong>no deletion hook and no
-scope parameter</strong>.</p>
+explicit contract: a <code>MemoryProvider</code> ABC with more than
+twenty members covering identity and availability, initialization,
+prompt blocks, prefetch and its queued form, recall status, turn start
+and per-turn sync, tool schemas and dispatch, session end and switch,
+pre-compression extraction, delegation observation, config, backup
+paths, and shutdown, with a <code>MemoryManager</code> that mounts
+exactly one external provider. First-party adapters ship in-tree for
+Honcho, Mem0, Hindsight, Supermemory, OpenViking, ByteRover, RetainDB,
+and the built-in Holographic plugin — so the adapters are reviewable
+even when a backing service is not. The contract has <strong>no deletion
+hook and no per-call tenant scope</strong>:
+<code>initialize(session_id, **kwargs)</code> documents
+<code>user_id</code> among optional keyword arguments, and
+<code>prefetch</code> and <code>sync_turn</code> take a
+<code>session_id</code>, so a provider learns its user once at startup
+rather than on each read or write.</p>
 <p><a href="../../systems/openclaw/">OpenClaw</a> reaches the same shape
 from the other direction: <code>memory-core</code> defines the plugin
 contract and CLI while <code>memory-lancedb</code> is merely the
@@ -267,10 +281,15 @@ consequently rebuilds message indexing, FTS, embeddings, and scope from
 scratch on top of those events, and has to decide for itself what a
 forked session inherits.</p>
 <p><a href="../../systems/tencentdb-agent-memory/">TencentDB Agent
-Memory</a> is the atlas's other plugin-shaped system, targeting both
-OpenClaw and Hermes, and it also lacks a first-class user-facing forget
-operation — the same gap arriving from the provider side rather than the
-host side.</p>
+Memory</a> sidesteps the host contract altogether: at its pin it is a
+reverse proxy in front of the model API, reached by pointing an agent's
+<code>base_url</code> at it, with SDKs and an OpenClaw plugin shipped
+beside it. Because it owns the traffic rather than a slot in a host's
+interface, deletion and scope are its own to define, and it defines both
+— <code>atomic/delete</code>, <code>scenario/rm</code> and a
+clear-memory path, each journalled to <code>memory_audit</code>, with
+the team/user/agent/task key composed into the delete predicates as well
+as the reads.</p>
 <p><a href="../../systems/mateclaw/">MateClaw</a> is the counterexample
 that shows the gap is a choice, not an inevitability. Its
 <code>MemoryProvider</code> SPI declares paired overloads —
@@ -284,29 +303,26 @@ any provider in <code>MetricsMemoryProvider</code> and
 solved once for every backend rather than reimplemented per plugin.
 Default interface methods give implicit capability negotiation — a
 provider implements what it supports.</p>
-<p>MateClaw still has <strong>no deletion hook</strong>, so it closes
-half the governance gap and leaves the other half open.</p>
-<p><strong>The count on this page and the one in the comparative report
-were counting different sets, and both are restated here.</strong> Nine
-contracts have now been read — Hermes, OpenClaw, Pi (which has none),
-MateClaw, ADK, AutoGen, Agno's <code>LearningStore</code>, Microsoft's
-<code>ContextProvider</code>, and the Pydantic AI Harness's
-<code>MemoryStore</code>, with CAMEL's <code>AgentMemory</code> a tenth
-if you count <code>clear</code> as removal. Two declare scope: ADK by
-required keyword argument, MateClaw by paired overloads. <strong>One
-declares targeted deletion, and only one</strong> — the Pydantic AI
-Harness, whose Protocol is <code>read</code>,
-<code>get_operation</code>, <code>write</code>, <code>delete</code>,
-<code>list_paths</code>. Everything else offers <code>clear()</code>, or
-nothing.</p>
-<p><a href="../../systems/agno/">Agno</a> is the fifth, and it separates
-two things the other four conflate. Its <code>LearningStore</code>
-Protocol declares six methods — <code>recall</code>,
-<code>process</code>, <code>build_context</code>,
-<code>instructions</code>, <code>get_tools</code>,
-<code>learning_type</code> — and every one of them takes
-<code>**kwargs</code>. So the contract expresses <strong>neither scope
-nor deletion</strong>, and both exist anyway:
+<p>MateClaw has <strong>no deletion hook</strong>, so it closes half the
+governance gap and leaves the other half open.</p>
+<p><strong>Across the host contracts read for this page</strong> —
+Hermes, OpenClaw, Pi (which has none), MateClaw, ADK, AutoGen, Agno's
+<code>LearningStore</code>, Microsoft's <code>ContextProvider</code>,
+the Pydantic AI Harness's <code>MemoryStore</code>, CAMEL's
+<code>AgentMemory</code>, Cosmonapse's <code>Engram</code> and Strands'
+<code>MemoryStore</code> — two declare scope: ADK by required keyword
+argument, MateClaw by paired overloads. <strong>One declares targeted
+deletion</strong> — the Pydantic AI Harness, whose Protocol is
+<code>read</code>, <code>get_operation</code>, <code>write</code>,
+<code>delete</code>, <code>list_paths</code>. Everything else offers
+<code>clear()</code>, or nothing.</p>
+<p><a href="../../systems/agno/">Agno</a> separates two things the other
+contracts conflate. Its <code>LearningStore</code> Protocol declares six
+methods — <code>recall</code>, <code>process</code>,
+<code>build_context</code>, <code>instructions</code>,
+<code>get_tools</code>, <code>learning_type</code> — and every one of
+them takes <code>**kwargs</code>. So the contract expresses
+<strong>neither scope nor deletion</strong>, and both exist anyway:
 <code>recall(user_id)</code> returns <code>None</code> when the key is
 missing, <code>retire_fact</code> keeps a superseded row,
 <code>forget</code> archives an entity. The reason is that Agno writes
@@ -327,17 +343,18 @@ and the omission is glaring once you have seen one.</strong> Every other
 interface on this page models the happy path: write, read, prefetch.
 This one ships five typed errors — <code>EngramTimeout</code> for an
 elapsed deadline, <code>EngramCancelled</code> for a task killed
-mid-call, <code>EngramNotBound</code> for storage nobody wired, and
+mid-call, <code>EngramNotBound</code> for storage nobody wired,
 <code>EngramOverloaded</code> for a backend that <strong>shed
-load</strong> — and two methods that follow from taking failure
-seriously. <code>can_serve(query) -&gt; bool</code> lets a backend
-decline (the docstring's example is a BM25 engram asked for vector
-search, and the hosting Dendrite then skips responding), which is the
-only place in this atlas where "retrieval can return nothing" is a
-capability the contract can express. <code>compensate(trace_id)</code>
-reverses every journaled write for a trace, replaying inverses LIFO so
-nested overwrites unwind, with <code>commit(trace_id)</code> discarding
-the journal at the workflow's commit point.</p>
+load</strong>, and <code>EngramError</code> above them — and two methods
+that follow from taking failure seriously.
+<code>can_serve(query) -&gt; bool</code> lets a backend decline (the
+docstring's example is a BM25 engram asked for vector search, and the
+hosting Dendrite then skips responding), which is the only place in this
+atlas where "retrieval can return nothing" is a capability the contract
+can express. <code>compensate(trace_id)</code> reverses every journaled
+write for a trace, replaying inverses LIFO so nested overwrites unwind,
+with <code>commit(trace_id)</code> discarding the journal at the
+workflow's commit point.</p>
 <p>Two limits are documented rather than left to be found, which is the
 right way to ship a rollback: compensation is best-effort, so a failing
 inverse is logged and the rest still run, and only Engram state is
@@ -346,12 +363,12 @@ that is <em>not</em> documented is where the journal lives:
 <code>self._saga_journal</code> is a dictionary on the instance, so in a
 protocol whose transports include NATS and Kafka precisely because
 workers are disposable, the rollback guarantee lasts exactly as long as
-the process. It also carries <strong>no scope parameter</strong>, which
-makes four contracts on this page with that gap.</p>
-<p><a href="https://github.com/wanxingai/LightAgent">LightAgent</a>
-shows the pattern at its smallest — a 196-line
-<code>shared_memory.py</code> with swappable adapters shipped as
-examples (<code>clawmem_memory_adapter.py</code>,
+the process. It also carries <strong>no scope parameter</strong>.</p>
+<p>Outside the corpus, and read without a pinned report, <a
+href="https://github.com/wanxingai/LightAgent">LightAgent</a> shows the
+pattern at its smallest — a 196-line <code>shared_memory.py</code> with
+swappable adapters shipped as examples
+(<code>clawmem_memory_adapter.py</code>,
 <code>vector_memory_adapter.py</code>). The shape survives the scale
 reduction; so does the missing deletion path.</p>
 <p><strong><a href="../../systems/smythos-sre/">SmythOS SRE</a> is the
@@ -380,8 +397,7 @@ contract, not the backend, is the limiting factor.</p>
 <h3 id="the-vendor-neutral-contract-nobody-signed-up-for">The
 vendor-neutral contract nobody signed up for</h3>
 <p>Every interface above is a host's, and each was designed by people
-who had to make one runtime work. There is now one that is not:
-OpenTelemetry's <a
+who had to make one runtime work. One is not: OpenTelemetry's <a
 href="https://github.com/open-telemetry/semantic-conventions-genai">GenAI
 semantic conventions</a> define, at
 <code class="commit-id" title="46d43c8949afb53765a202e89f4534eeb75ca3fa">46d43c89…</code>, a
@@ -396,8 +412,8 @@ field has to an agreed answer about what operations memory
 <em>has</em>.</p>
 <p>Read against this page's own tally, two things stand out.</p>
 <p><strong>It names deletion, twice, and at both granularities.</strong>
-Of the ten host contracts read here, exactly one declares targeted
-deletion. The vocabulary written by nobody's runtime declares
+Of the host contracts read here, one declares targeted deletion. The
+vocabulary written by nobody's runtime declares
 <code>delete_memory</code> for records and
 <code>delete_memory_store</code> for the whole store, and gives
 <code>gen_ai.memory.record.count</code> an explicit meaning for a delete
@@ -411,8 +427,8 @@ user, project or agent attribute on a memory operation — only
 <code>gen_ai.memory.store.id</code>, with the note that each component
 <em>"SHOULD document what <code>gen_ai.memory.store.id</code> maps
 to"</em>. Isolation is left as an implementation detail of the store id,
-which is the same gap four host contracts on this page have, arriving
-from a fifth direction.</p>
+which is the same gap most host contracts on this page have, arriving
+from another direction.</p>
 <p>The record schema is the sharper version of the same point.
 <code>model/gen-ai/gen-ai-memory-records.json</code> defines a
 <code>MemoryRecord</code> as <code>content</code> (the only required

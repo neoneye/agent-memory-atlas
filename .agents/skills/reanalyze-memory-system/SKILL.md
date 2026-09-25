@@ -259,7 +259,15 @@ them, not in a campaign.
   taught something about the method rather than about the system.
 - The homepage card in `site/index.html` when the headline finding changed, and
   its `data-search` terms when new mechanism names appeared.
-- Pattern pages citing this system as evidence, when the evidence changed.
+- **Every page that cites this system, whenever a mark or a mechanism moved.**
+  Find them with `grep -rln 'systems/<slug>/' content/patterns content/families.md content/verdicts.md content/overview.md`
+  and read each citation against the new reading. The checks see only part of
+  it: `check_family_marks.py` compares the families page's mark counts and
+  `check_pattern_exemplars.py` the *Read these first* lists, and neither sees a
+  catalogue paragraph that still describes the old mechanism. On 2026-09-25 an
+  audit of the pattern pages found 87 verified errors, most of them paragraphs
+  left behind by re-reads between 2026-09-17 and 2026-09-20 — three of the
+  trust-state exemplars had lost the mark the page cited them for.
 - Nothing for counts: corpus and mark counts are `PLACEHOLDER_*` tokens filled at
   build time (see `add-memory-system`).
 

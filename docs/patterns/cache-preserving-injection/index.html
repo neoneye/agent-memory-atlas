@@ -129,8 +129,8 @@ argument.</strong> The <a href="./">patterns index</a> declines
 context-window pruning as a prompt-assembly concern rather than a memory
 one, and that decision stands. This page is the part of that territory
 which is not about token budgets: <strong>where you inject memory
-constrains what your memory system is allowed to be</strong>, and one
-system in the atlas redesigned its entire write path around that
+constrains what your memory system is allowed to be</strong>, and
+systems in the atlas have shaped their write paths around that
 constraint rather than around anything about recall.</p>
 </blockquote>
 <h2 id="intent">Intent</h2>
@@ -148,9 +148,9 @@ prefix misses on every request — and the miss is not partial. Everything
 from the first differing byte onward is re-processed, which for a
 memory-augmented agent is usually the whole prompt.</p>
 <p>This is invisible in exactly the way that matters. Retrieval quality
-is unaffected, tests pass, and the only signal is the bill. Five reports
-in this atlas record a system in this state, and none of the five
-projects appears to have noticed:</p>
+is unaffected, tests pass, and the only signal is the bill. These
+reports record a system in this state, and none of the projects appears
+to have noticed:</p>
 <ul>
 <li><a href="../../systems/helm/">Helm</a> — <em>"Prompt-prefix caching
 is invalidated on every turn, by construction."</em>
@@ -170,6 +170,12 @@ injected at an unstable position rather than in a stable prefix.</li>
 own, but everything a plugin injects goes through
 <code>experimental.chat.system.transform</code> into the system prompt,
 so the <em>contract</em> hands every plugin author this failure.</li>
+<li><a href="../../systems/memorax-code/">MemoraX Code</a>, <a
+href="../../systems/openmasq/">OpenMasq</a>, <a
+href="../../systems/plur1bus/">PLUR1BUS</a> and <a
+href="../../systems/mnemosyne/">Mnemosyne</a> — per-turn recall injected
+into the prompt, each recorded in its report as invalidating the prefix
+cache on every turn whose recalled set changes.</li>
 </ul>
 <p>The cost is not a rounding error, and it compounds with the thing
 memory systems are for. The more memory you inject, the larger the
@@ -217,15 +223,14 @@ without changing what the model reads.</p>
 <p>The second-order effect is the interesting one. Once prompt cost is a
 static, known quantity, a memory budget becomes enforceable — which is
 what lets <a href="../../systems/hermes-agent/">Hermes Agent</a> take
-the position almost nothing else in this atlas takes: memory is
-<strong>hard-bounded and frozen, because the prompt cache matters more
-than completeness.</strong> <code>MEMORY.md</code> is capped at 2,200
-characters and <code>USER.md</code> at 1,375. When an <code>add</code>
-would exceed the cap the write is <em>refused</em>, and the tool returns
-the current entries with an instruction to consolidate and retry within
-the same turn. Compaction is not a background worker; it is a
-synchronous obligation handed to the model at the moment of
-overflow.</p>
+the position that memory is <strong>hard-bounded and frozen, because the
+prompt cache matters more than completeness.</strong>
+<code>MEMORY.md</code> is capped at 2,200 characters and
+<code>USER.md</code> at 1,375. When an <code>add</code> would exceed the
+cap the write is <em>refused</em>, and the tool returns the current
+entries with an instruction to consolidate and retry within the same
+turn. Compaction is not a background worker; it is a synchronous
+obligation handed to the model at the moment of overflow.</p>
 <p>That is a write path, a correction path and a capacity policy all
 derived from a caching constraint. It is why this belongs in a memory
 pattern library rather than in a prompt-engineering note.</p>
@@ -285,8 +290,28 @@ where the regeneration happens, not where the taxonomy suggests.</li>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
 <ul>
 <li><strong><a href="../../systems/hermes-agent/">Hermes
-Agent</a></strong> — the frozen snapshot, and the only system here whose
-memory <em>design</em> follows from the cache constraint.</li>
+Agent</a></strong> — the frozen snapshot, with a capacity policy and a
+write-refusal path that follow from the cache constraint.</li>
+<li><strong><a href="../../systems/nuum/">Nuum</a></strong> — the memory
+section frozen per epoch in <code>prompt-cache.json</code> so the
+system-prompt prefix stays byte-identical between turns. An explicit
+<code>update_state</code> write bumps the epoch; the extractor that runs
+after every turn does not, and <code>run.test.ts</code> pins both
+halves. The cost is the same boundary seen from the store: what the
+extractor writes or removes changes the files at once and the frozen
+prompt only at compaction or the next explicit write.</li>
+<li><strong><a href="../../systems/reasonix/">Reasonix</a></strong> —
+split by position, with the cache as the stated design constraint. The
+cached system prompt carries only a short memory policy and the standing
+instruction documents; the memory index and pinned fact bodies ride a
+host-generated <code>&lt;session-context&gt;</code> snapshot, a write
+appends one complete replacement snapshot on the next user turn, and an
+unchanged snapshot is deduplicated by digest.</li>
+<li><strong><a href="../../systems/hipocampus/">Hipocampus</a></strong>
+— size caps on the always-loaded files justified in the spec as a
+caching decision: <em>"stable content maximizes prompt cache hit
+rate"</em>, with about 3K tokens of <code>ROOT.md</code> per session
+chosen to sit inside the prompt cache.</li>
 <li><strong><a href="../../systems/memobase/">Memobase</a></strong> —
 the profile is injected at the front, which the report notes is
 friendlier to prefix caching than the alternative.</li>
@@ -302,9 +327,9 @@ Mode</a></strong> — the boundary shape by accident of lifecycle: its
 <code>&lt;session_knowledge&gt;</code> block is emitted once at
 <code>SessionStart</code> and once at <code>PreCompact</code> and never
 re-rendered mid-session, so it lands in the cached prefix. Nothing in
-that tree says this was reasoned about, which is worth noting — it is
-the one arrangement here that could silently stop being true if a
-maintainer added a per-turn refresh.</li>
+that tree says this was reasoned about, so it is the one arrangement
+here that could silently stop being true if a maintainer added a
+per-turn refresh.</li>
 <li><strong><a href="../../systems/khabeer/">Khabeer</a></strong> — that
 failure, with the intent written down. A port of Hermes whose
 specification states the frozen-snapshot rule in so many words, and
@@ -313,14 +338,6 @@ every provider request builder — once per tool step on the Anthropic
 path. Everything else in the Hermes store came across; the one property
 this pattern names did not, because the function that renders the block
 is called <code>systemPromptSnapshot</code> and holds no state.</li>
-<li><strong><a href="../../systems/nuum/">Nuum</a></strong> — the frozen
-section with a rule for who may break it. The memory render is kept per
-epoch in <code>prompt-cache.json</code>; an explicit
-<code>update_state</code> write bumps the epoch, and the per-turn
-extractor does not, both halves pinned in <code>run.test.ts</code>. The
-cost is the same boundary seen from the store: a fact the extractor
-removes from disk stays in the frozen prompt until compaction or the
-next explicit write.</li>
 <li><strong><a href="../../systems/helm/">Helm</a></strong>, <strong><a
 href="../../systems/csm/">CSM</a></strong>, <strong><a
 href="../../systems/risuai/">RisuAI</a></strong>, <strong><a
@@ -371,8 +388,8 @@ href="https://github.com/fkiene/llmtrim/commit/d7fd2c4e3ec4a9e354f98227546e3f75b
 It gets no report here, because its store is in-process only,
 size-capped and explicitly never written to disk — nothing survives the
 session, which is the inclusion bar.
-<code>crates/llmtrim-core/src/memo.rs</code> is worth reading anyway,
-for three reasons.</p>
+<code>crates/llmtrim-core/src/memo.rs</code> matters to this page for
+three reasons.</p>
 <p><strong>It names the failure precisely, and the failure is caused by
 compression itself.</strong> Its stages are deterministic per request
 but read the whole conversation, so <em>"the compressed form of an old
@@ -407,18 +424,22 @@ frequencies across the whole conversation, so reuse is disabled whenever
 that stage is on, rather than reaching into the stage to freeze its
 dictionary. A caching optimisation that knows which of its own
 components it cannot safely apply to is rarer than it should be.</p>
-<p>The same repository shows the other half of the trade. <a
+<p>A second proxy shows the other half of the trade. <a
 href="https://github.com/headroomlabs-ai/headroom">headroom</a>,
 examined at <a
 href="https://github.com/headroomlabs-ai/headroom/commit/675d13f08d42455c8fa17bda878c1a11b905cee4"><code class="commit-id" title="675d13f08d42455c8fa17bda878c1a11b905cee4">675d13f0…</code></a>,
 implements what it calls CCR — Compress-Cache-Retrieve — where a dropped
 payload is stashed in SQLite keyed by the hash that goes into the
 prompt, and a retrieval tool call trades the hash back for the original:
-<em>"lossy on the wire, lossless end-to-end."</em> It is a dereference
-table rather than a memory, and it is not reported here for that reason,
-but the shape is the one a memory system reaches for when a recalled
-item is too big to inject — put the handle in the prefix and let the
-model ask for the body, which is what <a
+<em>"lossy on the wire, lossless end-to-end."</em> CCR is a dereference
+table rather than a memory. The <a
+href="../../systems/headroom/">Headroom report</a> covers the
+repository's separate cross-agent memory subsystem, and places CCR in
+the compression product beside a <code>CacheAligner</code> that flags
+content which would bust a provider's prefix cache and never rewrites
+the prompt. The CCR shape is the one a memory system reaches for when a
+recalled item is too big to inject — put the handle in the prefix and
+let the model ask for the body, which is what <a
 href="../../systems/ollama/">Ollama</a>'s agent did above with a name
 instead of a hash.</p>
 <h2 id="tests-before-relying-on-it">Tests before relying on it</h2>

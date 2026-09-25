@@ -205,13 +205,14 @@ tamper-evidence.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong><a href="../../systems/aura/">Aura</a> and <a
-href="../../systems/aimee/">aimee</a> are the two that are
-tamper-evident, and between them they mark the upper bound of this
-pattern.</strong> Every other audit on this page is append-only by file
-handle: opened <code>O_APPEND</code>, never rewritten by the code that
-owns it, and completely silent about an edit made by anything else. Aura
-keeps a SHA-256 hash chain beside its receipt store, one JSONL line per
-receipt:</p>
+href="../../systems/aimee/">aimee</a> are tamper-evident, and between
+them they mark the upper bound of this pattern.</strong> So is <a
+href="../../systems/midas/">Midas</a>, below, whose rows carry their own
+chain. Most other audits on this page are append-only by file handle, by
+grant or by trigger: never rewritten by the code that owns them, and
+unable to show an edit made by anything with enough access to bypass
+that. Aura keeps a SHA-256 hash chain beside its receipt store, one
+JSONL line per receipt:</p>
 <pre class="text"><code>seq:           monotonically increasing per-store
 content_hash:  SHA-256 of the canonical JSON of the receipt body
 prev_hash:     entry_hash of the previous entry (genesis is all zeros)
@@ -263,10 +264,13 @@ of the fields, which closes the concatenation ambiguity that lets two
 different records hash alike; <code>ts</code> is deliberately excluded
 from the hashed material, so a clock correction does not break the
 chain.</p>
-<p><strong><a href="../../systems/palazzo/">Palazzo</a> is the only
-implementation here where the log entry is a precondition rather than a
-consequence.</strong> Every other audit on this page is written because
-a mutation happened. Palazzo's write-ahead log has two methods, and the
+<p><strong><a href="../../systems/palazzo/">Palazzo</a> makes the log
+entry a precondition of deletion rather than a consequence of it, and
+writes the rule into the method's contract.</strong> Most audits on this
+page are written because a mutation happened; <a
+href="../../systems/breadcrumbs/">breadcrumbs</a>, below, also writes
+its row before the overwrite, and aimee's append aborts the mutation it
+fails to record. Palazzo's write-ahead log has two methods, and the
 destructive paths call the second one:</p>
 <pre class="rust"><code>/// Like `log`, but errors when the entry cannot be durably appended —
 /// including when no WAL path is configured at all. Destructive operations
@@ -279,8 +283,10 @@ pub fn log_strict&lt;T: Serialize&gt;(&amp;self, operation: &amp;str, params: &a
 <code>log_strict</code>, which fails the operation. A lost store line is
 an inconvenience; a lost delete line is the erasure of the record that
 the erasure happened, and that is the one case where continuing is worse
-than stopping. <code>delete_happy_path_wal_logs_then_deletes</code> pins
-the ordering.</p>
+than stopping.
+<code>delete_aborts_before_qdrant_when_wal_unconfigured</code> pins the
+refusal: with no WAL path the delete errors, and no delete request
+reaches Qdrant.</p>
 <p>The second detail is what goes in the entry. Palazzo writes a text
 preview of every point before deleting it, so the log says what was
 removed. Compare <a href="../../systems/lorekit/">LoreKit</a>, whose
@@ -323,13 +329,13 @@ before the tamper-evidence question.</strong> Its
 <code>CognitiveJournal</code> is append-only JSONL, one SHA-256 per
 line, and its module docstring calls it <em>"the single source of truth
 for all Helix memories, beliefs, and thought snapshots"</em>. Every
-belief write appends a full snapshot to it. Both paths that remove a
-belief — <code>remove_belief</code>, which rewrites the category file
-and clears the runtime indexes, and <code>archive_belief</code>, which
-pins mass at <code>0.01</code> — append nothing. So the log is a
-complete record of everything the system has believed <strong>except
-what it was asked to forget</strong>, which is the one entry an audit
-exists for.</p>
+belief write appends a full snapshot to it, and so does
+<code>archive_belief</code>, which pins mass at <code>0.01</code> and
+tags the belief through the same sync path. <code>remove_belief</code>,
+which rewrites the category file and clears the runtime indexes, appends
+nothing. So the log is a complete record of everything the system has
+believed <strong>except what it was asked to forget</strong>, which is
+the one entry an audit exists for.</p>
 <p>Two details make it worth studying rather than merely citing. The
 checksum is recomputed on read and a line that fails it is <em>silently
 skipped</em> — integrity is detected and the result discarded, so a
@@ -340,22 +346,37 @@ per belief update, which is the failure mode on the opposite side of the
 retention question from <a href="../../systems/palazzo/">Palazzo</a>'s.
 <strong>Check what your log does on delete before you check whether
 anyone could forge it.</strong></p>
-<p><a href="../../systems/atomic-agent/">Atomic Agent</a> is now the
-clearest implementation, and its shape is the one to copy:</p>
+<p><a href="../../systems/atomic-agent/">Atomic Agent</a> has the table
+this page asks for and not the property that makes it worth having:</p>
 <pre class="sql"><code>vote_events (id, kind, target_id, direction, session_id, turn_index, created_at)
--- and, derived from it:
+-- and, on each votable row:
 memories.vote_score, lessons.vote_score, profile_facts.vote_score  (indexed)</code></pre>
-<p>The events are the record; the scores are a projection. A scoring
-rule can be changed and recomputed, a suspicious voting pattern can be
-audited, and no single vote is destructive. Set against the alternatives
+<p><code>applyVote</code> updates the score and inserts the event in one
+transaction, so an applied vote is never unrecorded. The score is not a
+projection of the events, though. It is incremented and clamped in
+place, a vote against a score already at the clamp writes no event, each
+consolidator tick multiplies every score by a decay factor in bulk
+<code>UPDATE</code>s that write no event, and
+<code>evictOldestEvents</code> deletes the oldest events once the table
+passes <code>memory.voting.eventLogMaxRows</code>, 50,000 by default. A
+changed scoring rule cannot be replayed over that history. And the score
+is read back into belief, behind options that switch each use on:
+utility-weighted eviction deletes memories ordered by
+<code>vote_score ASC</code> ahead of recall count, a lesson with a
+negative score and no recorded success is deprecated at the next
+consolidator tick, and the profile renderer hides a fact whose score
+falls to minus the configured threshold. Set against the alternatives
 the atlas has collected — <a
 href="../../systems/holographic/">Holographic</a> mutating a trust score
 in place until a fact falls below the retrieval floor, <a
 href="../../systems/rainbox/">RainBox</a> holding feedback behind a
 human gate, <a href="../../systems/metaclaw/">MetaClaw</a> letting
-telemetry tune retrieval policy through a promotion gate — the
-append-only log is the option that preserves every one of those choices
-for later.</p>
+telemetry tune retrieval policy through a promotion gate — a complete
+vote log with the score derived from it is the option that preserves
+every one of those choices for later. Atomic Agent's schema has that
+shape; its store keeps a capped log beside a score that behaves like
+Holographic's, which is the crossing of the dashed edge above that this
+page warns against.</p>
 <p><a href="../../systems/magic-context/">Magic Context</a> keeps
 dedicated mutation logs (<code>storage-memory-mutation-log.ts</code>,
 <code>storage-m0-mutation-log.ts</code>) alongside per-run dream
@@ -448,18 +469,19 @@ memory. The price is written into the design: a ring buffer drops the
 earliest accesses, which are the ones explaining how a memory became
 established. Both arrangements are defensible; only one of them is
 usually chosen deliberately.</p>
-<p><a href="../../systems/csm/">CSM</a> is the atlas's only
-implementation of the third bullet below — <em>distinguish considered,
-returned, and injected memories</em> — and it is worth copying whole.
-Alongside a conventional mutation stream (<code>memory_events</code> for
-created/deleted/retention-cleanup, <code>memory_merges</code> for each
-merge with its normalized hash) it writes a second pair of tables for
-<strong>assembly</strong>: <code>context_injection_events</code> holds
-one row per injected block with an idempotency key, a
-<code>block_hash</code>, a <code>builder_version</code> and a
-<code>config_hash</code>, and <code>context_injection_items</code> holds
-one row per <em>candidate</em>, carrying its layer, position, selection
-rank and score, a <code>disposition</code> of
+<p><a href="../../systems/csm/">CSM</a> implements the third bullet
+below — <em>distinguish considered, returned, and injected memories</em>
+— with a recorded reason for every candidate, and it is worth copying
+whole. Alongside a conventional mutation stream
+(<code>memory_events</code> for created/deleted/retention-cleanup,
+<code>memory_merges</code> for each merge with its normalized hash) it
+writes a second pair of tables for <strong>assembly</strong>:
+<code>context_injection_events</code> holds one row per injected block
+with an idempotency key, a <code>block_hash</code>, a
+<code>builder_version</code> and a <code>config_hash</code>, and
+<code>context_injection_items</code> holds one row per
+<em>candidate</em>, carrying its layer, position, selection rank and
+score, a <code>disposition</code> of
 <code>injected | trimmed | omitted</code>, and a
 <code>selection_reason_code</code> drawn from a closed set —
 <code>importance_rank</code>, <code>recent_session</code>,
@@ -468,14 +490,19 @@ rank and score, a <code>disposition</code> of
 <code>filter_rejection</code>, <code>empty_source</code>.</p>
 <p>The distinction that makes it useful is between the last three. A
 mutation log tells you the memory exists; a recall log tells you it was
-found; only this tells you it was found, ranked fourth, and lost to a
-layer budget — which is the actual answer to "why didn't the agent know
-that?" and the one no other audit shape in this atlas can produce. The
-<code>builder_version</code> and <code>config_hash</code> matter for the
-same reason: without them, an old row cannot be read against the
-selection rules that produced it. The cost is one row per considered
-item per turn, which is the highest write volume of any audit design
-here, and CSM attaches no retention policy to it.</p>
+found; this tells you it was found, ranked fourth, and lost to a layer
+budget — which is the actual answer to "why didn't the agent know
+that?". <a href="../../systems/rainbox/">RainBox</a> records the same
+fact without the reason: <code>build_profile_block</code> writes a
+<code>considered</code> row for every selected profile fact and an
+<code>injected</code> row only for those that fit the character budget,
+so the trimmed set is recoverable as the difference between the two
+stages, without a per-item reason code. The <code>builder_version</code>
+and <code>config_hash</code> matter for the same reason: without them,
+an old row cannot be read against the selection rules that produced it.
+The cost is one row per considered item per turn, which is the highest
+write volume of any audit design here, and CSM attaches no retention
+policy to it.</p>
 <p><a href="../../systems/lorekit/">LoreKit</a> contributes the cheapest
 correct implementation of the invariant and the sharpest warning about
 what it buys. The implementation: <code>audit_log</code> carries a
@@ -535,13 +562,18 @@ place and writes no event.</p>
 <p><strong>What that costs is visible in the same repository, one
 function away.</strong> <code>build_context(as_of=…)</code> replays the
 store as of a past moment by filtering facts on a
-<code>recorded_at</code> stamp — and renders each surviving fact's
-<em>current</em> status and oracle, because the promotion that changed
-them left no event to replay and no stamp to compare. The timeline query
-is only as deep as the log underneath it. Decide which transitions the
-log covers by asking which ones you would need to reconstruct, not by
-asking which ones happen to pass through the function you
-instrumented.</p>
+<code>recorded_at</code> stamp. With no promotion event to replay, it
+reads the trust axis from a second stamp on the row:
+<code>verify_fact</code> writes <code>verified_at</code>, and a fact
+whose <code>verified_at</code> is missing or later than
+<code>as_of</code> renders as <code>asserted</code>, so the replay never
+shows an oracle that did not exist at the replayed moment. What the row
+cannot hold is a sequence — a second <code>verify_fact</code> overwrites
+the stamp, the verifier and the evidence, and no event keeps the first.
+The timeline query is only as deep as what is stamped or logged
+underneath it. Decide which transitions the log covers by asking which
+ones you would need to reconstruct, not by asking which ones happen to
+pass through the function you instrumented.</p>
 <p><a href="../../systems/plur1bus/">PLUR1BUS</a> records the
 <em>decision</em> alongside the change. A reconsolidation event carries
 the action, the update source, the quoted evidence, the caller's

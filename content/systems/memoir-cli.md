@@ -1,6 +1,6 @@
 ---
 title: "memoir-cli"
-eyebrow: "The tombstone nothing can create"
+eyebrow: "A tombstone that outlives the merge"
 description: "A published format spec whose merge semantics get deletion right, shipped in a federation over other tools' memory directories — where the retraction its spec argues hardest for is a verb a person can type."
 root: ../..
 page_kind: system
@@ -23,10 +23,10 @@ matrix:
   memory_unit: "Two kinds — an entry file (markdown with YAML frontmatter, one of six types) living in whichever host tool's memory directory owns it, and an item in the session working set keyed on its normalized text"
   storage: "No store of its own for entries: eleven adapters read and write the host tools' own directories. Its own files are `~/.config/memoir/session.json`, `events.jsonl`, and AES-256-GCM ciphertext in Supabase storage"
   retrieval: "Field-weighted lexical scoring over parsed docs — aliases, name, description, headings, body — with saturating term frequency, a coverage-squared multiplier and prefix/plural folding, returning matched passages rather than files. A depth-3 `$HOME` crawl backs it, behind a 60-second index cache that a fresh CLI process never hits. No scope filter"
-  write: "Synchronous. Explicit writes through 14 MCP tools; auto-capture parses Claude Code's own JSONL transcripts with regex extractors behind a quality gate, redacting secrets against 27 patterns first"
-  update_delete: "Union-merge with newest-wins per identity, and two tombstone classes — `hidden` monotonic for decisions, `done_at` temporal for next actions. Both are honored on merge; only the temporal one has a shipped writer"
+  write: "Synchronous. Explicit writes through 16 MCP tools; auto-capture parses Claude Code's own JSONL transcripts with regex extractors behind a quality gate, redacting secrets against 27 patterns first"
+  update_delete: "Union-merge with newest-wins per identity, and two tombstone classes — `hidden` monotonic for decisions, `done_at` temporal for next actions. Both are honored on merge and both have shipped writers — `memoir forget` and `memoir_forget` for the absolute one, `memoir_complete_next` for the temporal one"
   scoping: "A project identity — a hash of the git remote or the home-relative path — stamped on each item and applied by `memoryVisibility` on every recall and session view, with `shared` visible everywhere and `allProjects` as the opt-out; profiles select a sync destination, not a memory scope"
-  integration: "An MCP server with 14 tools, an installer that configures 11 host tools, and a marker-delimited block injected into `~/.claude/CLAUDE.md` and three other always-loaded files"
+  integration: "An MCP server with 16 tools, an installer that configures 11 host tools, and a marker-delimited block injected into `~/.claude/CLAUDE.md` and three other always-loaded files"
   background: "None. A debounced autopush and a Stop hook run in the turn; nothing rewrites the store on a schedule"
   trust: "No epistemic state. A decision is live or suppressed, and provenance for an auto-captured one is the string `auto-captured:` prefixed onto its prose rationale field"
   strengths: "A merge spec where every normative rule cites the production data-loss bug it exists to prevent, with the monotonic-tombstone rule argued correctly and implemented as argued"
@@ -64,15 +64,18 @@ with fourteen lines of comment naming the resurrection bug, and the cap logic
 partitions tombstones out of the visible budget because they *"keep their
 original (recent) date"* and were winning cap slots from real entries.
 
-**And nothing in the shipped product can create an absolute tombstone.** The
-only assignment of `hidden = true` outside the merge function is
-`scripts/cleanup-junk-decisions-2026-07.mjs`, a dated one-off whose own header
-says *"NOT wired into any CLI command or package.json script"*, whose match
-strings are placeholders a human is expected to fill in, and which is absent
-from `package.json`'s `files` array and therefore from the npm package
-entirely. Three read paths filter `hidden`, the validator enforces its
+**The absolute tombstone has two shipped writers, one for a person and one for
+the model.** `memoir forget "substring" [--purge] [--yes]`
+(`src/commands/forget.js`) resolves the decision, prints it, states that hiding
+cannot be undone, and calls `hideDecision` to set `hidden` and `hidden_at`;
+`--purge` redacts the text in place while keeping a sha256 identity. The MCP
+tool `memoir_forget` (`src/mcp.js:583`) reaches the same `hideDecision`, and
+its description calls the result *"an absolute tombstone; there is no
+un-forget"*. Three read paths filter `hidden`, the validator enforces its
 invariant, a test suite asserts its exclusion across three surfaces, and the
-spec makes it normative for Full conformance. No user can produce one.
+spec makes it normative for Full conformance. The key is the decision text, so
+a paraphrase of a hidden decision is a different identity and is not
+suppressed.
 
 Elsewhere the engineering is uneven in an ordinary way. The secret scanner is 27
 patterns deep and its per-pattern length floor exists because a global floor of
@@ -128,7 +131,7 @@ hold the reason. The extractor's own `type` — `rename`, `tech`, `design`,
 `stack`, `user-note` — does distinguish them, and is discarded before the write.
 
 ```mermaid
-%% caption: why removal has to be a record, and which of the two records a user can actually create
+%% caption: why removal has to be a record, and what writes each of the two records
 stateDiagram-v2
     [*] --> Live: explicit MCP write, or regex auto-capture
     Live --> Rotated: cap rotation, oldest by date
@@ -138,11 +141,8 @@ stateDiagram-v2
     Completed --> Live: a re-add whose added postdates done_at
     Completed --> Suppressed_temporally: any copy whose added predates done_at
 
-    Live --> Hidden: sets hidden true and hidden_at
+    Live --> Hidden: memoir forget or memoir_forget sets hidden and hidden_at
     Hidden --> Hidden: monotonic, inherited by the date winner
-
-    state "no shipped writer" as Gap
-    Gap --> Hidden: only scripts/cleanup-junk-decisions, unshipped
 ```
 
 ## 3. Architecture
@@ -454,10 +454,10 @@ every future session.
 
 ## 8. Agent Integration
 
-Fifteen MCP tools across four groups: retrieval and storage (`memoir_recall`,
+Sixteen MCP tools across four groups: retrieval and storage (`memoir_recall`,
 `memoir_remember`, `memoir_list`, `memoir_read`), working set (`memoir_set_goal`,
 `memoir_add_next`, `memoir_complete_next`, `memoir_note`, `memoir_ask`,
-`memoir_session`, `memoir_why`), management (`memoir_consolidate`,
+`memoir_session`, `memoir_why`, `memoir_resume`), management (`memoir_consolidate`,
 `memoir_status`, `memoir_profiles`), and retraction (`memoir_forget`).
 
 The model has substantial agency: it can write entries into any host tool's
@@ -741,6 +741,8 @@ adopting any of the rest.
 `test-capture-quality.mjs`, `test-schema-migration.mjs`, `test-session-lock.mjs`.
 
 ## History
+
+**2026-09-25** — audited at the unchanged pin [`8de614336ec01582bf8ed97e3717714955653b37`](https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37); nothing upstream moved, so the corrections are ours. The executive summary, the eyebrow, the lifecycle diagram and the `update_delete` row still said no shipped surface could create the absolute tombstone; `memoir forget` (`src/commands/forget.js`) and `memoir_forget` (`src/mcp.js:583`) both call `hideDecision`, and the body now says so. The tool count was fourteen in the matrix and fifteen in section 8; `src/mcp.js` registers sixteen, `memoir_resume` included. No mark moved.
 
 **2026-09-19** — audited at the unchanged pin [`8de614336ec01582bf8ed97e3717714955653b37`](https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37); nothing upstream moved, so both corrections are ours. Section 8 carried a negative existence claim that is false at this pin: *"there is no `memoir_forget` and no tool that sets `hidden`."* There is — `server.tool('memoir_forget', …)` at `src/mcp.js:583`, in `CLAUDE.md`'s own fifteen-tool list, exercised by `test-audit-reliability.mjs:192`, and reached for by the activate template. The tool count in that section was fourteen and is fifteen. `human_review` is **withdrawn** in consequence and on its own terms: the evidence was the CLI's confirm prompt, which is a permission step gating a deletion rather than a state a memory waits in, `--yes` satisfies it, and the model now holds the same tombstone verb. The absolute tombstone itself is untouched and keeps `tombstone`. Screened again first; nothing was installed and no suite was run.
 

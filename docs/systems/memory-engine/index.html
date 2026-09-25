@@ -341,9 +341,8 @@ importers default a tree-less record, and they default it to
 <code>share</code> via a canonically defined constant.</p>
 <p>This is <a href="../../patterns/explicit-write-destination/">explicit
 write destination</a> enforced at the API boundary rather than
-encouraged in a tool description — the strongest instance of that
-pattern the atlas has found. The pattern page argues that defaults are
-acceptable only when safe, obvious and surfaced; here the default is
+encouraged in a tool description. The pattern page argues that defaults
+are acceptable only when safe, obvious and surfaced; here the default is
 <em>absent</em> on the interactive path and present only where a human
 already chose a file to import.</p>
 <h3 id="least-privilege-for-the-space-creator">Least privilege for the
@@ -548,8 +547,10 @@ the other wall.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
-<li><strong>Make the agent a principal.</strong> If an agent has memory,
-"which memories may this agent read" should be answerable from the
+<li><strong>Make a delegated credential a ceiling.</strong> A restricted
+API key's per-space and per-path maxima are intersected with the
+member's live grants by <code>build_tree_access</code> using
+<code>least()</code>, so "what may this key read" is answerable from the
 schema rather than from the deployment.</li>
 <li><strong>Make a delegated credential a ceiling and intersect it with
 live access</strong>, with <code>least()</code> at the deeper of the two
@@ -603,8 +604,8 @@ measures almost everything else.</li>
 <h3 id="fit">Fit</h3>
 <p>Borrow:</p>
 <ul>
-<li>The principal model and the agent clamp, which are transferable to
-any system where agents act on a user's behalf.</li>
+<li>The principal model and the API-key clamp, which are transferable to
+any system where a credential acts on a user's behalf.</li>
 <li>Authorization inside the ranking query.</li>
 <li>The required write destination and the creator-privilege
 default.</li>
@@ -633,8 +634,7 @@ import clobbered?</li>
 <ul>
 <li>Access model:
 <code>packages/database/core/migrate/incremental/005_tree_access.sql</code>,
-<code>core.build_tree_access</code>,
-<code>agent_tree_access</code>.</li>
+<code>core.build_tree_access</code>.</li>
 <li>Memory schema:
 <code>packages/database/space/migrate/incremental/001_memory.sql</code>
 (uuidv7 check, <code>temporal</code> bounds convention,
@@ -650,6 +650,14 @@ functions.</li>
 <code>packages/cli/failsafe.ts</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/timescale/memory-engine/commit/2ef90da9385448e0bbb02ed1da82c04bd663602d"><code class="commit-id" title="2ef90da9385448e0bbb02ed1da82c04bd663602d">2ef90da9…</code></a>
+— same pin. Section 11 still recommended making the agent a principal
+and listed <code>agent_tree_access</code> in the file index; migration
+<code>018_remove_agents.sql</code> drops both, as the 2026-09-10 entry
+records. The Steal and Borrow bullets now describe the API-key ceiling
+that replaced them, and the explicit-write-destination paragraph drops
+its superlative. No mark moved.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/timescale/memory-engine/commit/2ef90da9385448e0bbb02ed1da82c04bd663602d"><code class="commit-id" title="2ef90da9385448e0bbb02ed1da82c04bd663602d">2ef90da9…</code></a>
 — re-read at the same commit; <code>main</code> has not moved since 13

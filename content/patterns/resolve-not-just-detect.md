@@ -121,16 +121,18 @@ resolves conflicts at the keyboard.
 
 ## Seen in the atlas
 
-[Memanto](../../systems/memanto/) is the only complete instance. A scheduled
-local LLM pass writes a dated JSON report typed as
+[Memanto](../../systems/memanto/) types the finding and offers a non-binary
+disposition set. A scheduled local LLM pass writes a dated JSON report typed as
 `contradiction | update | duplicate | conflict` with old and new ids, and a
 person resolves each entry through the CLI or web UI as `keep_old`, `keep_new`,
-`keep_both`, `remove_both`, or `manual` with content they write themselves — a
-model validator refuses `manual` without it. The detection prompt requires at
+`keep_both`, `remove_both`, `manual` with content they write themselves — a
+model validator refuses `manual` without it — or `expire_old`, `expire_new`,
+`expire_both`, which retire the losing memory reversibly where the others
+delete it. The detection prompt requires at
 least one side to be new, keeping the pass linear and stopping the queue
 refilling with pairs someone already dismissed. What it lacks is requirement 5:
-`remove_both` deletes without a tombstone, so the next night's extraction may
-restore it.
+`remove_both` deletes permanently and leaves no tombstone, so the next night's
+extraction may restore it.
 
 [Core Memory](../../systems/core-memory/) has the governance half. Its approval
 workflow states the non-blocking rule explicitly — "pending beads stay
@@ -140,9 +142,8 @@ from *superseded* (once true, surfaced on request), and makes a reason mandatory
 on every governance action. It is aimed at review rather than at contradiction
 specifically.
 
-[Daimon](../../systems/daimon/) is the second complete instance, and it solves
-requirement 5 that Memanto misses while placing the decision somewhere neither
-of the others does: **inside the artifact the user is already reading**. A
+[Daimon](../../systems/daimon/) solves requirement 5, which Memanto misses, while
+placing the decision somewhere neither of the others does: **inside the artifact the user is already reading**. A
 detected supersession renders in the next briefing as a flagged item with the
 confirm and reject commands printed beside it, so the disposition is chosen at
 the moment the stale claim is encountered rather than in a queue nobody opens.
@@ -162,8 +163,8 @@ session-start conditions and names any superseded entry that still wins an
 injection slot, naming the probe that surfaced it, with `--fail-on-forbidden`
 turning a hit into a red exit. The docstring is the argument: *"Correction that
 stops at the ledger row and never reaches the retrieval lane is not correction;
-the descent has to complete."* Two systems in this atlas fail exactly that way on
-their main retrieval path, and neither has a test that would catch it.
+the descent has to complete."* A store can fail exactly that way on its main
+retrieval path with no test that would catch it.
 
 The check is also careful about its own negative result: when every superseded
 entry is unreachable it reports `unexercised` rather than clean, because a lane
@@ -182,33 +183,39 @@ anchor or an explicit `--evidence` string. And a human verdict **silences
 re-detection permanently**, so the queue cannot refill with something a person
 has already answered.
 
-The absence is the more common finding, and four reports arrived at it
-independently. [Gini](../../systems/gini-agent/) has `rejected` and `conflicted`
+The absence is the more common finding, reached independently in several
+reports. [Gini](../../systems/gini-agent/) has `rejected` and `conflicted`
 as states with no operator-facing resolution.
-[MateClaw](../../systems/mateclaw/) ships a dedicated `ContradictionDetector` and
-no resolution workflow, review queue, or supersession behind it.
 [Magic Context](../../systems/magic-context/)'s `flagged` "marks a problem
 without an operator surface". [OpenViking](../../systems/openviking/) has merge
 operations but "no operator-facing review queue for contradictions".
 [Holographic](../../systems/holographic/) surfaces contradictions as an ordinary
 query and only reports them.
 
-[Nova AI](../../systems/nova-ai/) is the limit case of the detect-only group and
-worth reading as one. `find_contradictions` checks a word's `is_a` parents
-against three hardcoded incompatible category groups and returns a reason per
-conflict — and it is invoked by nothing. One facade method re-exports it; no
-background pass, write-time check or command calls either. This is not a detector
-whose output is dropped downstream, which is the usual shape here; it is a
-detector with **no downstream at all**, in a system that otherwise gates every
-knowledge write on a human confirmation.
+[MateClaw](../../systems/mateclaw/) stops one step later: it has the queue and
+the actor without the effect. A `ContradictionDetector` fills a queue of
+unresolved contradictions, and `POST /contradictions/{id}/resolve`, gated on a
+workspace `member` role, records `KEEP_A`, `KEEP_B`, `MERGE` or `IGNORE` with
+`resolvedAt` and a `resolvedBy` read from the authenticated principal. No code
+path reads the verdict to retire, merge or down-trust a fact, so recall returns
+both sides before the verdict and after it — a disposition with an owner and a
+record, and no consequence.
 
-The compounding is the instructive part. Even wiring a caller would only produce
-a report, because nothing anywhere in the repository removes a relation — the
-single removal path in 25,000 lines applies to user preferences, not to
-knowledge. Requirement 5 is unreachable rather than skipped. A reader deciding
-whether to build detection first should take the ordering from this: the
-disposition is what makes the detector worth writing, and building the detector
-first produces a repository that reads as though the problem is handled.
+[Nova AI](../../systems/nova-ai/) answers detection without a queue.
+`find_contradictions` checks a word's `is_a` parents against three hardcoded
+incompatible category groups and returns a reason per conflict, and
+`modules/knowledge/contradiction_checker.py` calls it from a periodic sweep on
+the background loop, raising each conflict with the user with a concrete
+`weerleg:` proposal, so the refusal is one spoken sentence away. A
+`contradiction_state.json` keyed on the word plus its sorted conflict list
+remembers what has already been raised, so an unresolved conflict is mentioned
+once rather than every cycle — the bounded scan this page's *Cost to adopt*
+asks for. The disposition is the refutation itself: `weerleg` sets
+`status = "rejected"` with the reason in the record's audit log, reasoning
+filters it out, and `add_sense` refuses to re-add a refuted definition, which is
+requirement 5 met by the
+[rejected-value tombstone](../rejected-value-tombstone/) rather than by a
+separate resolution record.
 
 [Memora](../../systems/memora/) sits between the two groups: it classifies pairs
 into a defined vocabulary including `contradicts` as an edge between two named

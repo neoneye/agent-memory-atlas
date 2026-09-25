@@ -99,14 +99,10 @@ than a cursor and considerably easier for a human to inspect — "what did it le
 on the 14th?" is answerable by opening a file.
 
 [GenericAgent](../../systems/genericagent/) keeps raw sessions beneath three
-distilled layers in `L4_raw_sessions/`, archived on a 12-hour cron, and states
-the strongest capture rule in the atlas as an axiom: *"No Execution, No Memory"* —
+distilled layers in `L4_raw_sessions/`, archived on a 12-hour cron. Beside the
+retention it states an admission rule as an axiom: *"No Execution, No Memory"* —
 nothing enters durable memory unless it came from a successful tool call, with
 model guesses, unexecuted plans, and unverified assumptions explicitly forbidden.
-
-[Atomic Agent](../../systems/atomic-agent/) preserves the link in the other
-direction: a lesson and its procedure are derived from the **same consolidator
-cluster** in one LLM call, so the how-to and the why cannot drift apart.
 
 [AIMAOS](../../systems/aimaos/) makes the same separation structural in the
 cheapest way available: raw conversation chunks are their own storage category,
@@ -130,19 +126,7 @@ recoverable, and those are the same property viewed from two sides. **A system
 that retains evidence owes a deletion path that reaches it** — otherwise the
 pattern's benefit and its worst failure are the same mechanism.
 
-[Nova AI](../../systems/nova-ai/) reaches the same separation with no model
-anywhere in the system, which makes the boundary unusually easy to see. A
-sentence parsed into a candidate relation is held in a single `pending_relation`
-and is **not stored**; it becomes a belief only when the user answers "ja" to a
-question asked in plain language — *"Mag ik onthouden dat 'X' is een soort van
-'Y'?"* — with the sense disambiguated first, by number, if the word has more than
-one. An unparseable answer re-asks rather than defaulting. Because there is no
-extractor to trust or distrust, the pattern here is not a defence against a
-model's confidence; it is just the recognition that a parse and a belief are
-different objects, and it costs one conversational turn taken at the moment the
-user still has the context to answer.
-
-[MemPalace](../../systems/mempalace/) remains the strongest verbatim-first design
+[MemPalace](../../systems/mempalace/) is a verbatim-first design
 — extracted structures are navigation aids, drawers are authoritative.
 [Cognee](../../systems/cognee/) retains source data below its projections and can
 rebuild them; [Graphiti](../../systems/graphiti/) keeps episodes behind edges;
@@ -191,7 +175,7 @@ re-checked, and the verification stamp on the item becomes the only surviving
 evidence that a check ever happened. Reference evidence you control; copy
 evidence you do not.
 
-[MIRIX](../../systems/mirix/) is the cheapest instance to copy: one `raw_memory`
+[MIRIX](../../systems/mirix/) is a cheap instance to copy: one `raw_memory`
 table holding the unprocessed context string, embedded and searchable in its own
 right, beside six typed derived tables. No versioning, no lineage graph — just the
 source kept where a bad extraction cannot destroy it. What it does not do is link
@@ -206,31 +190,14 @@ derivation rewritten in place, is the only copy there has ever been. This patter
 and data minimization are in genuine tension; Memobase is where the price of
 choosing the other side is clearest.
 
-[Helm](../../systems/helm/) is the cheapest instance in the atlas, and it splits
-the pattern in half in a way worth studying. The belief side is right: a write
-tagged `--source observed` is capped at 0.7 confidence regardless of what the
-caller asked for, and rises 0.05 per independent repeat of the same value, so a
-single sighting cannot be recorded as certain. That is the whole gate, in about
-fifteen lines of arithmetic on a SQLite row.
-
-The evidence side is missing, and the consequence is precise. Episodes are
-retained, but no fact links to the episodes that produced it — the `links` table
-that could express it is created and never written. So a distilled row reading
-`mentioned in 5 episodes` is a claim about evidence that cannot name any of it,
-and a fact whose confidence has ratcheted to 0.9 across five corroborations
-cannot be audited back to a single one of them. Corroboration is the affordable
-half of this pattern and provenance is the load-bearing half: without it,
-repeated exposure to the same wrong value is indistinguishable from evidence,
-and a bad belief can be raised but not traced.
-
-[CSM](../../systems/csm/) has the half Helm is missing, and adds a gate the rest
-of this section does not: **evidence diversity, not just evidence count.** A
+[CSM](../../systems/csm/) has the provenance half that Helm, below, lacks, and adds
+a gate the rest of this section does not: **evidence diversity, not just evidence count.** A
 promotion candidate carries `source_packet_ids` pointing back to rows in
 `experience_packets`, and `BeliefPromotionEngine` joins those ids to
 `experience_packets.session_id` and counts *distinct sessions* before promoting.
 That separates a pattern from a loop — one runaway session can reinforce the
-same candidate fifty times and still be a single observation, which every
-count-based threshold in this atlas will happily read as overwhelming evidence.
+same candidate fifty times and still be a single observation, which a threshold
+on raw occurrences reads as overwhelming evidence.
 Each decision also carries a `thresholdChecks` object recording
 actual-versus-required for all five gates, so a promotion report explains its own
 refusals; and a candidate with any contradiction returns `needs_review` rather
@@ -250,30 +217,6 @@ chain is built, maintained, decayed and contradicted, and terminates in a state
 nothing can enter. Evidence-before-belief has a last mile that is easy to leave
 unbuilt precisely because the interesting work is upstream of it: if you build
 the ladder, commit a test that something can climb it.
-
-[Ouroboros](../../systems/ouroboros-agent-os/) supplies the rule this pattern
-usually leaves implicit: **not all evidence is allowed to become a belief.** Its
-interview answers arrive with an advertised prefix, and
-`classify_answer_provenance` settles at the point of entry whether an answer is a
-decision the caller *made* or a fact the caller *adopted* — `[from-code]`,
-`[from-repo]`, `[from-research]`, `[from-data]`. An adopted fact is evidence in
-the fullest sense of this page and is deliberately **withheld from the slot
-requirements are extracted from**, while staying intact in the question slot,
-because sharpening the next question is what collecting it was for. The rule is
-scoped per role rather than per string, so the same text plays both parts
-without the redaction destroying the second one.
-
-Two details make it transferable. The classification is **decided once and
-carried as a typed field** rather than re-derived per consumer, and the module
-names the drift that motivated it — a second classifier in the same repository
-reads `[from-research]` as human. And the withholding is enforced structurally
-rather than in a prompt: one requirement path emits a specification with no LLM
-in it at all, so a redaction living in a prompt template would never have reached
-it. A single parametrized test asserts across all four requirement-consuming
-render surfaces that the adopted fact's content is absent, with a companion test
-pinning the intentional *non*-redaction of the question line as *"intended
-behavior, not a conceded leak"* — which is the sentence that stops a later
-contributor from finishing the job.
 
 **[Claude Self-Reflect](../../systems/claude-self-reflect/) keeps the evidence in a form a later pass can re-check rather than re-derive.** Its `witness_ledger` is insert-and-query only by module contract — *"a witness that no longer holds is superseded by inserting a NEW row … never by mutating or removing the old one"* — and each row is a BLAKE3 stamp of a symbol span anchored to a commit oid. The belief layered on top, a `witness_verdicts` event saying an anchor is obsolete, superseded or reinstated, is a pure function of those stamps and git commit-graph ancestry, so any reader can recompute it, and the verdict carries the commit that proves it into the search-facing annotation. The raw material is never consumed either: the transcripts stay where the harness wrote them and a lost database is rebuilt by re-import. What it does not keep is the other direction — a `<private>` tag applied after the fact cannot reach a chunk already stored, because nothing in the tree deletes one.
 
@@ -307,6 +250,71 @@ Where it stops is the value. Retirement is keyed on the row, and the write-time
 dedupe opens its loop with `if (!isActiveMemoryEvidence(candidate)) continue;`,
 so a retired claim does not block the identical text being written again as a
 new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
+
+### Related: admission gates rather than evidence
+
+These decide what may become a belief — a shared derivation, a confirmation turn,
+a confidence cap, a provenance class — rather than keeping the material a belief
+came from. They sit beside the pattern, not inside it.
+
+[Atomic Agent](../../systems/atomic-agent/) links two derivations to each other
+rather than a derivation to its source: a lesson and its procedure are derived
+from the **same consolidator cluster** in one LLM call, so the how-to and the why cannot drift apart.
+
+[Nova AI](../../systems/nova-ai/) separates a parse from a belief with no model
+anywhere in the system, which makes the boundary unusually easy to see. A
+sentence parsed into a candidate relation is held in a single `pending_relation`
+and is **not stored**; it becomes a belief only when the user answers "ja" to a
+question asked in plain language — *"Mag ik onthouden dat 'X' is een soort van
+'Y'?"* — with the sense disambiguated first, by number, if the word has more than
+one. An unparseable answer re-asks rather than defaulting. Because there is no
+extractor to trust or distrust, the pattern here is not a defence against a
+model's confidence; it is just the recognition that a parse and a belief are
+different objects, and it costs one conversational turn taken at the moment the
+user still has the context to answer.
+
+[Helm](../../systems/helm/) has the belief half of this page and not the evidence
+half, and the split is worth studying. The belief side is right: a write
+tagged `--source observed` is capped at 0.7 confidence regardless of what the
+caller asked for, unless it passes `force`, and rises 0.05 each time the same
+value is written again, so a single sighting cannot be recorded as certain.
+Nothing checks that a repeat is independent: any write of the same kind, key and
+value increments `evidence_count`. That is the whole gate, in about
+fifteen lines of arithmetic on a SQLite row.
+
+The evidence side is missing, and the consequence is precise. Episodes are
+retained, but no fact links to the episodes that produced it — the `links` table
+that could express it is created and never written. So a distilled row reading
+`mentioned in 5 episodes` is a claim about evidence that cannot name any of it,
+and a fact whose confidence has ratcheted to 0.9 across five corroborations
+cannot be audited back to a single one of them. Corroboration is the affordable
+half of this pattern and provenance is the load-bearing half: without it,
+repeated exposure to the same wrong value is indistinguishable from evidence,
+and a bad belief can be raised but not traced.
+
+[Ouroboros](../../systems/ouroboros-agent-os/) supplies the rule this pattern
+usually leaves implicit: **not all evidence is allowed to become a belief.** Its
+interview answers arrive with an advertised prefix, and
+`classify_answer_provenance` settles at the point of entry whether an answer is a
+decision the caller *made* or a fact the caller *adopted* — `[from-code]`,
+`[from-repo]`, `[from-research]`, `[from-data]`. An adopted fact is evidence in
+the fullest sense of this page and is deliberately **withheld from the slot
+requirements are extracted from**, while staying intact in the question slot,
+because sharpening the next question is what collecting it was for. The rule is
+scoped per role rather than per string, so the same text plays both parts
+without the redaction destroying the second one.
+
+Two details make it transferable. The classification is **decided once and
+carried as a typed field** rather than re-derived per consumer, and the module
+names the drift that motivated it — a second classifier in the same repository
+reads `[from-research]` as human. And the withholding is enforced structurally
+rather than in a prompt: one requirement path emits a specification with no LLM
+in it at all, so a redaction living in a prompt template would never have reached
+it. A single parametrized test asserts across all four requirement-consuming
+render surfaces that the adopted fact's content is absent, with a companion test
+pinning the intentional *non*-redaction of the question line as *"intended
+behavior, not a conceded leak"* — which is the sentence that stops a later
+contributor from finishing the job.
 
 ## Implementation checklist
 

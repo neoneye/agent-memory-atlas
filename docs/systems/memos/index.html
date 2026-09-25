@@ -174,7 +174,19 @@ scheduler -&gt; textual memory -&gt; activation cache / maintenance</code></pre>
 dumped locally, initialized from a directory, or loaded from a remote
 repository. This suggests sharing and composing memory resources
 independently from the agent process.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — five memory forms in one cube, including memory held in weights, with a promotion rule whose three coefficients are left at one and no single correction contract across the modules</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: five memory forms in one cube, including memory held in weights, with a promotion rule whose three coefficients are left at one and no single correction contract across the modules
+<p>The one computed movement between forms is working memory into
+activation memory. When a timed trigger fires,
+<code>update_activation_memory_monitors</code> sorts the working-memory
+monitors by <code>get_importance_score</code> and keeps the top slice
+(<code>src/memos/mem_scheduler/monitors/general_monitor.py:234-268</code>);
+the score weights list position, a keyword score and a recording count
+by <code>DEFAULT_WEIGHT_VECTOR_FOR_RANKING = [0.9, 0.05, 0.05]</code>
+(<code>src/memos/mem_scheduler/schemas/general_schemas.py:54</code>,
+<code>src/memos/mem_scheduler/schemas/monitor_schemas.py:241-262</code>),
+and <code>update_activation_memory_periodically</code> turns the result
+into KV-cache items
+(<code>src/memos/mem_scheduler/memory_manage_modules/activation_memory_manager.py:112-186</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — five memory forms in one cube, including memory held in weights, with a timed scheduler that copies the top working memories by a weighted importance score into the KV cache, and no single correction contract across the modules</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: five memory forms in one cube, including memory held in weights, with a timed scheduler that copies the top working memories by a weighted importance score into the KV cache, and no single correction contract across the modules
 flowchart TB
     In[&quot;Reader extraction&quot;] --&gt; Cube[(&quot;Memory cube&quot;)]
     Cube --&gt; T1[&quot;Textual item&quot;]
@@ -182,7 +194,7 @@ flowchart TB
     Cube --&gt; T3[&quot;Preference / skill&quot;]
     Cube --&gt; T4[&quot;KV cache&quot;]
     Cube --&gt; T5[&quot;LoRA — memory in weights&quot;]
-    Sch[&quot;Scheduler&quot;] --&gt;|&quot;promotion: α·N_visit + β·L_interaction + γ·R_recency&lt;br/&gt;coefficients left at 1, 1, 1&quot;| Cube
+    Sch[&quot;Scheduler, on a timed trigger&quot;] --&gt;|&quot;top-k working memories by&lt;br/&gt;0.9·position + 0.05·keywords + 0.05·recording count&quot;| T4
     Cube --&gt; R[&quot;Direct vector, or graph + BM25&lt;br/&gt;+ rerank + reasoner&quot;]
     Cube -.-&gt;|&quot;update, delete, soft-delete and dump&lt;br/&gt;all mean different things per module&quot;| Gap[&quot;no single correction contract&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
@@ -404,6 +416,18 @@ numbers?</li>
 <li><code>tests/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/MemTensor/MemOS/commit/de8069428a9247bfa7a3d35f59a9b39fa8f231d2"><code class="commit-id" title="de8069428a9247bfa7a3d35f59a9b39fa8f231d2">de806942…</code></a>
+— diagram corrected at the unchanged pin. Its scheduler edge carried
+<code>α·N_visit + β·L_interaction + γ·R_recency</code> with coefficients
+of one, which is MemoryOS's heat formula; a grep of every text file in
+the tree at this pin for <code>N_visit</code>,
+<code>L_interaction</code>, <code>R_recency</code> and
+<code>compute_segment_heat</code> returns nothing. What the scheduler
+computes is a top-k of working memories by an importance score weighted
+<code>[0.9, 0.05, 0.05]</code> over list position, keyword score and
+recording count, on a timed trigger, copied into the KV cache; section 2
+now cites it. No mark moved.</p>
 <p><strong>2026-09-14</strong> — <a
 href="https://github.com/MemTensor/MemOS/commit/de8069428a9247bfa7a3d35f59a9b39fa8f231d2"><code class="commit-id" title="de8069428a9247bfa7a3d35f59a9b39fa8f231d2">de806942…</code></a>
 — re-read, 179 commits past the previous pin across 362 files. The mark

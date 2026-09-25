@@ -293,7 +293,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`openviking`](../systems/openviking/)
 - Best idea: three retrievable granularities on one record, plus hotness kept strictly separate from confidence.
 - Biggest risk: extraction becomes durable context with no verification tier, and published numbers are not backed by committed artifacts.
-- Most reusable component: `hotness_score`, `type_quota_recall`, and the `user_space` / `peers/<id>` isolation convention.
+- Most reusable component: `hotness_score`, the per-category quotas in `context_assembler/gather.py`, and the `user_space` / `peers/<id>` isolation convention.
 - Maturity impression: a large, seriously engineered platform with real multi-tenancy and the most complete benchmark harness in the atlas.
 - Study when: you need multimodal ingestion, tenant isolation, skills and resources unified with memory, or backend choice.
 - Do not copy when: you need a small embeddable layer, verified memory, or a licence compatible with closed distribution — this is AGPL-3.0.

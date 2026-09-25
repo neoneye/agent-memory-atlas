@@ -166,8 +166,21 @@ temperature</strong>:</p>
 population itself:</p>
 <pre class="python"><code>def _calculate_diversity(solutions, sample_size=50) -&gt; float:
     &quot;&quot;&quot;Normalized diversity score between 0 (identical) and 1 (max diversity)&quot;&quot;&quot;</code></pre>
-<p>Two details in those twenty lines are worth a reader's attention
+<p>Three details in those twenty lines deserve a reader's attention
 before they copy them.</p>
+<p><strong>The temperature moves the wrong way.</strong>
+<code>_adaptive_temperature_by_diversity</code> computes
+<code>new_temp = base_temp * adjustment_factor</code> with
+<code>adjustment_factor = 1 + (2 * diversity - 1)</code>
+(<code>boltzmann.py:80-83</code>), and selection weights are
+<code>np.exp((scores - max_score) / temperature)</code>. Lower diversity
+therefore gives a lower temperature and a sharper, greedier selection: a
+population collapsing toward sameness is pushed further toward its best
+few members, and a varied one is loosened. What keeps variety in is the
+<code>min_temp</code> clamp (0.5 by default) and
+<code>exploration_rate</code>, a 0.2 chance per call in
+<code>select_parents_with_dynamic_temperature</code> of returning a
+uniformly random solution.</p>
 <p><strong>The adjustment is linear and the comment says
 sigmoid.</strong> The line above it reads <em>"Sigmoid adjustment for
 smoother transitions"</em>; the arithmetic is
@@ -187,9 +200,10 @@ for cost would be off by a square.</p>
 deterministically.</strong> Rank by some blend of similarity, recency,
 and importance; take the top <em>k</em>. LoongFlow's evolutionary memory
 deliberately returns a <em>worse</em> remembered solution some of the
-time, with the probability governed by a temperature that rises when the
-population has collapsed toward sameness and falls when it is already
-varied.</p>
+time, with the probability governed by a temperature set from the
+population's measured diversity — one that falls as the population
+collapses toward sameness and rises when it is varied, so the controller
+amplifies convergence rather than countering it.</p>
 <p>That is an explicit exploration/exploitation trade applied to recall,
 and it has no counterpart anywhere else in this atlas. It is closest in
 spirit to <a href="../voyager/">Voyager</a>'s skill library and <a
@@ -215,7 +229,7 @@ mechanism, not as a general memory design.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — measured diversity sets the selection temperature, blending in a fifth of the current value for stability, so the population's own spread decides how greedy the next pick is</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: measured diversity sets the selection temperature, blending in a fifth of the current value for stability, so the population&#39;s own spread decides how greedy the next pick is
 flowchart TB
     P[&quot;population of scored solutions&quot;] --&gt; D[&quot;_calculate_diversity&lt;br/&gt;&lt;i&gt;samples 50 pairs → 0 identical .. 1 max&lt;/i&gt;&quot;]
-    D --&gt; T[&quot;_adaptive_temperature_by_diversity&lt;br/&gt;(current, min, max, base)&lt;br/&gt;&lt;i&gt;blends 20% of the current temperature&lt;br/&gt;for stability&lt;/i&gt;&quot;]
+    D --&gt; T[&quot;_adaptive_temperature_by_diversity&lt;br/&gt;(current, min, max, base)&lt;br/&gt;new = base × 2 × diversity, clamped&lt;br/&gt;&lt;i&gt;lower diversity → lower temperature&lt;/i&gt;&lt;br/&gt;&lt;i&gt;blends 20% of the current temperature&lt;br/&gt;for stability&lt;/i&gt;&quot;]
     T --&gt; B[&quot;_boltzmann_selection_with_weights(scores, temperature)&quot;]
     B --&gt;|&quot;low temperature&quot;| G[&quot;nearly greedy — picks the best&quot;]
     B --&gt;|&quot;high temperature&quot;| F[&quot;flatter — picks broadly&quot;]
@@ -270,15 +284,21 @@ sampling is deliberate — the docstring notes it exists "to reduce
 computation", since exhaustive pairwise comparison over a large
 population is quadratic.</p>
 <p><code>_adaptive_temperature_by_diversity</code> maps that score to a
-temperature within <code>[min_temp, max_temp]</code>, and — the detail
-worth noting — <strong>blends 20% of the current temperature into the
-result</strong> for stability. Without that, a noisy diversity estimate
-would make the temperature oscillate, and selection behaviour would
-swing between greedy and random between rounds.</p>
-<p>The feedback loop is the point: a population that has converged gets
-a higher temperature, which makes selection flatter, which admits weaker
-solutions, which restores variety. A varied population gets a lower
-temperature and selection sharpens toward the best.</p>
+temperature within <code>[min_temp, max_temp]</code> as
+<code>base_temp * 2 * diversity</code>, and <strong>blends 20% of the
+current temperature into the result</strong> for stability. Without
+that, a noisy diversity estimate would make the temperature oscillate,
+and selection behaviour would swing between greedy and random between
+rounds.</p>
+<p>The feedback loop runs with the sign that reinforces collapse. A
+population that has converged gets a lower temperature, which sharpens
+selection toward the best, which converges it further; a varied
+population gets a higher temperature and flatter selection. The loop
+that restores variety — converged population, higher temperature, weaker
+solutions admitted — needs the mapping inverted, for instance
+<code>base_temp * 2 * (1 - diversity)</code>. At this commit only the
+<code>min_temp</code> clamp and the <code>exploration_rate</code> random
+pick stop selection going fully greedy.</p>
 <h3 id="boltzmann-selection">Boltzmann selection</h3>
 <p><code>_boltzmann_selection_with_weights(scores, temperature)</code>
 weights each solution by the Boltzmann factor of its score at the
@@ -343,8 +363,9 @@ population backend by configuration.</p>
 Trust</h2>
 <p>Strengths:</p>
 <ul>
-<li><strong>Stochastic recall with a principled control signal</strong>
-— the only instance in the atlas.</li>
+<li><strong>Stochastic recall with a measured control signal</strong> —
+the only instance in the atlas, though the signal's sign is inverted
+(§4).</li>
 <li><strong>Temperature smoothing</strong> (20% of current) preventing
 round-to-round oscillation.</li>
 <li><strong>Sampled diversity</strong> keeping the control loop cheap on
@@ -390,9 +411,9 @@ no test.</strong> A grep for <code>diversity</code> across
 explicit temperature, so <code>_calculate_diversity</code> and
 <code>_adaptive_temperature_by_diversity</code> — the pair that
 distinguishes this system from every other retrieval in the atlas — are
-exercised by nothing, which is why the linear-versus-sigmoid mismatch
-and the pairs-versus-solutions sampling in section 3 could both be
-introduced without a failure.</p>
+exercised by nothing, which is why the inverted temperature direction,
+the linear-versus-sigmoid mismatch and the pairs-versus-solutions
+sampling in section 1 could all be introduced without a failure.</p>
 <p><strong>One file named like a test contains none.</strong>
 <code>grade/compressor/test_message_compression.py</code> is 292 lines
 whose docstring says <em>"This file generate test message to
@@ -417,7 +438,9 @@ selection makes the exploration/exploitation trade explicit and
 tunable.</li>
 <li><strong>Drive the temperature from a measured property of the
 store</strong>, not a schedule. Diversity collapse is the condition that
-should loosen selection, and it is directly measurable.</li>
+should loosen selection, and it is directly measurable — so assert the
+direction in a test; the shipped mapping tightens selection as diversity
+falls.</li>
 <li><strong>Smooth the control signal.</strong> Blending in a fraction
 of the current temperature turns a noisy estimate into stable
 behaviour.</li>
@@ -442,8 +465,9 @@ loop.</li>
 <p>Borrow:</p>
 <ul>
 <li>The diversity-to-temperature loop, including the smoothing and the
-bounds, wherever memory feeds a search or generate-and-test
-process.</li>
+bounds, wherever memory feeds a search or generate-and-test process —
+with the mapping inverted, so that falling diversity raises the
+temperature.</li>
 <li>The idea that recall need not be deterministic when its consumer is
 exploration.</li>
 </ul>
@@ -487,6 +511,17 @@ grow without bound?</li>
 <li>Tests: <code>tests/agentsdk/memory</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7"><code class="commit-id" title="945c78bc1554f8281aac40320b3599bd68d528d7">945c78bc…</code></a>
+— audited at the unchanged pin. The report had the temperature direction
+inverted. <code>_adaptive_temperature_by_diversity</code> sets
+<code>base_temp * 2 * diversity</code> before clamping and blending
+(<code>evolution/boltzmann.py:80-87</code>), and selection weights are
+<code>exp((score - max) / T)</code>, so a converging population gets a
+lower temperature and greedier selection. §1, the selection diagram, §4,
+§9, §10 and §11 now state that, the frontmatter risks name it, and §10's
+pointer to the two docstring defects names §1 rather than §3. No mark
+moved.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7"><code class="commit-id" title="945c78bc1554f8281aac40320b3599bd68d528d7">945c78bc…</code></a>
 — re-read at the same commit, still the tip; the last commit upstream is

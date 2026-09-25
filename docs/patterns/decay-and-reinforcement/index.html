@@ -192,68 +192,94 @@ error, just a worse answer.</p>
 <p><strong>Skip it if</strong> your store is small. Decay solves a
 crowding problem you may not have.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong><a href="../../systems/mnemopi/">Mnemopi</a> has the most
-considered forgetting model here, and the reason is a second
-parameter.</strong> Every other decaying system on this page picks a
-rate: an exponential half-life, an Ebbinghaus curve, a decay constant.
-Mnemopi gives each of fourteen memory types a Weibull <code>k</code>
-(shape) and <code>eta</code> (scale, in hours) — <code>profile</code> at
-k=0.3/eta=8760, <code>relationship</code> at 0.35/8760,
-<code>preference</code> at 0.4/4380, <code>fact</code> at 0.8/720,
-<code>context</code> at 0.85/360, <code>observation</code> at 0.9/480 —
-with a comment stating the intent: higher eta is slower decay, lower k
-is more long-term retention.</p>
-<p>The shape is what a single rate cannot express. A <code>k</code>
-below 1 gives a heavy tail: a profile fact fades slowly <em>and keeps
-fading slowly</em>, so it never quite leaves, while
-<code>observation</code> at k=0.9 approaches memoryless and is gone on
-schedule. That is the difference between "how fast" and "how
-stubbornly", and it is the instrument the <a
-href="../../systems/helm/">Helm</a> report is asking for when it says a
-preference should not fall down the ranking for being old while an event
-should, and that one ranking function for both is usually an unexamined
-decision.</p>
-<p>The cost is twenty-eight hand-set parameters with no committed
-derivation, and one of them is wrong in a way the model itself reveals:
-<code>commitment</code> is given k=1.0, exactly exponential, so an
-outstanding obligation decays memorylessly rather than persisting until
-it is discharged.</p>
-<p>Three systems added since this page was written show what the pattern
-looks like done carefully, and one shows the failure it warns about.</p>
+<h3 id="read-these-first">Read these first</h3>
+<ul>
+<li><a href="../../systems/daimon/">Daimon</a> — per-type linear decay
+with an escalating boost for overdue open questions, applied to
+proactive recall and lidded by trust class.</li>
+<li><a href="../../systems/helm/">Helm</a> — retrieval only slows loss,
+<code>log1p(access_count)</code> subtracted from stale weeks, and only
+never-corroborated rows decay at all.</li>
+<li><a href="../../systems/nooa-memory/">NOOA Memory</a> — retrieval
+bumps a <code>strength</code> counter that slows Ebbinghaus decay and
+leaves <code>confidence</code> untouched, and injected memories are not
+reinforced.</li>
+<li><a href="../../systems/graphify/">Graphify</a> — a 30-day half-life
+on outcomes decides a contested verdict, while the corroboration band
+comes from a count of distinct results.</li>
+<li><a href="../../systems/memory-lancedb-pro/">memory-lancedb-pro</a> —
+three injections never confirmed as used suppress a memory from
+auto-recall for thirty minutes, a negative signal fed only by the
+automatic path.</li>
+</ul>
+<h3 id="every-instance">Every instance</h3>
+<p><strong><a href="../../systems/daimon/">Daimon</a> applies its decay,
+and every factor can be read off the scoring file.</strong> Proactive
+recall multiplies FTS5 relevance by <code>effective_weight</code>, which
+is <code>importance/10 × tiered recency × per-type linear decay</code>,
+with rates from 0.005 a day for a strong belief to 0.05 for an active
+topic (<code>plugin/daimon_briefing/scoring.py</code>). One type is
+exempt from the usual conclusion: an open question past its fourteen-day
+expected lifespan gets an <strong>escalating</strong> boost,
+<code>1 + overdue_days**1.5 / 100</code>, capped at 3.0. For an open
+loop, staleness means <em>unresolved</em>, not <em>irrelevant</em>, and
+burying it is exactly wrong. Any system with a per-type decay table
+should ask which of its types this applies to; most have at least
+one.</p>
+<p>Three smaller guards in the same file generalize. A
+<code>first_seen</code> stamp more than 300 seconds in the future —
+further than ordinary clock skew explains — is treated as
+<em>neutral</em> rather than maximally fresh, so a teammate's
+mis-stamped item cannot outrank local work — a bug that only exists once
+memory crosses machines. Decay is floored at 0.1 rather than allowed to
+reach zero, so ordering may bury an item but arithmetic never erases it.
+And the finished weight is lidded by trust class after every
+accumulation term — 0.7 for an inferred item, 3.0 for a verified
+verbatim quote — so no combination of importance, recency and escalation
+lifts an inferred claim into the band a verified one occupies.</p>
+<p><a href="../../systems/mnemopi/">Mnemopi</a> shows the design this
+page would ask for and then does not run it. <code>weibull.ts</code>
+gives each of fourteen memory types a Weibull <code>k</code> (shape) and
+<code>eta</code> (scale, in hours) — <code>profile</code> at
+k=0.3/eta=8760, <code>preference</code> at 0.4/4380, <code>fact</code>
+at 0.8/720, <code>observation</code> at 0.9/480 — and a <code>k</code>
+below 1 is the heavy tail a single rate cannot express: a profile fact
+that fades slowly <em>and keeps fading slowly</em>. It is the instrument
+the <a href="../../systems/helm/">Helm</a> report asks for when it says
+a preference should not fall down the ranking for being old while an
+event should. But at the pinned commit the table's only importer is a
+test. Recall ages every type alike: <code>scoreCandidate</code> in
+<code>beam/recall.ts</code> multiplies the base score by
+<code>0.7 + 0.3 · exp(−age / 72 h)</code>, and the polyphonic temporal
+voice scores <code>exp(−age_days / 7) × importance</code>; neither reads
+the memory's type. Twenty-eight hand-set parameters, one of them —
+<code>commitment</code> at k=1.0, exactly exponential — wrong on its own
+terms, and none of them reaches a ranking. Before crediting a system
+with per-type decay, find the read path that calls the curve.</p>
 <p><a href="../../systems/redis-agent-memory-server/">Redis Agent Memory
-Server</a> has the most developed retention policy in the atlas.
-<code>select_ids_for_forgetting</code> combines TTL and inactivity so a
-recently-used memory survives its nominal age <strong>unless</strong> it
-exceeds a hard-age multiple (default 12×), honours pinning and per-type
-allowlists, and prunes to a budget using a recency composite with
-<strong>two half-lives</strong> — 7 days on last access, 30 on creation.
-Separating "recently used" decay from "recently learned" decay is the
-refinement most systems miss.</p>
+Server</a> has a composite retention policy worth copying and ships it
+switched off. <code>select_ids_for_forgetting</code> combines TTL and
+inactivity so a recently-used memory survives its nominal age
+<strong>unless</strong> it exceeds a hard-age multiple (default 12×),
+honours pinning and per-type allowlists, and prunes to a budget using a
+recency composite with <strong>two half-lives</strong> — 7 days on last
+access, 30 on creation. Separating "recently used" decay from "recently
+learned" decay is the refinement most systems miss. The periodic job
+that runs it returns without scanning unless
+<code>forgetting_enabled</code> is set, and that setting defaults to
+<code>False</code>, with the age, inactivity and budget thresholds all
+defaulting to <code>None</code>
+(<code>V0/agent_memory_server/config.py:485-490</code>).</p>
 <p><a href="../../systems/mercury-agent/">Mercury</a> makes the same
 distinction in the schema rather than the policy:
 <code>confidence</code>, <code>importance</code>, and
 <code>durability</code> are three independent fields. How much a memory
 matters and how long it should last are different questions, and one
-column cannot answer both. Mercury also keeps a
-<code>subconscious</code> tier — retained but below active recall — so
-demotion is available where most systems only have deletion.</p>
-<p><a href="../../systems/daimon/">Daimon</a> contributes the inversion
-this page has been missing. Its weight is
-<code>importance/10 × tiered recency × per-type linear decay</code>, and
-one type is exempt from the usual conclusion: an open question past a
-fourteen-day expected lifespan gets an <strong>escalating</strong>
-boost, <code>age**1.5 / 100</code>, capped so a fresh item still
-outranks an escalated one. For an open loop, staleness means
-<em>unresolved</em>, not <em>irrelevant</em>, and burying it is exactly
-wrong. Any system with a per-type decay table should ask which of its
-types this applies to; most have at least one.</p>
-<p>Two smaller guards in the same file generalize. A
-<code>first_seen</code> stamp further in the future than ordinary clock
-skew explains is treated as <em>neutral</em> rather than maximally
-fresh, so a teammate's mis-stamped item cannot outrank genuine local
-work — a bug that only exists once memory crosses machines. And decay is
-floored rather than allowed to reach zero, so ordering may bury an item
-but arithmetic never erases it.</p>
+column cannot answer both. Mercury's schema also declares a
+<code>subconscious</code> scope below active recall; what moves a memory
+into or out of it is an open question in the report, so the tier is a
+place demotion could go, not a demotion path the code is known to
+take.</p>
 <p><a href="../../systems/openviking/">OpenViking</a> computes hotness
 as
 <code>sigmoid(log1p(active_count)) * exp(-ln2 · age / half_life)</code>
@@ -284,11 +310,19 @@ individual score. The general lesson is narrow and reusable: <strong>a
 reinforcement signal that is itself caused by reachability is a feedback
 loop, not a measurement</strong>, and the way to find one is to ask
 which of your inputs the previous ranking already decided.</p>
-<p><a href="../../systems/verel/">Verel</a> remains the reference for
-the separation itself. <a href="../../systems/atomic-agent/">Atomic
-Agent</a> suggests the safest implementation shape: keep votes as
-append-only events and derive the score, so a reinforcement rule can be
-changed or recomputed rather than baked irreversibly into a column.</p>
+<p><a href="../../systems/verel/">Verel</a> is the reference for the
+separation itself. The safest implementation shape is to keep
+reinforcement as append-only events and derive the score, so a rule can
+be changed and recomputed rather than baked irreversibly into a column.
+<a href="../../systems/atomic-agent/">Atomic Agent</a> writes the events
+and stops short of the derivation: <code>applyVote</code> stores the
+clamped new score in the target row's <code>vote_score</code> column in
+the same transaction that inserts the <code>vote_events</code> row, the
+consolidator multiplies every stored score by a decay factor in place,
+and <code>vote_events</code> is an audit log FIFO-capped at
+<code>eventLogMaxRows</code>, 50,000 by default
+(<code>src/memory/voting/vote-store.ts</code>). The score cannot be
+rebuilt from the log.</p>
 <p><a href="../../systems/memora/">Memora</a> sits on the correct side
 of the line and still shows the hazard:
 <code>calculate_importance(created_at, base_importance, access_count)</code>
@@ -296,15 +330,21 @@ is a ranking signal rather than a confidence, but retrieval increments
 <code>access_count</code>, which raises the score, which makes future
 retrieval more likely — the self-amplifying loop with no counterweight
 visible.</p>
-<p><a href="../../systems/loongflow/">LoongFlow</a> is the one system
-here that answers reinforcement collapse structurally rather than by
-tuning a rate. Its evolutionary memory samples from a Boltzmann
-distribution over scores at a temperature raised when the population's
-measured diversity falls, so a store converging on the same few items
-automatically loosens selection until variety returns. It is a narrow
-instance — recall there feeds a search loop, not belief — but it is
-worth noting that the usual fix for reinforcement runaway is a decay
-constant, and this one is a feedback controller.</p>
+<p><a href="../../systems/loongflow/">LoongFlow</a> wires a feedback
+controller to reinforcement collapse and gives it the wrong sign. Its
+evolutionary memory samples parents from a Boltzmann distribution,
+<code>exp((score − max) / T)</code>, at a temperature set from the
+population's measured diversity — and the target temperature is
+<code>base_temp × 2 × diversity</code>, clamped to
+<code>[0.5, 2.0]</code> and blended 80/20 with the current value
+(<code>evolution/boltzmann.py:80-87</code>). A population converging on
+the same few solutions therefore gets a <em>lower</em> temperature and
+greedier selection, which converges it further; only the clamp and a 0.2
+chance per call of a uniformly random pick keep variety in. It is a
+narrow instance — recall there feeds a search loop, not belief — and the
+transferable point is the test nobody wrote: a controller meant to
+loosen selection as diversity falls needs an assertion on its direction,
+and here no test exercises the diversity function at all.</p>
 <p><a href="../../systems/nooa-memory/">NOOA Memory</a> is the only
 system here that closes the reinforcement loop rather than noting it.
 Retrieval bumps a <code>strength</code> counter that slows Ebbinghaus

@@ -180,12 +180,143 @@ policy, not as code.</p>
 <p><strong>Skip it if</strong> there is exactly one writer. A gateway in
 front of a single caller is ceremony.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/rainbox/">RainBox</a> remains the reference:
+<p><a href="../../systems/rainbox/">RainBox</a> is the reference:
 <code>record_belief</code> is the single path, taken under a Postgres
 advisory lock, running dedupe, tombstone checks, lattice-aware conflict
 detection, and actor-based trust in one transaction, with
 <code>correct_belief</code> as its atomic correction counterpart.</p>
-<p>Later systems show the gateway idea applied to different things.</p>
+<p>Several systems reach the same shape with a narrower policy inside
+the gate.</p>
+<p><a href="../../systems/aura/">Aura</a>'s
+<code>ConcreteMemoryWriteGateway</code> fails closed on both branches
+that usually differ: with no governance authority wired it denies the
+write with a warning naming the family, and a governance call that
+<em>raises</em> is denied too, after recording a degradation. Its
+receipt is a precondition by another route — the write lands, and if the
+receipt cannot be emitted the gateway restores the previous payload and
+raises. What it does not have is exclusivity. The legacy
+<code>MemoryFacade.add_memory</code> is a second write path whose
+constitutional gate can degrade open, for five named <em>service not
+wired</em> reasons and only on non-user-facing writes, so one codebase
+carries the stricter and the softer policy for the same operation. That
+is the problem this page opens with, in a codebase that has the gateway
+to solve it.</p>
+<p><a href="../../systems/osiris/">Osiris</a> states exclusivity as the
+contract of its actions layer — <em>"the only mutation path into the
+ontology"</em>, with the domain write, its <code>audit_log</code> row
+and any outbox rows committed in one transaction, and <em>"No
+bypassing."</em> <a href="../../systems/runar-forge/">runar-forge</a>
+routes MCP saves, prompt capture, extraction and its crawler through one
+<code>propose</code>, which strips private blocks and redacts secret
+patterns before it bounds content, then stamps the author and dedupes on
+a topic key. <a href="../../systems/neuron/">Neuron</a> refuses a
+missing required field or an invalid enum value at one
+<code>enforceFieldSchema</code> before the row lands. <a
+href="../../systems/kannaka-memory/">kannaka-memory</a> sends every
+wire-to-store absorb through <code>absorb_gate</code>, which forces the
+hallucination flag to the local default because a remote peer must not
+be able to set or clear its own verdict.</p>
+<p><a href="../../systems/opensre/">OpenSRE</a> is the smallest complete
+instance here, and it is worth reading for what it puts in the gate
+rather than for the gate itself. Two writers — an agent tool and an
+automatic post-turn extractor — reach one <code>save_memory</code>,
+which takes a directory lock, preserves <code>created_at</code>, writes
+through a temp file and an atomic replace. The policy in front of it is
+what distinguishes it: a closed type vocabulary, a <strong>model-free
+grounding check</strong> requiring an extracted infrastructure or
+incident claim to share distinctive tokens with text the user typed, a
+refusal of anything extracted from a transcript containing the product's
+own demo scenarios, and a secret filter whose rejection names the rule
+rather than echoing the value. Only the proposal step is a language
+model; every gate after it is deterministic and testable, which is what
+makes the committed negative cases possible.</p>
+<p><a href="../../systems/plur1bus/">PLUR1BUS</a> shows what a gate can
+demand of a correction, and which caller should be allowed past it.
+<code>lib/safe-update.js</code> refuses a content change with no
+<code>updateSource</code> and no <code>updateEvidence</code>, refuses
+new text with no new embedding, deduplicates on a hash of the change
+rather than of the row, and appends the outcome to a reconsolidation
+event log — five checks in one function, each of which a caller cannot
+skip. The sixth is a <strong>semantic drift gate</strong>: the
+correction is rejected outright if the new embedding sits more than 0.45
+cosine from the old, on the reasoning that a replacement meaning
+something else is corruption rather than correction. It is the only
+instance of that check in this atlas, and the two callers in the tree
+take opposite sides of it. The automated conflict apply, behind a
+<code>confirm === true</code> check, calls <code>safeUpdate</code> with
+the gate on and turns a drift refusal into <code>review_only</code>
+instead of a write. The user's <code>/correct</code> command passes
+<code>skipDriftGate: true</code>, with the reasoning at the call site: a
+nonce-confirmed user correction is exactly the case where large drift is
+intended, the confirmation dialog shows the old and new text in full,
+and the gate throws rather than warns. A skipped gate does not skip the
+measurement — the drift is recorded on the audit event. That split is
+the part worth carrying: a gate can meaningfully refuse a correction on
+semantic grounds, and the caller that should pass it is the one a person
+has confirmed, not the one a resolver chose.</p>
+<p><a href="../../systems/memory-palace/">Memory Palace</a> shows the
+write-side version with a degradation rule most gateways lack.
+<code>write_guard</code> runs a semantic and a lexical search before a
+write and returns <code>ADD</code>, <code>UPDATE</code> or
+<code>NOOP</code> — and when the embedding provider has degraded to a
+hash fallback, it returns <code>NOOP</code> with the reason instead of a
+decision. A duplicate gate that falls through to "not a duplicate"
+whenever its evidence is bad is the failure this avoids.</p>
+<p><a href="../../systems/clawmem/">ClawMem</a> gates the
+<em>destructive</em> branch on the quality of the classifier that would
+select it: <code>resolveEffectiveContradictionPolicy</code> downgrades a
+configured <code>supersede</code> policy to a non-deactivating
+<code>link</code> whenever no audited judge is configured, warns once
+per process, and emits a <code>merge_supersede_blocked</code> audit
+event per occurrence. The comment gives the reason — "an unaudited
+heuristic whose number-mismatch score sits exactly at the default action
+threshold must never select deactivation".</p>
+<p><a href="../../systems/hermes-agent/">Hermes Agent</a> routes memory
+mutations through a staged write-approval gate that can allow, block, or
+hold a write for human approval — but the gate <strong>fails
+open</strong> if its module cannot be imported, which is documented in
+the code and worth noticing: a gateway's failure mode is part of its
+design.</p>
+<p><a href="../../systems/hestia/">Hestia</a> declines the gateway for
+one adapter on purpose. The diagram above routes background extraction
+into the same governed command as every other caller; Hestia routes it
+somewhere else. <code>brain/note_taker.py</code> extracts durable facts
+from conversation and they <em>"land in a review inbox
+(<code>memory/inbox/*.md</code>), NOT straight into the live memory
+store"</em> — the queue is deduplicated against both live memory and its
+own pending entries, and <code>review_notes.py</code> is where a person
+promotes, edits or drops each one. No environment variable opens a way
+around it: the module states that <em>"deployment environment variables
+cannot bypass this gate"</em>, and a test sets the legacy
+<code>HESTIA_NOTETAKER_AUTOWRITE=1</code> and asserts the fact reaches
+the inbox and not the store. The direct write path still goes through
+one governed function with a <code>type</code> whitelist that raises
+rather than coercing, and returns the error text to the model so it can
+retry. So this is not a system without a gateway; it is one that decided
+the <em>least</em> trustworthy adapter should not have a machine-decided
+verdict at all. Worth weighing against the cost: the queue defers the
+judgement rather than deciding it, and nothing downstream can mark a
+promoted fact wrong.</p>
+<p><a href="../../systems/lobu/">Lobu</a> separates the gate from the
+writer completely. Its entity-mutation surfaces are described in their
+own comments as policy-blind: each builds one mutation request, calls
+the gate, and acts on the decision without importing any policy module.
+The one shipped interceptor consults a write-policy table whose action
+and effect rows resolve to auto, approval, deny or disabled, and an
+approval turns the write into a deferred mutation whose queue closure
+the core runs strictly post-commit — the repository's stated invariant
+that approvals never ride the caller's transaction. Two details make the
+gate hold rather than merely exist: the approval context check rejects
+any context carrying an agent, client or MCP session id and requires a
+user id, so an automation cannot approve the run it queued, and the
+queued proposal carries the snapshot it was built on, so a field a human
+edited in the meantime is skipped as stale instead of being clobbered by
+the approval.</p>
+<h3 id="gates-on-something-other-than-a-write">Gates on something other
+than a write</h3>
+<p>These are analogies rather than instances. Each puts one gate, or one
+stated rule, in front of a decision that is not a durable memory write,
+and each is worth borrowing for the shape.</p>
 <p><a href="../../systems/metaclaw/">MetaClaw</a> governs the
 <em>policy</em> rather than the claim. A candidate retrieval policy is
 replayed against real past turns and promoted only if it does not
@@ -211,12 +342,6 @@ to every backend without per-plugin code.</p>
 negative form — <strong>fail-closed</strong>: if persistent storage is
 unavailable, the plugin refuses to register rather than running without
 it.</p>
-<p><a href="../../systems/hermes-agent/">Hermes Agent</a> routes memory
-mutations through a staged write-approval gate that can allow, block, or
-hold a write for human approval — but the gate <strong>fails
-open</strong> if its module cannot be imported, which is documented in
-the code and worth noticing: a gateway's failure mode is part of its
-design.</p>
 <p><a href="../../systems/memora/">Memora</a> applies the idea to a bulk
 mutation rather than a single write: its supersession sweep takes
 <code>dry_run: bool = True</code>, so the pass that would hide
@@ -225,43 +350,6 @@ when explicitly asked. A gateway concentrates writes so they can be
 governed; a dry-run default lets them be <em>reviewed</em> first, which
 is the one control this pattern otherwise lacks for operations whose
 blast radius is unknowable in advance.</p>
-<p><a href="../../systems/opensre/">OpenSRE</a> is the smallest complete
-instance here, and it is worth reading for what it puts in the gate
-rather than for the gate itself. Two writers — an agent tool and an
-automatic post-turn extractor — reach one <code>save_memory</code>,
-which takes a directory lock, preserves <code>created_at</code>, writes
-through a temp file and an atomic replace. The policy in front of it is
-what distinguishes it: a closed type vocabulary, a <strong>model-free
-grounding check</strong> requiring an extracted infrastructure or
-incident claim to share distinctive tokens with text the user typed, a
-refusal of anything extracted from a transcript containing the product's
-own demo scenarios, and a secret filter whose rejection names the rule
-rather than echoing the value. Only the proposal step is a language
-model; every gate after it is deterministic and testable, which is what
-makes the committed negative cases possible.</p>
-<p><a href="../../systems/plur1bus/">PLUR1BUS</a> shows what a gate can
-demand of a correction and what happens when it demands too much.
-<code>lib/safe-update.js</code> refuses a content change with no
-<code>updateSource</code> and no <code>updateEvidence</code>, refuses
-new text with no new embedding, deduplicates on a hash of the change
-rather than of the row, and appends the outcome to a reconsolidation
-event log — five checks in one function, each of which a caller cannot
-skip. The sixth is a <strong>semantic drift gate</strong>: the
-correction is rejected outright if the new embedding sits more than 0.45
-cosine from the old, on the reasoning that a replacement meaning
-something else is corruption rather than correction. It is the only
-instance of that check in this atlas, and the only caller in the tree
-passes <code>skipDriftGate: true</code> — with the reasoning at the call
-site: a nonce-confirmed user correction is exactly the case where large
-drift is intended, the confirmation dialog shows the old and new text in
-full, and the gate throws rather than warns. The drift is still recorded
-on the audit event. Both halves are worth carrying: a gate can
-meaningfully refuse a correction on semantic grounds, and a gate that is
-right for automated callers and wrong for the one human caller it has
-ends up with no live consumer at all.</p>
-<p><a href="../../systems/verel/">Verel</a> gates promotion rather than
-writing; <a href="../../systems/engram/">engram</a> surfaces conflict
-candidates for judgment.</p>
 <p><a href="../../systems/midas/">Midas</a> applies the same idea one
 step later — a gateway on <em>use</em> rather than on write.
 <code>decide_memory_use</code> crosses a four-value provenance
@@ -278,48 +366,16 @@ attack. Currency is re-checked at the gate rather than trusted from
 recall, because, in the code's words, the guard "verifies currency
 itself rather than trusting recall to have filtered the stale
 record".</p>
-<p><a href="../../systems/memory-palace/">Memory Palace</a> shows the
-write-side version with a degradation rule most gateways lack.
-<code>write_guard</code> runs a semantic and a lexical search before a
-write and returns <code>ADD</code>, <code>UPDATE</code> or
-<code>NOOP</code> — and when the embedding provider has degraded to a
-hash fallback, it returns <code>NOOP</code> with the reason instead of a
-decision. A duplicate gate that falls through to "not a duplicate"
-whenever its evidence is bad is the failure this avoids.</p>
-<p><a href="../../systems/clawmem/">ClawMem</a> gates the
-<em>destructive</em> branch on the quality of the classifier that would
-select it: <code>resolveEffectiveContradictionPolicy</code> downgrades a
-configured <code>supersede</code> policy to a non-deactivating
-<code>link</code> whenever no audited judge is configured, warns once
-per process, and emits a <code>merge_supersede_blocked</code> audit
-event per occurrence. The comment gives the reason — "an unaudited
-heuristic whose number-mismatch score sits exactly at the default action
-threshold must never select deactivation".</p>
-<p><a href="../../systems/hestia/">Hestia</a> declines the gateway for
-one adapter on purpose. The diagram above routes background extraction
-into the same governed command as every other caller; Hestia routes it
-somewhere else. <code>brain/note_taker.py</code> extracts durable facts
-from conversation and they <em>"land in a review inbox
-(<code>memory/inbox/*.md</code>), NOT straight into the live memory
-store"</em> — the queue is deduplicated against both live memory and its
-own pending entries, and <code>review_notes.py</code> is where a person
-promotes, edits or drops each one. The bypass is present and defaults
-off (<code>HESTIA_NOTETAKER_AUTOWRITE</code> reads <code>"0"</code>).
-The direct write path still goes through one governed function with a
-<code>type</code> whitelist that raises rather than coercing, and
-returns the error text to the model so it can retry. So this is not a
-system without a gateway; it is one that decided the <em>least</em>
-trustworthy adapter should not have a machine-decided verdict at all.
-Worth weighing against the cost: the queue defers the judgement rather
-than deciding it, and nothing downstream can mark a promoted fact
-wrong.</p>
+<p><a href="../../systems/verel/">Verel</a> gates promotion rather than
+writing; <a href="../../systems/engram/">engram</a> surfaces conflict
+candidates for judgment.</p>
 <h3 id="the-gateway-that-is-not-yours">The gateway that is not
 yours</h3>
-<p>Every gateway on this page is inside the memory system it governs.
-Two projects in the token-cost corpus put one <em>outside</em>, in front
-of the agent, and between them they cover both directions of the same
-threat — which is worth naming because neither is a memory system and
-neither gets a report here.</p>
+<p>Every gateway above is inside the memory system it governs. AEGIS,
+from the token-cost corpus, puts one <em>outside</em>, in front of the
+agent, and ruflo below holds the read-side half of the same threat.
+AEGIS is worth naming although it is not a memory system and gets no
+report here.</p>
 <p><a href="https://github.com/Justin0504/Aegis">AEGIS</a>, MIT,
 examined on 2026-08-09 at <a
 href="https://github.com/Justin0504/Aegis/commit/82b7501cf3491a105362a10a059e33d0e949d4d3"><code class="commit-id" title="82b7501cf3491a105362a10a059e33d0e949d4d3">82b7501c…</code></a>,
@@ -355,21 +411,6 @@ catches whatever was already in the store when you turned the guard on.
 They are not substitutes, and a system with a governed write gateway of
 its own has the better version of the first half — because it knows
 which writes are writes.</p>
-<p><a href="../../systems/lobu/">Lobu</a> separates the gate from the
-writer completely. Its entity-mutation surfaces are described in their
-own comments as policy-blind: each builds one mutation request, calls
-the gate, and acts on the decision without importing any policy module.
-The one shipped interceptor consults a write-policy table whose action
-and effect rows resolve to auto, approval, deny or disabled, and an
-approval turns the write into a deferred mutation whose queue closure
-the core runs strictly post-commit — the repository's stated invariant
-that approvals never ride the caller's transaction. Two details make the
-gate hold rather than merely exist: the approval context check rejects
-any context carrying an agent, client or MCP session id and requires a
-user id, so an automation cannot approve the run it queued, and the
-queued proposal carries the snapshot it was built on, so a field a human
-edited in the meantime is skipped as stale instead of being clobbered by
-the approval.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exercise every adapter against the same invariant suite.</li>

@@ -4,24 +4,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="Let reads fan out across allowed
-memory stores while requiring every mutation to name one concrete
-private or shared destination.">
+    <meta name="description" content="Require every mutation to name one
+resolved destination, and refuse a write whose destination is absent or
+ambiguous rather than defaulting it.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Explicit Write
 Destination — Agent Memory Atlas">
-    <meta property="og:description" content="Let reads fan out across
-allowed memory stores while requiring every mutation to name one
-concrete private or shared destination.">
+    <meta property="og:description" content="Require every mutation to
+name one resolved destination, and refuse a write whose destination is
+absent or ambiguous rather than defaulting it.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Explicit Write
 Destination — Agent Memory Atlas">
-    <meta name="twitter:description" content="Let reads fan out across
-allowed memory stores while requiring every mutation to name one
-concrete private or shared destination.">
+    <meta name="twitter:description" content="Require every mutation to
+name one resolved destination, and refuse a write whose destination is
+absent or ambiguous rather than defaulting it.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Explicit Write Destination — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -43,7 +43,7 @@ concrete private or shared destination.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Explicit Write Destination",
-      "description": "Let reads fan out across allowed memory stores while requiring every mutation to name one concrete private or shared destination.",
+      "description": "Require every mutation to name one resolved destination, and refuse a write whose destination is absent or ambiguous rather than defaulting it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -100,13 +100,13 @@ concrete private or shared destination.">
         <div class="document-hero-inner">
           <p class="eyebrow">Pattern · Federation</p>
           <h1>Explicit Write Destination</h1>
-          <p class="document-deck">Let reads fan out across allowed
-memory stores while requiring every mutation to name one concrete
-private or shared destination.</p>
+          <p class="document-deck">Require every mutation to name one
+resolved destination, and refuse a write whose destination is absent or
+ambiguous rather than defaulting it.</p>
                                         <div class="document-meta">
-            <a class="meta-pill stance-pill stance-reporting" href="../../patterns/#how-established-is-any-of-this">
+            <a class="meta-pill stance-pill stance-advocacy" href="../../patterns/#how-established-is-any-of-this">
               <span>Epistemic status</span>
-              <strong>Reporting an established practice</strong>
+              <strong>Advocacy — a handful of instances</strong>
             </a>
           </div>
                             </div>
@@ -124,46 +124,59 @@ private or shared destination.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="intent">Intent</h2>
-<p>Support layered memory—personal, project, repository, team, or
-organization—without letting a broad read context silently determine
-where new information is written.</p>
+<p>Make <em>where does this memory go</em> a decision the caller states
+on every write, so that no default — and no inherited read context —
+chooses a destination for it.</p>
 <h2 id="the-problem">The problem</h2>
-<p>Federated retrieval may merge several stores into one result list. If
-a subsequent “remember this” operation inherits that blended context, a
-private observation can leak into a shared repository or a team lesson
-can land in one developer’s private memory.</p>
+<p>Once memory has more than one store — private and shared, personal
+and team, user and repository — a write that omits its destination still
+lands somewhere. Whatever supplies that somewhere is a default nobody
+chose at the moment of writing: a config value, the store the last read
+came from, the top search result. The write succeeds, in the wrong
+place, and a private observation is now shared.</p>
+<p>Keeping read scopes apart from the write scope is part of <a
+href="../scope-as-a-first-class-key/">scope as a first-class key</a>.
+This page is about the rule that separation leaves open: what a write
+that names no destination does.</p>
 <h2 id="the-pattern">The pattern</h2>
-<p>Separate read scope from write target:</p>
-<pre class="text"><code>read_scopes = [private, project, organization]
-write_target = project</code></pre>
-<p>Reads may fan out according to access policy and merge with locality
-or precedence rules. Writes accept exactly one resolved destination and
-reject ambiguous requests. The destination becomes part of identity,
-provenance, access control, and the mutation audit.</p>
-<p>Agent tools should make the target visible in their arguments.
-Defaults are acceptable only when they are safe, obvious, and surfaced
-to the user; shared writes often deserve confirmation.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — reads merge several scopes and label each result; a write with no resolved destination is rejected rather than defaulted, and a shared one is confirmed</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: reads merge several scopes and label each result; a write with no resolved destination is rejected rather than defaulted, and a shared one is confirmed
+<pre class="text"><code>write(memory, target)            # target is required
+    target absent or empty  -&gt; reject; there is no implicit default
+    target not writable     -&gt; reject; list the valid targets
+    target resolved         -&gt; exactly one store</code></pre>
+<p>A mutation names exactly one destination. The write API resolves it
+against the stores the caller may write, and an absent, empty or
+unrecognized destination is an error, never a fallback. A default
+belongs only on a path where a human has already chosen — a file
+importer — and never on the interactive or model-driven path. The
+resolved destination then becomes part of identity, provenance, access
+control and the mutation audit.</p>
+<p>Agent tools should carry the target in their arguments, and the
+refusal should name the valid targets, so a model learns the vocabulary
+from its first mistake. Shared writes often deserve confirmation on
+top.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write with no resolved destination is refused rather than defaulted, and only a resolved target reaches a store</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write with no resolved destination is refused rather than defaulted, and only a resolved target reaches a store
 flowchart TD
-    Q[&quot;read&quot;] --&gt; RS[&quot;read_scopes:&lt;br/&gt;private + project&lt;br/&gt;+ org&quot;]
-    RS --&gt; Merge[&quot;merge by locality&lt;br/&gt;/ precedence&quot;]
-    Merge --&gt; Out[&quot;results, each&lt;br/&gt;labelled with&lt;br/&gt;its scope&quot;]
-    W[&quot;write&quot;] --&gt; T{&quot;write_target&lt;br/&gt;resolved?&quot;}
-    T -- &quot;no&quot; --&gt; Rej[&quot;reject:&lt;br/&gt;ambiguous&lt;br/&gt;destination&quot;]
+    W[&quot;write(memory, target)&quot;] --&gt; T{&quot;target present&lt;br/&gt;and resolvable?&quot;}
+    T -- &quot;absent or empty&quot; --&gt; R1[&quot;reject:&lt;br/&gt;no implicit default&quot;]
+    T -- &quot;not a writable&lt;br/&gt;store&quot; --&gt; R2[&quot;reject:&lt;br/&gt;list the valid&lt;br/&gt;targets&quot;]
     T -- &quot;yes, private&quot; --&gt; P[&quot;private&lt;br/&gt;store&quot;]
-    T -- &quot;yes, shared&quot; --&gt; Conf[&quot;confirm, then&lt;br/&gt;shared store&quot;]</code></pre></details></figure>
-<p>Reads fan out; writes converge on exactly one named destination, and
-an unresolved destination is an error rather than a default.</p>
+    T -- &quot;yes, shared&quot; --&gt; S[&quot;confirm if policy&lt;br/&gt;asks, then&lt;br/&gt;shared store&quot;]</code></pre></details></figure>
 <h2 id="why-it-works">Why it works</h2>
-<p>The pattern prevents accidental publication and makes ownership
-inspectable. It also allows independent storage, sync, retention, and
-review policy for each layer.</p>
+<p>A default is the one destination nobody chose. Refusing the write
+moves the decision to the moment the caller knows what the memory is. It
+also makes a misrouted write attributable: the destination is in the
+arguments, so the audit shows who chose it rather than which
+configuration value did.</p>
 <h2 id="tradeoffs">Tradeoffs</h2>
 <p>Explicit targets add friction. Agents may choose poorly, and users
 may not understand the scope names. A promotion flow is needed when a
 private insight becomes shared knowledge. Moving a memory between stores
 must preserve provenance without leaving stale copies or broken
 links.</p>
+<p>The rule protects only the paths that pass through it. A library
+call, an importer or a background consolidator that writes directly can
+still create a record with no destination, and whatever the read path
+does with such a record becomes the effective default.</p>
 <p>Do not infer a write target from the top search result. Relevance and
 ownership are different decisions.</p>
 <h2 id="cost-to-adopt">Cost to adopt</h2>
@@ -179,61 +192,71 @@ decision on every turn.</p>
 <p><strong>Skip it if</strong> there is no shared store. This pattern
 exists to stop private material reaching a shared one.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> remains
-the clearest case: reads fan out across private and repository wikis
-while every mutation must name a concrete target, so a shared read scope
-never becomes a shared write.</p>
-<p><a href="../../systems/openviking/">OpenViking</a> enforces the same
-discipline structurally. <code>MemoryIsolationHandler</code> resolves
-the write target <strong>before</strong> anything is persisted, and
-<code>peer_user_space()</code> returns <code>user_space</code> for the
-sentinel <code>__self</code> and
-<code>user_space/peers/&lt;peer_id&gt;</code> otherwise — so memory
-<em>about</em> a third party is physically separated from memory about
-the user, by path, at write time.</p>
-<p><a href="../../systems/magic-context/">Magic Context</a> pairs a
-<code>project | ecosystem | universe</code> scope with a
-<code>shareable</code> flag, making "may this cross a boundary?" a
-property of the record rather than a property of the caller. <a
-href="../../systems/mateclaw/">MateClaw</a> puts the destination on the
-provider contract itself as an <code>ownerKey</code>, and its
-<code>MemoryScope</code> marks <code>TEAM</code> and <code>GLOBAL</code>
-as the shared values with an <code>isShared()</code> helper — the
-sharing decision is explicit and centrally testable.</p>
-<p><a href="../../systems/cowagent/">CowAgent</a> is the counterexample,
-and a common one: its <code>chunks.scope</code> column defaults to
-<code>'shared'</code>. A default that shares is a default that leaks,
-because the safe value is the one nobody has to remember to set — the
-same hazard the atlas flags in <a
-href="../../systems/agentmemory/">agentmemory</a>, whose strictest
-isolation requires opting in.</p>
-<p><a href="../../systems/moltis/">Moltis</a> shows what happens without
-the discipline at all: sanitized session transcripts are exported into
-the same Markdown corpus as curated notes, sharing one index and one
-rank, with nothing marking which is which.</p>
+<p>The atlas argues for this rule rather than reporting it as common
+practice. The systems below refuse an absent destination on their write
+path.</p>
+<p><a href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> —
+<code>parseTarget</code> in <code>scripts/lib/context/target.mjs</code>
+throws when a write or mutate <code>target</code> is empty, with the
+reason <em>"target is REQUIRED and must be explicit … (there is no
+implicit default)"</em>, and throws again for any value that is not an
+active context level rather than falling back to the private brain.
+Reads fan out across the private brain and the repository wikis; each
+write names one. The server enforces the explicit target; asking before
+a shared-repository write is policy, not code.</p>
+<p><a href="../../systems/memory-engine/">Memory Engine</a> —
+<code>memory.create</code> and <code>batchCreate</code> require a
+<code>tree</code>, and the protocol schema rejects an empty one
+(<code>treePathSchema.min(1, "tree path is required")</code>), so
+callers choose <code>share</code> versus <code>~</code> on every
+interactive write. A default exists only on the file importers, which
+file a tree-less record under <code>share</code> — a path where a human
+already chose the source.</p>
+<p><a href="../../systems/membrane/">Membrane</a> — the gRPC write
+boundary, <code>allowsWriteRecord</code>, refuses a record whose scope
+is empty and one outside the principal's <code>write_scopes</code>,
+under a comment stating the rule: <em>"every network mutation must name
+an explicitly permitted non-empty scope"</em>. Its limit is the one the
+tradeoffs above predict. The in-process library and the consolidators do
+not pass through that boundary and can create unscoped records, which
+the read path treats as visible from every context.</p>
+<p>The counterexamples show what the rule replaces. <a
+href="../../systems/mateclaw/">MateClaw</a> carries the destination on
+its provider contract as an <code>ownerKey</code>, beside unscoped
+overloads that remain callable, so the destination is opt-in per call
+site; its recall ledger does drop a personal-scope write with no
+resolved owner rather than recording it, which is the rule applied to
+one table. <a href="../../systems/cowagent/">CowAgent</a>'s
+<code>chunks.scope</code> column defaults to <code>'shared'</code>, and
+<a href="../../systems/agentmemory/">agentmemory</a> shares agent scope
+unless isolation is switched on — in both, the omitted destination
+resolves to the widest one, and the safe value is the one somebody has
+to remember to set.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
-<li>Give every store a stable, human-readable destination ID.</li>
+<li>Make the destination a required argument of every write and mutate
+call, and reject an empty one.</li>
+<li>Reject a destination that is not one of the caller's writable
+stores, and list the valid ones in the error.</li>
 <li>Resolve and authorize the target before mutation.</li>
+<li>Put a default, if any, only on paths where a human chose the source,
+never on the model-facing tool.</li>
+<li>Route every writer — library, importer, background consolidator —
+through the same check, or record which ones bypass it and what they
+default to.</li>
 <li>Include target scope in dedupe, conflict, and tombstone checks.</li>
 <li>Record promotions and moves as relations or audit events.</li>
 <li>Require stronger confirmation for shared or organization-wide
 writes.</li>
-<li>Keep private automatic capture separate from shared
-publication.</li>
 </ul>
-<p><a href="../../systems/memory-engine/">Memory Engine</a> is the
-strongest instance found: <code>memory.create</code> and
-<code>batchCreate</code> <strong>require</strong> an explicit
-<code>tree</code>, because callers should "choose <code>share</code> vs
-<code>~</code> deliberately". The default is not safe-and-surfaced — it
-is <em>absent</em> on the interactive path, and exists only for file
-importers, where a human already chose the source.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
-<li>Omitted and ambiguous write targets fail safely.</li>
+<li>Omitted, empty and unknown write targets fail with an error, and
+nothing is persisted.</li>
 <li>Private capture never appears in shared stores.</li>
 <li>Read federation does not affect write routing.</li>
+<li>Each writer outside the request path is either behind the same check
+or tested for what it writes when given no destination.</li>
 <li>Promotion preserves provenance and removes or links the
 predecessor.</li>
 <li>Concurrent moves cannot create two active owners.</li>

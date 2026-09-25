@@ -1,25 +1,39 @@
 ---
 title: Promotion Between Tiers
 eyebrow: Pattern · Lifecycle
-description: Almost every memory system has tiers. Far fewer can say what moves a memory up one — and a tier boundary with no stated rule is a place where memory quietly stops improving.
+description: Storage tiers are common, and so is a computable rule for moving a memory up one. Keeping the rule's inputs apart, capping it by provenance and recording why a memory moved are much rarer — and without them nobody can say what the long-term store is made of.
 root: ../..
 page_kind: pattern
-stance: reporting
+stance: mixed
 ---
 
 ## Intent
 
-If memory has tiers, name the rule that promotes between them, make it
+If memory has storage tiers, name the rule that promotes between them, make it
 computable, and be able to say why any given record is in the tier it is in.
+
+The page makes two kinds of claim. A computable rule for moving a memory between
+storage tiers — working to episodic, short- to mid- to long-term, a live store to
+a durable file — is reported practice:
+[MemoryOS](../../systems/memoryos/), [MemOS](../../systems/memos/),
+[dsh-ai-memory](../../systems/dsh-ai-memory/) and
+[cortexgraph](../../systems/cortexgraph/) each ship one. That the rule's inputs
+stay separate, that provenance caps it, and that each promotion is recorded with
+its reasons is argued, from partial instances named below.
+
+The line with [trust-state machine](../trust-state-machine/) runs between *where
+a memory is stored* and *what is believed about it*: a status that decides
+whether a memory may be acted on — a corroboration threshold, an outcome-counted
+ladder, a provenance cap on a `verified` label — belongs there, and this page is
+about the move from one store to another.
 
 ## The problem
 
-Tiering is the most common structure in agent memory: short-term and long-term,
-hot and archival, working and durable, core and recall. It is close to universal
-and almost free to describe, which is why nearly every system has it.
+Tiering is a common structure in agent memory: short-term and long-term, hot
+and archival, working and durable, core and recall. It is almost free to
+describe, which is why so many systems have it.
 
-What is not universal is an answer to **what moves a memory up**. The usual
-shapes:
+What varies is the answer to **what moves a memory up**. The usual shapes:
 
 - **No rule at all.** A summarizer runs every *N* turns and whatever it emits is
   now long-term. The tier boundary is a schedule, not a judgement.
@@ -112,7 +126,7 @@ because it implies a judgement that is not being made.
 
 ## Seen in the atlas
 
-Tiering is everywhere; the rule is not.
+### The computable rule — reported
 
 [MemoryOS](../../systems/memoryos/) writes the rule down, which is the right
 instinct and shows the trap: `alpha·N_visit + beta·L_interaction + gamma·R_recency`
@@ -123,56 +137,84 @@ long-term memory is built from what wins. It also keeps a *second* access counte
 for LFU eviction, so the number that decides what is hot and the number that
 decides what is deleted can disagree about the same segment.
 
-[Core Memory](../../systems/core-memory/) has the most developed answer, and it is
-a ceiling rather than a score. Grounding — `observed`, `extracted`, `inferred`,
-`speculative` — caps how far a record can climb: a speculative bead "cannot reach
-canonical status", explicitly "not via recall, not even via promotion". Use
-raises standing; it cannot raise it past what the source justifies. The class is
-also monotonic, with correction handled on a separate axis, so superseding a
-class-A claim preserves the record of how carefully it was established.
+[MemOS](../../systems/memos/) has the same shape one step further out. On a
+timed trigger its scheduler sorts working memories by an importance score
+weighting list position, a keyword score and a recording count
+`[0.9, 0.05, 0.05]`, and copies the top slice into activation memory as KV-cache
+items — one blended scalar, so which input moved a memory is not recoverable.
 
-[NOOA Memory](../../systems/nooa-memory/) separates the inputs properly —
-`importance`, `salience`, `confidence` and a spaced-repetition `strength`, where
-retrieval moves only the last. Its paper adds the detail that closes the loop:
-"injected memories are not reinforced, so what the harness surfaces does not
-distort the usage signal."
+[cortexgraph](../../systems/cortexgraph/) promotes out of its live store into a
+Markdown vault a person reads: a memory above a strength threshold and with
+enough use is written out, and `promoted_at` and `promoted_to` are set on the
+row.
 
-[Mercury](../../systems/mercury-agent/) grades confidence, importance and
-durability separately and keeps a subconscious tier below active recall.
-[Redis Agent Memory Server](../../systems/redis-agent-memory-server/) has the
-inverse — the atlas's most developed *demotion* policy, combining TTL,
-inactivity, pinning, per-type allowlists and budget pruning.
+[dsh-ai-memory](../../systems/dsh-ai-memory/) shows both ways a tier rule fails
+without any model involved. Working notes move to episodic after an age, and
+episodic notes to an untimed `profile` tier after an age once `access_count`
+reaches a minimum of two. Its `chat` preset expires a working note at the same
+age it would promote it, and `consolidate` checks the TTL first, so under the
+preset the plugin ships an unpinned working note is deleted rather than promoted
+— pinned notes skip expiry and can promote — while the type's own doc comment
+says to set retention longer than the promote delay. And `access_count` is
+incremented for every hit the per-prompt prefetch returns, 128 of them with no
+floor, so being injected twice is being accessed twice and the profile tier fills
+with whatever lasted a week.
 
-The larger group tiers without a stated rule: [Letta](../../systems/letta/)'s
-core, archival and recall; [MemOS](../../systems/memos/), whose promotion varies
-by cube; [LoongFlow](../../systems/loongflow/)'s stm/mtm/ltm with auto-compress.
-The tiers are real; what crosses them is a schedule.
+Other systems tier with no rule over stored fields at all.
+[Letta](../../systems/letta/)'s core, archival and recall tiers are written by
+the agent's own tool calls, so the rule is whatever the model decides — the
+rule-inside-a-prompt shape. [LoongFlow](../../systems/loongflow/)'s stm, mtm and
+ltm pass material through a `Compressor`. [Mercury](../../systems/mercury-agent/)
+keeps a `subconscious` tier below active recall, and its report found nothing that
+states what moves a memory into or out of it.
+[Redis Agent Memory Server](../../systems/redis-agent-memory-server/) works the
+other end of the lifecycle: its forgetting policy combines TTL, inactivity,
+pinning, per-type allowlists and budget pruning, and what it selects is deleted
+rather than moved to a lower tier.
 
-[Cambium](../../systems/cambium/) states the gate as a prohibition rather than a
-mechanism, which is the cleanest formulation of it in the atlas. Its status
-standard says *"File existence, a resolvable wiki link, the existence of an
-external checklist item, or a large page word count MUST NOT automatically change
-any status"*, and *"A status MUST NOT be upgraded directly because the file
-exists, its length reaches a threshold, or automated checks pass."* Its twelve
-deterministic scripts emit exactly two outcomes, `fail` and `candidate`, and the
-freshness check spells out the consequence: candidates *"only feed the
-maintenance-run candidate list and never change any status axis of a page."* So
-the tooling can block a batch and nominate work, and has no outcome that promotes.
+### Separate inputs, a ceiling, a recorded decision — argued
 
-Worth separating from the systems above: the usual failure is a promotion gate
-whose criterion is cheap — an age, a hit count, a threshold — and Cambium's
-contribution is naming those exact signals as the ones that must *not* qualify.
-Its evidence ladder (`signal → single-source → corroborated → validated`) is
-climbed by judgement only. The cost is the honest one: nothing in the repository
-enforces the prohibition, because the component that would enforce it is the one
-being prohibited.
+No system cited here has all three on a storage-tier move; each has part.
+
+**Separate inputs.** [NOOA Memory](../../systems/nooa-memory/) keeps
+`importance`, `salience`, `confidence` and a spaced-repetition `strength`
+apart, and retrieval moves only the last. Its paper adds the detail that closes
+the loop: "injected memories are not reinforced, so what the harness surfaces
+does not distort the usage signal" — the fix for dsh-ai-memory's prefetch.
+
+**A ceiling.** [Core Memory](../../systems/core-memory/) caps a ladder by its
+source. Grounding — `observed`, `extracted`, `inferred`, `speculative` — bounds
+the C/B/A `confidence_class` a bead can reach: a speculative bead "cannot reach
+canonical status", explicitly "not via recall, not even via promotion", and
+committed cases assert it across an index rebuild. The ladder it caps ranks and
+sets assembly depth rather than moving a bead between stores, so this is the
+ceiling shown on a confidence ladder; a status cap of the same kind is on
+[trust-state machine](../trust-state-machine/).
+
+**A recorded decision.** [CSM](../../systems/csm/) promotes from a candidate
+queue into durable memory through five gates — confidence, reinforcement,
+zero contradictions, evidence references and distinct source sessions — and
+every decision carries a `thresholdChecks` object with actual against required
+for each, so a promotion report explains its own refusals. It ships disabled
+and dry-run by default, and `minSessions` defaults to 1, which makes the
+session-diversity gate a no-op until an operator raises it.
+[OmniIntelligence](../../systems/omniintelligence/) records the same thing on a
+status ladder: every transition writes a row with a `gate_snapshot` of the gate
+conditions at transition time, under a foreign key that refuses deletion.
+
+[Cambium](../../systems/cambium/) names the inputs that must not qualify. Its
+status standard says *"A status MUST NOT be upgraded directly because the file
+exists, its length reaches a threshold, or automated checks pass"*, and its
+deterministic scripts emit only `fail` and `candidate`, so the tooling can
+nominate work and has no outcome that promotes. It governs status axes on wiki
+pages rather than storage tiers, and nothing in the repository enforces the
+prohibition; the list of cheap signals — an age, a size, a passing check —
+applies to a storage-tier rule unchanged.
 
 The measured warning comes from NOOA Memory's paper, and it applies to whatever
 promotion produces: reflection records are "22% of rows yet ~1% of both read
-channels". A fifth of that store is distilled material that retrieval essentially
+channels". A fifth of that store is distilled material that retrieval almost
 never surfaces. Promotion succeeded; usefulness did not follow.
-
-[dsh-ai-memory](../../systems/dsh-ai-memory/) shows both ways a tier rule fails without any model involved. Its `chat` preset expires a working note at the same age it would promote it, and `consolidate` checks the TTL first, so under the preset the plugin ships nothing ever moves from working to episodic — while the type's own doc comment says to set retention longer than the promote delay. Its episodic-to-profile bar is two accesses, counted by `recall`, and the per-prompt prefetch calls `recall` for 128 hits with no floor, so being injected twice is being accessed twice and the untimed profile tier fills with whatever lasted a week. NOOA's rule that injected memories are not reinforced is the fix.
 
 ## Tests to require
 

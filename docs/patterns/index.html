@@ -121,7 +121,7 @@ trusted.</p>
 different names. This library extracts those solutions from the
 repositories in the atlas and presents them as implementation patterns
 rather than product features. <strong>Not all of them are settled
-practice</strong> — a few rest on one or two implementations, and the
+practice</strong> — a few rest on a handful of implementations, and the
 section below says which.</p>
 <p>Each pattern explains the problem it addresses, its architectural
 shape, why it works, where it fails, examples from the analyzed systems,
@@ -353,29 +353,34 @@ wide:</p>
 </table></div>
 <!-- END GENERATED SPREAD -->
 
-<p>Read the bottom two rows as what they are. A mechanism present in 38
-systems of 627 — or in 19 — is <strong>not a best
-practice</strong>. There is no consensus behind it, no library that
-gives it to you, and nobody to ask when your implementation has a hole.
-Adopting it means building it.</p>
-<p>And in the tombstone's case the provenance is narrower still. It was
-not designed by anyone: a red team walked a rejected value back to
-verified in three steps, and Verel's fix became the mechanism. The
-second system carrying it adopted it after the survey that became this
-atlas flagged its absence, and the third arrived at a weaker form
-independently, keyed on exact text rather than a normalized value — so
-the field has produced this idea <strong>once</strong> in the form that
-survives an attack. The <a
+<p>Read the bottom two rows as what they are:
+87 systems of
+627 carry a human review surface.</p>
+<p>58 systems of
+627 carry a rejected-value tombstone. Neither is
+<strong>a best practice</strong>. There is no consensus behind either,
+no library that gives it to you, and nobody to ask when your
+implementation has a hole. Adopting one means building it.</p>
+<p>The tombstone's origin explains its shape. It was not designed by
+anyone: a red team walked a rejected value back to verified in three
+steps, and Verel's fix became the mechanism. The next system to carry it
+adopted it after the survey that became this atlas flagged its absence,
+and the one after that arrived at a weaker form independently, keyed on
+exact text rather than a normalized value. Independent arrivals have
+followed since, most of them keyed on the value and consulted on the
+write path; fewer normalize the value, carry its scope and consult it on
+every automated path, which is the form that survives the attack. The <a
 href="./rejected-value-tombstone/">rejected-value tombstone</a> page
-traces the whole chain.</p>
+sorts them.</p>
 <p>The outside view agrees, in the way that costs the atlas something to
 admit: the field's most comprehensive survey of itself (<a
 href="https://arxiv.org/abs/2512.13564">arXiv:2512.13564</a>, 107 pages,
 47 authors) does not contain the words <em>tombstone</em>,
 <em>rejected</em> or <em>negative</em> anywhere, while its
 trustworthy-memory section asks for "verifiable forgetting and auditable
-updates" as future work. Three small repositories have the mechanism;
-the field's own account of itself has no name for it.</p>
+updates" as future work. 58 systems of
+627 carry a rejected-value tombstone; the field's
+own account of itself has no name for it.</p>
 <p><strong>Where the literature does name it is one vision
 paper.</strong> <em>Is Agent Memory a Database? Rethinking Data
 Foundations for Long-Term AI Agent Memory</em> (<a
@@ -417,51 +422,44 @@ href="./bi-temporal-fact-validity/">bi-temporal fact validity</a>, <a
 href="./cache-preserving-injection/">cache-preserving injection</a>, <a
 href="./decay-and-reinforcement/">decay and reinforcement</a>, <a
 href="./evidence-before-belief/">evidence before belief</a>, <a
-href="./explicit-write-destination/">explicit write destination</a>, <a
 href="./gate-the-expensive-path/">gate the expensive path</a>, <a
 href="./governed-write-gateway/">governed write gateway</a>, <a
 href="./hybrid-retrieval-fusion/">hybrid retrieval fusion</a>, <a
-href="./pluggable-memory-provider/">pluggable memory provider</a>, <a
-href="./promotion-between-tiers/">promotion between tiers</a>, <a
-href="./recoverable-background-work/">recoverable background work</a>,
-<a href="./scope-as-a-first-class-key/">scope as a first-class key</a>,
-<a href="./skills-as-procedural-memory/">skills as procedural
-memory</a>, <a href="./trust-state-machine/">trust state machine</a> and
-<a href="./zero-llm-capture/">zero-LLM capture</a> describe things many
+href="./memory-as-an-editing-surface/">memory as an editing surface</a>,
+<a href="./recoverable-background-work/">recoverable background
+work</a>, <a href="./scope-as-a-first-class-key/">scope as a first-class
+key</a>, <a href="./source-diverse-context/">source-diverse context</a>,
+<a href="./trust-state-machine/">trust state machine</a> and <a
+href="./zero-llm-capture/">zero-LLM capture</a> describe things many
 systems already do. The pattern refines a practice that exists.</li>
-<li><strong>Advocacy — one or two instances.</strong> <a
-href="./rejected-value-tombstone/">Rejected-value tombstone</a> and <a
-href="./resolve-not-just-detect/">resolve, don't just detect</a> rest on
-one or two instances. The atlas is arguing for them, not reporting
-them.</li>
-<li><strong>Reporting, with one advocacy claim.</strong> <a
-href="./source-diverse-context/">Source-diverse context</a> is the mixed
-case: the quota mechanism itself is ordinary retrieval engineering that
-several systems run, while the negative-eval discipline inside it is an
-argument with almost nothing behind it.</li>
+<li><strong>Advocacy — a handful of instances.</strong> <a
+href="./resolve-not-just-detect/">Resolve, don't just detect</a> has no
+complete instance, and <a href="./explicit-write-destination/">explicit
+write destination</a> — a write with no named destination is refused
+rather than defaulted — has three. The atlas is arguing for them, not
+reporting them.</li>
+<li><strong>Reporting, with one advocacy claim.</strong> Each of these
+is common in one half and argued for in the other. <a
+href="./rejected-value-tombstone/">Rejected-value tombstone</a>: a
+value-keyed record consulted on the write path is reported; normalizing
+the value and consulting it on every automated path is argued. <a
+href="./pluggable-memory-provider/">Pluggable memory provider</a>: the
+host contract is reported; carrying scope and deletion across it is
+argued. <a href="./promotion-between-tiers/">Promotion between
+tiers</a>: a computable rule for moving between storage tiers is
+reported; separate inputs, a provenance cap and a recorded decision are
+argued. <a href="./retrieval-hysteresis/">Retrieval hysteresis</a>:
+cooldown and suppression of recently surfaced units are reported; the
+full sticky, cooldown and delay set with a stated precedence is argued.
+<a href="./skills-as-procedural-memory/">Skills as procedural
+memory</a>: the skill library is reported; writing a skill only after an
+observed outcome verifies it is argued.</li>
 </ul>
-<p>The advocacy patterns are the ones this atlas thinks matter most,
-which is exactly why they need the disclosure rather than the benefit of
-the doubt. A reader who assumed they were industry practice — as their
-author did until tracing the history — would be adopting them on the
-strength of an argument, not a consensus. That may still be the right
-call. It is a different decision.</p>
-<p><strong>A fourth case, added later and needing its own
-label.</strong> <a href="./retrieval-hysteresis/">Retrieval
-hysteresis</a> and <a href="./memory-as-an-editing-surface/">memory as
-an editing surface</a> are neither advocacy nor general reporting. They
-are <strong>mature in one category and unknown outside it.</strong> Both
-are mature, refined against very large user bases, and almost every
-instance is a roleplay or companion client — SillyTavern, RisuAI,
-N.E.K.O., Soul of Waifu, Z-Waif. No extraction-based system in this
-atlas carries per-unit activation state, and the systems that hold
-<code>human_review</code> mostly offer approval of a queue rather than
-an editor over the store.</p>
-<p>That is a different epistemic situation from a mechanism three
-repositories invented. These are known solutions to problems the rest of
-the field has, sitting in codebases the rest of the field does not read.
-Both pages exist because the mechanisms appear six times across the
-reports and were never collected in one place.</p>
+<p>The advocacy claims are the ones this atlas thinks matter most, which
+is exactly why they need the disclosure rather than the benefit of the
+doubt. A reader who assumed they were industry practice would be
+adopting them on the strength of an argument, not a consensus. That may
+still be the right call. It is a different decision.</p>
 <h2 id="stacks-by-what-you-are-building">Stacks, by what you are
 building</h2>
 <p>Patterns are usually read one at a time, which hides the thing that

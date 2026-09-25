@@ -199,9 +199,10 @@ ratio of turns that need the operation.</li>
 <li><strong>Gates drift.</strong> A heuristic tuned when the corpus was
 small, or a prompt tuned against one model, silently mis-fires
 later.</li>
-<li><strong>Layered gates compound.</strong> Three gates at 95% each
-admit a fifth of what they should not, or reject more than intended,
-depending on direction.</li>
+<li><strong>Layered gates compound.</strong> Three independent gates in
+series, each right 95% of the time, pass only about 86% of what they
+should (0.95³ ≈ 0.857), so about one warranted operation in seven is
+skipped.</li>
 <li><strong>A gate is a policy in disguise.</strong> "Does this need
 memory?" encodes a view of what memory is for, in a prompt or a regex
 nobody reviews as policy.</li>
@@ -218,8 +219,8 @@ the trade depends on the fraction of turns that need the operation.
 Gates also encode policy — "does this need memory?" is a view about what
 memory is for, living in a prompt nobody reviews as policy.</p>
 <p><strong>Ongoing:</strong> the false-negative rate is invisible by
-construction and needs deliberate measurement. Nothing in this atlas
-measures its gate.</p>
+construction and needs deliberate measurement. Waku's labelled accuracy
+test has no committed run, so even that gate's rate is unknown.</p>
 <p><strong>Skip it if</strong> you have not measured what the expensive
 step costs and how often it helps. A gate without that is a guess with a
 latency penalty.</p>
@@ -246,50 +247,49 @@ heuristic-gated, so the rewrite runs only when a heuristic says it is
 worth the call. Its consolidator is bounded by a stated invariant — at
 most one LLM call per cluster, even when that call must produce both a
 lesson and a procedure.</p>
-<p><a href="../../systems/gini-agent/">Gini</a> shows the cheapest
-possible gate. Its temporal recall channel participates <strong>only
-when the query actually contains a temporal expression</strong>, so a
-channel that cannot contribute never dilutes the fusion. The gate is a
-parser, not a model.</p>
-<p><a href="../../systems/daimon/">Daimon</a> shows the same idea run to
-its conclusion — no model anywhere in either gate — and it is the one
-place in the atlas where the fail direction is deliberately reversed.
-Its proactive-recall gate is three lexical tests, each defaulting to
+<p>The cheapest gate is a parser, not a model: <a
+href="../../systems/gini-agent/">Gini</a>'s temporal recall channel,
+described under <a
+href="../hybrid-retrieval-fusion/#seen-in-the-atlas">hybrid retrieval
+fusion</a>.</p>
+<p><a href="../../systems/daimon/">Daimon</a> runs the same idea with no
+model in either gate, and with the fail direction reversed. Its
+proactive-recall gate is three lexical tests, each defaulting to
 silence: an unknown project, a prompt with fewer than two salient terms,
 or a candidate session sharing fewer than two <em>distinct</em> terms
-all return nothing. Its world-check gate is a hard 0.8-second aggregate
-budget with a five-probe cap, where anything unfinished at the deadline
-is killed and skipped, and any failure — no <code>gh</code>, no remote,
-bad output — makes the render byte-identical to what it would have been
-without the feature.</p>
-<p>Both fail toward silence rather than open, and the reason is that
-they guard different things than Waku's gate does. A missing
-<em>suggestion</em> costs a reminder; a missing <em>memory</em> costs
-the answer. Which way a gate should fail is a property of what sits
-behind it, not a house style — and the shared-term threshold is also the
-atlas's clearest case of a gate that was tuned by a field failure: it
-counts terms per <em>session</em> rather than per <em>item</em>, because
-a per-item count silenced exactly the multi-topic prompts the feature
-existed to serve.</p>
-<p><a href="../../systems/genericagent/">GenericAgent</a> gates what
-occupies permanent context with an explicit cost model —
-<code>ROI = (error probability × cost) / per-turn word cost</code> — and
-its sharpest rule is a gate against redundancy: an entry the model would
-act on unprompted yields zero benefit and costs tokens on every
-turn.</p>
-<p><a href="../../systems/hermes-agent/">Hermes Agent</a> gates by
-budget rather than relevance: a write that would exceed the character
-cap is refused, forcing consolidation in the same turn. <a
-href="../../systems/redis-agent-memory-server/">Redis Agent Memory
+all return nothing. Its world-check pass runs under one aggregate
+<code>BUDGET_SECONDS = 0.8</code> and one <code>MAX_PROBES = 5</code>,
+the cap allocated in checkpoint order so a burst of <code>gh</code>
+claims cannot starve the local probes, and an exhausted budget skips the
+remaining probes.</p>
+<p>Both skip rather than run, and the reason is that they guard
+different things than Waku's gate does. A missing <em>suggestion</em>
+costs a reminder; a missing <em>memory</em> costs the answer. Which way
+a gate should fail is a property of what sits behind it, not a house
+style.</p>
+<p><a href="../../systems/redis-agent-memory-server/">Redis Agent Memory
 Server</a> gates extraction with a trailing-edge debounce, so a burst of
 messages produces one extraction rather than many. <a
 href="../../systems/metaclaw/">MetaClaw</a> gates in the other direction
 — its policy optimizer short-circuits when volume is low, declining to
 tune weights before there is enough data to tune on.</p>
-<p>Nothing in the atlas measures its gate. Waku's
-<code>should_retrieve</code> accuracy, Atomic Agent's rewriter
-heuristic, and Gini's temporal parser are all unevaluated, so the
-false-negative rate — the one that matters — is unknown everywhere.</p>
+<p>Two neighbours share the cost argument without a runtime gate in
+front of an expensive step. <a
+href="../../systems/genericagent/">GenericAgent</a> applies an explicit
+cost model —
+<code>ROI = (error probability × cost) / per-turn word cost</code> — as
+a written rule for what may occupy permanent context, and <a
+href="../../systems/hermes-agent/">Hermes Agent</a> refuses a write that
+would exceed its character cap, which is a capacity limit rather than a
+decision to skip work.</p>
+<p>Waku's gate has a measurement harness:
+<code>evals/judge/test_retrieval_gate_accuracy.py</code> scores its
+decisions against twelve labelled cases and reports both error
+directions separately; its own docstring says it measures and does not
+gate, it skips without a provider key, and no run is committed. For
+Atomic Agent's rewriter heuristic and Gini's temporal parser, their
+reports record no accuracy measurement at all. The false-negative rate —
+the one that matters — is unknown in every case.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Feed the gate turns that plainly need memory and turns that plainly

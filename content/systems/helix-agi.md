@@ -21,7 +21,7 @@ matrix:
   storage: "Per-category JSON files for beliefs, one append-only JSONL journal for memories and belief snapshots, a separately saved 384-D index; no database"
   retrieval: "Two surfaces — 8-D gravity in the manifold for ambient preconscious injection, and a lossless 384-D cosine index (numpy, FAISS IVFFlat past 5k vectors) for explicit recall"
   write: "Capture into the journal at pulse time with no model in the path; a local-model detector tags pulses, and a nightly Curator extracts, consolidates and integrates beliefs"
-  update_delete: "`update_belief` and `adjust_confidence`; `remove_belief` rewrites the category file and clears both runtime indexes; `archive_belief` sets mass to 0.01 and tags it; the journal records none of it, and memories have no delete path at all"
+  update_delete: "`update_belief` and `adjust_confidence`; `remove_belief` rewrites the category file and clears both runtime indexes; `archive_belief` sets mass to 0.01 and tags it, and its snapshot reaches the journal through the same sync path as any belief write; the journal records no removal, and memories have no delete path at all"
   scoping: "None. No user, project, agent or tenant key exists anywhere in the memory layer"
   integration: "A continuous four-state pulse loop, Discord/Slack/Telegram/WhatsApp/webhook channels, a tool registry with generated tools, a read-only dashboard, and an MCP plugin for testing agents"
   background: "A nightly Curator — extraction, consolidation, UMAP/HDBSCAN compounding — plus per-pulse hooks and a nightly attrition recompute; the journal's own documented compaction is defined and never called"
@@ -61,9 +61,10 @@ self-reinforcing popularity loop caught and cut.
 Against that, one gap runs through the whole design. `CognitiveJournal`'s module
 docstring calls it *"the single source of truth for all Helix memories, beliefs,
 and thought snapshots"*, and **nothing that deletes ever writes to it.**
-`remove_belief` rewrites a category file and clears the two runtime indexes;
-`archive_belief` sets mass to `0.01` and adds a tag. Neither appends a line. The
-journal therefore holds the content of every belief the system has ever had,
+`remove_belief` rewrites a category file and clears the two runtime indexes, and
+appends no line. `archive_belief`, which sets mass to `0.01` and adds a tag, does
+reach the journal: it calls `_sync_runtime`, which appends a snapshot like any
+belief write (`memory/belief_store.py:453-467`, `:205-220`). The journal therefore holds the content of every belief the system has ever had,
 including the ones it was told to forget, and `preconscious._resolve_memory_content`
 reads content out of it as a live fallback. Memories have no delete path at all.
 
@@ -426,6 +427,8 @@ mutation log.
 | `documents/benchmark/` | Committed per-run benchmark JSON and reports |
 
 ## History
+
+**2026-09-25** — [`7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5`](https://github.com/munch2u-a11y/Helix-AGI/commit/7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5) — same commit. The report said neither `remove_belief` nor `archive_belief` appends to the journal. `archive_belief` does: it ends in `_sync_runtime` (`memory/belief_store.py:453-467`), which calls `_append_belief_snapshot` (`:205-220`, `:167-203`), so an archived belief's snapshot, mass `0.01` and tag `archived`, lands in the journal like any belief write. Only `remove_belief` is silent to it. The matrix field and the opening section are corrected; the central finding, that the journal never hears about a removal, stands. No mark moved.
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved.
 `negative_eval` stands, and the record cited the weakest of the three cases in

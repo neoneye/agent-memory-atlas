@@ -209,7 +209,7 @@ Automatic capture instead happens in the layers that can absorb it: session mess
 
 ## 8. Agent Integration
 
-The `MemoryProvider` ABC is the most explicit pluggable-memory contract in the atlas — twenty-one members covering identity and availability, initialization, prompt blocks, prefetch and its queued form, recall status, per-turn sync, tool schemas and dispatch, session end and switch, pre-compression extraction, delegation observation, config, backup paths, and shutdown. `MemoryManager` enforces a one-external-provider limit to prevent tool-schema bloat and conflicting backends.
+The `MemoryProvider` ABC is the most explicit pluggable-memory contract in the atlas — twenty-two members covering identity and availability, initialization, prompt blocks, prefetch and its queued form, recall status, per-turn sync, tool schemas and dispatch, session end and switch, pre-compression extraction, delegation observation, config, backup paths, and shutdown. `MemoryManager` enforces a one-external-provider limit to prevent tool-schema bloat and conflicting backends.
 
 Hermes also exposes sessions to MCP clients via `hermes mcp serve`.
 
@@ -367,6 +367,8 @@ rg -n 'tombstone|rejected|superseded' tools/memory_tool_store.py     # 0: a remo
 ```
 
 ## History
+
+**2026-09-25** — [`8df0a03793784205833f9e0db12395aa33ada433`](https://github.com/NousResearch/hermes-agent/commit/8df0a03793784205833f9e0db12395aa33ada433) — same pin, one count corrected. Section 8 gave the `MemoryProvider` ABC twenty-one members; `agent/memory_provider.py` at this pin defines twenty-two methods. No mark moved.
 
 **2026-09-19** — re-pinned to [`8df0a03793784205833f9e0db12395aa33ada433`](https://github.com/NousResearch/hermes-agent/commit/8df0a03793784205833f9e0db12395aa33ada433). **Both marks hold.** The first reading was made on 2026-09-17, a day before the rubric narrowed, so `human_review` was re-tested against the current wording and the record now cites the import graph rather than the gate alone. `tools/write_approval.py` is imported in exactly two places outside its tests: `tools/memory_tool.py`, which stages, and `hermes_cli/write_approval_commands.py`, which lists, applies and discards. `mcp_serve.py` does not import it, so the staged memory queue is drained from a terminal and not from the agent's tool surface. Worth separating while reading either: the MCP bridge *does* expose `permissions_list_open` and `permissions_respond(id, decision)`, and those resolve the host's exec and plugin permission prompts, a different queue. The two limits the previous record carried were re-verified rather than repeated — the gate is per-subsystem and off unless configured, and `_gate_or_stage` opens with a bare `except: return None` under a docstring stating it fails open when the gate module cannot load. Screened again first; nothing installed or run.
 

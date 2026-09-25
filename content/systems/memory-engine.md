@@ -200,8 +200,7 @@ result* is rare enough to be worth copying on its own.
 record, and they default it to `share` via a canonically defined constant.
 
 This is [explicit write destination](../../patterns/explicit-write-destination/)
-enforced at the API boundary rather than encouraged in a tool description — the
-strongest instance of that pattern the atlas has found. The pattern page argues
+enforced at the API boundary rather than encouraged in a tool description. The pattern page argues
 that defaults are acceptable only when safe, obvious and surfaced; here the
 default is *absent* on the interactive path and present only where a human
 already chose a file to import.
@@ -393,9 +392,10 @@ kind of hole in the other wall.
 
 ### Steal
 
-- **Make the agent a principal.** If an agent has memory, "which memories may
-  this agent read" should be answerable from the schema rather than from the
-  deployment.
+- **Make a delegated credential a ceiling.** A restricted API key's per-space
+  and per-path maxima are intersected with the member's live grants by
+  `build_tree_access` using `least()`, so "what may this key read" is answerable
+  from the schema rather than from the deployment.
 - **Make a delegated credential a ceiling and intersect it with live access**,
   with `least()` at the deeper of the two paths and in both directions. It turns
   self-service delegation from a privilege-escalation risk into a
@@ -439,8 +439,8 @@ kind of hole in the other wall.
 
 Borrow:
 
-- The principal model and the agent clamp, which are transferable to any system
-  where agents act on a user's behalf.
+- The principal model and the API-key clamp, which are transferable to any
+  system where a credential acts on a user's behalf.
 - Authorization inside the ranking query.
 - The required write destination and the creator-privilege default.
 - `embedding_version` and the constrained `temporal` range.
@@ -465,7 +465,7 @@ Do not copy:
 ## Appendix: File Index
 
 - Access model: `packages/database/core/migrate/incremental/005_tree_access.sql`,
-  `core.build_tree_access`, `agent_tree_access`.
+  `core.build_tree_access`.
 - Memory schema: `packages/database/space/migrate/incremental/001_memory.sql`
   (uuidv7 check, `temporal` bounds convention, BM25/HNSW/GiST/GIN indexes,
   `embedding_version`).
@@ -477,6 +477,8 @@ Do not copy:
 - Harness contract: `packages/cli/harness-contract.ts`, `packages/cli/failsafe.ts`.
 
 ## History
+
+**2026-09-25** — [`2ef90da9385448e0bbb02ed1da82c04bd663602d`](https://github.com/timescale/memory-engine/commit/2ef90da9385448e0bbb02ed1da82c04bd663602d) — same pin. Section 11 still recommended making the agent a principal and listed `agent_tree_access` in the file index; migration `018_remove_agents.sql` drops both, as the 2026-09-10 entry records. The Steal and Borrow bullets now describe the API-key ceiling that replaced them, and the explicit-write-destination paragraph drops its superlative. No mark moved.
 
 **2026-09-18** — [`2ef90da9385448e0bbb02ed1da82c04bd663602d`](https://github.com/timescale/memory-engine/commit/2ef90da9385448e0bbb02ed1da82c04bd663602d) — re-read at the same commit; `main` has not moved since 13 August 2026. **Negative evaluation awarded**, a mark the two earlier readings missed because they looked at the RPC suite rather than at `packages/engine/space/db.integration.test.ts`, where the retrieval exclusions live: a `minSimilarity` case that asserts the below-floor memory absent with the two above-floor ones present and in rank order, and a BM25 case that seeds eight distractors beside two real matches, leaves the page large enough for all ten and pins the result by exact equality — written because `ORDER BY <@> LIMIT` used to backfill the page with zero-score rows on both the index path and a sequential scan. The bitemporal record's anchor was also wrong by file: it pointed at `idempotent/001_memory.sql`, which holds `get_memory`'s signature, while the column and the `temporal_bounds_convention` CHECK that makes the range *constrained* — null, or a point with both bounds inclusive, or `lower < upper` inclusive-exclusive — are in `incremental/001_memory.sql`. Four marks.
 

@@ -5,24 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A memory service whose nightly
-conflict pass ends in a human choosing between five resolutions — the
-only system in the atlas where detecting a contradiction leads to a
-decision rather than a flag.">
+conflict pass ends in a human choosing a disposition — keep either side,
+keep both, remove both, retire reversibly, or write a replacement — so
+detecting a contradiction leads to a decision rather than a flag.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Memanto — Agent Memory Atlas">
     <meta property="og:description" content="A memory service whose
-nightly conflict pass ends in a human choosing between five resolutions
-— the only system in the atlas where detecting a contradiction leads to
-a decision rather than a flag.">
+nightly conflict pass ends in a human choosing a disposition — keep
+either side, keep both, remove both, retire reversibly, or write a
+replacement — so detecting a contradiction leads to a decision rather
+than a flag.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Memanto — Agent Memory Atlas">
     <meta name="twitter:description" content="A memory service whose
-nightly conflict pass ends in a human choosing between five resolutions
-— the only system in the atlas where detecting a contradiction leads to
-a decision rather than a flag.">
+nightly conflict pass ends in a human choosing a disposition — keep
+either side, keep both, remove both, retire reversibly, or write a
+replacement — so detecting a contradiction leads to a decision rather
+than a flag.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Memanto — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -44,7 +46,7 @@ a decision rather than a flag.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Memanto",
-      "description": "A memory service whose nightly conflict pass ends in a human choosing between five resolutions \u2014 the only system in the atlas where detecting a contradiction leads to a decision rather than a flag.",
+      "description": "A memory service whose nightly conflict pass ends in a human choosing a disposition \u2014 keep either side, keep both, remove both, retire reversibly, or write a replacement \u2014 so detecting a contradiction leads to a decision rather than a flag.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -102,9 +104,9 @@ a decision rather than a flag.">
           <p class="eyebrow">Resolved conflict</p>
           <h1>Memanto</h1>
           <p class="document-deck">A memory service whose nightly
-conflict pass ends in a human choosing between five resolutions — the
-only system in the atlas where detecting a contradiction leads to a
-decision rather than a flag.</p>
+conflict pass ends in a human choosing a disposition — keep either side,
+keep both, remove both, retire reversibly, or write a replacement — so
+detecting a contradiction leads to a decision rather than a flag.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/moorcheh-ai/memanto">
               <span>Source</span>
@@ -152,18 +154,26 @@ on-prem.</p>
 closes a gap this atlas has recorded system after system.</p>
 <p><strong>Memanto resolves conflicts. Everything else only detects
 them.</strong></p>
-<p>The atlas has found contradiction detection in several places and a
-resolution path in none. <a href="../gini-agent/">Gini</a> has a
+<p>Contradiction detection is common in the atlas; a resolution that
+acts on the store is not. <a href="../gini-agent/">Gini</a> has a
 <code>conflicted</code> status with, in its own report's words, no
-operator-facing resolution. <a href="../mateclaw/">MateClaw</a> ships a
-dedicated <code>ContradictionDetector</code> and nothing that says what
-happens next. <a href="../holographic/">Holographic</a> surfaces
-contradictions as an ordinary query and only reports them. <a
+operator-facing resolution. <a href="../mateclaw/">MateClaw</a> records
+a person's verdict on a detected contradiction, and no code path reads
+the verdict to change a fact. <a href="../holographic/">Holographic</a>
+surfaces contradictions as an ordinary query and only reports them. <a
 href="../openviking/">OpenViking</a> has no conflict surface at all.
 Detection is the easy half; somebody still has to decide.</p>
-<p>Memanto's decision surface is a five-way choice:</p>
-<pre class="python"><code>action: Literal[&quot;keep_old&quot;, &quot;keep_new&quot;, &quot;keep_both&quot;, &quot;remove_both&quot;, &quot;manual&quot;]</code></pre>
-<p>Two of those five are the interesting ones.
+<p>Memanto's decision surface is an eight-way choice
+(<code>memanto/app/models/__init__.py:139-155</code>):</p>
+<pre class="python"><code>action: Literal[&quot;keep_old&quot;, &quot;keep_new&quot;, &quot;keep_both&quot;, &quot;remove_both&quot;,
+                &quot;expire_old&quot;, &quot;expire_new&quot;, &quot;expire_both&quot;, &quot;manual&quot;]</code></pre>
+<p>The field's own description splits them by what happens to the loser:
+the <code>keep_*</code>, <code>remove_both</code> and
+<code>manual</code> actions delete it permanently, and the three
+<code>expire_*</code> actions retire it reversibly, keeping its content
+and audit trail — <code>DirectClient.resolve_conflict</code> calls
+<code>set_lifecycle(..., expired=True, reason="conflict-resolution")</code>
+rather than deleting it. Two of the eight are the interesting ones.
 <strong><code>keep_both</code></strong> is an explicit "these are both
 true" — the answer a binary supersede/reject model cannot express, and
 the correct one whenever two memories disagree because they describe
@@ -182,14 +192,14 @@ content being extracted again. And the storage layer is a vendor service
 — on-prem is supported, but the retrieval quality of the thing
 underneath is not open to inspection on this atlas's terms.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the conflict pass writes a dated report holding both sides and its own recommendation, and a person picks one of five dispositions rather than the system resolving it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the conflict pass writes a dated report holding both sides and its own recommendation, and a person picks one of five dispositions rather than the system resolving it
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the conflict pass writes a dated report holding both sides and its own recommendation, and a person picks a disposition rather than the system resolving it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the conflict pass writes a dated report holding both sides and its own recommendation, and a person picks a disposition rather than the system resolving it
 flowchart TB
     D[&quot;a day&#39;s sessions&quot;] --&gt; AN[&quot;scheduled daily analysis&quot;]
     AN --&gt; SUM[&quot;AI summary&quot;]
     AN --&gt; CP[&quot;conflict pass&lt;br/&gt;&lt;i&gt;LLM, local&lt;/i&gt;&quot;]
     CP --&gt; F[(&quot;conflicts/&amp;lt;date&amp;gt;.json&lt;br/&gt;&lt;i&gt;type, title, old_memory_id, old_content,&lt;br/&gt;new_memory_id, new_content,&lt;br/&gt;description, recommendation&lt;/i&gt;&quot;)]
     F --&gt; UI[&quot;memanto conflicts CLI,&lt;br/&gt;or the web UI&quot;]
-    UI --&gt; V[&quot;keep_old · keep_new · keep_both&lt;br/&gt;remove_both · manual(content)&quot;]
+    UI --&gt; V[&quot;keep_old · keep_new · keep_both&lt;br/&gt;remove_both · manual(content)&lt;br/&gt;expire_old · expire_new · expire_both&quot;]
 
     style F fill:#e7efe9,stroke:#3d6b59
     style V fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
@@ -255,6 +265,7 @@ flowchart TD
   D --&gt;|keep_old / keep_new| M
   D --&gt;|keep_both| M
   D --&gt;|remove_both| Del[&quot;both deleted&quot;]
+  D --&gt;|expire_*| Exp[&quot;retired, content kept&lt;br/&gt;expired set&quot;]
   D --&gt;|manual + content| New[&quot;human-authored&lt;br/&gt;replacement&quot;]
   New --&gt; M</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
@@ -285,17 +296,16 @@ the knowledge base…"</p>
 will report it conflicting with itself. That this rule is in the prompt
 at all is scar tissue, and it is the kind of detail worth copying
 because it is not obvious until it happens.</p>
-<h3 id="five-resolutions-and-why-keep_both-matters">Five resolutions,
+<h3 id="eight-resolutions-and-why-keep_both-matters">Eight resolutions,
 and why <code>keep_both</code> matters</h3>
-<p>Every other conflict mechanism in this atlas is implicitly binary:
-one of the two survives. That is wrong more often than it looks. "I work
-at Acme" and "I work at Globex" conflict only if you assume one
-employer; "I prefer tabs" and "I prefer spaces" conflict only if you
-assume one project.</p>
+<p>A conflict mechanism that can only supersede or reject is binary: one
+of the two survives. That is wrong more often than it looks. "I work at
+Acme" and "I work at Globex" conflict only if you assume one employer;
+"I prefer tabs" and "I prefer spaces" conflict only if you assume one
+project.</p>
 <p><code>keep_both</code> lets the resolver say <em>the disagreement is
-not a contradiction</em>, and retains both. Nothing else here can
-express that, which means every other system forces a false choice or
-leaves the flag unresolved forever.</p>
+not a contradiction</em>, and retains both. A resolver without it forces
+a false choice or leaves the flag unresolved forever.</p>
 <p><code>manual</code> is the other one worth noting. Rather than
 choosing between two imperfect memories, a person writes the reconciling
 content, with <code>manual_type</code> optionally setting the memory
@@ -312,9 +322,10 @@ advisory</h3>
 <p>The detector emits a <code>recommendation</code> of
 <code>keep_new | keep_old | merge | remove_both</code>, and the
 resolver's action set is deliberately <em>different</em> — it adds
-<code>keep_both</code> and <code>manual</code> and drops
-<code>merge</code>. The model proposes; the human disposes, and can
-reach outcomes the model was not offered.</p>
+<code>keep_both</code>, <code>manual</code> and the three
+<code>expire_*</code> actions and drops <code>merge</code>. The model
+proposes; the human disposes, and can reach outcomes the model was not
+offered.</p>
 <p>Keeping the proposal vocabulary narrower than the decision vocabulary
 is a small governance idea worth stealing: it stops the model's framing
 from bounding the operator's options.</p>
@@ -425,8 +436,8 @@ definition is how it survives a refactor.</p>
 Trust</h2>
 <p>Strengths:</p>
 <ul>
-<li><strong>A conflict workflow that terminates in a decision</strong>,
-which is unique here.</li>
+<li><strong>A conflict workflow that terminates in a
+decision.</strong></li>
 <li><strong><code>keep_both</code></strong>, expressing "not actually a
 contradiction".</li>
 <li><strong><code>manual</code></strong>, letting a person author the
@@ -518,7 +529,7 @@ on-prem option.</li>
 <p>Borrow:</p>
 <ul>
 <li>The whole conflict lifecycle: typed detection, dated report,
-five-way resolution, human-authored manual path.</li>
+eight-way resolution, human-authored manual path.</li>
 <li>The bounded-scan instruction and the self-conflict guard.</li>
 </ul>
 <p>Do not copy:</p>
@@ -561,6 +572,19 @@ detect</a>.</p>
 (<code>MOORCHEH_API_KEY</code>, <code>MOORCHEH_ONPREM_URL</code>).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — audited at the unchanged pin <a
+href="https://github.com/moorcheh-ai/memanto/commit/ce38df5070cbaf57613f7a404fef6779ee3bef44"><code class="commit-id" title="ce38df5070cbaf57613f7a404fef6779ee3bef44">ce38df50…</code></a>;
+the corrections are ours. The report quoted a five-value
+<code>action</code> literal. At this pin
+<code>ConflictResolveRequest</code> has eight: <code>expire_old</code>,
+<code>expire_new</code> and <code>expire_both</code> retire the losing
+memory through <code>set_lifecycle(..., expired=True)</code> instead of
+deleting it (<code>memanto/app/models/__init__.py:139-155</code>,
+<code>DirectClient.resolve_conflict</code>). The description, the
+section 1 quote, both diagrams, the resolutions heading and the matrix
+row are corrected. Four sentences that called the workflow unique in the
+atlas are narrowed, because <a href="../mateclaw/">MateClaw</a> records
+a human verdict on a contradiction too. No mark moved.</p>
 <p><strong>2026-09-19</strong> — re-pinned to <a
 href="https://github.com/moorcheh-ai/memanto/commit/ce38df5070cbaf57613f7a404fef6779ee3bef44"><code class="commit-id" title="ce38df5070cbaf57613f7a404fef6779ee3bef44">ce38df50…</code></a>.
 <code>human_review</code> is <strong>withdrawn</strong>, on the

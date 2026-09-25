@@ -4,12 +4,14 @@ eyebrow: Pattern · Procedure
 description: Remember what worked as a reusable procedure rather than as a fact, and gate the write on evidence that it actually worked.
 root: ../..
 page_kind: pattern
-stance: reporting
+stance: mixed
 ---
 
 ## Intent
 
 Store an agent's competence, not just its knowledge. When the agent works out how to do something, keep the procedure itself — a script, a function, a checklist — so the next attempt starts from a working solution rather than from a description of one.
+
+The page makes two kinds of claim. Skill libraries — procedures the agent or a person writes down, advertised by name and description, with bodies loaded on demand — are reported practice, and common across this atlas. The **outcome-verified write gate** is argued, and rests on two systems: [Voyager](../../systems/voyager/) writes an executable skill only after the environment confirms it worked, and [Acontext](../../systems/acontext/) holds a partial version of the gate.
 
 ## The problem
 
@@ -63,7 +65,7 @@ And it sidesteps the hardest problem in the rest of this atlas. Every pattern he
 
 - **Verification is only as good as the check.** Succeeding once in one state is not evidence of generality, and a skill stored after a single lucky execution is a false memory with a confident-looking provenance.
 - **Executing stored artifacts is a trust boundary.** A skill library is durable, agent-authored, retrieved-by-similarity code. Outside a sandbox, in any setting where inputs are not trusted, this is an obvious attack surface.
-- **Libraries need pruning, and nobody has a good policy.** Without a utility signal — reuse count, success rate on reuse, composition depth — the library accumulates near-duplicate one-offs.
+- **Libraries need pruning, and pruning needs a utility signal.** Without one — reuse count, success rate on reuse, composition depth — the library accumulates near-duplicate one-offs.
 - **Retrieving the wrong procedure is worse than retrieving the wrong fact.** An irrelevant fact is noise the model can ignore; an irrelevant callable invites the model to call it. Score thresholds matter more here than elsewhere.
 - **Supersession needs lineage.** Replacing a skill with a better version is a correction, and correction without a lineage record leaves you unable to answer why behaviour changed.
 - **Not every domain has a checkable outcome.** The pattern degrades toward ordinary memory wherever success is a matter of judgment.
@@ -93,22 +95,23 @@ adds a loading mechanism.
 
 [Atomic Agent](../../systems/atomic-agent/) takes the opposite position from Voyager and states it as a rule: its `procedures` are derived alongside a parent lesson from the same consolidator cluster, and cross-phase invariant 20 holds that the runtime **never auto-executes them** — they are "advisory text the agent reads and either follows or consciously deviates from." Voyager buys empirical verification by making skills executable and accepts the trust boundary that follows; Atomic Agent gives up verification to avoid it. Both are defensible, and the choice is the pattern's central tradeoff.
 
-ScienceClaw, an [OpenClaw](../../systems/openclaw/) derivative, demonstrates the scale end: it ships 285 skills against OpenClaw's ~54, and its README states that "the agent writes new `SKILL.md` files at runtime without any redeployment." Runtime skill authoring at that volume is what the pattern looks like when the library is the product — and it sharpens the unanswered pruning question, because nothing in the atlas has a utility signal that would work across 285 entries.
+[Acontext](../../systems/acontext/) carries the gate over prose skills. Its `tasks` table constrains `status IN ('success', 'failed', 'running', 'pending')` as a database CHECK, the task-update path queues a learning task only on a terminal status, and `test_running_does_not_append`, `test_pending_does_not_append` and `test_no_status_does_not_append` assert the gate holds. Two things make it partial: a `failed` task triggers distillation as well as a `success` does, so the gate is on the task having ended rather than on its having worked, and the skill written is a Markdown `SKILL.md`, so nothing re-executes it to check that it still does.
+
+ScienceClaw, an [OpenClaw](../../systems/openclaw/) derivative outside the corpus and read without a pinned report, demonstrates the scale end: its README states that "the agent writes new `SKILL.md` files at runtime without any redeployment." Runtime skill authoring is what the pattern looks like when the library is the product, and it is where pruning stops being optional — the utility signals below are the answers this atlas has to that question.
 
 [MemOS](../../systems/memos/) mounts skill memory as one cube type among several, and [agentmemory](../../systems/agentmemory/) keeps procedural records alongside semantic ones; in both, procedure is one kind in a broader taxonomy rather than a design centre, and neither gates on execution.
 
-[OpenViking](../../systems/openviking/) unifies memory, resources, and **skills** in one filesystem hierarchy, which is the most integrated treatment in the atlas — skills are retrievable through the same tiered mechanism as everything else.
+[OpenViking](../../systems/openviking/) unifies memory, resources, and **skills** in one filesystem hierarchy — skills are retrievable through the same tiered mechanism as everything else.
 
 [Verel](../../systems/verel/) approaches the same territory from the opposite direction: it clusters *failures* into induced candidate rules and requires promotion gates before they become trusted. Read together with Voyager, the two halves of the missing system are visible — Voyager verifies successes and discards failures; Verel mines failures and gates promotion.
 
-[SESA](../../systems/sesa/) closes the pruning question this page has been
-holding open, and shows what it costs. Its skill bank writes a card **only from a
+[SESA](../../systems/sesa/) answers the pruning question with a trained
+reward, and shows what it costs. Its skill bank writes a card **only from a
 failure** — the exact inversion of Voyager's gate — and then measures every card
 it hands out: `retrieved_count`, `helpful_count` and `hurt_count`, all three
 written by the same rollout reward that trains the model. A card whose net score
 has gone negative after at least three retrievals is **deleted**, not demoted.
-That is the utility signal the ScienceClaw entry above says nothing here has, and
-the reason it works is a precondition worth stating plainly: SESA is a training
+The reason it works is a precondition worth stating plainly: SESA is a training
 loop, so the outcome is a scored answer rather than a guess about whether the
 user was pleased. A library without that signal cannot borrow the mechanism, only
 the wish for it.
@@ -121,6 +124,16 @@ leave again. And credit is assigned uniformly: all three retrieved cards receive
 the outcome of one rollout, so a harmful card is rewarded whenever it rides along
 with two good ones. The similarity score that would support weighted attribution
 is computed on every retrieval and attached to each card, and no caller reads it.
+
+[Agentic Context Engine](../../systems/agentic-context-engine/) keeps the same
+counters outside a training loop and refuses to let them delete anything. Every
+skill carries `used_count`, `helpful_count`, `harmful_count` and
+`neutral_count`, moved by `tag_skill` calls from a model that judges each
+injected skill against the run's outcome, and the prompt governing that model
+tells it to use them *"as one input among several … never as a hard removal
+trigger"*, because a heavily-used skill accumulates harm counts while still
+being net-positive. SESA acts on the signal mechanically; this one treats it as
+evidence for a judgement.
 
 [Neo4j Agent Memory](../../systems/neo4j-agent-memory/) supplies the half this
 pattern's gate leaves out. Its reasoning tier records traces through a context
@@ -157,7 +170,7 @@ exists because a person wrote the file.
 
 [Forgetful](../../systems/forgetful/) stores skills as rows beside memories — kebab-case name, description, Markdown body up to 100 KB, licence, compatibility, allowed tools, tags and an importance — with `import_skill` and `export_skill` in the Agent Skills `SKILL.md` format and a second vector table, `vec_skills`, built from the description alone so a skill is found by what it is for rather than by its body. The feature is off by default (`SKILLS_ENABLED=false`), nothing executes a skill, and nothing records whether following one worked. The ten `SKILL.md` files in the repository's own `skills/` directory are the other half of the pattern: they are the server's memory policy — query before create, confirm before update or obsolete, announce every save — shipped as procedures the agent loads, and the server has no way to know whether it did.
 
-[Hivemind (Activeloop)](../../systems/hivemind-activeloop/) answers the pruning question this page leaves open without a training reward, and then throws the answer away. Its write gate is the weak kind — a model curator reading ten recent sessions, told to keep a pattern only if it recurs across three exchanges and is not already covered, with nothing executed. The interesting half is after the write. A `PreToolUse` on an org skill arms a three-message judgment window; the user's next prompt spawns a worker that rebuilds the transcript around the invocation, appends the reaction, and asks a judge one question phrased against sycophancy — *"Ignore whether the user seemed happy or polite — a praised-but-wrong answer is a FAILURE"* — with an unparseable or errored verdict returning success, so the judge can miss a failure and never invent one. That is a reuse-quality signal derived from ordinary human reaction rather than a scored rollout, and it is the piece a library outside a training loop can borrow. The edit it produces is bounded the way this page's supersession tradeoff asks for: at most three anchored operations, a protected region the fast pass may not touch, and a new version appended rather than an overwrite.
+[Hivemind (Activeloop)](../../systems/hivemind-activeloop/) answers the pruning question without a training reward, and then throws the answer away. Its write gate is the weak kind — a model curator reading ten recent sessions, told to keep a pattern only if it recurs across three exchanges and is not already covered, with nothing executed. The interesting half is after the write. A `PreToolUse` on an org skill arms a three-message judgment window; the user's next prompt spawns a worker that rebuilds the transcript around the invocation, appends the reaction, and asks a judge one question phrased against sycophancy — *"Ignore whether the user seemed happy or polite — a praised-but-wrong answer is a FAILURE"* — with an unparseable or errored verdict returning success, so the judge can miss a failure and never invent one. That is a reuse-quality signal derived from ordinary human reaction rather than a scored rollout, and it is the piece a library outside a training loop can borrow. The edit it produces is bounded the way this page's supersession tradeoff asks for: at most three anchored operations, a protected region the fast pass may not touch, and a new version appended rather than an overwrite.
 
 Two failures sit beside it. The new version is published to the whole organisation under a comment reading *"No approval gate by design: detect → improve → publish, directly"*, and auto-pull writes every author's skills onto every signed-in machine at the next session start — so one person's bad turn rewrites a colleague's procedure before anyone has read the diff. And the loop never closes: its meta log declares `proposed | applied | reverted`, writes only `proposed`, and reads the field nowhere, so the dedup prevents re-proposing an identical edit and nothing distinguishes an improvement from a regression. Declaring the states and not writing them is how a library keeps editing in a direction no one has checked.
 

@@ -84,8 +84,7 @@ render_document() {
   stance="${stance//\"/}"
   case "$stance" in
     reporting) stance_label="Reporting an established practice" ;;
-    advocacy) stance_label="Advocacy — one or two instances" ;;
-    category-bound) stance_label="Mature in one category, unknown outside it" ;;
+    advocacy) stance_label="Advocacy — a handful of instances" ;;
     mixed) stance_label="Reporting, with one advocacy claim" ;;
     "") ;;
     *) echo "unknown stance '$stance' in $input" >&2; exit 1 ;;

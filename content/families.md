@@ -383,9 +383,10 @@ hierarchy with three retrievable granularities per record. **Memanto** is the
 only system here whose contradiction pipeline ends in a decision: a nightly pass
 writes a dated conflict report, and a human resolves each entry as `keep_old`,
 `keep_new`, `keep_both`, `remove_both`, or `manual` with content they write
-themselves. **Memory Engine** makes the agent a first-class access-control
-principal and clamps a delegated agent grant to `least(agent, owner)` at every
-path, so over-granting your own agent is harmless by construction. **memU** ranks
+themselves. **Memory Engine** treats a restricted API key as a ceiling rather
+than a grant: `build_tree_access` intersects the key's declared per-path access
+with the member's live grants by `least()` at every path, so over-declaring a
+key is harmless by construction. **memU** ranks
 segments and returns the files they belong to, scoring each file by the max of
 its segments — the search unit and the return unit are deliberately different
 sizes. **MIRIX** gives each of six memory types its own table, manager, writer

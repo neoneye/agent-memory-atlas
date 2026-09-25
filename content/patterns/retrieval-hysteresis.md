@@ -4,7 +4,7 @@ eyebrow: Pattern · Retrieval
 description: Give a memory unit its own activation state so it neither repeats every turn nor vanishes mid-thread.
 root: ../..
 page_kind: pattern
-stance: category-bound
+stance: mixed
 ---
 
 ## Intent
@@ -12,6 +12,14 @@ stance: category-bound
 Stop a relevance function from being the only thing that decides whether a
 memory is in the prompt. Give the unit a small amount of state about its own
 recent activation, so surfacing it once changes whether it surfaces again.
+
+The page makes two kinds of claim. Holding back a unit that was surfaced
+recently — for a few turns, for a span of time, or for the rest of the session —
+and suppressing a unit regardless of match are reported practice, in roleplay
+clients, companion apps and coding-agent memory alike. The full set of timed
+knobs on one unit — sticky, cooldown and delay, with a stated precedence
+between them — is argued, and rests on one system,
+[SillyTavern](../../systems/sillytavern/).
 
 ## The problem
 
@@ -25,9 +33,10 @@ appears.
 Neither is a scoring bug. Both are the consequence of computing relevance from
 the query alone and nothing from what was already said.
 
-Most systems in this atlas notice the first half and treat it as a tuning
-problem — raise the threshold, lower `k`, add a dedup pass over the returned
-set. Those act on one turn at a time and cannot express "not again for a while."
+The first half is often treated as a tuning problem — raise the threshold,
+lower `k`, add a dedup pass over the returned set. Those act on one turn at a
+time and cannot express "not again for a while." That needs state that outlives
+the turn.
 
 ## The pattern
 
@@ -78,11 +87,11 @@ not the condition for getting in.
 
 Activation stops being a pure function of the query, so the same conversation
 state can produce different context depending on history. That is the point, and
-it makes behaviour harder to reproduce in a test — which is exactly why the
-implementations below have almost no tests.
+it makes behaviour harder to reproduce in a test.
 
 Cross-turn state has to live somewhere. If it is held in memory rather than
-persisted, a reload silently resets every cooldown.
+persisted, a reload silently resets every cooldown — which is what
+[AIPass](../../systems/aipass/)'s per-session state dict does.
 
 Four interacting knobs plus recursion and a budget is a lot of surface. In
 [SillyTavern](../../systems/sillytavern/) it is seven interacting mechanisms with
@@ -113,50 +122,73 @@ a system that adopts them should know which of those two it is.
 
 ## In the analyzed systems
 
-**[SillyTavern](../../systems/sillytavern/)** is the complete version.
-`WorldInfoTimedEffects` tracks sticky, cooldown and delay per entry across chat
-messages; `@@dont_activate` supplies suppression; and `NOT_ANY`/`NOT_ALL` key
-logic lets an entry declare conditions under which it must not fire at all. It
-is the only implementation in the atlas with all four.
+### Holding back what was just surfaced — reported
+
+**[AIPass](../../systems/aipass/)** makes surfacing a rate question with state.
+`should_surface(item_id, relevance_score, state, config)` refuses a memory that
+cleared the relevance threshold when five have already surfaced this session,
+when fewer than ten messages have passed, or when 300 seconds have not elapsed,
+and its `surfaced_ids` list keeps an item from surfacing twice in one session.
+Every refusal returns a reason; none is logged. The state starts at zero in
+`new_state()` and is not persisted, so a restart resets the cooldown and the
+list.
+
+**[qwen-code](../../systems/qwen-code/)** excludes auto-memory documents already
+surfaced in the session before selection (`excludedFilePaths`, fed from the
+client's `surfacedRelevantAutoMemoryPaths`), and a committed case asserts that
+such a memory is not selected again. **[memory-ts](../../systems/memory-ts/)**
+keeps an `injected_memories` set per session and filters candidates against it;
+its test of that dedup asserts only that the third result is no larger than the
+second, so it passes when the dedup does nothing.
+**[Deja-vu](../../systems/deja-vu/)** runs a novelty tracker that remembers which
+ids were already injected, so the same memory is not served twice into one
+session. All three are a cooldown whose span is the rest of the session.
 
 **[Project N.E.K.O.](../../systems/neko/)** arrives at suppression from the
 correction side rather than the authoring side: a ban-topic directive keyed on
-`(kind, term.casefold())` withholds a term from recall, and a hard filter drops
+`(kind, term.casefold())` withholds a term from recall, expires three days after
+it was last said scaled by repetition up to thirty, and a hard filter drops
 disputed entries before the rerank. Its anti-repeat module attacks the same
 repetition problem from the generation end, with a BM25 corpus over the agent's
 own prior output.
 
-**[Z-Waif](../../systems/z-waif/)** shows the mechanism as a fossil, which is
-instructive. A commented-out `lorebook_check` implements a real cross-turn
-lockout — fire, set the counter to 9, decrement per turn — and the live
-`lorebook_gather` resets every counter at the start of each call, leaving the
-field as a within-pass dedup flag. The cooldown was implemented and then
-neutered. Separately, its retrieval caps the character's own words at two of six
-query terms and weights them `0.97`, which is the feedback loop closed by
-weighting rather than by state.
+**[mini-AGI](../../systems/mini-agi/)** carries the moves on a unit that is not
+text at all. Its working set is 32 expert weight files chosen per chunk, and
+`choose_by_demand` refuses to swap unless a candidate beats the weakest resident
+by `margin` (0.10), while `dwell_chars` (2,048) makes a newly admitted expert
+immune to eviction for a fixed span — a displacement threshold and a sticky
+window, under those names, for the same reason the prompt-side implementations
+have them: *"on text that has not changed, this settles to no movement at all."*
+It adds the piece RisuAI supplies separately, as a terminating version: a
+cold-start sweep admits one never-resident expert per chunk, in index order,
+until every expert has had one turn, then stops for good — because an expert that
+has never been resident has never trained, so its router row is noise and pure
+relevance would never elect it. The reasoning generalises directly to a memory
+that ranks on learned signals, and the termination is the part to copy.
 
 **[RisuAI](../../systems/risuai/)** reserves a random band of its token budget
 so old material resurfaces at some rate — the opposite intervention, aimed at
 the same failure of recency-plus-similarity being the only signal.
 
-**[mini-AGI](../../systems/mini-agi/)** carries all three moves on a unit that is
-not text at all, which is why it is worth reading beside the others. Its working
-set is 32 expert weight files chosen per chunk, and `choose_by_demand` refuses to
-swap unless a candidate beats the weakest resident by `margin` (0.10), while
-`dwell_chars` (2,048) makes a newly admitted expert immune to eviction for a
-fixed span — a displacement threshold and a sticky window, under those names, for
-the same reason the prompt-side implementations have them: *"on text that has not
-changed, this settles to no movement at all."* It adds the piece RisuAI supplies
-separately, as a terminating version: a cold-start sweep admits one
-never-resident expert per chunk, in index order, until every expert has had one
-turn, then stops for good — because an expert that has never been resident has
-never trained, so its router row is noise and pure relevance would never elect
-it. The reasoning generalises directly to a memory that ranks on learned
-signals, and the termination is the part to copy.
+**[Z-Waif](../../systems/z-waif/)** shows the mechanism as a fossil. A
+commented-out `lorebook_check` implements a real cross-turn lockout — fire, set
+the counter to 9, decrement per turn — and the live `lorebook_gather` resets
+every counter at the start of each call, leaving the field as a within-pass
+dedup flag. Separately, its retrieval caps the character's own words at two of
+six query terms and weights them `0.97`, which is the feedback loop closed by
+weighting rather than by state.
 
-Absent everywhere else. No extraction-based system in this atlas carries per-unit
-activation state, and several describe the repetition it prevents as a known
-annoyance.
+### Sticky, cooldown and delay with a stated precedence — argued
+
+**[SillyTavern](../../systems/sillytavern/)** is the complete version and the
+one system on this page with all four knobs. `WorldInfoTimedEffects` tracks
+sticky, cooldown and delay per entry across chat messages; `@@dont_activate`
+supplies suppression; and `NOT_ANY`/`NOT_ALL` key logic lets an entry declare
+conditions under which it must not fire at all. The precedence between sticky
+and cooldown is written in the code: the callback that runs when a sticky entry
+ends puts the entry on cooldown immediately if it has one, so an entry holds for
+its sticky span and then goes quiet for its cooldown. What it lacks is the
+fixture that would pin any of it.
 
 ## Tests to write first
 
@@ -166,12 +198,11 @@ annoyance.
 - Assert a delayed entry cannot fire before its turn threshold.
 - Assert suppression beats a positive match, including a forced-activation path
   if one exists.
-- Set sticky and cooldown on the same unit and assert the documented precedence —
-  no implementation in this atlas states which wins.
+- Set sticky and cooldown on the same unit and assert the precedence the code
+  states — in SillyTavern, cooldown starts when sticky ends.
 - Reload the session and assert cooldowns survive, or document that they do not.
 
-The last two are where these implementations are actually weak, and both are
-cheap fixtures.
+Both are cheap fixtures, and SillyTavern has neither.
 
 ## Related
 

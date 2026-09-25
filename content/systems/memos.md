@@ -57,8 +57,10 @@ scheduler -> textual memory -> activation cache / maintenance
 
 A cube is a deployable memory bundle, not just a namespace. It can be dumped locally, initialized from a directory, or loaded from a remote repository. This suggests sharing and composing memory resources independently from the agent process.
 
+The one computed movement between forms is working memory into activation memory. When a timed trigger fires, `update_activation_memory_monitors` sorts the working-memory monitors by `get_importance_score` and keeps the top slice (`src/memos/mem_scheduler/monitors/general_monitor.py:234-268`); the score weights list position, a keyword score and a recording count by `DEFAULT_WEIGHT_VECTOR_FOR_RANKING = [0.9, 0.05, 0.05]` (`src/memos/mem_scheduler/schemas/general_schemas.py:54`, `src/memos/mem_scheduler/schemas/monitor_schemas.py:241-262`), and `update_activation_memory_periodically` turns the result into KV-cache items (`src/memos/mem_scheduler/memory_manage_modules/activation_memory_manager.py:112-186`).
+
 ```mermaid
-%% caption: five memory forms in one cube, including memory held in weights, with a promotion rule whose three coefficients are left at one and no single correction contract across the modules
+%% caption: five memory forms in one cube, including memory held in weights, with a timed scheduler that copies the top working memories by a weighted importance score into the KV cache, and no single correction contract across the modules
 flowchart TB
     In["Reader extraction"] --> Cube[("Memory cube")]
     Cube --> T1["Textual item"]
@@ -66,7 +68,7 @@ flowchart TB
     Cube --> T3["Preference / skill"]
     Cube --> T4["KV cache"]
     Cube --> T5["LoRA — memory in weights"]
-    Sch["Scheduler"] -->|"promotion: α·N_visit + β·L_interaction + γ·R_recency<br/>coefficients left at 1, 1, 1"| Cube
+    Sch["Scheduler, on a timed trigger"] -->|"top-k working memories by<br/>0.9·position + 0.05·keywords + 0.05·recording count"| T4
     Cube --> R["Direct vector, or graph + BM25<br/>+ rerank + reasoner"]
     Cube -.->|"update, delete, soft-delete and dump<br/>all mean different things per module"| Gap["no single correction contract"]
 ```
@@ -219,6 +221,8 @@ For ordinary agent memory, choose and validate one text implementation first. Do
 - `tests/`
 
 ## History
+
+**2026-09-25** — [`de8069428a9247bfa7a3d35f59a9b39fa8f231d2`](https://github.com/MemTensor/MemOS/commit/de8069428a9247bfa7a3d35f59a9b39fa8f231d2) — diagram corrected at the unchanged pin. Its scheduler edge carried `α·N_visit + β·L_interaction + γ·R_recency` with coefficients of one, which is MemoryOS's heat formula; a grep of every text file in the tree at this pin for `N_visit`, `L_interaction`, `R_recency` and `compute_segment_heat` returns nothing. What the scheduler computes is a top-k of working memories by an importance score weighted `[0.9, 0.05, 0.05]` over list position, keyword score and recording count, on a timed trigger, copied into the KV cache; section 2 now cites it. No mark moved.
 
 **2026-09-14** — [`de8069428a9247bfa7a3d35f59a9b39fa8f231d2`](https://github.com/MemTensor/MemOS/commit/de8069428a9247bfa7a3d35f59a9b39fa8f231d2) — re-read, 179 commits past the previous pin across 362 files. The mark stands and now carries an evidence record naming both halves: the accessible cube list is derived from the user inside the call through `get_user_cubes(target_user_id)` rather than taken from the request, and the consumer is a skip over any cube not in that list when a search engine is selected. The range is mostly scheduler, embedder and plugin work; the one scope-shaped change is a fix narrowing secret environment fallbacks in the plugin, which is configuration rather than memory. No new mark: nothing in the range adds a trust status, a rejected-value record or a second time axis. Screened again first; nothing was installed and no suite was run.
 

@@ -6,7 +6,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A single-owner personal agent
 whose SQLite fact store caps a first observation at 0.7 confidence and
-lets it ratchet up only on independent repeats, then injects the
+lets it ratchet up only on repeats of the same value, then injects the
 surviving facts into the turn with the confidence stripped off.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -14,15 +14,15 @@ surviving facts into the turn with the confidence stripped off.">
     <meta property="og:title" content="Helm — Agent Memory Atlas">
     <meta property="og:description" content="A single-owner personal
 agent whose SQLite fact store caps a first observation at 0.7 confidence
-and lets it ratchet up only on independent repeats, then injects the
-surviving facts into the turn with the confidence stripped off.">
+and lets it ratchet up only on repeats of the same value, then injects
+the surviving facts into the turn with the confidence stripped off.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Helm — Agent Memory Atlas">
     <meta name="twitter:description" content="A single-owner personal
 agent whose SQLite fact store caps a first observation at 0.7 confidence
-and lets it ratchet up only on independent repeats, then injects the
-surviving facts into the turn with the confidence stripped off.">
+and lets it ratchet up only on repeats of the same value, then injects
+the surviving facts into the turn with the confidence stripped off.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Helm — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -44,7 +44,7 @@ surviving facts into the turn with the confidence stripped off.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Helm",
-      "description": "A single-owner personal agent whose SQLite fact store caps a first observation at 0.7 confidence and lets it ratchet up only on independent repeats, then injects the surviving facts into the turn with the confidence stripped off.",
+      "description": "A single-owner personal agent whose SQLite fact store caps a first observation at 0.7 confidence and lets it ratchet up only on repeats of the same value, then injects the surviving facts into the turn with the confidence stripped off.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -103,8 +103,8 @@ surviving facts into the turn with the confidence stripped off.">
           <h1>Helm</h1>
           <p class="document-deck">A single-owner personal agent whose
 SQLite fact store caps a first observation at 0.7 confidence and lets it
-ratchet up only on independent repeats, then injects the surviving facts
-into the turn with the confidence stripped off.</p>
+ratchet up only on repeats of the same value, then injects the surviving
+facts into the turn with the confidence stripped off.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/GOODMAN-PRO/helm">
               <span>Source</span>
@@ -155,13 +155,14 @@ gate</strong> in <code>workspace/memory/memory.mjs:87-162</code>. A
 write tagged <code>--source observed</code> — the tag the background
 reflection loop uses when it thinks it has noticed something about the
 owner — is capped at <code>PROVISIONAL_CAP = 0.7</code> no matter what
-confidence the caller asked for. It can only rise by 0.05 per
-<em>independent repeat</em>, tracked in <code>evidence_count</code>. A
-first observation is therefore structurally incapable of being stored as
-certain. That is the <a
-href="../../patterns/evidence-before-belief/">evidence before belief</a>
-pattern implemented in about fifteen lines of SQL and arithmetic, in a
-project whose whole memory layer is 401 lines.</p>
+confidence the caller asked for. It can only rise by 0.05 per repeat of
+the same value, tracked in <code>evidence_count</code> — and any write
+of the same kind, key and value is a repeat, since nothing checks that
+it is independent (<code>memory.mjs:104-117</code>). A first observation
+is therefore structurally incapable of being stored as certain. That is
+the <a href="../../patterns/evidence-before-belief/">evidence before
+belief</a> pattern implemented in about fifteen lines of SQL and
+arithmetic, in a project whose whole memory layer is 401 lines.</p>
 <p>The apparatus around it is unusually complete for its size.
 Supersession expires the old row and keeps it (<code>expired_at</code>),
 so <code>history &lt;key&gt;</code> returns the chain. Decay in
@@ -265,8 +266,9 @@ so retrieval slows the fall without ever reversing it.</p>
 <p><strong>Corroboration is the only thing that raises belief.</strong>
 Nothing in the system verifies a fact against the world. A repeat
 observation of the same value is the entire evidence model, and it is
-deliberately weak: <code>0.05</code> per repeat means six independent
-sightings to reach 1.0 from the cap.</p>
+deliberately weak: <code>0.05</code> per repeat means six repeats to
+reach 1.0 from the cap, whether they come from six sources or from one
+source writing six times.</p>
 <p><strong>Death is asymmetric.</strong> Being <em>replaced</em> is
 recoverable — the row stays and <code>history</code> shows it. Being
 <em>forgotten</em> or <em>pruned</em> is not: both are
@@ -648,12 +650,14 @@ tick to score its own thought — reinforces facts as a side effect of
 deciding whether to interrupt the owner.</p>
 <p><strong>Failure modes.</strong> Over-recall is bounded at eight facts
 on the hot path. The real exposures are the 500-row window above; silent
-degradation from MiniLM to TF-IDF to nothing (three quality tiers, one
-output shape, no signal to the caller); the 240-character query
-truncation, which for a long message searches only its opening; and
-distillation artefacts polluting results — a <code>learned</code> row
-reading <code>mentioned in 4 episodes (last: "…")</code> is a high-BM25
-match for common vocabulary and carries no information.</p>
+degradation from MiniLM to TF-IDF, and to an all-zero semantic arm when
+the query has no stems or fewer than three facts exist (lines 237-243) —
+three quality tiers, one output shape, no signal to the caller; the
+240-character query truncation, which for a long message searches only
+its opening; and distillation artefacts polluting results — a
+<code>learned</code> row reading
+<code>mentioned in 4 episodes (last: "…")</code> is a high-BM25 match
+for common vocabulary and carries no information.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are <strong>one process per fact</strong>. Every path shells
 out to <code>node workspace/memory/memory.mjs remember …</code>, which
@@ -1295,6 +1299,18 @@ self-audit dated 2 June 2026.</li>
 changelog with anchoring test numbers.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73"><code class="commit-id" title="f453eaa9683ea0a66b45c76275cb6576bcf14f73">f453eaa9…</code></a>
+— same commit. Two corrections. The confidence ratchet was described as
+rising on <em>independent</em> repeats; <code>memory.mjs:104-117</code>
+increments <code>evidence_count</code> on any write of the same kind,
+key and value, with no independence check, so the description, the trust
+field and the evidence-gate section now say so. And the failure-mode
+list said retrieval degrades from MiniLM to TF-IDF "to nothing",
+contradicting the retrieval section: a failed import or pipeline keeps
+the TF-IDF scores (<code>:246-259</code>), and the zero tier is an
+all-zero semantic arm when the query has no stems or fewer than three
+facts exist (<code>:237-243</code>). No mark moved.</p>
 <p><strong>2026-09-17</strong> — re-read at the same commit, confirmed
 still the tip by <code>git ls-remote</code> before a
 <code>--depth 1</code> clone. Nothing could have moved, so this reading

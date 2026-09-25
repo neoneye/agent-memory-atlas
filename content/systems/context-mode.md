@@ -97,8 +97,13 @@ how good the parsers are.
 The state machine is short, and its shortness is the finding:
 
 - **Written.** An event is inserted with `session_id`, `project_dir`,
-  `created_at`, an `attribution_source` and an `attribution_confidence`. It is
-  never edited afterwards; there is no `UPDATE` on `session_events` in the tree.
+  `created_at`, an `attribution_source` and an `attribution_confidence`. Its
+  content is never edited afterwards. The one `UPDATE` on `session_events` in the
+  tree re-keys rows: `renameSession` in `src/adapters/openclaw/session-db.ts`
+  rewrites `session_id` in one transaction across the session tables when
+  OpenClaw re-keys a session on gateway restart (called from
+  `src/adapters/openclaw/plugin.ts:693`), so the accumulated events survive the
+  re-key unchanged.
 - **Selected, or not.** At the next `SessionStart` the events for *that session
   id* are grouped by category and rendered. Some categories are filtered on their
   way in — a task whose latest status is `completed`, `deleted` or `failed` is
@@ -481,6 +486,8 @@ lexical over what a hook observed.
 `tests/benchmark-results-v04.json`
 
 ## History
+
+**2026-09-25** — [`f889a0537dc1fd264bb5e39299db8f9be1ef3fb6`](https://github.com/mksglu/context-mode/commit/f889a0537dc1fd264bb5e39299db8f9be1ef3fb6) — audited at the unchanged pin. §2's state machine said there is no `UPDATE` on `session_events` in the tree. There is one: `renameSessionEvents` in `src/adapters/openclaw/session-db.ts:80`, run by `renameSession` (`:123-129`) from `src/adapters/openclaw/plugin.ts:693` when OpenClaw re-keys a session on gateway restart. It rewrites `session_id` and no content, so the finding that nothing corrects an event stands in its narrower form. No mark moved.
 
 **2026-09-15** — [`f889a0537dc1fd264bb5e39299db8f9be1ef3fb6`](https://github.com/mksglu/context-mode/commit/f889a0537dc1fd264bb5e39299db8f9be1ef3fb6) — second reading. Fifty-six commits since the previous pin, every one `ci: update install stats` from `github-actions[bot]`; the net diff is `stats.json`, three lines. No source, hook or test changed, so both marks and both evidence records stand as written, and their cited paths are unchanged. The screen reports four auto-run surfaces where the previous reading recorded one — the plugin manifest, `.claude/settings.json`, `hooks/` and `hooks/hooks.json` — and all four were present at the previous pin; the difference is a more thorough screen, not a change in the tree. The hooks are the product: this is a hook-based plugin whose memory is written by them. Nothing was installed and nothing was run.
 

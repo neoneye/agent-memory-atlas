@@ -106,7 +106,7 @@ field you added becomes a queue nobody drains.</p>
                                         <div class="document-meta">
             <a class="meta-pill stance-pill stance-advocacy" href="../../patterns/#how-established-is-any-of-this">
               <span>Epistemic status</span>
-              <strong>Advocacy — one or two instances</strong>
+              <strong>Advocacy — a handful of instances</strong>
             </a>
           </div>
                             </div>
@@ -231,18 +231,21 @@ stops being read.</p>
 <p><strong>Skip it if</strong> nothing automatically writes memory. A
 store only a human edits resolves conflicts at the keyboard.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/memanto/">Memanto</a> is the only complete
-instance. A scheduled local LLM pass writes a dated JSON report typed as
+<p><a href="../../systems/memanto/">Memanto</a> types the finding and
+offers a non-binary disposition set. A scheduled local LLM pass writes a
+dated JSON report typed as
 <code>contradiction | update | duplicate | conflict</code> with old and
 new ids, and a person resolves each entry through the CLI or web UI as
 <code>keep_old</code>, <code>keep_new</code>, <code>keep_both</code>,
-<code>remove_both</code>, or <code>manual</code> with content they write
-themselves — a model validator refuses <code>manual</code> without it.
-The detection prompt requires at least one side to be new, keeping the
-pass linear and stopping the queue refilling with pairs someone already
-dismissed. What it lacks is requirement 5: <code>remove_both</code>
-deletes without a tombstone, so the next night's extraction may restore
-it.</p>
+<code>remove_both</code>, <code>manual</code> with content they write
+themselves — a model validator refuses <code>manual</code> without it —
+or <code>expire_old</code>, <code>expire_new</code>,
+<code>expire_both</code>, which retire the losing memory reversibly
+where the others delete it. The detection prompt requires at least one
+side to be new, keeping the pass linear and stopping the queue refilling
+with pairs someone already dismissed. What it lacks is requirement 5:
+<code>remove_both</code> deletes permanently and leaves no tombstone, so
+the next night's extraction may restore it.</p>
 <p><a href="../../systems/core-memory/">Core Memory</a> has the
 governance half. Its approval workflow states the non-blocking rule
 explicitly — "pending beads stay retrievable… rejection is the only
@@ -251,16 +254,16 @@ memory-worthy, excluded unconditionally, retained with rejecter and
 reason) from <em>superseded</em> (once true, surfaced on request), and
 makes a reason mandatory on every governance action. It is aimed at
 review rather than at contradiction specifically.</p>
-<p><a href="../../systems/daimon/">Daimon</a> is the second complete
-instance, and it solves requirement 5 that Memanto misses while placing
-the decision somewhere neither of the others does: <strong>inside the
-artifact the user is already reading</strong>. A detected supersession
-renders in the next briefing as a flagged item with the confirm and
-reject commands printed beside it, so the disposition is chosen at the
-moment the stale claim is encountered rather than in a queue nobody
-opens. Confirming appends a resolution that withholds the item from then
-on; the <code>forget</code> path appends a content-keyed tombstone,
-which is the trace Memanto's <code>remove_both</code> lacks.</p>
+<p><a href="../../systems/daimon/">Daimon</a> solves requirement 5,
+which Memanto misses, while placing the decision somewhere neither of
+the others does: <strong>inside the artifact the user is already
+reading</strong>. A detected supersession renders in the next briefing
+as a flagged item with the confirm and reject commands printed beside
+it, so the disposition is chosen at the moment the stale claim is
+encountered rather than in a queue nobody opens. Confirming appends a
+resolution that withholds the item from then on; the <code>forget</code>
+path appends a content-keyed tombstone, which is the trace Memanto's
+<code>remove_both</code> lacks.</p>
 <p><a href="../../systems/breadcrumbs/">breadcrumbs</a> contributes the
 requirement none of the three above states, and it is the one that goes
 wrong after everything above is built correctly: <strong>the resolution
@@ -277,9 +280,8 @@ slot, naming the probe that surfaced it, with
 <code>--fail-on-forbidden</code> turning a hit into a red exit. The
 docstring is the argument: <em>"Correction that stops at the ledger row
 and never reaches the retrieval lane is not correction; the descent has
-to complete."</em> Two systems in this atlas fail exactly that way on
-their main retrieval path, and neither has a test that would catch
-it.</p>
+to complete."</em> A store can fail exactly that way on its main
+retrieval path with no test that would catch it.</p>
 <p>The check is also careful about its own negative result: when every
 superseded entry is unreachable it reports <code>unexercised</code>
 rather than clean, because a lane that never had the chance to make the
@@ -298,37 +300,43 @@ either a live code anchor or an explicit <code>--evidence</code> string.
 And a human verdict <strong>silences re-detection permanently</strong>,
 so the queue cannot refill with something a person has already
 answered.</p>
-<p>The absence is the more common finding, and four reports arrived at
-it independently. <a href="../../systems/gini-agent/">Gini</a> has
+<p>The absence is the more common finding, reached independently in
+several reports. <a href="../../systems/gini-agent/">Gini</a> has
 <code>rejected</code> and <code>conflicted</code> as states with no
-operator-facing resolution. <a
-href="../../systems/mateclaw/">MateClaw</a> ships a dedicated
-<code>ContradictionDetector</code> and no resolution workflow, review
-queue, or supersession behind it. <a
-href="../../systems/magic-context/">Magic Context</a>'s
-<code>flagged</code> "marks a problem without an operator surface". <a
-href="../../systems/openviking/">OpenViking</a> has merge operations but
-"no operator-facing review queue for contradictions". <a
+operator-facing resolution. <a href="../../systems/magic-context/">Magic
+Context</a>'s <code>flagged</code> "marks a problem without an operator
+surface". <a href="../../systems/openviking/">OpenViking</a> has merge
+operations but "no operator-facing review queue for contradictions". <a
 href="../../systems/holographic/">Holographic</a> surfaces
 contradictions as an ordinary query and only reports them.</p>
-<p><a href="../../systems/nova-ai/">Nova AI</a> is the limit case of the
-detect-only group and worth reading as one.
-<code>find_contradictions</code> checks a word's <code>is_a</code>
-parents against three hardcoded incompatible category groups and returns
-a reason per conflict — and it is invoked by nothing. One facade method
-re-exports it; no background pass, write-time check or command calls
-either. This is not a detector whose output is dropped downstream, which
-is the usual shape here; it is a detector with <strong>no downstream at
-all</strong>, in a system that otherwise gates every knowledge write on
-a human confirmation.</p>
-<p>The compounding is the instructive part. Even wiring a caller would
-only produce a report, because nothing anywhere in the repository
-removes a relation — the single removal path in 25,000 lines applies to
-user preferences, not to knowledge. Requirement 5 is unreachable rather
-than skipped. A reader deciding whether to build detection first should
-take the ordering from this: the disposition is what makes the detector
-worth writing, and building the detector first produces a repository
-that reads as though the problem is handled.</p>
+<p><a href="../../systems/mateclaw/">MateClaw</a> stops one step later:
+it has the queue and the actor without the effect. A
+<code>ContradictionDetector</code> fills a queue of unresolved
+contradictions, and <code>POST /contradictions/{id}/resolve</code>,
+gated on a workspace <code>member</code> role, records
+<code>KEEP_A</code>, <code>KEEP_B</code>, <code>MERGE</code> or
+<code>IGNORE</code> with <code>resolvedAt</code> and a
+<code>resolvedBy</code> read from the authenticated principal. No code
+path reads the verdict to retire, merge or down-trust a fact, so recall
+returns both sides before the verdict and after it — a disposition with
+an owner and a record, and no consequence.</p>
+<p><a href="../../systems/nova-ai/">Nova AI</a> answers detection
+without a queue. <code>find_contradictions</code> checks a word's
+<code>is_a</code> parents against three hardcoded incompatible category
+groups and returns a reason per conflict, and
+<code>modules/knowledge/contradiction_checker.py</code> calls it from a
+periodic sweep on the background loop, raising each conflict with the
+user with a concrete <code>weerleg:</code> proposal, so the refusal is
+one spoken sentence away. A <code>contradiction_state.json</code> keyed
+on the word plus its sorted conflict list remembers what has already
+been raised, so an unresolved conflict is mentioned once rather than
+every cycle — the bounded scan this page's <em>Cost to adopt</em> asks
+for. The disposition is the refutation itself: <code>weerleg</code> sets
+<code>status = "rejected"</code> with the reason in the record's audit
+log, reasoning filters it out, and <code>add_sense</code> refuses to
+re-add a refuted definition, which is requirement 5 met by the <a
+href="../rejected-value-tombstone/">rejected-value tombstone</a> rather
+than by a separate resolution record.</p>
 <p><a href="../../systems/memora/">Memora</a> sits between the two
 groups: it classifies pairs into a defined vocabulary including
 <code>contradicts</code> as an edge between two named memories, and its

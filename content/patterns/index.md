@@ -6,7 +6,7 @@ root: ..
 page_kind: pattern-index
 ---
 
-Memory systems repeatedly solve the same hard problems under different names. This library extracts those solutions from the repositories in the atlas and presents them as implementation patterns rather than product features. **Not all of them are settled practice** — a few rest on one or two implementations, and the section below says which.
+Memory systems repeatedly solve the same hard problems under different names. This library extracts those solutions from the repositories in the atlas and presents them as implementation patterns rather than product features. **Not all of them are settled practice** — a few rest on a handful of implementations, and the section below says which.
 
 Each pattern explains the problem it addresses, its architectural shape, why it works, where it fails, examples from the analyzed systems, and the tests needed before relying on it.
 
@@ -181,27 +181,30 @@ Where the atlas has an exact count — the seven mechanisms on
 | Rejected-value tombstone | 58 of 627 |
 <!-- END GENERATED SPREAD -->
 
-Read the bottom two rows as what they are. A mechanism present in 38 systems of PLACEHOLDER_TOTAL_COUNT — or in 19 — is **not a best
-practice**. There is no consensus behind it, no library that gives it to you, and nobody to
-ask when your implementation has a hole.
-Adopting it means building it.
+Read the bottom two rows as what they are: PLACEHOLDER_PATTERN_HUMAN_REVIEW_COUNT
+systems of PLACEHOLDER_TOTAL_COUNT carry a human review surface.
 
-And in the tombstone's case the provenance is narrower still. It was not
-designed by anyone: a red team walked a rejected value back to verified in three
-steps, and Verel's fix became the mechanism. The second system carrying it
-adopted it after the survey that became this atlas flagged its absence, and the
-third arrived at a weaker form independently, keyed on exact text rather than a
-normalized value — so the field has produced this idea **once** in the form that
-survives an attack. The
-[rejected-value tombstone](./rejected-value-tombstone/) page traces the whole
-chain.
+PLACEHOLDER_PATTERN_TOMBSTONE_COUNT systems of PLACEHOLDER_TOTAL_COUNT carry a
+rejected-value tombstone. Neither is **a best practice**. There is no consensus
+behind either, no library that gives it to you, and nobody to ask when your
+implementation has a hole. Adopting one means building it.
+
+The tombstone's origin explains its shape. It was not designed by anyone: a red
+team walked a rejected value back to verified in three steps, and Verel's fix
+became the mechanism. The next system to carry it adopted it after the survey
+that became this atlas flagged its absence, and the one after that arrived at a
+weaker form independently, keyed on exact text rather than a normalized value.
+Independent arrivals have followed since, most of them keyed on the value and
+consulted on the write path; fewer normalize the value, carry its scope and
+consult it on every automated path, which is the form that survives the attack.
+The [rejected-value tombstone](./rejected-value-tombstone/) page sorts them.
 
 The outside view agrees, in the way that costs the atlas something to admit: the
 field's most comprehensive survey of itself
 ([arXiv:2512.13564](https://arxiv.org/abs/2512.13564), 107 pages, 47 authors)
 does not contain the words *tombstone*, *rejected* or *negative* anywhere, while
 its trustworthy-memory section asks for "verifiable forgetting and auditable
-updates" as future work. Three small repositories have the mechanism; the
+updates" as future work. PLACEHOLDER_PATTERN_TOMBSTONE_COUNT systems of PLACEHOLDER_TOTAL_COUNT carry a rejected-value tombstone; the
 field's own account of itself has no name for it.
 
 **Where the literature does name it is one vision paper.**
@@ -241,49 +244,43 @@ this section. The list below is the same classification, complete:
   [cache-preserving injection](./cache-preserving-injection/),
   [decay and reinforcement](./decay-and-reinforcement/),
   [evidence before belief](./evidence-before-belief/),
-  [explicit write destination](./explicit-write-destination/),
   [gate the expensive path](./gate-the-expensive-path/),
   [governed write gateway](./governed-write-gateway/),
   [hybrid retrieval fusion](./hybrid-retrieval-fusion/),
-  [pluggable memory provider](./pluggable-memory-provider/),
-  [promotion between tiers](./promotion-between-tiers/),
+  [memory as an editing surface](./memory-as-an-editing-surface/),
   [recoverable background work](./recoverable-background-work/),
   [scope as a first-class key](./scope-as-a-first-class-key/),
-  [skills as procedural memory](./skills-as-procedural-memory/),
+  [source-diverse context](./source-diverse-context/),
   [trust state machine](./trust-state-machine/) and
   [zero-LLM capture](./zero-llm-capture/) describe things
   many systems already do. The pattern refines a practice that exists.
-- **Advocacy — one or two instances.**
-  [Rejected-value tombstone](./rejected-value-tombstone/) and
-  [resolve, don't just detect](./resolve-not-just-detect/) rest on one or two
-  instances. The atlas is arguing for them, not reporting them.
-- **Reporting, with one advocacy claim.**
-  [Source-diverse context](./source-diverse-context/) is the mixed case: the
-  quota mechanism itself is ordinary retrieval engineering that several systems
-  run, while the negative-eval discipline inside it is an argument with almost
-  nothing behind it.
+- **Advocacy — a handful of instances.**
+  [Resolve, don't just detect](./resolve-not-just-detect/) has no complete
+  instance, and [explicit write destination](./explicit-write-destination/) —
+  a write with no named destination is refused rather than defaulted — has
+  three. The atlas is arguing for them, not reporting them.
+- **Reporting, with one advocacy claim.** Each of these is common in one half
+  and argued for in the other.
+  [Rejected-value tombstone](./rejected-value-tombstone/): a value-keyed
+  record consulted on the write path is reported; normalizing the value and
+  consulting it on every automated path is argued.
+  [Pluggable memory provider](./pluggable-memory-provider/): the host contract
+  is reported; carrying scope and deletion across it is argued.
+  [Promotion between tiers](./promotion-between-tiers/): a computable rule for
+  moving between storage tiers is reported; separate inputs, a provenance cap
+  and a recorded decision are argued.
+  [Retrieval hysteresis](./retrieval-hysteresis/): cooldown and suppression of
+  recently surfaced units are reported; the full sticky, cooldown and delay set
+  with a stated precedence is argued.
+  [Skills as procedural memory](./skills-as-procedural-memory/): the skill
+  library is reported; writing a skill only after an observed outcome verifies
+  it is argued.
 
-The advocacy patterns are the ones this atlas thinks matter most, which is
+The advocacy claims are the ones this atlas thinks matter most, which is
 exactly why they need the disclosure rather than the benefit of the doubt. A
-reader who assumed they were industry practice — as their author did until
-tracing the history — would be adopting them on the strength of an argument, not
-a consensus. That may still be the right call. It is a different decision.
-
-**A fourth case, added later and needing its own label.**
-[Retrieval hysteresis](./retrieval-hysteresis/) and
-[memory as an editing surface](./memory-as-an-editing-surface/) are neither
-advocacy nor general reporting. They are **mature in one category and unknown
-outside it.** Both are mature, refined against very large user bases,
-and almost every instance is a roleplay or companion client — SillyTavern,
-RisuAI, N.E.K.O., Soul of Waifu, Z-Waif. No extraction-based system in this atlas
-carries per-unit activation state, and the systems that hold `human_review`
-mostly offer approval of a queue rather than an editor over the store.
-
-That is a different epistemic situation from a mechanism three repositories
-invented. These are known solutions to problems the rest of the field has, sitting
-in codebases the rest of the field does not read. Both pages exist because the
-mechanisms appear six times across the reports and were never collected in one
-place.
+reader who assumed they were industry practice would be adopting them on the
+strength of an argument, not a consensus. That may still be the right call. It
+is a different decision.
 
 ## Stacks, by what you are building
 

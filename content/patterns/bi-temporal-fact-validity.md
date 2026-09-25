@@ -87,11 +87,15 @@ Most personal preferences do not need as-of queries.
 
 ## Seen in the atlas
 
-[Graphiti](../../systems/graphiti/) remains the fullest treatment — edges carry
-both transaction time and real-world validity, and a fact is invalidated by
+The `bitemporal` mark asks only that validity time be tracked separately from
+record time; this pattern also asks that a read path query it, so a carrier of
+the mark is not necessarily an instance of the pattern.
+
+[Graphiti](../../systems/graphiti/) puts both axes on graph edges — each edge carries
+transaction time and real-world validity, and a fact is invalidated by
 closing an interval rather than erasing history.
 
-The useful new finding is that **you do not need a graph database for this.**
+**You do not need a graph database for this.**
 
 [Gini](../../systems/gini-agent/) gets most of the value from three columns on an
 ordinary SQLite row:
@@ -107,8 +111,8 @@ query actually contains a temporal expression, so it does not dilute fusion
 elsewhere. A memory recorded on Friday about Tuesday's deploy answers a question
 about Tuesday.
 
-[GENOME](../../systems/genome/) is the instance that writes the interval
-arithmetic down, which is the part everyone else leaves implicit and gets wrong
+[GENOME](../../systems/genome/) writes the interval arithmetic down in the
+docstring, which is the part that is easy to leave implicit and get wrong
 once. `facts_valid_at(entity, T)` returns facts where
 `valid_from <= T < valid_until`, and the docstring names the convention — SQL:2011
 application-time periods, `valid_from` inclusive, `valid_until` exclusive — then
@@ -212,7 +216,7 @@ comparing feature lists will see `as_of` and `valid_to` and assume the pair.
 
 [Janus-Graph](../../systems/janus-graph/) is Graphiti seen from a caller, and both of its temporal defects live in the wrapper rather than the engine. It dates every episode by the sweep that processed it — the worker's `reference_time` falls back to now because it reads a `created_at` the queue's claim never sets — so relative dates in a delayed or dead-letter-replayed episode resolve against the wrong day, and no caller can supply the time. And its recall filter is `invalid_at IS NULL`, which keeps closed facts out but also hides a fact whose extracted end date lies in the future; comparing against the query instant is the correct predicate. It still earns the mark, because the engine's edges carry a model-extracted validity that can precede their row, and the wrapper reads that axis on every search.
 
-[Utopia](../../systems/utopia/) is the fullest version of this pattern here, and its discipline is on the read side. `valid_from`/`valid_to` carry a precision column *per endpoint*, replacing a single default that made a fact with no date at all look measured to the day, and the end precision admits `unknown`, so *"former CEO"* — an ending stated without a date — is distinguishable from *still holding*. Every read predicate for both axes is assembled in two modules, `world_axis.rs` and `record_axis.rs`, on the stated argument that a defence spread across fifty read sites fails silently when one is missed; both take an instant, and the record axis is reversed for chunks, documents and entity merges as well, so a replay at a past date sees the graph as it stood, merges undone and deleted documents back. The textbook indeterminate-instant trick is explicitly refused: filling `valid_to` with the document's date would put a confident-looking timestamp in a column every reader would have to check the precision of first.
+[Utopia](../../systems/utopia/) puts its discipline on the read side. `valid_from`/`valid_to` carry a precision column *per endpoint*, replacing a single default that made a fact with no date at all look measured to the day, and the end precision admits `unknown`, so *"former CEO"* — an ending stated without a date — is distinguishable from *still holding*. Every read predicate for both axes is assembled in two modules, `world_axis.rs` and `record_axis.rs`, on the stated argument that a defence spread across fifty read sites fails silently when one is missed; both take an instant, and the record axis is reversed for chunks, documents and entity merges as well, so a replay at a past date sees the graph as it stood, merges undone and deleted documents back. The textbook indeterminate-instant trick is explicitly refused: filling `valid_to` with the document's date would put a confident-looking timestamp in a column every reader would have to check the precision of first.
 
 ## A third clock
 

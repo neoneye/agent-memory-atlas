@@ -166,20 +166,18 @@ immediately consistent.</p>
 <p><strong>The failure this pattern does not cover is the job that
 succeeds and starves the write path.</strong> Recoverability protects
 work that fails; it says nothing about a maintenance pass that shares
-one deadline with capture and runs first. <a
-href="../../systems/plur1bus/">PLUR1BUS</a> is the worked case: its
-embedding drain was bounded by item count and not by time, ran ahead of
-capture inside the same sixty-second budget, and on a full backlog spent
-the whole budget — so capture was aborted every turn, with the only
-observable a log line announcing the 276 texts it was about to drop,
-followed by the timeout about thirty milliseconds later. Nothing was
-lost irrecoverably and nothing needed a dead-letter path; the queue was
-doing its job. The rule is ordering, not durability: <strong>a
-maintenance pass and the write path it serves must not share one budget,
-and where they must, the write path goes first and maintenance takes the
-remainder.</strong> The repair also needs the loop to honour a deadline
-and report that it stopped early, or the abort surfaces deep inside the
-embedder instead of at the loop boundary.</p>
+one deadline with capture and runs first. A drain bounded by item count
+rather than by time can spend the whole budget on a full backlog and
+abort the capture it was meant to serve, with every queued item intact.
+The rule is ordering, not durability: <strong>a maintenance pass and the
+write path it serves must not share one budget, and where they must, the
+write path goes first and maintenance takes the remainder</strong>,
+inside a loop that honours a deadline and reports that it stopped early.
+<a href="../../systems/plur1bus/">PLUR1BUS</a> keeps the two apart:
+capture is queued per agent and runs after the turn ends, and embeddings
+go to <code>embedding-queue.jsonl</code>, drained by a cron — so a
+memory can be lexically retrievable before it is vector-retrievable,
+which is the freshness gap that separation costs.</p>
 <h2 id="cost-to-adopt">Cost to adopt</h2>
 <p><strong>Build:</strong> durable input records, an explicit job state,
 idempotent processing, and a dead-letter path with something that
@@ -198,12 +196,13 @@ pattern exists to protect work that happens away from the user.</p>
 correct mechanism in the atlas, and it is worth trying before any retry
 queue. Its <code>Dream</code> consolidation runs against an append-only
 archive tracked by a <strong>consumption cursor</strong>, and
-<code>DreamRunProgress</code> watches for tool events with
-<code>phase == "error"</code>. A run that nominally completed but hit
-tool errors <strong>does not advance the cursor</strong> — so the
-material is simply reprocessed next time. No retry queue, no dead-letter
-table, no partial state to reconcile: the work is not recorded as done,
-so it is not done.</p>
+<code>MemoryStore.dream_run_completed</code> advances that cursor only
+when the run's stop reason is <code>completed</code>. A run that ends on
+<code>error</code>, <code>tool_error</code>, <code>max_iterations</code>
+or <code>cancelled</code> <strong>does not advance the cursor</strong> —
+so the material is simply reprocessed next time. No retry queue, no
+dead-letter table, no partial state to reconcile: the work is not
+recorded as done, so it is not done.</p>
 <p>The producer/consumer split is what makes this safe.
 <code>.cursor</code> marks how far the Consolidator has written;
 <code>.dream_cursor</code> marks how far Dream has read. A slow or
@@ -244,15 +243,13 @@ href="../../systems/cognee/">Cognee</a> stamps artifacts with pipeline
 provenance, rolls failed runs back, and recovers stale non-terminal runs
 at startup. <a href="../../systems/llm-wiki-memory/">llm-wiki-memory</a>
 retains failed inputs for redistillation. <a
-href="../../systems/hindsight/">Hindsight</a> gives consolidation capped
-retries with deterministic-error filtering. <a
+href="../../systems/hindsight/">Hindsight</a> queues consolidation with
+capped exponential backoff and per-bank dedup. <a
 href="../../systems/redis-agent-memory-server/">Redis Agent Memory
 Server</a> debounces and defers extraction, so a failure delays work
 rather than losing it. <a
 href="../../systems/mastra-observational-memory/">Mastra</a> persists
 buffers with durable range markers before activation. <a
-href="../../systems/tencentdb-agent-memory/">TencentDB</a> checkpoints
-capture, but its JSONL/store update path is not atomic. <a
 href="../../systems/basic-memory/">Basic Memory</a> rebuilds projections
 through startup reconciliation.</p>
 <p><a href="../../systems/heimdall/">Heimdall</a> contributes the
@@ -330,10 +327,11 @@ table with a replay verb. But a schema-repair wrapper between the model
 and Graphiti answers a malformed item with an empty list, so the job
 <em>succeeds</em> with nothing extracted and is marked done, and nothing
 distinguishes an empty success from a real one. And the nightly run
-labelled DLQ auto-repair requeues every dead-lettered episode without
-resetting its attempt count or closing its dead-letter row, so a poison
-input costs one model pass a night indefinitely. A dead-letter path that
-re-feeds itself is as unread as one nobody opens.</p>
+labelled DLQ auto-repair requeues up to a hundred dead-lettered episodes
+per run without resetting its attempt count or closing its dead-letter
+row, so a poison input costs one model pass a night indefinitely. A
+dead-letter path that re-feeds itself is as unread as one nobody
+opens.</p>
 <p><a href="../../systems/rushdb/">RushDB</a> has the failure this
 pattern exists to prevent, in one line. A record write is synchronous,
 then the embedding work is queued fire-and-forget with an empty catch at

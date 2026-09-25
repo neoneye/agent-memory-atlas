@@ -1,57 +1,82 @@
 ---
 title: Explicit Write Destination
 eyebrow: Pattern · Federation
-description: Let reads fan out across allowed memory stores while requiring every mutation to name one concrete private or shared destination.
+description: Require every mutation to name one resolved destination, and refuse a write whose destination is absent or ambiguous rather than defaulting it.
 root: ../..
 page_kind: pattern
-stance: reporting
+stance: advocacy
 ---
 
 ## Intent
 
-Support layered memory—personal, project, repository, team, or organization—without letting a broad read context silently determine where new information is written.
+Make *where does this memory go* a decision the caller states on every write, so
+that no default — and no inherited read context — chooses a destination for it.
 
 ## The problem
 
-Federated retrieval may merge several stores into one result list. If a subsequent “remember this” operation inherits that blended context, a private observation can leak into a shared repository or a team lesson can land in one developer’s private memory.
+Once memory has more than one store — private and shared, personal and team,
+user and repository — a write that omits its destination still lands somewhere.
+Whatever supplies that somewhere is a default nobody chose at the moment of
+writing: a config value, the store the last read came from, the top search
+result. The write succeeds, in the wrong place, and a private observation is now
+shared.
+
+Keeping read scopes apart from the write scope is part of
+[scope as a first-class key](../scope-as-a-first-class-key/). This page is about
+the rule that separation leaves open: what a write that names no destination
+does.
 
 ## The pattern
 
-Separate read scope from write target:
-
 ```text
-read_scopes = [private, project, organization]
-write_target = project
+write(memory, target)            # target is required
+    target absent or empty  -> reject; there is no implicit default
+    target not writable     -> reject; list the valid targets
+    target resolved         -> exactly one store
 ```
 
-Reads may fan out according to access policy and merge with locality or precedence rules. Writes accept exactly one resolved destination and reject ambiguous requests. The destination becomes part of identity, provenance, access control, and the mutation audit.
+A mutation names exactly one destination. The write API resolves it against the
+stores the caller may write, and an absent, empty or unrecognized destination is
+an error, never a fallback. A default belongs only on a path where a human has
+already chosen — a file importer — and never on the interactive or model-driven
+path. The resolved destination then becomes part of identity, provenance, access
+control and the mutation audit.
 
-Agent tools should make the target visible in their arguments. Defaults are acceptable only when they are safe, obvious, and surfaced to the user; shared writes often deserve confirmation.
+Agent tools should carry the target in their arguments, and the refusal should
+name the valid targets, so a model learns the vocabulary from its first mistake.
+Shared writes often deserve confirmation on top.
 
 ```mermaid
-%% caption: reads merge several scopes and label each result; a write with no resolved destination is rejected rather than defaulted, and a shared one is confirmed
+%% caption: a write with no resolved destination is refused rather than defaulted, and only a resolved target reaches a store
 flowchart TD
-    Q["read"] --> RS["read_scopes:<br/>private + project<br/>+ org"]
-    RS --> Merge["merge by locality<br/>/ precedence"]
-    Merge --> Out["results, each<br/>labelled with<br/>its scope"]
-    W["write"] --> T{"write_target<br/>resolved?"}
-    T -- "no" --> Rej["reject:<br/>ambiguous<br/>destination"]
+    W["write(memory, target)"] --> T{"target present<br/>and resolvable?"}
+    T -- "absent or empty" --> R1["reject:<br/>no implicit default"]
+    T -- "not a writable<br/>store" --> R2["reject:<br/>list the valid<br/>targets"]
     T -- "yes, private" --> P["private<br/>store"]
-    T -- "yes, shared" --> Conf["confirm, then<br/>shared store"]
+    T -- "yes, shared" --> S["confirm if policy<br/>asks, then<br/>shared store"]
 ```
-
-Reads fan out; writes converge on exactly one named destination, and an
-unresolved destination is an error rather than a default.
 
 ## Why it works
 
-The pattern prevents accidental publication and makes ownership inspectable. It also allows independent storage, sync, retention, and review policy for each layer.
+A default is the one destination nobody chose. Refusing the write moves the
+decision to the moment the caller knows what the memory is. It also makes a
+misrouted write attributable: the destination is in the arguments, so the audit
+shows who chose it rather than which configuration value did.
 
 ## Tradeoffs
 
-Explicit targets add friction. Agents may choose poorly, and users may not understand the scope names. A promotion flow is needed when a private insight becomes shared knowledge. Moving a memory between stores must preserve provenance without leaving stale copies or broken links.
+Explicit targets add friction. Agents may choose poorly, and users may not
+understand the scope names. A promotion flow is needed when a private insight
+becomes shared knowledge. Moving a memory between stores must preserve
+provenance without leaving stale copies or broken links.
 
-Do not infer a write target from the top search result. Relevance and ownership are different decisions.
+The rule protects only the paths that pass through it. A library call, an
+importer or a background consolidator that writes directly can still create a
+record with no destination, and whatever the read path does with such a record
+becomes the effective default.
+
+Do not infer a write target from the top search result. Relevance and ownership
+are different decisions.
 
 ## Cost to adopt
 
@@ -70,56 +95,65 @@ material reaching a shared one.
 
 ## Seen in the atlas
 
-[llm-wiki-memory](../../systems/llm-wiki-memory/) remains the clearest case:
-reads fan out across private and repository wikis while every mutation must name
-a concrete target, so a shared read scope never becomes a shared write.
+The atlas argues for this rule rather than reporting it as common practice. The
+systems below refuse an absent destination on their write path.
 
-[OpenViking](../../systems/openviking/) enforces the same discipline
-structurally. `MemoryIsolationHandler` resolves the write target **before**
-anything is persisted, and `peer_user_space()` returns `user_space` for the
-sentinel `__self` and `user_space/peers/<peer_id>` otherwise — so memory *about*
-a third party is physically separated from memory about the user, by path, at
-write time.
+[llm-wiki-memory](../../systems/llm-wiki-memory/) — `parseTarget` in
+`scripts/lib/context/target.mjs` throws when a write or mutate `target` is
+empty, with the reason *"target is REQUIRED and must be explicit … (there is no
+implicit default)"*, and throws again for any value that is not an active context
+level rather than falling back to the private brain. Reads fan out across the
+private brain and the repository wikis; each write names one. The server enforces
+the explicit target; asking before a shared-repository write is policy, not code.
 
-[Magic Context](../../systems/magic-context/) pairs a `project | ecosystem |
-universe` scope with a `shareable` flag, making "may this cross a boundary?" a
-property of the record rather than a property of the caller.
-[MateClaw](../../systems/mateclaw/) puts the destination on the provider contract
-itself as an `ownerKey`, and its `MemoryScope` marks `TEAM` and `GLOBAL` as the
-shared values with an `isShared()` helper — the sharing decision is explicit and
-centrally testable.
+[Memory Engine](../../systems/memory-engine/) — `memory.create` and `batchCreate`
+require a `tree`, and the protocol schema rejects an empty one
+(`treePathSchema.min(1, "tree path is required")`), so callers choose `share`
+versus `~` on every interactive write. A default exists only on the file
+importers, which file a tree-less record under `share` — a path where a human
+already chose the source.
 
-[CowAgent](../../systems/cowagent/) is the counterexample, and a common one: its
-`chunks.scope` column defaults to `'shared'`. A default that shares is a default
-that leaks, because the safe value is the one nobody has to remember to set —
-the same hazard the atlas flags in [agentmemory](../../systems/agentmemory/),
-whose strictest isolation requires opting in.
+[Membrane](../../systems/membrane/) — the gRPC write boundary,
+`allowsWriteRecord`, refuses a record whose scope is empty and one outside the
+principal's `write_scopes`, under a comment stating the rule: *"every network
+mutation must name an explicitly permitted non-empty scope"*. Its limit is the one
+the tradeoffs above predict. The in-process library and the consolidators do not
+pass through that boundary and can create unscoped records, which the read path
+treats as visible from every context.
 
-[Moltis](../../systems/moltis/) shows what happens without the discipline at all:
-sanitized session transcripts are exported into the same Markdown corpus as
-curated notes, sharing one index and one rank, with nothing marking which is
-which.
+The counterexamples show what the rule replaces.
+[MateClaw](../../systems/mateclaw/) carries the destination on its provider
+contract as an `ownerKey`, beside unscoped overloads that remain callable, so the
+destination is opt-in per call site; its recall ledger does drop a
+personal-scope write with no resolved owner rather than recording it, which is
+the rule applied to one table. [CowAgent](../../systems/cowagent/)'s `chunks.scope` column defaults to
+`'shared'`, and [agentmemory](../../systems/agentmemory/) shares agent scope
+unless isolation is switched on — in both, the omitted destination resolves to
+the widest one, and the safe value is the one somebody has to remember to set.
 
 ## Implementation checklist
 
-- Give every store a stable, human-readable destination ID.
+- Make the destination a required argument of every write and mutate call, and
+  reject an empty one.
+- Reject a destination that is not one of the caller's writable stores, and list
+  the valid ones in the error.
 - Resolve and authorize the target before mutation.
+- Put a default, if any, only on paths where a human chose the source, never on
+  the model-facing tool.
+- Route every writer — library, importer, background consolidator — through the
+  same check, or record which ones bypass it and what they default to.
 - Include target scope in dedupe, conflict, and tombstone checks.
 - Record promotions and moves as relations or audit events.
 - Require stronger confirmation for shared or organization-wide writes.
-- Keep private automatic capture separate from shared publication.
-
-[Memory Engine](../../systems/memory-engine/) is the strongest instance found:
-`memory.create` and `batchCreate` **require** an explicit `tree`, because callers
-should "choose `share` vs `~` deliberately". The default is not safe-and-surfaced
-— it is *absent* on the interactive path, and exists only for file importers,
-where a human already chose the source.
 
 ## Tests to require
 
-- Omitted and ambiguous write targets fail safely.
+- Omitted, empty and unknown write targets fail with an error, and nothing is
+  persisted.
 - Private capture never appears in shared stores.
 - Read federation does not affect write routing.
+- Each writer outside the request path is either behind the same check or tested
+  for what it writes when given no destination.
 - Promotion preserves provenance and removes or links the predecessor.
 - Concurrent moves cannot create two active owners.
 - Shared targets enforce authorization independently of the agent tool.

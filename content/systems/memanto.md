@@ -1,7 +1,7 @@
 ---
 title: Memanto
 eyebrow: Resolved conflict
-description: A memory service whose nightly conflict pass ends in a human choosing between five resolutions — the only system in the atlas where detecting a contradiction leads to a decision rather than a flag.
+description: A memory service whose nightly conflict pass ends in a human choosing a disposition — keep either side, keep both, remove both, retire reversibly, or write a replacement — so detecting a contradiction leads to a decision rather than a flag.
 root: ../..
 page_kind: system
 source_name: moorcheh-ai/memanto
@@ -21,7 +21,7 @@ matrix:
   storage: "Moorcheh vector service, hosted or on-prem; conflict reports as dated JSON on disk"
   retrieval: "Vector search with filters, confidence, and an `as_of_date` read"
   write: "Direct store, batch write, and LLM extraction from conversation"
-  update_delete: "Update and delete APIs; conflicts resolved by keep_old, keep_new, keep_both, remove_both, or manual"
+  update_delete: "Update and delete APIs; conflicts resolved by keep_old, keep_new, keep_both, remove_both, expire_old, expire_new, expire_both, or manual — the expire actions retire the losing memory reversibly, the others that remove one delete it"
   scoping: "`agent_id` throughout the API surface; per-agent conflict reports"
   integration: "FastAPI service, CLI, web UI, MCP, plus LangGraph, CrewAI, Claude Code and Hermes integrations"
   background: "Scheduled daily analysis producing an AI summary and a dated conflict report"
@@ -42,21 +42,28 @@ this atlas has recorded system after system.
 
 **Memanto resolves conflicts. Everything else only detects them.**
 
-The atlas has found contradiction detection in several places and a resolution
-path in none. [Gini](../gini-agent/) has a `conflicted` status with, in its own
-report's words, no operator-facing resolution. [MateClaw](../mateclaw/) ships a
-dedicated `ContradictionDetector` and nothing that says what happens next.
+Contradiction detection is common in the atlas; a resolution that acts on the
+store is not. [Gini](../gini-agent/) has a `conflicted` status with, in its own
+report's words, no operator-facing resolution. [MateClaw](../mateclaw/) records a
+person's verdict on a detected contradiction, and no code path reads the verdict
+to change a fact.
 [Holographic](../holographic/) surfaces contradictions as an ordinary query and
 only reports them. [OpenViking](../openviking/) has no conflict surface at all.
 Detection is the easy half; somebody still has to decide.
 
-Memanto's decision surface is a five-way choice:
+Memanto's decision surface is an eight-way choice
+(`memanto/app/models/__init__.py:139-155`):
 
 ```python
-action: Literal["keep_old", "keep_new", "keep_both", "remove_both", "manual"]
+action: Literal["keep_old", "keep_new", "keep_both", "remove_both",
+                "expire_old", "expire_new", "expire_both", "manual"]
 ```
 
-Two of those five are the interesting ones. **`keep_both`** is an explicit "these
+The field's own description splits them by what happens to the loser: the
+`keep_*`, `remove_both` and `manual` actions delete it permanently, and the three
+`expire_*` actions retire it reversibly, keeping its content and audit trail —
+`DirectClient.resolve_conflict` calls `set_lifecycle(..., expired=True, reason="conflict-resolution")` rather than deleting it.
+Two of the eight are the interesting ones. **`keep_both`** is an explicit "these
 are both true" — the answer a binary supersede/reject model cannot express, and
 the correct one whenever two memories disagree because they describe different
 times, scopes, or aspects. **`manual`** hands the reconciliation to a person: the
@@ -76,14 +83,14 @@ atlas's terms.
 ## 2. Mental Model
 
 ```mermaid
-%% caption: the conflict pass writes a dated report holding both sides and its own recommendation, and a person picks one of five dispositions rather than the system resolving it
+%% caption: the conflict pass writes a dated report holding both sides and its own recommendation, and a person picks a disposition rather than the system resolving it
 flowchart TB
     D["a day's sessions"] --> AN["scheduled daily analysis"]
     AN --> SUM["AI summary"]
     AN --> CP["conflict pass<br/><i>LLM, local</i>"]
     CP --> F[("conflicts/&lt;date&gt;.json<br/><i>type, title, old_memory_id, old_content,<br/>new_memory_id, new_content,<br/>description, recommendation</i>")]
     F --> UI["memanto conflicts CLI,<br/>or the web UI"]
-    UI --> V["keep_old · keep_new · keep_both<br/>remove_both · manual(content)"]
+    UI --> V["keep_old · keep_new · keep_both<br/>remove_both · manual(content)<br/>expire_old · expire_new · expire_both"]
 
     style F fill:#e7efe9,stroke:#3d6b59
     style V fill:#e7efe9,stroke:#3d6b59
@@ -132,6 +139,7 @@ flowchart TD
   D -->|keep_old / keep_new| M
   D -->|keep_both| M
   D -->|remove_both| Del["both deleted"]
+  D -->|expire_*| Exp["retired, content kept<br/>expired set"]
   D -->|manual + content| New["human-authored<br/>replacement"]
   New --> M
 ```
@@ -166,16 +174,16 @@ it conflicting with itself. That this rule is in the prompt at all is scar
 tissue, and it is the kind of detail worth copying because it is not obvious
 until it happens.
 
-### Five resolutions, and why `keep_both` matters
+### Eight resolutions, and why `keep_both` matters
 
-Every other conflict mechanism in this atlas is implicitly binary: one of the two
+A conflict mechanism that can only supersede or reject is binary: one of the two
 survives. That is wrong more often than it looks. "I work at Acme" and "I work
 at Globex" conflict only if you assume one employer; "I prefer tabs" and "I
 prefer spaces" conflict only if you assume one project.
 
 `keep_both` lets the resolver say *the disagreement is not a contradiction*, and
-retains both. Nothing else here can express that, which means every other system
-forces a false choice or leaves the flag unresolved forever.
+retains both. A resolver without it forces a false choice or leaves the flag
+unresolved forever.
 
 `manual` is the other one worth noting. Rather than choosing between two
 imperfect memories, a person writes the reconciling content, with
@@ -195,7 +203,7 @@ caller can select `manual` and supply nothing.
 
 The detector emits a `recommendation` of `keep_new | keep_old | merge |
 remove_both`, and the resolver's action set is deliberately *different* — it adds
-`keep_both` and `manual` and drops `merge`. The model proposes; the human
+`keep_both`, `manual` and the three `expire_*` actions and drops `merge`. The model proposes; the human
 disposes, and can reach outcomes the model was not offered.
 
 Keeping the proposal vocabulary narrower than the decision vocabulary is a small
@@ -304,7 +312,7 @@ default, and stating it at the definition is how it survives a refactor.
 
 Strengths:
 
-- **A conflict workflow that terminates in a decision**, which is unique here.
+- **A conflict workflow that terminates in a decision.**
 - **`keep_both`**, expressing "not actually a contradiction".
 - **`manual`**, letting a person author the reconciliation, enforced at the model
   layer.
@@ -377,7 +385,7 @@ does not appear to have been computed.
 
 Borrow:
 
-- The whole conflict lifecycle: typed detection, dated report, five-way
+- The whole conflict lifecycle: typed detection, dated report, eight-way
   resolution, human-authored manual path.
 - The bounded-scan instruction and the self-conflict guard.
 
@@ -415,6 +423,8 @@ This lifecycle is generalized as [resolve, don't just detect](../../patterns/res
   `MOORCHEH_ONPREM_URL`).
 
 ## History
+
+**2026-09-25** — audited at the unchanged pin [`ce38df5070cbaf57613f7a404fef6779ee3bef44`](https://github.com/moorcheh-ai/memanto/commit/ce38df5070cbaf57613f7a404fef6779ee3bef44); the corrections are ours. The report quoted a five-value `action` literal. At this pin `ConflictResolveRequest` has eight: `expire_old`, `expire_new` and `expire_both` retire the losing memory through `set_lifecycle(..., expired=True)` instead of deleting it (`memanto/app/models/__init__.py:139-155`, `DirectClient.resolve_conflict`). The description, the section 1 quote, both diagrams, the resolutions heading and the matrix row are corrected. Four sentences that called the workflow unique in the atlas are narrowed, because [MateClaw](../mateclaw/) records a human verdict on a contradiction too. No mark moved.
 
 **2026-09-19** — re-pinned to [`ce38df5070cbaf57613f7a404fef6779ee3bef44`](https://github.com/moorcheh-ai/memanto/commit/ce38df5070cbaf57613f7a404fef6779ee3bef44). `human_review` is **withdrawn**, on the lifecycle rather than the actor. The actor half holds: the MCP server publishes eleven tools and not one touches a conflict, so the producing agent cannot resolve one. But nothing waits for it to. `constants.py:29-31` says a memory is `active` until an expiry policy, a conflict resolution, or an explicit expire stamps it `expired` — so while a conflict is unresolved both sides stay active and both keep being recalled, and the resolution is what expires the loser. A queue nothing is held behind is a to-do list. The on-disk dated reports keep their credit in section 4. `scope_enforced` stands. Screened again first; nothing was installed and no suite was run.
 

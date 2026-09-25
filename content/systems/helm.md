@@ -1,7 +1,7 @@
 ---
 title: "Helm"
 eyebrow: "Confidence-ratcheted SQLite memory"
-description: "A single-owner personal agent whose SQLite fact store caps a first observation at 0.7 confidence and lets it ratchet up only on independent repeats, then injects the surviving facts into the turn with the confidence stripped off."
+description: "A single-owner personal agent whose SQLite fact store caps a first observation at 0.7 confidence and lets it ratchet up only on repeats of the same value, then injects the surviving facts into the turn with the confidence stripped off."
 root: ../..
 page_kind: system
 source_name: "GOODMAN-PRO/helm"
@@ -25,7 +25,7 @@ matrix:
   scoping: "None on the fact table — one owner, enforced at the gateway; `channel` is stored on episodes but never filtered on"
   integration: "Discord, iMessage and a terminal client into one Claude Code session; two registry tools; a generated index imported into the prompt"
   background: "A launchd/systemd think tick, a weekly deep review, consolidation with decay and prune, and index regeneration"
-  trust: "A confidence float with a 0.7 cap on a first observation that rises only on independent repeats"
+  trust: "A confidence float with a 0.7 cap on a first observation that rises only on repeats of the same value, independent or not"
   strengths: "The evidence gate, decay slowed by access, and episode-noise gates anchored by tests that name the pollution that forced them"
   risks: "Confidence never reaches the model, three readers ignore the expiry predicate, and the 500-row recall window is ordered by recency"
 ---
@@ -43,8 +43,9 @@ The design worth reading the code for is the **evidence gate** in
 `workspace/memory/memory.mjs:87-162`. A write tagged `--source observed` — the
 tag the background reflection loop uses when it thinks it has noticed something
 about the owner — is capped at `PROVISIONAL_CAP = 0.7` no matter what confidence
-the caller asked for. It can only rise by 0.05 per *independent repeat*, tracked
-in `evidence_count`. A first observation is therefore structurally incapable of
+the caller asked for. It can only rise by 0.05 per repeat of the same value,
+tracked in `evidence_count` — and any write of the same kind, key and value is a
+repeat, since nothing checks that it is independent (`memory.mjs:104-117`). A first observation is therefore structurally incapable of
 being stored as certain. That is the [evidence before
 belief](../../patterns/evidence-before-belief/) pattern implemented in about
 fifteen lines of SQL and arithmetic, in a project whose whole memory layer is
@@ -152,7 +153,8 @@ Three properties of this machine matter.
 **Corroboration is the only thing that raises belief.** Nothing in the system
 verifies a fact against the world. A repeat observation of the same value is the
 entire evidence model, and it is deliberately weak: `0.05` per repeat means six
-independent sightings to reach 1.0 from the cap.
+repeats to reach 1.0 from the cap, whether they come from six sources or from one
+source writing six times.
 
 **Death is asymmetric.** Being *replaced* is recoverable — the row stays and
 `history` shows it. Being *forgotten* or *pruned* is not: both are
@@ -491,8 +493,9 @@ owner.
 
 **Failure modes.** Over-recall is bounded at eight facts on the hot path. The
 real exposures are the 500-row window above; silent degradation from MiniLM to
-TF-IDF to nothing (three quality tiers, one output shape, no signal to the
-caller); the 240-character query truncation, which for a long message searches
+TF-IDF, and to an all-zero semantic arm when the query has no stems or fewer
+than three facts exist (lines 237-243) — three quality tiers, one output shape,
+no signal to the caller; the 240-character query truncation, which for a long message searches
 only its opening; and distillation artefacts polluting results — a `learned` row
 reading `mentioned in 4 episodes (last: "…")` is a high-BM25 match for common
 vocabulary and carries no information.
@@ -1011,6 +1014,8 @@ the smoke tests cannot see is free to rot.
   test numbers.
 
 ## History
+
+**2026-09-25** — [`f453eaa9683ea0a66b45c76275cb6576bcf14f73`](https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73) — same commit. Two corrections. The confidence ratchet was described as rising on *independent* repeats; `memory.mjs:104-117` increments `evidence_count` on any write of the same kind, key and value, with no independence check, so the description, the trust field and the evidence-gate section now say so. And the failure-mode list said retrieval degrades from MiniLM to TF-IDF "to nothing", contradicting the retrieval section: a failed import or pipeline keeps the TF-IDF scores (`:246-259`), and the zero tier is an all-zero semantic arm when the query has no stems or fewer than three facts exist (`:237-243`). No mark moved.
 
 **2026-09-17** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path, two unpinned manifests, nothing inside the cooldown; nothing was installed or run.
 

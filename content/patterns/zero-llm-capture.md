@@ -124,7 +124,8 @@ after.
 
 [Holographic](../../systems/holographic/) is the minimal version — six regexes
 over user turns (`I prefer|like|use`, `we decided/agreed/chose`) storing the raw
-matching message. It also demonstrates the cost: what is stored is conversational
+matching message, at session end and only when `auto_extract` is turned on; it
+defaults to off. It also demonstrates the cost: what is stored is conversational
 prose rather than a normalized claim, which then degrades the contradiction
 detection built on top of it.
 
@@ -151,11 +152,11 @@ session by regex, dropping any hit with no real file path in its own span, on
 the stated principle that a scar system dies from noise rather than from a
 missed lesson. Both are cheap, both are auditable, and neither can hallucinate.
 
-**The recurring hazard is capturing your own output.** Five systems independently
-built guards against it: OpenClaw's envelope sanitizer, Holographic excluding
+**The recurring hazard is capturing your own output.** Independent guards
+against it include OpenClaw's envelope sanitizer, Holographic excluding
 compaction handoff summaries that were being stored as facts on every context
-rollover, nanobot filtering its own `cron:` and `dream:` sessions, Moltis
-sanitizing before export, and CowAgent's distillation rules. If you capture
+rollover, nanobot filtering its own `cron:` and `dream:` sessions, and Moltis
+sanitizing transcripts before export. If you capture
 without a model, capture cheaply enough that everything flows in — which means
 something must decide what does not.
 
@@ -181,9 +182,10 @@ choice — it is the absence of one. Normalizing the captured span into a slug, 
 routing the write through an existing key when one matches, is the work this
 pattern skips at its peril.
 
-[CSM](../../systems/csm/) is the pattern held at a scale nothing else here
-approaches — 46 tables and 55,000 lines in which the only outbound call is an
-embedding request — and it gets the keying right where Helm got it wrong: a
+[CSM](../../systems/csm/) holds the pattern at one of the largest single-author
+scales in the atlas — 46 tables and 55,000 lines in which the only outbound call
+is an embedding request, and a failed embedding stores the row with a NULL
+vector rather than failing the capture — and it gets the keying right where Helm got it wrong: a
 partial unique index on pending candidates over `(candidate_type, dedup_key)`, a
 unique index on `(session_id, metadata->>'messageId')` for transcript rows with a
 unique-violation handler that returns the existing row rather than failing the
@@ -222,8 +224,10 @@ parsers: a harness whose payload shape drifts stops producing events, and nothin
 notices, because there is no downstream signal that a session was thin.
 
 It is also the clearest case of the pattern's other consequence. Because nothing
-judged the material on the way in, nothing can judge it later either — there is no
-`UPDATE` on the event table and no confidence to revise. A zero-LLM capture path
+judged the material on the way in, nothing can judge it later either — no
+statement rewrites an event's content, and there is no confidence to revise. The
+one `UPDATE` on the event table re-keys rows when OpenClaw renames a session, so
+the events survive the rename unchanged. A zero-LLM capture path
 tends to arrive with a zero-correction store, and the two are the same decision
 seen twice.
 
@@ -248,8 +252,8 @@ Two transfers. **Anchor an instruction pattern to the start of a message, and
 scope it to the first few hundred characters** — a genuine "remember that X"
 opens a turn, while the same words deep inside pasted content were never an
 instruction. And **run the quality gate once, before every persistence sink**:
-this codebase had two sinks filtering independently, so junk reached one of them
-after the other was fixed.
+`push.js` applies `isQuality` to the parsed decisions before either sink, so the
+two sinks cannot disagree about what counts as junk.
 
 What it does not do is the thing this page's other instances also miss, and here
 the fix was one field. The extractor computes a `type` for every match —
