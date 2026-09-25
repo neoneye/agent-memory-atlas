@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 627 of 627 screened at the report's current pin.**
+**Progress: 628 of 628 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 281 |
+| Repositories with an auto-run surface (`RUNS`) | 282 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 345 |
-| Repositories with build-time execution (`EXEC`) | 457 |
+| Repositories with build-time execution (`EXEC`) | 458 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -119,6 +119,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`fidelis`](../../content/systems/fidelis.md) | `server.json` |
 | [`fireweed-mcp`](../../content/systems/fireweed-mcp.md) | `server.json` |
 | [`gaius`](../../content/systems/gaius.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
+| [`gastown`](../../content/systems/gastown.md) | `.githooks/` |
 | [`gbrain`](../../content/systems/gbrain.md) | `.claude-plugin/` |
 | [`genome`](../../content/systems/genome.md) | `mcp.json`, `server.json` |
 | [`gh-aw`](../../content/systems/gh-aw.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.vscode/settings.json` |

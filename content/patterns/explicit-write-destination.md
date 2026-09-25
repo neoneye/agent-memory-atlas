@@ -130,6 +130,11 @@ the rule applied to one table. [CowAgent](../../systems/cowagent/)'s `chunks.sco
 `'shared'`, and [agentmemory](../../systems/agentmemory/) shares agent scope
 unless isolation is switched on — in both, the omitted destination resolves to
 the widest one, and the safe value is the one somebody has to remember to set.
+[Gas Town](../../systems/gastown/) fails in the other direction. `gt remember`
+takes no target, so the row lands in whichever Dolt database the process's
+working directory resolves to — the town's for the mayor, the rig's for crew and
+polecats. The mayor's prompt promises memories *"shared across all agents in the
+town"*, and a rule the mayor records never reaches a polecat.
 
 ## Implementation checklist
 

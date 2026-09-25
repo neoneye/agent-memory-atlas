@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A multi-agent coding orchestrator
+whose memory is typed key-value rows in beads' Dolt config table,
+printed whole at session start and partitioned by working directory.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Gas Town — Agent Memory Atlas">
+    <meta property="og:description" content="A multi-agent coding
+orchestrator whose memory is typed key-value rows in beads' Dolt config
+table, printed whole at session start and partitioned by working
+directory.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Gas Town — Agent Memory Atlas">
+    <meta name="twitter:description" content="A multi-agent coding
+orchestrator whose memory is typed key-value rows in beads' Dolt config
+table, printed whole at session start and partitioned by working
+directory.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Gas Town — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Gas Town",
+      "description": "A multi-agent coding orchestrator whose memory is typed key-value rows in beads' Dolt config table, printed whole at session start and partitioned by working directory.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Typed key-value memory inside a multi-agent
+orchestrator</p>
+          <h1>Gas Town</h1>
+          <p class="document-deck">A multi-agent coding orchestrator
+whose memory is typed key-value rows in beads' Dolt config table,
+printed whole at session start and partitioned by working directory.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/gastownhall/gastown">
+              <span>Source</span>
+              <strong>gastownhall/gastown</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/gastownhall/gastown/commit/649b832b7672bc7a2dbef26f5983aba6198b819b" title="649b832b7672bc7a2dbef26f5983aba6198b819b">
+              <span>Analyzed revision</span>
+              <code>649b832b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gastownhall--gastown" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>gastownhall--gastown</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>248,970
+lines of Go outside tests; the memory commands are 487 of
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>7,770
+commits on main by 371 contributors, 16 December 2025 – 23 July
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>5,840
+Go test functions in 225,753 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Gas Town is a workspace manager that runs twenty or thirty coding
+agents at once — a mayor, per-rig crew, ephemeral polecat workers and
+patrol roles — and coordinates them through <a
+href="https://github.com/gastownhall/beads">beads</a>, a Dolt-backed
+issue tracker, with mail, hooks and handoffs layered on top. Almost
+everything it persists is work state. Its memory is one small mechanism
+beside that: <code>gt remember</code> writes a typed string —
+<code>feedback</code>, <code>user</code>, <code>project</code>,
+<code>reference</code> or <code>general</code> — into beads' key-value
+store, and <code>gt prime</code>, which a SessionStart hook runs at the
+start of every agent session, prints every stored memory into context
+with feedback first. It is weak where it is small. Nothing ranks, bounds
+or attributes a memory. The destination is whichever database the
+working directory resolves to, not one the caller names. A key derived
+from the first five words overwrites any other memory that begins the
+same way.</p>
+<p>The design decision is explicit in the role prompts: this store
+<em>replaces</em> Claude Code's filesystem auto-memory, and borrows its
+four types and its "what not to save" rule. The mayor's template states
+the reason — memory held in Dolt is visible to every agent reading the
+same database, where a <code>MEMORY.md</code> belongs to one project
+path and one runtime
+(<code>internal/templates/roles/mayor.md.tmpl:267-293</code>).</p>
+<p>Three findings shape the rest of this report.</p>
+<ul>
+<li><strong>The scope is physical, and narrower than the prompt
+says.</strong> The mayor template tells the agent memories are
+<em>"shared across all agents in the town"</em>. The write goes to
+whichever database the process's working directory resolves to. That is
+<code>hq</code> for the town-level agents and the rig's own database for
+crew and polecats inside a rig. <code>gt prime</code> then reads the
+single database its own working directory resolves to. A rule the mayor
+records is therefore not injected into any polecat.</li>
+<li><strong>Memories are injected at a full prime and nowhere
+else.</strong> After a compaction or resume — or a crew worker's
+compaction-triggered session cycle — <code>gt prime</code> takes a fast
+path that prints an identity line and nothing from the store. The
+memories survive in the agent's context only if the compaction summary
+kept them. Beads ships <code>bd prime --memories-only</code> <em>"for
+compact hook contexts"</em>; no hook template in this tree calls
+it.</li>
+<li><strong>The same rows reach polecats twice.</strong> The polecat
+work formula runs <code>gt prime</code> and then <code>bd prime</code>,
+and beads' prime renders every <code>kv.memory.*</code> row again in its
+own format. The two CLIs share one keyspace deliberately, and a legacy
+untyped key is read as <code>general</code> for that reason.</li>
+</ul>
+<p>The rest of Gas Town's continuity is work state rather than memory:
+handoff mail, the polecat checkpoint, hooked beads, and
+<code>gt seance</code>, which forks a predecessor's Claude session to
+question it. None of it records what is the case, so none of it can turn
+out false in the sense <a
+href="../../families/#not-in-scope-conversation-window-management">the
+scope boundary</a> uses. Seance is described in section 2 because it is
+the most distinctive idea in the tree. It is not scored.</p>
+<p>No capability mark is carried. Section 9 names each near-miss.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one string under one key. It becomes a belief the moment
+<code>bd kv set</code> returns: there is no candidate state, no
+extraction pass, and no check against what is already stored beyond
+whether the key exists. It stops being one in exactly two ways.
+<code>gt forget</code> deletes the row, or a later
+<code>gt remember</code> under the same key replaces the text. Nothing
+expires. The Key Record Chronicle's TTLs
+(<code>internal/krc/krc.go</code>) apply to event-log entries, and the
+Reaper deletes closed wisps; neither reads the <code>config</code>
+table.</p>
+<p>The writer is whoever runs the command — an agent following its role
+prompt, or a person at a shell. Type is chosen at write time and does
+two things at read time: it orders the injected block
+(<code>feedback</code>, <code>user</code>, <code>project</code>,
+<code>reference</code>, <code>general</code>;
+<code>remember.go:32</code>) and picks the header each group is printed
+under (<code>prime.go:596-602</code>). The feedback header reads
+<em>"Behavioral Rules (from user feedback)"</em>. That provenance is a
+label the writer selected, not a fact the store recorded.</p>
+<p>Injected memories carry no qualifier — a bullet per memory,
+<code>**slug**: text</code> — so the model receives them as settled
+context, on a par with the role prompt.</p>
+<p>The other continuity mechanisms answer a different question.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>What it holds</th>
+<th>Can it be false about the world?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Handoff mail</td>
+<td>A bead the predecessor wrote, printed under <em>"Handoff from
+Previous Session"</em> (<code>prime_output.go:464-489</code>)</td>
+<td>No — it records what a session left for the next</td>
+</tr>
+<tr>
+<td>Polecat checkpoint</td>
+<td><code>.polecat-checkpoint.json</code>: molecule, step, modified
+files, last commit, branch, notes
+(<code>internal/checkpoint/checkpoint.go</code>)</td>
+<td>No — it describes the worktree</td>
+</tr>
+<tr>
+<td>Hooked bead</td>
+<td>The unit of work assigned to the agent</td>
+<td>No — it is the assignment</td>
+</tr>
+<tr>
+<td>Seance</td>
+<td>Nothing stored;
+<code>claude --fork-session --resume &lt;id&gt;</code> reopens a
+predecessor transcript and asks it a question
+(<code>seance.go:57</code>)</td>
+<td>The transcript is what was said</td>
+</tr>
+</tbody>
+</table></div>
+<p>Seance is memory by resurrection. The store is the untouched
+transcript, and the extraction cost is paid only when a successor asks
+something, by the model that already holds the context. Nothing is
+distilled, so nothing distilled can be wrong. The price is that the
+answer comes from a fork of a session that may have been confused, with
+no record of the question or answer kept anywhere.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a memory's path from gt remember to a session's context, and the paths that skip it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a memory&#39;s path from gt remember to a session&#39;s context, and the paths that skip it
+flowchart TD
+    W[&quot;gt remember --type T &#39;text&#39;&quot;] --&gt; K[&quot;key = memory.T.slug&lt;br/&gt;slug = --key, or first&lt;br/&gt;five words of the text&quot;]
+    K --&gt; X{&quot;key exists?&quot;}
+    X -- &quot;yes&quot; --&gt; U[&quot;overwrite, print&lt;br/&gt;&#39;Updated&#39;&quot;]
+    X -- &quot;no&quot; --&gt; S[&quot;store, print&lt;br/&gt;&#39;Stored&#39;&quot;]
+    U --&gt; D
+    S --&gt; D
+    D{&quot;which database does the&lt;br/&gt;working directory resolve to?&quot;}
+    D -- &quot;town root&quot; --&gt; HQ[&quot;hq database&lt;br/&gt;config row&lt;br/&gt;kv.memory.T.slug&quot;]
+    D -- &quot;inside a rig,&lt;br/&gt;via .beads/redirect&quot; --&gt; RIG[&quot;rig database&lt;br/&gt;config row&lt;br/&gt;kv.memory.T.slug&quot;]
+    BD[&quot;bd remember &#39;text&#39;&quot;] --&gt; RIG
+    RIG --&gt; P{&quot;gt prime --hook&lt;br/&gt;at SessionStart&quot;}
+    HQ --&gt; P
+    P -- &quot;source startup,&lt;br/&gt;no compaction marker&quot; --&gt; F[&quot;full prime: bd kv list&lt;br/&gt;on this directory&#39;s database,&lt;br/&gt;print every memory,&lt;br/&gt;feedback first&quot;]
+    P -- &quot;source compact or resume,&lt;br/&gt;or crew cycle marker&lt;br/&gt;&#39;compaction&#39;&quot; --&gt; C[&quot;fast path: identity line,&lt;br/&gt;no memories&quot;]
+    F --&gt; CTX[&quot;session context&quot;]
+    F --&gt; BP[&quot;polecat formula runs&lt;br/&gt;bd prime: same rows&lt;br/&gt;printed again&quot;]
+    BP --&gt; CTX
+    G[&quot;gt forget slug&quot;] --&gt; DEL[&quot;bd kv clear:&lt;br/&gt;row deleted&quot;]
+    DEL -.-&gt; J[&quot;JSONL backup&#39;s git&lt;br/&gt;history keeps the text&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Gas Town is a Go CLI, <code>gt</code>, plus a daemon, around a tmux
+session per agent and one Dolt SQL server per town on port 3307. The
+server holds one database per rig and an <code>hq</code> database for
+town-level beads (<code>docs/design/dolt-storage.md</code>, <em>Server
+Architecture</em>). Beads' <code>bd</code> binary does every read and
+write of that data; <code>gt</code> shells out to it.</p>
+<p>Memory adds no component of its own. A memory is a row in beads'
+<code>config</code> table, the table that also holds beads' settings,
+under the key <code>kv.memory.&lt;type&gt;.&lt;slug&gt;</code>.
+<code>bd</code> adds the <code>kv.</code> prefix (<code>kv.go:13</code>
+in beads); <code>gt</code> adds <code>memory.&lt;type&gt;.</code>
+(<code>remember.go:17</code>). There is no index, embedding or separate
+table.</p>
+<p><strong>The engine version is not pinned at runtime.</strong>
+<code>go.mod</code> requires
+<code>github.com/steveyegge/beads v1.0.5</code>, but no Go file here
+imports a beads package — <code>gt</code> execs whatever <code>bd</code>
+is on <code>PATH</code>, checks it against
+<code>MinBeadsVersion = "0.57.0"</code>, and installs
+<code>github.com/steveyegge/beads/cmd/bd@latest</code> when it is
+missing (<code>internal/deps/beads.go:19-22</code>). This report reads
+beads at <a
+href="https://github.com/gastownhall/beads/commit/6a3f515ced18406c189c55fff789a4925bfaa35c"><code>v1.0.5</code></a>
+as the reference; a later <code>bd</code> may behave differently.</p>
+<p>Two daemon jobs touch the memory rows without being about memory. The
+JSONL git backup exports each database's <code>config</code> table,
+among its supplemental tables, every 15 minutes and pushes the result to
+a git remote (<code>internal/daemon/jsonl_git_backup.go:210-221</code>).
+The scrub filter applies to <code>issues.jsonl</code> only
+(<code>jsonl_git_backup.go:226</code>), so memory text is exported as
+written. The Compactor Dog flattens Dolt history daily once a database
+passes 2,000 commits
+(<code>internal/daemon/compactor_dog.go:31</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nobody runs this memory without running Gas Town: Dolt,
+<code>bd</code>, <code>gt</code>, tmux, the daemon, and at least one
+coding CLI. It is fully local and needs no API key to store anything.
+The store is readable and repairable by hand — <code>gt memories</code>,
+<code>bd kv list</code>, SQL against the Dolt server, or
+<code>config.jsonl</code> in the backup repository — and a wrong memory
+is fixed by re-running <code>gt remember</code> with the same key.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>runRemember</code>
+(<code>internal/cmd/remember.go:70-114</code>) validates
+<code>--type</code> against <code>validMemoryTypes</code>
+(<code>:22-28</code>), defaults it to <code>general</code>, takes
+<code>--key</code> or <code>autoKey(content)</code>
+(<code>:137-170</code>: the first five words, lowercased,
+non-alphanumerics stripped, capped at 40 characters, falling back to the
+first 4 bytes of a SHA-256), runs <code>sanitizeKey</code>, then calls
+<code>bdKvGet</code> and <code>bdKvSet</code> (<code>:98-106</code>).
+Both helpers are a bare <code>exec.Command("bd", "kv", …)</code> with
+the inherited environment and working directory
+(<code>:195-217</code>).</p>
+<p><strong>Engine write.</strong> Beads' <code>kv set</code> validates
+the key against reserved prefixes and calls
+<code>store.SetConfig(ctx, "kv."+key, value)</code>
+(<code>cmd/bd/kv.go:57-96</code> at v1.0.5), which runs
+<code>issueops.SetConfigInTx</code> in a retrying transaction
+(<code>internal/storage/dolt/config.go:16-35</code>).</p>
+<p><strong>Inject.</strong> <code>runPrime</code> reaches
+<code>runPrimeExternalTools(ctx, cwd)</code> only on the full path
+(<code>prime.go:234</code>), after returning early for
+<code>isCompactResume()</code> (<code>:178-181</code>).
+<code>runMemoryInject</code> (<code>:606-654</code>) calls
+<code>bdKvListJSONForPrime(workDir)</code> (<code>:657-664</code>),
+which runs <code>bd kv list --json</code> through
+<code>runPrimeExternalCommand</code> (<code>:574-593</code>) with a
+5-second timeout (<code>:40</code>). For <code>bd</code>, that helper
+applies <code>beads.ConfigureCommand</code> with
+<code>ReadOnlyRouting</code>: the inherited <code>BEADS_DIR</code>,
+<code>BEADS_DB</code> and <code>BEADS_DOLT_*</code> selectors are
+stripped and <code>bd</code> routes by working directory
+(<code>internal/beads/database.go:57-108</code>, <code>:166-167</code>).
+The rows are parsed by <code>parseBdKvListJSON</code>
+(<code>remember.go:220-248</code>), filtered to the <code>memory.</code>
+prefix, grouped by <code>parseMemoryKey</code> (<code>:118-134</code>)
+and printed under <code># Agent Memories</code>.</p>
+<p><strong>Compaction and resume.</strong> <code>isCompactResume</code>
+is true for hook source <code>compact</code> or <code>resume</code>, or
+a handoff marker whose reason is <code>compaction</code>
+(<code>prime.go:408-410</code>). <code>runPrimeCompactResume</code>
+prints a recovery line, session metadata and, for polecats, a
+<code>gt done</code> reminder (<code>:276-303</code>); it calls neither
+<code>runMemoryInject</code> nor <code>outputHandoffContent</code>. The
+crew override replaces compaction with
+<code>gt handoff --cycle --reason compaction</code>
+(<code>internal/hooks/config.go:350-361</code>), which writes that
+marker and respawns the pane with <code>claude --continue</code>
+(<code>internal/cmd/handoff.go:529-568</code>).</p>
+<p><strong>Search.</strong> <code>runMemories</code>
+(<code>internal/cmd/memories.go:43-132</code>) lists every
+<code>memory.</code> key and, given a term, keeps rows whose short key,
+value or type contains it case-insensitively (<code>:81-83</code>).</p>
+<p><strong>Forget.</strong> <code>runForget</code>
+(<code>internal/cmd/forget.go:32-86</code>) accepts
+<code>type/key</code> and clears that key. Given a bare key, it tries
+each type in <code>memoryTypeOrder</code> and clears the first match
+(<code>:57-70</code>), then falls back to the legacy untyped key. Beads'
+<code>kv clear</code> calls <code>store.DeleteConfig</code>
+(<code>kv.go:146-180</code>), a plain delete
+(<code>config.go:79-83</code>).</p>
+<p><strong>The second injector.</strong> Beads'
+<code>formatMemoriesForPrime</code>
+(<code>cmd/bd/prime.go:340-400</code> at v1.0.5) reads every
+<code>kv.memory.*</code> config row and prints them under
+<em>"Persistent Memories (N)"</em> with instructions to update them via
+<code>bd remember --key</code>. The polecat work formula runs it
+straight after <code>gt prime</code>
+(<code>internal/formula/formulas/mol-polecat-work.formula.toml:64-67</code>),
+and four other polecat formulas do the same.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>key</td>
+<td><code>config.key</code></td>
+<td><code>kv.memory.&lt;type&gt;.&lt;slug&gt;</code>; legacy
+<code>kv.memory.&lt;slug&gt;</code> reads as <code>general</code></td>
+</tr>
+<tr>
+<td>value</td>
+<td><code>config.value</code></td>
+<td>The text as written. A non-string JSON value under a
+<code>memory.</code> key is compacted to a string rather than dropped
+(<code>remember.go:240-245</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<p>That is the whole record. The row carries no author, no timestamp, no
+session, no source bead and no status, although the writing process has
+<code>BD_ACTOR</code>, <code>GT_ROLE</code> and <code>GT_SESSION</code>
+in its environment. The type is part of the key, so
+<code>feedback/x</code> and <code>project/x</code> are two memories.
+Retyping a memory means a <code>remember</code> under the new type and a
+<code>forget</code> under the old.</p>
+<p><strong>Scope is the database.</strong> Beads' own guidance in this
+tree states the rule: <em>"Direct <code>bd</code> commands from rig
+worktrees use that rig's <code>.beads</code> redirect and database"</em>
+(<code>docs/design/dolt-storage.md</code>, <em>Gas Town Scope vs
+<code>bd --global</code></em>). <code>ResolveBeadsDir</code> follows
+<code>.beads/redirect</code> chains up to three deep so crew and polecat
+worktrees share the rig's database
+(<code>internal/beads/beads_redirect.go:28-90</code>). The mayor's
+session starts in <code>&lt;town&gt;/mayor</code>
+(<code>internal/mayor/manager.go:109-111</code>), which has no
+<code>.beads</code> of its own, so <code>bd</code> finds the town-root
+<code>.beads</code> that <code>gt install</code> creates for the
+<code>hq</code> database (<code>internal/cmd/install.go:57-60</code>).
+No key on the row carries a scope, and no read has a predicate: the
+partition is entirely which database answered.</p>
+<p><strong>The keyspace is shared with beads, by string.</strong>
+<code>bd remember</code> writes <code>kv.memory.&lt;slug&gt;</code>,
+which <code>gt</code> reads as <code>general</code>.
+<code>bd remember --key</code> uses the flag verbatim
+(<code>cmd/bd/memory.go:71-75</code> at v1.0.5), so
+<code>bd remember --key feedback.x</code> updates <code>gt</code>'s
+typed memory in place. The two auto-key rules differ: <code>gt</code>
+takes five words and 40 characters, <code>bd</code> eight words and 60.
+The same sentence stored by each CLI therefore lands under two keys.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no query. A full prime lists every memory row in one
+database and prints all of them, sorted by type order and then by key,
+with no cap on count or length (<code>prime.go:606-654</code>). Recall
+is complete by construction and precision is whatever the store's owners
+keep it to. The cost grows linearly with the store, and the mayor
+template's <em>"What NOT to save"</em> list is the only thing holding it
+down (<code>mayor.md.tmpl:290-293</code>).</p>
+<p>Injection happens once, at session start, as SessionStart hook
+output. Within a session the block does not change, so it does not
+disturb a prompt-prefix cache turn to turn. A memory written mid-session
+reaches other running agents only when they next take the full prime
+path, or if they run <code>gt memories</code>.</p>
+<p><strong>Polecats read the store twice.</strong> <code>gt prime</code>
+renders typed groups under <code># Agent Memories</code>, and
+<code>bd prime</code> renders the same rows as a flat list under
+<em>"Persistent Memories"</em>, the typed keys appearing as
+<code>feedback.slug</code>. Each copy arrives with the other CLI's
+editing instructions. Beads at <a
+href="https://github.com/gastownhall/beads/commit/dbbf3a9618aacaab20427f7bc1f7b35b6edab3ba"><code class="commit-id" title="dbbf3a9618aacaab20427f7bc1f7b35b6edab3ba">dbbf3a96…</code></a>,
+dated 27 July 2026, adds <code>--max-memories</code> and
+<code>--max-memory-chars</code> to its own prime, unlimited unless
+configured. <code>gt prime</code> has no equivalent.</p>
+<p><strong>After compaction, nothing is re-read.</strong> Claude Code
+fires SessionStart with source <code>compact</code> after compacting,
+<code>gt prime --hook</code> records the source
+(<code>prime.go:344-361</code>), and the fast path skips injection. A
+crew worker's compaction instead cycles to
+<code>claude --continue</code> with a <code>compaction</code> marker,
+which lands on the same fast path. Whether the memories survive depends
+on the runtime's summary, not on anything in this tree.
+<code>bd prime --memories-only</code> exists for this case
+(<code>cmd/bd/prime.go:197</code> at v1.0.5), and no hook template here
+calls it.</p>
+<p>A read failure is silent: <code>runMemoryInject</code> returns with
+no output when <code>bd kv list</code> fails or times out
+(<code>prime.go:607-610</code>). The same function's caller treats a
+failed hook query loudly — <em>"DATABASE ERROR — DO NOT RUN gt
+done"</em> (<code>prime.go:209-213</code>). A Dolt outage therefore
+produces a session with its work flagged as uncertain and its memories
+absent without comment.</p>
+<p><code>gt memories</code> is the only search: a substring over key,
+value and type.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. The agent, or a person, decides
+what to remember and runs a command; there is no extraction, no
+background writer, no deduplication beyond the exact key, and no
+consolidation. The call spawns two <code>bd</code> processes — a
+<code>get</code> then a <code>set</code> — each opening a connection to
+the Dolt server, so it costs one short blocking shell command. No model
+call is made.</p>
+<p><strong>Update is by key collision, and an auto-key collides on the
+first five words.</strong> When the key exists, <code>runRemember</code>
+changes its verb from <code>Stored</code> to <code>Updated</code> and
+overwrites (<code>remember.go:98-106</code>). With no
+<code>--key</code>, the key is the first five words, so any two memories
+that open the same way are one memory. The project's own test fixture
+shows the shape: <em>"Don't use rm -rf on .dolt-data/"</em> keys to
+<code>dont-use-rm-rf-on</code> (<code>remember_test.go:23-26</code>). A
+later <em>"Don't use rm -rf on the worktree"</em> replaces it. The
+command prints <code>Updated</code> and does not show the text it
+discarded.</p>
+<p><strong>The destination is the working directory's database.</strong>
+The command takes no target. It runs <code>bd</code> with the inherited
+environment, where the reader strips <code>BEADS_DIR</code> and the
+other selectors before routing. In a session configured as the daemon
+intends, both resolve from the same working directory and agree. They
+diverge in the one configuration <code>gt doctor</code> warns about —
+<em>"BEADS_DIR overrides prefix-based routing"</em>
+(<code>internal/doctor/env_check.go:163-185</code>). There,
+<code>gt remember</code> writes where <code>BEADS_DIR</code> points and
+<code>gt prime</code> reads the working directory's database. The
+divergence was not reproduced; it is read from the two env policies.</p>
+<p><strong>No Dolt commit is attributed to a <code>gt</code>
+memory.</strong> Beads' <code>kv set</code> never marks its command as a
+write, so bd's post-run auto-commit does not fire for it
+(<code>cmd/bd/main.go:1162</code> at v1.0.5). <code>bd remember</code>
+does mark it (<code>cmd/bd/memory.go:94</code>). Under Gas Town's server
+mode bd's auto-commit default is off in any case
+(<code>main.go:1045-1056</code>). The history a memory reliably leaves
+is therefore the JSONL backup's git log, at 15-minute granularity.</p>
+<p><strong>Delete</strong> is <code>gt forget</code>, a hard delete of
+one key. With a bare key and the same slug under two types, the first in
+type order is removed and the other stays. Nothing records that the text
+was rejected, so the same agent can store it again next session.</p>
+<p>Agent-generated memories are handled exactly like a person's. No
+input is filtered. The one gate is on the sandboxed path (section
+9).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, two <code>bd</code> subprocesses, no model call.
+Retrievable by the next full prime of any agent resolving to the same
+database.</li>
+<li>Background: none for memory. The 15-minute JSONL export and the
+daily compactor cover the whole database.</li>
+<li>Read: one <code>bd kv list --json</code> per full prime, bounded at
+5 seconds. Injection is unbounded in size, once per session, and
+duplicated for polecats.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Hook templates for Claude Code, Gemini CLI, Codex, OpenCode, pi and
+omp run <code>gt prime --hook</code> at SessionStart
+(<code>internal/hooks/templates/</code>; for Claude,
+<code>claude/settings-interactive.json:42-51</code>). That is the only
+automatic path from the store to a model.</p>
+<p>The write affordance is prose. The town-root <code>CLAUDE.md</code>
+template, which every Claude session under the town inherits, carries an
+<em>Agent Memory</em> section: <em>"Use <code>gt remember</code>, not
+MEMORY.md"</em>, and forbids writes to <code>~/.claude/*/memory/</code>
+(<code>internal/templates/townroot/claude.md:78-88</code>). The mayor
+template repeats it with the four types and a list of what not to save
+(<code>mayor.md.tmpl:267-293</code>). No polecat or crew template
+mentions memory.</p>
+<p>The agent has full agency over the store: write, overwrite, search
+and delete, with no confirmation on any of them. The one structural
+limit is the sandbox proxy. Polecats running under
+<code>gt-proxy-server</code> may invoke only <code>gt</code> subcommands
+annotated <code>polecatSafe</code> and a fixed <code>bd</code> list
+(<code>internal/cmd/proxy_subcmds.go:11-19</code>). <code>prime</code>
+carries the annotation; <code>remember</code>, <code>memories</code> and
+<code>forget</code> do not, and <code>kv</code> and
+<code>remember</code> are absent from the <code>bd</code> list. A
+sandboxed polecat receives the rig's memories and cannot change
+them.</p>
+<p>Porting the mechanism to another agent is trivial: a key-value table,
+a hook that prints it, and a paragraph of prompt. The Gas Town parts —
+rigs, redirects, the proxy — are what give it a scope and a gate.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is absent.</strong> A row records no writer, time
+or source, and the feedback header asserts user origin for text any
+agent in the database may have written. A polecat that reads an issue
+body containing an instruction to
+<code>gt remember --type feedback …</code> can, outside the sandbox,
+install a behavioural rule that every later session in the rig receives
+under <em>"Behavioral Rules (from user feedback)"</em>. Only the sandbox
+allowlist and the role prompt stand between the two.</p>
+<p><strong>Concurrency</strong> is last-write-wins per key inside a Dolt
+transaction, which is adequate for a store this size. Two agents
+remembering different facts under one auto-key lose one silently.</p>
+<p><strong>Data loss</strong> has two routes: the auto-key overwrite in
+section 7 and the silent read failure in section 6. The backup mitigates
+the first. The JSONL export holds every value that existed at an export,
+and git history keeps it.</p>
+<p><strong>Privacy and deletion.</strong> <code>gt forget</code> removes
+the row from the live database. The text stays in the backup
+repository's history, which the daemon pushes to a remote, unscrubbed.
+The Dolt commit history keeps it too until the compactor flattens it. A
+memory holding something that must be gone needs a history rewrite of
+the backup repository as well.</p>
+<p><strong>Uncertainty cannot be represented.</strong> There is no field
+for it, and injection presents every memory as settled.</p>
+<p>Capability marks, each withheld:</p>
+<ul>
+<li><code>scope_enforced</code> — the partition is one Dolt database per
+rig plus <code>hq</code>, selected by working directory. It is a real
+boundary and the <a href="../../methodology/atlas-rubric/">rubric</a>
+treats a physical partition as a different mechanism; there is no key on
+the row and no predicate on a read.</li>
+<li><code>tombstone</code> — <code>gt forget</code> deletes; nothing
+keyed on the rejected text survives to stop it being stored again.</li>
+<li><code>audit_log</code> — the store keeps no mutation record. The
+JSONL backup's git history and Dolt's commit graph are version history,
+and the compactor flattens the latter.</li>
+<li><code>trust_state</code> — the five types order and label the
+injection; no read excludes a row by type.</li>
+<li><code>human_review</code> — <code>gt memories</code> displays, and
+the same commands are open to the agent.</li>
+<li><code>negative_eval</code> — section 10.</li>
+<li><code>bitemporal</code> — no time field of any kind.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin.</p>
+<p><code>internal/cmd/remember_test.go</code> holds six tests of pure
+helpers: <code>autoKey</code>, <code>sanitizeKey</code>,
+<code>parseMemoryKey</code>, <code>memTypeRank</code>,
+<code>parseBdKvListJSON</code> and its malformed-input case. The parsing
+test asserts that non-memory, non-string values such as
+<code>schema_version</code> are dropped (<code>:194-238</code>). That is
+an exclusion of beads' own metadata, not of memory material, so it is
+not a negative case in the mark's sense.</p>
+<p><code>internal/cmd/prime_external_tools_test.go</code> exercises the
+injection path end to end against stub <code>bd</code> and
+<code>gt</code> scripts on <code>PATH</code>.
+<code>TestRunPrimeExternalTools_RunsMemoryAndMail</code> has the stub
+return <code>{"memory.feedback.test":"remembered"}</code>, asserts that
+<code>bd kv list --json</code> was called, and asserts the text reached
+stdout (<code>:75-98</code>). A second case bounds a slow mail check,
+and a third asserts memory still runs for patrol roles that skip mail
+(<code>:100-169</code>). These can fail: the stub exits 99 on any
+unexpected arguments, and the output assertions are positive.</p>
+<p><code>TestIsCompactResume</code> pins the routing that sends
+compaction, resume and compaction-cycle sessions down the fast path
+(<code>prime_test.go:696-763</code>). It asserts the routing. No test
+asserts what a session holds after the fast path, which is where the
+memories go missing.</p>
+<p>No test executes <code>runRemember</code>, <code>runForget</code> or
+<code>runMemories</code>. Nothing covers the auto-key overwrite, the
+type-order delete, or the writer's and reader's environment policies
+against each other.</p>
+<p><code>gt-model-eval/</code> is a promptfoo harness over patrol-role
+decisions; none of its cases touches memory. No paper or citation block
+exists in the tree, and no benchmark result is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Order the injected block by what a memory is for, and print
+a header per group.</strong> Corrections first, then facts about the
+user, then project state, then pointers. It costs a sort and it puts the
+rules a model must not break at the top of the block.</li>
+<li><strong>Put a "do not save" rule in the prompt that grants the
+write.</strong> Nothing derivable from the code, git history or existing
+docs. It is the only bound on this store, and it is the right one for a
+store that injects everything.</li>
+<li><strong>Strip inherited target selectors before every subprocess
+touches the store.</strong> <code>StripBDTargetEnv</code> removes stale
+<code>BEADS_DIR</code>-style variables so the process resolves the
+database the caller meant. Apply it to writes as well as reads.</li>
+<li><strong>Derive a sandbox allowlist from a per-command
+annotation.</strong> A new command is denied until someone marks it
+safe. That default is what keeps memory writes off the sandboxed worker
+path here, although nobody decided it for memory.</li>
+<li><strong>Consider asking a transcript instead of distilling
+one.</strong> Seance forks the predecessor session and asks it a
+question when a successor needs something. Nothing is extracted ahead of
+time, so nothing extracted can be wrong.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Treating a slug collision as an update.</strong> A key
+derived from content is an identity claim about the content. Refuse on
+collision, or show the text being replaced, unless the caller named the
+key.</li>
+<li><strong>A header that asserts provenance the row does not
+carry.</strong> <em>"From user feedback"</em> over text an agent chose
+to type as feedback is a trust claim with nothing behind it. Record the
+writer, or drop the claim.</li>
+<li><strong>Letting the process location choose the destination while
+the prompt describes a wider one.</strong> Name the scope in the write,
+and have the read say which scopes it merged — see <a
+href="../../patterns/explicit-write-destination/">explicit write
+destination</a>.</li>
+<li><strong>A fast path that skips the only injection.</strong> If
+memory arrives through one hook, every re-entry path — compaction,
+resume, a successor session — needs to re-run it or say it did not.</li>
+<li><strong>Loud failure for work state beside silent failure for
+memory.</strong> An empty block and a failed read look the same to the
+model.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is adequate for what it is: a few dozen durable rules per rig,
+kept by people and agents already running Gas Town, where Dolt and beads
+are sunk cost. It is not a reason to adopt Gas Town, and nothing in it
+transfers that a key-value table and a SessionStart hook would not give
+you in an afternoon. It stops fitting past the point where printing the
+whole store at every start is cheap. It also stops fitting once
+untrusted text reaches agents that can write feedback, or once the
+question becomes relevance rather than recall. A coordinator that relies
+on its rules reaching the workers should know they reach only the
+workers in its own database.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does Claude Code's compaction summary retain SessionStart hook
+output? If it does, the fast path loses less than section 6 implies.
+Settling it needs a run.</li>
+<li>Does a customised HQ put the mayor and the rigs on one database? The
+standard layout was traced and keeps them apart.
+<code>gt install --help</code> points to <code>docs/hq.md</code> for
+beads redirects and multi-system setups, and no such file is in the tree
+(<code>ls docs/hq.md</code>).</li>
+<li>Does a <code>bd</code> later than v1.0.5 change <code>kv</code>
+semantics, the write flag, or <code>bd prime</code>'s memory rendering?
+<code>gt</code> installs <code>@latest</code>.</li>
+<li>Does the Dolt server create a commit for a <code>config</code> write
+that bd's auto-commit skips? The design document's <em>All-on-Main</em>
+section describes <code>DOLT_COMMIT</code> for issue writes. It was not
+traced for the config table.</li>
+<li>How large do these stores get in the maintainers' own town? Nothing
+committed says.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>internal/cmd/remember.go</code> (key layout, types,
+<code>bdKvSet</code>, <code>bdKvGet</code>, <code>bdKvClear</code>,
+<code>parseBdKvListJSON</code>); beads v1.0.5 <code>cmd/bd/kv.go</code>,
+<code>cmd/bd/memory.go</code>,
+<code>internal/storage/dolt/config.go</code>;
+<code>docs/design/dolt-storage.md</code>.</li>
+<li><strong>Write path:</strong>
+<code>internal/cmd/remember.go:70-114</code>,
+<code>internal/cmd/forget.go</code>.</li>
+<li><strong>Retrieval and injection:</strong>
+<code>internal/cmd/prime.go:40, 170-240, 276-303, 344-361, 408-410, 547-664</code>;
+<code>internal/cmd/memories.go</code>; beads v1.0.5
+<code>cmd/bd/prime.go:328-400</code>.</li>
+<li><strong>Scope and environment:</strong>
+<code>internal/beads/beads_redirect.go</code>,
+<code>internal/beads/exec.go</code>,
+<code>internal/beads/database.go</code>,
+<code>internal/doctor/env_check.go:160-190</code>.</li>
+<li><strong>Agent integration:</strong>
+<code>internal/hooks/config.go</code>,
+<code>internal/hooks/templates/claude/settings-interactive.json</code>,
+<code>internal/templates/townroot/claude.md:78-88</code>,
+<code>internal/templates/roles/mayor.md.tmpl:267-293</code>,
+<code>internal/formula/formulas/mol-polecat-work.formula.toml</code>,
+<code>internal/cmd/proxy_subcmds.go</code>,
+<code>cmd/gt-proxy-server/main.go</code>.</li>
+<li><strong>Continuity mechanisms (not memory):</strong>
+<code>internal/cmd/handoff.go</code>,
+<code>internal/cmd/prime_output.go:464-489</code>,
+<code>internal/checkpoint/checkpoint.go</code>,
+<code>internal/cmd/seance.go</code>,
+<code>internal/krc/krc.go</code>.</li>
+<li><strong>Background:</strong>
+<code>internal/daemon/jsonl_git_backup.go</code>,
+<code>internal/daemon/compactor_dog.go</code>.</li>
+<li><strong>Tests:</strong> <code>internal/cmd/remember_test.go</code>,
+<code>internal/cmd/prime_external_tools_test.go</code>,
+<code>internal/cmd/prime_test.go</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, and beads at
+<code>v1.0.5</code>.</p>
+<ul>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+<li><code>grep -rn 'memories-only' . --exclude-dir=.git</code> — no
+match in Gas Town; beads defines the flag at
+<code>cmd/bd/prime.go:197</code>.</li>
+<li><code>grep -rnE 'runMemoryInject|bdKvListJSONForPrime|runRemember|runForget|runMemories' --include='*_test.go' .</code>
+— no match. The injection is reached through
+<code>runPrimeExternalTools</code>, which
+<code>prime_external_tools_test.go</code> calls.</li>
+<li><code>grep -rnE 'bdKvSet\(|bdKvClear\(|bdKvGet\(' --include='*.go' .</code>
+— callers only in <code>remember.go:98-104</code> and
+<code>forget.go:44-80</code>.</li>
+<li><code>grep -rnE 'memoryKeyPrefix' --include='*.go' . | grep -v _test</code>
+— <code>remember.go</code>, <code>forget.go</code>,
+<code>memories.go</code>, <code>prime.go</code>; no other writer or
+reader of the prefix.</li>
+<li><code>grep -nE 'events\.|townlog|LogEvent' internal/cmd/remember.go internal/cmd/forget.go</code>
+— no match; neither command emits an event.</li>
+<li><code>grep -rlE '(gt|\{\{ ?cmd ?\}\}) (remember|memories|forget)' . --exclude-dir=.git --exclude='*.go'</code>
+— <code>CHANGELOG.md</code>, <code>mayor.md.tmpl</code>,
+<code>townroot/claude.md</code>; no polecat or crew template.</li>
+<li><code>rg -l 'AnnotationPolecatSafe: "true"' internal/cmd</code> —
+thirteen files, none of them <code>remember.go</code>,
+<code>memories.go</code> or <code>forget.go</code>.</li>
+<li><code>rg -l '"github.com/steveyegge/beads/' --type go</code> — only
+<code>internal/deps/beads.go</code>, which names the install path in a
+string; no beads package is imported.</li>
+<li><code>rg -n 'commandDidWrite' cmd/bd/kv.go cmd/bd/memory.go</code>
+in beads — <code>memory.go:94</code> and <code>:234</code> only.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/gastownhall/gastown/commit/649b832b7672bc7a2dbef26f5983aba6198b819b"><code class="commit-id" title="649b832b7672bc7a2dbef26f5983aba6198b819b">649b832b…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 23
+July 2026. No mark awarded; section 9 names each near-miss. Beads was
+read at <a
+href="https://github.com/gastownhall/beads/commit/6a3f515ced18406c189c55fff789a4925bfaa35c"><code>v1.0.5</code></a>
+for the storage engine. Screened before reading: one auto-run surface
+(<code>.githooks/</code>, inert unless <code>core.hooksPath</code>
+points at it; its <code>pre-push</code> restricts push targets), two
+build-time execution points (<code>Makefile</code>, an npm
+<code>postinstall</code>), no unpinned surface, nothing inside the
+cooldown, and <code>AGENTS.md</code> recorded as data. Beads' screen
+found six auto-run surfaces; the clone was read with <code>grep</code>
+and <code>sed</code> only. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
