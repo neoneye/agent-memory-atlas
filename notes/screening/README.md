@@ -9,19 +9,19 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 617 of 620 screened at the report's current pin.**
+**Progress: 626 of 627 screened at the report's current pin.**
 
-1 further record(s) describe a revision the report has since moved
-off, and 2 report(s) have no record at all.
+0 further record(s) describe a revision the report has since moved
+off, and 1 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 278 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 343 |
-| Repositories with build-time execution (`EXEC`) | 452 |
-| Repositories where the screen saw nothing (`NOTHING SCANNED`) | 5 |
-| Repositories that could not be screened | 2 |
+| Repositories with an auto-run surface (`RUNS`) | 281 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 345 |
+| Repositories with build-time execution (`EXEC`) | 457 |
+| Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
+| Repositories that could not be screened | 1 |
 
 ## Auto-run surfaces
 
@@ -96,6 +96,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`craft`](../../content/systems/craft.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`ctx`](../../content/systems/ctx.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md` |
+| [`cua`](../../content/systems/cua.md) | `.vscode/settings.json` |
 | [`daem0n-mcp`](../../content/systems/daem0n-mcp.md) | `.claude-plugin/`, `.opencode/`, `hooks/` |
 | [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
@@ -107,6 +108,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`dovsg`](../../content/systems/dovsg.md) | `.gitmodules` |
 | [`ecc`](../../content/systems/ecc.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`egc`](../../content/systems/egc.md) | `.cursor/rules/`, `.githooks/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `hooks/`, `hooks/hooks.json` |
+| [`elizaos`](../../content/systems/elizaos.md) | `.gitmodules` |
 | [`empirica`](../../content/systems/empirica.md) | `.cursorrules`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`engram`](../../content/systems/engram.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json` |
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
@@ -305,6 +307,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |
 | [`windieos`](../../content/systems/windieos.md) | `.vscode/settings.json` |
 | [`yourmemory`](../../content/systems/yourmemory.md) | `server.json` |
+| [`zcode`](../../content/systems/zcode.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
 
@@ -313,5 +316,4 @@ These execute without a command being typed. Read before opening the tree.
 | System | Status | Detail |
 | --- | --- | --- |
 | `always-on-memory-agent` | clone-failed | fatal: repository 'https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/agents/always-on-memory-agent/' |
-| `humans` | clone-failed | fatal: repository 'https://github.com/munch2u-a11y/HUMANs/' not found |
 
