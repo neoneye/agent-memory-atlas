@@ -177,6 +177,17 @@ if ! python3 "$project_dir/scripts/list_voice_tics.py" --check "$project_dir"; t
   exit 1
 fi
 
+# Reports read or re-read from the cutover on open with the finding: the census
+# is in the header band, the description is one line, and a History entry states
+# the delta. Older prose is not held, so the corpus converts as it is re-read.
+if ! python3 "$project_dir/scripts/check_report_shape.py" --self-test; then
+  echo "check_report_shape.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_report_shape.py" "$project_dir"; then
+  exit 1
+fi
+
 # check_anchors.py follows fragments and stops there, so a relative href that
 # points at nothing has never been checked. Thirty were broken when this was
 # written — mostly sibling reports written `./verel/` from inside
