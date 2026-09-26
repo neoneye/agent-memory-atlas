@@ -12342,35 +12342,42 @@ harness committed but no result</td>
 <td><code>linggen-memory</code></td>
 <td>A fact with content, an optional vector, hierarchical
 <code>contexts</code>, free-form prefixed <code>tags</code>, a type, a
-tier, an optional outcome and an origin of user, agent or derived</td>
+tier, an optional outcome, an origin of user, agent or derived, a
+working directory, an optional account and three clocks</td>
 <td>LanceDB — two tables on one connection, <code>semantic</code> for
 curated long-term memory and <code>episodic</code> for staged
-short-term, with per-table ANN index isolation</td>
-<td>Hybrid cosine and keyword fusion with a score floor a lexical hit
-can lift a candidate over, filtered first by account, contexts, type,
-tier and time</td>
-<td>Facts are staged episodic and promoted to semantic; a condense stage
-detects supersession chains mechanically and leaves the merge decision
-to the caller</td>
-<td>A <code>superseded_by</code> column on the row; the condense
-endpoint computes chains and the actual <code>replace_ids</code> merges
-belong to the agent that asked</td>
+short-term; no ANN index is built and recall scans the filtered set</td>
+<td>Cosine plus an IDF-weighted keyword boost over the whole filtered
+row set, gated by a score floor; the filter carries account, archive,
+working directory, type, tier and time</td>
+<td>Synchronous embed-and-insert with exact-content dedup within and
+across the two tables; the host agent's dream promotes episodic rows to
+semantic and merges with <code>replace_ids</code></td>
+<td>A <code>replace_ids</code> merge archives semantic losers with
+<code>expired_at</code> and <code>superseded_by</code> and hard-deletes
+episodic ones; a sweep deletes judged episodic rows past TTL;
+<code>delete</code> is hard</td>
 <td>An <code>AccountScope</code> enum whose default compiles
-<code>account_id IS NULL</code>, beside hierarchical
-<code>contexts</code> filters and a project-path scope that treats
-nesting rather than equality</td>
-<td>A CLI, an HTTP API, an MCP server and a daemon, with plugins beside
-them</td>
-<td>A dream and maintenance pass that picks its person from the distinct
-accounts rather than assuming one</td>
+<code>account_id IS NULL</code>, beside a nesting working-directory
+scope for recall and an ancestor list for session-start rules;
+<code>all_accounts</code> widens it from any caller</td>
+<td>A CLI, an HTTP API and an MCP server on one daemon, and Claude Code,
+Codex and OpenClaw plugins whose hooks start the daemon, recall per turn
+and stamp the working directory</td>
+<td>Daemon-side storage compaction on a measured condition; the dream
+that judges days, promotes and merges runs in the host agent through the
+memory verbs</td>
 <td>None as an epistemic status. <code>origin</code> records who
 authored a fact and <code>outcome</code> records how an action went;
 neither withholds a fact from a reader</td>
-<td>A scope default that is closed rather than open, with the
-back-compatibility reasoning written down; a condense detector that is
-read-only and zero-LLM so judgement stays with the caller</td>
-<td>No audit of mutations and no record keyed on a superseded value, so
-a fact merged away can be re-extracted as new</td>
+<td>A scope default that is closed rather than open, with the reasoning
+written down; merges that archive rather than delete; a condense
+detector that is read-only and zero-LLM so judgement stays with the
+caller</td>
+<td>The exact-content dedup lookup ignores the archive and the account,
+so a byte-identical re-statement of a merged-away fact is folded back
+into the archive and one person's identical write lands on another's
+row; no audit of mutations</td>
 </tr>
 <tr>
 <td><code>livingfeed</code></td>
@@ -27906,7 +27913,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>111 of 646:</em> <a
+<p><em>112 of 646:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -27952,6 +27959,7 @@ href="../systems/inite-brain/"><code>inite-brain</code></a>, <a
 href="../systems/janus-graph/"><code>janus-graph</code></a>, <a
 href="../systems/knowl/"><code>knowl</code></a>, <a
 href="../systems/lerim/"><code>lerim</code></a>, <a
+href="../systems/linggen-memory/"><code>linggen-memory</code></a>, <a
 href="../systems/llm-wiki-cli/"><code>llm-wiki-cli</code></a>, <a
 href="../systems/lobu/"><code>lobu</code></a>, <a
 href="../systems/loreweave/"><code>loreweave</code></a>, <a
@@ -28658,7 +28666,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>366 of 646:</em> <a
+<p><em>367 of 646:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -28826,6 +28834,7 @@ href="../systems/lemmalog/"><code>lemmalog</code></a>, <a
 href="../systems/lerim/"><code>lerim</code></a>, <a
 href="../systems/lethe/"><code>lethe</code></a>, <a
 href="../systems/letta/"><code>letta</code></a>, <a
+href="../systems/linggen-memory/"><code>linggen-memory</code></a>, <a
 href="../systems/llm-wiki-cli/"><code>llm-wiki-cli</code></a>, <a
 href="../systems/lobu/"><code>lobu</code></a>, <a
 href="../systems/loreai/"><code>loreai</code></a>, <a
@@ -29055,7 +29064,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-366 repositories of
+367 repositories of
 646 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

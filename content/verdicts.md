@@ -1022,11 +1022,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`linggen-memory`](../systems/linggen-memory/)
 - Best idea: `#[default]` on the restrictive variant. `AccountScope::Owner` compiles `account_id IS NULL` into the WHERE clause, so a caller who never heard of accounts reads the owner's rows rather than everyone's — one word that decides whether the scope is a boundary or a convention.
-- Biggest risk: supersession points forward and says nothing. `superseded_by` records which row won, not why or who decided, so a re-extraction of the losing fact is indistinguishable from a new observation.
-- Most reusable component: naming which half of a job is mechanical and which is judgement, in the module that does the mechanical half — the chain scan is read-only and zero-LLM, and the merge belongs to the caller.
-- Maturity impression: ~14,600 lines of Rust over LanceDB with two tables on one connection, a numbered spec the source cites by section, and a written policy for when a tag prefix graduates to a column.
-- Study when: one person runs memory across several agent surfaces and wants the scope right by default and the condensing decisions left to the agent.
-- Do not copy when: a correction must hold against re-assertion, or you need to answer when something changed and who changed it.
+- Biggest risk: the exact-content dedup lookup carries neither the archive gate nor the account predicate that every read applies. A byte-identical re-statement of a merged-away fact is folded back into the archived row, and one person's identical write lands on another person's row.
+- Most reusable component: merges that archive their losers under the survivor's id — `expired_at` and `superseded_by`, a default read gate and an unpack query — beside a chain scan that is read-only and zero-LLM and leaves the merge to the caller.
+- Maturity impression: three marks on ~15,400 lines of Rust over LanceDB, store tests that run against real LanceDB tables, CI running `cargo test` on every push, and a LongMemEval harness whose results section reads Pending.
+- Study when: one person runs memory across several agent hosts and wants the scope right by default, merges reversible, and the condensing decisions left to the agent.
+- Do not copy when: several people share one store and the boundary must hold on writes as well as reads, or you need to answer who changed a fact and why.
 
 ### [`logseq`](../systems/logseq/)
 - Best idea: the user defines the schema and the agent must write inside it. Properties carry a declared type and cardinality, tags are classes that extend other tags, and `listTags`/`listProperties` let a model discover the ontology before writing in it. Everywhere else the memory model is the vendor's; here it is the user's.
