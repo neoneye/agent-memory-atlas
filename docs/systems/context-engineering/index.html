@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A course's flagship MCP server
+that teaches CoALA's four memory tiers over SQLite, JSON and Chroma,
+with an ADD-only consolidation pass into the semantic store.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="WARNERCO
+Schematica — Agent Memory Atlas">
+    <meta property="og:description" content="A course's flagship MCP
+server that teaches CoALA's four memory tiers over SQLite, JSON and
+Chroma, with an ADD-only consolidation pass into the semantic store.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="WARNERCO
+Schematica — Agent Memory Atlas">
+    <meta name="twitter:description" content="A course's flagship MCP
+server that teaches CoALA's four memory tiers over SQLite, JSON and
+Chroma, with an ADD-only consolidation pass into the semantic store.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>WARNERCO Schematica — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "WARNERCO Schematica",
+      "description": "A course's flagship MCP server that teaches CoALA's four memory tiers over SQLite, JSON and Chroma, with an ADD-only consolidation pass into the semantic store.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A four-tier CoALA teaching app over SQLite,
+JSON and Chroma</p>
+          <h1>WARNERCO Schematica</h1>
+          <p class="document-deck">A course's flagship MCP server that
+teaches CoALA's four memory tiers over SQLite, JSON and Chroma, with an
+ADD-only consolidation pass into the semantic store.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/timothywarner-org/context-engineering">
+              <span>Source</span>
+              <strong>timothywarner-org/context-engineering</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/timothywarner-org/context-engineering/commit/0f07bdbd01593ab5213e77db1512dbaf181463c5" title="0f07bdbd01593ab5213e77db1512dbaf181463c5">
+              <span>Analyzed revision</span>
+              <code>0f07bdbd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/timothywarner-org--context-engineering" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>timothywarner-org--context-engineering</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>18,742
+lines of Python in the tree; the WARNERCO backend is 10,774, of which
+the stores and consolidation are 3,098</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>82
+commits on main by 2 contributors, 8 July 2025 – 19 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>192
+pytest functions in 4,441 lines, plus two standalone scripts with 23
+cases in 944 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>WARNERCO Schematica is the flagship teaching app of <em>Context
+Engineering with MCP</em>, a four-segment course whose repository also
+holds slide decks, lesson notebooks and three smaller labs. It is a
+FastMCP server over a fictional robot catalogue that implements the four
+memory tiers of CoALA (<a
+href="https://arxiv.org/abs/2309.02427">arXiv:2309.02427</a>, submitted
+5 September 2023) as four small stores. A working-memory scratchpad and
+an episodic event log sit in SQLite, the robot schematics in a JSON file
+mirrored into Chroma, and procedural memory is the server's five MCP
+prompts.</p>
+<p>What is notable is how legible each tier is. Episodic recall is <a
+href="../generative-agents/">Generative Agents</a>'
+recency-importance-relevance score in about a hundred lines, and every
+score component is returned with the event. What is weak is what the
+injected context says: a scratchpad note reaches the model as an LLM's
+expansion of it, or, without an OpenAI key, as its first 75% of
+words.</p>
+<p>A consolidation tool asks the client's model, through MCP sampling,
+to extract up to five durable facts from the scratchpad and recent
+episodes. It writes them into the semantic store as <code>draft</code>
+schematics tagged <code>agent_extracted</code>. The docstring calls the
+pass ADD-only and leaves conflict resolution as <em>"homework"</em>.
+Nothing marks a scratchpad entry as consolidated, and nothing on a read
+path excludes a draft.</p>
+<p>The repository is course material first. Its other code — a
+JavaScript hello world, a Python chat client whose documents are an
+in-process dict, a remote Azure Functions sample that saves snippets to
+blob storage, and a README for three npm-published MCP Apps servers —
+has no memory mechanism this report covers. Only
+<code>src/warnerco/backend/</code> is read here.</p>
+<p>One mark: <code>negative_eval</code>, on a standalone script that
+asserts a session-filtered recall leaves out another session's more
+relevant event. Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one of four records, and each tier has its own way of
+becoming and ceasing to be believed.</p>
+<p><strong>Scratchpad (working).</strong> An agent calls
+<code>warn_scratchpad_write</code> with a subject, one of seven
+predicates, an object and text. The store keeps three texts: the
+original, a "minimized" one and an "enriched" one. There is no candidate
+state; the row is injected into the next pipeline turn. It stops being
+believed only when <code>warn_scratchpad_clear</code> deletes every row
+for its subject, or all rows. The predicates <code>contradicts</code>
+and <code>supersedes</code> are labels: nothing reads them to retire an
+earlier row (<code>app/models/scratchpad.py:36-44</code>).</p>
+<p><strong>Episodic.</strong> Every turn through the pipeline appends a
+<code>user_turn</code> event, and an agent can log
+<code>observation</code>, <code>tool_call</code> or
+<code>agent_response</code> events itself. Events are never updated and,
+on any reachable path, never deleted. They fade only in rank: recency
+halves every 24 hours
+(<code>app/adapters/episodic_store.py:318-325</code>).</p>
+<p><strong>Semantic.</strong> A schematic has a <code>draft</code>,
+<code>active</code> or <code>deprecated</code> status, set by whoever
+writes it. Consolidated facts enter as <code>draft</code>. A schematic
+stops being believed when an agent updates or deletes it.</p>
+<p><strong>Graph.</strong> A triplet is inserted once,
+<code>INSERT OR IGNORE</code>, and has no delete.</p>
+<p>Everything injected is presented as context under a header, with no
+qualifier distinguishing an agent's inference from a catalogue
+entry.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how each WARNERCO tier admits a record, what reaches the reasoning prompt, and where a record can leave</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how each WARNERCO tier admits a record, what reaches the reasoning prompt, and where a record can leave
+flowchart TD
+    SW[&quot;warn_scratchpad_write&quot;] --&gt; MIN{&quot;OpenAI or Azure&lt;br/&gt;key configured?&quot;}
+    MIN -- &quot;yes&quot; --&gt; LLM[&quot;LLM minimizes;&lt;br/&gt;LLM enriches, temp 0.3&quot;]
+    MIN -- &quot;no, over 50 tokens&quot; --&gt; TR[&quot;content = first 75%&lt;br/&gt;of the words&quot;]
+    LLM --&gt; SP[(&quot;scratchpad entries&lt;br/&gt;no session key&quot;)]
+    TR --&gt; SP
+    EL[&quot;warn_episodic_log&quot;] --&gt; EP[(&quot;episodic events&lt;br/&gt;append-only&quot;)]
+    Q[&quot;warn_semantic_search&lt;br/&gt;or POST /search&quot;] --&gt; PIPE[&quot;nine-node pipeline&quot;]
+    SP -- &quot;enriched text preferred,&lt;br/&gt;newest first, 1,500 tokens&quot; --&gt; PIPE
+    EP -- &quot;analytics or diagnostic intent,&lt;br/&gt;all sessions&quot; --&gt; PIPE
+    SEM[(&quot;schematics.json&lt;br/&gt;and Chroma&quot;)] -- &quot;semantic search,&lt;br/&gt;no status filter&quot; --&gt; PIPE
+    PIPE --&gt; R[&quot;reason node prompt&quot;]
+    PIPE -- &quot;log_episode&quot; --&gt; EP
+    C[&quot;warn_consolidate_memory&quot;] -- &quot;30 newest scratchpad rows,&lt;br/&gt;episodes since N minutes&quot; --&gt; S[&quot;ctx.sample:&lt;br/&gt;client&#39;s model&quot;]
+    S -- &quot;up to 5 facts,&lt;br/&gt;status draft&quot; --&gt; SEM
+    C -- &quot;consolidation observation&quot; --&gt; EP
+    SP -. &quot;clear by subject or all&quot; .-&gt; X[&quot;deleted&quot;]
+    SEM -. &quot;update or delete, confirm flag&quot; .-&gt; X</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The backend is one Python package, <code>app/</code>, run two ways:
+<code>warnerco-mcp</code> serves the FastMCP server over stdio
+(<code>app/mcp_stdio.py</code>), and <code>warnerco-serve</code> runs
+FastAPI with the same server mounted at <code>/mcp</code> over stateless
+streamable HTTP (<code>app/main.py:22</code>, <code>:87</code>). Both
+import one module, <code>app/mcp_tools.py</code>, 5,024 lines holding 29
+tools, 13 resources and 5 prompts.</p>
+<p>Four stores sit under <code>data/</code> beside the backend.
+<code>data/scratchpad/notes.db</code> and
+<code>data/episodic/events.db</code> are SQLite in WAL mode with
+thread-local connections. <code>data/graph/knowledge.db</code> is SQLite
+mirrored into an in-process NetworkX graph. The semantic tier is
+<code>data/schematics/schematics.json</code>, loaded into a dict at
+construction and rewritten whole on each change
+(<code>app/adapters/json_store.py:22-58</code>). The configured backend
+adds a Chroma <code>PersistentClient</code> collection or an Azure AI
+Search index on top (<code>app/adapters/factory.py</code>); the JSON
+file stays the source of truth for both.</p>
+<p>The JSON file is tracked by git while the three SQLite directories
+are ignored (<code>.gitignore:243-249</code>). Every schematic an agent
+creates and every consolidated fact therefore shows as a modification to
+a committed file.</p>
+<p>Nothing runs in the background. The only model calls are the
+scratchpad's minimize and enrich, episodic importance scoring when the
+caller omits it, the reason node, and MCP sampling for consolidation and
+explanation.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Locally: Python 3.13 and <code>uv sync</code>; Chroma is the default
+backend, and its built-in embedding runs on first use. No key is needed
+to store anything. An Anthropic key drives the reason node; an OpenAI or
+Azure key is what the scratchpad and importance scorer call. Azure
+deployment is Bicep plus a Container App behind API Management, whose
+policy validates a JWT
+(<code>src/warnerco/infra/apim/validate-jwt.policy.xml</code>). The
+local HTTP server has no authentication and binds <code>127.0.0.1</code>
+by default (<code>app/config.py:35</code>).</p>
+<p>Every store is inspectable by hand: two SQLite files with one table
+each, a graph database with two, and a pretty-printed JSON array.</p>
+<p><code>Settings</code> declares <code>chroma_persist_dir</code> and
+<code>json_schematics_path</code>, and the backend
+<code>.env.example</code> documents them as overridable. The
+<code>chroma_path</code> and <code>json_path</code> properties the
+stores read ignore both and hardcode <code>data/</code> under the
+backend (<code>app/config.py:59-63</code>, <code>:86-98</code>). Setting
+either variable changes nothing.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Scratchpad write.</strong> <code>warn_scratchpad_write</code>
+(<code>app/mcp_tools.py:3959-4064</code>) →
+<code>ScratchpadStore.write</code>
+(<code>app/adapters/scratchpad_store.py:285-408</code>): validate
+subject, object and predicate; <code>_minimize_content</code>
+(<code>:176-231</code>); <code>_enrich_content</code>
+(<code>:233-279</code>); one <code>INSERT</code>
+(<code>:366-381</code>). Both LLM helpers build
+<code>AzureChatOpenAI</code> or <code>ChatOpenAI</code> directly.</p>
+<p><strong>Scratchpad read and inject.</strong> <code>read</code>
+filters by subject and predicate, newest first (<code>:414-460</code>).
+The pipeline's <code>inject_scratchpad</code> node
+(<code>app/langgraph/flow.py:243-273</code>) calls
+<code>get_context_for_injection</code>
+(<code>scratchpad_store.py:553-595</code>). It formats every row as
+<code>[predicate] subject -&gt; object: text</code>, choosing
+<code>enriched_content</code> over <code>content</code>, and stops at
+the first row that would exceed the budget.</p>
+<p><strong>Episodic write.</strong> <code>warn_episodic_log</code>
+(<code>mcp_tools.py:4251-4295</code>) and the pipeline's
+<code>log_episode</code> node (<code>flow.py:559-608</code>) both call
+<code>EpisodicStore.log</code> (<code>episodic_store.py:212-262</code>).
+The node sets importance by rule: 0.8 on error, 0.6 diagnostic, 0.4
+analytics, 0.3 otherwise.</p>
+<p><strong>Episodic recall.</strong> <code>recall</code>
+(<code>episodic_store.py:268-359</code>) reads every event, or every
+event of one session, and scores each as
+<code>0.4·recency + 0.3·importance + 0.3·relevance</code>, with
+relevance a bag-of-words cosine (<code>:74-94</code>). The pipeline's
+<code>recall_episodes</code> node (<code>flow.py:276-309</code>) runs it
+only for analytics and diagnostic intents, with no
+<code>session_id</code> (<code>:295-298</code>).</p>
+<p><strong>Semantic retrieval.</strong> <code>retrieve</code>
+(<code>flow.py:312-356</code>) routes a <code>WRN-</code> ID to
+<code>get_schematic</code> and everything else to
+<code>semantic_search</code>. Chroma queries with a <code>where</code>
+built only from caller filters (<code>chroma_store.py:135-208</code>)
+and falls back to JSON keyword scoring on any exception.</p>
+<p><strong>Graph.</strong> <code>query_graph</code>
+(<code>flow.py:181-240</code>) extracts <code>WRN-</code> IDs and
+keywords and appends one-hop neighbours for diagnostic, lookup and
+search intents.</p>
+<p><strong>Assembly.</strong> <code>compress_context</code>
+(<code>flow.py:359-442</code>) concatenates scratchpad, episodes, graph
+and search results under four headers, and <code>reason</code>
+(<code>:445-515</code>) sends that as one user message.</p>
+<p><strong>Consolidation.</strong> <code>warn_consolidate_memory</code>
+(<code>mcp_tools.py:4375-4409</code>) → <code>consolidate_memory</code>
+(<code>app/langgraph/consolidate.py:185-294</code>): read the 30 newest
+scratchpad rows and up to 30 episodes from <code>since(minutes)</code>
+(<code>:210-221</code>); sample; wrap each fact with
+<code>_fact_to_schematic</code> (<code>:152-182</code>);
+<code>upsert_schematic</code>; log the cycle as an observation
+(<code>:276-286</code>).</p>
+<p><strong>Correction.</strong> <code>warn_update_schematic</code>
+(<code>mcp_tools.py:1107-1311</code>),
+<code>warn_delete_schematic</code> (<code>:1314-1404</code>) and
+<code>warn_scratchpad_clear</code> (<code>:4137-4178</code>). No tool
+reaches <code>EpisodicStore.clear</code> or a graph delete.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>entries</code> (scratchpad): <code>id</code>,
+<code>subject</code>, <code>predicate</code>, <code>object_</code>,
+<code>content</code>, <code>original_content</code>,
+<code>enriched_content</code>, three token counts,
+<code>created_at</code>, <code>metadata</code>
+(<code>scratchpad_store.py:125-138</code>). No session, author or status
+column.</p>
+<p><code>events</code> (episodic): <code>id</code>,
+<code>session_id</code>, <code>kind</code>, <code>summary</code>,
+<code>content</code>, <code>importance</code>, <code>created_at</code>,
+<code>provenance</code> (<code>episodic_store.py:141-150</code>). The
+provenance JSON carries <code>source</code> and
+<code>trust_level</code>: <code>user</code> from the MCP tool,
+<code>system</code> from the pipeline and from consolidation.</p>
+<p>Schematic (<code>app/models/schematic.py</code>): <code>id</code>,
+<code>model</code>, <code>name</code>, <code>component</code>,
+<code>version</code>, <code>summary</code>, <code>url</code>,
+<code>category</code>, <code>status</code>, <code>tags</code>, free-form
+<code>specifications</code>, and <code>last_verified</code>.
+<code>warn_update_schematic</code> sets <code>last_verified</code> to
+the day of any edit (<code>mcp_tools.py:1247-1250</code>), so the field
+records when a row was last changed, not checked.</p>
+<p>A consolidated fact is a schematic with <code>model="MEMORY"</code>,
+<code>category= "consolidated_fact"</code>, an ID prefixed
+<code>FACT-</code>, and a <code>specifications</code> dict holding
+<code>provenance</code>, <code>supporting_ids</code> and
+<code>confidence</code> from the model's output
+(<code>consolidate.py:152-182</code>). <code>supporting_ids</code> is
+copied as returned; nothing checks that the IDs exist.</p>
+<p><code>triplets</code> (graph): <code>subject</code>,
+<code>predicate</code>, <code>object</code>, <code>metadata</code>,
+<code>created_at</code>, unique on the triple
+(<code>graph_store.py:121-129</code>). A predicate outside the
+vocabulary is logged to stderr and stored anyway
+(<code>:208-214</code>).</p>
+<p>Time is <code>created_at</code> everywhere. Nothing records when a
+fact was true.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is application-driven. The model calls
+<code>warn_semantic_search</code>, and the pipeline decides which tiers
+to consult from a keyword intent classifier
+(<code>flow.py:81-111</code>).</p>
+<p><strong>Scratchpad</strong> is not retrieved by relevance.
+<code>get_context_for_injection</code> accepts
+<code>query_context</code> and ignores it
+(<code>scratchpad_store.py:553-575</code>), so every search injects the
+newest rows up to 1,500 tokens whatever the query. One long row at the
+head stops the loop with <code>break</code> (<code>:589-593</code>)
+rather than being skipped.</p>
+<p><strong>Episodic</strong> recall returns the top five by the weighted
+sum. With the default weights an event from the last hour with
+importance 0.8 and no word in common with the query scores about 0.63,
+above an on-topic event from two days ago at importance 0.3. The
+pipeline's recall reads across every session.</p>
+<p><strong>Semantic</strong> search returns Chroma's nearest rows,
+converted to a score as <code>1 - distance/2</code>, re-read from the
+JSON store. No status is filtered unless the caller passes one, and
+<code>warn_semantic_search</code> exposes only <code>category</code> and
+<code>model</code> (<code>mcp_tools.py:616-620</code>). Drafts,
+deprecated rows and consolidated facts rank beside active
+schematics.</p>
+<p>The search tool returns the result list, the reasoning text and the
+recalled episode lines. The scratchpad lines shape the reasoning and are
+not in the tool's result model (<code>mcp_tools.py:644-653</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are hot-path tool calls, plus one automatic event per pipeline
+turn.</p>
+<p><strong>Minimization degrades to truncation.</strong>
+<code>has_llm_config</code> is true when any of Anthropic, OpenAI or
+Azure is configured (<code>app/config.py:111-117</code>). The
+scratchpad's helpers try Azure, else
+<code>ChatOpenAI(api_key=settings.openai_api_key)</code>, with no
+Anthropic branch (<code>scratchpad_store.py:184-221</code>). With the
+course's Anthropic-only setup that construction has no key. The
+exception is logged as a warning, and a note over 50 tokens is stored as
+its first 75% of words (<code>:223-229</code>). The original survives in
+<code>original_content</code>, which no injection or consolidation path
+reads. This was read, not run.</p>
+<p><strong>Enrichment replaces the note in context.</strong> When an
+OpenAI or Azure key is present, <code>_enrich_content</code> asks for
+<em>"relevant context, implications, and connections"</em> at
+temperature 0.3 (<code>:262-269</code>). Injection prefers that text
+(<code>:585</code>). What the agent observed reaches the next prompt as
+a model's elaboration of it. <code>backfill_enrichments</code>
+(<code>:601-634</code>) would enrich older rows too; no tool or route
+calls it.</p>
+<p><strong>Consolidation duplicates.</strong> The pass is ADD-only by
+design (<code>consolidate.py:15-17</code>). It reads the 30 newest
+scratchpad rows regardless of <code>since_minutes</code> and never marks
+them, so a second run over an unchanged scratchpad asks for the same
+facts again and appends new <code>FACT-</code> IDs.</p>
+<p><strong>Dedup in the other tiers.</strong> Graph triplets deduplicate
+on the exact triple. Schematic IDs come from the highest existing
+<code>WRN-</code> number plus one.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A scratchpad write blocks on up to two model calls when a key is
+configured. Every search runs the full pipeline: one model call in
+<code>reason</code> when a key is configured, and one SQLite insert.
+Consolidation is one sampling request to the client, capped at 1,024
+tokens. The episodic recall reads every row and scores it in Python,
+which the code comment accepts as <em>"fine for a class app"</em>
+(<code>episodic_store.py:286-287</code>). Injection sits inside a single
+user message assembled per query, so there is no stable prefix to
+cache.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model holds every verb. Read, write, clear, update, delete, graph
+insert, episodic log and consolidation are all tools in one registry.
+<code>warn_search_tools</code> and <code>warn_describe_tool</code>
+(<code>mcp_tools.py:4906-5024</code>) let a client load tool
+descriptions progressively.</p>
+<p>Two MCP features are used in memory paths. <strong>Sampling</strong>
+makes consolidation run on the client's model, so the server needs no
+key for it. <strong>Elicitation</strong> in
+<code>warn_feedback_loop</code> (<code>:1562-1655</code>) asks the
+person for a rating and comments on a schematic, then returns them to
+the caller without storing anything.</p>
+<p><code>.claude/mcp.json</code> registers the same backend twice, as
+<code>claude-warnerco-schematica</code> and
+<code>claude-warnerco-coala-memory</code>, both running
+<code>warnerco-mcp</code> in one working directory. That produces two
+processes over one JSON file (section 9).</p>
+<p>Adapting this to another agent means taking a store module, not the
+server: <code>episodic_store.py</code> and
+<code>scratchpad_store.py</code> depend only on <code>settings</code>
+and their models.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Two processes lose each other's semantic writes.</strong>
+<code>RawJsonStore</code> loads the file once at construction and
+rewrites the whole dict on each upsert or delete
+(<code>json_store.py:22-58</code>, <code>:114-126</code>). With the HTTP
+server and a stdio server running, or the two registered stdio servers,
+a fact one writes is invisible to the other, whose next save overwrites
+it. The SQLite tiers do not have this problem.</p>
+<p><strong>Agent inference and catalogue data are indistinguishable at
+read time.</strong> Consolidated facts carry <code>status=draft</code>
+and <code>trust_level: agent_extracted</code>, and the only reader of
+<code>trust_level</code> anywhere is the writer. The consolidation
+docstring says the tags make facts <em>"filterable"</em>; no read
+filters them.</p>
+<p><strong>Provenance is partly model-asserted.</strong>
+<code>supporting_ids</code> are whatever the model returned. Episodic
+<code>trust_level: user</code> is stamped for any caller of the MCP
+tool, which is the model.</p>
+<p><strong>Deletion is uneven.</strong> A deleted schematic leaves its
+graph triplets and any consolidated fact derived from it. Episodic
+events have no delete on any tool or route. The e2e script deletes the
+live episodic database (section 10).</p>
+<p><strong>Uncertainty</strong> is representable only as the fact's
+<code>confidence</code> float, which nothing reads.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — schematic delete and scratchpad clear
+remove rows. Nothing keyed on a rejected value stops consolidation
+re-extracting it.</li>
+<li><code>trust_state</code> — <code>draft</code>, <code>active</code>
+and <code>deprecated</code> exist as a field, and consolidation sets
+<code>draft</code>. No read excludes a draft or deprecated row, so the
+state withholds nothing.</li>
+<li><code>bitemporal</code> — <code>created_at</code> only.</li>
+<li><code>scope_enforced</code> — episodic rows carry
+<code>session_id</code> and <code>recall</code> applies
+<code>WHERE session_id = ?</code> when a caller passes one. The
+pipeline's recall, the one read that reaches the reasoning prompt,
+passes none, and the scratchpad its docstring calls
+<em>"session-scoped"</em> (<code>flow.py:250</code>) has no session
+column.</li>
+<li><code>audit_log</code> — episodic events record turns and
+observations. The one mutation they record is a consolidation cycle;
+schematic, scratchpad and graph writes leave no event.</li>
+<li><code>human_review</code> — elicitation reaches a person and stores
+nothing. Status changes are on the agent's own
+<code>warn_update_schematic</code>.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run; everything below is from reading
+the tests at the pin.</p>
+<p><strong>The negative case.</strong> <code>test_episodic_e2e.py</code>
+is a standalone script with 14 cases, run as
+<code>uv run python test_episodic_e2e.py</code>.
+<code>test_recall_session_filter</code> (<code>:302-315</code>) logs two
+<code>sA</code> events and <code>beta event</code> under
+<code>sB</code>, recalls <code>event</code> for <code>sA</code>, and
+passes only if all results are <code>sA</code> and exactly two returned.
+<code>beta event</code> is the closest match to the query, so an
+unscoped recall would include it. <code>test_since</code>
+(<code>:353-376</code>) asserts a backdated <code>old</code> event is
+absent and <code>fresh</code> present. <code>main</code> exits 1 on any
+failure (<code>:544</code>).</p>
+<p>Three limits. The script sits outside pytest's
+<code>testpaths = tests</code>, and no committed workflow runs it.
+Collected by pytest directly, its cases record FAIL without asserting
+and pass. And <code>cleanup_db</code> (<code>:40-61</code>) unlinks
+<code>settings.episodic_path</code>, the live
+<code>data/episodic/events.db</code>, before the cases and again at
+exit.</p>
+<p><strong>The pytest suite</strong> (192 functions under
+<code>tests/</code>) covers the scratchpad store, models and tools, the
+graph store and graph tools, the explain-schematic sampling tool, and
+the scratchpad's place in <code>compress_context</code>. Stores run on
+<code>tmp_path</code> databases and LLM helpers are patched.
+<code>test_clear_by_subject_removes_matching</code> checks the remaining
+count through <code>stats()</code>, not a read, and
+<code>test_read_filter_by_subject</code> checks a count of one; neither
+names what must be absent.</p>
+<p><strong>Not covered.</strong> No committed test exercises
+<code>consolidate_memory</code>, the JSON or Chroma stores'
+write-and-search round trip, or the minimization fallback without a
+mocked helper. No retrieval-quality evaluation exists. There is no paper
+about this system; the tree cites CoALA and Generative Agents as sources
+of its design.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Return the score breakdown with each recalled
+memory.</strong> Recency, importance and relevance per event make a
+wrong recall diagnosable without a debugger.</li>
+<li><strong>Keep the original beside every rewrite.</strong> Persisting
+original, minimized and enriched text means any of them can be restored;
+the next step is making the verbatim one what the model sees.</li>
+<li><strong>Record the consolidation act as a memory.</strong> An
+observation naming the fact IDs a cycle produced is the start of a
+promotion log.</li>
+<li><strong>Run consolidation on the client's model through MCP
+sampling.</strong> The server stays keyless and the extraction bill
+lands with the session that asked.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Injecting a model's elaboration in place of the
+observation.</strong> Enrichment that adds "implications" is a new,
+unreviewed claim.</li>
+<li><strong>A silent lossy fallback on the write path.</strong>
+Truncating to 75% of words when a key is missing turns a configuration
+gap into data loss.</li>
+<li><strong>Promotion without a high-water mark.</strong> A pass that
+cannot tell what it has already promoted duplicates on every run.</li>
+<li><strong>Status as a label nobody filters.</strong> A
+<code>draft</code> that ranks beside <code>active</code> looks like a
+trust state and is not one.</li>
+<li><strong>Whole-file rewrite from a startup snapshot.</strong> Any
+second process makes it last-writer-wins over the entire store.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a well-annotated specimen of the CoALA vocabulary, built to
+be narrated in a fifty-minute segment, and it serves that. Read it to
+see four tiers side by side at small scale, or to lift
+<code>episodic_store.py</code> as a starting recall scorer. Do not run
+it as memory for a real agent: the context it injects is not what was
+written, the semantic tier cannot survive two processes, and the pass
+that promotes facts cannot stop repeating itself. Its own comments say
+most of this, which is the right posture for teaching code and the
+reason not to deploy it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>ChatOpenAI(api_key=None)</code> raises at construction
+under the pinned <code>langchain-openai</code>, which decides whether
+the Anthropic-only path truncates or reaches the network first. Running
+it would settle this.</li>
+<li>What the notebooks' Segment 3 run of consolidation produced, and
+whether duplicate <code>FACT-</code> rows appeared.</li>
+<li>The two committed workflows deploy <code>coretext-mcp</code> and
+<code>stoic-mcp</code>, neither of which is in the tree at this pin.
+Whether they were earlier memory servers of this course would need the
+history.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>src/warnerco/backend/app/adapters/scratchpad_store.py</code>,
+<code>episodic_store.py</code>, <code>graph_store.py</code>,
+<code>json_store.py</code>, <code>chroma_store.py</code>,
+<code>azure_search_store.py</code>, <code>factory.py</code>;
+<code>app/models/{scratchpad,episodic,schematic,graph}.py</code>;
+<code>app/config.py</code>.</li>
+<li><strong>Write path and consolidation:</strong>
+<code>app/mcp_tools.py:950-1404, 3631-3712, 3959-4409</code>;
+<code>app/langgraph/consolidate.py</code>.</li>
+<li><strong>Retrieval and assembly:</strong>
+<code>app/langgraph/flow.py</code>.</li>
+<li><strong>Integration:</strong> <code>app/mcp_tools.py</code>,
+<code>app/mcp_stdio.py</code>, <code>app/main.py</code>,
+<code>app/api/routes.py</code>, <code>.claude/mcp.json</code>,
+<code>.vscode/mcp.json</code>.</li>
+<li><strong>Tests:</strong>
+<code>src/warnerco/backend/tests/*.py</code>,
+<code>test_episodic_e2e.py</code>, <code>test_9node_flow.py</code>,
+<code>pytest.ini</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from
+<code>src/warnerco/backend</code> unless stated.</p>
+<ul>
+<li><code>grep -rn 'trust_level' app/</code> — writers only:
+<code>consolidate.py:176, 283</code>, <code>flow.py:602</code>,
+<code>mcp_tools.py:4284</code>, and the model's docstring.</li>
+<li><code>grep -rn 'supersedes\|contradicts' app/</code> — docstrings
+and the predicate dictionary; no reader acts on either.</li>
+<li><code>grep -rn '\.clear(\|backfill_enrichments\|\.since(' app/ scripts/</code>
+— <code>mcp_tools.py:4165</code> (scratchpad) and
+<code>consolidate.py:217</code>; no caller of
+<code>EpisodicStore.clear</code> or
+<code>backfill_enrichments</code>.</li>
+<li><code>grep -rn 'DELETE FROM\|delete_entity\|remove_relationship' app/</code>
+— the scratchpad and episodic stores only; no graph delete.</li>
+<li><code>grep -n '@router\.' app/api/routes.py</code> — 15 routes; the
+only memory writes are reindexing and the <code>user_turn</code> event
+<code>POST /search</code> appends through the pipeline.</li>
+<li><code>grep -rn 'chroma_persist_dir\|json_schematics_path' . --include='*.py'</code>
+(tree root) — declared in <code>config.py:60, 63</code>, read
+nowhere.</li>
+<li><code>grep -n 'status\|draft\|trust_level' app/langgraph/flow.py app/adapters/*.py</code>
+— status filtered only when present in caller filters.</li>
+<li><code>grep -rln 'consolidat' src/warnerco/backend/tests src/warnerco/backend/test_*.py notebooks</code>
+(tree root) — <code>notebooks/segment-3.ipynb</code> only.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+(tree root) — a tutorial and three research syntheses citing CoALA,
+Generative Agents and others; no <code>CITATION</code> file.</li>
+<li><code>ls .github/workflows</code> (tree root) — two deploy
+workflows, no test workflow.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/timothywarner-org/context-engineering/commit/0f07bdbd01593ab5213e77db1512dbaf181463c5"><code class="commit-id" title="0f07bdbd01593ab5213e77db1512dbaf181463c5">0f07bdbd…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 19
+September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: one auto-run surface, a <code>.gitattributes</code> LFS filter
+on <code>.zip</code> and <code>.pptx</code>, checked out with the smudge
+filter disabled; one build-time execution point
+(<code>tests/conftest.py</code>); 14 dependency files inside the
+cooldown, every file in the depth-1 clone dating to the tip; six
+unpinned surfaces. <code>CLAUDE.md</code>, <code>.claude/</code> and
+<code>.github/agents/</code> were read as data. Only
+<code>src/warnerco/backend/</code> is covered; the labs and slide decks
+are course material. Read with <code>grep</code>, <code>sed</code> and
+<code>awk</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

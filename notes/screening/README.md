@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 643 of 643 screened at the report's current pin.**
+**Progress: 644 of 644 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 293 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 358 |
-| Repositories with build-time execution (`EXEC`) | 469 |
+| Repositories with an auto-run surface (`RUNS`) | 294 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 359 |
+| Repositories with build-time execution (`EXEC`) | 470 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -82,6 +82,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursorrules` |
 | [`commonground`](../../content/systems/commonground.md) | `.gitmodules` |
 | [`compartment`](../../content/systems/compartment.md) | `.claude-plugin/`, `mcp.json`, `server.json` |
+| [`context-engineering`](../../content/systems/context-engineering.md) | `.gitattributes` |
 | [`context-keeper`](../../content/systems/context-keeper.md) | `hooks/`, `server.json` |
 | [`context-mem`](../../content/systems/context-mem.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`context-mode`](../../content/systems/context-mode.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/`, `hooks/hooks.json` |

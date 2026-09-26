@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 643 reports.**
+**This page covers all 644 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5761,3 +5761,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0-only, 103,455 lines of TypeScript outside tests and 2,488 commits on main from 15 contributors since January 2026, of which the memory path is about 4,300 lines. No marks: the project predicates and their CI-run exclusion tests guard chats and documents, and the captured-memory layer has no reachable producer in the public tree. The LLM memory filter and entity extraction have no tests, and the private `pro/` submodule that feeds them returns 404.
 - Study when: you are building project-scoped chat recall in a local app and want the predicate, the negative test through the real handlers and a deletion registry to copy.
 - Do not copy when: you need to know what is remembered about a person, or to correct it. The capture producers are private, nothing records a status or rejection, and a correction cannot reach derived facts.
+
+### [`context-engineering`](../systems/context-engineering/)
+
+- Best idea: **return the score with the memory.** `EpisodicStore.recall` gives each event its recency, importance, relevance and total beside the text, so a wrong recall is explained by the tool's own output rather than reconstructed. The consolidation pass also logs itself as an episodic observation naming the fact IDs it wrote.
+- Biggest risk: **the injected context is not what was written.** Injection prefers `enriched_content`, a temperature-0.3 expansion asking for *"implications, and connections"*; with only an Anthropic key the minimizer's OpenAI call fails and a note over 50 tokens is stored as its first 75% of words. `original_content` is kept and read by nothing.
+- Most reusable component: `src/warnerco/backend/app/adapters/episodic_store.py` — one SQLite table and the Generative Agents score in about a hundred lines, with a bag-of-words relevance its comment marks as the three-line swap point for embeddings.
+- Second risk: **promotion has no memory of itself, and the semantic store has no second process.** Consolidation re-reads the 30 newest scratchpad rows every cycle and appends new `FACT-` rows; the JSON store rewrites the whole file from a startup snapshot, and `.claude/mcp.json` launches two servers over it.
+- Maturity impression: MIT, 82 commits from 2 contributors between 8 July 2025 and 19 September 2026; the backend is 10,774 lines of Python, 3,098 of them stores and consolidation, with 192 pytest functions. One mark, `negative_eval`, on a standalone script that also deletes the live episodic database. No committed test covers consolidation.
+- Study when: you want the CoALA tiers side by side at readable scale, or a starting recall scorer with explainable output.
+- Do not copy when: the memory must be what was observed, survive two processes, or be kept apart by session — the pipeline recalls across every session and the scratchpad has no session key.
