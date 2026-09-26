@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 637 reports.</strong></p>
+<p><strong>This page covers all 638 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26228,6 +26228,52 @@ previous pointer on any failure.</li>
 <li>Do not copy when: a person must be able to retract one rule and have
 it stay retracted, or the served text must equal what was validated.
 Neither holds here.</li>
+</ul>
+<h3 id="sqlite-memory-mcp"><a
+href="../systems/sqlite-memory-mcp/"><code>sqlite-memory-mcp</code></a></h3>
+<ul>
+<li>Best idea: <strong>retire a fact with a reason and an effective
+time, and log both sides.</strong> <code>govern_fact</code> supersedes,
+invalidates or revalidates a canonical fact, writes the effective time
+to <code>valid_to</code> apart from <code>updated_at</code>, links the
+pair in <code>knowledge_links</code>, and appends the before and after
+state to an append-only <code>memory_events</code> ledger that the nine
+core graph tools also write on every create and delete.</li>
+<li>Biggest risk: <strong>the promotion gate is a default
+argument.</strong> <code>promote_candidate</code> takes
+<code>mode="human_confirmed"</code> unless told otherwise, on a tool the
+agent holds, and only keyword-detected sensitive scopes demand even
+that. Beside it, <code>extract_inline_claims</code> promotes a regex
+claim to a canonical fact after three or four matching observations, and
+the context pack renders that fact exactly like a confirmed one.</li>
+<li>Most reusable component: <code>memory_audit.py</code>
+<code>govern_fact</code> with <code>db_utils.py</code>
+<code>record_memory_event</code> — a small truth-maintenance verb over
+an append-only, per-machine logically clocked ledger whose cross-machine
+import is an idempotent <code>INSERT OR IGNORE</code>.</li>
+<li>Second risk: <strong>scope stops at the rows.</strong> Only
+<code>search_by_project</code> filters by project;
+<code>search_nodes</code> treats it as a 1.5x boost. The bridge push
+filters entities to the <code>shared</code> prefix and then exports the
+whole event ledger, which carries every observation's text, including
+deleted ones.</li>
+<li>Maturity impression: MIT, 65,843 lines of Python outside tests and
+555 commits by 2 contributors since 1 March 2026, with 1,615 pytest
+functions run in CI without the vector extra. Five marks, each on a
+narrow surface: <code>tombstone</code> on rejected task-to-entity links,
+<code>bitemporal</code> on a fact's validity end,
+<code>scope_enforced</code> on one tool, <code>audit_log</code> on the
+ledger, <code>negative_eval</code> on <code>search_nodes</code> and the
+context pack. No test compares two BM25 ranks, and the re-ranker, read
+closely, inverts them.</li>
+<li>Study when: you want a worked append-only mutation ledger and a
+supersede-with-rationale verb over a local SQLite graph, or a search
+response that labels which results actually carried the query
+terms.</li>
+<li>Do not copy when: promotion must exclude the agent, reads must be
+isolated per project, or deletion must reach every machine. The approve
+verbs are all on the MCP surface, and the ledger and bridge keep what
+was deleted.</li>
 </ul>
         </article>
       </div>

@@ -172,6 +172,8 @@ other end of the lifecycle: its forgetting policy combines TTL, inactivity,
 pinning, per-type allowlists and budget pruning, and what it selects is deleted
 rather than moved to a lower tier.
 
+[sqlite-memory-mcp](../../systems/sqlite-memory-mcp/) builds a governed promotion from candidate claim to canonical fact and then opens two doors beside it. The governed door, `promote_candidate`, takes its mode from the caller and defaults to `human_confirmed`, so the agent that extracted a claim can promote it by omitting an argument. The ungoverned door runs on every observation write: a regex claim gains 0.1 confidence per matching observation and is inserted into `canonical_facts` as `auto_lazy` at 0.85, three or four sentences in, with no gate consulted. Both land in one table and render identically as FACT in the context pack, so the tier boundary records who promoted a fact without changing how it is read.
+
 ### Separate inputs, a ceiling, a recorded decision — argued
 
 No system cited here has all three on a storage-tier move; each has part.

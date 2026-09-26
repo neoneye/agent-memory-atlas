@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local SQLite MCP knowledge graph
+for coding agents with an append-only event ledger, and a claim-to-fact
+promotion gate whose default mode is human_confirmed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="sqlite-memory-mcp — Agent Memory Atlas">
+    <meta property="og:description" content="A local SQLite MCP
+knowledge graph for coding agents with an append-only event ledger, and
+a claim-to-fact promotion gate whose default mode is human_confirmed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="sqlite-memory-mcp — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local SQLite MCP
+knowledge graph for coding agents with an append-only event ledger, and
+a claim-to-fact promotion gate whose default mode is human_confirmed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>sqlite-memory-mcp — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "sqlite-memory-mcp",
+      "description": "A local SQLite MCP knowledge graph for coding agents with an append-only event ledger, and a claim-to-fact promotion gate whose default mode is human_confirmed.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A promotion gate at the tool, a second door
+on the write path</p>
+          <h1>sqlite-memory-mcp</h1>
+          <p class="document-deck">A local SQLite MCP knowledge graph
+for coding agents with an append-only event ledger, and a claim-to-fact
+promotion gate whose default mode is human_confirmed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/RMANOV/sqlite-memory-mcp">
+              <span>Source</span>
+              <strong>RMANOV/sqlite-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/RMANOV/sqlite-memory-mcp/commit/f5d04e6ef5fe62e543b08a954ae71c98aaf2a0f9" title="f5d04e6ef5fe62e543b08a954ae71c98aaf2a0f9">
+              <span>Analyzed revision</span>
+              <code>f5d04e6e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RMANOV--sqlite-memory-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>RMANOV--sqlite-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>65,843
+lines of Python outside tests; the nine-tool knowledge-graph server is
+970 of them, beside a 9,266-line shared db_utils.py</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>555
+commits on main by 2 contributors, 1 March 2026 – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,615
+pytest functions in 45,407 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>sqlite-memory-mcp is a local-first MCP memory stack for coding
+agents. Its core is a drop-in replacement for the official MCP memory
+server's nine knowledge-graph tools over one SQLite file. Around it sit
+six more FastMCP servers for sessions, tasks and notes, cross-machine
+bridge sync, collaboration, task-to-entity linking, and an "Intelligence
+v2" tier that turns text into candidate claims and canonical facts.</p>
+<p>What is notable is the bookkeeping. Every core write appends to
+<code>memory_events</code> with the old and new value. Facts are
+superseded or invalidated through <code>govern_fact</code> with a
+rationale and an effective time, never deleted. A rejected automatic
+link is remembered by pair, so the auto-linker cannot re-propose it.
+<code>search_nodes</code> labels each result with whether the query
+terms were found in the text returned.</p>
+<p>What is weak is the governance the README leads with.
+<code>promote_candidate</code>, the gate from claim to fact, defaults to
+<code>mode="human_confirmed"</code> on a tool the agent holds. Beside
+it, every observation an agent writes is regex-scanned and a claim seen
+three or four times is promoted to a canonical fact with no gate. The
+re-ranker, read closely, scores a stronger BM25 match lower.</p>
+<p>Five marks — <code>tombstone</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code> — each on a narrower surface than its name
+suggests; section 9 states which. The debate protocol, the task manager
+and the private-extension contract are not memory and are not
+covered.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are two stores of belief, and they do not share a
+lifecycle.</p>
+<p><strong>Entities and observations are ground truth by
+assertion.</strong> An observation is a string on a named entity. It
+becomes memory when a tool inserts it and stops being memory when
+<code>delete_observations</code> removes that exact string or
+<code>delete_entities</code> cascades. It has no status, no confidence
+and no validity time. Search returns it as written.</p>
+<p><strong>Claims and facts are the governed tier.</strong> A claim is a
+subject, predicate and object with a scope and a confidence. It reaches
+<code>canonical_facts</code> by one of three routes.
+<code>promote_candidate</code> accepts a mode, and
+<code>human_confirmed</code> — the default — always passes
+(claim_graph.py:321-325, :358-376). <code>enrich_context</code> and the
+tray call <code>auto_promote_layer1</code>, which promotes a claim
+scoped <code>memory</code> at confidence 0.7 (intel_server.py:555-560,
+claim_graph.py:646-667). And <code>extract_inline_claims</code> runs on
+every new observation.</p>
+<p><strong>The third route has no gate at all.</strong> Eight regexes
+match patterns such as <em>X uses Y</em> and <em>X depends on Y</em> in
+English and Bulgarian. Each match adds or bumps a
+<code>lazy_claims</code> row, adding 0.1 per earlier hit to a
+per-predicate base capped at +0.3. At 0.85 the claim is inserted into
+<code>canonical_facts</code> as <code>auto_lazy</code>
+(lazy_enrichment.py:29-32, :141-208, :211-319). A
+<code>depends_on</code> sentence written into three observations is a
+fact on the third.</p>
+<p><strong>A fact dies by governance, not deletion.</strong>
+<code>govern_fact</code> sets <code>valid_to</code> and, for supersede,
+<code>superseded_by_fact_id</code>, or clears both to revalidate. No
+statement in the tree deletes from <code>canonical_facts</code>, so a
+fact outlives the observation it was read from.</p>
+<p>The status <code>rejected</code> on <code>lazy_claims</code> is read
+by the extractor as a confidence penalty and by contradiction detection
+as an exclusion. Nothing outside the tests writes it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the three routes from text to a canonical fact, and what the context pack does with each tier</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the three routes from text to a canonical fact, and what the context pack does with each tier
+flowchart TD
+    W[&quot;create_entities or&lt;br/&gt;add_observations&quot;] --&gt; O[&quot;observation row,&lt;br/&gt;observation_add event&quot;]
+    O --&gt; RX{&quot;regex match&lt;br/&gt;X uses Y, X depends on Y ...&quot;}
+    RX -- &quot;no&quot; --&gt; OBS[&quot;searchable text only&quot;]
+    RX -- &quot;yes&quot; --&gt; LC[&quot;lazy_claims row,&lt;br/&gt;hit_count + 1&quot;]
+    LC --&gt; TH{&quot;base + 0.1 per earlier hit,&lt;br/&gt;at least 0.85?&quot;}
+    TH -- &quot;no&quot; --&gt; LC
+    TH -- &quot;yes, no gate&quot; --&gt; CF[&quot;canonical_facts row&quot;]
+    REJ[&quot;status rejected&quot;] -. &quot;read as a penalty,&lt;br/&gt;no writer in the tree&quot; .-&gt; LC
+    CH[&quot;assess_context chunk&quot;] --&gt; CC[&quot;candidate_claims row,&lt;br/&gt;status candidate&quot;]
+    CC --&gt; PM{&quot;promote_candidate:&lt;br/&gt;mode argument&quot;}
+    PM -- &quot;human_confirmed,&lt;br/&gt;the default&quot; --&gt; CF
+    PM -- &quot;multi_evidence:&lt;br/&gt;3 evidence rows, scope memory&quot; --&gt; CF
+    CC -- &quot;enrich_context or tray:&lt;br/&gt;auto_layer1 at 0.7&quot; --&gt; CF
+    CF --&gt; GV[&quot;govern_fact: supersede,&lt;br/&gt;invalidate, revalidate&lt;br/&gt;valid_to = effective_at&quot;]
+    CF --&gt; PK{&quot;build_context_pack&quot;}
+    GV --&gt; PK
+    CC --&gt; PK
+    PK -- &quot;valid_to set, or&lt;br/&gt;contradiction_count above 0&quot; --&gt; OUT[&quot;left out&quot;]
+    PK -- &quot;canonical fact&quot; --&gt; FACT[&quot;rendered as FACT&quot;]
+    PK -- &quot;claim still candidate&quot; --&gt; PROV[&quot;rendered as PROVISIONAL&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything is one SQLite file,
+<code>~/.claude/memory/memory.db</code> unless
+<code>SQLITE_MEMORY_DB</code> says otherwise, opened in WAL mode by
+every process. The schema lives in <code>schema.py</code> and runs its
+own migrations; <code>db_utils.py</code> holds connections, the event
+ledger, bridge import and export, and most shared helpers.</p>
+<p>The MCP surface is split across seven stdio servers because a client
+exposes only so many tools per server: <code>server.py</code> (the nine
+graph tools), <code>session_server.py</code>,
+<code>task_server.py</code>, <code>bridge_server.py</code>,
+<code>collab_server.py</code>, <code>entity_server.py</code> and
+<code>intel_server.py</code>. <code>unified_server.py</code> mounts all
+of them. The decorator counts are 9, 5, 9, 7, 9, 7 and 53; the README's
+table gives <code>sqlite_intel</code> 46.</p>
+<p>Two processes do work nobody calls for. The PyQt6 task tray runs
+bridge sync and <code>auto_accept_high_confidence_links</code> on a
+timer (task_tray.py:314-320). The bridge worker pushes and pulls a
+private git repository: per-entity files for entities whose project
+starts with <code>shared</code>, and every row of the claim, fact,
+chunk, provenance and event tables (db_utils.py:7385-7389, 8356-8371;
+bridge_sync_worker.py:1291-1299). Nothing else runs in the background
+for memory.</p>
+<p>Search is FTS5 over a per-entity document of name, type and
+concatenated observations, kept in step by triggers. With the
+<code>vector</code> extra it adds a <code>vec0</code> table of
+<code>all-MiniLM-L6-v2</code> embeddings and fuses the two lists by
+RRF.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install -e .</code> with <code>fastmcp</code> as the only
+required dependency, then one <code>claude mcp add</code> or
+<code>codex mcp add</code> per server. It runs fully offline; the vector
+arm needs <code>sqlite-vec</code> and <code>sentence-transformers</code>
+and degrades to FTS5 without them. No API key is needed. The store is
+readable with the <code>sqlite3</code> shell, and
+<code>bin/memory-lint</code> prints a read-only health report.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>create_entities</code>
+(server.py:317-432) inserts with <code>INSERT OR IGNORE</code>, records
+<code>entity_create</code> and <code>observation_add</code> events,
+syncs FTS and vectors, and calls <code>extract_inline_claims</code> for
+each new observation (:412-419). <code>add_observations</code>
+(:434-499) does the same for an existing entity. Given a project for an
+entity that already exists, <code>create_entities</code> updates its
+project in place (:365-370).</p>
+<p><strong>Delete.</strong> <code>delete_entities</code> (:560-595)
+records <code>entity_delete</code>, removes FTS and vector rows and
+deletes with cascade. <code>delete_observations</code> (:597-643)
+deletes by exact content and records the text as <code>old_value</code>.
+<code>delete_relations</code> (:645-683) likewise.</p>
+<p><strong>Search.</strong> <code>search_nodes</code> (:749-925) quotes
+every token and joins them with OR (<code>fts_query</code>,
+db_utils.py:3767-3780), takes 100 FTS rows, fuses vector hits if
+available, adds one-hop neighbours of the top ten
+(<code>_expand_by_relations</code>, :60-114), re-ranks with
+<code>rerank_entities</code> (smart_retrieval.py:99-235), probes which
+observations actually matched, and packs whole entities into a
+16,000-character budget with two observations each
+(recall_budget.py:297-368). <code>search_by_project</code>
+(session_server.py:126-223) is the FTS path with a project predicate and
+no vector arm or expansion.</p>
+<p><strong>Context assembly.</strong> <code>build_context_pack</code>
+(context_packer.py) takes up to 1,000 facts, drops those with
+<code>valid_to</code> or a contradiction count (:612-621), adds
+candidate claims marked provisional (:700-730), questions and chunks,
+and fills a token budget by role.</p>
+<p><strong>Promotion.</strong> <code>promote_candidate</code>
+(claim_graph.py:321-643); <code>auto_promote_layer1</code> (:646-667);
+<code>auto_promote_claim</code> (lazy_enrichment.py:211-319).</p>
+<p><strong>Governance.</strong> <code>govern_fact</code>
+(memory_audit.py:495-689), exposed at intel_server.py:459-488.
+<code>audit_memory</code> runs <code>run_memory_audit</code> with
+<code>repair=True</code> by default, backfilling provenance and
+recomputing contradiction counts.</p>
+<p><strong>Ledger.</strong> <code>record_memory_event</code>
+(db_utils.py:2648-2726); <code>replay_memory_events</code>
+(memory_audit.py:692-741).</p>
+<p><strong>Links.</strong> <code>suggest_links</code> and
+<code>record_link_decision</code> (link_suggestions.py:326-695);
+<code>unlink_task_entity</code> (entity_server.py:108-145).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>entities</code></td>
+<td>name (unique), type, project, visibility, origin</td>
+<td>no status, no validity time</td>
+</tr>
+<tr>
+<td><code>observations</code></td>
+<td>entity id, content</td>
+<td><code>UNIQUE(entity_id, content)</code>, cascade on entity</td>
+</tr>
+<tr>
+<td><code>relations</code></td>
+<td>from, to, type</td>
+<td><code>UNIQUE(from_id, to_id, relation_type)</code></td>
+</tr>
+<tr>
+<td><code>candidate_claims</code></td>
+<td>SPO, scope, confidence, status, <code>requires_human</code></td>
+<td>status written <code>candidate</code> and <code>promoted</code>
+only</td>
+</tr>
+<tr>
+<td><code>lazy_claims</code></td>
+<td>SPO from regex, confidence, <code>hit_count</code>, status</td>
+<td>cascade on the source observation</td>
+</tr>
+<tr>
+<td><code>canonical_facts</code></td>
+<td>SPO, scope, <code>validation_mode</code>, <code>valid_from</code>,
+<code>valid_to</code>, <code>superseded_by_fact_id</code>,
+<code>contradiction_count</code></td>
+<td>no foreign key to entities</td>
+</tr>
+<tr>
+<td><code>memory_events</code></td>
+<td>event type, aggregate, actor, tool, machine, logical clock, old and
+new value, source span</td>
+<td>append-only</td>
+</tr>
+<tr>
+<td><code>link_suggestion_decisions</code></td>
+<td>task id, entity id, accepted or rejected, decided_by</td>
+<td>unique per pair</td>
+</tr>
+</tbody>
+</table></div>
+<p>Scope is the nullable <code>project</code> column. Because
+<code>entities.name</code> is globally unique, two projects cannot each
+hold an entity of the same name; the second <code>create_entities</code>
+call moves the first into its project. <code>visibility</code>
+(<code>private</code>, <code>pending_public</code>, <code>public</code>)
+governs collaboration publishing, not reads.</p>
+<p>Provenance for facts is a <code>provenance_links</code> row per
+source, and <code>knowledge_links</code> carries
+<code>supersedes</code>, <code>superseded_by</code> and
+<code>contradicts</code> edges with an <code>active</code> flag. Notes
+are rows in <code>tasks</code> with <code>type='note'</code>, versioned
+per field in <code>task_field_versions</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated. Nothing injects graph memory into a
+session; the shipped example hook prints the last two session summaries
+only (examples/session_context_hook.py).</p>
+<p><strong>The query is OR over quoted terms.</strong> Every token is
+double-quoted, so the README's <code>NOT</code>, prefix and column
+examples reach FTS5 as literal terms rather than operators.</p>
+<p><strong>The re-rank inverts its own base signal.</strong>
+<code>compute_composite_score</code> starts from
+<code>1.0 / (1.0 + abs(bm25_rank))</code> (smart_retrieval.py:68).
+FTS5's rank is more negative for a better match, so a stronger match
+gets a smaller base, which the comment above it says is not the intent.
+Relation expansion adds neighbours at rank <code>0.0</code> so that one
+"must not outrank a real match" (server.py:98-105), which gives them the
+largest base possible, and they are one hop from the seeds by
+construction, so they also take the 1.8x graph boost. On the FTS-only
+path the default install and CI run, a neighbour with no query term
+therefore starts with the highest base and the graph boost, and
+outscores a match unless recency or richness differ sharply. This was
+read, not run; RRF ranks are small enough that the vector path
+compresses the effect.</p>
+<p><strong>The fact boost ignores governance.</strong> Signal five
+multiplies by 1.4 when any <code>canonical_facts</code> row names the
+entity as subject (:165-178), with no test of <code>valid_to</code>, so
+a superseded or invalidated fact still lifts its entity. The session
+boost is off by design: <code>search_nodes</code> passes
+<code>session_id=None</code>, and a test pins that.</p>
+<p>What the response does well is say what it is. Each entity carries
+<code>_evidence_status</code> of <code>found</code> or
+<code>not_found</code>, and the accounting block reports entities
+considered and returned, observations sent, the wire size of the payload
+including itself, and a query classification.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. A tool call inserts, appends
+events, updates FTS, embeds if the vector extra is present, and runs the
+claim regexes, all in one transaction; a new memory is searchable when
+the call returns. Duplicates collapse on exact text; nothing merges
+near-duplicates, although <code>knowledge_health</code> reports
+them.</p>
+<p><strong>Agent-written text becomes fact by repetition.</strong> The
+inline extractor keys a claim on its subject, predicate and object text,
+so the same statement in different observations accumulates hits.
+<code>depends_on</code>, <code>validates</code> and
+<code>requires</code> cross 0.85 on the third hit; <code>uses</code>,
+<code>produces</code> and <code>replaces</code> on the fourth.
+<code>is</code> and <code>contains</code> never do. The fact is scoped
+<code>entity</code>, never reaches <code>promote_candidate</code>'s
+scope gate, and renders as a FACT in the executor pack.</p>
+<p><strong>Correction is by governance for facts and by deletion for
+everything else.</strong> An observation cannot be edited, only deleted
+and re-added. A fact is superseded by another fact, not rewritten.</p>
+<p><strong>Deletion leaves copies.</strong> The deleted text stays in
+<code>memory_events.old_value</code>, any <code>canonical_facts</code>
+promoted from it stay, and the bridge carries the ledger to every
+machine. On pull, entities, observations and relations are merged with
+<code>INSERT OR IGNORE</code> and no entity or observation tombstone
+exists, so a peer whose payload still carries a deleted observation
+re-inserts it (db_utils.py:7634-7691).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, no model call. A regex pass per observation, and
+a 384-dimension embedding when the vector extra is installed.</li>
+<li>Background: tray link scan and bridge sync on timers; bridge push
+streams the whole ledger, which a comment at bridge_sync_worker.py:1292
+puts at hundreds of MB.</li>
+<li>Read: <code>search_nodes</code> is capped at 16,000 characters;
+context packs at a token budget defaulting to 4,000. Nothing is injected
+per turn.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds every verb. The core nine are the official server's
+tools with added <code>project</code> and <code>aliases</code> fields.
+The intelligence server adds claim extraction, promotion, context packs,
+fact governance, ledger replay and the reflection review tools; the
+entity server adds manual links, unlinking and entity merge.</p>
+<p>There is no confirmation on any write or delete, and no hook. An
+agent must be told to search and save, and <code>resume_context</code>
+builds a handoff pack when asked. Adapting it to another MCP client is a
+config line per server; the seven-server split is the main friction, and
+<code>unified_server.py</code> removes it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The promotion gate is advisory.</strong> Its only hard rule
+is that claims whose text matches <code>mapping</code>,
+<code>validation</code>, <code>bridge</code> or <code>export</code>
+keywords need <code>mode="human_confirmed"</code>
+(claim_graph.py:107-117, :358-376). That is the tool's default
+(intel_server.py:305), supplied by the caller. The project's own
+<code>REWRITE PROPOSAL.md</code> concedes "approval-aware", not "always
+gated"; the inline extractor goes further and bypasses the tool.</p>
+<p><strong>The ledger is the strongest part.</strong> Every core
+mutation is appended with before and after values, replayable per
+aggregate, and imported across machines without overwriting.</p>
+<p><strong>Privacy does not follow scope.</strong> Entity export honours
+the <code>shared</code> prefix; the ledger, candidate claims, facts and
+context chunks are exported whole. Any reader of the bridge repository
+reads every observation ever added or deleted.</p>
+<p><strong>Uncertainty is representable only in the claim tier.</strong>
+An observation is asserted or absent.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>audit_log</code> — awarded on <code>memory_events</code>.
+Merge, bridge import and the project re-scope write no event.</li>
+<li><code>bitemporal</code> — awarded on the end of a fact's validity;
+the start is always record time and no read is as-of.</li>
+<li><code>scope_enforced</code> — awarded on
+<code>search_by_project</code> only.</li>
+<li><code>tombstone</code> — awarded on rejected task-to-entity links.
+Nothing value-keyed guards observations or facts; the
+<code>lazy_claims</code> rejection has no writer.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>trust_state</code> — withheld.
+<code>candidate_claims.status</code> holds <code>candidate</code> or
+<code>promoted</code>, and the pack renders candidates as PROVISIONAL
+rather than excluding them. The exclusions it does make key on
+<code>valid_to</code> and <code>contradiction_count</code>, not on a
+status, and the one state that would withhold, <code>rejected</code>,
+has no producer.</li>
+<li><code>human_review</code> — withheld.
+<code>promote_candidate</code>, <code>reflect_decide</code>
+(<code>decided_by="user"</code> by default), <code>reflect_apply</code>
+and <code>review_shared_knowledge</code> with
+<code>action="approve"</code> are all tools the agent holds.
+<code>unlink_task_entity</code> stamps <code>decided_by="human"</code>
+as a literal on an agent-callable tool.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; the suite was
+read at the pin. CI runs <code>ruff</code> and <code>pytest -q</code>
+without the vector extra, plus a core-only MCP stdio smoke test.</p>
+<p><strong>Negative retrieval.</strong>
+<code>tests/test_search_nodes_graph_signals.py</code> seeds a match, a
+related neighbour and an unrelated entity (:35-73). With expansion off
+it asserts the match present and the neighbour absent (:76-83); with it
+on, the unrelated entity stays out (:91-95).
+<code>test_task_scoped_pack_matches_snake_case_tool_keyword</code>
+asserts a relevant chunk in the pack body and a noise chunk out
+(tests/test_context_packer.py:124-159).</p>
+<p><strong>A case with no positive control.</strong>
+<code>test_executor_pack_hides_contradicted_facts</code> (:235-262)
+inserts one fact, sets its contradiction count and asserts it is absent;
+an empty pack passes it.</p>
+<p><strong>Governance.</strong>
+<code>test_govern_fact_supersede_sets_validity_and_links</code> pins
+<code>valid_to</code> to the supplied effective time
+(tests/test_memory_audit.py:247-273). The link rejection test is at
+tests/test_link_suggestions.py:195-232.</p>
+<p><strong>Ranking.</strong> Every <code>compute_composite_score</code>
+test passes the same <code>-5.0</code> rank
+(tests/test_smart_retrieval.py:40-96), so none compares two matches of
+different strength, and no committed test asserts an order among
+<code>search_nodes</code> results. Both would catch section 6's
+inversion.</p>
+<p><strong>Evaluation.</strong>
+<code>tests/fixtures/retrieval_eval_corpus.json</code> holds six queries
+for <code>find_by_title</code> over tasks and notes, asserted at 100%
+top-1 and top-3. No benchmark result or paper is in the tree.</p>
+<p><strong>Unwired primitives.</strong> <code>trust_boundary.py</code>,
+<code>claim_confidence.py</code>, <code>lazy_verification.py</code>,
+<code>source_reliability.py</code> and
+<code>prediction_calibration.py</code> are imported only by their tests
+and by one another.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Append the old and new value on every mutation, keyed by
+machine and a logical clock.</strong> A unique index on the pair makes
+cross-machine import an idempotent <code>INSERT OR IGNORE</code>.</li>
+<li><strong>Retire facts with a reason and an effective time, and never
+delete them.</strong> <code>govern_fact</code>'s supersede, invalidate
+and revalidate cover the corrections a person actually makes.</li>
+<li><strong>Remember a rejected suggestion by the pair it
+proposed.</strong> The auto-linker's next scan then cannot re-propose
+it, and the rejection doubles as an evaluation label.</li>
+<li><strong>Tell the caller which results carried evidence.</strong> A
+<code>not_found</code> label on an expanded neighbour and an accounting
+block that measures the payload it sits in make a degraded answer
+visible.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An approval flag with an approving default.</strong> A gate
+the caller passes by omitting an argument is a log entry, not a
+gate.</li>
+<li><strong>A second promotion path beside the governed one.</strong>
+Hit counts on regex matches reach the same fact table as a human
+confirmation, and the reader cannot tell them apart.</li>
+<li><strong>Inverting a rank without a test of two ranks.</strong> Every
+scoring test at one input value leaves the direction of the main signal
+unasserted.</li>
+<li><strong>Scoping the rows and not the log.</strong> A ledger that
+carries content is a copy of the store and needs the same export
+filter.</li>
+<li><strong>Testing a validity end for presence.</strong> Compare it to
+the clock, or an effective time in the future retires the fact at
+once.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer running several Claude Code or Codex
+sessions on their own machines who wants a shared, inspectable graph
+with a real change log, and who will read the claim tier as advisory. It
+is a large codebase for one maintainer, most of it task management and a
+debate protocol, and the memory path is a small part of it. Anyone who
+needs the promotion gate to exclude an agent, per-project isolation on
+every read, or deletion that reaches other machines should not rely on
+it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the BM25 inversion show in practice? Running
+<code>search_nodes</code> on a graph with matches of different strength,
+without the vector extra, would settle it.</li>
+<li>Is <code>lazy_claims.status = 'rejected'</code> meant to be set by a
+tool that has not shipped, or by hand?</li>
+<li>How large is the ledger on a long-lived store, and is any pruning
+planned for the bridge copy?</li>
+<li>Do bridge peers ever share a repository with a second person, given
+that the collaboration server uses the same
+<code>BRIDGE_REPO</code>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong> <code>schema.py</code> (entities to
+relations :59-87, claim and fact tier :400-449, ledger :498-523, lazy
+claims :644-660, link decisions :261-278).</li>
+<li><strong>Write and delete:</strong> <code>server.py</code>,
+<code>lazy_enrichment.py</code>, <code>claim_graph.py</code>.</li>
+<li><strong>Retrieval:</strong> <code>server.py:749-925</code>,
+<code>smart_retrieval.py</code>, <code>vec_search.py</code>,
+<code>recall_budget.py</code>,
+<code>session_server.py:126-223</code>.</li>
+<li><strong>Context assembly:</strong> <code>context_packer.py</code>,
+<code>advanced_context.py</code>.</li>
+<li><strong>Governance and ledger:</strong>
+<code>memory_audit.py</code>, <code>db_utils.py:2648-2726</code>.</li>
+<li><strong>Links:</strong> <code>link_suggestions.py</code>,
+<code>entity_server.py</code>.</li>
+<li><strong>Bridge:</strong> <code>bridge_sync_worker.py</code>,
+<code>db_utils.py:7385-7389, 7634-7691, 8356-8425</code>.</li>
+<li><strong>MCP:</strong> <code>server.py</code>,
+<code>session_server.py</code>, <code>intel_server.py</code>,
+<code>entity_server.py</code>, <code>collab_server.py</code>,
+<code>unified_server.py</code>.</li>
+<li><strong>Tests:</strong>
+<code>tests/test_search_nodes_graph_signals.py</code>,
+<code>tests/test_context_packer.py</code>,
+<code>tests/test_memory_audit.py</code>,
+<code>tests/test_link_suggestions.py</code>,
+<code>tests/test_smart_retrieval.py</code>,
+<code>tests/test_lazy_enrichment.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn -iE '(DELETE FROM|UPDATE|REPLACE INTO|INSERT OR REPLACE INTO) +memory_events' --include='*.py' .</code>
+— no match.</li>
+<li><code>grep -rn "'rejected'" --exclude-dir=.git --exclude-dir=tests .</code>
+— link decisions and bridge only; for <code>lazy_claims</code> the
+status is read at <code>lazy_enrichment.py:149-154</code> and
+<code>:376</code>, and written only in
+<code>tests/test_lazy_enrichment.py:184</code>.</li>
+<li><code>grep -rn "UPDATE candidate_claims" --include='*.py' . | grep -v tests</code>
+— two writes, both <code>status = 'promoted'</code>.</li>
+<li><code>grep -rn 'DELETE FROM canonical_facts\|DELETE FROM lazy_claims\|DELETE FROM candidate_claims' --include='*.py' .</code>
+— no match.</li>
+<li><code>grep -rn 'record_memory_event\|DELETE FROM entities' entity_server.py</code>
+— the merge deletes at <code>:470</code> with no event.</li>
+<li><code>grep -rln 'search_by_project' tests/</code> — only the
+surface-contract fixture.</li>
+<li><code>grep -rn 'promote_candidate\|pending_shared_entities\|reflect_decide\|record_link_decision' task_tray.py tray_dialogs.py tray_sync.py premium_task_tray.py bin/</code>
+— no match; the GUI has no approve verb.</li>
+<li><code>for m in trust_boundary claim_confidence lazy_verification source_reliability prediction_calibration; do grep -rln "import $m\|from $m" --include='*.py' .; done</code>
+— tests, and <code>trust_boundary.py</code> importing
+<code>lazy_verification</code>.</li>
+<li><code>grep -rln 'SessionStart\|UserPromptSubmit\|PreCompact' --exclude-dir=.git .</code>
+— the example hook and <code>hooks/debate_wake.py</code>.</li>
+<li><code>grep -rn -iE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' --exclude-dir=.git . | grep -v tests/</code>
+— one heading in a design note; no paper, no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/RMANOV/sqlite-memory-mcp/commit/f5d04e6ef5fe62e543b08a954ae71c98aaf2a0f9"><code class="commit-id" title="f5d04e6ef5fe62e543b08a954ae71c98aaf2a0f9">f5d04e6e…</code></a>
+— first reading, at the head of <code>main</code>, a merge commit dated
+25 September 2026. Five marks: <code>tombstone</code>,
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>. Screened before
+reading: one auto-run surface (<code>hooks/</code>, seven scripts a
+plugin manifest could register, with no manifest in the tree), one
+build-time execution point (<code>tests/conftest.py</code>), two
+dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip — and two unpinned surfaces. No <code>AGENTS.md</code>
+or <code>CLAUDE.md</code> is present. Read with <code>grep</code> and
+<code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

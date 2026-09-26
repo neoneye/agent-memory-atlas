@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 637 reports.**
+**This page covers all 638 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5701,3 +5701,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 4,979 lines of Python in `emulo.py` and 2,767 in `emulo_autopilot/`, 409 commits from 3 contributors between 8 July and 25 September 2026, and 571 Python test functions, strongest on the admission gates' refusals. No mark; the one read-path exclusion test covers an overlay whose only writer is its fixture. A committed pre-registered study shows the profile changes output style on one of two models and does not claim it improves the work.
 - Study when: you are building an extractor over user-authored logs and want receipts that a model cannot fake, content-addressed stages that make an unchanged re-run free, and an activation that restores the previous pointer on any failure.
 - Do not copy when: a person must be able to retract one rule and have it stay retracted, or the served text must equal what was validated. Neither holds here.
+
+### [`sqlite-memory-mcp`](../systems/sqlite-memory-mcp/)
+
+- Best idea: **retire a fact with a reason and an effective time, and log both sides.** `govern_fact` supersedes, invalidates or revalidates a canonical fact, writes the effective time to `valid_to` apart from `updated_at`, links the pair in `knowledge_links`, and appends the before and after state to an append-only `memory_events` ledger that the nine core graph tools also write on every create and delete.
+- Biggest risk: **the promotion gate is a default argument.** `promote_candidate` takes `mode="human_confirmed"` unless told otherwise, on a tool the agent holds, and only keyword-detected sensitive scopes demand even that. Beside it, `extract_inline_claims` promotes a regex claim to a canonical fact after three or four matching observations, and the context pack renders that fact exactly like a confirmed one.
+- Most reusable component: `memory_audit.py` `govern_fact` with `db_utils.py` `record_memory_event` — a small truth-maintenance verb over an append-only, per-machine logically clocked ledger whose cross-machine import is an idempotent `INSERT OR IGNORE`.
+- Second risk: **scope stops at the rows.** Only `search_by_project` filters by project; `search_nodes` treats it as a 1.5x boost. The bridge push filters entities to the `shared` prefix and then exports the whole event ledger, which carries every observation's text, including deleted ones.
+- Maturity impression: MIT, 65,843 lines of Python outside tests and 555 commits by 2 contributors since 1 March 2026, with 1,615 pytest functions run in CI without the vector extra. Five marks, each on a narrow surface: `tombstone` on rejected task-to-entity links, `bitemporal` on a fact's validity end, `scope_enforced` on one tool, `audit_log` on the ledger, `negative_eval` on `search_nodes` and the context pack. No test compares two BM25 ranks, and the re-ranker, read closely, inverts them.
+- Study when: you want a worked append-only mutation ledger and a supersede-with-rationale verb over a local SQLite graph, or a search response that labels which results actually carried the query terms.
+- Do not copy when: promotion must exclude the agent, reads must be isolated per project, or deletion must reach every machine. The approve verbs are all on the MCP surface, and the ledger and bridge keep what was deleted.
