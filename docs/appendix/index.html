@@ -11846,6 +11846,25 @@ package rejects a string with a tested <code>StorageError</code>, and
 the TypeScript <code>FileMemoryStore</code> scans with <code>list</code>
 and <code>read</code> instead, so the seam is Python-only. Read, not
 run.</li>
+<li><strong><code>home-assistant/core</code> was examined and has no
+report: its assistant forgets every conversation after five idle
+minutes, and nothing in the tree stores anything the model
+learned.</strong> At <a
+href="https://github.com/home-assistant/core/commit/087bf875d6103f46b7ad7e397a8fd09b7727b1ad"><code class="commit-id" title="087bf875d6103f46b7ad7e397a8fd09b7727b1ad">087bf875…</code></a>
+the Python under <code>homeassistant/</code> runs to 1,547,500 lines
+over 1,525 integration directories, and the LLM surface is a small part
+of it. The chat history lives in a <code>hass.data</code> dict:
+<code>ChatLog</code> in <code>components/conversation/chat_log.py</code>
+is keyed by <code>conversation_id</code>, and its cleanup callback at
+line 150 pops the entry. That callback runs when
+<code>helpers/chat_session.py:102</code> finds a session idle past
+<code>CONVERSATION_TIMEOUT = timedelta(minutes=5)</code> (line 28).
+Every provider integration resends the whole log each turn. OpenAI's
+<code>store_responses</code> option (default <code>False</code>,
+<code>openai_conversation/const.py:46</code>) keeps responses on
+OpenAI's side, and no code reads them back;
+<code>previous_response_id</code> appears nowhere in
+<code>homeassistant/</code>.</li>
 <li><strong><code>mcn92/pikelet</code> was examined and has no report,
 because nothing that happens after the build can contradict what it
 holds.</strong> Apache-2.0 (Matthew Noonan), 61,585 lines of JavaScript,
