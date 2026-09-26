@@ -2708,11 +2708,13 @@ was installed and no suite was run</li>
 href="https://github.com/rekal-dev/rekal-cli">rekal-dev/rekal-cli</a> at
 <a
 href="https://github.com/rekal-dev/rekal-cli/commit/4550e602eaa347d7afe28cf7f38f25f8c43f9afc"><code class="commit-id" title="4550e602eaa347d7afe28cf7f38f25f8c43f9afc">4550e602…</code></a>
-— read only; two auto-run surfaces (a <code>.claude-plugin/</code>
-marketplace manifest and a configured LFS smudge filter over the packed
-embedding model), <code>go.mod</code>/<code>go.sum</code> inside the
-7-day cooldown, and an uninstalled <code>scripts/pre-push</code> hook.
-Nothing was installed and no suite was run</li>
+— read only; screened on 2026-09-13 and again on a full clone on
+2026-09-26 at the same pin: two auto-run surfaces (a
+<code>.claude-plugin/</code> marketplace manifest and a configured LFS
+smudge filter over the packed embedding model), <code>go.sum</code>
+unchanged since 16 July 2026, and an uninstalled
+<code>scripts/pre-push</code> hook. Nothing was installed and no suite
+was run</li>
 <li><a href="https://github.com/xerj-org/xerj">xerj-org/xerj</a> at <a
 href="https://github.com/xerj-org/xerj/commit/f54eead8097fc234d0815ce245613870dcf22ffd"><code class="commit-id" title="f54eead8097fc234d0815ce245613870dcf22ffd">f54eead8…</code></a>
 — read only; 21 dependency manifests inside the 7-day cooldown, two
@@ -5272,6 +5274,26 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Rekal report withheld <code>scope_enforced</code> over
+an author filter on both recall paths, and misstated its timestamp
+column, its session mutability and its ranking weights; corrected
+2026-09-26.</strong> At <a
+href="https://github.com/rekal-dev/rekal-cli/commit/4550e602eaa347d7afe28cf7f38f25f8c43f9afc"><code class="commit-id" title="4550e602eaa347d7afe28cf7f38f25f8c43f9afc">4550e602…</code></a>
+the <a href="../systems/rekal/">Rekal</a> report said recall applies no
+scope predicate at all. <code>rekal -a &lt;email&gt;</code> applies the
+<code>user_email</code> every captured and synced session row carries,
+as SQL in filter mode and per candidate in hybrid mode; the recorded
+search looked for <code>branch</code> only, so the mark was withheld in
+error. It said <code>captured_at</code> holds the session start for
+three adapters and the ingest clock for two. The commit capture path
+writes the capture clock for all seven, and the adapters' start times
+reach only cross-repo imports, where four adapters use the import clock.
+It called sessions immutable; a continuing conversation gains turns at
+the next capture. It gave the benchmark calibration's weights as the
+shipped ones and omitted a fourth, facet layer that feeds confidence.
+Its screen put <code>go.mod</code> and <code>go.sum</code> inside the
+cooldown; they last changed on 16 July 2026, and the finding was a
+shallow-clone artifact.</li>
 <li><strong>The Moltis report called its session capture sanitized, said
 memory had no scope beyond the indexed directory, and credited a
 reranker, a batch embedder and hash-addressed citations the default path
