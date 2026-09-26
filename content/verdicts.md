@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 635 reports.**
+**This page covers all 636 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5681,3 +5681,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Codependent AI Source-Available License, 17,088 lines of TypeScript and 1,354 lines of SQL in 23 migrations, 32 commits on master by 2 contributors between 22 March and 19 September 2026. 85 Vitest cases in 18 files, 42 of them image handling; the only database test writes one observation, and no test reaches search, supersession or consolidation. No marks.
 - Study when: you want write-time supersession without an LLM in the loop, or a worked example of ordering statements for safe failure on a connection that cannot hold a transaction.
 - Do not copy when: corrections must hold on every read path, deletion must be reliable, more than one principal shares the store, or search has to work while the embedding provider is down.
+
+### [`engram-nickcirv`](../systems/engram-nickcirv/)
+
+- Best idea: **mine reverts into then-believed, found-false and truth-now.** `mineGitReverts` pairs a revert with the commit it overturns and stores the original subject, the revert's timestamp and `"Reverted in <sha>"` as separate fields with both shas in metadata, at a confidence high enough to warn before the next edit of that file. A frozen-fixture test holds the session regexes to zero extractions on a prose README.
+- Biggest risk: **the memory is deleted by the paths that refresh the code graph.** Mistakes are rows in the node table keyed on `source_file`, and `syncFile` deletes every node for a file before re-inserting only AST nodes, so `engram watch`, `engram reindex` and the opt-in reindex hook remove the landmines for the file being edited. A full `engram init` clears the table, and every `engram learn` lesson with it.
+- Most reusable component: `src/miners/git-revert-miner.ts` — 228 lines, no dependencies beyond `git`, that turn `This reverts commit <sha>` into a record of what was believed, when it stopped being true and what replaced it.
+- Second risk: **every hook process rewrites the whole store.** sql.js loads `graph.db` into memory and `close()` always saves, including after reads, so parallel hooks are last-writer-wins — which the repository's own two-process test states and accepts. `valid_until` is filtered by two readers and written by nothing.
+- Maturity impression: Apache-2.0, 25,199 lines of TypeScript in `src/` and 225 commits by 3 contributors from 9 April to 22 September 2026, with 1,197 Vitest cases run in CI on two operating systems. One mark, `negative_eval`, on a per-file lookup that leaves out another file's mistakes after a positive control. The mistake memory is about 1,300 of those lines.
+- Study when: you want a coding agent warned before it edits a file with reverts in its history, and want a regex miner with a false-positive gate rather than a model call.
+- Do not copy when: taught lessons must survive a re-index, several agents write at once, or a wrong warning must be retractable. There is no delete verb, no lock, and no state between present and gone.

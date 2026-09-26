@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 635 reports.</strong></p>
+<p><strong>This page covers all 636 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26144,6 +26144,47 @@ connection that cannot hold a transaction.</li>
 <li>Do not copy when: corrections must hold on every read path, deletion
 must be reliable, more than one principal shares the store, or search
 has to work while the embedding provider is down.</li>
+</ul>
+<h3 id="engram-nickcirv"><a
+href="../systems/engram-nickcirv/"><code>engram-nickcirv</code></a></h3>
+<ul>
+<li>Best idea: <strong>mine reverts into then-believed, found-false and
+truth-now.</strong> <code>mineGitReverts</code> pairs a revert with the
+commit it overturns and stores the original subject, the revert's
+timestamp and <code>"Reverted in &lt;sha&gt;"</code> as separate fields
+with both shas in metadata, at a confidence high enough to warn before
+the next edit of that file. A frozen-fixture test holds the session
+regexes to zero extractions on a prose README.</li>
+<li>Biggest risk: <strong>the memory is deleted by the paths that
+refresh the code graph.</strong> Mistakes are rows in the node table
+keyed on <code>source_file</code>, and <code>syncFile</code> deletes
+every node for a file before re-inserting only AST nodes, so
+<code>engram watch</code>, <code>engram reindex</code> and the opt-in
+reindex hook remove the landmines for the file being edited. A full
+<code>engram init</code> clears the table, and every
+<code>engram learn</code> lesson with it.</li>
+<li>Most reusable component: <code>src/miners/git-revert-miner.ts</code>
+— 228 lines, no dependencies beyond <code>git</code>, that turn
+<code>This reverts commit &lt;sha&gt;</code> into a record of what was
+believed, when it stopped being true and what replaced it.</li>
+<li>Second risk: <strong>every hook process rewrites the whole
+store.</strong> sql.js loads <code>graph.db</code> into memory and
+<code>close()</code> always saves, including after reads, so parallel
+hooks are last-writer-wins — which the repository's own two-process test
+states and accepts. <code>valid_until</code> is filtered by two readers
+and written by nothing.</li>
+<li>Maturity impression: Apache-2.0, 25,199 lines of TypeScript in
+<code>src/</code> and 225 commits by 3 contributors from 9 April to 22
+September 2026, with 1,197 Vitest cases run in CI on two operating
+systems. One mark, <code>negative_eval</code>, on a per-file lookup that
+leaves out another file's mistakes after a positive control. The mistake
+memory is about 1,300 of those lines.</li>
+<li>Study when: you want a coding agent warned before it edits a file
+with reverts in its history, and want a regex miner with a
+false-positive gate rather than a model call.</li>
+<li>Do not copy when: taught lessons must survive a re-index, several
+agents write at once, or a wrong warning must be retractable. There is
+no delete verb, no lock, and no state between present and gone.</li>
 </ul>
         </article>
       </div>

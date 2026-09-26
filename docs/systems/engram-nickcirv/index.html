@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local code-graph context layer
+for coding agents whose memory is regex-mined mistake and decision nodes
+in one SQLite file, surfaced as landmines by hooks.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="engram
+(NickCirv) — Agent Memory Atlas">
+    <meta property="og:description" content="A local code-graph context
+layer for coding agents whose memory is regex-mined mistake and decision
+nodes in one SQLite file, surfaced as landmines by hooks.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="engram
+(NickCirv) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local code-graph context
+layer for coding agents whose memory is regex-mined mistake and decision
+nodes in one SQLite file, surfaced as landmines by hooks.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>engram (NickCirv) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "engram (NickCirv)",
+      "description": "A local code-graph context layer for coding agents whose memory is regex-mined mistake and decision nodes in one SQLite file, surfaced as landmines by hooks.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Mistake landmines inside a structural code
+graph</p>
+          <h1>engram (NickCirv)</h1>
+          <p class="document-deck">A local code-graph context layer for
+coding agents whose memory is regex-mined mistake and decision nodes in
+one SQLite file, surfaced as landmines by hooks.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NickCirv/engram">
+              <span>Source</span>
+              <strong>NickCirv/engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NickCirv/engram/commit/df445d3132583100e6d5106af4b4c91c01a2ba15" title="df445d3132583100e6d5106af4b4c91c01a2ba15">
+              <span>Analyzed revision</span>
+              <code>df445d31…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NickCirv--engram" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>NickCirv--engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>25,199
+lines of TypeScript in src/; the mistake memory is about 1,300 of
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>225
+commits on main by 3 contributors, 9 April – 22 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,197
+Vitest cases in 93 files, 17,589 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>engram, published on npm as <code>engramx</code>, is a local
+code-intelligence layer for Claude Code and similar hosts. It builds a
+structural graph of a repository in one SQLite file, intercepts reads
+and edits through hooks, and adds a mistake memory: nodes mined from
+reverts, fix commits and project notes that warn the agent before it
+edits a file with a history.</p>
+<p>What is notable is the revert record. A <code>git revert</code>
+becomes a mistake with the belief it overturned, the date it was found
+false, and the revert that superseded it, rendered as <em>"then you
+believed … found false … truth now"</em>.</p>
+<p>What is weak is where that memory lives. Mistakes share the
+<code>source_file</code> column with derived code nodes, so the paths
+that refresh code delete them, and every store open rewrites the whole
+file on close.</p>
+<p>Most of the tree is not memory. The AST miner, the reference graph,
+PageRank, the Read and Grep interception gates, the provider resolver
+and the token accounting are a context-compression product. This report
+covers the mistake, decision and pattern nodes, which state things that
+can be false, and the code graph only where the two share a table.</p>
+<p>The mistake memory is built on the graph's own node table
+(<code>src/graph/schema.ts:3-53</code>): a mistake is a
+<code>GraphNode</code> with <code>kind: "mistake"</code>, four optional
+bi-temporal fields added by migration 9
+(<code>src/db/migrate.ts:206-211</code>), and a <code>valid_until</code>
+column added by migration 8 (<code>:186-194</code>) that the readers
+honour and nothing writes.</p>
+<p>One mark, <code>negative_eval</code>, for a committed case in which a
+per-file lookup leaves out another file's mistakes after a positive
+control. Section 9 names the six withheld.</p>
+<p>Five other repositories named engram have reports, and none is this
+one: <a href="../engram/">engram</a>, <a
+href="../engram-alpha/">engram-alpha</a>, <a
+href="../engram-cognitive/">engram-cognitive</a>, <a
+href="../engram-format/">engram-format</a> and <a
+href="../engram-provable/">engram-provable</a>. The licence is
+Apache-2.0 with no rider.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a graph node of kind <code>mistake</code>,
+<code>decision</code> or <code>pattern</code>. None is ever a candidate:
+a node exists or it does not, and a node's weight in retrieval is a
+confidence score set by its miner.</p>
+<p><strong>Beliefs arrive from four producers, all regular expressions
+and git.</strong></p>
+<ul>
+<li><code>mineGitReverts</code> pairs a revert commit with the commit it
+reverts and writes <code>thenBelieved</code> (the original subject),
+<code>foundFalseAt</code> (the revert's author time),
+<code>truthNow</code> (<code>"Reverted in &lt;sha&gt;"</code>) and
+<code>appliesTo</code> (a label derived from the changed paths), at
+confidence 0.9
+(<code>src/miners/git-revert-miner.ts:196-219</code>).</li>
+<li><code>mineBugFixCommits</code> turns a <code>fix:</code>-prefixed or
+issue-closing commit into <code>"Bug fixed here: &lt;subject&gt;"</code>
+at 0.6 (<code>src/miners/git-bugfix-miner.ts:75-86</code>,
+<code>:126-141</code>).</li>
+<li><code>mineSessionHistory</code> runs three regex families over
+<code>CLAUDE.md</code>, <code>.claude/CLAUDE.md</code>,
+<code>AGENTS.md</code>, <code>.cursorrules</code>,
+<code>.cursor/rules</code> and every <code>.engram/sessions/*.md</code>
+(<code>src/miners/session-miner.ts:14-29</code>, <code>:95-125</code>).
+A <code>bug: …</code> line becomes a mistake at 0.6, a
+<code>decided X over Y</code> phrase a decision at 0.7, a
+<code>pattern: …</code> line a pattern at 0.65.</li>
+<li><code>learn</code> runs the same regexes over a caller's text and
+promotes any mistake it finds to 0.85 and <code>EXTRACTED</code>
+(<code>src/core.ts:620-642</code>).</li>
+</ul>
+<p><strong>Identity is derived from the words.</strong> Session nodes
+take <code>session_&lt;kind&gt;_&lt;label&gt;</code> lowercased,
+stripped to alphanumerics and cut at 60 characters
+(<code>session-miner.ts:31-39</code>). Two lessons whose normalised text
+shares its first 44 characters are one node, and the second replaces the
+first. Revert and fix nodes are keyed on commit shas and replace
+themselves on re-mine.</p>
+<p><strong>A belief stops being one in three ways, none of them a
+decision about it.</strong> A full <code>engram init</code> deletes
+every node and re-mines (<code>src/core.ts:171-173</code>), so git-mined
+mistakes return, bounded to the last 200 or 300 commits, while every
+<code>learn</code>ed node is gone. A single-file reindex deletes every
+node whose <code>source_file</code> is that file, then re-inserts only
+AST nodes (<code>src/watcher.ts:124-138</code>), so the file's mistakes
+disappear until the next full init. The third exit,
+<code>valid_until</code>, is declared and never set (section 5).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a mistake node is produced, where it is read, and the two paths that delete it without anyone deciding to</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a mistake node is produced, where it is read, and the two paths that delete it without anyone deciding to
+flowchart TD
+    RV[&quot;git revert commit&quot;] --&gt; MR[&quot;mineGitReverts:&lt;br/&gt;thenBelieved, foundFalseAt,&lt;br/&gt;truthNow, score 0.9&quot;]
+    FX[&quot;fix: or closes #N commit&quot;] --&gt; MB[&quot;mineBugFixCommits:&lt;br/&gt;&#39;Bug fixed here&#39;, score 0.6&quot;]
+    NOTES[&quot;CLAUDE.md, AGENTS.md,&lt;br/&gt;.cursorrules, .engram/sessions&quot;] --&gt; MS[&quot;session regexes:&lt;br/&gt;bug:, fix:, decided X over Y,&lt;br/&gt;score 0.6 to 0.7&quot;]
+    L[&quot;engram learn / POST /learn&quot;] --&gt; ML[&quot;same regexes,&lt;br/&gt;mistakes promoted to 0.85&quot;]
+    MR --&gt; N[(&quot;nodes table,&lt;br/&gt;kind = mistake,&lt;br/&gt;keyed by source_file&quot;)]
+    MB --&gt; N
+    MS --&gt; N
+    ML --&gt; N
+    N --&gt; E{&quot;PreToolUse Edit or Write:&lt;br/&gt;source_file = edited path,&lt;br/&gt;score at least 0.8?&quot;}
+    E -- &quot;yes&quot; --&gt; W[&quot;landmine in additionalContext;&lt;br/&gt;deny if GUARD=2&quot;]
+    N --&gt; SS[&quot;SessionStart and PreCompact:&lt;br/&gt;3 newest by last_verified&quot;]
+    N --&gt; Q[&quot;query_graph: substring match,&lt;br/&gt;score x 2.5, warning block&quot;]
+    INIT[&quot;engram init, full&quot;] -- &quot;clearAll, re-mine git and notes&quot; --&gt; N
+    RX[&quot;watch, reindex,&lt;br/&gt;opt-in reindex hook&quot;] -- &quot;deleteBySourceFile:&lt;br/&gt;the file&#39;s mistakes go too&quot; --&gt; N
+    VU[&quot;valid_until&quot;] -. &quot;read by 2 read paths,&lt;br/&gt;written by nothing&quot; .-&gt; N</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>engramx</code> is a Node 20 TypeScript package with three
+binaries: the <code>engram</code> CLI, an alias, and
+<code>engram-serve</code>, a stdio MCP server
+(<code>package.json</code>). Storage is <code>sql.js</code>, SQLite
+compiled to WebAssembly: <code>GraphStore.open</code> reads the whole
+<code>.engram/graph.db</code> into memory and <code>save</code> writes
+the whole exported database back with <code>writeFileSync</code>
+(<code>src/graph/store.ts:29-40</code>, <code>:102-105</code>).
+<code>close</code> always calls <code>save</code>
+(<code>:669-672</code>).</p>
+<p>That makes every open-and-close a whole-file write, including reads.
+Each hook invocation is a separate process, and <code>mistakes()</code>,
+<code>getFileContext()</code> and <code>queryGraph()</code> all open and
+close the store; <code>queryGraph</code> also increments
+<code>query_count</code> on its seeds
+(<code>src/graph/query.ts:128</code>). The only lock in
+<code>src/</code> guards <code>init</code>
+(<code>src/core.ts:82-95</code>).</p>
+<p>The hook layer is <code>engram intercept</code>, registered by
+<code>engram init</code> into the project's
+<code>.claude/settings.local.json</code> on PreToolUse, PostToolUse,
+SessionStart, SubagentStart, UserPromptSubmit, PreCompact, CwdChanged
+and Stop unless <code>--no-hook</code> is passed
+(<code>src/intercept/installer.ts:22-31</code>, <code>:105-155</code>;
+<code>src/cli.ts:136-206</code>). An HTTP server bound to
+<code>127.0.0.1</code> with Host, Origin, bearer-token and JSON
+content-type checks adds <code>POST /learn</code>
+(<code>src/server/http.ts:336-367</code>, <code>:744-756</code>).</p>
+<p>Providers resolve per-file context packets from the graph, git,
+Claude Code's own <code>MEMORY.md</code> index, an external
+<code>mempalace</code> CLI, Context7, Obsidian and configured MCP
+servers, caching results in a <code>provider_cache</code> table
+(<code>src/providers/</code>). Of these, only the graph belongs to
+engram's memory; the others are readers of someone else's store.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One <code>npm install -g engramx</code> and <code>engram init</code>
+in a project. No API key, no model call, no service; everything runs in
+the hook processes. The store is a SQLite file any client can open, and
+mistakes can be listed with <code>engram mistakes</code>, but there is
+no command to remove one. The update check and optional providers reach
+the network, which the README states.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Mine on init.</strong> <code>init</code> runs
+<code>extractDirectory</code>, <code>mineGitHistory</code>,
+<code>mineGitReverts</code>, <code>mineBugFixCommits</code> and
+<code>mineSessionHistory</code> (<code>src/core.ts:112-120</code>), then
+either clears everything (full) or calls <code>removeNodesForFile</code>
+for each <code>sourceFile</code> in the new node set (incremental), and
+<code>bulkUpsert</code>s (<code>:160-174</code>).</p>
+<p><strong>Teach.</strong> <code>engram learn &lt;text&gt;</code> →
+<code>learn(projectRoot, text)</code> with the default source label
+<code>"manual"</code> (<code>src/cli.ts:622-634</code>);
+<code>POST /learn</code> passes the body's <code>file</code>, defaulting
+to <code>"http-api"</code> (<code>src/server/http.ts:363</code>). Both
+reach <code>learnFromSession</code>
+(<code>session-miner.ts:130-132</code>) and
+<code>store.bulkUpsert</code>.</p>
+<p><strong>Warn on edit.</strong> <code>dispatchPreToolUse</code> runs
+<code>handleEditOrWrite</code> and then <code>applyMistakeGuard</code>
+for Edit and Write, and <code>applyMistakeGuard</code> alone after
+<code>handleBash</code>
+(<code>src/intercept/dispatch.ts:199-214</code>).
+<code>handleEditOrWrite</code> calls <code>mistakes()</code> with
+<code>sourceFile</code>, a limit of 5 and
+<code>minConfidence: 0.8</code>
+(<code>src/intercept/handlers/edit-write.ts:171-180</code>;
+<code>src/intercept/safety.ts:48</code>). The guard re-reads by file
+through <code>getNodesByFile</code>, drops rows whose
+<code>validUntil</code> has passed and rows under the floor, and denies
+the call in strict mode
+(<code>src/intercept/handlers/mistake-guard.ts:133-138</code>,
+<code>:314-335</code>).</p>
+<p><strong>Warn on Bash.</strong> The guard's Bash arm scans every
+mistake and matches <code>metadata.commandPattern</code>, which nothing
+writes, or a <code>sourceFile</code> longer than five characters that
+appears in the command (<code>mistake-guard.ts:151-195</code>).</p>
+<p><strong>Brief.</strong> SessionStart and PreCompact inject the three
+newest by <code>last_verified</code> mistakes through
+<code>mistakes()</code>
+(<code>src/intercept/handlers/session-start.ts:276-279</code>;
+<code>src/intercept/handlers/pre-compact.ts:138</code>). The Read path's
+<code>engram:mistakes</code> provider lists up to five per file
+(<code>src/providers/engram-mistakes.ts:25-39</code>).</p>
+<p><strong>Query.</strong> <code>queryGraph</code> seeds from
+<code>searchNodes</code>, a <code>LIKE</code> over label and id ordered
+by <code>query_count</code> (<code>src/graph/store.ts:201-214</code>),
+multiplies a mistake's score by 2.5
+(<code>src/graph/query.ts:94-96</code>), and renders matched mistakes in
+a warning block above the nodes (<code>:286-313</code>).</p>
+<p><strong>MCP.</strong> Six tools, all reads: <code>query_graph</code>,
+<code>god_nodes</code>, <code>graph_stats</code>,
+<code>shortest_path</code>, <code>benchmark</code> and
+<code>list_mistakes</code> (<code>src/serve.ts:55-116</code>).</p>
+<p><strong>Export into notes.</strong> <code>engram gen</code> writes a
+marker-bounded block into <code>CLAUDE.md</code> and
+<code>AGENTS.md</code> whose default view lists five mistakes and five
+decisions (<code>src/autogen.ts:86-102</code>, <code>:165-175</code>).
+<code>engram memory-sync</code> writes a similar block into the
+project's <code>MEMORY.md</code>
+(<code>src/cli.ts:1613-1714</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Written by</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kind</code></td>
+<td>every miner</td>
+<td>every mistake read</td>
+</tr>
+<tr>
+<td><code>label</code></td>
+<td>miner or learned text</td>
+<td>all renders, <code>searchNodes</code></td>
+</tr>
+<tr>
+<td><code>source_file</code></td>
+<td>the file a commit touched, a notes file's basename,
+<code>manual</code>, <code>http-api</code>, or a caller's
+<code>file</code></td>
+<td>the per-file lookups, <code>deleteBySourceFile</code>,
+<code>removeNodesForFile</code></td>
+</tr>
+<tr>
+<td><code>confidence</code>, <code>confidence_score</code></td>
+<td>miner constant; <code>learn</code> raises mistakes to 0.85</td>
+<td>the 0.8 floor; the enum only changes rendering</td>
+</tr>
+<tr>
+<td><code>last_verified</code></td>
+<td>commit time or mining time</td>
+<td>ordering and <code>--since</code></td>
+</tr>
+<tr>
+<td><code>then_believed</code>, <code>found_false_at</code>,
+<code>truth_now</code>, <code>applies_to</code></td>
+<td>the revert miner only</td>
+<td>the landmine and <code>engram mistakes</code> renderers</td>
+</tr>
+<tr>
+<td><code>valid_until</code>, <code>invalidated_by_commit</code></td>
+<td>nothing outside tests</td>
+<td><code>engram:mistakes</code> provider, mistake guard</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The validity column has no producer.</strong> Migration 8's
+comment says <code>valid_until</code> is set <em>"when the referenced
+code was refactored away"</em>, and the provider's comment names the git
+miner as the writer
+(<code>src/providers/engram-mistakes.ts:28-32</code>).
+<code>src/miners/git-miner.ts</code> contains no <code>invalid</code> in
+any spelling, and the only assignment outside tests is
+<code>upsertNode</code> binding whatever the node carries
+(<code>src/graph/store.ts:122-123</code>). Two read paths filter on it.
+<code>core.mistakes()</code>, which serves the Edit warning, the briefs,
+the CLI and MCP, does not (<code>src/core.ts:671-723</code>), and
+neither do <code>queryGraph</code> or <code>engram gen</code>.</p>
+<p><strong>The bi-temporal fields are one event.</strong>
+<code>foundFalseAt</code> and <code>lastVerified</code> are both the
+revert's author time; when the original belief started is not stored,
+and nothing records when engram learned it apart from being overwritten
+on each mine.</p>
+<p><strong>Scope is the directory.</strong> One <code>graph.db</code>
+per project root. The <code>source_file</code> path is a relevance key,
+not a boundary, and learned mistakes can name any path.</p>
+<p><strong>Declared and unwired: mesh sharing.</strong>
+<code>src/mesh/types.ts:91-104</code> declares a
+<code>mistake.shared</code> payload with <code>observedAt</code> and
+<code>validUntil</code>, and <code>decision.shared</code> beside it. No
+code sends or receives either, and the mesh audit log has one writer,
+<code>engram mesh init</code>, which records <code>key_rotate</code>
+(<code>src/cli.ts:753</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There are three retrieval shapes, and none uses a vector.</p>
+<ul>
+<li><strong>By file.</strong> Exact equality on
+<code>source_file</code>, the lookup that powers the landmine. It is
+precise for git-mined mistakes, which carry a real path, and blind to
+session-mined ones, which carry <code>CLAUDE.md</code> or
+<code>sessions/x.md</code>.</li>
+<li><strong>By recency.</strong> <code>mistakes()</code> sorts by
+<code>last_verified</code> and slices, so the SessionStart brief shows
+the three newest regardless of relevance.</li>
+<li><strong>By text.</strong> <code>searchNodes</code> is a substring
+<code>LIKE</code> over up to 200 nodes per term, BFS then expands
+neighbours; mistakes are boosted but have no edges, so they only enter
+by matching the query's words.</li>
+</ul>
+<p>The proactive floor is the one precision control, and it is a score
+threshold: reverts (0.9) and learned mistakes (0.85) warn, mined fix
+commits and session lines (0.6) do not. <code>learn</code>'s default
+source label reaches the Bash arm. A CLI-learned mistake carries
+<code>source_file = "manual"</code>, six characters, so every mistake
+taught through <code>engram learn</code> matches any Bash command
+containing <code>manual</code> (<code>mistake-guard.ts:182</code>) and,
+under <code>ENGRAM_MISTAKE_GUARD=2</code>, denies it.</p>
+<p>Injection is bounded: 3 mistakes in a brief, 5 per edit warning, 5
+per file from the provider, labels truncated at 500 characters.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous, local and model-free. <code>init</code> mines
+and writes in one process; <code>learn</code> is one CLI call. A learned
+mistake is retrievable immediately. No background pass rewrites memory;
+the watcher and reindex hook touch one file at a time.</p>
+<p><strong>Nothing deletes a mistake on purpose, and two paths delete
+them by accident.</strong> <code>syncFile</code> calls
+<code>deleteBySourceFile(relPath)</code>, which removes every node with
+that <code>source_file</code> in one transaction
+(<code>src/graph/store.ts:155-165</code>), then inserts
+<code>extractFile</code>'s AST nodes
+(<code>src/watcher.ts:124-130</code>). Git-mined mistakes are keyed on
+the file they describe, so editing that file under
+<code>engram watch</code>, <code>engram reindex</code>, the opt-in
+<code>--auto-reindex</code> hook or <code>ENGRAM_AUTO_REINDEX=1</code>
+removes the warnings for exactly the file being changed. They return on
+the next full init; learned ones do not.</p>
+<p><strong>Incremental init has the converse hazard, read and not
+run.</strong> In incremental mode the AST miner emits nothing for an
+unchanged file (<code>src/miners/ast-miner.ts:671-677</code>), while the
+git miners emit mistakes and hot-file nodes for files regardless.
+<code>removeNodesForFile</code> then runs for every such
+<code>sourceFile</code> (<code>src/core.ts:162-170</code>), deleting the
+unchanged file's code nodes, which the next incremental run also skips.
+<code>tests/incremental.test.ts</code> runs in a directory that is not a
+git repository, so the git miners contribute nothing there.</p>
+<p><strong>Re-ingestion loop.</strong> <code>engram gen</code> writes
+mistake labels into <code>CLAUDE.md</code> and <code>AGENTS.md</code>,
+and <code>init</code> mines both files with the session regexes. A
+fix-commit label such as <em>"Bug fixed here: fix: handle empty
+token"</em> contains a match for <code>(?:fix|…):\s*(.{10,80})</code>,
+so the next init can add it back as a session mistake at 0.6 under
+<code>source_file = "CLAUDE.md"</code>. The miner does not skip the
+<code>&lt;!-- engram:start --&gt;</code> block.</p>
+<p><strong>The CCS importer is not idempotent.</strong>
+<code>engram init --from-ccs</code> gives every bullet of
+<code>.context/index.md</code> a <code>randomUUID()</code> id, so a
+bullet under an "Issues" heading becomes a mistake at 0.9, and an
+incremental init followed by another import duplicates it
+(<code>src/ccs/importer.ts:23-35</code>, <code>:76-88</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, no model, one whole-file SQLite write per store
+close.</li>
+<li>Background: none for memory.</li>
+<li>Read: a store load and a whole-file write on every hook that
+consults the graph; injection bounded to a few lines per event, placed
+in hook <code>additionalContext</code> rather than a stable prefix.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent receives memory without asking: landmines on Edit and
+Write, a brief at SessionStart and before compaction, a <em>"KNOWN
+ISSUES"</em> section in Read packets, and a warning block in
+<code>query_graph</code> results. It can list mistakes through MCP and
+cannot write, correct or delete one through it.</p>
+<p>It can write through a shell. <code>engram learn</code> is a CLI
+command, and the HTTP <code>POST /learn</code> accepts any holder of the
+local token. A learned mistake is promoted to the nagging tier by
+construction, so the one channel with no provenance is the one that
+warns loudest.</p>
+<p>The guard's default is contradicted in the tree.
+<code>currentGuardMode</code> returns <code>permissive</code> when
+<code>ENGRAM_MISTAKE_GUARD</code> is unset
+(<code>mistake-guard.ts:40-53</code>), while the same file's header says
+<em>"unset / <code>0</code> → no-op (default — zero production
+overhead)"</em> (<code>:4-8</code>), the dispatcher's comment says
+opt-in (<code>dispatch.ts:204-205</code>), and <code>server.json</code>
+tells MCP registries <em>"Unset = off, zero overhead"</em>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Concurrent hooks are last-writer-wins, and the project
+knows.</strong> Every process loads the file, mutates or only reads, and
+writes the whole file back. A <code>learn</code> that lands while a
+PreToolUse hook holds an older snapshot is erased when that hook closes.
+The repository's own two-process test states it: <em>"SQLite's
+last-writer-wins semantics mean one write may clobber the other when two
+sql.js processes save concurrently"</em>, and asserts only that one of
+the two files' nodes survived
+(<code>tests/watcher.test.ts:377-404</code>). <code>writeFileSync</code>
+is not a temp-and-rename, so a crash mid-write can truncate the
+store.</p>
+<p><strong>Provenance is good for reverts and absent for the
+rest.</strong> A revert mistake carries both shas, the original author
+and the reverted files in <code>metadata</code>
+(<code>git-revert-miner.ts:206-212</code>). A learned or session mistake
+carries a label and a file name.</p>
+<p><strong>Prompt-injected memory.</strong> Anything that can write a
+matching line into <code>CLAUDE.md</code>, <code>AGENTS.md</code>,
+<code>.cursorrules</code> or <code>.engram/sessions/</code> plants a
+mistake or decision on the next init, and anything that can run
+<code>engram learn</code> plants one that warns immediately. There is no
+quarantine state.</p>
+<p><strong>Uncertainty is a number.</strong> The score sets a threshold
+on two warning paths; nothing can say <em>"on record, not
+believed"</em>.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — no delete verb exists for a memory, and a
+re-mine re-asserts whatever the sources still say.</li>
+<li><code>trust_state</code> — <code>confidence</code> is an enum,
+<code>EXTRACTED | INFERRED | AMBIGUOUS</code>, and every read of it
+changes rendering (<code>query.ts:309</code>,
+<code>edit-write.ts:104</code>). The filter is on
+<code>confidence_score</code>, a float.</li>
+<li><code>bitemporal</code> — <code>valid_until</code> has readers and
+no producer, and the revert miner's <code>foundFalseAt</code> equals its
+<code>lastVerified</code>. One clock, stored twice.</li>
+<li><code>scope_enforced</code> — one database per project is a physical
+partition; the <code>source_file</code> predicate is relevance, not
+scope.</li>
+<li><code>audit_log</code> — the mesh <code>audit.jsonl</code> has one
+writer, recording identity key rotation; <code>hook-log.jsonl</code> is
+tool telemetry. Neither records a memory mutation.</li>
+<li><code>human_review</code> — no state waits for anyone;
+<code>engram mistakes</code> displays.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin. CI runs <code>npx vitest run</code> on
+Ubuntu and Windows under Node 20 and 22
+(<code>.github/workflows/ci.yml:10-58</code>).</p>
+<p><strong>The negative case.</strong>
+<code>mistakes() — sourceFile filter</code> seeds two learned mistakes
+each under <code>src/auth.ts</code> and <code>src/db.ts</code>
+(<code>tests/intercept/mistakes-filter.test.ts:35-47</code>).
+<em>"filters to only mistakes matching the given sourceFile"</em>
+asserts the <code>src/auth.ts</code> lookup is non-empty and that every
+result's <code>sourceFile</code> is <code>src/auth.ts</code>
+(<code>:62-70</code>). The fixture guarantees the excluded material is
+present, and the positive side is asserted first, so an empty result
+fails.</p>
+<p><strong>Well-formed cases on an unproduced state.</strong>
+<code>tests/providers/engram-mistakes.test.ts:140-172</code> seeds a
+stale, a future-dated and an undated mistake in one file and asserts the
+provider keeps two and drops the stale one;
+<code>tests/intercept/handlers/mistake-guard.test.ts:233-254</code> does
+the same through the guard. Both seed <code>validUntil</code> by hand,
+which is the only way it is ever set.</p>
+<p><strong>The floor, tested in halves.</strong> <em>"does NOT surface a
+low-confidence mistake"</em> seeds only a 0.6 mistake and asserts zero
+matches (<code>mistake-guard.test.ts:185-198</code>), and a separate
+case seeds only a 0.9 one and asserts one. Each half alone could pass on
+a guard that returned nothing, or everything.</p>
+<p><strong>A precision gate on the miner.</strong> <em>"engram README
+corpus extracts ZERO garbage mistakes (frozen fixture)"</em> runs the
+session regexes over a saved README and asserts no mistake, decision or
+pattern (<code>tests/mistake-memory.test.ts:209-228</code>), with the
+comment <em>"don't silently accept"</em>. It pins false positives on one
+document; recall is not measured.</p>
+<p><strong>Not covered.</strong> No test runs <code>syncFile</code> on a
+file that has mistakes, runs an incremental init inside a git
+repository, or checks that a learned mistake survives <code>init</code>.
+The <code>bench/</code> harnesses measure token counts of context
+packets, and <code>bench/README.md</code> says the main runner <em>"does
+not run four live agents"</em>. No paper describes engram;
+<code>docs/FRONTIER.md</code> cites others' arXiv papers.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Mine reverts into structured regret.</strong> A revert is
+the one commit that says in so many words that an earlier belief was
+wrong; keep the overturned subject, the date and the superseding sha as
+separate fields.</li>
+<li><strong>Split browsing from nagging with a floor.</strong>
+Everything inferred stays listable; only high-confidence memory
+interrupts a tool call.</li>
+<li><strong>Freeze a prose fixture against the extractor.</strong> A
+regex miner's failure is false positives on documentation, and one saved
+README with an assertion of zero catches the loosening.</li>
+<li><strong>Keep the model-facing surface read-only</strong> when writes
+have no provenance.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Keying memory on the same column as a derived
+index.</strong> A delete meant to refresh derived rows will take the
+memory with it.</li>
+<li><strong>Whole-file writes from every reader.</strong> With several
+hook processes per turn, a store that saves on every close loses writes
+by design.</li>
+<li><strong>A validity column the readers trust and nothing
+sets.</strong> It reads as a guarantee in the schema, the comments and
+the changelog (<code>CHANGELOG.md:507</code>), and behaves as
+<code>NULL</code> everywhere.</li>
+<li><strong>Writing memory into the files you mine.</strong> Export and
+ingest need a boundary the miner respects.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a solo developer on one machine who wants a coding agent
+warned before it edits a file with reverts in its history, and who
+already wants the code graph. The memory is a side effect of the graph
+rather than a store with its own lifecycle. Anyone who needs taught
+lessons to persist, several agents writing at once, or a way to retract
+a wrong warning should read the revert miner and build the store around
+it themselves.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often do concurrent hook processes lose a write in a real Claude
+Code session with parallel tool calls? Nothing here measures it.</li>
+<li>Does the incremental-init deletion described in section 7 occur as
+read? It was traced, not reproduced.</li>
+<li>Was <code>valid_until</code> ever written by an earlier version of
+the git miner, or planned and never landed? The changelog entry does not
+say.</li>
+<li>Is the permissive guard default intended, given that
+<code>server.json</code> and the file header say off?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and storage:</strong>
+<code>src/graph/schema.ts</code>, <code>src/graph/store.ts</code>,
+<code>src/db/migrate.ts</code>.</li>
+<li><strong>Write:</strong> <code>src/core.ts</code> (<code>init</code>,
+<code>learn</code>), <code>src/miners/session-miner.ts</code>,
+<code>src/miners/git-revert-miner.ts</code>,
+<code>src/miners/git-bugfix-miner.ts</code>,
+<code>src/ccs/importer.ts</code>, <code>src/server/http.ts</code>.</li>
+<li><strong>Deletion by refresh:</strong> <code>src/watcher.ts</code>,
+<code>src/intercept/handlers/post-tool.ts</code>,
+<code>src/intercept/installer.ts</code>.</li>
+<li><strong>Retrieval and injection:</strong> <code>src/core.ts</code>
+(<code>mistakes</code>), <code>src/graph/query.ts</code>,
+<code>src/providers/engram-mistakes.ts</code>,
+<code>src/intercept/handlers/edit-write.ts</code>,
+<code>src/intercept/handlers/mistake-guard.ts</code>,
+<code>src/intercept/handlers/session-start.ts</code>,
+<code>src/intercept/handlers/pre-compact.ts</code>,
+<code>src/intercept/dispatch.ts</code>,
+<code>src/intercept/safety.ts</code>.</li>
+<li><strong>Export:</strong> <code>src/autogen.ts</code>,
+<code>src/intercept/memory-md.ts</code>.</li>
+<li><strong>MCP:</strong> <code>src/serve.ts</code>,
+<code>server.json</code>.</li>
+<li><strong>Declared, unwired:</strong> <code>src/mesh/types.ts</code>,
+<code>src/mesh/audit.ts</code>.</li>
+<li><strong>Tests:</strong>
+<code>tests/intercept/mistakes-filter.test.ts</code>,
+<code>tests/providers/engram-mistakes.test.ts</code>,
+<code>tests/intercept/handlers/mistake-guard.test.ts</code>,
+<code>tests/mistake-memory.test.ts</code>,
+<code>tests/watcher.test.ts</code>,
+<code>tests/incremental.test.ts</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'validUntil\|valid_until\|invalidatedByCommit\|invalidated_by_commit' src | grep -v '^src/graph/schema.ts'</code>
+— <code>store.ts</code> binds and reads the columns;
+<code>engram-mistakes.ts:32</code> and
+<code>mistake-guard.ts:137,156</code> filter;
+<code>mesh/types.ts:103</code> declares a string; no assignment.</li>
+<li><code>grep -rn 'validUntil\|valid_until' --include='*.ts' . --exclude-dir=node_modules --exclude-dir=.git | grep -v '^./src/'</code>
+— every assignment is in <code>tests/</code>.</li>
+<li><code>grep -n -i 'invalid' src/miners/git-miner.ts</code> — no
+match.</li>
+<li><code>grep -rn "mistake.shared\|MistakeSharedPayload\|decision.shared" src --include='*.ts'</code>
+— <code>src/mesh/types.ts</code> only.</li>
+<li><code>grep -rn 'logAudit(' src --include='*.ts'</code> —
+<code>cli.ts:753</code> and the definition.</li>
+<li><code>grep -rn 'commandPattern' src --include='*.ts'</code> — read
+in <code>mistake-guard.ts</code>; no writer.</li>
+<li><code>grep -rn -i -E 'forget|dismiss|unlearn|tombstone|suppress|blocklist|denylist' src --include='*.ts'</code>
+— no memory verb.</li>
+<li><code>grep -rn -i -E 'approve|pending|review' src --include='*.ts'</code>
+— migrations and hook preview only.</li>
+<li><code>grep -rn -i -E 'user_id|tenant|namespace|agent_id|scope' src/graph src/db src/core.ts</code>
+— no match.</li>
+<li><code>grep -rnE "confidence ?(===|!==|==) ?\"|'(EXTRACTED|INFERRED|AMBIGUOUS)'|\"AMBIGUOUS\"" src --include='*.ts'</code>
+— renders at <code>query.ts:309</code> and
+<code>edit-write.ts:104</code>, the stats count and DDL defaults.</li>
+<li><code>grep -rn 'syncFile(' src --include='*.ts'</code> —
+<code>watcher.ts</code>, <code>cli.ts</code> (<code>reindex</code>),
+<code>post-tool.ts</code>.</li>
+<li><code>grep -rn -i 'lock' src --include='*.ts' | grep -v -i 'block\|clock\|unlock'</code>
+— <code>init.lock</code> in <code>core.ts</code> and a hook-log
+comment.</li>
+<li><code>grep -rln -i -E 'concurren|parallel|Promise\.all' tests --include='*.ts'</code>
+— <code>core.test.ts</code>, <code>watcher.test.ts</code>,
+<code>providers/lsp.test.ts</code>; only
+<code>watcher.test.ts:377</code> runs two writers.</li>
+<li><code>grep -rn '"sessions"\|sessions/' src --include='*.ts'</code> —
+the session miner reads <code>.engram/sessions</code>; nothing writes
+it.</li>
+<li><code>grep -rn 'engram:start\|engram:end' src/miners/session-miner.ts</code>
+— no match.</li>
+<li><code>grep -rn 'incremental: true\|--incremental' src</code> — the
+CLI flag only.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— <code>docs/FRONTIER.md</code>, citing other work; no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/NickCirv/engram/commit/df445d3132583100e6d5106af4b4c91c01a2ba15"><code class="commit-id" title="df445d3132583100e6d5106af4b4c91c01a2ba15">df445d31…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 22
+September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: 2 auto-run surfaces (<code>.cursorrules</code>, an
+engram-generated structure summary, and <code>server.json</code>, an MCP
+manifest naming the <code>engramx</code> npm package), 3 build-time
+execution points (a <code>postinstall</code> that prints a banner, two
+<code>prepublishOnly</code> builds), 5 dependency files inside the
+cooldown — every file in a depth-1 clone dates to the tip — and 3
+unpinned surfaces. <code>.cursorrules</code>, <code>CLAUDE.md</code> and
+<code>CONTEXT.md</code> were read as data. Nothing was installed, built
+or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

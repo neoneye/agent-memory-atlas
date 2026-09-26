@@ -398,6 +398,18 @@ date leaves both facts visible on that date. Its miner also closes every
 triple from a changed file and re-adds each relation with
 <code>valid_from</code> NULL, so an unchanged fact gains a closed copy
 and an open copy that both claim validity from the start.</p>
+<p><a href="../../systems/engram-nickcirv/">engram (NickCirv)</a> has
+the column and not the clock. Migration 8 adds <code>valid_until</code>
+and <code>invalidated_by_commit</code> to its node table, the Read-path
+provider and the pre-edit guard both drop a mistake whose
+<code>valid_until</code> has passed, and the changelog describes
+invalidation when the referenced code is refactored away — but no
+production path assigns the field, and the tests that exercise the
+filter set it by hand. Its revert miner's <code>foundFalseAt</code> is
+the same timestamp as <code>lastVerified</code>, so the one temporal
+fact it does record is stored twice rather than on two axes. A validity
+filter is only as good as its writer; grep for the assignment before
+trusting the read.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision
