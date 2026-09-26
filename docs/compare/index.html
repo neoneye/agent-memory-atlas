@@ -14502,36 +14502,38 @@ in the tree</td>
 </tr>
 <tr>
 <td><code>memoket-kite</code></td>
-<td>A <code>&lt;fact&gt;</code> element — text, <code>kind</code>,
+<td>A <code>fact</code> element — text, <code>kind</code>,
 <code>who</code>, an event time <code>t</code>, a three-valued
 <code>conf</code>, topic and entity codes, facet codes for object class,
 place, event type and duration, and <code>src</code> ids pointing at the
-<code>&lt;line&gt;</code> elements it was extracted from, which stay in
-the same file as evidence</td>
+<code>line</code> elements it was extracted from, which stay in the same
+file as evidence</td>
 <td>One XML artifact per memory, holding a vocabulary of topic and
 entity codes, a timeline of sessions, their facts and their raw lines.
 No database, no index files, no embeddings; the package declares zero
 runtime dependencies and the posting lists are rebuilt in memory on
 load</td>
-<td>Symbolic and lexical only. A question is compiled by one LLM call
-into a JSON plan — <code>select</code>, <code>where</code>, and a
-<code>pipe</code> of sort, head, count and other operators — validated
-against the vocabulary, then executed as prune by time, match by code
-closure and postings, filter, rank, refine and pack. Ranking blends
-BM25-ish token specificity with a confidence bonus; a refine ladder
-relaxes constraints in a fixed order when nothing matches</td>
+<td>Symbolic and lexical only. Each question is compiled three times
+into a JSON plan — select, where, and a pipe of sort, head, tail and
+count — and a deterministic scorer keeps the candidate that returns the
+most rows. The plan runs as prune by time, match by code closure and
+postings, filter, rank, refine and pack, fused with an IDF-weighted
+keyword channel over every fact and line. A refine ladder relaxes
+constraints in a fixed order and abstains rather than return the
+corpus</td>
 <td><code>remember()</code> is one LLM call per session that returns
 facts and retrieval facets, appended to the XML timeline and written
 back through a staged temporary file that is parsed by the loader before
 it replaces the original. Synchronous, immediately retrievable, no
 background pass. A session id already present is refused rather than
-merged</td>
+merged, and the docs rule out concurrent writers</td>
 <td>Absent, and it is the design's central bet. The public API is load,
 remember, recall, answer — no delete, no forget, no edit, no
-supersession field; <code>grep -rn -i "supersede" src/</code> matches
-nothing. A superseded fact stays in the file and is expected to lose at
-read time, because the compiled plan sorts by event time and takes the
-head</td>
+supersession field. A superseded fact stays in the file; the evidence
+pack is sorted by date and the default reader prompt says the most
+recent contradicting row wins. A vocabulary merge in the package
+rewrites stored topic and entity codes, and only the benchmark build
+scripts call it</td>
 <td>The artifact is the boundary: <code>Memory.load</code> takes one or
 more XML paths and everything in them is in scope. <code>who</code>
 filters by which speaker said something, which is a content axis rather
@@ -14539,28 +14541,29 @@ than an access one, and no tenant, user or project key exists on a
 fact</td>
 <td>A Python library and nothing else — no CLI entry point, no MCP
 server, no HTTP surface. A second, lower-level <code>research</code> API
-exposes the plan objects, the execution trace and per-stage telemetry
-for method evaluation</td>
-<td>None. Extraction happens in <code>remember</code>, indexing happens
-on load, and the benchmark bindings' consolidation stages — instance
-alignment, topic refinement — are explicit build steps in the benchmark
-harness rather than anything the library runs</td>
+exposes the plan objects, a profile protocol, the execution trace and
+per-stage telemetry for method evaluation</td>
+<td>None. Extraction happens in <code>remember</code> and indexing on
+load; topic and entity consolidation and instance alignment are library
+functions that only the benchmark build scripts call</td>
 <td>Every fact carries its source line ids and the raw utterances stay
 in the file, so an answer's receipts resolve to the words someone
 actually said. Epistemic status is a <code>conf</code> of low, med or
-high, ordered by a dict named <code>CONF_ORDER</code> and spent on both
-a ranking bonus and an optional <code>conf_min</code> threshold; no
-value means a fact should not be believed</td>
+high, ordered by a dict named <code>CONF_ORDER</code> and spent on a
+ranking bonus and an optional <code>conf_min</code> floor the public API
+cannot set; no value means a fact should not be believed</td>
 <td>The benchmark machinery is built to be checked by a sceptic —
 dataset revisions and SHA-256s pinned in a manifest, results sealed by
 digest, a verifier that recomputes the published metric from the sealed
 bytes without an LLM, and a contamination gate that scans shipped prompt
 text for terms concentrated in a small fraction of the corpus</td>
 <td>Nothing can be corrected or removed, so a wrong extraction is
-permanent and an erasure request has no path but a text editor; and the
-two headline scores cannot be checked by a reader — the sealed rows they
-were computed from are named in the manifest, not committed, and the
-release they are meant to be attached to carries no assets</td>
+permanent and an erasure request has no path but a text editor; on the
+default path a contradiction is settled by the reader model following
+one prompt line; and the two headline scores come from a benchmark
+configuration the library does not ship and cannot be checked by a
+reader, because the sealed rows are named in the manifest, not
+committed, and the release carries no assets</td>
 </tr>
 <tr>
 <td><code>memomind</code></td>

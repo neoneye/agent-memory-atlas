@@ -485,13 +485,17 @@ than its memory.</strong> Memoket's Apache-2.0 library declares zero
 runtime dependencies and stores a memory as one XML artifact: an LLM
 turns each session into dated facts under a controlled topic and entity
 vocabulary, keeping the raw utterances beside them, and a question is
-compiled by a second call into a JSON plan — <code>select</code>,
+compiled into three candidate JSON plans — <code>select</code>,
 <code>where</code>, a <code>pipe</code> of sort and head — validated
-against that vocabulary and executed over posting lists with a
-relaxation ladder that records which constraints it dropped.
-Contradiction is settled by sorting on event time and taking the head,
-and that is the entire correction mechanism: the public API is load,
-remember, recall and answer, and
+against that vocabulary, and the one returning the most rows is executed
+over posting lists with a relaxation ladder that records which
+constraints it dropped and abstains rather than return the corpus.
+Contradiction is settled at read time and nowhere else: the plan
+language can sort on event time and take the head, the library's default
+compile prompt never shows that operator, and the default path orders
+the evidence pack by date and tells the reader the most recent
+contradicting row wins. The public API is load, remember, recall and
+answer, and
 <code>grep -rn -i "def forget\|def delete\|def supersede" src/</code>
 matches nothing, so a wrong extraction is permanent and an erasure
 request has no path through the library. What surrounds the claim is
@@ -504,13 +508,15 @@ scans every shipped prompt string for terms concentrated in a small
 fraction of a benchmark corpus. Two things stop a reader using any of
 it. The judged rows the manifest names are not committed and the release
 they are meant to be attached to carries no assets, so the verifier runs
-only for its author; and the two headline scores come from per-benchmark
-bindings with their own knobs, kind vocabularies and seed taxonomies —
-LoCoMo's enables an inference pass under a comment reading "Its QA set
-contains no unanswerable questions, so a bounded inference pass can only
-recover an answer, never invent a refusal" — while the library's own
-default profile declares none of them and the pipeline reads every one
-with a <code>getattr</code> that defaults it off.</p>
+only for its author; and the two headline scores come from a shared
+benchmark baseline that turns on eleven switches the library default
+leaves off, and from per-benchmark bindings with their own prompts, kind
+vocabularies and seed taxonomies — LoCoMo's enables an inference pass
+under a comment reading "Its QA set contains no unanswerable questions,
+so a bounded inference pass can only recover an answer, never invent a
+refusal" — while the library's own default profile declares none of them
+and the pipeline reads every one with a <code>getattr</code> that
+defaults it off.</p>
 <p><strong><a href="../systems/kektordb/">KektorDB</a> is a Go vector
 database carrying an agent memory layer, and its engine is ahead of its
 memory policy.</strong> HNSW over mmap arenas, roaring-bitmap filters,
