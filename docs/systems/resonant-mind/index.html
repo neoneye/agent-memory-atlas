@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-mind MCP memory on
+Postgres and pgvector whose writes auto-supersede similar observations
+and whose 30-minute daemon archives, consolidates, dreams and
+proposes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Resonant
+Mind — Agent Memory Atlas">
+    <meta property="og:description" content="A single-mind MCP memory on
+Postgres and pgvector whose writes auto-supersede similar observations
+and whose 30-minute daemon archives, consolidates, dreams and
+proposes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Resonant
+Mind — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-mind MCP memory
+on Postgres and pgvector whose writes auto-supersede similar
+observations and whose 30-minute daemon archives, consolidates, dreams
+and proposes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Resonant Mind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Resonant Mind",
+      "description": "A single-mind MCP memory on Postgres and pgvector whose writes auto-supersede similar observations and whose 30-minute daemon archives, consolidates, dreams and proposes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Single-mind MCP memory with a subconscious
+daemon</p>
+          <h1>Resonant Mind</h1>
+          <p class="document-deck">A single-mind MCP memory on Postgres
+and pgvector whose writes auto-supersede similar observations and whose
+30-minute daemon archives, consolidates, dreams and proposes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/codependentai/resonant-mind">
+              <span>Source</span>
+              <strong>codependentai/resonant-mind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/codependentai/resonant-mind/commit/9a08410b538f9dc56119ee34e8de044aef867e51" title="9a08410b538f9dc56119ee34e8de044aef867e51">
+              <span>Analyzed revision</span>
+              <code>9a08410b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/codependentai--resonant-mind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>codependentai--resonant-mind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Codependent
+AI Source-Available License (personal and non-commercial use; commercial
+use needs a licence)</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>17,088
+lines of TypeScript in 105 files under src, and 1,354 lines of SQL in 23
+migrations</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>32
+commits on master by 2 contributors, 22 March – 19 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>85
+Vitest cases in 18 files, 1,667 lines; the three PostgreSQL cases run
+only when TEST_DATABASE_URL is set</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Resonant Mind is a Cloudflare Worker that gives one long-running AI a
+persistent store over Neon Postgres and pgvector: 47 MCP tools grouped
+into "regions", and a daemon every 30 minutes that decays novelty,
+archives, runs Gemini consolidation, composes dreams and proposes
+identity rows. What is notable is contradiction handling on the write
+path. Each new observation looks up similar observations on the same
+entity and retires any at cosine 0.85 or above. What is weak is that the
+retirement is honoured by two of the read paths and ignored by the rest,
+and that a retired pair cannot then be deleted.</p>
+<p>The licence restricts use. The tree carries the Codependent AI
+Source-Available License, which permits personal, educational and
+non-commercial use and requires a commercial licence otherwise. The
+first public commit, on 22 March 2026, was released as Apache 2.0; the
+licence changed at <a
+href="https://github.com/codependentai/resonant-mind/commit/81bb4d1e0eff22d4a2481f194287fac2755f5851"><code class="commit-id" title="81bb4d1e0eff22d4a2481f194287fac2755f5851">81bb4d1e…</code></a>
+on 30 March 2026. The project was published as Mind Cloud up to v2.3.1
+(<code>CHANGELOG.md:3</code>).</p>
+<p>The unit is an observation, a line of text on a named entity. It
+carries a <code>certainty</code> of <code>tentative</code>,
+<code>believed</code> or <code>known</code>, a <code>source</code>, an
+emotional <code>weight</code> and <code>charge</code>, and a novelty
+score that the daemon recomputes. The agent is the only author and the
+only reviewer. It writes through <code>mind_write</code>, and it accepts
+or rejects what the daemon proposes through
+<code>ritual_tend</code>.</p>
+<p>No capability marks. Section 9 names each of the seven and the reason
+it is withheld; the nearest is <code>trust_state</code>, whose
+<code>certainty</code> field is read only to draw an icon.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory becomes a belief the moment <code>mind_write</code> inserts
+it. The default <code>certainty</code> is <code>believed</code>, the
+writer may say <code>known</code> or <code>tentative</code>, and no
+later step changes it (<code>src/legacy-tools/write.ts:183-188</code>).
+There is no candidate state and no extraction: the agent states the
+observation in its own words.</p>
+<p><strong>It stops being current in five ways, and they are not
+equivalent.</strong></p>
+<ul>
+<li><strong>Superseded.</strong> A later observation on the same entity
+whose embedding scores 0.85 or more against it sets
+<code>valid_until = NOW()</code> and <code>superseded_by</code> on the
+older row (<code>src/legacy-tools/write.ts:213-256</code>, thresholds at
+<code>src/shared/constants.ts:59-61</code>). The newer row always wins.
+Nothing asks whether the two disagree; similarity is the whole
+test.</li>
+<li><strong>Archived.</strong> The night-time deep-archive pass sets
+<code>archived_at</code> on light observations never sat with and
+unsurfaced for 30 days, and on medium ones older than 90 days and
+unsurfaced for 60 (<code>src/daemon/archive.ts:19-55</code>).
+Consolidation archives a cluster of three or more co-surfacing
+observations and inserts one Gemini summary with
+<code>source = 'consolidated'</code>
+(<code>src/daemon/consolidation.ts:101-162</code>). The agent can
+archive from the orphan queue.</li>
+<li><strong>Metabolized.</strong> <code>active_resolve</code> sets
+<code>charge = 'metabolized'</code>
+(<code>src/legacy-tools/resolve.ts:46</code>). That drops the row from
+the surfacing pools and leaves it in search. It means
+<em>processed</em>, not <em>false</em>.</li>
+<li><strong>Deleted.</strong> <code>mind_delete</code> removes the row
+and its embedding (<code>src/shared/surgery.ts:178-208</code>).</li>
+<li><strong>Edited.</strong> <code>mind_edit</code> overwrites the text
+in place after copying the old text to <code>observation_versions</code>
+(<code>src/shared/surgery.ts:98-120</code>).</li>
+</ul>
+<p><strong>Archive is not an ending.</strong>
+<code>rescueObservation</code> clears <code>archived_at</code> and
+stamps <code>rescued_at</code>, and every daemon pass that would
+re-archive or decay it checks that stamp until the row next surfaces
+(<code>src/shared/archive-observation.ts:55-62</code>). The redolence
+pass lets an archived row "rise" into the subconscious snapshot when a
+fresh observation lands close to it in vector space, without unarchiving
+it (<code>src/daemon/redolence.ts:170-191</code>).</p>
+<p><strong>The daemon proposes, the agent disposes.</strong> Relation,
+resonance, proximity, compass and identity additions wait in
+<code>daemon_proposals</code> as <code>pending</code> until the agent
+calls <code>ritual_tend</code> with <code>accept</code> or
+<code>reject</code>, or until they expire after 30 days
+(<code>src/daemon/proposals.ts:55-65</code>). No person sits on that
+path.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an observation enters Resonant Mind, the ways it stops being current, and which read paths notice</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an observation enters Resonant Mind, the ways it stops being current, and which read paths notice
+flowchart TD
+    W[&quot;mind_write observation&quot;] --&gt; D{&quot;top 10 vectors over the whole store:&lt;br/&gt;same entity, cosine at least 0.80?&quot;}
+    D -- &quot;none&quot; --&gt; INS[&quot;INSERT as believed,&lt;br/&gt;valid_from = NOW()&quot;]
+    D -- &quot;0.80 to 0.85&quot; --&gt; INS
+    D -- &quot;0.85 or more&quot; --&gt; INS2[&quot;INSERT new row&quot;]
+    INS2 --&gt; SUP[&quot;older row: valid_until = NOW(),&lt;br/&gt;superseded_by = new id&quot;]
+    INS --&gt; LIVE[&quot;current observation&quot;]
+    INS2 --&gt; LIVE
+    SUP --&gt; F1[&quot;mind_search and graph_look:&lt;br/&gt;hidden&quot;]
+    SUP --&gt; F2[&quot;dream_surface pools, ritual_orient,&lt;br/&gt;orphan queue, GET /api/search:&lt;br/&gt;still returned&quot;]
+    LIVE --&gt; CRON{&quot;daemon every 30 min&quot;}
+    CRON -- &quot;old, unengaged&quot; --&gt; ARC[&quot;archived_at set&quot;]
+    CRON -- &quot;cluster of 3+&quot; --&gt; CONS[&quot;originals archived,&lt;br/&gt;Gemini summary inserted&quot;]
+    ARC --&gt; RES[&quot;mind_archive rescue:&lt;br/&gt;rescued_at held&quot;]
+    RES --&gt; LIVE
+    SUP --&gt; DEL{&quot;mind_delete on either&lt;br/&gt;member of the pair&quot;}
+    DEL --&gt; FK[&quot;embedding deleted first,&lt;br/&gt;then FK violation:&lt;br/&gt;row stays, unsearchable&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The Worker's <code>fetch</code> handler serves the MCP protocol and a
+REST API; its <code>scheduled</code> handler runs
+<code>processSubconscious</code> on the cron in
+<code>wrangler.toml:23-24</code> (<code>src/index.ts:67-105</code>).
+Postgres is reached through Hyperdrive by a D1-compatible adapter that
+rewrites SQLite idioms and opens a new <code>pg.Client</code> for every
+statement (<code>src/adapter.ts:1-13</code>, <code>:128-144</code>).
+There are no transactions on the runtime path, so the code orders its
+statements instead: the delete engine removes dependents before the row,
+and consolidation archives before it inserts.</p>
+<p>Vectors live in the same database. <code>createVectorAdapter</code>
+gives a Vectorize-shaped <code>upsert</code> and <code>query</code> over
+one <code>embeddings</code> table with an HNSW cosine index
+(<code>src/vectors.ts:56-141</code>,
+<code>migrations/postgres/0001_core.sql:382-395</code>). Embeddings come
+from <code>gemini-embedding-2-preview</code> at 768 dimensions, and text
+generation for consolidation and reflection from
+<code>gemini-2.5-flash-lite</code>
+(<code>src/embeddings.ts:10-12</code>). Dreams are composed by Workers
+AI. Image bytes go to R2.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to be running:</strong> a Cloudflare account with a
+Worker, Hyperdrive, an R2 bucket and a Workers AI binding; a Neon
+Postgres with the <code>vector</code> extension; a Gemini API key. There
+is no local mode, and the README names D1 as unsupported from v4.</li>
+<li><strong>Offline:</strong> not possible. Every search embeds the
+query through Gemini, so a Gemini outage fails <code>mind_search</code>
+outright. Writes still land, reported as "stored without vectors", and
+nothing re-embeds an observation or journal later; only dreams have a
+sweep (<code>src/daemon/dream-processing.ts:380-410</code>).</li>
+<li><strong>First run:</strong> <code>npm ci</code>, three
+<code>wrangler secret put</code> calls, a Hyperdrive binding, then
+<code>npm run db:migrate</code> against Neon directly. The runner takes
+an advisory lock, checksums each file into
+<code>schema_migrations</code>, and refuses an untracked existing schema
+(<code>scripts/migrate-postgres.mjs:25-58</code>). In-place upgrade from
+v3.2 is refused by design.</li>
+<li><strong>Repair by hand:</strong> plain Postgres rows, readable with
+SQL. The one trap is that <code>embeddings</code> is keyed by strings
+such as <code>obs-12-345</code> with no foreign key, so a hand-deleted
+observation leaves its vector behind.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>mind_write</code> with
+<code>type: "observation"</code> resolves or creates the entity by name,
+then for each string: runs <code>detectContradictions</code>, inserts
+the row, runs the startle fast path, embeds and upserts the vector, and
+applies supersession (<code>src/legacy-tools/write.ts:139-272</code>).
+<code>episode_record</code> wraps the same handler with
+<code>context</code> defaulting to <code>episodic</code>
+(<code>src/regions/episodes.ts:18-51</code>).
+<code>POST /api/observations</code> is a second door that inserts and
+embeds with no contradiction check and no <code>valid_from</code>
+(<code>src/http/handlers/observations.ts:54-73</code>).</p>
+<p><strong>Contradiction detection.</strong>
+<code>detectContradictions</code> embeds
+<code>"&lt;entity&gt;: &lt;text&gt;"</code>, asks for the top 10 vectors
+across the entire <code>embeddings</code> table, keeps matches at 0.80
+or more whose metadata names the same entity, and re-reads each to
+confirm it is not archived, superseded or expired
+(<code>src/legacy-tools/write.ts:104-137</code>). Candidates between
+0.80 and 0.85 are returned and then ignored; only those at 0.85 or more
+are acted on (<code>:217-218</code>). Because the top 10 is taken before
+the entity filter, a store where other entities or journals crowd the
+neighbourhood yields no candidates at all.</p>
+<p><strong>Retrieval.</strong> <code>mind_search</code> tints the query
+with mood words from the daemon's snapshot, embeds it, and takes
+<code>n_results</code> vectors, or ten times that when a type filter is
+set (<code>src/legacy-tools/search.ts:31-58</code>). It classifies hits
+as entity, image, journal or observation; batch-reads the observation
+rows; applies the optional filters; drops superseded and expired rows
+unless <code>include_expired</code> is set (<code>:206-220</code>);
+scores; and bumps <code>access_count</code> on what it returns
+(<code>:258-271</code>). If the vector query returns nothing it falls
+back to <code>LIKE</code> over observations and journals with no status
+filter at all (<code>:60-84</code>).</p>
+<p><strong>Context assembly.</strong> <code>ritual_orient</code> reads
+identity rows, context entries, relational state, the last journal, the
+last dream, the subconscious snapshot and two "orphans" — medium or
+heavy observations unseen for 30 days — in one <code>Promise.all</code>
+(<code>src/legacy-tools/orient.ts:52-103</code>). The orphan pick
+filters archived and metabolized rows and not superseded ones
+(<code>:17-34</code>). <code>dream_surface</code> builds four pools:
+core and edge from vector hits, novelty and dormant from SQL, then
+re-reads the rows filtering archived and metabolized only
+(<code>src/legacy-tools/surface.ts:88-185</code>,
+<code>src/daemon/pools.ts:17-90</code>).</p>
+<p><strong>Update, delete, forget.</strong> <code>editObservation</code>
+snapshots the old text, weight and emotion into
+<code>observation_versions</code>, updates in place and re-embeds
+(<code>src/shared/surgery.ts:67-158</code>).
+<code>deleteObservation</code> deletes sits, versions, orphan rows and
+the embedding, then the observation last (<code>:178-208</code>).
+<code>mind_delete</code> with <code>text_match</code> deletes the most
+recent observation whose text contains the string
+(<code>src/legacy-tools/delete.ts:25-35</code>).
+<code>spine_amend</code> with <code>remove</code> soft-archives identity
+rows and demands a <code>reason</code>, which it echoes in the reply and
+does not store (<code>src/regions/spine.ts:150-180</code>).</p>
+<p><strong>Schema.</strong> <code>observations</code> and its sidecars
+are in <code>migrations/postgres/0001_core.sql:167-283</code>;
+supersession, validity and consolidation groups in
+<code>0002_enhanced_memory.sql:10-29</code>; the <code>CHECK</code>
+enums in <code>0007_enum_constraints.sql:15-25</code>; compass and its
+provenance in <code>0004_compass.sql:13-39</code>.</p>
+<p><strong>Background.</strong> <code>processSubconscious</code> runs
+each pass in its own <code>try</code>
+(<code>src/daemon/index.ts:38-426</code>). Night-gated passes are deep
+archive, retention and full consolidation (<code>:175-228</code>).
+Retention thins mood logs, drive events and co-surfacing rows, and keeps
+the newest 20 versions per observation
+(<code>src/daemon/retention.ts:174-201</code>).</p>
+<p><strong>MCP and API.</strong> The handler map and the 47 tool schemas
+are in <code>src/mcp/registry.ts:76-139</code> and <code>:141</code>
+onward. Auth is one shared key, as Bearer or as Basic with the fixed
+client id <code>resonant-mind</code>, with an optional internal header
+and an optional secret connector path
+(<code>src/http/auth.ts:18-61</code>).</p>
+<p><strong>Tests.</strong> Section 10.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>observations</code> carries the content and eighteen lifecycle
+columns: <code>weight</code> (<code>light | medium | heavy</code>),
+<code>charge</code>
+(<code>fresh | active | processing | metabolized</code>),
+<code>certainty</code> (<code>believed | known | tentative</code>),
+<code>source</code>
+(<code>conversation | realization | external | consolidated | inferred | journal</code>),
+<code>salience</code>, <code>context</code>, <code>novelty_score</code>,
+<code>surface_count</code>, <code>access_count</code>,
+<code>archived_at</code>, <code>rescued_at</code>,
+<code>resolved_at</code>, <code>linked_observation_id</code>,
+<code>valid_from</code>, <code>valid_until</code>,
+<code>superseded_by</code>, <code>supersedes</code> and
+<code>source_date</code>
+(<code>migrations/postgres/0001_core.sql:169-192</code>,
+<code>0002_enhanced_memory.sql:2-14</code>,
+<code>0007_enum_constraints.sql:16-25</code>). <code>entity_id</code>
+routes by trigger to <code>person_id</code> or <code>node_id</code>, and
+a <code>CHECK</code> requires exactly one
+(<code>0005d_routing_triggers.sql:19-35</code>,
+<code>0005e_people_nodes_constraints.sql:16-18</code>).</p>
+<p><strong>Temporal fields record time, not validity.</strong>
+<code>valid_from</code> is <code>NOW()</code> at insert and
+<code>valid_until</code> is <code>NOW()</code> at supersession, so both
+are system time. The nearest thing to world time is
+<code>source_date</code>, which <code>mind_search</code> filters on
+through <code>date_from</code> and <code>date_to</code>
+(<code>src/mcp/registry.ts:236-237</code>). No code path writes it. A
+date filter therefore drops every observation from the results, while
+journals and dreams, which carry no details row, pass through
+(<code>src/legacy-tools/search.ts:186-200</code>).</p>
+<p><strong>Versioning is snapshots of edits, not of the
+lifecycle.</strong> <code>observation_versions</code> receives the
+pre-edit content on each <code>editObservation</code>. It records
+nothing on insert, supersession, archive or delete, is deleted with its
+observation, and is pruned to 20 rows per observation at night.</p>
+<p><strong>Other stores.</strong> <code>journals</code> hold dated
+entries and, with <code>journal_type = 'reflection'</code>, the daemon's
+Gemini insights (<code>src/daemon/reflection.ts:37-48</code>).
+<code>identity</code> holds sectioned "spine" rows with a soft
+<code>archived_at</code>. <code>compass</code> holds values, beliefs,
+boundaries, commitments and ideologies, with a
+<code>compass_provenance</code> edge table
+(<code>0004_compass.sql:13-39</code>). <code>compass_calibrate</code>
+overwrites a compass row's content with no history
+(<code>src/regions/compass.ts:302-322</code>).
+<code>consolidation_groups</code> records each summary's source
+observation ids.</p>
+<p><strong>Scoping.</strong> One mind per deployment; the README lists
+"no hard-coded person or household tenancy" as a v4 property.
+<code>context</code> is a topic label such as <code>research</code> or
+<code>values-ethics</code>. <code>graph_look</code> passes it through as
+an optional filter (<code>src/legacy-tools/read-entity.ts:34-42</code>);
+<code>mind_search</code> declares a <code>context</code> parameter and
+its handler never reads it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The search is vector-only in practice. The <code>LIKE</code> fallback
+runs only when the vector query returns no rows, which with an
+unthresholded <code>LIMIT</code> over a non-empty table does not happen,
+and an embedding failure throws before the fallback is reached
+(<code>src/shared/mind-helpers.ts:15-18</code>).</p>
+<p><strong>Ranking.</strong> Each observation scores
+<code>0.50 * similarity + 0.20 * recency + 0.20 * importance + 0.10 * access</code>,
+plus 0.1 when its emotion matches the current mood
+(<code>src/legacy-tools/search.ts:222-254</code>,
+<code>src/shared/constants.ts:55-57</code>). Recency decays at
+<code>exp(-0.02 * days)</code>; importance maps heavy, medium and light
+to 1.0, 0.6 and 0.3; access saturates at around 20 reads. Because
+<code>mind_search</code> and <code>graph_look</code> both write
+<code>access_count</code>, reading an observation raises its rank for
+the next search.</p>
+<p><strong>Mood changes the query.</strong> When the daemon's mood
+confidence is not <code>low</code>, the query string gains a
+parenthesised list such as <em>"warm, gentle, caring, soft"</em> before
+it is embedded (<code>src/legacy-tools/search.ts:36-54</code>). The same
+question therefore returns different results as the daemon's mood
+computation moves.</p>
+<p><strong>Filtering happens after the top k.</strong> Superseded,
+expired and optionally filtered observations are removed from the
+<code>n_results</code> already fetched, so a store with many superseded
+near-duplicates returns fewer than asked. The supersede filter also
+fails open. If the batch read of observation details throws, the empty
+catch leaves the map empty, the guard
+<code>obsDetails.size &gt; 0</code> is false, and every superseded row
+is returned (<code>:178-181</code>, <code>:208</code>).</p>
+<p><strong>Generated content shares the index.</strong> Reflections are
+upserted as <code>journal-&lt;id&gt;</code> and render as
+<code>[journal]</code> with no mark that Gemini wrote them. Dream
+vectors carry <code>source: 'dream'</code> and fall through the type
+classifier into the observation list, then appear again under
+<strong>Dreams</strong> (<code>src/legacy-tools/search.ts:91-107</code>,
+<code>:327-339</code>).</p>
+<p><strong>Token budget.</strong> None is computed. Search truncates
+each hit to 300 characters and defaults to ten;
+<code>ritual_orient</code> caps each block with <code>LIMIT</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls. The agent names the entity, supplies
+one or more observation strings, and optionally sets weight, emotion,
+certainty, source and context; the registry describes <code>known</code>
+as <em>"verified fact"</em> (<code>src/mcp/registry.ts:212</code>).
+Nothing checks that claim.</p>
+<p><strong>Deduplication and conflict are the same operation.</strong>
+Supersession fires on similarity, so a paraphrase of an existing
+observation retires it as surely as a correction does. The reply says
+<code>Superseded 1 older observation</code> with no id and no text
+(<code>src/legacy-tools/write.ts:268-270</code>). Two observations on
+the same entity that share most of their wording and differ in one fact
+are exactly the pair this catches. They are also the pair where retiring
+the older one is right only when the fact changed rather than a second
+fact arrived.</p>
+<p><strong>The pair is written in two statements.</strong> Without
+transactions, the old row is retired first and the back-pointer set
+second; a failure between them is logged with the SQL to reconcile it
+rather than swallowed (<code>:217-253</code>). The guard
+<code>AND valid_until IS NULL</code> makes a concurrent double-supersede
+a no-op.</p>
+<p><strong>Consolidation replaces originals with a summary.</strong> For
+up to three entities with ten or more live observations, clusters of
+three or more that co-surfaced at least twice are summarised by Gemini
+under the prompt <em>"Summarize these … observations into ONE concise
+observation (1-2 sentences)"</em>, the originals archived, and the
+summary inserted as <code>believed</code>
+(<code>src/daemon/consolidation.ts:23-162</code>). A mismatch in the
+archive count restores what was archived and skips the cluster. The
+summary goes through no contradiction check.</p>
+<p><strong>The identity hunt ignores rejections.</strong> Every four
+hours it clusters medium and heavy observations from three stance
+contexts over the last 14 days by word overlap and inserts up to three
+<code>compass_addition</code> or <code>identity_addition</code>
+proposals (<code>src/daemon/identity-hunt.ts:61-168</code>). It checks
+novelty against existing compass and identity text. It reads
+<code>daemon_proposals</code> only for the rate limit and the pending
+count, so a cluster the agent rejected is proposed again at the next run
+while its seed is inside the window. The <code>ritual_tend</code>
+description promises that <em>"reject dismisses permanently"</em>
+(<code>src/mcp/registry.ts:157</code>); that holds for co-surfacing
+pairs, whose eligibility clause excludes rejections
+(<code>src/daemon/proposals.ts:109-122</code>), and not here.</p>
+<p><strong>Malicious input.</strong> No filter. Anything the agent
+writes is stored as <code>believed</code>, and anything it reads is
+eligible to become a stance proposal.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Blocking:</strong> yes. Each observation costs two identical
+Gemini embedding calls — one in <code>detectContradictions</code>, one
+for the upsert, both on <code>"&lt;entity&gt;: &lt;text&gt;"</code>
+(<code>src/legacy-tools/write.ts:108</code>, <code>:198</code>) — plus a
+Postgres connection per statement. The memory is retrievable when the
+call returns.</li>
+<li><strong>Background:</strong> every 30 minutes the daemon reads the
+whole <code>relations</code> table for centrality
+(<code>src/daemon/index.ts:54-57</code>), runs one Gemini call per
+consolidated cluster (one entity by day, up to an affect-modulated cap
+at night), one reflection call when five or more observations arrived in
+35 minutes, up to five embedding calls for redolence, and a nightly
+dream through Workers AI. No pass rewrites the whole store; archive and
+retention sweeps are capped at 50 and 500 rows.</li>
+<li><strong>Read path:</strong> nothing is injected unasked. What the
+agent receives per call is bounded by <code>LIMIT</code>s, and the
+prefix cache is the client's concern.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds all 47 tools. The wake ritual is written into tool
+descriptions rather than a hook: <em>"First call on wake"</em> for
+<code>ritual_orient</code>, <em>"Second call on wake"</em> for
+<code>ritual_ground</code>, and <code>ritual_tend</code> as <em>"The
+third practice"</em> (<code>src/mcp/registry.ts:144-157</code>). A
+client that does not follow the ritual gets nothing at session start.
+There is no compaction handling; the server does not see sessions.</p>
+<p>The agency is complete. The same tool list writes, edits, deletes,
+archives, rescues, accepts daemon proposals into compass and identity,
+calibrates compass weights and content, and soft-archives identity rows.
+<code>drive_safeword</code> and the drive tools are also agent-held. A
+REST surface mirrors much of this for a separate client behind the same
+key (<code>src/http/router.ts</code>).</p>
+<p>Porting to another agent is an MCP URL and a key. Porting the design
+to another host means replacing Hyperdrive, R2, Workers AI and the cron
+trigger.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The supersede filter is on two of seven read paths.</strong>
+<code>mind_search</code> and <code>graph_look</code> exclude superseded
+rows (<code>src/legacy-tools/search.ts:206-220</code>,
+<code>src/legacy-tools/read-entity.ts:34-42</code>). The pools behind
+<code>dream_surface</code>
+(<code>src/legacy-tools/surface.ts:169-171</code>,
+<code>src/daemon/pools.ts:18-20</code>), the orphan pick in
+<code>ritual_orient</code>
+(<code>src/legacy-tools/orient.ts:22-31</code>), the orphan queue behind
+<code>ritual_tend</code> (<code>src/daemon/orphans.ts:26-38</code>), the
+identity hunt's source query
+(<code>src/daemon/identity-hunt.ts:89-99</code>) and
+<code>GET /api/search</code>
+(<code>src/http/handlers/search.ts:25-35</code>) filter archived or
+metabolized rows and not superseded ones. A corrected observation can
+come back at wake, as a surfaced memory or as the seed of a proposed
+value.</p>
+<p><strong>A supersede pair cannot be deleted, and trying costs the
+embedding.</strong> <code>superseded_by</code>, <code>supersedes</code>
+and <code>linked_observation_id</code> reference
+<code>observations(id)</code> with no <code>ON DELETE</code> clause
+(<code>migrations/postgres/0001_core.sql:183</code>,
+<code>0002_enhanced_memory.sql:13-14</code>), so Postgres' default
+<code>NO ACTION</code> refuses to delete either member while the other
+points at it. <code>deleteObservation</code> deletes the embedding,
+versions and sits first and the row last
+(<code>src/shared/surgery.ts:189-205</code>). The final
+<code>DELETE</code> then fails, the client sees <em>"Internal
+error"</em> (<code>src/mcp/protocol.ts:106-115</code>), and the row
+stays in Postgres — reachable by the SQL pools and
+<code>ritual_orient</code>, invisible to vector search, with its edit
+history gone.
+<code>consolidation_groups.consolidated_observation_id</code> and
+<code>entity_id</code> have the same shape
+(<code>0002_enhanced_memory.sql:20-27</code>), so deleting an entity
+with a consolidation behind it fails the same way. This follows from the
+schema and the statement order; I did not run it.</p>
+<p><strong>Provenance.</strong> <code>source</code> is the writer's
+choice from a fixed list, and the daemon stamps
+<code>consolidated</code> on its summaries. Consolidation keeps the
+source ids. Compass rows carry provenance edges. Nothing records which
+client or session wrote an observation, and the reason
+<code>spine_amend</code> requires is not stored.</p>
+<p><strong>Auth and tenancy.</strong> One key for everything. Any holder
+can read and rewrite the whole mind, and the design has no second
+principal to separate.</p>
+<p><strong>Failure recovery.</strong> Honest reporting is the house
+style: writes return
+<code>(N vectorized, M stored without vector)</code>, a failed re-embed
+after an edit says <em>"search will serve stale text"</em>, and
+scheduled failures now propagate to the Cloudflare scheduler
+(<code>src/scheduled.ts:1-15</code>). The 3.2.0 changelog records the
+opposite era, in which <em>"every affected write failed silently inside
+<code>try/catch</code>"</em> against a schema the code no longer
+matched.</p>
+<p><strong>Withheld marks.</strong></p>
+<ul>
+<li><strong><code>tombstone</code> — withheld.</strong> Deletion is
+hard, supersession is keyed on row ids, and nothing records a rejected
+value. Re-asserting a retired observation inserts a new row that
+supersedes the correction. Rejected co-surfacing proposals are
+remembered by observation-id pair, which is record-keyed, and rejected
+identity proposals are not remembered at all.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>certainty</code> is the discrete field, and its only readers draw
+✓ or ? beside a surfaced row
+(<code>src/legacy-tools/surface.ts:348</code>, <code>:422-423</code>);
+<code>rg</code> finds no <code>WHERE</code> on it. The column that does
+filter is <code>superseded_by</code>, which is a correction chain set by
+similarity, not a status anyone assigns.
+<code>charge = 'metabolized'</code> filters the surfacing pools and
+means emotionally processed.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_from</code> and <code>valid_until</code> are both
+<code>NOW()</code> at write, and <code>source_date</code> has no
+writer.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> No user,
+agent or tenant key exists; the deployment is the boundary.
+<code>context</code> is a topic label, and the main search ignores
+it.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>observation_versions</code> holds pre-edit snapshots only, is
+deleted with the row and pruned to 20. <code>drive_states</code> is
+append-only by design
+(<code>migrations/postgres/0011_drives.sql:39-47</code>), and it records
+drive levels, not memory mutations.</li>
+<li><strong><code>human_review</code> — withheld.</strong> The proposal
+queue is real, filled by the daemon and drained by <code>accept</code>
+and <code>reject</code>. Both are values of the <code>action</code> enum
+on <code>ritual_tend</code>, a tool the agent holds
+(<code>src/mcp/registry.ts:93</code>, <code>:156-166</code>), and the
+agent can write compass and identity rows directly with
+<code>compass_create</code> and <code>spine_amend</code> besides.</li>
+<li><strong><code>negative_eval</code> — withheld.</strong> No test
+calls <code>mind_search</code>, <code>graph_look</code> or the supersede
+path; section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>85 Vitest cases in 18 files. Five files and 42 of the cases are image
+ingestion and serving: byte-level format validation, R2 cleanup on
+failure, redirect limits for remote fetches. The memory-relevant files
+are small.</p>
+<ul>
+<li><code>tests/postgres-v4.integration.test.ts</code> applies every
+migration to a fresh pgvector Postgres, writes one observation through
+<code>handleMindWrite</code> with a mocked all-zero embedding, checks
+the stored row and vector metadata, edits it, and reads the edit history
+back. The CI job <code>postgres-contracts</code> sets
+<code>TEST_DATABASE_URL</code> so this runs there
+(<code>.github/workflows/verify.yml</code>); without it,
+<code>describe.runIf</code> skips all three cases.</li>
+<li><code>tests/rescue-persistence.test.ts</code> records the SQL
+strings the daemon passes emit and asserts that each contains the
+pending-rescue predicate. It proves the predicate is in the query text;
+it does not execute a query.</li>
+<li><code>tests/active-context.test.ts</code> and
+<code>tests/observation-read.test.ts</code> cover context clearing and
+the edit-history response shape.</li>
+</ul>
+<p><strong>No test reaches search, supersession or
+consolidation.</strong> One observation is written in the only database
+test, so <code>detectContradictions</code> has nothing to find, and no
+case asserts that a superseded row is excluded from anything. The tests
+that assert on SQL text explain how the read paths drifted: a predicate
+was added to the passes the suite pins, and the passes it does not pin
+were never compared.</p>
+<p>No benchmark, eval harness or paper is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve contradictions where the write happens.</strong>
+Looking up the entity's near neighbours before insert, and retiring with
+both pointers, costs one query and closes the case most stores leave to
+a nightly pass.</li>
+<li><strong>Order statements for the failure you can live with.</strong>
+Without transactions, delete dependents first and the row last, archive
+before inserting the summary, and restore what you archived when the
+count is wrong.</li>
+<li><strong>Hold a deliberate rescue against every pass that would undo
+it.</strong> A <code>rescued_at</code> that decay, orphaning, archive
+and consolidation all respect until the next real surfacing is what
+makes "bring this back" stick.</li>
+<li><strong>Report partial success in the reply.</strong> "2 vectorized,
+1 stored without vector" is information the agent can act on.</li>
+<li><strong>Expire your own suggestions.</strong> A 30-day TTL and a
+pending cap stopped a queue that had reached 11,512 rows.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Treating similarity as contradiction.</strong> Cosine 0.85
+on the same entity catches updates and paraphrases alike, and silently
+retires the older one. Type the finding before disposing of it.</li>
+<li><strong>A lifecycle predicate written into each query by
+hand.</strong> Seven read paths here re-derive "live observation", and
+five of them leave supersession out. Put it in one view or one function
+that every read uses.</li>
+<li><strong>Self-referencing foreign keys with no delete rule, behind a
+delete that removes dependents first.</strong> The row survives and
+loses exactly the parts that made it findable.</li>
+<li><strong>A required reason that is not stored.</strong> Asking for
+provenance and echoing it back teaches the caller that it was kept.</li>
+<li><strong>Pinning SQL text instead of outcomes.</strong> A test that
+the query contains a predicate cannot notice a second query that lacks
+it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is built for one AI, one operator and one Cloudflare account,
+and for a maintainer who wants the memory to feel alive — mood, dreams,
+redolence, drives — more than to be auditable. It suits that reader,
+with the licence permitting non-commercial use only. A team that needs
+corrections to hold everywhere, several principals, or deletion that can
+be relied on should take the write-path supersession idea and not the
+system. So should anyone who cannot depend on Gemini being reachable:
+search stops when it is not.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does a running deployment return for <code>mind_delete</code>
+on a superseded observation — is the foreign-key failure seen in
+practice, and are there stranded rows without embeddings?</li>
+<li>How often does auto-supersession fire on paraphrase rather than
+correction at 0.85 with Gemini Embedding 2?</li>
+<li>How many identity and compass proposals are duplicates of rejected
+ones in a live queue?</li>
+<li>Is the <code>source_date</code> column populated by the v3.2
+migration path or an import script outside this repository?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong>
+<code>migrations/postgres/0001_core.sql</code>,
+<code>0002_enhanced_memory.sql</code>, <code>0004_compass.sql</code>,
+<code>0007_enum_constraints.sql</code>,
+<code>0017_schema_cleanup.sql</code>, <code>0018_rescued_at.sql</code>;
+<code>scripts/migrate-postgres.mjs</code>.</li>
+<li><strong>Storage adapters:</strong> <code>src/adapter.ts</code>,
+<code>src/vectors.ts</code>, <code>src/embeddings.ts</code>,
+<code>src/shared/mind-helpers.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/legacy-tools/write.ts</code>,
+<code>src/regions/episodes.ts</code>,
+<code>src/http/handlers/observations.ts</code>,
+<code>src/shared/constants.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/legacy-tools/search.ts</code>,
+<code>src/legacy-tools/read-entity.ts</code>,
+<code>src/legacy-tools/read.ts</code>,
+<code>src/legacy-tools/surface.ts</code>,
+<code>src/daemon/pools.ts</code>,
+<code>src/http/handlers/search.ts</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>src/legacy-tools/orient.ts</code>,
+<code>src/legacy-tools/ground.ts</code>.</li>
+<li><strong>Correction and deletion:</strong>
+<code>src/shared/surgery.ts</code>,
+<code>src/legacy-tools/delete.ts</code>,
+<code>src/shared/archive-observation.ts</code>,
+<code>src/regions/spine.ts</code>,
+<code>src/regions/compass.ts</code>.</li>
+<li><strong>Background:</strong> <code>src/daemon/index.ts</code>,
+<code>archive.ts</code>, <code>consolidation.ts</code>,
+<code>retention.ts</code>, <code>redolence.ts</code>,
+<code>proposals.ts</code>, <code>identity-hunt.ts</code>,
+<code>reflection.ts</code>, <code>orphans.ts</code>,
+<code>novelty.ts</code>; <code>src/scheduled.ts</code>.</li>
+<li><strong>MCP and API:</strong> <code>src/mcp/registry.ts</code>,
+<code>src/mcp/protocol.ts</code>, <code>src/http/router.ts</code>,
+<code>src/http/auth.ts</code>,
+<code>src/legacy-tools/proposals.ts</code>.</li>
+<li><strong>Tests:</strong>
+<code>tests/postgres-v4.integration.test.ts</code>,
+<code>tests/rescue-persistence.test.ts</code>,
+<code>tests/observation-read.test.ts</code>,
+<code>tests/active-context.test.ts</code>,
+<code>.github/workflows/verify.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'superseded_by|supersedes' .</code> — written at
+<code>write.ts:222</code>, <code>:228</code>; read in
+<code>search.ts</code>, <code>read-entity.ts</code>,
+<code>consolidation.ts</code>, <code>read.ts</code>, and in the
+contradiction check; no match in <code>surface.ts</code>,
+<code>pools.ts</code>, <code>orient.ts</code>, <code>orphans.ts</code>,
+<code>identity-hunt.ts</code>, <code>http/handlers/search.ts</code>, and
+none in <code>surgery.ts</code>, so no delete path clears the
+pointers.</li>
+<li><code>rg -n 'REFERENCES observations|REFERENCES entities|DROP CONSTRAINT|ALTER CONSTRAINT|consolidation_groups' migrations src</code>
+— <code>superseded_by</code>, <code>supersedes</code>,
+<code>linked_observation_id</code>,
+<code>consolidation_groups.entity_id</code> and
+<code>consolidated_observation_id</code> carry no
+<code>ON DELETE</code>, and no later migration alters them.</li>
+<li><code>rg -n "certainty|'tentative'|tentative" src tests</code> —
+selected in <code>surface.ts</code>, <code>pools.ts</code>,
+<code>read.ts</code>, <code>http/handlers/entities.ts</code>; used only
+for the icon at <code>surface.ts:348</code> and <code>:423</code>; no
+<code>WHERE</code> clause.</li>
+<li><code>rg -n "source_date|valid_from|valid_until" src migrations scripts tests</code>
+— <code>source_date</code> is declared, indexed, selected and filtered
+on, and never written.</li>
+<li><code>rg -n 'params.context|params\["context"\]' src/legacy-tools/search.ts</code>
+— no match.</li>
+<li><code>rg -n "rejected|status" src/daemon/identity-hunt.ts</code> —
+one match, the pending count at <code>:79</code>.</li>
+<li><code>rg -n -i 'supersed|contradict' tests</code> and
+<code>rg -n -i 'mind_search|handleMindSearch|handleApiSearch' tests</code>
+— no match.</li>
+<li><code>rg -n -i 're-?embed|backfill|vectorized_at|missing embedding|without vector' src</code>
+— the only re-embed sweep is for dreams.</li>
+<li><code>rg -n "audit|event_log|history" migrations</code> — comments
+only; no mutation log table.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git</code>
+— no match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/codependentai/resonant-mind/commit/9a08410b538f9dc56119ee34e8de044aef867e51"><code class="commit-id" title="9a08410b538f9dc56119ee34e8de044aef867e51">9a08410b…</code></a>
+— first reading, at the head of <code>master</code>, the v4.0.1 merge
+dated 19 September 2026. No marks. Screened before reading: 0 RUNS, 0
+EXEC, 0 FLOAT, 2 FRESH (<code>package.json</code>,
+<code>package-lock.json</code>). The depth-1 clone dates every file to
+the tip, and the API confirms the lockfile itself changed on 19
+September 2026. No agent-instruction files are in the tree. Read with
+<code>rg</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

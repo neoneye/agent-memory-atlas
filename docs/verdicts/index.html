@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 634 reports.</strong></p>
+<p><strong>This page covers all 635 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26096,6 +26096,54 @@ the upstream commits since the last pin have been classified.</li>
 verb, no audit, no provenance beyond a caller-supplied
 <code>added_by</code>, and a correction is a delete followed by an
 add.</li>
+</ul>
+<h3 id="resonant-mind"><a
+href="../systems/resonant-mind/"><code>resonant-mind</code></a></h3>
+<ul>
+<li>Best idea: <strong>retire the older observation at the moment the
+newer one is written.</strong> <code>mind_write</code> embeds each
+observation, looks up same-entity neighbours, and sets
+<code>valid_until</code> and <code>superseded_by</code> on any at cosine
+0.85 or more, old row first and back-pointer second, with the desync
+logged as the SQL to reconcile it. One query at write time closes the
+case most stores leave to a nightly pass.</li>
+<li>Biggest risk: <strong>the retirement is a predicate that two of
+seven read paths apply.</strong> <code>mind_search</code> and
+<code>graph_look</code> hide superseded rows; the
+<code>dream_surface</code> pools, the orphan pick in
+<code>ritual_orient</code>, the orphan queue, the identity hunt's source
+query and <code>GET /api/search</code> do not. A corrected observation
+comes back at wake or as the seed of a proposed value, and
+<code>mind_search</code> itself fails open when its detail read
+throws.</li>
+<li>Most reusable component: the rescue hold in
+<code>src/shared/archive-observation.ts</code> — <code>rescued_at</code>
+is stamped on un-archive, and novelty recalculation, access decay,
+orphan marking, deep archive and consolidation all skip the row until it
+next surfaces, so a deliberate rescue is not undone by the next
+tick.</li>
+<li>Second risk: <strong>a supersede pair cannot be deleted.</strong>
+<code>superseded_by</code>, <code>supersedes</code> and
+<code>linked_observation_id</code> reference
+<code>observations(id)</code> with no <code>ON DELETE</code>, and
+<code>deleteObservation</code> removes the embedding and edit history
+before the row. By the schema, the final delete fails and leaves a row
+the SQL pools still surface and vector search cannot find. Beside it,
+the identity hunt re-proposes compass and identity additions the agent
+rejected, while the tool description promises rejection is
+permanent.</li>
+<li>Maturity impression: Codependent AI Source-Available License, 17,088
+lines of TypeScript and 1,354 lines of SQL in 23 migrations, 32 commits
+on master by 2 contributors between 22 March and 19 September 2026. 85
+Vitest cases in 18 files, 42 of them image handling; the only database
+test writes one observation, and no test reaches search, supersession or
+consolidation. No marks.</li>
+<li>Study when: you want write-time supersession without an LLM in the
+loop, or a worked example of ordering statements for safe failure on a
+connection that cannot hold a transaction.</li>
+<li>Do not copy when: corrections must hold on every read path, deletion
+must be reliable, more than one principal shares the store, or search
+has to work while the embedding provider is down.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 634 reports.**
+**This page covers all 635 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5671,3 +5671,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 35,098 lines of Python in the package, 1,104 commits on main by 14 contributors, of which 1,031 are the fork author's since 13 April 2026. 3,937 test functions against real LanceDB with a stub embedder. Three marks — `scope_enforced` on the vector prefilter, `bitemporal` on the inherited graph schema, `negative_eval` on a wing exclusion and an expired-fact exclusion with positive controls. No mutation audit: upstream's write-ahead log postdates the fork.
 - Study when: you are building memory over a source tree and need incremental re-indexing that never deletes what a person wrote, or you maintain a fork and want a release gate that refuses to publish until the upstream commits since the last pin have been classified.
 - Do not copy when: manual notes are the product. They have no update verb, no audit, no provenance beyond a caller-supplied `added_by`, and a correction is a delete followed by an add.
+
+### [`resonant-mind`](../systems/resonant-mind/)
+
+- Best idea: **retire the older observation at the moment the newer one is written.** `mind_write` embeds each observation, looks up same-entity neighbours, and sets `valid_until` and `superseded_by` on any at cosine 0.85 or more, old row first and back-pointer second, with the desync logged as the SQL to reconcile it. One query at write time closes the case most stores leave to a nightly pass.
+- Biggest risk: **the retirement is a predicate that two of seven read paths apply.** `mind_search` and `graph_look` hide superseded rows; the `dream_surface` pools, the orphan pick in `ritual_orient`, the orphan queue, the identity hunt's source query and `GET /api/search` do not. A corrected observation comes back at wake or as the seed of a proposed value, and `mind_search` itself fails open when its detail read throws.
+- Most reusable component: the rescue hold in `src/shared/archive-observation.ts` — `rescued_at` is stamped on un-archive, and novelty recalculation, access decay, orphan marking, deep archive and consolidation all skip the row until it next surfaces, so a deliberate rescue is not undone by the next tick.
+- Second risk: **a supersede pair cannot be deleted.** `superseded_by`, `supersedes` and `linked_observation_id` reference `observations(id)` with no `ON DELETE`, and `deleteObservation` removes the embedding and edit history before the row. By the schema, the final delete fails and leaves a row the SQL pools still surface and vector search cannot find. Beside it, the identity hunt re-proposes compass and identity additions the agent rejected, while the tool description promises rejection is permanent.
+- Maturity impression: Codependent AI Source-Available License, 17,088 lines of TypeScript and 1,354 lines of SQL in 23 migrations, 32 commits on master by 2 contributors between 22 March and 19 September 2026. 85 Vitest cases in 18 files, 42 of them image handling; the only database test writes one observation, and no test reaches search, supersession or consolidation. No marks.
+- Study when: you want write-time supersession without an LLM in the loop, or a worked example of ordering statements for safe failure on a connection that cannot hold a transaction.
+- Do not copy when: corrections must hold on every read path, deletion must be reliable, more than one principal shares the store, or search has to work while the embedding provider is down.
