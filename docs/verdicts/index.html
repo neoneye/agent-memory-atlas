@@ -17225,22 +17225,24 @@ operator can read and diff the memory without the service running.</li>
 for a missing field and <code>system</code> is on the privileged list,
 so a caller that omits <code>actor_role</code> passes every private-tier
 check and reads every user's short-term memory, working memory and
-preferences in the workspace.</li>
-<li>Most reusable component: filtering a conversation for distillation
-value before spending a model call on it, and refusing a caller-supplied
-<code>memory_url</code> override on the proxy that would otherwise fetch
-what it is told to.</li>
+preferences in the workspace. The owner check guards reads, not writes:
+a member who knows another user's task id overwrites that user's working
+memory.</li>
+<li>Most reusable component: the distillation admission gate, which
+drops a distilled claim that hedges or whose specific tokens are absent
+from the user's own messages before it is written, and the refusal of a
+caller-supplied <code>memory_url</code> outside an exact allowlist.</li>
 <li>Maturity impression: MIT, ~42,300 lines of Python across a gateway,
-a key-guarded memory service, an SDK, an MCP server and an operator
-portal, with quotas, encrypted workspace secrets and an internal key
-check that refuses to start unauthenticated outside an explicit
-local-dev opt-in.</li>
+a key-guarded memory service, an SDK, a reference agent runtime and an
+operator portal, with quotas, encrypted workspace secrets and an
+internal key check that answers 500 unless a key is configured or an
+explicit local-dev opt-in is set.</li>
 <li>Study when: a multi-tenant product needs a memory plane under a
 framework already chosen, and the team wants quotas and a portal rather
 than another agent runtime.</li>
 <li>Do not copy when: memory must be correct rather than present — there
-is no verification state, no correction record and no committed
-retrieval evaluation.</li>
+is no verification state, no correction record, no delete route and no
+committed retrieval evaluation.</li>
 </ul>
 <h3 id="selmem"><a
 href="../systems/selmem/"><code>selmem</code></a></h3>

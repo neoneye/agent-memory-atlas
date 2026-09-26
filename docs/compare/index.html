@@ -775,34 +775,46 @@ tested, and the notebooks disagree with each other on scoping</td>
 <tr>
 <td><code>agent-memoryforge</code></td>
 <td>A Markdown file in a tiered workspace tree — short-term summary,
-working-memory task state, durable preference, semantic fact or decision
-— indexed as a row carrying tier, scope, kind and owner</td>
+working-memory task state, durable preference, semantic fact or graph
+relation — indexed as a row carrying tier, scope, kind and path, with
+the owner in the entry metadata</td>
 <td>One directory per tenant and workspace, with a SQLite index (FTS5
-plus a vector table) beside the files; pgvector as an alternate index
-and Redis optionally for audit</td>
-<td>FTS5 over content plus vector similarity, narrowed by tier, scope,
-memory kind and path prefix, with private tiers filtered per hit against
-the record's owner</td>
-<td>Synchronous file write plus index upsert through an authenticated
-internal service; distillation is enqueued to a worker</td>
-<td>Files are rewritten and rows re-indexed; working-memory items move
-to done or cancelled and stay. Nothing records that a claim was
-wrong</td>
+plus a vector table) beside the files; pgvector as an alternate vector
+index in one shared table keyed on tenant and workspace; Redis
+optionally for audit</td>
+<td>FTS5 over content plus optional vector similarity merged by
+reciprocal rank, narrowed by tier, scope, memory kind and path prefix,
+with private tiers filtered per hit against the entry's owner after the
+top_k cut</td>
+<td>Synchronous file write plus a best-effort index upsert through an
+authenticated internal service; distillation is enqueued to a worker
+whose writes pass a grounding and hedge filter</td>
+<td>Files are overwritten or appended and rows re-indexed;
+working-memory items move to done or cancelled and stay unless written
+with a TTL, which deletes the file on the first read after expiry. No
+delete route, and nothing records that a claim was wrong</td>
 <td>A directory per tenant and workspace, a membership check at the
-gateway, and an owner predicate on every private-tier read</td>
-<td>An authenticated REST API, a Python SDK, an MCP server, an operator
-portal, and adapters that leave LangChain or LangGraph as the agent
-owner</td>
+gateway, and an owner predicate on every private-tier read; a private
+file is addressed by conversation or task id, with no check of the
+existing file's owner on write</td>
+<td>An authenticated REST API and a Python SDK whose assembled context a
+LangChain or LangGraph loop can prepend, a reference agent runtime, and
+an operator portal; the in-tree MCP server exposes legacy skill tools,
+not memory</td>
 <td>An async distillation worker that turns conversations into durable
-facts, plus quota and usage accounting</td>
-<td>None as a status. Working memory has a task lifecycle, and nothing
-records whether a stored fact is true</td>
-<td>Private tiers filtered per hit against the owner read off the
-record, and an internal service key that refuses to start
-unauthenticated outside an explicit local-dev opt-in</td>
+facts, preferences and graph relations, plus quota and usage
+accounting</td>
+<td>None as a status. Distilled claims that hedge or are not grounded in
+the user's own messages are dropped before write, and nothing records
+whether a stored fact is true</td>
+<td>Private tiers filtered per hit against the owner read off the entry,
+a fail-closed internal service key, and a distillation gate that drops
+hedged or ungrounded claims before they are written</td>
 <td><code>_actor_role</code> defaults to <code>system</code>, which is
 privileged, so a caller that omits the field reads every user's private
-memories; audit durability is off by default</td>
+memories; a workspace member who knows another user's task id overwrites
+that user's working memory; audit durability is off by default and
+distilled writes are unaudited</td>
 </tr>
 <tr>
 <td><code>agent-mesh</code></td>

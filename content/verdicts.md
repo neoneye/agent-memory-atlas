@@ -4025,11 +4025,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`agent-memoryforge`](../systems/agent-memoryforge/)
 - Best idea: memory is Markdown first and SQLite second, with a rebuild path from the workspace tree — the index is derived, so an operator can read and diff the memory without the service running.
-- Biggest risk: `_actor_role` returns `system` for a missing field and `system` is on the privileged list, so a caller that omits `actor_role` passes every private-tier check and reads every user's short-term memory, working memory and preferences in the workspace.
-- Most reusable component: filtering a conversation for distillation value before spending a model call on it, and refusing a caller-supplied `memory_url` override on the proxy that would otherwise fetch what it is told to.
-- Maturity impression: MIT, ~42,300 lines of Python across a gateway, a key-guarded memory service, an SDK, an MCP server and an operator portal, with quotas, encrypted workspace secrets and an internal key check that refuses to start unauthenticated outside an explicit local-dev opt-in.
+- Biggest risk: `_actor_role` returns `system` for a missing field and `system` is on the privileged list, so a caller that omits `actor_role` passes every private-tier check and reads every user's short-term memory, working memory and preferences in the workspace. The owner check guards reads, not writes: a member who knows another user's task id overwrites that user's working memory.
+- Most reusable component: the distillation admission gate, which drops a distilled claim that hedges or whose specific tokens are absent from the user's own messages before it is written, and the refusal of a caller-supplied `memory_url` outside an exact allowlist.
+- Maturity impression: MIT, ~42,300 lines of Python across a gateway, a key-guarded memory service, an SDK, a reference agent runtime and an operator portal, with quotas, encrypted workspace secrets and an internal key check that answers 500 unless a key is configured or an explicit local-dev opt-in is set.
 - Study when: a multi-tenant product needs a memory plane under a framework already chosen, and the team wants quotas and a portal rather than another agent runtime.
-- Do not copy when: memory must be correct rather than present — there is no verification state, no correction record and no committed retrieval evaluation.
+- Do not copy when: memory must be correct rather than present — there is no verification state, no correction record, no delete route and no committed retrieval evaluation.
 
 ### [`selmem`](../systems/selmem/)
 - Best idea: two texts per memory, one allowed to drift and one frozen at encode for it to drift *away from*. The narrator rebuilds a sentence from the current `gist`; when spoken sentences leave the `core` often enough, grounding pulls the trace back and the recall's disclaimer changes from "lived account (fidelity 0.62)" to "pulled back toward the core". A third text, the verbatim archive, is reachable by one accessor and one HTTP route and never by the narrator.
