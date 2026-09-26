@@ -2937,10 +2937,12 @@ compiled hooks</li>
 href="https://github.com/fellowgeek/mcp-memory">fellowgeek/mcp-memory</a>
 at <a
 href="https://github.com/fellowgeek/mcp-memory/commit/a50a87708628d0822af439015503de47c35d7acc"><code class="commit-id" title="a50a87708628d0822af439015503de47c35d7acc">a50a8770…</code></a>
-— read only; a <code>requirements.txt</code> inside the seven-day
-cooldown and one build-time exec (the setup wizard), so nothing was
-installed or run. The upsert-and-mirror OKF store, the FTS5 read path,
-the enforced namespace filter, and the write-only handling of OKF's
+— read only; one build-time exec (the setup wizard) and one unpinned
+surface (<code>fastmcp&lt;=3</code>, <code>pyyaml&gt;=6.0</code>),
+nothing inside the cooldown, so nothing was installed or run. The
+upsert-and-mirror OKF store, the FTS5 read path, the namespace predicate
+on retrieve and delete and its optional form on search, the
+<code>log.md</code> change log, and the write-only handling of OKF's
 <code>status</code>/<code>verified</code>/<code>stale_after</code> were
 read from the five source files against <code>test_memory.py</code></li>
 <li><a
@@ -5259,6 +5261,32 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The MCP-Memory report withheld <code>audit_log</code> from a
+change log every store writes, overstated the namespace filter behind
+<code>scope_enforced</code>, and carried the first pin's anchors and
+tests into the second; corrected 2026-09-26.</strong> At <a
+href="https://github.com/fellowgeek/mcp-memory/commit/a50a87708628d0822af439015503de47c35d7acc"><code class="commit-id" title="a50a87708628d0822af439015503de47c35d7acc">a50a8770…</code></a>
+the <a href="../systems/mcp-memory/">MCP-Memory</a> report said
+<code>namespace</code> was applied in SQL on every search, retrieve and
+delete, partitioned the on-disk directories, and was exercised by the
+tests. <code>memory_search</code> takes
+<code>namespace: Optional[str] = None</code> and
+<code>search_memories</code> adds the predicate only when one is passed,
+so an unqualified search reads every namespace; a <code>default</code>
+key containing a slash shares a mirror path with a named namespace; and
+no test writes to two namespaces. The mark holds on the narrower
+evidence of retrieve and delete, which always apply the predicate.
+<code>audit_log</code> was withheld in error for lacking an actor, a
+before/after value and a reader, none of which the definition asks for,
+over a <code>log.md</code> that every store and delete appends to; it is
+added. The line anchors, file sizes and account of the tests were those
+of <a
+href="https://github.com/fellowgeek/mcp-memory/commit/4514d1fd162598e65280c15ea2df017698fcbf16"><code class="commit-id" title="4514d1fd162598e65280c15ea2df017698fcbf16">4514d1fd…</code></a>,
+including the claim that the only negative assertion was a post-delete
+lookup. The scope claim over-credited the system and the audit
+withholding under-credited it. The search that would have caught the
+scope overstatement:
+<code>grep -n -E 'namespace: Optional|if namespace' memory_server.py db.py</code>.</li>
 <li><strong>The Lemmalog report called its escalation list unresolvable
 and its differential tests uncommitted, and miscounted two other things;
 corrected 2026-09-26.</strong> At <a

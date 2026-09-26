@@ -13560,14 +13560,16 @@ commit, never read back</td>
 query; tags filtered in Python after the fetch; exact key+namespace
 lookup; no vector or semantic search</td>
 <td>memory_store upserts by (key, namespace) via ON CONFLICT,
-overwriting content in place with no version history; a
-system/last_memory checkpoint carries continuity across sessions</td>
+overwriting content in place with no version history; each store and
+delete adds a dated line to log.md; a system/last_memory checkpoint
+carries continuity across sessions</td>
 <td>Update is an in-place upsert; delete is a hard DELETE plus os.remove
 of the .md; deprecation is a status string that nothing reads, and
 re-storing deleted content is always accepted</td>
-<td>namespace is a real filter on the read path — applied in SQL on
-search, retrieve and delete, and partitioning the on-disk
-directories</td>
+<td>namespace is a key on every row and a predicate on retrieve and
+delete, but an optional argument on search, which spans every namespace
+when it is omitted; project_root selects one SQLite file per project, a
+physical partition with no project key on a row</td>
 <td>A FastMCP server exposing six tools (store, retrieve, search,
 delete, get_last, update_last); each call takes a project_root to locate
 the per-project store; stdlib sqlite3, no external services</td>
@@ -13577,12 +13579,12 @@ daemon, extraction, consolidation or decay</td>
 verified actor-event list, and stale_after are all serialized into
 frontmatter and read by no retrieval or gating path</td>
 <td>A small, self-contained, dependency-light MCP memory server whose
-namespace scoping is genuinely enforced on read and whose store is
-human-readable OKF markdown mirrored to disk</td>
+store is human-readable OKF markdown mirrored to disk, with a dated
+change log beside it</td>
 <td>The OKF trust and lifecycle model is write-only — verified, status
-and stale_after are stored faithfully and consulted nowhere — and the
-conformance validator that would enforce OKF is never called on the
-write path</td>
+and stale_after are stored faithfully and consulted nowhere; the
+conformance validator is never called on the write path; and an
+unqualified search reads every namespace</td>
 </tr>
 <tr>
 <td><code>mem0</code></td>
@@ -28327,7 +28329,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>215 of 646:</em> <a
+<p><em>216 of 646:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -28430,7 +28432,8 @@ href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/magicore/"><code>magicore</code></a>, <a
 href="../systems/mandalore/"><code>mandalore</code></a>, <a
 href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a>,
-<a href="../systems/mem0/"><code>mem0</code></a>, <a
+<a href="../systems/mcp-memory/"><code>mcp-memory</code></a>, <a
+href="../systems/mem0/"><code>mem0</code></a>, <a
 href="../systems/membrane/"><code>membrane</code></a>, <a
 href="../systems/memcontinuum/"><code>memcontinuum</code></a>, <a
 href="../systems/memini/"><code>memini</code></a>, <a

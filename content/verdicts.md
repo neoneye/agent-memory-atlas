@@ -2850,12 +2850,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`mcp-memory`](../systems/mcp-memory/)
 
-- Best idea: store memory as an Open Knowledge Format markdown document — typed frontmatter, human-readable, mirrored to disk per namespace — indexed in SQLite FTS5, so the store is diffable and hand-repairable rather than an opaque table.
-- Biggest risk: the OKF trust-and-lifecycle model is write-only. `status` (draft/stable/deprecated), a `verified` actor list and a `stale_after` date are serialized faithfully into every record and read by no retrieval, ranking or gating path — a `deprecated` or expired memory is returned exactly like a fresh verified one. The "strictly adheres to the spec" claim is also unbacked: the conformance validator exists and is never called on the write path.
-- Most reusable component: the namespace-scoped, FTS5-indexed OKF store with a `last_memory` continuity checkpoint — small, self-contained (≈1,600 lines, stdlib sqlite3 plus fastmcp and pyyaml), and the namespace filter is genuinely enforced on read.
-- Maturity impression: MIT, a tidy single-purpose MCP server; the one earned mark is `scope_enforced`. Tests cover the positive paths but assert nothing about the lifecycle fields, so their inertness is untested rather than caught.
-- Study when: you want a minimal, inspectable, dependency-light MCP memory server and are content with lexical search and manual lifecycle management.
-- Do not copy when: you expect the OKF `verified`/`status`/`stale_after` fields to *do* anything — today they are inert — or you need semantic recall, decay, correction that sticks, or provenance the system acts on.
+- Best idea: store memory as an Open Knowledge Format markdown document — typed frontmatter, human-readable, mirrored to disk beside a dated `log.md` of every store and delete — indexed in SQLite FTS5, so the store is diffable and hand-repairable rather than an opaque table.
+- Biggest risk: the OKF trust-and-lifecycle model is write-only. `status` (draft/stable/deprecated), a `verified` actor list and a `stale_after` date are serialized faithfully into every record and read by no retrieval, ranking or gating path — a `deprecated` or expired memory is returned exactly like a fresh verified one. The "strictly adheres to the spec" claim is also unbacked: the conformance validator exists and is never called on the write path. And `namespace`, offered as separation for contexts or users, is optional on search, so an unqualified search reads every namespace.
+- Most reusable component: the FTS5-indexed OKF store with a `last_memory` continuity checkpoint and a path check that runs before the commit — small, self-contained (1,810 lines, stdlib sqlite3 plus fastmcp and pyyaml).
+- Maturity impression: MIT, a tidy single-purpose MCP server; it earns `scope_enforced` narrowly, on a namespace predicate that retrieve and delete always apply and search applies only when passed, and `audit_log` on a `log.md` that names the key but not the namespace and carries no actor. The per-project database is a physical partition on top. Tests cover the positive paths and path traversal but assert nothing about the lifecycle fields or namespace isolation.
+- Study when: you want a minimal, inspectable, dependency-light MCP memory server for one user per project database and are content with lexical search and manual lifecycle management.
+- Do not copy when: you expect the OKF `verified`/`status`/`stale_after` fields to *do* anything, need namespaces to separate users sharing a database, or need semantic recall, decay, correction that sticks, or provenance the system acts on.
 
 ### [`mentisdb`](../systems/mentisdb/)
 

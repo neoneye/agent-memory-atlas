@@ -174,7 +174,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | --- | --- |
 | Negative retrieval assertion | 365 of 646 |
 | Scope enforced in retrieval | 300 of 646 |
-| Append-only mutation audit | 215 of 646 |
+| Append-only mutation audit | 216 of 646 |
 | Explicit trust state | 164 of 646 |
 | Bi-temporal validity | 111 of 646 |
 | Human review surface | 88 of 646 |

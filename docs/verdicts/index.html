@@ -11132,9 +11132,10 @@ memory half costs to operate.</li>
 href="../systems/mcp-memory/"><code>mcp-memory</code></a></h3>
 <ul>
 <li>Best idea: store memory as an Open Knowledge Format markdown
-document — typed frontmatter, human-readable, mirrored to disk per
-namespace — indexed in SQLite FTS5, so the store is diffable and
-hand-repairable rather than an opaque table.</li>
+document — typed frontmatter, human-readable, mirrored to disk beside a
+dated <code>log.md</code> of every store and delete — indexed in SQLite
+FTS5, so the store is diffable and hand-repairable rather than an opaque
+table.</li>
 <li>Biggest risk: the OKF trust-and-lifecycle model is write-only.
 <code>status</code> (draft/stable/deprecated), a <code>verified</code>
 actor list and a <code>stale_after</code> date are serialized faithfully
@@ -11142,23 +11143,29 @@ into every record and read by no retrieval, ranking or gating path — a
 <code>deprecated</code> or expired memory is returned exactly like a
 fresh verified one. The "strictly adheres to the spec" claim is also
 unbacked: the conformance validator exists and is never called on the
-write path.</li>
-<li>Most reusable component: the namespace-scoped, FTS5-indexed OKF
-store with a <code>last_memory</code> continuity checkpoint — small,
-self-contained (≈1,600 lines, stdlib sqlite3 plus fastmcp and pyyaml),
-and the namespace filter is genuinely enforced on read.</li>
-<li>Maturity impression: MIT, a tidy single-purpose MCP server; the one
-earned mark is <code>scope_enforced</code>. Tests cover the positive
-paths but assert nothing about the lifecycle fields, so their inertness
-is untested rather than caught.</li>
+write path. And <code>namespace</code>, offered as separation for
+contexts or users, is optional on search, so an unqualified search reads
+every namespace.</li>
+<li>Most reusable component: the FTS5-indexed OKF store with a
+<code>last_memory</code> continuity checkpoint and a path check that
+runs before the commit — small, self-contained (1,810 lines, stdlib
+sqlite3 plus fastmcp and pyyaml).</li>
+<li>Maturity impression: MIT, a tidy single-purpose MCP server; it earns
+<code>scope_enforced</code> narrowly, on a namespace predicate that
+retrieve and delete always apply and search applies only when passed,
+and <code>audit_log</code> on a <code>log.md</code> that names the key
+but not the namespace and carries no actor. The per-project database is
+a physical partition on top. Tests cover the positive paths and path
+traversal but assert nothing about the lifecycle fields or namespace
+isolation.</li>
 <li>Study when: you want a minimal, inspectable, dependency-light MCP
-memory server and are content with lexical search and manual lifecycle
-management.</li>
+memory server for one user per project database and are content with
+lexical search and manual lifecycle management.</li>
 <li>Do not copy when: you expect the OKF
 <code>verified</code>/<code>status</code>/<code>stale_after</code>
-fields to <em>do</em> anything — today they are inert — or you need
-semantic recall, decay, correction that sticks, or provenance the system
-acts on.</li>
+fields to <em>do</em> anything, need namespaces to separate users
+sharing a database, or need semantic recall, decay, correction that
+sticks, or provenance the system acts on.</li>
 </ul>
 <h3 id="mentisdb"><a
 href="../systems/mentisdb/"><code>mentisdb</code></a></h3>
