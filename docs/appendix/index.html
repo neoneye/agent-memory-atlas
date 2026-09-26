@@ -10882,6 +10882,53 @@ before reading, from a shallow clone: five files, one auto-run surface,
 one build-time execution point, one unpinned surface and two dependency
 files inside the cooldown; nothing was installed and nothing was
 run</li>
+<li><strong><code>nexi-lab/nexus</code> was examined and has no report:
+its memory brick was deleted upstream on 15 March 2026, and what remains
+at the pin is schema with no writer.</strong> At <a
+href="https://github.com/nexi-lab/nexus/commit/66e3b994773036514a2aebae8138c60b77a64329"><code class="commit-id" title="66e3b994773036514a2aebae8138c60b77a64329">66e3b994…</code></a>,
+25 September 2026, Nexus is a distributed virtual filesystem for
+multi-agent systems — a Rust kernel, ReBAC permissions, IPC pipes, Raft
+federation and runtime-loadable Python "bricks", 344,403 lines of Python
+under <code>src/</code> outside tests — under Apache-2.0. Commit <a
+href="https://github.com/nexi-lab/nexus/commit/2dfc23d95aa234dfbc270d7a32c94e2ccdac593b"><code class="commit-id" title="2dfc23d95aa234dfbc270d7a32c94e2ccdac593b">2dfc23d9…</code></a>
+(15 March 2026, <em>"strip LLM brick and all dependent
+bricks/services"</em>) removed <code>nexus.bricks.memory</code> — 26
+files, 10,117 lines, including the service, paging, enrichment,
+versioning and state modules — with its REST router, RPC handler, CLI
+command and the MCP tools <code>nexus_store_memory</code> and
+<code>nexus_query_memory</code>. The residue at the pin has no producer.
+<code>MemoryModel</code>
+(<code>src/nexus/storage/models/memory.py:27-34</code>) is still
+exported and still created by <code>Base.metadata.create_all</code>
+(<code>src/nexus/storage/record_store.py:360</code>), and no code path
+inserts a row: its one writer,
+<code>migrate_identity_memory_v04.py</code>, has no caller. The v2
+request models in
+<code>src/nexus/server/api/v2/models/memories.py</code> have no router
+under <code>routers/</code>. Two readers wait on
+<code>_memory_provider</code>
+(<code>src/nexus/factory/manifest_adapter.py:41</code>,
+<code>src/nexus/tools/langgraph/nexus_tools.py:679</code>), and nothing
+assigns that attribute, so the LangGraph tool returns <em>"Memory system
+not available"</em>. Three surfaces still advertise the deleted system:
+<code>nexus mcp</code> prints both removed tool names
+(<code>src/nexus/cli/commands/mcp.py:884-885</code>), the TUI calls
+eight <code>/api/v2/memories</code> routes
+(<code>packages/nexus-tui/src/stores/search-store.ts:256-644</code>),
+and the example agents call <code>nx.memory.store</code>. The MCP
+integration test that exercises memory skips when the tool is absent
+(<code>tests/e2e/self_contained/mcp/test_mcp_server_integration.py:298-299</code>),
+so it passes against the deletion. The commit message says a canary
+asserts the removed modules raise <code>ModuleNotFoundError</code>;
+<code>tests/unit/test_llm_removal_canary.py:12-21</code> lists six LLM
+and ACE modules and no memory module. The last commit carrying the brick
+is <a
+href="https://github.com/nexi-lab/nexus/commit/999a9c2a8d6eaae0f7a2390620a6f3abb41e1b1d"><code class="commit-id" title="999a9c2a8d6eaae0f7a2390620a6f3abb41e1b1d">999a9c2a…</code></a>.
+Screened before reading: no auto-run surface, 43 build-time execution
+points, 30 dependency files inside the cooldown — every file in a
+depth-1 clone dates to the tip — and 15 unpinned surfaces; no
+agent-instruction file in the tree. Nothing was installed, built or
+run.</li>
 <li><strong><code>mcn92/pikelet</code> was examined and has no report,
 because nothing that happens after the build can contradict what it
 holds.</strong> Apache-2.0 (Matthew Noonan), 61,585 lines of JavaScript,
