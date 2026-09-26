@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 645 reports.</strong></p>
+<p><strong>This page covers all 646 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26562,6 +26562,50 @@ codebase showing supersession done atomically.</li>
 survive replication, or the answer usually lives in the body. The
 profile sync has no deletion record, and only the title is embedded or
 gated.</li>
+</ul>
+<h3 id="mind-mem"><a
+href="../systems/mind-mem/"><code>mind-mem</code></a></h3>
+<ul>
+<li>Best idea: <strong>the ingest door, not the writer, decides the
+status.</strong> <code>INITIAL_STATUS</code> maps each
+<code>IngestTier</code> to the one status it may mint, only
+<code>PROPOSAL_APPLY</code> reaches <code>active</code>, and every
+<code>write_block</code> calls <code>require_admission</code>, which
+refuses a receipt whose tier cannot mint the status the block carries.
+Recall serves an allow-list of statuses, so a status a new door invents
+is withheld by default.</li>
+<li>Biggest risk: <strong>the gate guards the package and not the
+files.</strong> The store of record is plain Markdown; an agent with an
+Edit tool can append a <code>Status: active</code> decision that the
+next recall serves, and no read path consults the evidence chain to
+notice it has no admission.</li>
+<li>Most reusable component: <code>src/mind_mem/admissibility.py</code>
+— the status allow-list derived from the tier table,
+<code>admit_leg</code> applied to each retrieval leg before RRF fusion,
+and the <code>Releases</code> field through which an active decision
+admits quarantined ids and revoking it re-quarantines them.</li>
+<li>Second risk: <strong>proposing and approving share one
+scope.</strong> <code>propose_update</code> and
+<code>approve_apply</code> are both admin-scoped, so an agent configured
+to propose — as the documented Qwen stanza does — can also approve;
+<code>python3 -m mind_mem.apply_engine</code> applies with no scope
+check at all.</li>
+<li>Maturity impression: Apache-2.0, 166,989 lines of Python under
+<code>src/mind_mem</code> and 12,538 pytest functions in 747 files,
+1,790 commits on main from 5 contributor identities, one of them
+dependabot, between 18 February and 24 September 2026. Five marks —
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>human_review</code>,
+<code>negative_eval</code> — each with a stated limit; the exclusion
+tests pair every retrieval leg with its served control. Benchmark
+results are first-party with committed raw rows and were not
+re-run.</li>
+<li>Study when: you want untrusted writes withheld by construction
+rather than by a filter each read path must remember, or a template for
+per-leg exclusion tests with positive controls.</li>
+<li>Do not copy when: the agent that writes memory also has file access
+to the store, you need a scope that can propose without approving, or
+deleted content must actually be gone.</li>
 </ul>
         </article>
       </div>

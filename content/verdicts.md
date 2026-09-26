@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 645 reports.**
+**This page covers all 646 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5781,3 +5781,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 13,452 lines of C and 162 commits on master from 4 contributors between 6 May and 25 September 2026. One mark, `negative_eval`, on a storage test asserting an expired neighbour stays out of a graph read while the live one is returned. The ops are tested only for argument rejection, and CI runs `ctest` only on release branches.
 - Study when: you want a retrieval gate that returns less when unsure, a single-binary local store with in-process embeddings, or a small C codebase showing supersession done atomically.
 - Do not copy when: memory is shared across machines, corrections must survive replication, or the answer usually lives in the body. The profile sync has no deletion record, and only the title is embedded or gated.
+
+### [`mind-mem`](../systems/mind-mem/)
+
+- Best idea: **the ingest door, not the writer, decides the status.** `INITIAL_STATUS` maps each `IngestTier` to the one status it may mint, only `PROPOSAL_APPLY` reaches `active`, and every `write_block` calls `require_admission`, which refuses a receipt whose tier cannot mint the status the block carries. Recall serves an allow-list of statuses, so a status a new door invents is withheld by default.
+- Biggest risk: **the gate guards the package and not the files.** The store of record is plain Markdown; an agent with an Edit tool can append a `Status: active` decision that the next recall serves, and no read path consults the evidence chain to notice it has no admission.
+- Most reusable component: `src/mind_mem/admissibility.py` — the status allow-list derived from the tier table, `admit_leg` applied to each retrieval leg before RRF fusion, and the `Releases` field through which an active decision admits quarantined ids and revoking it re-quarantines them.
+- Second risk: **proposing and approving share one scope.** `propose_update` and `approve_apply` are both admin-scoped, so an agent configured to propose — as the documented Qwen stanza does — can also approve; `python3 -m mind_mem.apply_engine` applies with no scope check at all.
+- Maturity impression: Apache-2.0, 166,989 lines of Python under `src/mind_mem` and 12,538 pytest functions in 747 files, 1,790 commits on main from 5 contributor identities, one of them dependabot, between 18 February and 24 September 2026. Five marks — `trust_state`, `scope_enforced`, `audit_log`, `human_review`, `negative_eval` — each with a stated limit; the exclusion tests pair every retrieval leg with its served control. Benchmark results are first-party with committed raw rows and were not re-run.
+- Study when: you want untrusted writes withheld by construction rather than by a filter each read path must remember, or a template for per-leg exclusion tests with positive controls.
+- Do not copy when: the agent that writes memory also has file access to the store, you need a scope that can propose without approving, or deleted content must actually be gone.

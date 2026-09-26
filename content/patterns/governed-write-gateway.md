@@ -178,6 +178,8 @@ than deciding it, and nothing downstream can mark a promoted fact wrong.
 
 [MEX](../../systems/mex/) builds the gateway and then routes the ordinary loop around it. `mex wiki apply` is the only module that writes Wiki Markdown, re-plans against the current tree, blocks on the subject's content hash, and journals an intent and a completion line to a committed, body-free ledger. The GROW checklist its setup installs tells the agent to edit `context/` files directly after every task, and the ledger's own header says manual edits leave no entry. The gateway's guarantees therefore cover the rare path, and the repository's own ledger holds two agent operations beside 130 migration lines.
 
+[MIND-Mem](../../systems/mind-mem/) makes exclusivity a property of the store rather than of the callers. Every `BlockStore.write_block` implementation calls `require_admission` and raises when no receipt from the governance gate is open, the receipt names an ingest tier whose row in `INITIAL_STATUS` fixes the status the write may carry, and `tests/test_governed_write_paths.py` parses the source tree and fails on any new raw caller, with a negative control on its own matcher. What the gateway cannot see is the store itself: the corpus is Markdown, and a block written by an editor enters recall with no receipt at all.
+
 ### Gates on something other than a write
 
 These are analogies rather than instances. Each puts one gate, or one stated

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 645 of 645 screened at the report's current pin.**
+**Progress: 646 of 646 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 295 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 360 |
-| Repositories with build-time execution (`EXEC`) | 470 |
+| Repositories with an auto-run surface (`RUNS`) | 296 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 361 |
+| Repositories with build-time execution (`EXEC`) | 471 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -203,6 +203,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`meridian`](../../content/systems/meridian.md) | `.claude/settings.json`, `.githooks/` |
 | [`mex`](../../content/systems/mex.md) | `.claude-plugin/` |
 | [`midas`](../../content/systems/midas.md) | `server.json` |
+| [`mind-mem`](../../content/systems/mind-mem.md) | `.cursorrules`, `.githooks/`, `.github/copilot-instructions.md`, `hooks/`, `hooks/hooks.json` |
 | [`mindreader`](../../content/systems/mindreader.md) | `mcp.json` |
 | [`mirix`](../../content/systems/mirix.md) | `.cursorrules`, `.vscode/settings.json` |
 | [`mnemonic`](../../content/systems/mnemonic.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `.opencode/` |
