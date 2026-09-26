@@ -197,12 +197,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: exact evidence retrieval is the primary requirement.
 
 ### [`memex-zettel`](../systems/memex-zettel/)
-- Best idea: the credential gate runs on the query as well as the write, and its test asserts the rejection message never echoes the token it refused — `expect(result.error).not.toContain("sk-proj")`.
-- Biggest risk: archiving is the only correction, and it records that something left rather than that it was wrong, so an agent that produced a bad card once can produce it again with no signal.
+- Best idea: the credential gate runs on the search command as well as the write command, and its test asserts the rejection message never echoes the token it refused — `expect(result.error).not.toContain("sk-proj")`.
+- Biggest risk: the gate sits in the write command rather than the store, so `memex import openclaw`, `memex flomo import` and `memex link` write cards unscreened; and archiving, the only correction, records nothing and replaces an earlier archived copy of the same slug.
 - Most reusable component: testing a secret detector for false positives — "allows security architecture language without raw secrets" beside "rejects actual OpenAI-style tokens" — because a scanner nobody can write about gets switched off.
-- Maturity impression: ~16,300 lines of TypeScript over a directory of markdown, nineteen test files including a hundred-query scoring suite, and five agent surfaces over the same cards.
-- Study when: you want a Zettelkasten your coding agent can read and write, curated by hand, with a real guard against pasting a credential into it.
-- Do not copy when: memory must be governed or shared — no scope, no status, no audit, and correction that leaves no trace, all by design rather than oversight.
+- Maturity impression: ~16,300 lines of TypeScript over a directory of markdown, 801 test cases in 43 files including a 106-query scoring suite, one mark (`negative_eval`, on the search pre-filter), and six agent surfaces over the same cards.
+- Study when: you want a Zettelkasten your coding agent can read and write, curated by hand, with a guard against the agent pasting a credential into it.
+- Do not copy when: memory must be governed or shared, or bulk imports carry unscreened text — no scope, no status, no audit, and correction that leaves no trace.
 
 ### [`memos`](../systems/memos/)
 - Best idea: mount textual, preference, skill, KV-cache, and parametric memory as one cube.

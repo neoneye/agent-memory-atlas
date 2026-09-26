@@ -2764,12 +2764,16 @@ and <code>cargo test</code> was not run</li>
 href="https://github.com/iamtouchskyer/memex">iamtouchskyer/memex</a> at
 <a
 href="https://github.com/iamtouchskyer/memex/commit/453c0e33f527a02178dc51b5ea426145e9cd22f8"><code class="commit-id" title="453c0e33f527a02178dc51b5ea426145e9cd22f8">453c0e33…</code></a>
-— read only; six auto-run surfaces including a
-<code>.claude-plugin/</code> marketplace manifest,
-<code>.cursorrules</code>, <code>hooks/hooks.json</code> registering
-SessionStart and Stop, and <code>server.json</code>, plus a committed
-<code>dist/</code>. Nothing was installed, no hook was registered and no
-test was run</li>
+— read only; screened on 2026-09-13 and again on a full clone on
+2026-09-26: six auto-run surfaces — a <code>.claude-plugin/</code>
+marketplace manifest, <code>.cursorrules</code>, <code>hooks/</code> and
+<code>hooks/hooks.json</code> registering SessionStart and Stop,
+<code>server.json</code> and <code>smithery.yaml</code> — two build-time
+execution points, an npm <code>prepare</code> that copies
+<code>scripts/pre-commit</code> into <code>.git/hooks</code> and a
+<code>prepublishOnly</code> build, plus a committed <code>dist/</code>,
+and nothing inside the seven-day cooldown on the second screen. Nothing
+was installed, no hook was registered and no test was run</li>
 <li><a
 href="https://github.com/framerslab/agentos">framerslab/agentos</a> at
 <a
@@ -5261,6 +5265,23 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Memex report withheld <code>negative_eval</code> over
+committed cases, and overstated where its credential gate and archive
+check reach; corrected 2026-09-26.</strong> At <a
+href="https://github.com/iamtouchskyer/memex/commit/453c0e33f527a02178dc51b5ea426145e9cd22f8"><code class="commit-id" title="453c0e33f527a02178dc51b5ea426145e9cd22f8">453c0e33…</code></a>
+the <a href="../systems/memex-zettel/">Memex</a> report said no test
+asserts that material must not be retrieved and that the read path has
+no filter; its recorded grep covered <code>tests/lib/</code> only.
+<code>tests/commands/search-manifest-filter.test.ts</code> asserts named
+cards absent beside named cards present under a category, tag, author
+and date pre-filter, over a populated fixture, so the mark was withheld
+in error. The report said the gate runs on the write path; it runs in
+the <code>write</code> command, and three CLI writers call the store
+without it. It said archiving refuses when a card of that slug is
+already archived; the check fires only when no live card exists, and
+otherwise the move overwrites the earlier copy. It also said cards have
+no frontmatter schema, counted nineteen test files where there are 43,
+and counted five auto-run surfaces where the screen found six.</li>
 <li><strong>The MCP-Memory report withheld <code>audit_log</code> from a
 change log every store writes, overstated the namespace filter behind
 <code>scope_enforced</code>, and carried the first pin's anchors and

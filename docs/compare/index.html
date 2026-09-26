@@ -14014,29 +14014,40 @@ person</td>
 </tr>
 <tr>
 <td><code>memex-zettel</code></td>
-<td>A markdown card addressed by slug, with wiki-style links to other
-cards</td>
-<td>Files on disk under a cards directory, with an archive directory
-beside it and a local embedding cache keyed by content hash</td>
-<td>Lexical scoring with code-token awareness, optionally combined with
-embeddings from a local, Azure or OpenAI provider</td>
-<td>A CLI or MCP write that passes the input through a credential
-detector before it reaches a file</td>
-<td>Editing a card is editing a file; <code>archiveCard</code> moves it
-to the archive directory and refuses if a card of that slug is already
-archived</td>
-<td>None. One cards directory per install, with no key on a card and no
-predicate on a query</td>
+<td>A markdown card addressed by slug, with required title, created and
+source frontmatter, optional category, tags and author, and wiki-style
+links to other cards</td>
+<td>Files under a cards directory in a memex home chosen by MEMEX_HOME,
+the nearest .memexrc above the working directory, or ~/.memex; an
+archive directory beside it, an embedding cache keyed by content hash,
+and optional git sync to a remote</td>
+<td>Lexical scoring with code-token awareness by default; an opt-in
+semantic mode blends embeddings from an OpenAI, Azure, Ollama or local
+provider with a keyword boost; an optional category, tag, author and
+date pre-filter runs before either</td>
+<td>The write command passes input through a credential detector before
+the file is written; the openclaw and flomo importers and the link
+command call the store directly and skip it</td>
+<td>Editing a card is editing a file; archiveCard renames it into the
+archive directory, replacing any earlier archived card of the same slug,
+and records nothing about why</td>
+<td>No scope key. One home directory per MEMEX_HOME or .memexrc, a
+physical partition; the category, tag, author and date filter is a
+caller-chosen facet that applies nothing when omitted</td>
 <td>A CLI, an MCP server, a Claude Code plugin with SessionStart and
-Stop hooks, a Cursor rules file and a Pi extension</td>
-<td>None over the store; embedding refresh is triggered on demand and
-skipped when the content hash is unchanged</td>
+Stop hooks, agent rules files for Cursor and Windsurf, a Pi extension
+that shells out to the CLI, and a VS Code extension that registers the
+MCP server</td>
+<td>None over the store; embedding refresh runs on a semantic search and
+skips cards whose content hash is unchanged, and auto sync commits and
+pushes after a write when enabled</td>
 <td>None. A card carries no status, score or confidence</td>
-<td>A credential detector on both the write and query paths, tested for
-false positives as well as rejections, whose error message is asserted
-never to echo the token it refused</td>
-<td>No scope, no status, no audit and no record of a correction —
-archiving moves a file and leaves nothing keyed on what was wrong</td>
+<td>A credential detector on the write and search commands, tested for
+false positives as well as rejections, with a fixed rejection message
+asserted never to echo the token it refused</td>
+<td>The detector sits in the write command rather than the store, so
+three CLI write paths skip it; archiving records nothing and overwrites
+an earlier archived copy; no scope, status or audit</td>
 </tr>
 <tr>
 <td><code>memex</code></td>
@@ -28647,7 +28658,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>365 of 646:</em> <a
+<p><em>366 of 646:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -28831,6 +28842,7 @@ href="../systems/mcp-memory-service/"><code>mcp-memory-service</code></a>,
 href="../systems/membukkit/"><code>membukkit</code></a>, <a
 href="../systems/memcontinuum/"><code>memcontinuum</code></a>, <a
 href="../systems/memex/"><code>memex</code></a>, <a
+href="../systems/memex-zettel/"><code>memex-zettel</code></a>, <a
 href="../systems/memhtml/"><code>memhtml</code></a>, <a
 href="../systems/memini/"><code>memini</code></a>, <a
 href="../systems/memledger/"><code>memledger</code></a>, <a
@@ -29043,7 +29055,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-365 repositories of
+366 repositories of
 646 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
