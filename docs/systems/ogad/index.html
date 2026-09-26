@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An on-device AI desktop app whose
+open core scopes chat recall and documents by project and holds an
+LLM-filtered memory layer that private code feeds.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Off Grid AI
+Desktop — Agent Memory Atlas">
+    <meta property="og:description" content="An on-device AI desktop app
+whose open core scopes chat recall and documents by project and holds an
+LLM-filtered memory layer that private code feeds.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Off Grid AI
+Desktop — Agent Memory Atlas">
+    <meta name="twitter:description" content="An on-device AI desktop
+app whose open core scopes chat recall and documents by project and
+holds an LLM-filtered memory layer that private code feeds.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Off Grid AI Desktop — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Off Grid AI Desktop",
+      "description": "An on-device AI desktop app whose open core scopes chat recall and documents by project and holds an LLM-filtered memory layer that private code feeds.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Project-scoped chat recall in an open-core
+desktop AI app</p>
+          <h1>Off Grid AI Desktop</h1>
+          <p class="document-deck">An on-device AI desktop app whose
+open core scopes chat recall and documents by project and holds an
+LLM-filtered memory layer that private code feeds.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/off-grid-ai/OGAD">
+              <span>Source</span>
+              <strong>off-grid-ai/OGAD</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/off-grid-ai/OGAD/commit/7f073cada0b4555dc3b5d60bfd9928bc11d3f4cc" title="7f073cada0b4555dc3b5d60bfd9928bc11d3f4cc">
+              <span>Analyzed revision</span>
+              <code>7f073cad…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/off-grid-ai--OGAD" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>off-grid-ai--OGAD</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0-only;
+the paid pro/ submodule is a private repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>103,455
+lines of TypeScript outside tests; the memory path is about 4,300 of
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>2,488
+commits on main by 15 contributors, 18 January 2026 – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>about
+3,486 Vitest cases in 571 test files (84,759 lines)</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Off Grid AI Desktop is an Electron app that runs local models behind
+an OpenAI-compatible gateway and adds chat, projects with document
+retrieval, and a memory layer. What is notable is that the memory layer
+has no scope at all: captured memories carry no project key and join
+every project's knowledge base by default, beside chats and documents
+that are filtered by project. What is weak is that the layer cannot be
+followed end to end in public: the code that feeds it is either a
+retired feature whose AI-chat source is purged at each startup or lives
+in the private <code>pro/</code> submodule, which could not be read.</p>
+<p>The repository is the open, AGPL core of an open-core product. The
+paid layer — screen capture, observations, meetings, the entity CRM,
+sync between devices — registers itself through a hook registry, and a
+Vite alias replaces it with a null stub when <code>pro/</code> is absent
+(<code>electron.vite.config.ts:9-20</code>;
+<code>src/main/bootstrap/hookRegistry.ts</code>). That seam is clean,
+and it is also the boundary of this report. The pinned submodule commit,
+<code class="commit-id" title="d30893ee92558b8d7f8fc806f02052841b54c9d4">d30893ee…</code> of
+<code>off-grid-ai/desktop-pro</code>, returns 404.</p>
+<p>Three surfaces live in core. <strong>Project chats and
+documents</strong> are live in the free build and are context, not
+memory. <strong>Captured memories, entities and facts</strong> have
+schema, extraction prompts, an admission policy, hybrid retrieval and
+deletion in core. Their producers in core read a <code>messages</code>
+table that nothing in the public tree writes, and whose scraped AI-chat
+rows <code>purgeLegacyChatImports</code> deletes on startup
+(<code>src/main/index.ts:307-311</code>;
+<code>src/main/database.ts:560-567</code>). The same function's comment
+says the current capture pipeline, which is Pro's, also feeds
+<code>entities</code>. <strong>Universal search</strong> fuses keyword
+and LanceDB hits across all of it, and reads tables only Pro
+creates.</p>
+<p>No marks. The project-scoping predicates and their tests guard
+verbatim chat turns and uploaded documents, which cannot turn out to be
+false and so sit on the <a
+href="../../families/#not-in-scope-conversation-window-management">conversation-window
+side</a> of the line. The one captured-memory assertion rests on rows a
+fixture writes. Section 9 names all seven.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A chat message becomes recallable the moment
+<code>addRagMessage</code> commits it. Its conversation's
+<code>project_id</code> decides who can recall it. Inside a project the
+chat UI offers the model <code>search_knowledge_base</code>, which
+returns up to six sibling-chat messages ranked by term count beside the
+top five knowledge-base chunks (<code>src/main/tools.ts:371-400</code>).
+A second project branch in the <code>rag:chat</code> handler injects the
+last twelve sibling messages unasked, as <em>"Related discussion from
+other chats in this project"</em>; no core renderer call reaches it with
+memory on (<code>src/main/ipc.ts:823-885</code>). The current chat is
+excluded from both. A message stops being recallable when it is edited,
+truncated away, or its conversation is deleted.</p>
+<p>A captured memory is a <strong>sentence an LLM agreed to
+keep</strong>. <code>evaluateAndStoreMemoryForMessage</code> skips short
+messages, asks the model <code>{store, name, memory}</code> under a
+lenient, balanced or strict prompt, then drops answers under four words
+or over 280 characters, answers opening <em>"The user said"</em> and
+similar, and substring duplicates within the session
+(<code>src/main/ipc.ts:391-455</code>). The balanced prompt stores an
+assistant message <em>"ONLY if it repeats a verified user fact"</em>,
+which is an instruction to the filter model, not a check.</p>
+<p>Entities come from the session's memories through a second prompt,
+then pass <code>assessEntityCandidate</code>, which rejects generic
+nouns, file names, paths, domains and code symbols before
+<code>resolveEntityRecord</code> may write
+(<code>src/main/entity-admission-policy.ts:128-157</code>). New facts
+append; an LLM rewrites the entity summary from the old summary plus the
+new facts (<code>src/main/ipc.ts:457-539</code>). Nothing in either path
+records a status, a confidence or the rejected alternatives. A memory
+stops being one when a person deletes it, when a clean reprocess wipes
+and re-derives the layer, or when a category or full erase runs. Its
+facts outlive it (section 7).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the two memory paths in the open core — project chats (live in the free build) and captured memories (fed from a retired source or from the private pro submodule)</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the two memory paths in the open core — project chats (live in the free build) and captured memories (fed from a retired source or from the private pro submodule)
+flowchart TD
+    UI[&quot;chat UI: rag:create-conversation&lt;br/&gt;with project id&quot;] --&gt; MSG[&quot;rag_messages row&lt;br/&gt;conversation carries project_id&quot;]
+    MSG --&gt; SIB{&quot;project chat turn&quot;}
+    SIB -- &quot;rc.project_id = ? and&lt;br/&gt;not the current chat&quot; --&gt; INJ[&quot;search_knowledge_base result:&lt;br/&gt;sibling messages and chunks&quot;]
+    DOC[&quot;project document&quot;] --&gt; CH[&quot;rag_chunks,&lt;br/&gt;d.project_id = ?&quot;]
+    CH --&gt; KB[&quot;project knowledge base:&lt;br/&gt;cosine over candidates&quot;]
+    SRC[&quot;messages table:&lt;br/&gt;no writer in the public tree,&lt;br/&gt;legacy AI-chat rows purged at startup&quot;] --&gt; F{&quot;LLM memory filter&lt;br/&gt;store or drop&quot;}
+    F -- &quot;store, 4 words to 280 chars,&lt;br/&gt;not generic, not a duplicate&quot; --&gt; MEM[&quot;memories row:&lt;br/&gt;no project key&quot;]
+    F -- &quot;drop&quot; --&gt; GONE[&quot;nothing recorded&quot;]
+    MEM --&gt; EX[&quot;entity extraction prompt&quot;]
+    EX --&gt; AD{&quot;assessEntityCandidate&quot;}
+    AD -- &quot;admitted&quot; --&gt; ENT[&quot;entities and entity_facts,&lt;br/&gt;summary rewritten by LLM&quot;]
+    AD -- &quot;generic, file, path,&lt;br/&gt;domain, code symbol&quot; --&gt; REJ[&quot;dropped, reason not stored&quot;]
+    MEM -- &quot;include_memory = 1 (default),&lt;br/&gt;first 2,000 rows&quot; --&gt; KB
+    KB --&gt; INJ
+    MEM -- &quot;db:delete-memory&quot; --&gt; DEL[&quot;row gone;&lt;br/&gt;derived facts stay&quot;]
+    PRO[&quot;pro/ capture pipeline&lt;br/&gt;(private, unread)&quot;] -.-&gt; ENT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The main process owns one SQLite file, <code>memories.db</code>,
+opened through <code>better-sqlite3-multiple-ciphers</code>. A fresh
+profile gets a random 32-byte key stored as a
+<code>safeStorage</code>-encrypted <code>.dbkey</code> beside the file,
+and a profile created before that, or on a machine without keychain
+encryption, stays plaintext (<code>src/main/database.ts:27-55</code>,
+<code>:96-102</code>). A <code>cosine_similarity</code> SQL function is
+registered on the connection so JSON-text embeddings can be scored in
+SQL.</p>
+<p>Embeddings are MiniLM, 384 dimensions, computed in-process. Project
+chunks and captured memories keep theirs in SQLite; universal search
+also keeps a LanceDB table under <code>userData/lancedb</code>, keyed
+<code>kind:refId</code> back to SQLite
+(<code>src/main/vectors.ts</code>). The table is filled by
+<code>runBackfill</code>, which has no caller outside tests in this tree
+(<code>src/main/search.ts:123-140</code>).</p>
+<p>The renderer reaches memory only through IPC handlers registered in
+<code>setupIPC</code>. The OpenAI-compatible gateway on port 7878 and
+the MCP server expose no memory route. Pro, when present, calls core
+through the <code>@offgrid/core</code> alias and extends it through
+hooks such as <code>chat.augmentContext</code>,
+<code>search.extraSources</code> and
+<code>sync.recordLocalMutation</code>.</p>
+<p>Seven workspace packages resolve to <code>../shared/...</code> or
+<code>../executorch-speech</code>, outside the repository
+(<code>package.json:68-76</code>, <code>:126</code>). None holds the
+memory path, but the tree does not build on its own.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing runs but the app: SQLite and LanceDB are embedded, inference
+is local, and no API key is needed to store anything. Install is a
+signed DMG or NSIS installer; building needs Git LFS for the bundled
+runtimes and the sibling <code>shared</code> packages. The store is a
+SQLite file, readable by hand only with the key from the keychain when
+encryption is on.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Chat write.</strong> <code>rag:add-message</code> →
+<code>addRagMessage</code> inserts with a UUID for sync and bumps the
+conversation's <code>updated_at</code>
+(<code>src/main/database.ts:1287-1330</code>).
+<code>rag:update-message</code> and <code>rag:truncate-messages</code>
+edit and trim (<code>:1332-1390</code>).</p>
+<p><strong>Project recall.</strong> The chat UI sends every turn through
+<code>toolChat</code>
+(<code>src/renderer/src/components/MemoryChat/index.tsx:1851-1860</code>).
+In a project it offers <code>search_knowledge_base</code> and protects
+it from the tool budget as the scope tool; the handler combines
+<code>searchProjectConversations</code> with
+<code>ragService.searchProject</code> at its default top five
+(<code>src/main/tools.ts:371-400</code>, <code>:725-742</code>,
+<code>:765-775</code>). The <code>rag:chat</code> project branch calls
+<code>searchProject</code> with <code>topK: 6</code> and a 4,096-token
+budget, then
+<code>getProjectChatHistory(projectId, conversationId, 12)</code>
+(<code>src/main/ipc.ts:823-885</code>); its core renderer caller passes
+<code>noMemory</code>.</p>
+<p><strong>Knowledge-base candidates.</strong>
+<code>getChunkCandidates</code> selects the project's enabled document
+chunks with <code>d.project_id = ?</code>, then, if
+<code>projectIncludesMemory</code>, every memory with an embedding under
+<code>LIMIT 2000</code> and no <code>ORDER BY</code>
+(<code>src/main/rag/store.ts:138-191</code>).
+<code>rankBySimilarity</code> scores all of them with cosine and keeps
+the top k (<code>packages/rag/src/retrieval.ts</code>).</p>
+<p><strong>Captured-memory write.</strong>
+<code>evaluateAndStoreMemoryForMessage</code> →
+<code>insertMemoryRecord</code>, which embeds and inserts
+(<code>src/main/ipc.ts:330-455</code>). Its core callers are the
+<code>db:reprocess-all-sessions</code> handler (<code>:1403-1520</code>)
+and nothing else. The separate <code>db:add-memory</code> handler embeds
+the content and, if a memory with the same <code>session_id</code> was
+written in the last twelve hours, replaces that row's content rather
+than adding one (<code>:607-644</code>).</p>
+<p><strong>Entity write.</strong> <code>summarizeSession</code> →
+<code>extractEntitiesForSession</code> →
+<code>resolveEntityCandidate</code> → <code>addEntityFact</code> and
+<code>updateEntitySummary</code> (<code>src/main/ipc.ts:457-574</code>).
+Pro can replace the SQLite implementation through
+<code>registerEntityDomain</code>, and admission still runs first
+(<code>src/main/entity-domain.ts</code>).</p>
+<p><strong>Universal search.</strong> <code>universalSearch</code> runs
+five FTS5 lists (observations, summaries, entities, facts, memories),
+four LIKE lists (meetings, frames, chats, documents) and one LanceDB
+list, fuses them with RRF at k = 60, adds a recency boost and a 0.012
+nudge for chats and documents, then filters and sorts
+(<code>src/main/search.ts:223-284</code>, <code>:434-499</code>;
+<code>src/main/search-ranking.ts</code>).</p>
+<p><strong>Delete.</strong> <code>db:delete-memory</code>,
+<code>db:delete-entity</code>, <code>rag:delete-conversation</code>,
+<code>data:clear</code> and <code>data:delete-all</code>
+(<code>src/main/ipc.ts:1158-1191</code>, <code>:1305-1311</code>,
+<code>:1821-1830</code>;
+<code>src/main/data-privacy.ts:329-409</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+<th>Scope key</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rag_conversations</code>, <code>rag_messages</code></td>
+<td>chats, message UUIDs, origin device</td>
+<td><code>project_id</code> on the conversation</td>
+<td><code>created_at</code>, <code>updated_at</code></td>
+</tr>
+<tr>
+<td><code>projects</code>, <code>rag_documents</code>,
+<code>rag_chunks</code></td>
+<td>knowledge base, <code>include_memory</code> flag, chunk
+embeddings</td>
+<td><code>project_id</code> on the document</td>
+<td><code>created_at</code></td>
+</tr>
+<tr>
+<td><code>memories</code></td>
+<td><code>content</code>, <code>name</code>, <code>raw_text</code>,
+<code>source_app</code>, <code>session_id</code>,
+<code>message_id</code>, embedding</td>
+<td>none</td>
+<td><code>created_at</code></td>
+</tr>
+<tr>
+<td><code>entities</code>, <code>entity_facts</code>,
+<code>entity_sessions</code>, <code>entity_edges</code></td>
+<td>name and type (unique pair), LLM summary, facts with
+<code>source_session_id</code>, co-occurrence edges</td>
+<td>none</td>
+<td><code>created_at</code>, <code>updated_at</code></td>
+</tr>
+<tr>
+<td><code>conversations</code>, <code>messages</code>,
+<code>chat_summaries</code>, <code>master_memory</code></td>
+<td>the retired scrape and its summaries; <code>master_memory</code> is
+no longer written</td>
+<td>none; an <code>app_name</code> filter</td>
+<td><code>created_at</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Schema is <code>CREATE TABLE IF NOT EXISTS</code> plus
+<code>ALTER TABLE</code> in <code>try</code> blocks
+(<code>src/main/database.ts:114-426</code>). <code>project_id</code>
+arrived by migration (<code>:376-381</code>).</p>
+<p><strong>Provenance stops at the session.</strong> A memory keeps the
+raw message and its session; a fact keeps its session. Neither records
+which model or strictness kept it, and an entity summary records nothing
+about the facts it was written from.</p>
+<p><strong>Pro-owned columns appear in core reads.</strong>
+<code>universalSearch</code> filters <code>entities.hidden = 0</code>
+and joins <code>observations</code>, <code>observation_fts</code>,
+<code>frames</code> and <code>meetings</code>, none of which core
+creates; the tests create them by hand
+(<code>src/main/__tests__/rag-empty-memory.dbtest.ts:80-112</code>). The
+chat UI offers the All memory scope, and with it
+<code>search_memory</code>, only when <code>isPro</code> is true
+(<code>src/renderer/src/components/MemoryChat/index.tsx:510</code>,
+<code>:4421-4437</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Project chats are term count, and recall is the model's
+call.</strong> <code>searchProjectConversations</code> drops stop words
+and short terms, scores each message by how many of up to six terms it
+contains with <code>LIKE</code>, and returns six by default, each cut to
+1,500 characters by the tool. Nothing is recalled unless the model calls
+the tool. <code>getProjectChatHistory</code>, on the
+<code>rag:chat</code> path, injects the latest twelve sibling messages
+regardless of the query.</p>
+<p><strong>The project knowledge base is exhaustive cosine</strong>,
+recomputed per query over every candidate in JavaScript. At 2,000
+memories plus a project's chunks that is a few thousand dot products,
+cheap on a laptop. The <code>LIMIT 2000</code> without an order means a
+store past 2,000 memories silently drops whichever rows SQLite returns
+last, and the tool and the prompt cannot tell.</p>
+<p><strong>Universal search is hybrid and read-verified.</strong>
+Semantic hits pass <code>semanticSourceExists</code>, which confirms the
+SQLite row still exists, and hidden entities are excluded
+(<code>src/main/search.ts:355-401</code>). A deleted memory's vector
+cannot surface. A changed one can: <code>vec_indexed</code> records a
+key once, and only the capture clear ever deletes receipts, so an edited
+memory or a rewritten entity summary keeps its first vector. When only
+the semantic list returns that key, the fused result carries the stale
+snippet (<code>:85-119</code>;
+<code>src/main/data-privacy.ts:356-359</code>). Memories, entities and
+facts carry <code>ts = 0</code>, so the recency boost never lifts
+them.</p>
+<p><strong>Budgets.</strong> The <code>rag:chat</code> branch trims
+knowledge-base excerpts to 40% of a 4,096-token window; the tool path
+takes five chunks with no budget of its own, and every tool result is
+bounded by <code>boundToolResult</code> from the out-of-tree
+<code>@offgrid/models</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Chats and documents are explicit writes. A document is extracted,
+chunked, embedded and stored in one call, and a failed embedding rolls
+the document back (<code>packages/rag/src/service.ts</code>).</p>
+<p>Captured memories are written per message by one blocking LLM call
+plus one embedding call, and extraction runs per session. In core the
+only trigger is <code>db:reprocess-all-sessions</code>, and
+<code>startReprocess</code>, the function that would call it, has no
+caller in the core renderer
+(<code>src/renderer/src/hooks/useReprocessing.tsx:39-56</code>). A clean
+reprocess drops the FTS delete triggers, deletes every memory, entity,
+fact and edge, recreates the triggers, and re-derives from
+<code>messages</code> (<code>src/main/ipc.ts:1403-1520</code>).</p>
+<p><strong>Deduplication is a substring test inside one
+session.</strong> A memory equal to, containing or contained in an
+earlier memory of the session is dropped. Across sessions nothing
+deduplicates memories; entity facts deduplicate on an exact
+<code>UNIQUE(entity_id, fact)</code>. The one core call to
+<code>resolveEntityCandidate</code> passes no <code>selfAliases</code>,
+so the admission policy's <code>self</code> rule never fires on it
+(<code>src/main/ipc.ts:491</code>).</p>
+<p><strong>Deletion does not follow derivation.</strong>
+<code>deleteMemory</code> removes one row
+(<code>src/main/database.ts:821-827</code>). No core path deletes a
+single entity fact, and <code>db:delete-session</code> removes the
+session's memories and summary but not its facts, and its entity links
+survive because foreign keys are off
+(<code>src/main/ipc.ts:1158-1171</code>;
+<code>src/main/database.ts:1257</code>). An entity summary written from
+a deleted memory keeps saying it.</p>
+<p><strong>Conflicts are not modelled.</strong> A newer fact that
+contradicts an older one is appended beside it, and the summary rewrite
+is the only reconciliation.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Chat and document writes are synchronous SQLite inserts; a document
+write also embeds every chunk before returning.</li>
+<li>A captured memory costs one LLM call per message and one per session
+for entities, plus one per entity with new facts; it is retrievable by
+FTS at commit and by LanceDB only after a backfill batch.</li>
+<li>A clean reprocess re-reads every message in the store through the
+model.</li>
+<li>A project turn that calls the tool adds up to six sibling messages
+and five chunks as a tool result; the <code>rag:chat</code> branch
+injects twelve sibling messages and a window-sized knowledge-base block
+ahead of the history.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is used inside the app's own chat loop. <code>toolChat</code>
+builds the tool list per turn, and <code>isMemoryToolAllowed</code>
+offers <code>search_knowledge_base</code> only with an active project
+and <code>search_memory</code> only in the All memory scope
+(<code>src/main/tools/memory-scope.ts</code>). The system prompt adds
+<em>"Do not invent project facts or use information from other
+projects"</em> in a project (<code>src/main/tools.ts:802-812</code>).
+<code>search_memory</code> excludes the current conversation so the
+model cannot cite itself.</p>
+<p>No tool writes memory. The model cannot store, correct or delete
+anything; those verbs belong to the UI and to Pro. That removes the
+prompt-injected write path, and it also means an agent cannot record a
+correction the user dictates.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The project instruction and the project data
+disagree.</strong> A project's knowledge base includes every captured
+memory by default, none of which carries a project, labelled
+<em>"Captured memory"</em>. The committed lifecycle test asserts exactly
+that — a memory added with no project reaches the project prompt — while
+the system prompt forbids information from other projects.</p>
+<p><strong>Encryption at rest is conditional.</strong> Existing
+plaintext databases are never migrated, and the app falls back to
+plaintext when the keychain is unavailable, with a console line as the
+only signal.</p>
+<p><strong>Delete-all is registry-driven.</strong>
+<code>deleteAllData</code> iterates a list that Pro extends through
+<code>registerPersonalStore</code>, suspends registered producers first,
+and reports failure rather than success when the vector store cannot be
+cleared (<code>src/main/data-privacy.ts:135-162</code>,
+<code>:190-241</code>, <code>:395-409</code>). Its comment records that
+observations, connectors, secrets and documents once survived a full
+erase.</p>
+<p><strong>Uncertainty is not representable.</strong> A memory is kept
+or not; the filter's doubt is resolved at write time by the
+<code>If unsure</code> line of the chosen prompt.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — withheld.
+<code>rag_conversations.project_id</code> and
+<code>rag_documents.project_id</code> are real keys with real predicates
+(<code>src/main/database.ts:1168-1228</code>;
+<code>src/main/rag/store.ts:138-191</code>), but what they scope is
+verbatim chat turns and handed-in documents. Neither can turn out to be
+false, so this is context selection, not memory. The memory beside them,
+<code>memories</code>, has no scope column.</li>
+<li><code>negative_eval</code> — withheld. Most of the two committed
+cases assert that another project's chats and documents stay out, which
+is the same non-memory side. The one memory assertion, that a deleted
+captured memory stays out, exercises a layer whose producers in the
+public tree read a table nothing writes; the row comes from
+<code>db:add-memory</code> in the fixture, and no core renderer calls
+that handler.</li>
+<li><code>tombstone</code> — none. A deleted memory is a missing row,
+and a clean reprocess can re-derive it from the same message.</li>
+<li><code>trust_state</code> — none in core.
+<code>universalSearch</code> filters <code>entities.hidden = 0</code>, a
+column only Pro creates and writes, so its meaning and producer cannot
+be read; the <code>rag:chat</code> memory branch does not apply it
+(<code>src/main/ipc.ts:967-975</code>).</li>
+<li><code>bitemporal</code> — <code>created_at</code> and
+<code>updated_at</code> only.</li>
+<li><code>audit_log</code> — core emits
+<code>put</code>/<code>delete</code> sync mutations for chats and
+projects into a Pro hook (<code>src/main/sync-mutation.ts</code>);
+nothing in core stores them, and memories and entities emit none.</li>
+<li><code>human_review</code> — the memory filter is a model; a person
+can delete after the fact. The approval queue the README describes is
+Pro's and gates actions.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run; everything below is from reading the tests
+at the pin.</p>
+<p><strong>The exclusion cases.</strong>
+<code>searches sibling conversations only inside the selected project</code>
+writes 200, 300 and 400 budgets to the current chat, a sibling and
+another project's chat, asserts the search returns exactly the sibling,
+and asserts the tool output lacks the other two
+(<code>src/main/__tests__/rag-store-integration.dbtest.ts:57-80</code>).
+<code>keeps project grounding isolated through policy changes, delete/reindex, and reopen</code>
+drives the real handlers over real SQLite. It asserts the other
+project's document and chat and the current chat stay out, that turning
+<code>include_memory</code> off removes the captured memory, and that
+after <code>db:delete-memory</code> and a re-index the memory and the
+old document stay out while the new document is present, before and
+after a reopen
+(<code>src/main/__tests__/memory-rag-chat-lifecycle.integration.dbtest.ts:117-291</code>).</p>
+<p>Both are <code>.dbtest.ts</code> files. CI's DB journeys run them
+through <code>vitest.db.ci.config.ts</code>, which excludes four other
+files by name with reasons
+(<code>.github/workflows/ci.yml:185-198</code>). The embedding mock
+returns a constant vector, so every candidate scores alike and the
+exclusions rest on SQL predicates and deletion.</p>
+<p>They are good tests of a boundary, and they do not earn
+<code>negative_eval</code>. Of the material they keep out, the chats and
+documents are not memory, and the captured memory was put there by the
+test through a handler the app's own UI never calls. The mark needs a
+must-not case over memory a reachable path produces, and the public tree
+has no such path.</p>
+<p><strong>Ranking and admission.</strong>
+<code>search-ranking.test.ts</code> pins RRF, the boosts, the tokeniser
+and the rule that <code>excludeChatId</code> drops exactly one chat.
+<code>entity-admission-policy.test.ts</code> and
+<code>entity-domain.dbtest.ts</code> cover admission and transactional
+entity deletion.</p>
+<p><strong>Not covered.</strong> No test in <code>src/</code> or
+<code>integration-tests/</code> names
+<code>evaluateAndStoreMemoryForMessage</code>,
+<code>extractEntitiesForSession</code>, <code>summarizeSession</code> or
+the reprocess handler, so the LLM filter and its post-filters are
+untested. No test updates a memory or an entity summary and then
+searches. No retrieval-quality evaluation is committed, and the tree
+carries no paper of its own.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the scope key on the row and write the negative test
+against the real handler.</strong> A search that returns the sibling and
+not the other project, with the positive case asserted first, is the
+cheapest proof a boundary holds.</li>
+<li><strong>Treat the relational row as truth and the vector index as a
+cache.</strong> Checking that a semantic hit's source row still exists
+makes deletion safe without deleting vectors.</li>
+<li><strong>Drive delete-all from a registry that extensions must
+join.</strong> A new store is erased by registering it, not by
+remembering to edit the eraser.</li>
+<li><strong>Admit entities through a pure function that sits before
+persistence.</strong> Extractors are untrusted callers, and the
+rejection reasons are testable without a database.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A global pool folded into a scoped context by
+default.</strong> If some material has no scope, keep it out of scoped
+reads until someone opts it in.</li>
+<li><strong>A candidate cap without an order.</strong>
+<code>LIMIT</code> with no <code>ORDER BY</code> makes what is
+searchable an accident of storage.</li>
+<li><strong>An index receipt keyed only on identity.</strong> Key it on
+content or version, or an edit is invisible to the semantic arm.</li>
+<li><strong>Deleting the source and keeping the derivation.</strong>
+Facts and summaries built from a memory need to go when it goes, or be
+rebuilt.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a reader choosing a private desktop assistant, the open core is a
+competent project-scoped RAG with chat recall, and the parts called
+memory depend on code that cannot be inspected. For a reader choosing a
+memory design to copy, the value is in a few small pieces: the project
+predicate and its test, the read-verified vector cache, the deletion
+registry and the admission policy. The capture and extraction layer is
+an interesting prompt stack with no tests and no correction model.
+Anyone who needs to audit what gets remembered about them should walk
+away until the producer is public.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does the private <code>pro/</code> submodule write into
+<code>memories</code>, <code>entities</code> and <code>messages</code>,
+and does it call <code>evaluateAndStoreMemoryForMessage</code>?</li>
+<li>Who sets <code>entities.hidden</code>, and does it mean rejected,
+merged or muted?</li>
+<li>Does Pro schedule <code>runBackfill</code>, and does anything
+re-embed a changed row?</li>
+<li>Does Pro's sync replicate memories and entities, and how does a
+deletion travel to a paired device?</li>
+<li>Is <code>include_memory</code> on by default deliberately, given the
+project prompt?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>src/main/database.ts</code>, <code>src/main/rag/store.ts</code>,
+<code>src/main/vectors.ts</code>,
+<code>src/main/vectors-predicates.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/main/ipc.ts:330-574</code>,
+<code>:607-644</code>, <code>:1403-1520</code>;
+<code>src/main/prompts.ts</code>;
+<code>src/main/entity-admission-policy.ts</code>;
+<code>src/main/entity-domain.ts</code>;
+<code>packages/rag/src/service.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/main/search.ts</code>,
+<code>src/main/search-ranking.ts</code>,
+<code>packages/rag/src/retrieval.ts</code>,
+<code>src/main/database.ts:1154-1228</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>src/main/ipc.ts:709-1135</code>, <code>src/main/tools.ts</code>,
+<code>src/main/tools/memory-scope.ts</code>.</li>
+<li><strong>Deletion:</strong> <code>src/main/data-privacy.ts</code>,
+<code>src/main/ipc.ts:1158-1191</code>.</li>
+<li><strong>Open-core seam:</strong>
+<code>electron.vite.config.ts:9-20</code>,
+<code>src/main/bootstrap/hookRegistry.ts</code>,
+<code>src/bootstrap/proStub.ts</code>.</li>
+<li><strong>Tests:</strong>
+<code>src/main/__tests__/rag-store-integration.dbtest.ts</code>,
+<code>src/main/__tests__/memory-rag-chat-lifecycle.integration.dbtest.ts</code>,
+<code>src/main/__tests__/search-ranking.test.ts</code>,
+<code>src/main/__tests__/entity-admission-policy.test.ts</code>,
+<code>src/main/__tests__/entity-domain.dbtest.ts</code>,
+<code>vitest.db.ci.config.ts</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n "INTO (messages|conversations)\b" --glob '!**/__tests__/**' --glob '!**/dist/**' .</code>
+— no match; nothing in the public tree writes the tables the memory
+filter reads.</li>
+<li><code>rg -n "api\.(addMemory|summarizeSession|reprocessAllSessions)\(" src</code>
+— one match, inside <code>useReprocessing.tsx</code>;
+<code>rg -n "startReprocess\(" src --glob '!**/__tests__/**'</code> — no
+match.</li>
+<li><code>rg -n "runBackfill\(" src --glob '!**/__tests__/**'</code> —
+only the definition in <code>search.ts</code>.</li>
+<li><code>rg -n "CREATE (VIRTUAL )?TABLE IF NOT EXISTS (observations|observation_fts|frames|meetings)|ADD COLUMN hidden" src packages --glob '!**/__tests__/**' --glob '!**/dist/**'</code>
+— no match.</li>
+<li><code>rg -n "DELETE FROM entity_facts" src --glob '!**/__tests__/**'</code>
+— the legacy purge, <code>deleteEntityRecord</code> and the clean
+reprocess; no single-fact or per-memory delete.</li>
+<li><code>rg -n "DELETE FROM vec_indexed" src --glob '!**/__tests__/**'</code>
+— one match, the capture clear in <code>data-privacy.ts</code>.</li>
+<li><code>rg -n -i "tombstone|rejected|superseded|valid_from|valid_to|audit" src/main/database.ts src/main/ipc.ts src/main/search.ts src/main/rag/store.ts src/main/data-privacy.ts</code>
+— only <code>PromiseRejectedResult</code> in
+<code>data-privacy.ts</code>.</li>
+<li><code>rg -ln "evaluateAndStoreMemoryForMessage|summarizeSession|extractEntitiesForSession|reprocess-all-sessions|memoryFilter" src integration-tests -g '*test*'</code>
+— no match.</li>
+<li><code>rg -n -i "memor|universalSearch|search_memory|entities" src/main/model-server.ts src/main/mcp-server.ts src/main/model-server/*.ts</code>
+— only hardware-memory settings and one comment; no memory route.</li>
+<li><code>rg -n "UPDATE memories|updateEntitySummary|db:add-memory" src integration-tests -g '*test*'</code>
+— a persistence test of <code>updateEntitySummary</code> and the
+lifecycle test's single add; no case searches after an update.</li>
+<li><code>gh api repos/off-grid-ai/desktop-pro</code> — 404.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' --exclude-dir=.git --exclude-dir=node_modules .</code>
+— three planning documents citing other work; no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/off-grid-ai/OGAD/commit/7f073cada0b4555dc3b5d60bfd9928bc11d3f4cc"><code class="commit-id" title="7f073cada0b4555dc3b5d60bfd9928bc11d3f4cc">7f073cad…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 25
+September 2026. No mark: the project predicates and their tests guard
+chats and documents, not memory, and the captured-memory layer has no
+reachable producer in the public tree. Screened before reading: four
+auto-run surfaces (<code>.claude/settings.json</code>, a permission
+allowlist with no hooks; <code>.gitattributes</code> LFS filters,
+checked out with the filters disabled; <code>.gitmodules</code>, the
+private <code>pro</code> submodule, left uninitialised;
+<code>.vscode/settings.json</code>), two build-time execution points,
+five dependency files inside the cooldown — every file in a depth-1
+clone dates to the tip — and two unpinned surfaces.
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> were read as data.
+Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

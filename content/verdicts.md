@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 642 reports.**
+**This page covers all 643 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5751,3 +5751,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 1,864,976 lines of Rust and 514,427 of TypeScript and JavaScript, 3,245 commits on main from 26 contributors since November 2025; the agent memory is two npm files of 10,546 and 4,381 lines and a 27,753-line Rust server. No marks. The provenance gates are tested with assertions that can fail and run in CI; the CLI's remember and recall smoke tests assert `|| true`, and none of the brain server's 148 tests builds its router.
 - Study when: you run several embedders over time against one store and want the refusal and migration path spelled out, or want a corrupt-store policy that never silently empties.
 - Do not copy when: memories must be retracted one at a time, written by concurrent hooks without loss, or kept free of command lines; or when a shared store must be defended against unauthenticated writes.
+
+### [`ogad`](../systems/ogad/)
+
+- Best idea: **treat SQLite as the truth and the vector index as a cache.** `semanticSourceExists` drops any LanceDB hit whose source row is gone, so a deleted memory, entity or capture cannot surface from a stale vector, and the per-category clears delete vectors by kind as well.
+- Biggest risk: **the project boundary has an unscoped pool behind it.** `getChunkCandidates` filters documents by `d.project_id = ?` and then adds up to 2,000 captured memories with no project key and no order, on by default, while the project system prompt says not to use information from other projects.
+- Most reusable component: `src/main/data-privacy.ts` — delete-all driven by a registry that extensions join through `registerPersonalStore`, with producers suspended before the erase and a failure reported when the vector store is not cleared.
+- Second risk: **derived state outlives its source and its edits.** Deleting a memory leaves the entity facts and the LLM-written summary built from it, and `vec_indexed` records each key once, so a changed memory or entity keeps its first vector and snippet.
+- Maturity impression: AGPL-3.0-only, 103,455 lines of TypeScript outside tests and 2,488 commits on main from 15 contributors since January 2026, of which the memory path is about 4,300 lines. No marks: the project predicates and their CI-run exclusion tests guard chats and documents, and the captured-memory layer has no reachable producer in the public tree. The LLM memory filter and entity extraction have no tests, and the private `pro/` submodule that feeds them returns 404.
+- Study when: you are building project-scoped chat recall in a local app and want the predicate, the negative test through the real handlers and a deletion registry to copy.
+- Do not copy when: you need to know what is remembered about a person, or to correct it. The capture producers are private, nothing records a status or rejection, and a correction cannot reach derived facts.

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 642 reports.</strong></p>
+<p><strong>This page covers all 643 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26446,6 +26446,44 @@ corrupt-store policy that never silently empties.</li>
 <li>Do not copy when: memories must be retracted one at a time, written
 by concurrent hooks without loss, or kept free of command lines; or when
 a shared store must be defended against unauthenticated writes.</li>
+</ul>
+<h3 id="ogad"><a href="../systems/ogad/"><code>ogad</code></a></h3>
+<ul>
+<li>Best idea: <strong>treat SQLite as the truth and the vector index as
+a cache.</strong> <code>semanticSourceExists</code> drops any LanceDB
+hit whose source row is gone, so a deleted memory, entity or capture
+cannot surface from a stale vector, and the per-category clears delete
+vectors by kind as well.</li>
+<li>Biggest risk: <strong>the project boundary has an unscoped pool
+behind it.</strong> <code>getChunkCandidates</code> filters documents by
+<code>d.project_id = ?</code> and then adds up to 2,000 captured
+memories with no project key and no order, on by default, while the
+project system prompt says not to use information from other
+projects.</li>
+<li>Most reusable component: <code>src/main/data-privacy.ts</code> —
+delete-all driven by a registry that extensions join through
+<code>registerPersonalStore</code>, with producers suspended before the
+erase and a failure reported when the vector store is not cleared.</li>
+<li>Second risk: <strong>derived state outlives its source and its
+edits.</strong> Deleting a memory leaves the entity facts and the
+LLM-written summary built from it, and <code>vec_indexed</code> records
+each key once, so a changed memory or entity keeps its first vector and
+snippet.</li>
+<li>Maturity impression: AGPL-3.0-only, 103,455 lines of TypeScript
+outside tests and 2,488 commits on main from 15 contributors since
+January 2026, of which the memory path is about 4,300 lines. No marks:
+the project predicates and their CI-run exclusion tests guard chats and
+documents, and the captured-memory layer has no reachable producer in
+the public tree. The LLM memory filter and entity extraction have no
+tests, and the private <code>pro/</code> submodule that feeds them
+returns 404.</li>
+<li>Study when: you are building project-scoped chat recall in a local
+app and want the predicate, the negative test through the real handlers
+and a deletion registry to copy.</li>
+<li>Do not copy when: you need to know what is remembered about a
+person, or to correct it. The capture producers are private, nothing
+records a status or rejection, and a correction cannot reach derived
+facts.</li>
 </ul>
         </article>
       </div>

@@ -860,6 +860,8 @@ stated in the source rather than left to a reader: `filter.ts` composes with
 Postgres RLS instead of replacing it — RLS gates `entity_id`/`server_id`, this
 gates `metadata.scope` — so a deployment without RLS has half the design.
 
+**[Off Grid AI Desktop](../../systems/ogad/) puts the key on everything except the memory.** Conversations and uploaded documents carry `project_id`, and every project read applies it. The captured memories that `getChunkCandidates` appends to a project's knowledge base have no project column at all, gated only by a per-project `include_memory` flag that defaults to on, up to 2,000 rows in no order. **A pool with no key is not neutral in a scoped read: exclude it by default, or give it the key.**
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
