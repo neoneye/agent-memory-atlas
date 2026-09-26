@@ -5820,38 +5820,41 @@ functions, callers and imports — into oxigraph over one N-Quads file per
 tier, and injects a slice at each of the four Claude Code hook moments
 rather than waiting to be called. Correction is a supersession edge with
 a forward-walking <code>resolve_head</code>, a write-time cycle refusal,
-and a <code>FILTER NOT EXISTS</code> the serving queries splice inside
-the GRAPH group. What is worth reading is
-<code>src/supersede.rs</code>'s header: it records that
+and a <code>FILTER NOT EXISTS</code> spliced inside the GRAPH group of
+recall, both rules blocks and the prompt neighbourhood.
+<code>src/supersede.rs</code>'s header records that
 <code>ops:supersedes</code> and <code>ops:supersededBy</code> had been
 declared in the ontology for months <em>"and <strong>nothing has ever
 written either one</strong> — measured on Chris's store, 2026-09-07: 0
 quads of each across both tiers"</em>, with the only supersession being
 a sync-ledger JSON field <em>"which no graph reader can see"</em>. The
 module exists to end that, and it is wired — a CLI verb produces the
-edge and four readers consume it. The same header separates the edge
-from the label: <code>ops:status</code> is stamped for the dashboard and
-consulted by no decision path, justified with a census of the author's
-own store — 44 distinct values against the six the ontology declares,
-including <code>Pass</code> 242, <code>PASS</code> 43 and
-<code>PASS (no change)</code> 1. That is why <code>trust_state</code> is
-withheld here even though the vocabulary exists. Two marks,
-<code>audit_log</code> on a <code>changes.jsonl</code> appended after
-the atomic rename lands from the single write funnel, and
-<code>negative_eval</code> on a test file whose own header states the
-vacuity rule — <em>"a filter that excludes everything passes a 'the old
-one is gone' assertion just as well as a correct one"</em> — and asserts
-both halves per serving surface, which makes it a third corpus instance
-of an exclusion asserted about a <em>corrected</em> value. Scope is the
-near-miss: writes are routed into a per-workspace named graph and the
-four hook queries read <code>GRAPH ?g</code> across every named graph in
-the tier, so the boundary that holds is the tier's file. The project has
-been bitten by exactly that difference and wrote it down — bug #112,
-where a wildcard guard passed a rule sitting in a foreign named graph,
-<em>"460 quads of them on the reporting install"</em>, while the scoped
-DELETE matched nothing and a hardcoded <code>Ok(1)</code> reported
-success. Licence is the Functional Source License 1.1 with an Apache-2.0
-future licence: source-available at this pin.</p>
+edge and six queries filter on it. The same header separates the edge
+from the label and justifies distrusting <code>ops:status</code> with a
+census of the author's own store — 44 distinct values against the six
+the ontology declares, including <code>Pass</code> 242,
+<code>PASS</code> 43 and <code>PASS (no change)</code> 1. The label is a
+lifecycle field with no candidate or verified value, which is why
+<code>trust_state</code> is withheld, and it is read: the writer adds
+<code>superseded</code> without removing <code>active</code>, so the
+session-start memory block, which selects <code>active</code>, serves a
+corrected note beside its correction. Two marks, <code>audit_log</code>
+on a <code>changes.jsonl</code> appended after the atomic rename lands
+from the single write funnel, and <code>negative_eval</code> on test
+files whose header states the vacuity rule — <em>"a filter that excludes
+everything passes a 'the old one is gone' assertion just as well as a
+correct one"</em> — and assert both halves per serving surface, which
+makes it a third corpus instance of an exclusion asserted about a
+<em>corrected</em> value. Scope is the near-miss: writes route into a
+per-workspace named graph that no hook query filters on, and the one
+read-path predicate keeps the working set's projects to the current
+workspace by a home derived from <code>ops:path</code>. Bug #112 is the
+named-graph difference biting the removal path — a wildcard guard passed
+a rule sitting in a foreign named graph, <em>"460 quads of them on the
+reporting install"</em>, while the scoped DELETE matched nothing and a
+hardcoded <code>Ok(1)</code> reported success. Licence is the Functional
+Source License 1.1 with an Apache-2.0 future licence: source-available
+at this pin.</p>
 <p><strong><a href="../systems/claude-mem-lite/">claude-mem-lite</a>
 treats retraction as the memory's core invariant and nearly holds it
 everywhere.</strong> A Claude Code plugin on one SQLite file: hooks

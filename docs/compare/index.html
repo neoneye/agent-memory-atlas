@@ -2967,59 +2967,63 @@ into per-workspace named graphs inside it, an append-only
 <code>changes.jsonl</code> beside each graph, and a sync ledger for
 cross-machine replication</td>
 <td>SPARQL against the tier's store, composed per hook moment rather
-than ranked: session start returns what governs where the agent is about
-to work, the prompt hook returns matching domain rules and prior
-decisions, the pre-tool hook returns the shape of the file about to be
-read, and the post-tool hook returns the call chain for the lines just
-returned. A <code>FILTER NOT EXISTS { ?x ops:supersededBy ?y }</code> is
-spliced into the serving queries so only live versions come back</td>
+than ranked: session start returns the working set, the active notes and
+the handoffs, the prompt hook returns matching domain rules and prior
+decisions, the pre-tool hook returns the rules and shape of the file
+about to be read, and the post-tool hook returns the call chain for the
+lines just returned. A
+<code>FILTER NOT EXISTS { ?x ops:supersededBy ?y }</code> is spliced
+into recall, both rules blocks and the prompt neighbourhood; the
+session-start memory block and <code>learn --list</code> select
+<code>status active</code> instead, which the supersession writer leaves
+in place</td>
 <td>Synchronous CLI and hook writes under a file lock, loaded and
 mutated inside the lock, serialised to a temp file and renamed
 atomically; the changes line and a doorbell notification to any running
-app both fire after the rename lands, never before. Session start
-additionally compacts a tier graph that has ballooned past a threshold,
-backup-first and cooldown-gated</td>
-<td>Correction is a supersession edge and nothing is ever re-pointed:
-<code>new ops:supersedes old</code> with the inverse written in the same
-statement, A→B→C left as three records and two edges,
-<code>resolve_head</code> walking forward to the live end, and
-<code>would_cycle</code> refusing a loop at write time. The serving
-surfaces filter on the edge; <code>--include-superseded</code> shows the
-chain. Removal is a separate verb whose guard and DELETE now ask the
-same wildcard question</td>
+app both fire after the rename lands, never before</td>
+<td>Correction is a supersession edge and nothing is re-pointed:
+<code>new ops:supersedes old</code> with the inverse and a
+<code>superseded</code> status in one INSERT, A→B→C left as three
+records and two edges, <code>resolve_head</code> walking forward to the
+live end, and <code>would_cycle</code> refusing a loop at write time.
+The INSERT adds the status without deleting <code>active</code>, and the
+sync of <code>domains.toml</code> deletes every triple on a synced rule,
+the edge included. Removal is a separate verb whose guard and DELETE ask
+the same wildcard question</td>
 <td>Two tiers as two files, selected by
 <code>find_workspace_base(cwd)</code>, and per-workspace named graphs
-inside a tier that writes are routed to. The boundary that holds is the
-file: the hook injection queries read <code>GRAPH ?g</code>, a wildcard
-over every named graph in the tier, so the workspace key is a write-time
-routing decision the serving path does not filter on</td>
+inside a tier that writes are routed to and no hook query filters on.
+One read-path predicate exists: the session-start working set keeps
+projects whose <code>ops:path</code> resolves to the current registered
+workspace or to none. Notes, rules, decisions, tasks and handoffs are
+read across every named graph in the tier</td>
 <td>A single Rust binary wired into all four Claude Code hooks — session
 start, prompt submit, pre-tool, post-tool — installed by a shell or
 PowerShell one-liner, plus a CLI of graph verbs, a Svelte dashboard, a
 doorbell socket for a running Electron app, and a plugin and extension
-surface. Codex and Antigravity are named as coming</td>
-<td>None on a timer. Graph compaction is triggered at session start when
-a tier has grown past a threshold, and the supersession audit runs
-inside <code>base doctor</code> because the author ruled that a
-per-write nag <em>"fires several times a day, is ignored within a week,
-and trains him to ignore the next warning that matters"</em></td>
-<td>Provenance is the changes log and the supersession chain. Epistemic
-status is declared and unread: <code>ops:status</code> has six values in
-<code>ops.ttl:117</code> and 44 distinct values in the store the author
-measured, including <code>Pass</code> 242, <code>PASS</code> 43 and
-<code>PASS (no change)</code> 1, plus whole sentences — and no decision
-path consults it, because every one keys on the edge</td>
+surface. Hook output is trimmed to a byte budget before it is printed.
+Codex and Antigravity are named as coming</td>
+<td>None on a timer. Session start runs three passes: graph compaction
+when a tier has grown past a threshold, backup-first and cooldown-gated;
+an archive of reminders ten days past due; and a deferral pass over cold
+handoffs, forks, tasks and milestones, gated on
+<code>[defer] enabled</code>, false by default. The supersession audit
+runs inside <code>base doctor</code> rather than at write time</td>
+<td>Provenance is the changes log and the supersession chain.
+<code>ops:status</code> is a lifecycle label — six declared values, 44
+in the author's measured store — that the working set and the memory
+block filter on; no value separates a candidate from a verified
+record</td>
 <td>The source comments are incident records: a dated quad count proving
 a declared predicate had never been written, a status-value census that
 explains why the label is not trusted, a numbered bug where a wildcard
-guard and a scoped DELETE disagreed and a hardcoded success hid it, and
-a filter-placement note naming the release that shipped it in the wrong
-clause</td>
-<td>The workspace key is written and not served — the four hook queries
-that put context in front of the model read across every named graph in
-the tier — and a correction is keyed on the record, so re-learning a
-corrected fact produces a new live note the supersession chain does not
-reach</td>
+guard and a scoped DELETE disagreed, and tests that name the release
+they were red at and carry a control that must stay green</td>
+<td>The session-start memory block serves a superseded note beside its
+correction, because it filters on a status the supersession writer adds
+to rather than replaces. Within a tier nothing scopes notes, rules or
+decisions to a workspace. Correction is keyed on the record, and a sync
+of <code>domains.toml</code> erases the edge on a synced rule</td>
 </tr>
 <tr>
 <td><code>basic-memory</code></td>
