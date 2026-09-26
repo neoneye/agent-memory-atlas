@@ -1048,17 +1048,19 @@ ran.</p>
 <p><a
 href="../../systems/create-context-graph/">create-context-graph</a>
 shows how a scope key can be real on one read path and absent from the
-one that matters. Every seeded node on the self-hosted backend is merged
-on name and domain, and four helpers in the generated client carry a
-null-permissive domain predicate — enough to earn the mark, on the REST
-routes the front end calls. The agent's own retrieval is a different
+one that matters. On the self-hosted backend the generated seeder merges
+every node on name and domain, and nine REST read paths carry a
+null-permissive domain predicate — enough to earn the mark on those
+routes, though the front end's schema view also sends one unscoped query
+through the free-form route. The agent's own retrieval is a different
 path entirely: a search for the domain parameter across all twenty-seven
 bundled ontologies returns zero, so not one of the tool queries the
 model actually calls carries the predicate, and the free-form query tool
 only sets the value as a default parameter its query may ignore. Two
-further weakenings recur elsewhere and are worth naming: the predicate
-is null-permissive, so every row the memory library writes without the
-property is visible from every domain; and on the default hosted backend
+further weakenings follow. The predicate is null-permissive, and the
+CLI's library ingest packs the key into a serialized metadata string
+while the generated importer writes none, so every entity those paths
+write is visible from every domain. And on the default hosted backend
 entities are created with no attributes at all, so the key is never
 written and the boundary falls back to the API key's workspace — a
 physical partition, which is a different mechanism. The test that would

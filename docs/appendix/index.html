@@ -3386,12 +3386,18 @@ what is absent is anything that persists it.</li>
 href="https://github.com/neo4j-labs/create-context-graph">neo4j-labs/create-context-graph</a>
 at <a
 href="https://github.com/neo4j-labs/create-context-graph/commit/707b168d9509cbf1b919b82940285d1df4c6810d"><code class="commit-id" title="707b168d9509cbf1b919b82940285d1df4c6810d">707b168d…</code></a>
-— read only; no auto-run surface, two build-time execution paths (a
-<code>Makefile</code> and a <code>conftest.py</code> at collection), one
-unpinned manifest in the docs site with a lockfile beside it and both
-lockfiles outside the cooldown, <code>CLAUDE.md</code> read as data;
-nothing installed, built or run, the entity-type distribution recomputed
-from the committed domain YAMLs in Python</li>
+— read only, and audited on 2026-09-26 at the same pin, the head of
+<code>main</code>; no auto-run surface, two build-time execution paths
+(a <code>Makefile</code> and a <code>conftest.py</code> at collection),
+one unpinned manifest in the docs site with a lockfile beside it and
+both lockfiles outside the cooldown, <code>CLAUDE.md</code> read as
+data; the dependency <a
+href="https://github.com/neo4j-labs/agent-memory">neo4j-labs/agent-memory</a>
+read at its <code>python-v0.5.0</code> tag, <a
+href="https://github.com/neo4j-labs/agent-memory/commit/8bd50eff9debbe7211a46b2d66ac74c94422f625"><code class="commit-id" title="8bd50eff9debbe7211a46b2d66ac74c94422f625">8bd50eff…</code></a>,
+for what <code>add_entity</code> writes; nothing installed, built or
+run, the entity-type distribution and the tool-body domain check
+recomputed from the committed domain YAMLs in Python</li>
 <li><a href="https://github.com/halofyai/halofy">halofyai/halofy</a> at
 <a
 href="https://github.com/halofyai/halofy/commit/3763e64f521df8dc58d00d4632e732e702dd76ef"><code class="commit-id" title="3763e64f521df8dc58d00d4632e732e702dd76ef">3763e64f…</code></a>
@@ -5244,6 +5250,23 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Create Context Graph report missed a writable agent tool
+and misplaced its scope key; corrected 2026-09-26.</strong> At <a
+href="https://github.com/neo4j-labs/create-context-graph/commit/707b168d9509cbf1b919b82940285d1df4c6810d"><code class="commit-id" title="707b168d9509cbf1b919b82940285d1df4c6810d">707b168d…</code></a>
+the <a href="../systems/create-context-graph/">create-context-graph</a>
+report said the generated agent has no tool that writes memory; every
+framework template's free-form Cypher tool, described to the model as
+read-only, executes writes on a self-hosted graph. It said every seeded
+node carries the <code>domain</code> key; the CLI's library ingest and
+the generated importer write none. It overstated three pieces of
+evidence: a scope integration test with no positive control, a vector
+index called empty over a property the library writes, and three
+encoders called held in lockstep when the contract test covers two. It
+understated the predicate, which sits on nine read paths rather than
+four. Smaller facts were wrong: ten correction patterns not eight,
+fourteen redaction patterns not thirteen, 216 matrix combinations not
+176, chat history in <code>sessionStorage</code> not
+<code>localStorage</code>. No mark moved.</li>
 <li><strong>A report called a memory write unawaited, and the
 synchronous call waits on it.</strong> The <a
 href="../systems/strands-agents/">Strands Agents</a> report of 22
