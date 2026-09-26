@@ -505,12 +505,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: the scope boundary has to be enforced rather than remembered, durable deletion has to survive your own audit log, or a single scope will grow past what an exact cosine scan per query can carry.
 
 ### [`agentos-framerslab`](../systems/agentos-framerslab/)
-- Best idea: cite the paper in the file that implements it. `RetrievalInducedForgetting.ts` names Anderson & Spellman 1995 and says which account of the effect it implements, so a reader can check the code against the claim — rare in cognitive-sounding memory code.
-- Biggest risk: correction is entirely a strength effect. Four mechanisms make a wrong memory less retrievable and none records that it was wrong, so a suppressed trace and an unused one are indistinguishable afterwards.
-- Most reusable component: warning when a config is set that cannot take effect — passing `cognitiveMechanisms` with memory disabled logs that it will be ignored, rather than silently doing nothing.
-- Maturity impression: ~64,200 lines under `src/cognition/memory` with GraphRAG in SQL and Neo4j, ten mechanisms from the cognitive literature all wired behind one optional config key, and large test files beside the store.
-- Study when: you want memory that behaves like human memory — recency and salience effects, gist over detail, retrieval that reshapes what is retrieved.
-- Do not copy when: memory must be governed. There is no review surface, no epistemic status, no record of a correction, and the careful audit trail covers the context window rather than the store.
+- Best idea: cite the paper in the file that implements it. `RetrievalInducedForgetting.ts` names Anderson, Bjork & Bjork 1994 and Anderson & Spellman 1995 and says which account it implements, so a reader can check the code against the claim.
+- Biggest risk: the high-level path and the mechanisms are different stacks. `souledAgent()` wires the `Memory` facade, which has no mechanisms engine, and `agent()` accepts `cognitiveMechanisms` and forwards it nowhere. The facade's recall also omits the `brain_id` every write stamps, a cross-brain read in the shared-Postgres mode the code calls multi-tenant.
+- Most reusable component: a soft delete fenced on the durable column. `MemoryStore` checks every vector hit against `deleted` and returns nothing when it cannot, so a failed vector delete leaves a retry rather than a resurrection, with committed race tests across sibling stores.
+- Maturity impression: 64,247 lines under `src/cognition/memory`, 19,749 of them tests, 1,085 memory test cases, and GraphRAG in SQL and Neo4j. Two marks: `scope_enforced` on the agency filter and `negative_eval` on a soft-delete case with a pre-delete control.
+- Study when: you want memory that behaves like human memory — recency and salience effects, gist over detail, retrieval that reshapes what is retrieved — and will drive `CognitiveMemoryManager` directly.
+- Do not copy when: memory must be governed, or tenants share a Postgres database through the facade. No status moves after the write, corrections are keyed on the row, and nothing logs a mutation.
 
 ### [`ai-agent-automation`](../systems/ai-agent-automation/)
 

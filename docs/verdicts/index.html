@@ -1478,28 +1478,34 @@ carry.</li>
 href="../systems/agentos-framerslab/"><code>agentos-framerslab</code></a></h3>
 <ul>
 <li>Best idea: cite the paper in the file that implements it.
-<code>RetrievalInducedForgetting.ts</code> names Anderson &amp; Spellman
-1995 and says which account of the effect it implements, so a reader can
-check the code against the claim — rare in cognitive-sounding memory
-code.</li>
-<li>Biggest risk: correction is entirely a strength effect. Four
-mechanisms make a wrong memory less retrievable and none records that it
-was wrong, so a suppressed trace and an unused one are indistinguishable
-afterwards.</li>
-<li>Most reusable component: warning when a config is set that cannot
-take effect — passing <code>cognitiveMechanisms</code> with memory
-disabled logs that it will be ignored, rather than silently doing
-nothing.</li>
-<li>Maturity impression: ~64,200 lines under
-<code>src/cognition/memory</code> with GraphRAG in SQL and Neo4j, ten
-mechanisms from the cognitive literature all wired behind one optional
-config key, and large test files beside the store.</li>
+<code>RetrievalInducedForgetting.ts</code> names Anderson, Bjork &amp;
+Bjork 1994 and Anderson &amp; Spellman 1995 and says which account it
+implements, so a reader can check the code against the claim.</li>
+<li>Biggest risk: the high-level path and the mechanisms are different
+stacks. <code>souledAgent()</code> wires the <code>Memory</code> facade,
+which has no mechanisms engine, and <code>agent()</code> accepts
+<code>cognitiveMechanisms</code> and forwards it nowhere. The facade's
+recall also omits the <code>brain_id</code> every write stamps, a
+cross-brain read in the shared-Postgres mode the code calls
+multi-tenant.</li>
+<li>Most reusable component: a soft delete fenced on the durable column.
+<code>MemoryStore</code> checks every vector hit against
+<code>deleted</code> and returns nothing when it cannot, so a failed
+vector delete leaves a retry rather than a resurrection, with committed
+race tests across sibling stores.</li>
+<li>Maturity impression: 64,247 lines under
+<code>src/cognition/memory</code>, 19,749 of them tests, 1,085 memory
+test cases, and GraphRAG in SQL and Neo4j. Two marks:
+<code>scope_enforced</code> on the agency filter and
+<code>negative_eval</code> on a soft-delete case with a pre-delete
+control.</li>
 <li>Study when: you want memory that behaves like human memory — recency
 and salience effects, gist over detail, retrieval that reshapes what is
-retrieved.</li>
-<li>Do not copy when: memory must be governed. There is no review
-surface, no epistemic status, no record of a correction, and the careful
-audit trail covers the context window rather than the store.</li>
+retrieved — and will drive <code>CognitiveMemoryManager</code>
+directly.</li>
+<li>Do not copy when: memory must be governed, or tenants share a
+Postgres database through the facade. No status moves after the write,
+corrections are keyed on the row, and nothing logs a mutation.</li>
 </ul>
 <h3 id="ai-agent-automation"><a
 href="../systems/ai-agent-automation/"><code>ai-agent-automation</code></a></h3>

@@ -1122,35 +1122,43 @@ passed; fuzzy supersession can hide conflicts</td>
 </tr>
 <tr>
 <td><code>agentos-framerslab</code></td>
-<td>A memory trace with an embedding, a strength, an importance score
-and emotional valence, scored by a retrieval-priority model rather than
-typed by epistemic status</td>
-<td>An in-process vector index with optional write-through to a durable
-Brain, a SQL or Neo4j knowledge graph, and a vector provider the adopter
-binds</td>
-<td>Vector search and spreading activation over the knowledge graph,
-optionally reshaped by ten cognitive mechanisms before results are
-returned</td>
-<td>Traces are written through a consolidation pipeline; compaction of
-the context window is logged separately with full provenance</td>
-<td>Forgetting is a strength effect — retrieval-induced suppression of
-competitors and source-confidence decay — with no record of a rejected
-value</td>
-<td>An agency id compiled into the vector query's metadata filter,
-beside a per-agency collection; no principal key on an individual
-trace</td>
-<td>A TypeScript agent framework — <code>createAgent</code> options, an
-agency layer for multi-agent sharing, and a memory facade</td>
-<td>Consolidation, decay and the cognitive mechanisms engine run over
-the store when enabled</td>
-<td>Continuous. Source confidence decays and a feeling-of-knowing signal
-is computed; no discrete epistemic status exists on a trace</td>
-<td>Ten named mechanisms drawn from the cognitive literature with the
-papers cited in the source, and a warning when the config that enables
-them is set while memory is off</td>
-<td>The whole mechanisms layer is opt-in and silent when omitted; the
-compaction log audits the context window rather than the store;
-forgetting leaves nothing keyed on what was wrong</td>
+<td>A memory trace with a scope key, a strength, emotional valence and a
+per-source trust policy of three use flags, scored by a
+retrieval-priority model rather than typed by epistemic status</td>
+<td>A SQLite or Postgres Brain behind the Memory facade with FTS and an
+HNSW sidecar; the cognitive manager's in-process vector index writing
+through to it; a SQL or Neo4j knowledge graph; a vector provider the
+adopter binds</td>
+<td>FTS fused with HNSW by reciprocal rank on the facade; vector search
+and spreading activation on the cognitive manager, optionally reshaped
+by the mechanisms engine</td>
+<td>Facade remember and the agent's memory tools insert rows directly;
+the cognitive manager encodes synchronously and its consolidation
+pipeline soft-deletes the loser of a conflict</td>
+<td>Soft delete keyed on trace id through tools, the facade and conflict
+resolution, which writes contradictedBy on both sides; forgetting and
+decay lower weights; nothing is keyed on a rejected value</td>
+<td>A scope and scopeId on every trace and a brain_id on every row; the
+agency layer compiles an agency id into every vector query; facade
+recall and the search tool take scopeId as an optional filter and add no
+brain_id</td>
+<td>A TypeScript framework — agent() with a memoryProvider hook,
+souledAgent() wiring the Memory facade, memory tools for the tool
+registry, AgentMemory over the cognitive manager, and an agency
+layer</td>
+<td>The facade's consolidation loop prunes and merges and logs counts
+per run; the cognitive manager runs its consolidation pipeline and, when
+configured, the mechanisms engine</td>
+<td>A per-trace policy of three use flags set from the source type at
+encode and filtered only when a caller passes usableFor; confidence
+decays continuously; no status moves after the write</td>
+<td>Mechanisms from the cognitive literature with the papers cited in
+the source, and a soft delete fenced against stale vector documents
+across sibling stores, with committed race tests</td>
+<td>The high-level agent path never runs the mechanisms and agent()
+drops cognitiveMechanisms without a warning when memory is on; facade
+recall omits brain_id in a mode the code calls multi-tenant; the agency
+query embeds with a placeholder hash</td>
 </tr>
 <tr>
 <td><code>agentrecall-x</code></td>
@@ -28602,7 +28610,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>363 of 646:</em> <a
+<p><em>364 of 646:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -28622,6 +28630,8 @@ href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
 href="../systems/agentic-context-engine/"><code>agentic-context-engine</code></a>,
 <a href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/agentmemory-markdown/"><code>agentmemory-markdown</code></a>,
+<a
+href="../systems/agentos-framerslab/"><code>agentos-framerslab</code></a>,
 <a href="../systems/agentrt/"><code>agentrt</code></a>, <a
 href="../systems/agents-memory/"><code>agents-memory</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -28995,7 +29005,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-363 repositories of
+364 repositories of
 646 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
