@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 638 reports.**
+**This page covers all 639 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5711,3 +5711,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 65,843 lines of Python outside tests and 555 commits by 2 contributors since 1 March 2026, with 1,615 pytest functions run in CI without the vector extra. Five marks, each on a narrow surface: `tombstone` on rejected task-to-entity links, `bitemporal` on a fact's validity end, `scope_enforced` on one tool, `audit_log` on the ledger, `negative_eval` on `search_nodes` and the context pack. No test compares two BM25 ranks, and the re-ranker, read closely, inverts them.
 - Study when: you want a worked append-only mutation ledger and a supersede-with-rationale verb over a local SQLite graph, or a search response that labels which results actually carried the query terms.
 - Do not copy when: promotion must exclude the agent, reads must be isolated per project, or deletion must reach every machine. The approve verbs are all on the MCP surface, and the ledger and bridge keep what was deleted.
+
+### [`automem`](../systems/automem/)
+
+- Best idea: **make the current version of a fact the default answer, and substitute rather than drop.** Ranked recall defaults `current_only` to true, withholds a memory whose validity window has closed or not yet opened, follows `INVALIDATED_BY` and `EVOLVED_INTO` edges up to five hops with a per-source visited set, and returns the chain head marked `state_replacement` with a pointer to what it replaced.
+- Biggest risk: **the vector arm does not see a window set at store time.** The embedding worker, which writes the Qdrant point whenever the caller supplies no embedding, builds a payload without `t_valid`, `t_invalid` or `archived`; a vector hit's memory is that payload, and the graph arms skip ids the vector arm already returned. The negative tests seed a fake graph directly, so none reaches the worker.
+- Most reusable component: `_active_replacements_for_memories` and `_apply_current_state_filter` in `automem/api/recall.py` (lines 525-724) — a batched, bounded, cycle-safe supersession walk that injects the current head with provenance.
+- Second risk: **nothing bounds who sees or removes what.** There is no scope key on the row and one bearer token opens the whole graph; bulk delete by tag has no dry run; tag listing and id fetch skip the state pass; and `scripts/recover_from_qdrant.py` rebuilds nodes from the payload with no validity fields and no edges, so a restore through it makes every superseded memory current.
+- Maturity impression: MIT, 19,197 lines of Python in the service core, 480 commits on `develop` by 14 contributors between 16 September 2025 and 28 August 2026, and 623 test functions run in CI, including negative recall cases with positive controls. The mcp-automem client adds 18,397 lines of TypeScript and 986 mocked test cases.
+- Study when: you are adding supersession to a memory store and want the read side to answer with the current version rather than hide the stale one.
+- Do not copy when: more than one person or project shares the store, or when the vector index is written by more than one code path — build the payload in one function and test the state filter on a point the default path wrote.

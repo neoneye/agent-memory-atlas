@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A FalkorDB and Qdrant memory
+service whose default recall withholds expired and superseded memories
+and returns the current version in their place.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AutoMem — Agent Memory Atlas">
+    <meta property="og:description" content="A FalkorDB and Qdrant
+memory service whose default recall withholds expired and superseded
+memories and returns the current version in their place.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AutoMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A FalkorDB and Qdrant
+memory service whose default recall withholds expired and superseded
+memories and returns the current version in their place.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AutoMem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AutoMem",
+      "description": "A FalkorDB and Qdrant memory service whose default recall withholds expired and superseded memories and returns the current version in their place.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Current-state recall over a graph and a
+vector store</p>
+          <h1>AutoMem</h1>
+          <p class="document-deck">A FalkorDB and Qdrant memory service
+whose default recall withholds expired and superseded memories and
+returns the current version in their place.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/verygoodplugins/automem">
+              <span>Source</span>
+              <strong>verygoodplugins/automem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/verygoodplugins/automem/commit/0e8c4174b799abb9eab3370400a80ea9e8ad1f02" title="0e8c4174b799abb9eab3370400a80ea9e8ad1f02">
+              <span>Analyzed revision</span>
+              <code>0e8c4174…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/verygoodplugins--automem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>verygoodplugins--automem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>19,197
+lines of Python in automem/, app.py and consolidation.py, plus 9,382 in
+operator scripts and a 1,572-line JavaScript MCP bridge</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>480
+commits on develop by 14 contributors, 16 September 2025 – 28 August
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>623
+Python test functions in 46 files, run in CI without the benchmarks
+directory</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AutoMem is a single-tenant memory service: a Flask API over FalkorDB,
+which holds memories as nodes with typed edges, and Qdrant, which holds
+their vectors. Agents reach it through <a
+href="https://github.com/verygoodplugins/mcp-automem">mcp-automem</a>,
+the author's stdio MCP client and installer, or through an MCP bridge
+the service ships. Writes are explicit; the service classifies,
+summarizes, embeds and enriches in the background.</p>
+<p>What is notable is the default read. Ranked recall runs a
+current-state pass that withholds a memory whose validity window has
+closed or not yet opened, or that a later memory superseded through an
+<code>INVALIDATED_BY</code> or <code>EVOLVED_INTO</code> edge, and
+returns the head of the supersession chain in its place. The client's
+supersede mode writes exactly the state that pass reads.</p>
+<p>What is weak is that the pass depends on a payload two writers build
+differently. Four findings, all read rather than run:</p>
+<ul>
+<li><strong>The vector arm does not see a validity window set at store
+time.</strong> The embedding worker builds the Qdrant payload from the
+graph node and leaves out <code>t_valid</code> and
+<code>t_invalid</code>, and a vector hit's memory is that payload.</li>
+<li><strong>Two read modes skip the pass.</strong> Tag listing and id
+fetch return superseded and expired memories, and the client strips the
+validity fields before the model sees them.</li>
+<li><strong>Scope is a tag the caller chooses.</strong> Nothing on the
+row or the request enforces one, and one token opens the whole
+graph.</li>
+<li><strong>The Qdrant recovery script rebuilds nodes without validity
+or edges</strong>, so a restore through it makes every superseded memory
+current again.</li>
+</ul>
+<p>Two marks: <code>bitemporal</code> and <code>negative_eval</code>.
+Section 9 names the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a node a client wrote. The service extracts nothing from
+conversation; the mcp-automem Hermes provider can store raw turns when
+an operator turns that on. On write the service classifies the type and
+summarizes content over 500 characters, and enrichment later adds entity
+tags, a summary and similarity edges.</p>
+<p><strong>A memory stops being current in three ways, none of which
+deletes it.</strong> Its <code>t_invalid</code> passes; its
+<code>t_valid</code> has not yet arrived; or an
+<code>INVALIDATED_BY</code> or <code>EVOLVED_INTO</code> edge leads from
+it to a memory that is still current
+(<code>automem/api/recall.py:83</code>, <code>:438-449</code>). A
+fourth, decay archiving, exists and is off by default.
+<code>DELETE</code> removes the node and its point outright.</p>
+<p><strong>A correction is a new memory plus a closed window.</strong>
+The service has no supersede endpoint. The mcp-automem client composes
+one: fetch the old memory, store the replacement, PATCH the old one with
+<code>t_invalid</code> set to the client's clock, then create the edge;
+if the PATCH fails, it deletes the replacement (section 8).</p>
+<p><strong>Recall walks to the head.</strong> The current-state pass
+batch-loads each result's supersession edges, follows the chain up to
+five hops with a per-source visited set, drops the old result and
+injects the head with <code>match_type: "state_replacement"</code> and a
+<code>state_replaces</code> pointer (<code>recall.py:525-594</code>,
+<code>:597-724</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a memory is written, corrected and recalled in AutoMem, and the two read modes that skip the current-state pass</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a memory is written, corrected and recalled in AutoMem, and the two read modes that skip the current-state pass
+flowchart TD
+    S[&quot;POST /memory&quot;] --&gt; N[&quot;FalkorDB node:&lt;br/&gt;timestamp, t_valid, t_invalid&quot;]
+    S --&gt; Q{&quot;embedding&lt;br/&gt;supplied?&quot;}
+    Q -- &quot;yes&quot; --&gt; P1[&quot;Qdrant payload&lt;br/&gt;with t_valid, t_invalid&quot;]
+    Q -- &quot;no, the default&quot; --&gt; W[&quot;embedding worker:&lt;br/&gt;payload without&lt;br/&gt;t_valid, t_invalid&quot;]
+    N --&gt; E[&quot;enrichment job:&lt;br/&gt;entity tags, summary,&lt;br/&gt;similarity edges&quot;]
+    SS[&quot;client supersede mode&quot;] --&gt; R1[&quot;POST replacement&quot;]
+    R1 --&gt; R2[&quot;PATCH old:&lt;br/&gt;t_invalid = now&quot;]
+    R2 -- &quot;fails&quot; --&gt; RB[&quot;DELETE replacement&quot;]
+    R2 --&gt; R3[&quot;POST /associate:&lt;br/&gt;INVALIDATED_BY or EVOLVED_INTO&quot;]
+    RC[&quot;GET /recall&quot;] --&gt; A[&quot;vector, keyword and&lt;br/&gt;metadata arms&quot;]
+    A --&gt; F{&quot;current_only,&lt;br/&gt;default true&quot;}
+    F -- &quot;archived, expired,&lt;br/&gt;not yet valid&quot; --&gt; X[&quot;withheld&quot;]
+    F -- &quot;superseded&quot; --&gt; H[&quot;walk up to 5 hops,&lt;br/&gt;inject chain head&quot;]
+    F -- &quot;current&quot; --&gt; OUT[&quot;returned&quot;]
+    H --&gt; OUT
+    EN[&quot;GET /memory/id or&lt;br/&gt;GET /memory/by-tag&quot;] --&gt; RAW[&quot;no state pass&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>app.py</code> builds the service state and hands blueprint
+registration to <code>automem/api/runtime_bootstrap.py:110-201</code>.
+The live memory routes are <code>create_memory_blueprint_full</code>
+(<code>automem/api/memory.py:457</code>). A second implementation of the
+same routes, <code>automem/api/runtime_memory_routes.py</code>, 713
+lines with its own size constants, has no importer in the tree. Recall
+is <code>handle_recall</code> (<code>recall.py:1704</code>),
+consolidation is <code>consolidation.py</code>, and worker threads run
+embeddings, enrichment and the consolidation scheduler.</p>
+<p>Auth is one bearer token for every memory route, with
+<code>/health</code> open
+(<code>automem/api/auth_helpers.py:45-61</code>), and a separate admin
+token for admin routes. Every client of one service shares one graph and
+one collection.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>make dev</code> or Docker Compose runs the API with FalkorDB
+and Qdrant; a Railway template deploys the same stack. An embedding
+provider is required for vector search, and OpenAI, when a key is
+present, is used for classification, summaries and auto-summarization.
+Without Qdrant a store answers <code>qdrant: unconfigured</code> and
+recall falls back to the graph arms. The mcp-automem installer clones
+this repository's default branch and starts Compose for its local path
+(section 8).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Store.</strong> <code>store</code>
+(<code>automem/api/memory.py:486-777</code>) rejects content over 2,000
+characters, replaces content over 500 with a model summary and keeps the
+original in <code>metadata.original_content</code>
+(<code>:498-557</code>), mints a UUID (<code>:543</code>), and
+classifies the type when none is given (<code>:572</code>). It writes
+the node with <code>MERGE</code> (<code>:626-668</code>), writes the
+Qdrant point itself only when the caller supplied an embedding
+(<code>:683-718</code>) and otherwise queues one
+(<code>:719-722</code>), then queues enrichment (<code>:776</code>).
+Batch store is <code>POST /memory/batch</code> (<code>:1204</code>), up
+to 500 items, without <code>t_valid</code>, <code>t_invalid</code> or
+embeddings.</p>
+<p><strong>Recall.</strong> <code>GET /recall</code> →
+<code>handle_recall</code> (<code>recall.py:1704</code>).
+<code>GET /memory/{id}</code> returns one node and bumps
+<code>last_accessed</code>; <code>GET /memory/by-tag</code> pages exact
+tag matches (<code>memory.py:295-334</code>).</p>
+<p><strong>Update.</strong> <code>PATCH /memory/{id}</code> →
+<code>update</code> (<code>memory.py:813-993</code>): read the node,
+fall back to current values for every field not sent, <code>SET</code>
+them all, re-embed when content changed or copy the existing vector
+otherwise, and upsert the Qdrant payload with the window
+(<code>:954-968</code>).</p>
+<p><strong>Delete.</strong> <code>DELETE /memory/{id}</code> detaches
+and deletes the node and its point (<code>memory.py:996-1023</code>);
+<code>DELETE /memory/by-tag</code> loops pages of 200 until none match
+(<code>:1026-1077</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>node, point id</td>
+<td>server-minted UUID; a client id is ignored</td>
+</tr>
+<tr>
+<td><code>content</code>, <code>summary</code></td>
+<td>node, payload</td>
+<td>summary written by enrichment</td>
+</tr>
+<tr>
+<td><code>tags</code>, <code>tag_prefixes</code></td>
+<td>node, payload</td>
+<td>enrichment appends <code>entity:category:slug</code> tags</td>
+</tr>
+<tr>
+<td><code>importance</code></td>
+<td>node, payload</td>
+<td>0 to 1, caller-set, ranks</td>
+</tr>
+<tr>
+<td><code>type</code>, <code>confidence</code></td>
+<td>node, payload</td>
+<td>seven types; confidence is the classifier's</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>node, payload</td>
+<td>creation time; a caller may supply it and a PATCH may overwrite
+it</td>
+</tr>
+<tr>
+<td><code>t_valid</code>, <code>t_invalid</code></td>
+<td>node; payload only on some writers</td>
+<td>the validity window</td>
+</tr>
+<tr>
+<td><code>updated_at</code>, <code>last_accessed</code></td>
+<td>node, payload</td>
+<td><code>last_accessed</code> bumped on read</td>
+</tr>
+<tr>
+<td><code>archived</code>, <code>archived_at</code>,
+<code>relevance_score</code></td>
+<td>node, some payloads</td>
+<td>written by consolidation</td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td>node as JSON, payload as object</td>
+<td>free-form</td>
+</tr>
+</tbody>
+</table></div>
+<p>Relationships are typed edges. Eleven types are authorable through
+<code>/associate</code>, three more are system-only, and the recall pass
+reads two.</p>
+<p><strong>The validity window has two writers that disagree.</strong>
+The store handler puts <code>t_valid</code> and <code>t_invalid</code>
+in the Qdrant payload when it writes the point itself
+(<code>memory.py:691-707</code>). The embedding worker, which writes the
+point in the default case, lists eleven payload fields and omits both,
+along with <code>archived</code>
+(<code>automem/embedding/runtime_pipeline.py:161-181</code>). The update
+handler writes them again when it upserts. Which copy a memory has
+depends on which path last wrote its point.</p>
+<p><strong><code>updated_at</code> does not move on update.</strong> The
+PATCH handler takes
+<code>payload.get("updated_at", current.get("updated_at", …))</code>
+(<code>memory.py:859</code>), so an edit leaves the previous value in
+place unless the caller sends one. The mcp-automem session-start prompt
+recalls preferences sorted by <code>updated_desc</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Ranked recall runs up to three candidate arms per query: Qdrant
+vector search with a tag filter and an exclusion of
+<code>MetaPattern</code> types, a graph keyword search, and a metadata
+search (<code>recall.py:1960-2040</code>). Vector hits come first and
+the graph arms skip ids already seen, so a memory found by both carries
+the Qdrant payload as its memory. Scores blend vector, keyword,
+metadata, relation, tag, importance, confidence, recency and exact-match
+terms with fixed weights
+(<code>automem/utils/scoring.py:250-262</code>). Optional relation and
+entity expansion add neighbours; <code>scope_fallback</code>, off by
+default, tops up a tag-scoped result from an unscoped vector search and
+labels the fills <code>outside_tag_scope</code>.</p>
+<p>The current-state pass runs last over the combined list, and again
+over fallback fills (<code>recall.py:2300-2313</code>,
+<code>:894-906</code>). Its payload-level check reads
+<code>archived</code>, <code>t_valid</code> and <code>t_invalid</code>
+off whatever memory dict the result carries. Its edge-level check
+queries the graph by id.</p>
+<p><strong>So the vector arm misses a window set at store time.</strong>
+A memory stored on 1 March with <code>t_invalid</code> set to 8 March,
+and no caller-supplied embedding, gets a payload without it. On 9 March
+a vector hit carries no <code>t_invalid</code>, the payload check
+passes, and no supersession edge exists to catch it. The graph arms read
+the node and would withhold it, but they skip ids the vector arm already
+returned. A supersession is caught either way, because the edge check
+goes to the graph.</p>
+<p><strong>Two modes skip the pass.</strong>
+<code>GET /memory/{id}</code> returns any node, and
+<code>GET /memory/by-tag</code> filters only on tags
+(<code>memory.py:311-318</code>). <code>GET /startup-recall</code>
+selects by tag with no state predicate
+(<code>recall.py:2696-2753</code>); no mcp-automem file calls it.</p>
+<p>Decay runs daily and writes <code>relevance_score</code>, which the
+final score weights at <code>0.0</code> by default
+(<code>automem/config.py:484</code>), so decay changes no ranking unless
+an operator sets the weight.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit HTTP calls. The service adds no deduplication:
+every store mints a new UUID.</p>
+<p><strong>An update does not re-enrich.</strong> The PATCH handler
+neither enqueues enrichment nor resets <code>processed</code>, and it
+keeps the current tags when none are sent
+(<code>memory.py:848-849</code>). Entity tags derived from the replaced
+text stay on the memory, and entity expansion selects by those tags
+(<code>recall.py:1445</code>).</p>
+<p><strong>Enrichment writes metadata and tags wholesale.</strong>
+<code>enrich_memory</code> reads the node, computes entities, links and
+a summary, then sets <code>metadata</code> and <code>tags</code> from
+its own read
+(<code>automem/enrichment/runtime_orchestration.py:191-283</code>). A
+PATCH landing between the read and the write is overwritten. The window
+is the enrichment job's duration; this was read, not reproduced.</p>
+<p><strong>Consolidation names its own collection.</strong> Every Qdrant
+call in <code>consolidation.py</code> passes
+<code>collection_name="memories"</code>, at six sites including the
+forget step's delete and archive payload (<code>:715</code>,
+<code>:779</code>), while the rest of the service uses
+<code>QDRANT_COLLECTION</code> (<code>automem/config.py:14</code>), and
+<code>docs/QDRANT_SETUP.md:225-227</code> suggests per-environment
+names. Under a custom name, an enabled forget step deletes or archives
+the node and leaves the vector point as it was.</p>
+<p><strong>Recovery from Qdrant drops the correction state.</strong>
+<code>scripts/recover_from_qdrant.py</code> rebuilds each node with
+<code>CREATE</code> from the payload's content, timestamp, importance,
+type, confidence and tags, with metadata keys flattened into node
+properties (<code>:85-120</code>). It writes no <code>t_valid</code>,
+<code>t_invalid</code> or <code>archived</code> and no edges, although
+its docstring says the API "will rebuild all graph relationships".</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: one graph <code>MERGE</code>; a model call for
+classification, and another for summarization over 500 characters, when
+a key is configured; an embedding and an enrichment job queued.</li>
+<li>Background: embedding and enrichment workers; decay daily, creative
+association weekly, clustering monthly; forgetting off.</li>
+<li>Read: one to three arms per query plus batched edge queries per
+supersession hop, up to five.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong><a
+href="https://github.com/verygoodplugins/mcp-automem">mcp-automem</a></strong>,
+read at <a
+href="https://github.com/verygoodplugins/mcp-automem/commit/9a0bbf754dd31db524da25638b0e97907e32ff37"><code class="commit-id" title="9a0bbf754dd31db524da25638b0e97907e32ff37">9a0bbf75…</code></a>
+(25 August 2026, MIT), is the main surface. It is 18,397 lines of
+TypeScript outside tests, 12,429 of them an installer that configures
+Claude Code, Codex, Cursor, OpenClaw, Hermes and Grok, with Copilot and
+Claude Desktop set up separately. Its local install clones this
+repository's default branch (<code>src/cli/install.ts:289</code>,
+<code>:1460</code>). At the client's pin date that head was <a
+href="https://github.com/verygoodplugins/automem/commit/969755deb47934125d4face18816f3a1039766a7"><code class="commit-id" title="969755deb47934125d4face18816f3a1039766a7">969755de…</code></a>;
+<code>recall.py</code>, the embedding pipeline, enrichment and
+<code>consolidation.py</code> are byte-identical to the revision read
+here.</p>
+<p>The client's six stdio tools map onto the routes.
+<code>store_memory</code> exposes <code>t_valid</code> and
+<code>t_invalid</code> to the agent
+(<code>src/mcp-surface.ts:189-198</code>) and adds the supersede mode
+(<code>src/automem-client.ts:299-366</code>). <code>recall_memory</code>
+chooses id fetch, tag listing or ranked recall by argument, rejects
+ranked-only parameters in listing mode, and maps results through
+<code>mapStoredMemory</code>, which keeps none of <code>t_valid</code>,
+<code>t_invalid</code> or <code>archived</code> (<code>:75-89</code>). A
+superseded memory listed by tag therefore reads as current.</p>
+<p>The client never replays a POST after an unparseable response,
+because a committed store with a truncated body <em>"would mint a second
+UUID"</em> (<code>src/automem-client.ts:212-227</code>). Its
+SessionStart hook prints a recall prompt with
+<code>PROJECT=$(basename "$PWD")</code> as the tag gate
+(<code>src/memory-policy/shared.ts:245-283</code>); the model runs it.
+The OpenClaw plugin recalls automatically before each prompt
+(<code>src/openclaw-plugin.ts:669-789</code>), merging default tags into
+every store and none into recall.</p>
+<p>The agent holds every verb, including <code>delete_memory</code> by
+tag, whose description says <em>"There is NO dry-run"</em>
+(<code>src/mcp-surface.ts:900</code>).</p>
+<p>This repository also ships <code>mcp-sse-server/server.js</code>, an
+SSE and streamable-HTTP MCP bridge with the same six tool names and no
+supersede mode, and a parity harness that compares it with the published
+client.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The read side substitutes rather than merely hides</strong>,
+so a question whose best match is a superseded memory still gets the
+current answer. The edge walk is bounded at five hops and
+cycle-safe.</p>
+<p><strong>Scope is advisory.</strong> There is no user, project or
+agent key on the row and no scope argument on any route. The client's
+project tag comes from prompt text, and any holder of the one token
+reads and deletes everything.</p>
+<p><strong>Privacy.</strong> Content over 500 characters is sent to the
+classification model for summarization, and the original is kept in
+metadata.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>bitemporal</code> — awarded; the validity window is
+caller-settable, stored beside the record clock, and applied by default.
+The limits in the evidence record are real: validity is compared only
+with now, and corrections carry no system time of their own.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — supersession is keyed on the record, and
+delete removes the node. Nothing keyed on rejected text stops a client
+storing it again.</li>
+<li><code>trust_state</code> — no status field. <code>confidence</code>
+is the type classifier's and ranks. <code>archived</code> is a decay
+outcome, off by default. The client's supersede keys
+<code>deprecated</code> and <code>superseded_by</code> are read by
+nothing in the service.</li>
+<li><code>scope_enforced</code> — tags are a filter the caller may pass,
+not a scope key; <code>scope_fallback</code> lifts even that.</li>
+<li><code>audit_log</code> — <code>emit_event</code> puts store, update
+and delete events on in-memory SSE queues and drops them when a
+subscriber is slow (<code>automem/api/stream.py:48-70</code>).
+Consolidation persists run summaries, not per-memory mutations.</li>
+<li><code>human_review</code> — no queue. The graph viewer displays, and
+every client holds update and both deletes.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report. CI runs
+<code>pytest tests/</code> without the benchmarks directory
+(<code>.github/workflows/ci.yml:85-87</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>test_recall_current_only_filters_temporal_state</code> seeds three
+memories under one tag, the two stale ones at higher importance, and
+asserts default recall returns only the active one with reasons
+<code>expired</code> and <code>not_yet_valid</code>, then that
+<code>current_only=false</code> returns all three
+(<code>tests/test_api_endpoints.py:1201-1248</code>). The replacement
+case asserts that at <code>limit=1</code> a superseded importance-1.0
+memory is absent and its 0.1 replacement returned, for both relations
+(<code>:1397-1426</code>).</p>
+<p><strong>Why the vector-arm gap passes.</strong> The helper writes
+memories straight into a fake graph
+(<code>tests/test_api_endpoints.py:1180-1198</code>), so no case stores
+through the handler and lets the embedding worker build the payload. The
+assertion is on the filter's output given a memory dict, not on the dict
+the vector arm produces.</p>
+<p>The mcp-automem client's 986 Vitest cases mock <code>fetch</code> and
+assert request shapes, including the supersede sequence and both failure
+paths.</p>
+<p><strong>Benchmarks.</strong> The README reports LoCoMo and
+LongMemEval on the project's own harness with a self-hosted judge and
+states that the judge alone moves scores by about 12 points, and
+separately reports runs on a third-party benchmark. None were run here.
+<code>docs/RESEARCH.md</code> cites HippoRAG 2 and three other papers as
+design sources; the tree carries no paper of its own.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make "current" the default read, and substitute rather than
+drop.</strong> Walking a supersession chain to its head, bounded and
+cycle-safe, answers the question the caller asked instead of returning
+nothing.</li>
+<li><strong>Exclude internal artifacts at one chokepoint.</strong>
+<code>_result_passes_filters</code> drops <code>MetaPattern</code> rows
+for every arm and expansion path
+(<code>automem/search/runtime_recall_helpers.py:398-406</code>).</li>
+<li><strong>Ship destructive maintenance disabled.</strong> Forget
+interval and thresholds default to zero
+(<code>automem/config.py:40-42</code>, <code>:64-65</code>).</li>
+<li><strong>Mint ids on the server.</strong> A client-chosen id cannot
+overwrite another memory.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two writers of one payload with different field
+lists.</strong> Build the vector payload in one function and test the
+filter against a point the default path wrote.</li>
+<li><strong>Read modes that bypass the state predicate.</strong></li>
+<li><strong>A recovery path that rebuilds rows from a
+projection.</strong> The vector payload is a partial copy; restoring
+from it loses whatever it never carried.</li>
+<li><strong>Literal store names inside a maintenance job</strong> when
+the rest of the service reads them from configuration.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants a shared graph-vector memory across
+several agent hosts, runs the service themselves, and values a default
+recall that prefers the current version of a fact. It does not suit
+several people or projects on one service: there is no scope key, one
+token opens everything, and a client can bulk-delete by tag. A reader
+borrowing the current-state pass should borrow the edge walk and the
+default, and put the validity window wherever every read arm will see
+it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Which revision does the Railway template deploy, and does its image
+track <code>main</code> or a tag?</li>
+<li>How often do clients set <code>t_invalid</code> at store time,
+rather than through supersession? That is the case the vector arm
+misses.</li>
+<li>Is <code>automem/api/runtime_memory_routes.py</code> a staged
+replacement or a leftover?</li>
+<li>Does <code>scripts/restore_from_backup.py</code>, which restores
+from a full export, replace <code>recover_from_qdrant.py</code> for
+every documented recovery?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Write:</strong> <code>automem/api/memory.py</code>,
+<code>automem/embedding/runtime_pipeline.py</code>,
+<code>automem/enrichment/runtime_orchestration.py</code>,
+<code>automem/utils/text.py</code>.</li>
+<li><strong>Read:</strong> <code>automem/api/recall.py</code>,
+<code>automem/search/runtime_recall_helpers.py</code>,
+<code>automem/utils/scoring.py</code>.</li>
+<li><strong>Background:</strong> <code>consolidation.py</code>,
+<code>automem/consolidation/runtime_scheduler.py</code>,
+<code>automem/config.py</code>.</li>
+<li><strong>Events, auth, wiring:</strong>
+<code>automem/api/stream.py</code>,
+<code>automem/api/auth_helpers.py</code>,
+<code>automem/api/runtime_bootstrap.py</code>, <code>app.py</code>.</li>
+<li><strong>Operator scripts:</strong>
+<code>scripts/recover_from_qdrant.py</code>,
+<code>scripts/restore_from_backup.py</code>.</li>
+<li><strong>MCP bridge:</strong> <code>mcp-sse-server/server.js</code>,
+<code>mcp-sse-server/parity/</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_api_endpoints.py</code>,
+<code>tests/support/fake_graph.py</code>.</li>
+<li><strong>Client (mcp-automem at its pin):</strong>
+<code>src/mcp-surface.ts</code>, <code>src/automem-client.ts</code>,
+<code>src/memory-policy/shared.ts</code>,
+<code>src/openclaw-plugin.ts</code>,
+<code>src/cli/install.ts</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, and mcp-automem
+at <code class="commit-id" title="9a0bbf754dd31db524da25638b0e97907e32ff37">9a0bbf75…</code> where
+marked.</p>
+<ul>
+<li><code>grep -rnE 'deprecated|superseded_by|supersede_reason' --include='*.py' .</code>,
+excluding <code>tests/</code> — no match; the client's supersede keys
+have no reader.</li>
+<li><code>grep -rn 't_invalid' automem/embedding automem/enrichment automem/sync</code>
+— no match; the embedding, enrichment and sync writers never set the
+window.</li>
+<li><code>grep -n 't_valid\|t_invalid\|archived' scripts/recover_from_qdrant.py</code>
+— no match.</li>
+<li><code>grep -n 'processed\|enqueue' automem/api/memory.py</code> —
+enrichment enqueued at <code>:776</code> and <code>:1459</code> only,
+both store paths; none in <code>update</code>.</li>
+<li><code>grep -rn 'runtime_memory_routes' --include='*.py' .</code> —
+no match; the module has no importer.</li>
+<li><code>grep -n 'collection_name="memories"' consolidation.py</code> —
+six sites: <code>:375</code>, <code>:715</code>, <code>:743</code>,
+<code>:779</code>, <code>:801</code>, <code>:1104</code>.</li>
+<li><code>grep -rniE 'tenant|user_id|namespace|workspace_id|project_id|isolation' --include='*.py' automem app.py consolidation.py</code>
+— one match, a comment about <code>SimpleNamespace</code>; no scope
+key.</li>
+<li><code>grep -n 'supersede' mcp-sse-server/server.js</code> — no
+match; the bridge has no supersede mode.</li>
+<li><code>grep -rn 'startup-recall'</code> over mcp-automem's
+<code>.ts</code>, <code>.sh</code>, <code>.py</code>, <code>.md</code>,
+<code>.mjs</code> and <code>.ps1</code> files — no match.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git</code>
+— <code>README.md</code>, <code>docs/RESEARCH.md</code>,
+<code>docs/TESTING.md</code>, <code>benchmarks/EXPERIMENT_LOG.md</code>
+and one benchmark test, all links to other papers; no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/verygoodplugins/automem/commit/0e8c4174b799abb9eab3370400a80ea9e8ad1f02"><code class="commit-id" title="0e8c4174b799abb9eab3370400a80ea9e8ad1f02">0e8c4174…</code></a>
+— first reading, at the head of the default branch <code>develop</code>,
+a commit dated 28 August 2026. Two marks, <code>bitemporal</code> and
+<code>negative_eval</code>. The mcp-automem client was read at <a
+href="https://github.com/verygoodplugins/mcp-automem/commit/9a0bbf754dd31db524da25638b0e97907e32ff37"><code class="commit-id" title="9a0bbf754dd31db524da25638b0e97907e32ff37">9a0bbf75…</code></a>
+for the integration surface. Screened before reading: no auto-run
+surface, 3 build-time execution points (<code>Makefile</code>, two
+<code>conftest.py</code>), 4 unpinned surfaces, nothing inside the
+cooldown, and <code>AGENTS.md</code> and <code>CLAUDE.md</code> recorded
+as data. The client's screen showed 2 auto-run surfaces, 2 build-time
+points, 1 unpinned manifest and nothing inside the cooldown. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

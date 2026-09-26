@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 638 reports.</strong></p>
+<p><strong>This page covers all 639 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26274,6 +26274,49 @@ terms.</li>
 isolated per project, or deletion must reach every machine. The approve
 verbs are all on the MCP surface, and the ledger and bridge keep what
 was deleted.</li>
+</ul>
+<h3 id="automem"><a
+href="../systems/automem/"><code>automem</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the current version of a fact the default
+answer, and substitute rather than drop.</strong> Ranked recall defaults
+<code>current_only</code> to true, withholds a memory whose validity
+window has closed or not yet opened, follows <code>INVALIDATED_BY</code>
+and <code>EVOLVED_INTO</code> edges up to five hops with a per-source
+visited set, and returns the chain head marked
+<code>state_replacement</code> with a pointer to what it replaced.</li>
+<li>Biggest risk: <strong>the vector arm does not see a window set at
+store time.</strong> The embedding worker, which writes the Qdrant point
+whenever the caller supplies no embedding, builds a payload without
+<code>t_valid</code>, <code>t_invalid</code> or <code>archived</code>; a
+vector hit's memory is that payload, and the graph arms skip ids the
+vector arm already returned. The negative tests seed a fake graph
+directly, so none reaches the worker.</li>
+<li>Most reusable component:
+<code>_active_replacements_for_memories</code> and
+<code>_apply_current_state_filter</code> in
+<code>automem/api/recall.py</code> (lines 525-724) — a batched, bounded,
+cycle-safe supersession walk that injects the current head with
+provenance.</li>
+<li>Second risk: <strong>nothing bounds who sees or removes
+what.</strong> There is no scope key on the row and one bearer token
+opens the whole graph; bulk delete by tag has no dry run; tag listing
+and id fetch skip the state pass; and
+<code>scripts/recover_from_qdrant.py</code> rebuilds nodes from the
+payload with no validity fields and no edges, so a restore through it
+makes every superseded memory current.</li>
+<li>Maturity impression: MIT, 19,197 lines of Python in the service
+core, 480 commits on <code>develop</code> by 14 contributors between 16
+September 2025 and 28 August 2026, and 623 test functions run in CI,
+including negative recall cases with positive controls. The mcp-automem
+client adds 18,397 lines of TypeScript and 986 mocked test cases.</li>
+<li>Study when: you are adding supersession to a memory store and want
+the read side to answer with the current version rather than hide the
+stale one.</li>
+<li>Do not copy when: more than one person or project shares the store,
+or when the vector index is written by more than one code path — build
+the payload in one function and test the state filter on a point the
+default path wrote.</li>
 </ul>
         </article>
       </div>
