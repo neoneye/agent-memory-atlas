@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted .NET MCP server
+storing titled Markdown memories in Postgres with hybrid search,
+per-edit version snapshots, and an optional project or workspace
+scope.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memorizer — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted .NET MCP
+server storing titled Markdown memories in Postgres with hybrid search,
+per-edit version snapshots, and an optional project or workspace
+scope.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memorizer — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted .NET MCP
+server storing titled Markdown memories in Postgres with hybrid search,
+per-edit version snapshots, and an optional project or workspace
+scope.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memorizer — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memorizer",
+      "description": "A self-hosted .NET MCP server storing titled Markdown memories in Postgres with hybrid search, per-edit version snapshots, and an optional project or workspace scope.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Self-hosted MCP memory service on Postgres
+and pgvector</p>
+          <h1>Memorizer</h1>
+          <p class="document-deck">A self-hosted .NET MCP server storing
+titled Markdown memories in Postgres with hybrid search, per-edit
+version snapshots, and an optional project or workspace scope.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/petabridge/memorizer">
+              <span>Source</span>
+              <strong>petabridge/memorizer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/petabridge/memorizer/commit/0c043e4c0af20e92af5b9f18b8fd939780a025cf" title="0c043e4c0af20e92af5b9f18b8fd939780a025cf">
+              <span>Analyzed revision</span>
+              <code>0c043e4c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/petabridge--memorizer" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>petabridge--memorizer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>20,281
+lines of C# outside tests, 8,326 of Razor views and 634 of SQL
+migrations; the storage class is 4,207 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>160
+commits on dev by 6 contributors, 15 July 2025 – 11 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>402
+xUnit test methods in 13,700 lines; the integration suite runs against
+Testcontainers Postgres and Ollama in CI</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memorizer is a self-hosted memory service for coding agents, written
+in .NET and maintained by Petabridge from a fork of Dario Griffo's
+<code>postg-mem</code>. An agent connects over MCP and stores titled
+Markdown documents in Postgres, finds them by hybrid search, edits them
+by find-and-replace, and organises them into workspaces and projects. A
+web UI on the same port lets a person browse, edit, diff and revert the
+same rows.</p>
+<p>What is notable is the editing model. Every edit, metadata change and
+revert snapshots the prior state and writes a change event in one
+transaction, so a bad edit is one <code>revert_to_version</code> away.
+The retrieval choice is argued from a committed evaluation corpus,
+recorded in an ADR, rather than asserted.</p>
+<p>What is weak is the record around the edits. The event vocabulary
+declares six change types and two have producers. Deleting a memory
+cascades its history away, and a time-based purge deletes events
+outright. <code>delete_workspace</code> reports moving memories it does
+not move. No inbound authentication exists.</p>
+<p>The design is document-shaped rather than fact-shaped. A memory is
+closer to a wiki page than to an extracted claim: the agent writes it,
+rewrites it, and checks items off inside it. Nothing extracts,
+consolidates or judges. That is the right shape for plans, checklists
+and reference notes an agent maintains across sessions, and it leaves
+every question of truth to whoever writes.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is whatever the caller stores: a title, a Markdown body, a
+free-text type and source, tags, a confidence number, an owner and an
+archetype. It becomes live the moment <code>store</code> commits. There
+is no candidate state, no extraction, and no model call on the way in.
+It stops being live in one of three ways: <code>archive_memory</code>
+hides it from default reads, <code>delete</code> removes it with its
+history, or a later <code>edit</code> replaces its text in place.</p>
+<p><strong>Archetype is the only state, and it is a visibility
+switch.</strong> <code>document</code> and <code>record</code> are
+admitted by every default read. <code>archived</code> is admitted only
+when a caller passes <code>includeArchived</code>. <code>system</code>
+holds internal index rows for project and workspace search and is
+admitted only by that search
+(<code>src/Memorizer/Services/Memory.cs:1454-1463</code>). The archive
+tool describes its effect as <em>"marking it as obsolete"</em>, and the
+<code>maintain_memory</code> prompt tells the agent to archive anything
+<em>"old or not useful"</em>. Obsolete and wrong are the same state.</p>
+<p><strong>The caller picks the archetype, including the hidden
+ones.</strong> <code>store</code> passes its <code>archetype</code>
+string to <code>ParseArchetype</code>, which maps <code>archived</code>,
+<code>obsolete</code> and <code>system</code> as readily as
+<code>document</code>
+(<code>src/Memorizer/Models/Enums/ArchetypeEnum.cs:67-80</code>). The
+tool's description names only <code>document</code> and
+<code>record</code>. A memory stored with <code>system</code> never
+appears in <code>search_memories</code>, <code>get_by_filter</code> or a
+project listing, and no tool lists system rows.</p>
+<p><strong>A record is described as immutable and is not.</strong> The
+enum comment calls <code>record</code> a <em>"historical, immutable
+record"</em> and <code>IsMutable()</code> returns false for it
+(<code>ArchetypeEnum.cs:85-88</code>). Nothing outside the test projects
+calls <code>IsMutable()</code>: <code>edit</code>,
+<code>update_metadata</code> and <code>revert_to_version</code> rewrite
+a record exactly as they rewrite a document.</p>
+<p><strong>Versions are the correction mechanism.</strong> An update
+copies the pre-edit row into <code>memory_versions</code> and writes one
+<code>memory_events</code> row, then overwrites <code>memories</code>
+and re-embeds (<code>Memory.cs:1086-1102</code>). A revert snapshots the
+current state before restoring an older one, so a revert can itself be
+reverted. The history lives only as long as the row:
+<code>memory_versions</code> and <code>memory_events</code> both
+reference <code>memories(id) ON DELETE CASCADE</code>
+(<code>src/Memorizer/migrations/008_add_memory_versioning.sql:19</code>,
+<code>:56</code>).</p>
+<p>Retrieval presents every hit as equally settled.
+<code>confidence</code> is stored, displayed by <code>get</code>, and
+read by no WHERE clause or ranking term.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Memorizer memory becomes visible, how it changes, and the ways it leaves default reads</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Memorizer memory becomes visible, how it changes, and the ways it leaves default reads
+flowchart TB
+    ST[&quot;store: title, text, type, tags,&lt;br/&gt;owner, archetype string&quot;] --&gt; EMB[&quot;two embeddings generated&lt;br/&gt;synchronously, one INSERT,&lt;br/&gt;no version, no event&quot;]
+    EMB --&gt; AR{&quot;archetype the&lt;br/&gt;caller named&quot;}
+    AR -- &quot;document, record&lt;br/&gt;or anything unknown&quot; --&gt; LIVE[&quot;live: admitted by&lt;br/&gt;every default read&quot;]
+    AR -- &quot;archived, obsolete,&lt;br/&gt;system or sys&quot; --&gt; HID[&quot;hidden at birth:&lt;br/&gt;no default read admits it&quot;]
+    LIVE -- &quot;edit, update_metadata,&lt;br/&gt;revert_to_version&quot; --&gt; TX[&quot;one transaction: snapshot old row,&lt;br/&gt;one content_updated or&lt;br/&gt;memory_reverted event, re-embed&quot;]
+    TX --&gt; LIVE
+    LIVE -- &quot;archive_memory&quot; --&gt; ARC[&quot;archived: read only with&lt;br/&gt;includeArchived or list_archived&quot;]
+    ARC -- &quot;restore_memory&quot; --&gt; LIVE
+    LIVE -- &quot;delete&quot; --&gt; GONE[&quot;row deleted; versions and&lt;br/&gt;events cascade with it&quot;]
+    ARC -- &quot;delete&quot; --&gt; GONE
+    PURGE[&quot;version purge tool:&lt;br/&gt;events older than N days&quot;] -. &quot;DELETE FROM memory_events&quot; .-&gt; TX
+    LIVE --&gt; Q{&quot;search_memories&quot;}
+    Q -- &quot;projectId or workspaceId given&quot; --&gt; SC[&quot;owner predicate on&lt;br/&gt;both search legs&quot;]
+    Q -- &quot;neither given&quot; --&gt; ALL[&quot;every workspace&lt;br/&gt;and project&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One ASP.NET Core process serves three surfaces on one port: the MCP
+server at <code>/mcp</code> over stateless Streamable HTTP, an MVC web
+UI at <code>/</code>, and a REST API under <code>/api/</code>
+(<code>src/Memorizer/Program.cs:43-51</code>, <code>:129</code>). All
+three call one scoped <code>Storage</code> class that issues
+hand-written SQL through Npgsql (<code>Memory.cs:445-460</code>).
+Akka.NET hosts four background actors, each started from the
+<code>/tools</code> page of the UI and reporting progress over
+server-sent events (<code>src/Memorizer/Routes.cs</code>).</p>
+<p>Persistence is one Postgres database with the <code>vector</code>
+extension. Twenty-one numbered migrations run at startup through
+<code>SchemaMigrator</code>. Embeddings come from Ollama or an
+OpenAI-compatible endpoint, configured at startup and editable in the
+UI. An LLM provider is configured beside it and used only by the
+title-generation actor.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The documented path is <code>docker-compose up -d</code>, which
+starts <code>pgvector/pgvector:pg17</code>, pgAdmin, Ollama and the
+<code>petabridge/memorizer:latest</code> image. Four services, all
+local, with no API key needed to store anything. It runs offline once
+Ollama has pulled the embedding model. Every store blocks on that model,
+so the service stores nothing while Ollama is down.</p>
+<p>The shipped compose file publishes Postgres on 5432 with
+<code>postgres/postgres</code> and Memorizer on 5000, both on all
+interfaces by Docker's default. It sets
+<code>ASPNETCORE_ENVIRONMENT=Development</code> for the Memorizer
+container.</p>
+<p>The store is repairable by hand in the way any Postgres table is, and
+pgAdmin ships in the compose file for that purpose. The version history
+makes most repairs unnecessary: the UI shows a diff between any two
+versions and reverts with one click.</p>
+<p>A fresh instance seeds sample content. <code>appsettings.json</code>
+sets <code>Seeding:Enabled</code> to true, and
+<code>InitializationService</code> calls <code>SeedAsync</code> at
+startup, which writes the 17 memories in
+<code>SeedData/seed-data.json</code> into sample workspaces when no
+workspace exists yet. An operator who does not want sample memories in
+an agent's search results has to turn it off.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>MemoryTools.Store</code> validates
+<code>text</code> and <code>title</code>, parses owner ids defensively,
+parses the archetype string, and calls <code>Storage.StoreMemory</code>
+(<code>src/Memorizer/Tools/MemoryTools.cs:33-119</code>).
+<code>StoreMemory</code> extracts a body from JSON keys
+<code>text</code>, <code>fact</code>, <code>observation</code> or
+<code>content</code> if the input parses as JSON, embeds title plus body
+and then title plus tags, and inserts one row
+(<code>Memory.cs:488-612</code>). It writes no version and no event. An
+optional relationship is inserted afterwards, outside any
+transaction.</p>
+<p><strong>Retrieval.</strong> <code>search_memories</code> calls
+<code>HybridSearch</code> with the caller's scope and archive flags
+(<code>MemoryTools.cs:360-371</code>). <code>HybridSearch</code> builds
+the owner and archetype predicates once and splices them into a vector
+query and a full-text query, each limited to
+<code>max(limit*3, 30)</code> rows, then fuses by RRF
+(<code>Memory.cs:1521-1700</code>). The HTTP routes
+<code>/api/memory/search</code> and
+<code>/api/memory/search/metadata</code> call
+<code>SearchWithMetadataEmbedding</code> instead, a single vector query
+that does apply a distance threshold
+(<code>src/Memorizer/Controllers/MemoryController.cs:535-620</code>).</p>
+<p><strong>Context assembly.</strong> There is none on the server.
+<code>search_memories</code> returns title, type, owner, archetype, tags
+and similarity per hit unless <code>Search:ReturnFullContent</code> is
+set (default false), and ends with the <code>get_many</code> call to
+make. <code>get</code> returns the full text, relationships, optional
+version history, and by default up to five similar memories from
+anywhere in the store (<code>MemoryTools.cs:523-737</code>).</p>
+<p><strong>Update.</strong> <code>edit</code> performs a
+find-and-replace on the stored text and calls <code>UpdateMemory</code>,
+as does <code>update_metadata</code>. <code>UpdateMemory</code> reads
+the row, computes a line diff and re-embeds both vectors. Then, in one
+transaction, it writes the snapshot and a <code>content_updated</code>
+event, updates the row, and prunes snapshots beyond
+<code>Versioning:MaxVersionsPerMemory</code> (50)
+(<code>Memory.cs:1005-1147</code>, <code>:465-486</code>).</p>
+<p><strong>Revert.</strong> <code>RevertToVersion</code> writes a
+<code>memory_reverted</code> event, snapshots the current state,
+restores the target snapshot and re-embeds, in one transaction
+(<code>Memory.cs:1983-2098</code>). Relationships are not restored: the
+snapshot records their ids and nothing reads them back.</p>
+<p><strong>Archive and delete.</strong>
+<code>UpdateMemoryArchetypeAsync</code> is one UPDATE with no event
+(<code>Memory.cs:4068-4092</code>). <code>Delete</code> is
+<code>DELETE FROM memories WHERE id = @id</code>, and the cascade takes
+versions, events and relationships (<code>Memory.cs:745-759</code>).</p>
+<p><strong>Ownership.</strong> <code>move_memory</code> and the UI's
+owner PATCH update <code>owner_type</code> and <code>owner_id</code>
+with no event (<code>Memory.cs:1248-1268</code>,
+<code>:3809-3826</code>). Deleting a project fires
+<code>trg_project_delete_move_memories</code>, which re-homes its
+memories to Unfiled
+(<code>migrations/015_add_project_delete_trigger.sql</code>). Deleting a
+workspace runs <code>DELETE FROM workspaces</code> and nothing else
+(<code>Memory.cs:2755-2769</code>).</p>
+<p><strong>Background.</strong> <code>VersionPurgeActor</code> calls
+<code>PurgeVersionsOlderThan</code>, which deletes every event older
+than the cutoff and every snapshot older than it except each memory's
+newest (<code>Memory.cs:2122-2163</code>).
+<code>TitleGenerationActor</code> asks the configured LLM for titles on
+untitled rows. <code>EmbeddingRegenerationActor</code> and
+<code>DimensionMigrationActor</code> rebuild vectors after a model
+change.</p>
+<p><strong>Tests.</strong> <code>src/Memorizer.IntegrationTests</code>
+boots Testcontainers Postgres and Ollama once per collection
+(<code>IntegrationTestFixture.cs</code>). The scoping, archive and
+versioning suites are described in section 10.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> carries <code>id</code>, <code>title</code>,
+<code>text</code>, a legacy <code>content</code> JSONB,
+<code>type_legacy</code> (free text), <code>memory_type</code> (a
+six-value enum no write path sets), <code>source</code>,
+<code>tags</code>, <code>confidence</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>current_version</code>,
+<code>owner_type</code>, <code>owner_id</code>, <code>archetype</code>,
+two <code>vector</code> columns and <code>search_vector</code>. The
+tsvector is maintained by a trigger weighting title A, tags B and body C
+(<code>migrations/020_add_full_text_search.sql</code>).</p>
+<p><strong>The owner is polymorphic and has no foreign key.</strong>
+<code>owner_type</code> is 0 for a workspace and 1 for a project, and
+<code>owner_id</code> is a UUID defaulting to the Unfiled workspace
+(<code>migrations/014_extend_memories.sql:15-17</code>). The project
+delete trigger keeps project-owned rows consistent. Nothing does the
+same for a workspace, so memories owned directly by a deleted workspace
+keep an <code>owner_id</code> pointing at nothing. Scoped reads then
+never reach them, and neither does the Unfiled filter, which matches the
+zero UUID.</p>
+<p><strong>Workspaces and projects nest without limit.</strong> Both
+have <code>parent_id</code>; projects also carry a status from draft to
+archived and free-text victory conditions. Each project and workspace
+gets a <code>system</code> archetype memory in the hidden <em>System
+Memories</em> workspace, whose text indexes its name and description for
+<code>SearchProjectsAsync</code> and
+<code>SearchWorkspacesAsync</code>.</p>
+<p><strong>History tables.</strong> <code>memory_versions</code> holds
+full snapshots without embeddings, unique on
+<code>(memory_id, version_number)</code>. <code>memory_events</code>
+holds <code>event_type</code>, <code>event_data</code> JSONB,
+<code>timestamp</code> and a nullable <code>changed_by</code>. Only
+<code>RevertToVersion</code> writes <code>changed_by</code>, from an
+optional string the caller supplies. An update's event is stamped with
+the pre-edit version number, while a revert's event carries the
+post-revert one, so <code>version_number</code> means different things
+by event type.</p>
+<p><strong>Relationships</strong> are typed edges with an optional
+similarity score. <code>created_in_version</code> and
+<code>deleted_in_version</code> exist on the table, set once by
+migration 008 and written by nothing in <code>src/Memorizer</code>. No
+path removes a relationship except the delete cascade.</p>
+<p>No field carries validity time. <code>created_at</code> and
+<code>updated_at</code> are record time, and a snapshot's
+<code>versioned_at</code> is when it was taken.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The primary search is two legs and a rank fusion.</strong>
+The vector leg orders by cosine distance on the title-plus-tags
+embedding, with no distance predicate. The lexical leg builds an AND of
+prefix terms (<code>postgres:* &amp; backup:*</code>) and ranks by
+<code>ts_rank_cd</code>. RRF adds <code>weight/(60 + rank)</code> per
+leg, with the lexical weight at 1.5 for queries of one or two words, and
+applies a 10 percent multiplier for a tag match
+(<code>Memory.cs:1541</code>, <code>:1613-1651</code>). The body reaches
+ranking only through the C-weighted tsvector; the body embedding is not
+queried here.</p>
+<p><strong>The similarity threshold is a documented no-op, and the tool
+still advertises it.</strong> <code>HybridSearch</code> accepts
+<code>minSimilarity</code> and never reads it. The ADR records this as
+intended, <em>"accepted but not applied"</em>, because a hard threshold
+caused zero-result queries
+(<code>docs/adr/2026-02-14-hybrid-search-rrf.md:58</code>). The MCP
+parameter is still described as a <em>"Minimum similarity
+threshold"</em> with a default of 0.7
+(<code>MemoryTools.cs:317</code>).</p>
+<p>The consequence is that <code>search_memories</code> cannot report
+that nothing relevant exists. On any non-empty scope the vector leg
+returns rows, so every query gets up to <code>limit</code> hits. The
+fallback that retries at a threshold 0.1 lower when nothing matched
+cannot find what the first call missed, since the value it lowers is not
+read (<code>MemoryTools.cs:378-410</code>).</p>
+<p><strong>Scope is a predicate, when asked for.</strong> With
+<code>projectId</code>, both legs add
+<code>owner_type = 1 AND owner_id = @projectId</code>, optionally OR the
+Unfiled workspace. With <code>workspaceId</code>, they admit the
+workspace's own rows and every row owned by a project in it
+(<code>Memory.cs:1425-1444</code>). With neither, the search spans the
+whole store. The two ids are mutually exclusive, enforced in the tool
+and again by <code>EnsureOwnerScopeExclusive</code>.</p>
+<p><strong><code>workspaceId</code> means two things.</strong> In
+<code>search_memories</code> it rolls up the workspace's projects. In
+<code>get_by_filter</code> it is an exact owner match, so the same id
+returns the workspace's direct memories only
+(<code>Memory.cs:3918-3922</code>).</p>
+<p><strong>The similar-memories list crosses every boundary.</strong>
+<code>get</code> defaults <code>includeSimilar</code> to true and calls
+<code>GetSimilarMemories</code>, whose SQL excludes archived and system
+rows and has no owner predicate (<code>Memory.cs:913-927</code>). Each
+<code>get</code> therefore puts up to five titles from any project into
+the agent's context. The parameter description says the comparison uses
+the content embedding; the query uses the metadata embedding.</p>
+<p>Injection is bounded by <code>limit</code> (default 10) and by the
+lightweight result format. Nothing is injected automatically, so the
+server never touches a provider's prompt-prefix cache.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. <code>store</code> blocks on two
+embedding calls and one INSERT; the memory is retrievable when the call
+returns. <code>edit</code> and <code>update_metadata</code> block on two
+embedding calls and a four-statement transaction. The
+<code>update_metadata</code> description promises no embedding
+regeneration, and it calls the same <code>UpdateMemory</code>, which
+regenerates both (<code>MemoryTools.cs:251</code>).</p>
+<p><strong>No deduplication or consolidation runs on the write
+path.</strong> The duplicate signal is surfaced to the agent instead:
+<code>get</code> lists similar memories and the tool text suggests
+consolidating them. The agent merges by editing one memory and archiving
+the other, which the <code>maintain_memory</code> prompt prescribes.</p>
+<p><strong>Conflict handling is last-write-wins on the row.</strong>
+<code>UpdateMemory</code> reads the current row outside its transaction
+and writes <code>current_version + 1</code> inside it. Two concurrent
+edits to one memory both compute the same next version. The snapshot
+insert uses <code>ON CONFLICT DO NOTHING</code>, so the second writer's
+snapshot is dropped and its UPDATE wins.</p>
+<p><strong>Agent-generated content is stored as given.</strong>
+<code>source</code> defaults to <code>LLM</code> and is otherwise
+whatever the caller passes. No filter looks at the text.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No LLM call sits on any memory write. Each store costs two embedding
+requests, and each search one embedding request and two SQL queries.
+Nothing rewrites the whole store on a schedule. Embedding regeneration
+and dimension migration re-embed everything, but only when an operator
+starts them after changing models. Per-search output is bounded by
+<code>limit</code> and the lightweight format; <code>get</code> returns
+the full body.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 21 tools across <code>MemoryTools</code> and
+<code>WorkspaceTools</code>, named in snake case as the MCP tests assert
+(<code>McpServerTests.cs:70-73</code>): <code>store</code>,
+<code>edit</code>, <code>update_metadata</code>,
+<code>search_memories</code>, <code>get</code>, <code>get_many</code>,
+<code>delete</code>, <code>create_reference</code>,
+<code>revert_to_version</code>, <code>archive_memory</code>,
+<code>restore_memory</code>, <code>get_by_filter</code> and
+<code>list_archived</code>, plus workspace and project CRUD,
+<code>get_project_context</code> and <code>move_memory</code>. Seven
+prompts describe workflows, and one resource returns the workspace tree
+(<code>src/Memorizer/Prompts/MemorizerPrompts.cs</code>,
+<code>src/Memorizer/Resources/MemorizerResources.cs</code>).</p>
+<p>The agent has every verb. It can create, rewrite, revert, archive,
+restore and permanently delete any memory in any workspace, with no
+confirmation on any of them. Retrieval is entirely tool-driven: no hook
+injects anything at session start, and the README asks the operator to
+paste a tool list into the agent's system prompt.</p>
+<p><code>ToolArgumentGuard</code> validates arguments at the CallTool
+boundary and returns a message the model can act on instead of the SDK's
+binding error. Ids accept a <code>doc-</code> prefix. These are the
+parts most easily lifted into another MCP server.</p>
+<p>Porting to another agent is trivial for any MCP client: one URL. The
+session lifecycle is the client's.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No inbound authentication exists.</strong>
+<code>Program.cs</code> registers no authentication scheme, and CORS
+defaults to any origin, any method and any header
+(<code>src/Memorizer/Settings/CorsSettings.cs:35-40</code>,
+<code>appsettings.json:24-29</code>). With the shipped defaults, any
+page open in a browser on the same machine can send
+<code>DELETE /api/memory/{id}</code> to the service and read its
+responses. <code>docs/security.md</code> recommends restricting origins
+for production; the defaults are open.</p>
+<p><strong>Provenance is caller-asserted.</strong> <code>source</code>
+is a free string and <code>changed_by</code> is recorded only on
+reverts, from a parameter. Nothing distinguishes a memory a person wrote
+in the UI from one an agent stored.</p>
+<p><strong>Prompt-injected memories have no gate.</strong> An agent that
+reads hostile text can store it, and a later session retrieves it with
+the same standing as anything else. The same agent can archive or delete
+the memories that would contradict it.</p>
+<p><strong>Deletion is thorough at the row and loses its own
+record.</strong> <code>delete</code> removes the memory, its snapshots
+and its events together. The embedding goes with the row. Nothing
+records that the memory existed.</p>
+<p><strong>One tool reports an effect it does not have.</strong>
+<code>delete_workspace</code> checks for child projects and workspaces,
+deletes the workspace, and returns <em>"N memories were moved to
+Unfiled"</em>
+(<code>src/Memorizer/Tools/WorkspaceTools.cs:331-386</code>). No trigger
+or statement moves them, and the HTTP route returns the same count as
+<code>memoriesMoved</code>. The memories survive with a dangling owner,
+reachable by an unscoped search or by id and by no scoped read.</p>
+<p><strong>Uncertainty cannot be represented as a state.</strong>
+<code>confidence</code> is a number no read consults, and
+<code>archived</code> means put away rather than disbelieved.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — awarded. The owner is a key on the
+row, and the search and listing reads apply it as a predicate when a
+scope is named. It is optional, unauthenticated, and bypassed by
+<code>get</code>, <code>get_many</code> and the similar list.</li>
+<li><code>negative_eval</code> — awarded, section 10.</li>
+<li><code>audit_log</code> — withheld. <code>memory_events</code> is
+written on the right path for updates and reverts, inside the same
+transaction, and it is not an append-only mutation record. Of six
+declared event types, <code>content_updated</code> and
+<code>memory_reverted</code> have producers. <code>memory_created</code>
+is written only by the migration 008 backfill, and
+<code>metadata_updated</code>, <code>relationship_added</code> and
+<code>relationship_removed</code> by nothing
+(<code>src/Memorizer/Models/MemoryEvent.cs:101-109</code>). Store,
+archive, restore, move and delete write no event.
+<code>PurgeVersionsOlderThan</code> deletes events by age
+(<code>Memory.cs:2128-2134</code>), and the cascade deletes them with
+their memory.</li>
+<li><code>trust_state</code> — withheld. <code>archived</code> filters,
+and it is a retention pair with the live archetypes, the call made for
+<a href="../lerim/">Lerim</a>. Nothing expresses <em>recorded but not
+believed</em>: the agent archives the obsolete and the wrong alike,
+restores either at will, and can store directly into a hidden
+archetype.</li>
+<li><code>human_review</code> — withheld. The web UI edits and reverts
+the same rows the agent's tools reach, after the write has landed. No
+memory waits on a person.</li>
+<li><code>tombstone</code> — withheld. <code>delete</code> removes the
+row and its history, and <code>archive</code> keeps the row keyed on its
+id. Nothing keyed on rejected text stops it being stored again.</li>
+<li><code>bitemporal</code> — withheld. No validity time exists.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report. Everything below is from
+reading the tests at the pin.</p>
+<p>CI runs <code>dotnet build</code> and <code>dotnet test</code> on
+<code>ubuntu-latest</code>
+(<code>.github/workflows/pr_validation.yml</code>). The integration
+fixture starts <code>pgvector/pgvector:pg17</code> and
+<code>ollama/ollama:latest</code> containers and pulls
+<code>all-minilm</code> before any test runs. No test in either project
+carries a <code>Skip</code>, so a run without Docker fails rather than
+passing empty.</p>
+<p><strong>The scope case is the strongest test in the tree.</strong>
+<code>SearchWithMetadataEmbedding_WithWorkspaceId_RollsUpWorkspaceAndProjects</code>
+stores five memories whose titles share a per-run nonce: one on
+workspace A, two in A's projects, one on workspace B and one in B's
+project. It searches workspace A with a threshold of zero and asserts
+the three A memories present and the two B memories absent
+(<code>McpToolsProjectScopingTests.cs:464-579</code>). The comment
+beside the nonce records why: a title mismatch had made the test
+flaky.</p>
+<p><strong>The archive case pairs exclusion with an exact
+count.</strong>
+<code>GetMemoriesByOwnerAsync_ExcludesArchivedMemories</code> stores
+five memories in one project, archives two, and asserts the listing
+holds exactly three rows, each active id, and neither archived id
+(<code>ArchivedMemoryTests.cs:254-336</code>). That listing is what
+<code>get_project_context</code> returns.</p>
+<p><strong>The weaker cases sit beside them.</strong>
+<code>SearchWithMetadataEmbedding_WithProjectId_FiltersCorrectly</code>
+asserts only <code>Assert.All(results, owner == project1)</code>, which
+passes on an empty result
+(<code>McpToolsProjectScopingTests.cs:255</code>, <code>:271</code>). No
+test runs <code>HybridSearch</code> against a database for results. The
+unit test for the MCP search asserts that the tool forwards
+<code>workspaceId</code> to a fake
+(<code>MemoryToolsCanonicalUrlTests.cs:182-202</code>). The one
+<code>record</code> immutability assertion checks the return value of
+<code>IsMutable()</code>, not an attempted edit
+(<code>McpToolsProjectScopingTests.cs:175</code>).</p>
+<p><strong>Versioning is well covered.</strong>
+<code>MemoryVersioningTests.cs</code> exercises pre-versioning rows,
+repeated edits, revert-the-revert and pruning past the cap, asserting
+the pruned version numbers are gone. Nothing tests event coverage, and
+nothing tests deleting a workspace that holds memories.</p>
+<p><strong>The retrieval eval is a harness, not a result.</strong>
+<code>SearchEval/synthetic_corpus.json</code> and
+<code>evaluation_queries.json</code> (30 queries with expected relevant
+ids) ship in the tree. <code>POST /api/search-eval/run</code> computes
+MRR, recall, hit rate and NDCG for three search methods at three
+thresholds against a live instance, and the ADR quotes a table from it.
+No run output is committed. <code>HybridSearch</code> ignores the
+threshold, so its three rows per run are the same search.</p>
+<p>No paper or citation file exists in the tree. The ADR's production
+figures come from a 2,335-memory dataset that is not committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Snapshot before overwrite, in the write's
+transaction.</strong> A full prior-state row per edit, plus a revert
+that snapshots before restoring, makes every agent edit reversible at
+the cost of one INSERT. Cap the count, and say so.</li>
+<li><strong>Keep a committed retrieval corpus and pick the ranker with
+it.</strong> The ADR table comparing three methods on MRR, recall and
+NDCG is a better argument for a ranking change than any description of
+it.</li>
+<li><strong>Share one predicate builder across every search
+method.</strong> The owner filter is one function spliced into both legs
+and into the older search, which is why a test against one method says
+something about the others.</li>
+<li><strong>Return correctable tool errors.</strong> Validate MCP
+arguments before binding and answer with the fix, not the
+exception.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An event vocabulary wider than its producers.</strong>
+Declaring six change types and writing two reads as an audit trail to
+anyone who reads the schema. Write the event on every mutation path, or
+declare only what is written.</li>
+<li><strong>Cascading history away with its subject.</strong> If the log
+is how a correction is explained, a delete is the correction most in
+need of a record, and a cascade removes it.</li>
+<li><strong>A parameter kept for compatibility after it stops
+working.</strong> An ignored threshold with a default and a description
+tells the model it is filtering. Remove it or rename it.</li>
+<li><strong>A caller-parsed visibility state.</strong> When a free-form
+string can select a hidden state, the agent can hide memories by
+accident. Accept only the states a caller is meant to set.</li>
+<li><strong>A tool message describing work the code does not
+do.</strong> A success string is read as fact by the agent and by the
+person watching it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer or a small trusted team on one machine
+or a private network, who want an agent to keep living documents —
+plans, checklists, specs, reference notes — organised by project, with a
+UI to see and undo what the agent did. The operator cost is a Docker
+compose file and an embedding model.</p>
+<p>Walk away if memory must be isolated between users, defended against
+hostile input, or explainable after a deletion. There is no user, no
+authentication and no durable record of what was removed. Walk away too
+if the agent should learn facts from conversation without being told to:
+nothing here extracts.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the published <code>petabridge/memorizer:latest</code> image
+carries <code>Seeding:Enabled</code> true, as
+<code>appsettings.json</code> does at the pin, and so seeds sample
+memories into every fresh deployment.</li>
+<li>Whether the <code>delete_workspace</code> message is known to be
+wrong upstream, or relied on a trigger that existed only on another
+branch.</li>
+<li>What the search eval reports on a store holding only the synthetic
+corpus. The harness searches unscoped, so on a working instance the
+user's own memories compete with the corpus.</li>
+<li><code>docker-compose.yml</code> sets
+<code>MEMORIZER_LLM__Chunking__*</code> variables, and two ADRs describe
+chunking; whether that feature was removed or never landed on
+<code>dev</code>.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong>
+<code>src/Memorizer/migrations/008_add_memory_versioning.sql</code>,
+<code>014_extend_memories.sql</code>,
+<code>015_add_project_delete_trigger.sql</code>,
+<code>016_add_archived_support.sql</code>,
+<code>017_add_system_archetype.sql</code>,
+<code>020_add_full_text_search.sql</code>.</li>
+<li><strong>Storage:</strong>
+<code>src/Memorizer/Services/Memory.cs</code> (<code>StoreMemory</code>,
+<code>UpdateMemory</code>, <code>HybridSearch</code>,
+<code>GetSimilarMemories</code>, <code>RevertToVersion</code>,
+<code>PurgeVersionsOlderThan</code>, <code>CreateVersionSnapshot</code>,
+<code>GetMemoriesByOwnerAsync</code>,
+<code>DeleteWorkspaceAsync</code>).</li>
+<li><strong>Model:</strong>
+<code>src/Memorizer/Models/Enums/ArchetypeEnum.cs</code>,
+<code>src/Memorizer/Models/MemoryEvent.cs</code>,
+<code>src/Memorizer/Models/Memory.cs</code>.</li>
+<li><strong>MCP:</strong>
+<code>src/Memorizer/Tools/MemoryTools.cs</code>,
+<code>src/Memorizer/Tools/WorkspaceTools.cs</code>,
+<code>src/Memorizer/Tools/ToolArgumentGuard.cs</code>,
+<code>src/Memorizer/Prompts/MemorizerPrompts.cs</code>,
+<code>src/Memorizer/Program.cs</code>.</li>
+<li><strong>HTTP and UI:</strong>
+<code>src/Memorizer/Controllers/MemoryController.cs</code>,
+<code>WorkspaceController.cs</code>,
+<code>SearchEvalController.cs</code>,
+<code>ToolsController.cs</code>.</li>
+<li><strong>Background:</strong>
+<code>src/Memorizer/Actors/VersionPurgeActor.cs</code>,
+<code>TitleGenerationActor.cs</code>,
+<code>EmbeddingRegenerationActor.cs</code>,
+<code>DimensionMigrationActor.cs</code>.</li>
+<li><strong>Decisions:</strong>
+<code>docs/adr/2026-02-14-hybrid-search-rrf.md</code>.</li>
+<li><strong>Tests:</strong>
+<code>src/Memorizer.IntegrationTests/McpToolsProjectScopingTests.cs</code>,
+<code>ArchivedMemoryTests.cs</code>,
+<code>MemoryVersioningTests.cs</code>,
+<code>MemoryToolsIntegrationTests.cs</code>,
+<code>Mcp/McpServerTests.cs</code>,
+<code>src/Memorizer.UnitTests/Tools/MemoryToolsCanonicalUrlTests.cs</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the
+repository root.</p>
+<ul>
+<li><code>grep -rn 'memory_events\|memory_versions' --include='*.cs' src | grep -v 'Tests/'</code>
+— inserts only in <code>Memory.cs</code> at <code>:2020</code> (revert)
+and <code>:2222</code> (<code>CreateVersionSnapshot</code>); deletes at
+<code>:479</code>, <code>:2112</code>, <code>:2131</code>,
+<code>:2142</code>.</li>
+<li><code>grep -rn 'CreateVersionSnapshot' --include='*.cs' src</code> —
+one caller, <code>UpdateMemory</code> at
+<code>Memory.cs:1095</code>.</li>
+<li><code>grep -rn 'new \(MemoryCreatedEvent\|ContentUpdatedEvent\|MetadataUpdatedEvent\|RelationshipAddedEvent\|RelationshipRemovedEvent\|MemoryRevertedEvent\)' --include='*.cs' src | grep -v Tests</code>
+— producers at <code>Memory.cs:1086</code> and <code>:2016</code>; the
+rest are deserializer fallbacks in <code>MemoryEvent.cs</code>.</li>
+<li><code>awk 'NR&gt;=1521 &amp;&amp; NR&lt;=1700 &amp;&amp; /minSimilarity|maxDistance|BuildDistanceFilter/' src/Memorizer/Services/Memory.cs</code>
+— one line, the signature at <code>:1524</code>.</li>
+<li><code>grep -rn 'IsMutable' --include='*.cs' src</code> — the
+definition and two test files; no production caller.</li>
+<li><code>grep -rn -i 'CREATE TRIGGER' src/Memorizer/migrations</code> —
+<code>trg_project_delete_move_memories</code> and
+<code>memories_search_vector_trigger</code>; none on
+<code>workspaces</code>.</li>
+<li><code>grep -rn 'deleted_in_version\|created_in_version' --include='*.cs' src</code>
+— one doc comment at <code>Memory.cs:2439</code>; no writer.</li>
+<li><code>grep -rn -i 'Authorize\|AddAuthentication\|Bearer' --include='*.cs' src | grep -v Tests</code>
+— outbound embedding and provider-test headers only.</li>
+<li><code>grep -rn -i 'order by.*confidence\|where.*confidence\|confidence *[&lt;&gt;]' --include='*.cs' src/Memorizer</code>
+— two matches, the <code>Confidence</code> value type's declaration and
+its JSON converter.</li>
+<li><code>grep -rn -i 'chunk' src --include='*.cs' | grep -v Tests</code>
+— streaming response chunks in
+<code>OllamaMemorizerAgentProvider.cs</code> only; no
+<code>Chunking</code> setting is read.</li>
+<li><code>grep -rn 'Skip' --include='*.cs' src/Memorizer.UnitTests src/Memorizer.IntegrationTests</code>
+— no match.</li>
+<li><code>grep -rniE 'tombstone|blocklist|denylist|rejected|suppress' src --include='*.cs' --include='*.sql' | grep -v Tests</code>
+— one comment in <code>ToolArgumentGuard.cs</code> about argument
+binding.</li>
+<li><code>grep -rniE 'valid_from|valid_to|valid_at|invalid_at|effective_' src --include='*.cs' --include='*.sql'</code>
+— no match.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match, and no <code>CITATION</code> file.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/petabridge/memorizer/commit/0c043e4c0af20e92af5b9f18b8fd939780a025cf"><code class="commit-id" title="0c043e4c0af20e92af5b9f18b8fd939780a025cf">0c043e4c…</code></a>
+— first reading, at the head of <code>dev</code>, a commit dated 11
+September 2026. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>. Screened before reading: no auto-run
+surface, no build-time execution point, nothing inside the cooldown, and
+three unpinned surfaces, each a <code>.csproj</code> whose versions are
+pinned exactly in <code>Directory.Packages.props</code> through central
+package management. <code>AGENT.md</code> and <code>CLAUDE.md</code>
+were recorded as data. Read with <code>grep</code> and <code>sed</code>;
+nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

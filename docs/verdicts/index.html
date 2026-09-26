@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 629 reports.</strong></p>
+<p><strong>This page covers all 630 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25857,6 +25857,52 @@ not in <code>core</code>, so taking the runtime gets you the contracts,
 the ladder and the dedupe and no facts at all — and the memory is a
 small fraction of a monorepo carrying a desktop app, local inference and
 a cloud service.</li>
+</ul>
+<h3 id="memorizer"><a
+href="../systems/memorizer/"><code>memorizer</code></a></h3>
+<ul>
+<li>Best idea: <strong>snapshot before overwrite, in the write's own
+transaction.</strong> <code>UpdateMemory</code> copies the pre-edit row
+into <code>memory_versions</code> and writes a change event before the
+UPDATE, and <code>RevertToVersion</code> snapshots the current state
+before restoring, so a revert can be reverted. The web UI diffs any two
+versions, which turns an agent's rewrite of a plan or checklist into
+something a person can inspect and undo.</li>
+<li>Biggest risk: <strong>the history ends where the memory
+does.</strong> <code>memory_events</code> and
+<code>memory_versions</code> cascade on delete, a purge tool deletes
+events by age, and store, archive, move and delete write no event at
+all. Of six declared event types two have producers, so the table reads
+as an audit trail and answers only "which edits and reverts happened to
+a memory that still exists".</li>
+<li>Most reusable component:
+<code>src/Memorizer/Tools/ToolArgumentGuard.cs</code> with the tool-side
+id parsing in <code>MemoryTools.cs</code> — validation at the MCP
+CallTool boundary that returns a message the model can correct against,
+instead of the SDK's binding error.</li>
+<li>Second risk: <strong>the search cannot say "nothing
+relevant".</strong> <code>HybridSearch</code> ignores
+<code>minSimilarity</code> by ADR, while the tool still advertises a 0.7
+default, so every non-empty scope returns hits. Beside it,
+<code>store</code> accepts <code>archetype: system</code> or
+<code>archived</code>, hiding a memory from every default read at
+birth.</li>
+<li>Maturity impression: MIT, 20,281 lines of C# outside tests, 160
+commits on <code>dev</code> by 6 contributors from July 2025 to
+September 2026, 402 xUnit test methods with an integration suite on
+Testcontainers Postgres and Ollama in CI. Two marks,
+<code>scope_enforced</code> and <code>negative_eval</code>, the second
+on a workspace-scope search and an archive-exclusion listing, each with
+a positive control. <code>HybridSearch</code> has no database-backed
+test.</li>
+<li>Study when: you want an agent-maintained document store — plans,
+checklists, specs — with per-edit versioning, a human-facing diff and
+revert UI, and project and workspace organisation behind one MCP
+URL.</li>
+<li>Do not copy when: memory must be isolated between users, explainable
+after a delete, or protected from a hostile page on the same machine.
+There is no authentication, CORS admits any origin by default, and a
+delete leaves no trace.</li>
 </ul>
         </article>
       </div>

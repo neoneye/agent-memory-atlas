@@ -493,6 +493,14 @@ check for: the schema is not the evidence, the call sites are.
 
 **[Membrane](../../systems/membrane/) is the cascade version of this failure.** Its audit table is genuinely insert-only with a closed action vocabulary — create, revise, fork, merge, delete, reinforce, decay — and, unusually, every value in it has a producer on a reachable path. The defeat is one clause in the schema: `record_id … ON DELETE CASCADE`. The prune pass writes its own audit entry and deletes the record in the same transaction, so the entry documenting the deletion is removed by the deletion it documents, along with the record's entire history. An audit meant to outlive what it describes cannot be keyed to it by a foreign key that cascades.
 
+**[Memorizer](../../systems/memorizer/) writes its events on the right path and
+too few of them.** Each edit and revert inserts a `memory_events` row inside the
+same transaction as the snapshot and the UPDATE, which is the placement this
+pattern asks for. The vocabulary declares six event types and two have
+producers; store, archive, move and delete write nothing, a purge tool deletes
+events by age, and `ON DELETE CASCADE` removes a memory's events with it — so
+the log explains edits to memories that still exist and nothing else.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

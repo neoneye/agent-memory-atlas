@@ -698,6 +698,15 @@ own audit entry and deletes the record in the same transaction, so the
 entry documenting the deletion is removed by the deletion it documents,
 along with the record's entire history. An audit meant to outlive what
 it describes cannot be keyed to it by a foreign key that cascades.</p>
+<p><strong><a href="../../systems/memorizer/">Memorizer</a> writes its
+events on the right path and too few of them.</strong> Each edit and
+revert inserts a <code>memory_events</code> row inside the same
+transaction as the snapshot and the UPDATE, which is the placement this
+pattern asks for. The vocabulary declares six event types and two have
+producers; store, archive, move and delete write nothing, a purge tool
+deletes events by age, and <code>ON DELETE CASCADE</code> removes a
+memory's events with it — so the log explains edits to memories that
+still exist and nothing else.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>
