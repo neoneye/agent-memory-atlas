@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local C daemon storing
+agent-written notes in SQLite, recalled through a title-only
+STRONG/WEAK/MISS gate, hybrid fusion and a keyword-and-semantic edge
+graph.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Graft — Agent Memory Atlas">
+    <meta property="og:description" content="A local C daemon storing
+agent-written notes in SQLite, recalled through a title-only
+STRONG/WEAK/MISS gate, hybrid fusion and a keyword-and-semantic edge
+graph.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Graft — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local C daemon storing
+agent-written notes in SQLite, recalled through a title-only
+STRONG/WEAK/MISS gate, hybrid fusion and a keyword-and-semantic edge
+graph.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Graft — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Graft",
+      "description": "A local C daemon storing agent-written notes in SQLite, recalled through a title-only STRONG/WEAK/MISS gate, hybrid fusion and a keyword-and-semantic edge graph.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A local C daemon with a confidence-gated
+recall over agent notes</p>
+          <h1>Graft</h1>
+          <p class="document-deck">A local C daemon storing
+agent-written notes in SQLite, recalled through a title-only
+STRONG/WEAK/MISS gate, hybrid fusion and a keyword-and-semantic edge
+graph.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AEndrix03/Graft">
+              <span>Source</span>
+              <strong>AEndrix03/Graft</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AEndrix03/Graft/commit/b60e8f34ecda05d7883731dea244616de679f982" title="b60e8f34ecda05d7883731dea244616de679f982">
+              <span>Analyzed revision</span>
+              <code>b60e8f34…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/AEndrix03--Graft" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>AEndrix03--Graft</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>13,452
+lines of C in src/ and include/; storage, insert, retrieval,
+verification, explore, rerank and stats are 5,036 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>162
+commits on master by 4 contributors, 6 May 2026 – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>11
+C test programs in 2,211 lines, plus 5 Python tests for the OAuth
+gateway</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Graft is a local memory daemon for coding agents, written in C11. An
+agent saves a note — a title, a Markdown body and keywords — and later
+asks whether it has seen a problem before. The answer is a gate:
+<code>STRONG</code> returns the note, <code>WEAK</code> returns only its
+title, <code>MISS</code> returns nothing but a fallback list. A hybrid
+ranked search and a beam search over a keyword-and-semantic edge graph
+sit beside it. Embeddings run in-process through llama.cpp with BGE-M3,
+so nothing leaves the machine.</p>
+<p>What is notable is that gate: it refuses to hand over a body unless a
+lexical signal agrees with the vector. What is weak is correction. The
+supersession the README advertises is reachable only from an HTTP
+endpoint that is off by default, the agent-facing surfaces correct by
+deleting, and profile sync reverses the deletions and never carries the
+supersessions.</p>
+<p>The core is a daemon, <code>graftd</code>, reached over a Unix socket
+with MessagePack frames by a thin <code>graft</code> CLI. A Python MCP
+server wraps the CLI, an optional HTTP server and Vue viewer expose the
+same operations, and skills installed by <code>graft setup</code> teach
+Claude Code, Codex and OpenCode when to search and when to save.
+Profiles give one SQLite file and one daemon per memory space. <a
+href="../heimdall/">Heimdall</a> vendors Graft's C source under
+<code>vendor/graft/</code> as its retrieval engine.</p>
+<p>Four findings shape the rest of this report.</p>
+<ul>
+<li><strong>Supersession has no agent path.</strong>
+<code>mg_op_insert</code> accepts a <code>supersedes</code> id and marks
+the old node superseded in the same transaction. The CLI's
+<code>build_insert</code> sends no such field, the MCP
+<code>graft_insert</code> tool has no such parameter, and the
+<code>graft</code> skill tells the agent to <code>delete</code> and
+re-insert. The one caller in the tree that sends the field is the
+viewer's <em>Save (supersedes)</em> button, over HTTP.</li>
+<li><strong>Sync resurrects.</strong> A pull re-inserts every remote
+node missing locally, so a local delete of a shared note returns on the
+next sync. A push copies only local-origin nodes with
+<code>INSERT OR IGNORE</code>, so a superseded state never reaches the
+remote or any other client.</li>
+<li><strong>The gate reads the title only.</strong> Insert embeds the
+title, and query scores vector and trigram overlap against the title.
+With the default thresholds, <code>WEAK</code> is reachable only in a
+lexical band 0.015 wide.</li>
+<li><strong>Three epistemic shapes are declared and unwired.</strong> A
+<code>STALE</code> node state, a <code>CONTRADICTS</code> edge kind, and
+a <code>stale_marked</code> count hardcoded to <code>0</code> in
+consolidate's output.</li>
+</ul>
+<p>One mark, <code>negative_eval</code>, on a storage test that asserts
+an expired neighbour stays out of a graph read while the live neighbour
+is returned. Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a node the caller wrote. It becomes a belief when
+<code>insert</code> commits: there is no extraction, no model call and
+no candidate state. It is <code>ACTIVE</code> from birth
+(<code>src/insert/insert.c:380</code>). It stops being one in three ways
+— a delete removes the row, an insert that names it in
+<code>supersedes</code> sets it <code>SUPERSEDED</code>, or its
+<code>expires_at</code> passes and the next read prunes it.</p>
+<p><strong>Identity is the content.</strong>
+<code>build_content_hash</code> hashes title, body and the sorted
+keywords with BLAKE3, and deliberately leaves author and dates out
+(<code>insert.c:119-167</code>). An insert whose hash exists returns the
+existing id with <code>"duplicate": true</code> and writes nothing
+(<code>insert.c:289-298</code>). The lookup does not filter on state
+(<code>src/storage/storage.c:495-512</code>). Re-inserting the exact
+text of a superseded note therefore returns the superseded node's id,
+reports success, and leaves the note invisible to every search.
+<code>graft get</code> does not print a state
+(<code>src/retrieve/get.c:1-14</code>), so nothing tells the agent.</p>
+<p><strong>Supersession is a filter, not a verdict.</strong> A
+<code>SUPERSEDED</code> node keeps its row and gains an incoming
+<code>SUPERSEDES</code> edge (<code>storage.c:425-452</code>). The
+vector scan, both FTS arms and the graph walk all carry
+<code>state != 2</code> beside the expiry predicate
+(<code>storage.c:591-601</code>, <code>:738-746</code>,
+<code>:770-787</code>). A superseded node is fetchable by id and visible
+in the viewer. It cannot be searched.</p>
+<p><strong>The gate decides how much of a note the model sees.</strong>
+A <code>STRONG</code> hit returns title and body. A <code>WEAK</code>
+hit returns the title with <code>body: nil</code>
+(<code>src/retrieve/query.c:250-258</code>). Nothing marks a
+<code>STRONG</code> body as provisional, and the opt-in hook prints it
+under <code>&lt;graft-cache hit="STRONG"&gt;</code> as found.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Graft note becomes searchable, the three ways it stops being searchable, and where sync undoes the second and third</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Graft note becomes searchable, the three ways it stops being searchable, and where sync undoes the second and third
+flowchart TD
+    W[&quot;graft insert: title, body,&lt;br/&gt;keywords, optional expires_at&quot;] --&gt; H{&quot;content hash&lt;br/&gt;already stored?&quot;}
+    H -- &quot;yes, any state&quot; --&gt; DUP[&quot;return that id,&lt;br/&gt;duplicate: true,&lt;br/&gt;nothing written&quot;]
+    H -- &quot;no&quot; --&gt; E[&quot;embed the title only,&lt;br/&gt;build keyword and&lt;br/&gt;semantic edges&quot;]
+    E --&gt; A[&quot;ACTIVE:&lt;br/&gt;vector, BM25 and&lt;br/&gt;graph arms return it&quot;]
+    V[&quot;viewer Save, POST /v1/insert&lt;br/&gt;with supersedes id&quot;] --&gt; S[&quot;old node SUPERSEDED,&lt;br/&gt;SUPERSEDES edge new to old,&lt;br/&gt;one transaction&quot;]
+    A --&gt; S
+    A -- &quot;graft delete&lt;br/&gt;(CLI, MCP, HTTP)&quot; --&gt; D[&quot;row and edges deleted&quot;]
+    A -- &quot;expires_at passed&quot; --&gt; P[&quot;pruned by the&lt;br/&gt;next read&quot;]
+    S --&gt; HID[&quot;kept, fetchable by id,&lt;br/&gt;filtered from every search&quot;]
+    D --&gt; PULL{&quot;profile sync:&lt;br/&gt;node still in the&lt;br/&gt;shared file?&quot;}
+    PULL -- &quot;yes&quot; --&gt; A
+    S --&gt; PUSH{&quot;profile sync push&quot;}
+    PUSH -- &quot;old node copied only if&lt;br/&gt;local-origin, INSERT OR IGNORE&quot; --&gt; REM[&quot;remote copy stays ACTIVE&lt;br/&gt;for every other client&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>graftd</code> is a single C11 process per profile. It opens the
+profile's SQLite file, loads BGE-M3 through llama.cpp, and serves
+MessagePack frames on an <code>AF_UNIX</code> socket
+(<code>src/daemon/socket.c</code>,
+<code>src/daemon/dispatch.c:114-127</code>). The <code>graft</code> CLI
+encodes each command as a frame, auto-starting the daemon when the
+socket is absent, and prints the reply as JSON. Eleven ops exist:
+classify, insert, query, retrieve, explore, get, stats, consolidate,
+delete, view and remote_sync.</p>
+<p><strong>Persistence.</strong> One SQLite file in WAL mode per
+profile, under
+<code>&lt;GRAFT_HOME&gt;/profiles/&lt;name&gt;/graft.db</code>
+(<code>src/cli/profile.c:1-20</code>). The schema is five tables and one
+FTS5 virtual table (<code>src/storage/schema.c:9-68</code>). The vectors
+live in a sqlite-vec <code>vec0</code> table that falls back to a plain
+blob table if the extension will not load
+(<code>storage.c:109-120</code>). The file is forced to mode 0600 after
+open. A <code>GRAFT_DB_KEY</code> is applied as a SQLCipher
+<code>PRAGMA key</code>, and the code probes <code>cipher_version</code>
+and warns loudly when the linked SQLite is not SQLCipher
+(<code>storage.c:142-201</code>).</p>
+<p><strong>Search stack.</strong> The vector arm does not use
+sqlite-vec's KNN. <code>topk_scan</code> selects every live row's
+embedding and computes cosine in C (<code>storage.c:587-627</code>), so
+each search is linear in the store. Lexical search is FTS5 BM25 with a
+<code>unicode61</code> tokenizer. The graph is two edge kinds written at
+insert and walked by <code>explore</code>.</p>
+<p><strong>Optional surfaces.</strong> An HTTP server with a Vue 3D
+viewer, off by default and refused on a non-loopback address unless
+<code>allow_remote</code> is set with a token or external TLS
+(<code>config.example.yaml:312-340</code>). A Python MCP server over
+stdio, or over HTTP behind an OAuth resource-server gateway
+(<code>integrations/mcp-server/</code>). An autosync worker that syncs a
+profile against a shared SQLite file on an interval
+(<code>profile.c:1109-1330</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The documented install pipes <code>install.sh</code> to a shell,
+which fetches a prebuilt, checksum-verified archive into
+<code>~/.graft</code> and fetches the BGE-M3 GGUF model, about 600 MB,
+once. No API key and no network service are needed after that; a CPU is
+enough, and CUDA or ROCm are build options. <code>graft setup</code>
+copies skills into every agent it finds, and <code>/graft-init</code>
+inside the agent writes the usage rule into <code>CLAUDE.md</code> or
+<code>AGENTS.md</code>.</p>
+<p><code>graft view</code> runs <code>npm install</code> and
+<code>npm run build</code> for the viewer on first use
+(<code>src/cli/view.c:1-11</code>), which executes a dependency tree
+whose manifest carries floating ranges. The store is an ordinary SQLite
+file, readable and repairable with <code>sqlite3</code> apart from the
+embedding blobs.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>graft insert</code> →
+<code>build_insert</code> (<code>src/cli/main.c:346-385</code>) sends
+title, body, keywords, an author resolved from <code>--author</code>,
+<code>GRAFT_AUTHOR</code> or <code>user@host</code>
+(<code>main.c:194-230</code>), and an optional <code>expires_at</code>.
+<code>mg_op_insert</code> (<code>insert.c:206-395</code>) hashes, checks
+for a duplicate, embeds the title (<code>:313</code>), upserts keywords,
+calls <code>mg_insert_build_edges_from_embedding</code>, and commits
+through <code>mg_storage_insert_node_with_edges</code>
+(<code>storage.c:345-455</code>).</p>
+<p><strong>Edges.</strong> For each keyword, a vector top-k restricted
+to nodes with that keyword yields keyword edges above
+<code>edge_keyword_min</code> 0.5; a global top-20 run through MMR
+yields semantic edges above <code>edge_semantic_min</code> 0.6
+(<code>src/insert/edges.c:74-213</code>). Every accepted edge also
+appends its cosine to <code>similarity_samples</code>
+(<code>:108</code>, <code>:205</code>).</p>
+<p><strong>Query.</strong> <code>mg_op_query</code>
+(<code>query.c:114-275</code>) embeds the text, takes ten vector
+candidates, gives up below a cosine floor of 0.3 (<code>:43</code>,
+<code>:161</code>), and scores each survivor with
+<code>mg_verify_score</code> against its title (<code>:200-207</code>).
+The best hit by a weighted rank wins. A <code>MISS</code> carries a
+fallback retrieve capped at five (<code>:81-84</code>).</p>
+<p><strong>Retrieve.</strong> <code>mg_retrieve_run_rrf</code>
+(<code>src/retrieve/retrieve.c:129-327</code>) fuses three lists of 50 —
+vector, BM25 on title, BM25 on body — by <code>1/(k + rank)</code> with
+k 60. An optional rerank stage is off by default.</p>
+<p><strong>Explore.</strong> <code>mg_op_explore</code>
+(<code>src/explore/explore.c</code>) seeds from the vector top-k, drops
+seeds sharing no keyword with the filter, then extends beams through
+<code>mg_storage_neighbors</code> with a log-score, a depth penalty and
+an MMR penalty. The keyword filter is resolved by
+<code>mg_storage_upsert_keyword</code> (<code>explore.c:258-275</code>),
+so a read with an unknown keyword inserts a keyword row.</p>
+<p><strong>Delete.</strong> <code>mg_op_delete</code> →
+<code>mg_storage_delete_node</code> (<code>storage.c:1063-1102</code>)
+removes the vector row explicitly, because <code>vec0</code> ignores
+foreign keys, then the node, cascading keywords and edges and removing
+the FTS row by trigger.</p>
+<p><strong>Supersede.</strong> <code>mg_op_insert</code> parses
+<code>supersedes</code> only when it is exactly 32 hex characters, and
+silently inserts without superseding otherwise
+(<code>insert.c:245-269</code>). The HTTP handler forwards the field
+(<code>src/http/handlers.c:273-305</code>); <code>NodePanel.vue</code>
+sets it to the open node on save
+(<code>viewer/src/components/NodePanel.vue:130-146</code>).</p>
+<p><strong>Sync.</strong> <code>mg_op_remote_sync</code>
+(<code>src/storage/remote_sync_op.c:26-51</code>) runs
+<code>mg_storage_pull_remote_file</code> then
+<code>mg_storage_push_to_remote_file</code>
+(<code>storage.c:1198-1277</code>, <code>:1287-1386</code>). An
+<code>http://</code> remote is refused with <em>"HTTP remote sync is not
+available in this build"</em> (<code>profile.c:955-958</code>).</p>
+<p><strong>MCP.</strong> <code>register_tools</code>
+(<code>integrations/mcp-server/server.py:127-264</code>) wraps each CLI
+command in a subprocess, with <code>GRAFT_PROFILE</code> set from the
+<code>profile</code> argument (<code>:67-72</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Written by</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>16-byte UUIDv7</td>
+<td>insert</td>
+<td>primary key</td>
+</tr>
+<tr>
+<td><code>content_hash</code></td>
+<td>BLAKE3, <code>UNIQUE</code></td>
+<td>insert</td>
+<td>title, body and sorted keywords</td>
+</tr>
+<tr>
+<td><code>title</code>, <code>body</code></td>
+<td>text</td>
+<td>insert</td>
+<td>only the title is embedded</td>
+</tr>
+<tr>
+<td><code>author</code></td>
+<td>text, nullable</td>
+<td>CLI flag, env or <code>user@host</code></td>
+<td>stored verbatim, never checked</td>
+</tr>
+<tr>
+<td><code>created_at</code>, <code>last_access</code>,
+<code>access_count</code></td>
+<td>ms, count</td>
+<td>insert, <code>STRONG</code> query, <code>get</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>expires_at</code></td>
+<td>ms, 0 for none</td>
+<td>caller</td>
+<td>rows past it are deleted, not kept</td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td>0 active, 1 stale, 2 superseded</td>
+<td>insert (0), supersession (2)</td>
+<td>nothing writes 1</td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td>0 local, 1 remote, 2 pushed</td>
+<td>sync</td>
+<td>drives what pull deletes and push copies</td>
+</tr>
+</tbody>
+</table></div>
+<p>Edges carry <code>src</code>, <code>dst</code>, a kind —
+<code>KEYWORD</code> 0, <code>SEMANTIC</code> 1,
+<code>CONTRADICTS</code> 2, <code>SUPERSEDES</code> 3 — an optional
+keyword id and a weight (<code>include/graft/types.h:17-28</code>,
+<code>schema.c:53-62</code>). Nothing in <code>src/</code> writes kind
+2; consolidate counts it and recommends a review if any exist
+(<code>src/stats/consolidate.c:29-30</code>, <code>:73-75</code>). The
+configuration reference describes <code>nli_enabled</code> as
+<em>"Reserved for the future contradiction-detection layer"</em> and a
+no-op (<code>docs/configuration/README.md:96</code>).</p>
+<p><strong>Scope is the file.</strong> A profile is its own database and
+its own daemon, so profiles cannot see one another at the storage layer.
+There is no scope key on a node. The MCP server's instructions call
+profiles tenants — <em>"pass <code>profile=&lt;name&gt;</code> to any
+tool to target a specific tenant"</em> (<code>server.py:115-120</code>)
+— and the OAuth gateway grants <code>graft:read</code>,
+<code>graft:write</code> and <code>graft:admin</code> per operation with
+no claim naming a profile. A token holder chooses the tenant.</p>
+<p><strong>A keyword scope on one read.</strong>
+<code>http.view_keyword_scope</code> restricts <code>/v1/view</code> to
+nodes tagged with one keyword, and edges to those with both ends in
+scope (<code>src/retrieve/view.c:108-178</code>).
+<code>/v1/search</code>, <code>/v1/match</code>,
+<code>/v1/explore</code> and <code>/v1/nodes/{id}</code> on the same
+server do not read the setting.</p>
+<p><strong>No time axis beyond the row.</strong> <code>expires_at</code>
+ends a node's life and the prune deletes it, so nothing records what was
+believed before it expired. A superseded node keeps
+<code>created_at</code> and loses searchability; the superseding node's
+<code>created_at</code> is the only date of the change.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The gate.</strong> With the cross-encoder off, which is the
+default, a candidate is <code>STRONG</code> when trigram overlap with
+the title is at least 0.15 with a cosine of 0.7, or when the cosine is
+at least 0.75 with overlap at least 0.065. It is <code>WEAK</code> when
+it is not strong, the cosine is at least 0.85 and overlap at least 0.05
+(<code>src/verify/verify.c:263-285</code>; defaults at
+<code>src/config/config.c:54-60</code>). Any candidate with a cosine of
+at least 0.85 and overlap of at least 0.065 is already strong, so
+<code>WEAK</code> occupies overlap between 0.05 and 0.065. The unit test
+for the weak gate sits in that band at 0.06
+(<code>tests/test_verify.c:35-37</code>).</p>
+<p><strong>The body is not searched by meaning.</strong> Only the title
+is embedded, and the gate scores only the title. A note whose answer is
+in the body reaches the agent through <code>query</code> only if its
+title is phrased like the question. The <code>graft</code> skill says
+so: <em>"The title is the retrieval anchor"</em>.</p>
+<p><strong>The lexical arms AND every token.</strong>
+<code>build_scoped_fts_query</code> wraps each whitespace token as
+<code>col:"token"</code> and joins them with a space
+(<code>storage.c:651-703</code>, the join at <code>:674-676</code>).
+FTS5 reads a space as AND, so a row must contain every token of the
+query. A sentence-length query to <code>retrieve</code>, or the
+<code>MISS</code> fallback over a whole prompt, will usually match
+nothing lexically and fall back to the vector list alone. The quoting
+closes a column-breakout injection, which the comment above the function
+describes. <a href="../heimdall/">Heimdall</a>'s benchmark analysis
+located the same join in its vendored copy as one cause of its low
+recall.</p>
+<p><strong>Every read writes.</strong> <code>topk_scan</code>,
+<code>mg_storage_fts_search</code> and <code>mg_storage_neighbors</code>
+each call <code>mg_storage_prune_expired</code> first
+(<code>storage.c:610</code>, <code>:736</code>, <code>:770</code>). That
+function opens <code>BEGIN IMMEDIATE</code> and deletes expired rows
+(<code>:285-343</code>), so each search takes the write lock, and
+<code>query</code> records a similarity sample unless
+<code>signals_only</code> is set (<code>query.c:153-157</code>).</p>
+<p><strong>Injection.</strong> The opt-in <code>UserPromptSubmit</code>
+hook runs <code>graft query</code> on any prompt of four or more words.
+On <code>STRONG</code> it prints title and body plus up to six explore
+neighbours at depth one or more, under the heading <em>"what may
+contradict or constrain the answer"</em>
+(<code>integrations/optional/hooks/graft/query_inject.js:156-172</code>).
+On <code>MISS</code> it injects a bare marker and deliberately withholds
+the fallback list (<code>:199-208</code>). Injection is bounded to one
+body and a few titles per prompt.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. Nothing extracts from a
+transcript; the agent decides to call <code>insert</code>, prompted by
+the skills, or by the optional <code>PostToolUse</code> hook that emits
+a same-turn proposal after an edit. <code>/learn</code> and
+<code>/memoryze</code> are skills that plan and distill notes before
+inserting them, and <code>/learn</code> asks for the user's approval in
+its text.</p>
+<p><strong>Deduplication is exact.</strong> A change of one character,
+or one keyword, is a new node. The skill's instruction for a wrong note
+is delete then insert, and for a doubtful one to <em>"re-save it with an
+<code>unsure</code> keyword"</em> — a tag convention that no read path
+consults.</p>
+<p><strong>Delete is final locally and temporary under sync.</strong>
+Pull deletes a local row only when its origin is non-zero and the shared
+file lacks it (<code>storage.c:1218-1222</code>), then inserts every
+shared node missing locally with <code>INSERT OR IGNORE</code>
+(<code>:1228-1234</code>). A note deleted on one client and still in the
+shared file is back after the next sync. No sync path deletes from the
+shared file.</p>
+<p><strong>Supersession does not travel.</strong> Push copies nodes
+<code>WHERE origin = 0</code> with <code>INSERT OR IGNORE</code> and
+flips them to origin 2 (<code>storage.c:1329-1338</code>,
+<code>:1370-1373</code>). A client that supersedes a pulled node pushes
+the new node and the <code>SUPERSEDES</code> edge; the old node's row on
+the shared file is never updated. Every other client keeps retrieving
+it.</p>
+<p><strong>Agent-written and person-written notes are
+indistinguishable.</strong> <code>author</code> is whatever the caller
+supplies, defaulting to the login name and host. There is no content
+filter; the skills ask the model not to save secrets.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous. One BGE-M3 embedding of the title on CPU, then
+one brute-force vector scan per keyword and one global scan to build
+edges, each preceded by a prune transaction. A new note is searchable
+when <code>insert</code> returns.</li>
+<li>Background: none by default. <code>consolidate</code> is manual; it
+prunes expired nodes, deletes orphan, duplicate and zero-weight edges,
+then runs <code>ANALYZE</code> (<code>storage.c:973-1060</code>).
+Autosync, when enabled, re-reads the whole shared file per
+interval.</li>
+<li>Read: one embedding and one linear vector scan per query;
+<code>query</code> loads up to ten candidate rows. The hook adds one
+body and up to six titles to the user's turn.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The supported path is skills plus one rule in the instruction file.
+The <code>graft</code> skill tells the agent to search before any
+non-trivial task, to insert fixes, gotchas and decisions at the end of a
+piece of work, and to close each turn with a one-line recap of what
+graft did (<code>integrations/standard/skills/graft/SKILL.md</code>).
+<code>recall</code> escalates from <code>query</code> to
+<code>retrieve</code> to <code>explore</code>; <code>memory-audit</code>
+reads <code>graft stats</code> and <code>graft analytics</code> and
+proposes deletions without making them.</p>
+<p>The MCP server exposes the same operations as tools —
+<code>graft_query</code>, <code>graft_retrieve</code>,
+<code>graft_explore</code>, <code>graft_classify</code>,
+<code>graft_insert</code>, <code>graft_get</code>,
+<code>graft_delete</code>, <code>graft_stats</code>,
+<code>graft_analytics</code> and seven profile tools including remove
+and merge. Over stdio, <code>_require_scopes</code> returns early
+because there is no token, so every tool is open to the model
+(<code>server.py:94-106</code>).</p>
+<p>The three hooks under <code>integrations/optional/hooks/</code> are
+not installed by <code>graft setup</code> and need a hand edit of
+<code>settings.json</code>. The <code>CHANGELOG.md</code>
+<em>Unreleased</em> section lists them as removed
+(<code>CHANGELOG.md:28-30</code>); at this commit they are in the tree
+under <code>optional/</code>.</p>
+<p>The agent holds insert and delete and cannot supersede. The only
+agent-reachable correction is deletion, which sync reverses for shared
+notes.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The gate is the trust mechanism, and it acts per
+query.</strong> It withholds a body when the lexical and vector signals
+disagree, which prevents a confident wrong hit on an unrelated note. It
+says nothing about whether the note itself is still true. A stale note
+with a well-phrased title is <code>STRONG</code>.</p>
+<p><strong>Correction depends on which door is used.</strong> A person
+in the viewer produces supersession: atomic, reversible by hand,
+filtered from every search. An agent produces deletion. Sync reverses
+the second and ignores the first on every other client.</p>
+<p><strong>Local safety is careful.</strong> The DB is chmod 0600; the
+hook state directory is 0700 and session ids are validated before use as
+filenames (<code>query_inject.js:36-46</code>); HTTP auth uses a
+constant-time compare and a read-only token tier
+(<code>src/http/server.c:131-148</code>); browser writes need an
+<code>Origin</code> matching <code>Host</code>. The <code>Origin</code>
+check is a substring test (<code>server.c:175-177</code>).</p>
+<p><strong>Privacy.</strong> Deletion is a hard delete in the profile's
+file and in FTS. Earlier exports, merges into other profiles, and any
+shared sync file keep copies.</p>
+<p><strong>Uncertainty is not representable</strong> beyond the
+<code>unsure</code> keyword convention.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld. Delete leaves nothing.
+Supersession is keyed on a record and is excluded by the rubric. The
+content-hash duplicate check does swallow an exact re-insert of
+superseded text, but it is keyed on the whole record including keywords,
+reports success, and any edit walks past it.</li>
+<li><code>trust_state</code> — withheld. <code>state</code> is a
+lifecycle with one filtering value, <code>SUPERSEDED</code>, and no
+value says a note is unverified or believed wrong. <code>STALE</code> is
+declared in <code>types.h:26</code> and has no writer; consolidate
+reports <code>stale_marked</code> as a constant <code>0</code>
+(<code>consolidate.c:32-33</code>).</li>
+<li><code>bitemporal</code> — withheld. <code>created_at</code> and a
+deleting <code>expires_at</code>; no valid interval and no as-of
+read.</li>
+<li><code>scope_enforced</code> — withheld. Profiles are a physical
+partition. The one predicate on a stored key,
+<code>view_keyword_scope</code>, sits on <code>/v1/view</code> and not
+on search, match, explore or get.</li>
+<li><code>audit_log</code> — withheld. <code>usage.jsonl</code> appends
+one line per CLI invocation, with op, status, latency, hit and id
+(<code>src/cli/usage_log.c:93-113</code>, <code>main.c:650</code>). It
+exists for hit-rate analytics, is not in the store, names no profile,
+and misses HTTP and viewer writes, expiry prunes, sync and merge.</li>
+<li><code>human_review</code> — withheld. <code>/learn</code>'s approval
+gate is prose to the model; the viewer edit is authoring after the fact;
+the agent holds insert and delete.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I built and ran nothing; everything below is from reading the tests
+at the pin.</p>
+<p><strong>The negative case.</strong> <code>tests/test_storage.c</code>
+section 6 (<code>:237-345</code>) inserts an expired node with a
+weight-1.0 semantic edge from <code>title_hit</code>, then asserts
+<code>mg_storage_neighbors</code> returns exactly one neighbour,
+<code>body_hit</code> (<code>:262-266</code>). The live neighbour is the
+positive control, so an empty or unfiltered result fails. The same
+section asserts an expired node is absent from a vector top-k over a
+store of live nodes sharing its embedding (<code>:286-301</code>). The
+FTS twin asserts a search for <code>gamma</code> returns zero rows with
+no live <code>gamma</code> node beside it (<code>:325-331</code>), which
+an empty index also passes.</p>
+<p><strong>Supersession is tested for the write, not the read.</strong>
+The test inserts a node with <code>supersedes</code> and asserts the old
+node's state is <code>SUPERSEDED</code>
+(<code>test_storage.c:486-509</code>). No case asserts it is absent from
+a search.</p>
+<p><strong>Sync is tested for bookkeeping.</strong>
+<code>test_remote_profiles.c</code> covers origin flags, remote-side
+deletion, push idempotence and merge. One comment reads <em>"pushed node
+treated as local-done, not re-deleted"</em> above an assertion that
+requires <code>deleted == 1</code> (<code>:108-115</code>). No case
+deletes locally and syncs.</p>
+<p><strong>The ops are tested for argument rejection.</strong>
+<code>mg_op_query</code>, <code>mg_op_retrieve</code>,
+<code>mg_op_insert</code> and the rest appear in tests only with a
+<code>NULL</code> context (<code>tests/test_retrieve.c:91-111</code>,
+<code>tests/test_explore.c:38-54</code>). <code>test_embed.c</code>
+skips without <code>GRAFT_TEST_MODEL</code>, which the workflow does not
+set. The gate is unit-tested on hand-picked signal values
+(<code>test_verify.c</code>).</p>
+<p><strong>CI.</strong> <code>ctest</code> runs in
+<code>.github/workflows/release.yml:62-115</code>, which triggers only
+on pushes to <code>release/**</code> branches.</p>
+<p><strong>No benchmark.</strong> No retrieval-quality harness or result
+is committed; the README roadmap lists <em>"publish better
+benchmarks"</em>. No paper or citation file is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Gate the body, not the answer.</strong> Returning the title
+alone on a weak match lets the agent decide whether to open it, and
+costs almost nothing.</li>
+<li><strong>Require a lexical signal to agree before calling a vector
+hit strong.</strong> Unrelated high-cosine neighbours are the common
+false positive.</li>
+<li><strong>Make supersession atomic with the replacing insert</strong>,
+and put the state predicate in every read's SQL, including the graph
+walk.</li>
+<li><strong>Quote user text per token before it reaches an FTS
+<code>MATCH</code></strong>, and say in a comment which injection it
+closes.</li>
+<li><strong>Warn when an encryption key is set but the engine cannot use
+it.</strong> A silently ignored <code>PRAGMA key</code> is a false sense
+of safety.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A correction verb only a person's UI can reach.</strong> If
+the agent corrects by deleting, the lifecycle state never gets written
+in practice.</li>
+<li><strong>Sync that inserts whatever is missing.</strong> Without a
+deletion record, replicated deletes come back; without updating existing
+rows, state changes never replicate.</li>
+<li><strong>Implicit AND over every token of a natural-language
+query.</strong> Use OR with BM25 ranking, or cap the token count.</li>
+<li><strong>A dedup lookup that ignores state.</strong> It turns a
+re-assertion into a silent no-op against a hidden row.</li>
+<li><strong>Pruning inside every read.</strong> It puts a write lock on
+the search path.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Graft suits one developer on one machine who wants coding-agent notes
+recalled across sessions without a service or an API key, and who will
+phrase titles as future questions. The C daemon is small enough to read
+in a day and runs on a laptop CPU. It does not suit a team sharing
+memory through profile sync: the sync as written cannot propagate a
+correction, and a deleted note returns. Anyone needing to know why a
+note is believed, or when it stopped being true, will find no record to
+read.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does <code>WEAK</code> fire in real use, given the band
+the defaults leave it? The usage log records hit labels, so
+<code>graft analytics</code> could answer this.</li>
+<li>Does <code>INSERT OR REPLACE</code> in a merge with
+<code>overwrite</code> fire the cascades on the replaced rows, or leave
+edges pointing at a deleted id?</li>
+<li>Is the viewer the intended correction path, or is supersession meant
+to reach the CLI and MCP tools?</li>
+<li>Heimdall's <code>VENDORED.md</code> names a different upstream for
+its vendored copy; which commit of this repository does that copy
+correspond to?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and storage:</strong>
+<code>src/storage/schema.c</code>, <code>src/storage/storage.c</code>,
+<code>include/graft/types.h</code>,
+<code>include/graft/storage.h</code>.</li>
+<li><strong>Write:</strong> <code>src/insert/insert.c</code>,
+<code>src/insert/edges.c</code>, <code>src/insert/classify.c</code>,
+<code>src/cli/main.c</code> (<code>build_insert</code>,
+<code>mg_resolve_author</code>).</li>
+<li><strong>Read:</strong> <code>src/retrieve/query.c</code>,
+<code>src/verify/verify.c</code>, <code>src/retrieve/retrieve.c</code>,
+<code>src/explore/explore.c</code>, <code>src/retrieve/get.c</code>,
+<code>src/retrieve/view.c</code>, <code>src/config/config.c</code>.</li>
+<li><strong>Delete, maintenance, sync:</strong>
+<code>src/retrieve/delete.c</code>,
+<code>src/stats/consolidate.c</code>,
+<code>src/storage/remote_sync_op.c</code>,
+<code>src/cli/profile.c</code>.</li>
+<li><strong>Transport:</strong> <code>src/daemon/dispatch.c</code>,
+<code>src/http/server.c</code>, <code>src/http/handlers.c</code>,
+<code>viewer/src/components/NodePanel.vue</code>.</li>
+<li><strong>Agent surfaces:</strong>
+<code>integrations/mcp-server/server.py</code>,
+<code>integrations/mcp-server/oauth_gateway.py</code>,
+<code>integrations/standard/skills/*/SKILL.md</code>,
+<code>integrations/optional/hooks/graft/*.js</code>,
+<code>src/cli/usage_log.c</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_storage.c</code>,
+<code>tests/test_verify.c</code>,
+<code>tests/test_remote_profiles.c</code>,
+<code>tests/test_retrieve.c</code>, <code>tests/test_explore.c</code>,
+<code>.github/workflows/release.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rn -E 'MG_EDGE_CONTRADICTS|MG_NODE_STALE|MG_NODE_SUPERSEDED' src include integrations viewer/src</code>
+— <code>SUPERSEDED</code> written at <code>storage.c:443</code>;
+<code>CONTRADICTS</code> and <code>STALE</code> appear only in
+<code>types.h</code>.</li>
+<li><code>grep -rn 'SET state' src</code> — one site,
+<code>storage.c:441</code>.</li>
+<li><code>grep -rn -i 'supersede' src/cli integrations</code> — no
+match; no CLI flag, MCP parameter or skill text supersedes.</li>
+<li><code>grep -rn -iE 'vec_distance|embedding MATCH|knn' src</code> —
+no match; sqlite-vec is not queried for nearest neighbours.</li>
+<li><code>grep -rn 'keyword_scope' src</code> — <code>config.c</code>,
+the copy in <code>verify.c</code>, and <code>view.c</code> only.</li>
+<li><code>grep -n -i 'profile' integrations/mcp-server/oauth_gateway.py</code>
+— no match.</li>
+<li><code>grep -rniE 'audit|event_log|mutation' src include --include='*.c' --include='*.h'</code>
+— no match.</li>
+<li><code>grep -rn -E 'valid_from|valid_to|valid_until|as_of' src include</code>
+— no match.</li>
+<li><code>grep -rn 'mark_local_pushed' src</code> — definition only; the
+test calls it.</li>
+<li><code>grep -rn 'mg_op_' tests/*.c</code> — query, retrieve, insert,
+get and delete appear only with a <code>NULL</code> context.</li>
+<li><code>grep -n 'GRAFT_TEST_MODEL' .github/workflows/*.yml</code> — no
+match.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git --exclude-dir=third_party</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/AEndrix03/Graft/commit/b60e8f34ecda05d7883731dea244616de679f982"><code class="commit-id" title="b60e8f34ecda05d7883731dea244616de679f982">b60e8f34…</code></a>
+— first reading, at the head of <code>master</code>, the v0.1.1 release
+commit of 25 September 2026. One mark, <code>negative_eval</code>.
+Screened before reading: one auto-run finding, <code>.gitmodules</code>
+naming four third-party submodules (BLAKE3, llama.cpp, mpack,
+sqlite-vec), left uninitialised; no build-time execution point; three
+dependency surfaces inside the cooldown, inflated because a depth-1
+clone dates every file to the tip; two unpinned surfaces, the MCP
+server's <code>pyproject.toml</code> with no lockfile and the viewer's
+floating ranges; an empty <code>CLAUDE.md</code> recorded as data. Read
+with <code>grep</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

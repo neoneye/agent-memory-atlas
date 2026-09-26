@@ -240,6 +240,8 @@ between a retriever that degrades and one that degrades silently.
 
 **[GrayMatter](../../systems/graymatter/) fuses three signals and tests the claim that one of them is a sliding window.** RRF over a vector cosine ranking, a TF-IDF keyword score with optional stemming, and recency. Two details are worth copying. Superseded facts are removed *before* anything is scored rather than filtered from the result, so a retired fact cannot occupy a slot a live one needed. And a decision record asserts that a sliding window is the special case of this ranking with all weight on recency, so the benchmark implements that window independently and asserts on every invocation that the recency-only weighting returns exactly the same fact set — a design claim turned into a check that fails when it stops holding. The published miss is equally instructive: the corpus's one failing query asked about *"roll back"* against a stored *"Rollbacks"*, which is what motivated stemming, gated on a strict-subset property rather than a net win count.
 
+[Graft](../../systems/graft/) fuses a title-embedding vector list with BM25 over title and over body by reciprocal rank, and its lexical arms are narrower than they look. `build_scoped_fts_query` quotes each whitespace token and joins them with a space, which FTS5 reads as AND, so a sentence-length query matches only rows containing every word and the fusion quietly becomes the vector list alone. [Heimdall](../../systems/heimdall/), which vendors the same C, located this join as one cause of its measured recall.
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.

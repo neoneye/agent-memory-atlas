@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 644 reports.**
+**This page covers all 645 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5771,3 +5771,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 82 commits from 2 contributors between 8 July 2025 and 19 September 2026; the backend is 10,774 lines of Python, 3,098 of them stores and consolidation, with 192 pytest functions. One mark, `negative_eval`, on a standalone script that also deletes the live episodic database. No committed test covers consolidation.
 - Study when: you want the CoALA tiers side by side at readable scale, or a starting recall scorer with explainable output.
 - Do not copy when: the memory must be what was observed, survive two processes, or be kept apart by session — the pipeline recalls across every session and the scratchpad has no session key.
+
+### [`graft`](../systems/graft/)
+
+- Best idea: **withhold the body when the signals disagree.** `mg_op_query` takes ten vector candidates, scores each against its title with trigram overlap, and returns title and body only on `STRONG`; a `WEAK` hit carries the title with `body: nil`, so the agent decides whether to open it. The opt-in prompt hook injects a `MISS` as a bare marker and deliberately withholds the fallback list.
+- Biggest risk: **sync resurrects deletions and drops supersessions.** Pull inserts every shared node missing locally with `INSERT OR IGNORE`, so a note deleted on one client returns at the next sync. Push copies only local-origin nodes, so a superseded state never reaches the shared file, and every other client keeps retrieving the old note.
+- Most reusable component: `src/storage/storage.c` `build_scoped_fts_query` plus the state and expiry predicate repeated in `topk_scan`, `mg_storage_fts_search` and `mg_storage_neighbors` — per-token quoting that closes FTS column breakout, and one lifecycle filter carried by all three read arms including the graph walk.
+- Second risk: **the agent cannot supersede, and a re-assertion hides.** The CLI and MCP insert send no `supersedes`, and the skill says delete then insert. The duplicate check ignores state, so re-inserting a superseded note's exact text returns its id as a successful duplicate while every search filters it out.
+- Maturity impression: Apache-2.0, 13,452 lines of C and 162 commits on master from 4 contributors between 6 May and 25 September 2026. One mark, `negative_eval`, on a storage test asserting an expired neighbour stays out of a graph read while the live one is returned. The ops are tested only for argument rejection, and CI runs `ctest` only on release branches.
+- Study when: you want a retrieval gate that returns less when unsure, a single-binary local store with in-process embeddings, or a small C codebase showing supersession done atomically.
+- Do not copy when: memory is shared across machines, corrections must survive replication, or the answer usually lives in the body. The profile sync has no deletion record, and only the title is embedded or gated.

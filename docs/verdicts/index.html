@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 644 reports.</strong></p>
+<p><strong>This page covers all 645 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26522,6 +26522,46 @@ or a starting recall scorer with explainable output.</li>
 <li>Do not copy when: the memory must be what was observed, survive two
 processes, or be kept apart by session — the pipeline recalls across
 every session and the scratchpad has no session key.</li>
+</ul>
+<h3 id="graft"><a href="../systems/graft/"><code>graft</code></a></h3>
+<ul>
+<li>Best idea: <strong>withhold the body when the signals
+disagree.</strong> <code>mg_op_query</code> takes ten vector candidates,
+scores each against its title with trigram overlap, and returns title
+and body only on <code>STRONG</code>; a <code>WEAK</code> hit carries
+the title with <code>body: nil</code>, so the agent decides whether to
+open it. The opt-in prompt hook injects a <code>MISS</code> as a bare
+marker and deliberately withholds the fallback list.</li>
+<li>Biggest risk: <strong>sync resurrects deletions and drops
+supersessions.</strong> Pull inserts every shared node missing locally
+with <code>INSERT OR IGNORE</code>, so a note deleted on one client
+returns at the next sync. Push copies only local-origin nodes, so a
+superseded state never reaches the shared file, and every other client
+keeps retrieving the old note.</li>
+<li>Most reusable component: <code>src/storage/storage.c</code>
+<code>build_scoped_fts_query</code> plus the state and expiry predicate
+repeated in <code>topk_scan</code>, <code>mg_storage_fts_search</code>
+and <code>mg_storage_neighbors</code> — per-token quoting that closes
+FTS column breakout, and one lifecycle filter carried by all three read
+arms including the graph walk.</li>
+<li>Second risk: <strong>the agent cannot supersede, and a re-assertion
+hides.</strong> The CLI and MCP insert send no <code>supersedes</code>,
+and the skill says delete then insert. The duplicate check ignores
+state, so re-inserting a superseded note's exact text returns its id as
+a successful duplicate while every search filters it out.</li>
+<li>Maturity impression: Apache-2.0, 13,452 lines of C and 162 commits
+on master from 4 contributors between 6 May and 25 September 2026. One
+mark, <code>negative_eval</code>, on a storage test asserting an expired
+neighbour stays out of a graph read while the live one is returned. The
+ops are tested only for argument rejection, and CI runs
+<code>ctest</code> only on release branches.</li>
+<li>Study when: you want a retrieval gate that returns less when unsure,
+a single-binary local store with in-process embeddings, or a small C
+codebase showing supersession done atomically.</li>
+<li>Do not copy when: memory is shared across machines, corrections must
+survive replication, or the answer usually lives in the body. The
+profile sync has no deletion record, and only the title is embedded or
+gated.</li>
 </ul>
         </article>
       </div>
