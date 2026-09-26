@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 640 reports.**
+**This page covers all 641 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5731,3 +5731,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 159,071 lines of TypeScript outside tests and 724 commits on main from 23 contributors between 19 March and 25 September 2026, with about 3,884 test cases. Two marks: `audit_log` on the operation ledger and `negative_eval` on a case asserting an archived entity stays out of a default listing with both controls. The committed benchmark measures code retrieval, not memory.
 - Study when: you want claims in a repository tied to the code they describe, or a crash-safe operation journal for file-backed memory.
 - Do not copy when: every agent write must be recorded or reviewed, or retired knowledge must stay out of what the agent reads.
+
+### [`m3-memory`](../systems/m3-memory/)
+
+- Best idea: **close the old interval, write the edge and log the event under one compare-and-set.** `_mark_superseded` guards its UPDATE with `is_deleted = 0` and writes the `supersedes` edge and `memory_history` row only when that UPDATE changed a row, so two writers superseding the same memory on PostgreSQL produce one edge, not two.
+- Biggest risk: **proximity is treated as contradiction.** A singleton write whose vector is above 0.92 cosine to an older memory of the same type, with different content, soft-deletes the older one under the default `loose` title gate. With no `agent_id` — the stdio bridge does not inject one, and the Observer passes none — the scan spans every agent's rows.
+- Most reusable component: `Dialect.scope_predicates` in `bin/memory/backends/dialect.py` — one function renders the user, scope, type and agent predicates for every candidate-fetch path on SQLite and PostgreSQL, with a docstring recording the drift between hand-copied predicates that it replaced.
+- Second risk: **the point-in-time read cannot see what supersession closed.** `memory_search_scored_impl` starts its WHERE with `mi.is_deleted = 0` and adds the `as_of` interval beside it, while supersession sets `is_deleted = 1`; the FTS short-circuit ignores `as_of`, `requesting_agent`, `variant` and `conversation_id` outright. No test passes `as_of` to a search.
+- Maturity impression: Apache-2.0, 136,257 lines of Python outside tests and 1,684 commits on main from 4 contributors between 7 April and 22 September 2026, with 3,807 pytest functions. Four marks — `bitemporal`, `scope_enforced`, `audit_log`, `negative_eval` — each with a stated limit; the negative case exercises the main search path and not the short-circuit that lacks the predicate. The LongMemEval figures are in a committed report whose harness and results are not.
+- Study when: you want supersession that closes a validity interval atomically, a single scope-predicate builder across backends, or a large worked example of logging each failure with its cause and repair command.
+- Do not copy when: distinct true facts can phrase alike, identity must be enforced rather than supplied by the model, or a point-in-time query must return corrected values.

@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first SQLite MCP memory
+for coding agents whose writes auto-supersede similar memories, with
+bitemporal columns, a mutation history and opt-in agent isolation.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="m3 Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first SQLite MCP
+memory for coding agents whose writes auto-supersede similar memories,
+with bitemporal columns, a mutation history and opt-in agent
+isolation.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="m3 Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first SQLite MCP
+memory for coding agents whose writes auto-supersede similar memories,
+with bitemporal columns, a mutation history and opt-in agent
+isolation.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>m3 Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "m3 Memory",
+      "description": "A local-first SQLite MCP memory for coding agents whose writes auto-supersede similar memories, with bitemporal columns, a mutation history and opt-in agent isolation.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Local MCP memory that supersedes on
+similarity</p>
+          <h1>m3 Memory</h1>
+          <p class="document-deck">A local-first SQLite MCP memory for
+coding agents whose writes auto-supersede similar memories, with
+bitemporal columns, a mutation history and opt-in agent isolation.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/skynetcmd/m3-memory">
+              <span>Source</span>
+              <strong>skynetcmd/m3-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/skynetcmd/m3-memory/commit/651ae92a2940d4e59b68dba459c433c584853fcc" title="651ae92a2940d4e59b68dba459c433c584853fcc">
+              <span>Analyzed revision</span>
+              <code>651ae92a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/skynetcmd--m3-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>skynetcmd--m3-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+with a NOTICE requesting attribution for the architecture</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>136,257
+lines of Python outside tests; the memory package, memory_core and
+maintenance are about 24,800 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,684
+commits on main by 4 contributors, 7 April 2026 – 22 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>3,807
+pytest functions in 391 files, 88,617 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>m3 Memory is a local-first memory server for coding agents: a SQLite
+store, PostgreSQL optional, behind a stdio MCP bridge exposing more than
+a hundred tools. Around it sit a JSON CLI, a Claude Code plugin that
+captures chat turns, and a background loop that classifies, embeds,
+extracts and decays. One store is meant to be shared by Claude Code,
+Cursor, Gemini CLI and other agents on one machine.</p>
+<p>What is notable is that correction is built into the write. A new
+memory whose vector sits above 0.92 cosine to an older one of the same
+type, with different content, closes the older row's
+<code>valid_to</code>, soft-deletes it, links it with a
+<code>supersedes</code> edge and records a history event, all behind a
+compare-and-set. Explicit <code>memory_supersede</code> does the same
+for a named row.</p>
+<p>What is weak is where that machinery stops. Supersession by
+similarity decides truth from proximity, and with an empty
+<code>agent_id</code> it crosses agents. The <code>as_of</code> read
+keeps <code>is_deleted = 0</code>, so it can never return the rows
+supersession closed. The FTS short-circuit that answers exact-phrase
+queries skips four of the filters the main path applies.</p>
+<p>The reading covered the core <code>memory_items</code> store:
+<code>bin/memory/</code>, <code>bin/memory_core.py</code>,
+<code>bin/memory_maintenance.py</code>, the catalog under
+<code>bin/catalog/</code>, and the migrations. The chat-log store, the
+file-ingestion store (<code>bin/files_memory/</code>), the wiki compiler
+(<code>bin/wiki/</code>), tasks, handoffs and the PostgreSQL sync were
+read only where they touch that store.</p>
+<p>Four marks: <code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>. Section 9 names the
+three withheld and the limits on the four awarded.</p>
+<p>The code is Apache-2.0. <code>NOTICE</code> additionally asks that
+the architecture be credited to skynetCMD when it is reused, published
+or described.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row. It becomes a belief the moment
+<code>memory_write</code> commits: there is no candidate state, and the
+model-free write path stores the caller's text verbatim after a regex
+and SQL-parse safety gate (<code>bin/memory/util.py:39-78</code>).
+Everything after that is ranking, except three exits.</p>
+<p><strong>Supersession, by similarity or by name.</strong> On a
+singleton write with a vector, <code>_check_contradictions</code> scans
+up to 200 live rows of the same type, scoped to the same
+<code>user_id</code> when one is given and to the same
+<code>agent_id</code> when one is given
+(<code>bin/memory/write.py:1376-1409</code>). Any row above
+<code>CONTRADICTION_THRESHOLD</code> (0.92,
+<code>bin/memory/config.py:208</code>) whose content differs fires under
+the default <code>loose</code> title gate (<code>:219</code>;
+<code>write.py:1443-1448</code>). The older row gets
+<code>is_deleted = 1</code> and <code>valid_to</code> closed, and
+nothing about it is kept as rejected.</p>
+<p><strong>Deletion.</strong> Soft (<code>is_deleted = 1</code>) or
+hard, by the agent, a curation plan, a per-agent retention policy, a
+TTL, or the 24-hour expiry every <code>scope='session'</code> memory is
+born with (<code>write.py:294-298</code>).</p>
+<p><strong>Erasure.</strong> <code>gdpr_forget</code> removes a
+subject's rows, embeddings, edges, history and archive copies
+(<code>bin/memory_maintenance.py:1432</code>,
+<code>:1537-1560</code>).</p>
+<p>A second kind of supersession exists and means less. The Reflector
+model pass writes only a <code>supersedes</code> edge between two
+observations (<code>bin/run_reflector.py:270-285</code>); neither row
+changes state, and only <code>memory_search_routed</code> reads the
+edge, halving the older row's score
+(<code>bin/memory/search.py:2125-2155</code>). Plain
+<code>memory_search</code> ignores it.</p>
+<p>Confidence is a float derived from provenance and a corroboration
+ledger (<code>bin/memory/confidence.py</code>,
+<code>bin/memory/trust.py</code>). It feeds ranking when
+<code>M3_CONFIDENCE_RANKING=1</code> and filters nothing
+(<code>config.py:246</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a memory_items row becomes a belief and the three ways it stops being one, with the read paths that can and cannot see each end state</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a memory_items row becomes a belief and the three ways it stops being one, with the read paths that can and cannot see each end state
+flowchart TD
+    W[&quot;memory_write (MCP, CLI, observer)&quot;] --&gt; G{&quot;safety regex and&lt;br/&gt;SQL-parse gate&quot;}
+    G -- &quot;match&quot; --&gt; REJ[&quot;refused, nothing stored&quot;]
+    G -- &quot;clean&quot; --&gt; ROW[&quot;row inserted:&lt;br/&gt;valid_from = given or now,&lt;br/&gt;valid_to = NULL,&lt;br/&gt;history: create&quot;]
+    ROW --&gt; E{&quot;fast embedder&lt;br/&gt;available?&quot;}
+    E -- &quot;no&quot; --&gt; DEF[&quot;vector deferred to backfill;&lt;br/&gt;no contradiction check&quot;]
+    E -- &quot;yes&quot; --&gt; C{&quot;same type, is_deleted = 0,&lt;br/&gt;cosine above 0.92,&lt;br/&gt;content differs&quot;}
+    C -- &quot;agent_id given&quot; --&gt; SAME[&quot;only that agent&#39;s rows&quot;]
+    C -- &quot;agent_id empty&quot; --&gt; ANY[&quot;any agent&#39;s rows&quot;]
+    SAME --&gt; SUP[&quot;old row: is_deleted = 1,&lt;br/&gt;valid_to closed,&lt;br/&gt;supersedes edge,&lt;br/&gt;history: supersede&quot;]
+    ANY --&gt; SUP
+    MS[&quot;memory_supersede old_id&quot;] --&gt; SUP
+    RF[&quot;Reflector pass&quot;] --&gt; EDGE[&quot;supersedes edge only;&lt;br/&gt;row stays live&quot;]
+    ROW --&gt; DEL[&quot;delete, retention,&lt;br/&gt;TTL, session expiry&quot;]
+    ROW --&gt; GD[&quot;gdpr_forget:&lt;br/&gt;row and its history erased&quot;]
+    SUP --&gt; Q1{&quot;memory_search as_of&quot;}
+    Q1 -- &quot;main path keeps&lt;br/&gt;is_deleted = 0&quot; --&gt; MISS[&quot;superseded row&lt;br/&gt;never returned&quot;]
+    EDGE --&gt; Q2{&quot;memory_search_routed&quot;}
+    Q2 --&gt; HALF[&quot;older row scored x 0.5&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The server is Python. <code>bin/memory_bridge.py</code> builds one
+FastMCP function per <code>ToolSpec</code> in <code>bin/catalog/</code>
+and, in the default lazy mode, registers eight essential tools plus two
+meta-tools; <code>tools_load_domain</code> registers the rest on demand
+(<code>bin/memory_bridge.py:262-343</code>). The same specs back the
+<code>m3</code> CLI, the <code>m3_call</code> dispatcher
+(<code>bin/catalog/dispatch.py:227-289</code>) and an HTTP bridge.</p>
+<p>The store is SQLite in WAL mode at
+<code>~/.m3/engine/agent_memory.db</code>
+(<code>bin/memory/config.py:81</code>), or PostgreSQL through a backend
+seam (<code>bin/memory/backends/</code>) whose <code>dialect()</code>
+supplies every placeholder, JSON default and scope predicate. Chat turns
+live in <code>agent_chatlog.db</code> and indexed files in
+<code>files_database.db</code>, each with its own migrations. Lexical
+search is FTS5 with BM25 on SQLite and tsvector on PostgreSQL. Vectors
+are BLOBs in <code>memory_embeddings</code>, scored exhaustively against
+every live row of the configured model and dimension
+(<code>bin/memory/backends/sqlite_backend.py:755-791</code>).</p>
+<p>Embedding is BGE-M3, served by a shared local HTTP embed server, an
+in-process GGUF path through the separately installed
+<code>m3_core_rs</code>, or an OpenAI-compatible endpoint such as LM
+Studio or Ollama. Model passes — classification, entity extraction, the
+Observer and Reflector, belief consolidation — call a local LLM through
+<code>bin/llm_failover.py</code>.</p>
+<p><code>bin/m3_cognitive_loop.py</code> is a daemon, installed as a
+launchd, systemd or Task Scheduler service, that runs every 300 seconds
+by default and chooses passes by pending work, including a maintenance
+pass at most once an hour
+(<code>bin/m3_cognitive_loop.py:1502-1521</code>, <code>:1851</code>,
+<code>:1941</code>).</p>
+<p>A second log sits outside the store. <code>bin/audit_trail.py</code>
+appends SHA-256 hash-chained entries to
+<code>audit_trail.log.jsonl</code> on <code>memory_delete</code> and
+<code>memory_supersede</code>. It reads the whole file to find the
+previous hash, falls back to the genesis hash on any parse error, and
+takes no lock.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install m3-memory</code> and <code>m3 setup</code> wire the
+MCP server into detected agents and provision the embedder. Nothing else
+must run: without a fast embedder, writes defer their vectors and search
+degrades to FTS. No API key is required. The store is a SQLite file
+readable with any client, and the dashboard on 127.0.0.1:8088 browses,
+edits, soft-deletes and restores rows; it requires a token only when one
+is configured or the bind is not loopback
+(<code>bin/dashboard_server.py:600-634</code>). A full install carries
+the loop daemon, an embed server, a watchdog and a notification waiter
+as services, which is a real operating surface for a single-user
+memory.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>memory_write_impl</code>
+(<code>bin/memory/write.py:200-622</code>): safety gate on content,
+title and metadata (<code>:268-285</code>), scope coerced into
+<code>{user, session, agent, org}</code>, session expiry, one INSERT
+with <code>valid_from</code> defaulting to now and <code>valid_to</code>
+stored NULL (<code>:326-343</code>), then <code>content_hash</code> and
+derived <code>confidence</code> in one UPDATE (<code>:345-367</code>).
+Embedding runs inline only when <code>fast_embedder_available()</code>
+(<code>:381-392</code>); long text is windowed, and dense chunks are
+subdivided on an input-too-long error. History <code>create</code> is
+recorded at <code>:553</code>. Fact enrichment and entity extraction are
+dispatched non-blocking.</p>
+<p><strong>Contradiction.</strong> Gated on
+<code>check_contradictions</code> (default true), a vector, and a type
+outside <code>CONTRADICTION_TYPE_EXCLUSIONS</code> (default
+<code>conversation</code>) (<code>write.py:583</code>).
+<code>_check_contradictions</code> (<code>:1341-1534</code>) fires
+<code>_mark_superseded</code> with <code>require_active=True</code>
+(<code>:1466-1486</code>). With <code>M3_CORROBORATION=1</code>, an
+identical re-write at cosine 0.95 or above records a corroboration
+instead (<code>:1438-1441</code>).</p>
+<p><strong>Supersede.</strong> <code>_mark_superseded</code>
+(<code>write.py:625-706</code>) runs one UPDATE setting
+<code>is_deleted = 1</code> and
+<code>valid_to = COALESCE(NULLIF(valid_to,''), close_at)</code>,
+optionally guarded by <code>AND is_deleted = 0</code>, then inserts the
+edge and a <code>supersede</code> history row on the same connection.
+<code>memory_supersede_impl</code> (<code>:709-867</code>) writes the
+replacement first, then closes the old row, and on a lost race
+soft-deletes its own replacement.</p>
+<p><strong>Search.</strong> <code>memory_search_impl</code>
+(<code>bin/memory/search.py:2484-2572</code>) formats
+<code>memory_search_scored_impl</code> (<code>:600-1660</code>). That
+function tries an FTS short-circuit for queries over three characters in
+hybrid mode (<code>:736-857</code>), returning early when at least
+<code>k</code> rows contain the exact phrase. Otherwise it embeds the
+query, falls back to FTS-only if no vector comes back
+(<code>:889-918</code>), and builds the main WHERE clause
+(<code>:941-1044</code>).</p>
+<p><strong>Context injection.</strong> None automatic. The plugin's
+SessionStart hook only checks that <code>mcp-memory</code> is on PATH
+(<code>hooks/hooks.json</code>); the agent calls
+<code>memory_search</code>.</p>
+<p><strong>Update and delete.</strong> <code>memory_update_impl</code>
+(<code>bin/memory_core.py:827-887</code>) records history per changed
+content, title, type, <code>refresh_on</code>,
+<code>refresh_reason</code> and <code>conversation_id</code>.
+<code>memory_delete_impl</code> (<code>:947-975</code>) records a
+<code>delete</code> event, then soft- or hard-deletes, cascading
+embeddings and edges on hard.</p>
+<p><strong>Maintenance.</strong> <code>memory_maintenance_impl</code>
+(<code>bin/memory_maintenance.py:1158-1330</code>) decays importance,
+reinforces accessed rows, re-aggregates confidence, enforces retention
+(<code>:1097-1157</code>), archives and hard-deletes expired rows
+(<code>:1238-1257</code>), and prunes orphan embeddings.</p>
+<p><strong>Chat capture.</strong> Stop and PreCompact hooks run a
+per-host script that ingests the transcript into the chat-log DB;
+<code>chatlog_promote</code> copies turns into <code>memory_items</code>
+as <code>conversation</code> rows.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code>, <code>type</code>, <code>title</code>,
+<code>content</code>, <code>metadata_json</code></td>
+<td>type from <code>VALID_MEMORY_TYPES</code>
+(<code>bin/catalog/spec.py:20-63</code>)</td>
+</tr>
+<tr>
+<td><code>agent_id</code>, <code>model_id</code>,
+<code>change_agent</code>, <code>source</code>,
+<code>origin_device</code></td>
+<td>provenance, caller-supplied</td>
+</tr>
+<tr>
+<td><code>user_id</code>, <code>scope</code></td>
+<td>migration 009; scope in <code>user</code>, <code>session</code>,
+<code>agent</code>, <code>org</code></td>
+</tr>
+<tr>
+<td><code>valid_from</code>, <code>valid_to</code></td>
+<td>migration 010; validity time</td>
+</tr>
+<tr>
+<td><code>created_at</code>, <code>updated_at</code></td>
+<td>record time</td>
+</tr>
+<tr>
+<td><code>is_deleted</code>, <code>expires_at</code>,
+<code>pinned</code></td>
+<td>lifecycle</td>
+</tr>
+<tr>
+<td><code>importance</code>, <code>importance_raw</code>,
+<code>confidence</code>, <code>corroboration_count</code>,
+<code>contradiction_count</code>, <code>helpful_count</code>,
+<code>unhelpful_count</code>, <code>access_count</code>,
+<code>last_accessed_at</code></td>
+<td>ranking signals, migrations 035, 037 and 049</td>
+</tr>
+<tr>
+<td><code>content_hash</code>, <code>conversation_id</code>,
+<code>refresh_on</code>, <code>refresh_reason</code>,
+<code>variant</code></td>
+<td>integrity, grouping, review reminders, benchmark tagging</td>
+</tr>
+</tbody>
+</table></div>
+<p>Beside the row sit <code>memory_embeddings</code>, one or more
+vectors per row keyed by <code>vector_kind</code>, and
+<code>memory_relationships</code>, typed edges unique per endpoint pair
+and type since migration 039. <code>memory_history</code> holds mutation
+events. <code>memory_corroborations</code> is an insert-only ledger of
+corroboration and contradiction deltas
+(<code>memory/migrations/036_trust_and_corroboration.up.sql</code>).
+<code>memory_archive</code> copies each row a maintenance pass removed,
+keyed on the original id (<code>042_memory_archive.up.sql</code>).
+<code>agents.trust_score</code> weights sources.</p>
+<p><strong>The validity interval has one writer that closes it.</strong>
+<code>valid_to</code> is set by a caller at write time or by
+<code>_mark_superseded</code>. The Observer pass writes
+<code>valid_from</code> from the date a turn refers to
+(<code>bin/run_observer.py:383-398</code>), so for observations the two
+clocks differ in practice, not only in schema.</p>
+<p><strong>Scope is advisory until someone passes it.</strong> The
+column defaults are <code>''</code> and <code>'agent'</code>;
+<code>memory_write</code> defaults <code>scope</code> to
+<code>agent</code>, but reads apply no scope unless the caller names
+one.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The main path blends vector similarity and BM25 at
+<code>vector_weight</code> 0.7, adds importance, recency, title-overlap,
+role and procedure terms and, when enabled, a confidence term
+(<code>bin/memory/search.py:1312-1360</code>), then applies MMR. An
+optional sentence-transformers cross-encoder reranks.
+<code>memory_search_routed</code> adds temporal routing, session and
+graph expansion, entity-graph expansion and the <code>supersedes</code>
+demotion, all opt-in.</p>
+<p><strong>The FTS short-circuit is a second read path with fewer
+filters.</strong> It builds its predicate from
+<code>scope_predicates(user_id, scope, type_filter, agent_filter)</code>
+(<code>bin/memory/search.py:789-800</code>) and returns directly when
+<code>k</code> rows contain the exact phrase (<code>:820-836</code>).
+The main path adds <code>requesting_agent</code> isolation,
+<code>conversation_id</code>, <code>variant</code> and
+<code>as_of</code> (<code>:966-1012</code>). So an exact-phrase query
+with <code>requesting_agent</code> set can return another agent's
+<code>scope='agent'</code> rows, an <code>as_of</code> query can return
+current rows, and a benchmark-tagged row can bypass the
+<code>variant</code> gate the MCP validator applies. The degrade path
+<code>_fts_only_results</code> (<code>:434-498</code>) has the same four
+omissions. This was read, not reproduced.</p>
+<p><strong><code>as_of</code> excludes what supersession
+closed.</strong> The main WHERE begins <code>mi.is_deleted = 0</code>
+(<code>:941</code>) and adds the interval under <code>as_of</code>
+(<code>:1002-1012</code>). Supersession sets
+<code>is_deleted = 1</code>, so the rows whose <code>valid_to</code> it
+closed are the rows <code>as_of</code> cannot return. The docstring of
+<code>memory_supersede_impl</code> promises the opposite
+(<code>bin/memory/write.py:738-739</code>). What <code>as_of</code> does
+exclude are rows whose <code>valid_from</code> lies after the cutoff and
+rows written with an explicit past <code>valid_to</code>.</p>
+<p><strong>A closed interval does not filter a default search.</strong>
+Without <code>as_of</code>, no predicate reads <code>valid_to</code>, so
+a live row whose validity ended is ranked like any other.</p>
+<p>Retrieval is tool-mediated. The result is capped at <code>k</code>
+(1-100) and returned as text or JSON records; nothing is injected at
+session start.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool or CLI calls, plus four machine producers:
+the Observer (model-extracted <code>observation</code> rows from the
+chat log), belief consolidation (opt-in, weekly,
+<code>M3_CONSOLIDATION_AUTO</code>), fact enrichment and procedure
+distillation. Every producer goes through <code>memory_write_impl</code>
+or the bulk variant, and so through the same contradiction check.</p>
+<p><strong>The contradiction check is the correction mechanism, and it
+is lossy by design.</strong> Two memories of the same type that embed
+within 0.92 cosine and differ in text are treated as a correction of the
+older by the newer. Two different true facts phrased alike — two
+services' ports, two users' preferences when <code>user_id</code> is
+empty — are within that radius. The result reports
+<code>(superseded N conflicting memories: …)</code>; the older row
+leaves every default read, and <code>memory_history</code> holds its
+text. The bulk path defaults the check off
+(<code>write.py:204-208</code>).</p>
+<p><strong>Agent scoping of the check depends on identity
+arriving.</strong> With an <code>agent_id</code> the scan is limited to
+that agent's rows. With none, it spans every agent
+(<code>:1388-1393</code>, <code>:1450-1454</code>). The stdio bridge
+does not inject <code>agent_id</code> (section 8), and the Observer
+writes with none (<code>bin/run_observer.py:388-398</code>).</p>
+<p>Deletion is soft by default and hard on request. The agent-reachable
+<code>memory_feedback(misleading)</code> lowers importance and records a
+contradiction; it deletes nothing
+(<code>bin/memory_maintenance.py:799-829</code>). Decay multiplies
+importance by 0.995 per pass for unpinned rows older than seven days,
+per migration 049's header; until 19 September 2026 a sweep soft-deleted
+every memory below 0.05 importance, and now it only reports candidates,
+which <code>memory_restore</code> can bring back
+(<code>bin/catalog/tools_memory.py:611-620</code>;
+<code>tests/test_no_autonomous_deletion.py:1-20</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Write:</strong> synchronous SQL; no model call on the
+default path. Embedding runs inline on a fast tier and is otherwise
+deferred to the backfill pass, when the row is FTS-searchable at once
+and vector-searchable a loop cycle later (300 seconds by default). A
+deferred row also skips the contradiction check.</li>
+<li><strong>Background:</strong> the loop's model passes are paced by a
+resource governor. Maintenance rewrites <code>importance</code> across
+eligible rows at most hourly, in SQL.</li>
+<li><strong>Read:</strong> one search per tool call, bounded by
+<code>k</code>; the output sits wherever the agent's tool result lands,
+so no injected prefix exists to invalidate a cache.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>m3 setup</code> wires the stdio server into Claude Code,
+Cursor, Cline, Gemini CLI, Antigravity, Aider, OpenCode, OpenClaw and
+Hermes. The Claude Code plugin (<code>.claude-plugin/plugin.json</code>)
+registers the server and three hooks: a PATH check on SessionStart and
+chat-log capture on Stop and PreCompact (<code>hooks/hooks.json</code>).
+Slash commands under <code>commands/</code> and two curator subagents
+under <code>agents/</code> complete it.</p>
+<p><strong>The agent holds every verb.</strong> On the stdio bridge,
+lazy registration hands out any domain's tools on request, and the
+<code>default_allowed=False</code> flag on <code>memory_delete</code>,
+<code>curate_memory_apply</code>, <code>gdpr_forget</code> and
+<code>memory_restore</code> is consulted only by the
+<code>m3_call</code> dispatcher and the HTTP proxy
+(<code>bin/catalog/dispatch.py:244</code>;
+<code>bin/mcp_proxy.py:271</code>). The bridge wrapper passes the
+model's arguments through validation to the impl and applies
+<code>inject_agent_id</code> nowhere
+(<code>bin/memory_bridge.py:183-247</code>), so <code>agent_id</code>
+and <code>requesting_agent</code> are whatever the model supplies.</p>
+<p>The <code>curate-memory</code> subagent's two-spawn plan-then-apply
+protocol is prose: the subagent's tool list includes
+<code>curate_memory_apply</code> and <code>gdpr_forget</code>
+(<code>agents/curate-memory.md:4</code>).</p>
+<p>Adapting it to another agent is cheap: every tool is a JSON-in,
+JSON-out CLI call, and the LangChain, CrewAI and PydanticAI adapters
+wrap the same catalog.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Concurrency is handled where it was found to fail.</strong>
+Supersession is a compare-and-set on <code>is_deleted = 0</code>, so
+concurrent writers on PostgreSQL produce one edge and one history row
+rather than N (<code>write.py:1466-1486</code>), and the unique index
+from migration 039 backs it. History rows share the caller's connection
+so SQLite writers do not contend
+(<code>bin/memory/db.py:557-563</code>).</p>
+<p><strong>Tenancy is a caller convention.</strong> User, scope and
+agent predicates are real and centralised in one builder
+(<code>bin/memory/backends/dialect.py:236-302</code>), whose docstring
+records the drift it replaced. Every key is optional and supplied by the
+caller, and on stdio the caller is the model.</p>
+<p><strong>Injection defence is a pattern list.</strong>
+<code>&lt;script</code>, <code>javascript:</code>,
+<code>__import__</code>, <code>exec(</code>, <code>eval(</code> and an
+ignore-previous-instructions phrase are refused, as is text that parses
+as SQL containing drop, delete or alter
+(<code>bin/memory/util.py:39-78</code>). A code memory mentioning
+<code>eval(</code> is refused; a false fact phrased plainly is not.</p>
+<p><strong>Uncertainty is representable as a number only.</strong>
+Confidence and the corroboration ledger say how sure; nothing says
+whether a memory may be acted on.</p>
+<p><strong>Privacy.</strong> <code>gdpr_export</code> and
+<code>gdpr_forget</code> reach rows, embeddings, edges, history, the
+archive, materialised bypass rows and wiki syntheses derived from erased
+rows. The hash-chained JSONL audit file is outside that erasure.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>bitemporal</code> — awarded. The consumer is partly stale:
+<code>as_of</code> never sees a superseded row, and the short-circuit
+ignores <code>as_of</code>. No test covers it.</li>
+<li><code>scope_enforced</code> — awarded on the SQL predicates. Keys
+are optional and the short-circuit omits
+<code>requesting_agent</code>.</li>
+<li><code>audit_log</code> — awarded on <code>memory_history</code>.
+Importance, metadata and pin changes, and the retention, TTL and expiry
+purges, write no event; the expiry purge hard-deletes after copying to
+<code>memory_archive</code>
+(<code>bin/memory_maintenance.py:1097-1157</code>,
+<code>:1238-1257</code>).</li>
+<li><code>negative_eval</code> — awarded on
+<code>tests/test_agent_isolation.py</code>; section 10.</li>
+<li><code>tombstone</code> — withheld. <code>memory_archive</code> is
+keyed on the memory id, nothing reads it on write, and a superseded text
+can be written again as a new row.</li>
+<li><code>trust_state</code> — withheld. <code>confidence</code> is a
+float used for ranking. The nearest state is a wiki synthesis's
+<code>metadata_json.authority</code>, which gates only how
+<code>bin/wiki/render.py</code> renders a page (<code>:372-410</code>),
+is writable through <code>memory_update(metadata=…)</code>, and filters
+no search.</li>
+<li><code>human_review</code> — withheld. <code>chatlog_promote</code>,
+<code>files_promote</code> and <code>files_entity_coalesce_apply</code>
+are default-allowed agent tools, and the dashboard's restore
+(<code>bin/dashboard_server.py:2653-2676</code>) edits after the fact
+while the agent holds <code>memory_supersede</code> and
+<code>memory_update</code>.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run; everything below is from reading
+the tests at the pin.</p>
+<p><strong>The negative case.</strong>
+<code>test_requesting_agent_excludes_other_agents_private_rows</code>
+(<code>tests/test_agent_isolation.py:117-135</code>) seeds four rows
+with one shared vector, so ranking cannot hide a leak, and asserts
+<code>planner-private</code> is absent while the requester's own private
+row and both shared rows are present. A symmetric case follows
+(<code>:183-199</code>). It runs in CI's default lane
+(<code>.github/workflows/ci.yml:266</code>). The helper searches for
+<code>"anything"</code> in <code>search_mode="vector"</code>
+(<code>:91-94</code>), which bypasses the FTS short-circuit, so the path
+without the predicate is not exercised.</p>
+<p><strong>Supersession.</strong>
+<code>tests/test_memory_supersede.py</code> asserts the explicit verb:
+old row retained with <code>is_deleted = 1</code> and
+<code>valid_to</code> set, the edge, the history event, inheritance, and
+rollback of the orphan on a lost race (<code>:151-356</code>). No case
+under <code>tests/</code> asserts automatic contradiction supersession;
+the script <code>bin/test_memory_bridge.py:544-588</code> does, and
+skips without an embedding model. No test passes <code>as_of</code> to a
+search.</p>
+<p><strong>Structure tests.</strong> Several suites assert source text
+rather than behaviour, for example
+<code>tests/test_tenancy_sql_uses_the_seam.py:67-68</code>, which greps
+<code>search.py</code> for hardcoded placeholders.</p>
+<p><strong>Benchmark.</strong>
+<code>benchmarks/longmemeval/LME-S_Benchmarking_Report.md</code> claims
+99.2% session hit rate at k=10, 100% at k=20, and 92.0% QA (460/500)
+with an Opus 4.6 answerer and the upstream GPT-4o judge, at engine
+commit <code>af650678</code>. The harness is not in the tree:
+<code>benchmarks/</code> holds that report and a LoCoMo placeholder, and
+<code>.gitignore:123-131</code> excludes the result JSONs. The figures
+cannot be recomputed from the repository. No paper or citation file is
+present.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Close the old interval and write the edge in one
+compare-and-set.</strong> A guarded UPDATE whose row count decides
+whether the edge and history are written makes supersession exactly-once
+under concurrent writers.</li>
+<li><strong>Build every scope predicate in one function</strong> and
+call it from each candidate path, including the fast paths nobody thinks
+of as search.</li>
+<li><strong>Keep the undecayed value beside the decayed one.</strong>
+<code>importance_raw</code> makes a forensic read possible after decay
+has overwritten the live column.</li>
+<li><strong>Say what failed and how to repair it in the log
+line.</strong> The embed path's <code>EMBED_NO_VECTOR</code> and
+<code>EMBED_PARTIAL_COVERAGE</code> name cause, effect and command.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Treating vector proximity as contradiction.</strong>
+Near-duplicates and corrections share a neighbourhood with distinct true
+facts; a soft-delete on similarity needs a review step or a narrower
+trigger.</li>
+<li><strong>Filtering deleted rows under a point-in-time query.</strong>
+If supersession soft-deletes, <code>as_of</code> must read deleted rows
+or it answers only for rows nothing corrected.</li>
+<li><strong>An early-return read path with its own predicate
+list.</strong> The fast path is where filters go missing, and the test
+that guards the filter will not visit it.</li>
+<li><strong>Advertising identity injection the transport does not
+perform.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants several coding agents on one
+machine to share a searchable store without a cloud account, and who
+will run its daemon and embed server. It does not suit a team that needs
+tenant boundaries: every key is supplied by the caller, and on the
+default transport the caller is the model. The feature surface — a wiki
+compiler, file ingestion, tasks, handoffs, PostgreSQL sync, a dashboard
+— is large for four contributors and a first commit in April 2026;
+expect its edges, like the short-circuit, to lag the centre.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does automatic supersession fire on distinct true facts in
+a real store, and does anyone read the <code>superseded N</code>
+suffix?</li>
+<li>Is the PostgreSQL sync's <code>sync_conflicts</code> queue drained,
+and by whom? The sync was not traced.</li>
+<li>Does the in-process GGUF path through <code>m3_core_rs</code> change
+any memory semantics, or only speed? That package was not read.</li>
+<li>Why does the earliest commit reachable from <code>main</code> date
+to 7 April 2026 when the repository was created on 26 February
+2026?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong>
+<code>memory/migrations/001_initial_schema.sql</code>,
+<code>009_scoping_and_history.sql</code>,
+<code>010_tier_features.sql</code>, <code>035_confidence.up.sql</code>,
+<code>036_trust_and_corroboration.up.sql</code>,
+<code>042_memory_archive.up.sql</code>,
+<code>049_memory_dynamics.up.sql</code>.</li>
+<li><strong>Write:</strong> <code>bin/memory/write.py</code>,
+<code>bin/memory/util.py</code>, <code>bin/memory/db.py</code>.</li>
+<li><strong>Read:</strong> <code>bin/memory/search.py</code>,
+<code>bin/memory/backends/dialect.py</code>,
+<code>bin/memory/backends/sqlite_backend.py</code>,
+<code>bin/memory/config.py</code>.</li>
+<li><strong>Update, delete, lifecycle:</strong>
+<code>bin/memory_core.py</code>, <code>bin/memory_maintenance.py</code>,
+<code>bin/audit_trail.py</code>.</li>
+<li><strong>Background:</strong> <code>bin/m3_cognitive_loop.py</code>,
+<code>bin/run_observer.py</code>, <code>bin/run_reflector.py</code>,
+<code>bin/consolidate_beliefs.py</code>.</li>
+<li><strong>Trust:</strong> <code>bin/memory/confidence.py</code>,
+<code>bin/memory/trust.py</code>,
+<code>bin/wiki/authority.py</code>.</li>
+<li><strong>Integration:</strong> <code>bin/memory_bridge.py</code>,
+<code>bin/catalog/</code>, <code>hooks/hooks.json</code>,
+<code>.claude-plugin/plugin.json</code>,
+<code>agents/curate-memory.md</code>,
+<code>bin/dashboard_server.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_agent_isolation.py</code>,
+<code>tests/test_memory_supersede.py</code>,
+<code>tests/test_no_autonomous_deletion.py</code>,
+<code>bin/test_memory_bridge.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -n 'is_deleted' bin/memory/search.py</code> — the main
+WHERE at <code>:941</code> and three id-lookup reads; none relaxes the
+predicate under <code>as_of</code>.</li>
+<li><code>grep -rln 'as_of' tests</code> —
+<code>tests/test_chatlog_roundtrip.py</code> (a comment) and the API
+snapshot; no search with <code>as_of</code>.</li>
+<li><code>grep -n 'requesting_agent\|_req_agent' bin/memory/search.py</code>
+— applied only at <code>:966-971</code>, after the short-circuit
+returns.</li>
+<li><code>grep -rn '_effective_requesting_agent' --include='*.py' .</code>
+— only the comment at <code>search.py:963</code>; the helper it names
+does not exist.</li>
+<li><code>grep -rn 'default_allowed' --include='*.py' bin m3_memory</code>
+— readers in <code>catalog/dispatch.py</code>, <code>mcp_proxy.py</code>
+and manifest generators; none in <code>memory_bridge.py</code> or
+<code>tool_loader.py</code>.</li>
+<li><code>grep -rn '_record_history(' --include='*.py' bin m3_memory</code>
+— no call in <code>memory_maintenance.py</code>; the importance and
+metadata updates at <code>memory_core.py:869-870</code> have none.</li>
+<li><code>grep -rn "'supersedes'" --include='*.py' bin</code> — read
+only in <code>memory_search_routed_impl</code>
+(<code>search.py:2139</code>) and the wiki selector.</li>
+<li><code>grep -rn 'SUPERSEDES_PENALTY' bin/memory</code> — used only at
+<code>search.py:2130-2147</code>.</li>
+<li><code>grep -rn "authority" --include='*.py' bin</code> — read by
+<code>bin/wiki/render.py</code> and <code>derivability_review.py</code>;
+no search path.</li>
+<li><code>grep -rn -iE "tombstone|blocklist|denylist|suppress" --include='*.py' bin</code>
+— archive and chat-log prune comments; no value-keyed refusal on
+write.</li>
+<li><code>grep -rn 'superseded [0-9]\|(superseded\|check_contradictions=True' tests</code>
+— no match.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' .</code> —
+citations of other systems in <code>docs/</code> and
+<code>CHANGELOG.md</code> only; no <code>CITATION.cff</code>.</li>
+<li><code>find . -iname '*longmem*' -not -path './.git/*'</code> — only
+<code>benchmarks/longmemeval/</code> and its report.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/skynetcmd/m3-memory/commit/651ae92a2940d4e59b68dba459c433c584853fcc"><code class="commit-id" title="651ae92a2940d4e59b68dba459c433c584853fcc">651ae92a…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 22
+September 2026. Four marks: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>. Screened before reading: 7 auto-run surfaces
+(<code>.claude-plugin/</code>, <code>.claude/settings.json</code>
+holding only a permission allowlist, a Git LFS rule in
+<code>.gitattributes</code> matching no file, <code>.githooks/</code>,
+<code>hooks/</code> and <code>hooks/hooks.json</code>,
+<code>server.json</code>), 3 build-time execution points, 7 dependency
+files inside the cooldown — every file in a depth-1 clone dates to the
+tip — and 6 unpinned surfaces; <code>AGENTS.md</code>,
+<code>CLAUDE.md</code> and <code>GEMINI.md</code> recorded as data. Read
+with <code>grep</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

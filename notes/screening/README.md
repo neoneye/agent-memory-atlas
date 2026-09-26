@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 640 of 640 screened at the report's current pin.**
+**Progress: 641 of 641 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 290 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 355 |
-| Repositories with build-time execution (`EXEC`) | 466 |
+| Repositories with an auto-run surface (`RUNS`) | 291 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 356 |
+| Repositories with build-time execution (`EXEC`) | 467 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -165,6 +165,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`lorekit`](../../content/systems/lorekit.md) | `.claude-plugin/` |
 | [`loreweave`](../../content/systems/loreweave.md) | `server.json` |
 | [`lossless-context-mcp`](../../content/systems/lossless-context-mcp.md) | `hooks/`, `server.json` |
+| [`m3-memory`](../../content/systems/m3-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitattributes`, `.githooks/`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |
 | [`marsnme`](../../content/systems/marsnme.md) | `server.json` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |

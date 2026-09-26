@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **640 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **641 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -375,6 +375,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 <ul class="az">
 <li><a class="az-row" href="../systems/m-flow/"><span class="az-id">M-flow</span><span class="az-what">Deterministic first, model second</span><code class="az-repo">FlowElement-xinliuyuansu/m_flow</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/m3-memory/"><span class="az-id">m3 Memory</span><span class="az-what">Local MCP memory that supersedes on similarity</span><code class="az-repo">skynetcmd/m3-memory</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/magic-context/"><span class="az-id">Magic Context</span><span class="az-what">Verified-against-code memory</span><code class="az-repo">cortexkit/magic-context</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/magicore/"><span class="az-id">MagiCore</span><span class="az-what">Mem0&#x27;s architecture, rebuilt in C#, with a robot&#x27;s memory beside it</span><code class="az-repo">jihadkhawaja/magicore</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/mandalore/"><span class="az-id">Mandalore</span><span class="az-what">There is no delete, and the packet says what it cannot prove</span><code class="az-repo">acoz-labs/mandalore</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>

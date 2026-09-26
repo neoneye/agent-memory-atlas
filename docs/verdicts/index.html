@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 640 reports.</strong></p>
+<p><strong>This page covers all 641 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26356,6 +26356,52 @@ measures code retrieval, not memory.</li>
 describe, or a crash-safe operation journal for file-backed memory.</li>
 <li>Do not copy when: every agent write must be recorded or reviewed, or
 retired knowledge must stay out of what the agent reads.</li>
+</ul>
+<h3 id="m3-memory"><a
+href="../systems/m3-memory/"><code>m3-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>close the old interval, write the edge and log
+the event under one compare-and-set.</strong>
+<code>_mark_superseded</code> guards its UPDATE with
+<code>is_deleted = 0</code> and writes the <code>supersedes</code> edge
+and <code>memory_history</code> row only when that UPDATE changed a row,
+so two writers superseding the same memory on PostgreSQL produce one
+edge, not two.</li>
+<li>Biggest risk: <strong>proximity is treated as
+contradiction.</strong> A singleton write whose vector is above 0.92
+cosine to an older memory of the same type, with different content,
+soft-deletes the older one under the default <code>loose</code> title
+gate. With no <code>agent_id</code> — the stdio bridge does not inject
+one, and the Observer passes none — the scan spans every agent's
+rows.</li>
+<li>Most reusable component: <code>Dialect.scope_predicates</code> in
+<code>bin/memory/backends/dialect.py</code> — one function renders the
+user, scope, type and agent predicates for every candidate-fetch path on
+SQLite and PostgreSQL, with a docstring recording the drift between
+hand-copied predicates that it replaced.</li>
+<li>Second risk: <strong>the point-in-time read cannot see what
+supersession closed.</strong> <code>memory_search_scored_impl</code>
+starts its WHERE with <code>mi.is_deleted = 0</code> and adds the
+<code>as_of</code> interval beside it, while supersession sets
+<code>is_deleted = 1</code>; the FTS short-circuit ignores
+<code>as_of</code>, <code>requesting_agent</code>, <code>variant</code>
+and <code>conversation_id</code> outright. No test passes
+<code>as_of</code> to a search.</li>
+<li>Maturity impression: Apache-2.0, 136,257 lines of Python outside
+tests and 1,684 commits on main from 4 contributors between 7 April and
+22 September 2026, with 3,807 pytest functions. Four marks —
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code> — each with a stated
+limit; the negative case exercises the main search path and not the
+short-circuit that lacks the predicate. The LongMemEval figures are in a
+committed report whose harness and results are not.</li>
+<li>Study when: you want supersession that closes a validity interval
+atomically, a single scope-predicate builder across backends, or a large
+worked example of logging each failure with its cause and repair
+command.</li>
+<li>Do not copy when: distinct true facts can phrase alike, identity
+must be enforced rather than supplied by the model, or a point-in-time
+query must return corrected values.</li>
 </ul>
         </article>
       </div>
