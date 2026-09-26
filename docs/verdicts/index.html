@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 641 reports.</strong></p>
+<p><strong>This page covers all 642 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26402,6 +26402,50 @@ command.</li>
 <li>Do not copy when: distinct true facts can phrase alike, identity
 must be enforced rather than supplied by the model, or a point-in-time
 query must return corrected values.</li>
+</ul>
+<h3 id="ruvector"><a
+href="../systems/ruvector/"><code>ruvector</code></a></h3>
+<ul>
+<li>Best idea: <strong>stamp the embedding space on the store and refuse
+writes from another.</strong> <code>checkVectorWrite</code> records
+embedder kind, model, dimension, normalization and prefix policy on the
+first write, refuses a later write that differs with an error naming
+both sides, and makes a store with vectors but no stamp read-only until
+<code>hooks reembed</code> rebuilds it from retained source text. Beside
+it, a store that fails to parse is renamed to
+<code>.corrupt-&lt;timestamp&gt;</code> instead of being read as empty
+and saved back.</li>
+<li>Biggest risk: <strong>ambient telemetry and explicit memory share
+one FIFO.</strong> The hooks <code>hooks init</code> installs append an
+entry before every Read, Glob, Grep and Task and after every edit and
+command, including the full command line. Past 5,000 entries the oldest
+1,000 are dropped whatever their type, and there is no per-memory
+forget, so a decision a person asked it to keep ages out by volume.</li>
+<li>Most reusable component:
+<code>npm/packages/ruvector/src/core/embedding-provenance.ts</code> —
+the provenance record, <code>compareProvenance</code>,
+<code>assertProvenanceMatch</code> and the rollout-flag resolvers,
+independent of the store that uses them.</li>
+<li>Second risk: <strong>the Shared Brain's inject route skips every
+control on the share route.</strong>
+<code>POST /v1/pipeline/inject</code> takes no credential, nonce or rate
+limit and writes as a <code>pipeline:</code> contributor flagged system,
+which no API key can delete; page corrections and evidence are kept in
+process memory only, and a <code>Correction</code> delta never changes
+the page text.</li>
+<li>Maturity impression: MIT, 1,864,976 lines of Rust and 514,427 of
+TypeScript and JavaScript, 3,245 commits on main from 26 contributors
+since November 2025; the agent memory is two npm files of 10,546 and
+4,381 lines and a 27,753-line Rust server. No marks. The provenance
+gates are tested with assertions that can fail and run in CI; the CLI's
+remember and recall smoke tests assert <code>|| true</code>, and none of
+the brain server's 148 tests builds its router.</li>
+<li>Study when: you run several embedders over time against one store
+and want the refusal and migration path spelled out, or want a
+corrupt-store policy that never silently empties.</li>
+<li>Do not copy when: memories must be retracted one at a time, written
+by concurrent hooks without loss, or kept free of command lines; or when
+a shared store must be defended against unauthenticated writes.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 641 reports.**
+**This page covers all 642 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5741,3 +5741,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 136,257 lines of Python outside tests and 1,684 commits on main from 4 contributors between 7 April and 22 September 2026, with 3,807 pytest functions. Four marks — `bitemporal`, `scope_enforced`, `audit_log`, `negative_eval` — each with a stated limit; the negative case exercises the main search path and not the short-circuit that lacks the predicate. The LongMemEval figures are in a committed report whose harness and results are not.
 - Study when: you want supersession that closes a validity interval atomically, a single scope-predicate builder across backends, or a large worked example of logging each failure with its cause and repair command.
 - Do not copy when: distinct true facts can phrase alike, identity must be enforced rather than supplied by the model, or a point-in-time query must return corrected values.
+
+### [`ruvector`](../systems/ruvector/)
+
+- Best idea: **stamp the embedding space on the store and refuse writes from another.** `checkVectorWrite` records embedder kind, model, dimension, normalization and prefix policy on the first write, refuses a later write that differs with an error naming both sides, and makes a store with vectors but no stamp read-only until `hooks reembed` rebuilds it from retained source text. Beside it, a store that fails to parse is renamed to `.corrupt-<timestamp>` instead of being read as empty and saved back.
+- Biggest risk: **ambient telemetry and explicit memory share one FIFO.** The hooks `hooks init` installs append an entry before every Read, Glob, Grep and Task and after every edit and command, including the full command line. Past 5,000 entries the oldest 1,000 are dropped whatever their type, and there is no per-memory forget, so a decision a person asked it to keep ages out by volume.
+- Most reusable component: `npm/packages/ruvector/src/core/embedding-provenance.ts` — the provenance record, `compareProvenance`, `assertProvenanceMatch` and the rollout-flag resolvers, independent of the store that uses them.
+- Second risk: **the Shared Brain's inject route skips every control on the share route.** `POST /v1/pipeline/inject` takes no credential, nonce or rate limit and writes as a `pipeline:` contributor flagged system, which no API key can delete; page corrections and evidence are kept in process memory only, and a `Correction` delta never changes the page text.
+- Maturity impression: MIT, 1,864,976 lines of Rust and 514,427 of TypeScript and JavaScript, 3,245 commits on main from 26 contributors since November 2025; the agent memory is two npm files of 10,546 and 4,381 lines and a 27,753-line Rust server. No marks. The provenance gates are tested with assertions that can fail and run in CI; the CLI's remember and recall smoke tests assert `|| true`, and none of the brain server's 148 tests builds its router.
+- Study when: you run several embedders over time against one store and want the refusal and migration path spelled out, or want a corrupt-store policy that never silently empties.
+- Do not copy when: memories must be retracted one at a time, written by concurrent hooks without loss, or kept free of command lines; or when a shared store must be defended against unauthenticated writes.

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 641 of 641 screened at the report's current pin.**
+**Progress: 642 of 642 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 291 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 356 |
-| Repositories with build-time execution (`EXEC`) | 467 |
+| Repositories with an auto-run surface (`RUNS`) | 292 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 357 |
+| Repositories with build-time execution (`EXEC`) | 468 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -274,6 +274,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`ripwire`](../../content/systems/ripwire.md) | `.mcp.json`, `hooks/` |
 | [`ruflo`](../../content/systems/ruflo.md) | `.claude-plugin/`, `.claude/settings.json`, `.githooks/` |
 | [`rushdb`](../../content/systems/rushdb.md) | `.claude/settings.json` |
+| [`ruvector`](../../content/systems/ruvector.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `.gitmodules` |
 | [`sage-memory`](../../content/systems/sage-memory.md) | `.claude/settings.json`, `server.json` |
 | [`second-brain-cloudflare`](../../content/systems/second-brain-cloudflare.md) | `.cursor/rules/` |
 | [`serena`](../../content/systems/serena.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `.vscode/settings.json`, `server.json` |

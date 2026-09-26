@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust vector-engine monorepo
+whose agent memory is a per-project JSON store written by Claude Code
+hooks, plus a hosted shared brain with votes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="RuVector — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust vector-engine
+monorepo whose agent memory is a per-project JSON store written by
+Claude Code hooks, plus a hosted shared brain with votes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RuVector — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust vector-engine
+monorepo whose agent memory is a per-project JSON store written by
+Claude Code hooks, plus a hosted shared brain with votes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>RuVector — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "RuVector",
+      "description": "A Rust vector-engine monorepo whose agent memory is a per-project JSON store written by Claude Code hooks, plus a hosted shared brain with votes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A JSON hook store and a shared brain beside
+a vector engine</p>
+          <h1>RuVector</h1>
+          <p class="document-deck">A Rust vector-engine monorepo whose
+agent memory is a per-project JSON store written by Claude Code hooks,
+plus a hosted shared brain with votes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ruvnet/RuVector">
+              <span>Source</span>
+              <strong>ruvnet/RuVector</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ruvnet/RuVector/commit/5356a84e2f784a33fa497da2e73440d469eb5542" title="5356a84e2f784a33fa497da2e73440d469eb5542">
+              <span>Analyzed revision</span>
+              <code>5356a84e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ruvnet--RuVector" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ruvnet--RuVector</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>1,864,976
+lines of Rust in 4,700 files and 514,427 lines of TypeScript and
+JavaScript; the agent memory is two npm files of 10,546 and 4,381 lines
+and a 27,753-line Rust server</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>3,245
+commits on main by 26 contributors, 19 November 2025 – 23 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>23,932
+Rust test functions across the monorepo, 148 of them in the Shared Brain
+server and none on its HTTP routes; 16 scripts in the npm package's test
+command</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>RuVector is a Rust monorepo of 363 Cargo manifests around a vector
+engine — HNSW, quantization, graph and GNN crates, a Postgres extension,
+an LLM runtime — whose README opens by calling it a substrate for
+<em>"agent memory across sessions"</em>. Two agent-memory surfaces ship.
+The <code>ruvector</code> npm package keeps a per-project
+<code>.ruvector/intelligence.json</code> that
+<code>ruvector hooks remember</code> and <code>recall</code> read and
+write, from the CLI, from a stdio MCP server, and from Claude Code hooks
+that <code>ruvector hooks init</code> installs. The Shared Brain is an
+axum server, in the tree as <code>crates/mcp-brain-server</code>, that
+the package's <code>brain_*</code> tools call at <code>pi.ruv.io</code>
+by default.</p>
+<p>What is notable is the store's defensive engineering. Every
+<code>remember</code> is checked against an embedding-provenance stamp,
+and a store stamped by one embedder refuses writes from another rather
+than mixing spaces. A corrupt file is renamed aside and reported instead
+of being read as empty and saved back.</p>
+<p>What is weak is correction. The hook store has no per-memory update
+or forget, and the hooks <code>init</code> installs write a record for
+every file read, search, edit and shell command into the same
+5,000-entry FIFO as the decisions a person asked it to keep. On the
+brain, the inject route takes no credential and writes as a system
+contributor, and a page correction is a logged delta that never changes
+the page.</p>
+<p>Two library crates model more than either store does and are not
+wired to them. <code>ruvector-agent-memory</code> implements a TARL
+ledger with <code>Accepted</code>, <code>Pending</code> and
+<code>Rejected</code> states and cascading demotion of dependents; it
+has no persistence of its own and no consumer in the tree, and the
+README's <em>Known boundaries</em> item 6 says compaction is not wired
+into core, MCP or RVF. <code>ruvector-core::AgenticDB</code> persists
+episodes, skills and a hash-linked witness log behind a Rust API the
+hook store does not use.</p>
+<p>No marks. Section 9 names the seven and why each is withheld. <a
+href="../ruflo/">ruflo</a>, from the same author, keeps its memory in
+its own package over SQLite and AgentDB; none of that package's files is
+in this tree.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>Hook store.</strong> A memory is one object in the
+<code>memories</code> array of <code>intelligence.json</code>. It
+becomes a belief the moment it is appended: there is no candidate state,
+extraction or model call. Two kinds of writer produce it. A person or
+agent runs <code>hooks remember -t decision "…"</code> or the
+<code>hooks_remember</code> tool. And the hooks installed by
+<code>hooks init</code> append on their own: <em>"Reading: path"</em>
+before every Read, <em>"Search: pattern"</em> before every Glob or Grep,
+<em>"Agent: type"</em> before every Task
+(<code>npm/packages/ruvector/bin/cli.js:4353-4355</code>), and the full
+command text after every Bash call (<code>:4814</code>).</p>
+<p>A memory stops being one in three ways, none aimed at it. Past 5,000
+entries the oldest 1,000 are spliced off, whatever their type
+(<code>cli.js:3534</code>). <code>hooks import</code> without
+<code>--merge</code> replaces the whole list (<code>:6676-6680</code>).
+<code>hooks reembed --drop-missing</code> drops entries without source
+text. There is no command or tool that updates or deletes one memory, so
+a wrong decision stays until a thousand newer entries push it out.</p>
+<p><strong>Shared Brain.</strong> A <code>BrainMemory</code> is shared,
+PII-stripped, embedded and witness-hashed, and enters search at once
+with a <code>Beta(1,1)</code> quality score. Votes from other pseudonyms
+move the Beta; the author cannot vote on their own
+(<code>crates/mcp-brain-server/src/store.rs:877-884</code>). It leaves
+search when its owner deletes it, or when its Beta mean falls below the
+0.01 default floor, which takes 99 downvotes against no upvote
+(<code>routes.rs:1755</code>, <code>store.rs:712</code>). A Brainpedia
+page is the same record plus a status that moves <code>Draft</code> to
+<code>Canonical</code> on a quorum; search never consults the
+status.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how text becomes a RuVector memory on each surface, and the only ways it leaves</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how text becomes a RuVector memory on each surface, and the only ways it leaves
+flowchart TD
+    subgraph HOOK[&quot;hook store: .ruvector/intelligence.json&quot;]
+        E1[&quot;hooks remember -t type text&lt;br/&gt;or hooks_remember tool&quot;] --&gt; G{&quot;embedder matches&lt;br/&gt;stored provenance?&quot;}
+        E2[&quot;installed hooks: every Read,&lt;br/&gt;Glob, Grep, Task, edit, command&quot;] --&gt; G
+        G -- &quot;no, or legacy store&quot; --&gt; REF[&quot;write refused&lt;br/&gt;or skipped&quot;]
+        G -- &quot;yes, or first write stamps it&quot; --&gt; APP[&quot;append object;&lt;br/&gt;whole file rewritten by&lt;br/&gt;temp file and rename&quot;]
+        APP --&gt; CAP{&quot;more than 5,000?&quot;}
+        CAP -- &quot;yes&quot; --&gt; FIFO[&quot;oldest 1,000 dropped,&lt;br/&gt;any type&quot;]
+        APP --&gt; REC[&quot;hooks recall: cosine over all,&lt;br/&gt;no type filter, top k&quot;]
+        IMP[&quot;hooks import without --merge&quot;] --&gt; REPL[&quot;whole list replaced&quot;]
+    end
+    subgraph BRAIN[&quot;Shared Brain server&quot;]
+        S1[&quot;POST /v1/memories:&lt;br/&gt;API key, rate limits,&lt;br/&gt;optional nonce&quot;] --&gt; PII[&quot;PII strip, embed,&lt;br/&gt;witness hash&quot;]
+        S2[&quot;POST /v1/pipeline/inject:&lt;br/&gt;no credential&quot;] --&gt; PII
+        PII --&gt; MEM[&quot;BrainMemory, Beta(1,1),&lt;br/&gt;map + Firestore write-through&quot;]
+        MEM --&gt; V[&quot;votes from other pseudonyms&lt;br/&gt;move the Beta mean&quot;]
+        MEM --&gt; SR[&quot;search: keyword-dominant score,&lt;br/&gt;floor mean &gt;= 0.01&quot;]
+        MEM --&gt; DEL[&quot;DELETE by owner only&quot;]
+        MEM --&gt; PG[&quot;page Draft to Canonical&lt;br/&gt;on quorum; displayed only&quot;]
+    end</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The npm package is a Node CLI (<code>bin/cli.js</code>) and a stdio
+MCP server (<code>bin/mcp-server.js</code>), each with its own copy of
+an <code>Intelligence</code> class over the same JSON file. Both resolve
+the path the same way: the project's
+<code>.ruvector/intelligence.json</code> when that directory or a
+<code>.claude</code> directory exists, else the home one
+(<code>cli.js:3232-3240</code>; <code>mcp-server.js:269-276</code>).
+<code>save()</code> rewrites the whole document through a temp file and
+<code>rename()</code>, whose own comment says the final rename <em>"is
+last-writer-wins"</em> (<code>cli.js:3080-3101</code>,
+<code>:3305-3332</code>).</p>
+<p>An optional <code>IntelligenceEngine</code>
+(<code>src/core/intelligence-engine.ts</code>) adds ONNX MiniLM
+embeddings and an HNSW <code>VectorDB</code> from
+<code>@ruvector/core</code>, the native binding built from
+<code>crates/ruvector-node</code>. That index is in process only
+(<code>intelligence-engine.ts:314-324</code>): each process imports the
+JSON into it (<code>:1268-1290</code>) and discards it on exit. The MCP
+server constructs the engine whenever it loads
+(<code>mcp-server.js:220-243</code>); the CLI builds it lazily, when a
+command first touches it.</p>
+<p>The Shared Brain is <code>crates/mcp-brain-server</code>: axum routes
+over a <code>DashMap</code> cache, written through to Firestore and
+hydrated from four collections at start (<code>store.rs:536-632</code>),
+with <code>.rvf</code> blobs in GCS and Cloud Run deployment scripts.
+<code>mcp-brain-server-local</code> is a separate binary over SQLite.
+The npm tools reach the hosted instance through
+<code>@ruvector/pi-brain</code> with <code>BRAIN_URL</code> and a key
+from the <code>PI</code> variable (<code>mcp-server.js:158-175</code>);
+<code>crates/mcp-brain</code> is a Rust MCP client over the same
+API.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The hook store needs Node and nothing else: no server, no API key.
+Semantic mode downloads <code>all-MiniLM-L6-v2</code> on first use. The
+store is one readable JSON file, repairable by hand, and
+<code>hooks init</code> adds <code>.ruvector/</code> to
+<code>.gitignore</code> (<code>cli.js:4678</code>). Self-hosting the
+brain means a GCP project with Firestore and GCS, or building the local
+binary; the default is a service the author runs.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write, CLI.</strong> <code>hooks remember</code>
+(<code>cli.js:4856-4886</code>) picks an embedder with
+<code>hooksUseSemanticEmbedder</code> (<code>:4838-4854</code>), then
+calls <code>rememberAsync</code> or <code>remember</code>. The sync path
+(<code>:3526-3544</code>) builds a 64-dimension character-hash embedding
+(<code>:3337-3353</code>), gates it through
+<code>guardVectorWrite</code> (<code>:3428-3446</code>), appends
+<code>{id, memory_type, content, embedding, metadata, timestamp}</code>
+with id <code>`mem_${this.now()}`</code> in whole seconds, and applies
+the FIFO cap. The command then calls <code>save()</code>.</p>
+<p><strong>Write, MCP.</strong> <code>hooks_remember</code>
+(<code>mcp-server.js:2036-2049</code>) calls
+<code>Intelligence.remember</code> (<code>:490-520</code>), which stores
+through the engine when it can and appends
+<code>{content, type, created, embedding}</code> — no <code>id</code>, a
+different type field, no cap — and saves.</p>
+<p><strong>Ambient writes.</strong> <code>hooks init</code> writes the
+PreToolUse hooks at <code>cli.js:4343-4356</code> and the PostToolUse
+ones at <code>:4357-4360</code>. <code>post-edit</code> and
+<code>post-command</code> call <code>tryRemember</code>
+(<code>:4788</code>, <code>:4814</code>), which swallows a provenance
+refusal so the hook never fails (<code>:3550-3560</code>).</p>
+<p><strong>Read.</strong> <code>hooks recall</code>
+(<code>cli.js:4888-4898</code>) runs the sync <code>recall</code>
+(<code>:3610-3616</code>) — cosine against every memory, sort, slice —
+or <code>recallAsync</code> (<code>:3583-3608</code>) through the
+engine. <code>hooks_recall</code> (<code>mcp-server.js:2051-2069</code>)
+goes through the engine whenever it exists (<code>:522-552</code>).
+<code>hooks rag-context</code> is the same recall with an optional
+reranker (<code>cli.js:5603-5625</code>).</p>
+<p><strong>Correct and delete.</strong> Nothing per memory.
+<code>hooks import</code> (<code>cli.js:6626-6689</code>) replaces or
+content-dedup merges; <code>hooks_import</code>
+(<code>mcp-server.js:2235-2310</code>) replaces or appends.
+<code>hooks reembed</code> (<code>cli.js:4903-5005</code>) rewrites
+every embedding and can drop entries without text.</p>
+<p><strong>Brain.</strong> Routes are registered at
+<code>routes.rs:318-413</code>. <code>share_memory</code>
+(<code>:1420</code>) checks the nonce, key and IP rate limits, strips
+PII and stores. <code>search_memories</code> (<code>:1740</code>) scores
+the whole corpus. <code>vote_memory</code> (<code>:2254</code>) and
+<code>delete_memory</code> (<code>:2365</code>) call
+<code>store.update_quality</code> (<code>store.rs:871</code>) and
+<code>store.delete_memory</code> (<code>:671-693</code>).
+<code>pipeline_inject</code> (<code>routes.rs:3760</code>) runs
+<code>process_inject</code> (<code>:3553-3757</code>). Pages are
+<code>create_page</code> (<code>:4564</code>), <code>submit_delta</code>
+(<code>:4727</code>), <code>add_evidence</code> (<code>:4851</code>) and
+<code>promote_page</code> (<code>:4904</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The two writers disagree on the schema of one file.</strong>
+The CLI writes <code>id</code>, <code>memory_type</code> and a Unix
+<code>timestamp</code>; the MCP server writes <code>type</code> and an
+ISO <code>created</code> and no <code>id</code>. Each reader looks for
+its own names. <code>hooks recall</code> prints
+<code>r.memory_type || 'unknown'</code> and
+<code>r.timestamp || ''</code> (<code>cli.js:4897</code>), so an
+MCP-written memory recalls from the CLI as type <code>unknown</code>
+with no time. The CLI's <code>convertLegacyData</code> reads
+<code>m.memory_type</code> (<code>:3198</code>) and the MCP server's
+reads <code>m.type</code> (<code>mcp-server.js:252</code>), so each
+imports the other's memories into the engine as
+<code>general</code>.</p>
+<p><strong>Ids collapse on the engine path.</strong> The engine keys
+memories in a <code>Map</code> by <code>id</code>
+(<code>intelligence-engine.ts:1280</code>). The CLI's sync id has
+one-second resolution (<code>cli.js:3527</code>), so ambient hooks that
+fire twice within one second write duplicate ids. The MCP server assigns
+id-less rows <code>`mem-${Date.now()}`</code> inside one
+<code>map</code> call (<code>mcp-server.js:249</code>), so rows
+converted in the same millisecond share a key. In both cases the later
+row overwrites the earlier in the engine, and a recall that goes through
+the engine searches fewer memories than the file holds.</p>
+<p><strong>Scope is physical.</strong> The file is the boundary: one per
+project directory, or the home one. Nothing on a row names a project,
+agent or user, and <code>recall</code> filters on nothing, not even the
+type a caller supplied.</p>
+<p><strong>Shared Brain.</strong> <code>BrainMemory</code>
+(<code>crates/mcp-brain-server/src/types.rs:155-179</code>) holds
+category, title, content, tags, embedding, <code>contributor_id</code>,
+a <code>BetaParams</code> quality score, a witness hash, optional
+redaction log, differential-privacy proof and witness chain, and
+<code>created_at</code>/<code>updated_at</code>. A contributor is a
+pseudonym: SHAKE-256 of any bearer string of 8 to 256 characters
+(<code>auth.rs:23-41</code>, <code>:82-84</code>). Pages add
+<code>PageStatus</code> (<code>types.rs:753-758</code>),
+<code>PageDelta</code> and <code>EvidenceLink</code>, whose
+<code>verified</code> flag is caller-supplied and never read by
+promotion.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Hook store.</strong> Retrieval is tool-mediated only. No hook
+injects memories: the installed SessionStart runs
+<code>session-start</code>, which prints a banner
+(<code>cli.js:4744-4750</code>), and UserPromptSubmit runs
+<code>suggest-context</code>, which prints two counts
+(<code>:4825-4829</code>). An agent sees a memory only by calling
+<code>hooks recall</code> or <code>hooks_recall</code>. The sync path
+embeds the query with the same character hash and returns the top k by
+cosine over every entry, file-access logs included; the CLI truncates
+each result to 200 characters.</p>
+<p>The hash embedding counts characters into 64 buckets by code point
+and position (<code>cli.js:3337-3353</code>), so <em>"Reading:
+src/auth.ts"</em> and a decision about authentication compete on letter
+statistics. Semantic mode replaces it with MiniLM through the engine,
+subject to the id collapse above.</p>
+<p><strong>Shared Brain.</strong> <code>search_memories</code> embeds
+the query, fetches every memory that passes the category, tag and
+quality filters (<code>store.rs:696-731</code>), and scores each. When
+any query token matches, the score is
+<code>1.0 + keyword * 0.85 + cosine * 0.05 + PageRank * 0.04 + reputation * 0.03 + vote * 0.03</code>,
+otherwise a weighted sum of cosine, PageRank, reputation and vote
+(<code>routes.rs:1992-2004</code>). The vote term there is
+<code>(mean - 0.5).max(0.0) * 0.3</code> (<code>:1917-1918</code>), so a
+downvote only removes an upvote's boost. A second pass re-scores each
+result as <code>0.85 * hybrid + 0.10 * mean + 0.05 * recency</code>
+(<code>ranking.rs:31-46</code>), where a downvote does count. Recency is
+read from <code>updated_at</code>, which every vote, up or down, resets
+to now (<code>store.rs:909</code>), so a downvote also makes a memory
+look fresh.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every hook-store write is synchronous and whole-file. Each hook is
+its own short-lived process that loads the JSON, appends, and renames a
+fresh copy over it. Two hook processes that overlap each load the same
+version, and the second rename discards the first's append. The atomic
+rename removed torn reads, the defect its comment was written for; it
+did not add a lock, and the comment says so.</p>
+<p>A memory is retrievable as soon as <code>save()</code> returns.
+Nothing rewrites the store in the background; <code>reembed</code>
+rewrites every embedding on request. There is no deduplication on the
+write path, so the same <em>"Reading: …"</em> line is appended once per
+read.</p>
+<p>The provenance gate is the one write-side check.
+<code>checkVectorWrite</code> (<code>cli.js:3401-3420</code>) stamps
+<code>embeddingProvenance</code> on the first write, refuses a later
+write whose embedder kind, model, dimension, normalization or prefix
+policy differs, and makes a store with vectors but no stamp read-only
+until <code>hooks reembed</code>
+(<code>src/core/embedding-provenance.ts:379-388</code>). The MCP
+<code>hooks_import</code> enforces it
+(<code>mcp-server.js:2270-2296</code>); the CLI
+<code>hooks import</code> does not, and appends or replaces whatever
+vectors the file holds (<code>cli.js:6660-6680</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call on the default path. The ambient hooks add one Node
+start and one full parse and rewrite of the file per Read, Glob, Grep,
+Task, edit and command; <code>--fast</code> swaps <code>npx</code> for a
+local wrapper with 300 to 1,000 ms timeouts
+(<code>cli.js:4330-4332</code>). The engine path rebuilds an HNSW index
+over the whole file in every process that uses it. Recall injects
+nothing unless called and returns five results by default.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>hooks init</code> writes <code>.claude/settings.json</code>
+hooks for PreToolUse, PostToolUse, SessionStart and Stop, and with the
+default options a UserPromptSubmit and PreCompact set and a permission
+allowlist (<code>cli.js:4037-4730</code>). Its MCP step enables a server
+named <code>claude-flow</code> in <code>enabledMcpjsonServers</code>,
+not this package's own (<code>:4200-4211</code>). The UserPromptSubmit
+set also calls <code>npx agentic-flow@alpha workers …</code> with the
+user's prompt as an argument (<code>:4409-4427</code>).</p>
+<p>The MCP server registers hooks, workers, RVF, rvlite, brain, edge,
+identity and decompiler tools. A policy module filters them by
+<code>RUVECTOR_MCP_ALLOW</code>, <code>RUVECTOR_MCP_DENY</code> and
+<code>RUVECTOR_MCP_PROFILE</code> (<code>bin/mcp-policy.js</code>). Its
+header calls this a <em>"default-deny posture"</em>, and
+<code>isToolAllowed</code> returns <code>true</code> when no variable is
+set (<code>:82-87</code>), so an unconfigured server exposes
+<code>hooks_import</code>, which can replace the whole store, beside
+<code>hooks_recall</code>. The <code>readonly</code> profile
+(<code>:23-43</code>) excludes both <code>hooks_remember</code> and
+<code>hooks_import</code>; the README recommends it.</p>
+<p>Porting the hook store to another agent is a matter of calling the
+CLI; the store format is plain JSON. The brain tools need
+<code>@ruvector/pi-brain</code> installed, or return a
+missing-dependency result (<code>mcp-server.js:158-175</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Privacy of the ambient record.</strong>
+<code>post-command</code> stores <code>`${cmd} succeeded`</code>
+verbatim (<code>cli.js:4814</code>), so a token passed on a command line
+lands in <code>intelligence.json</code> and in any
+<code>hooks export</code>. The Shared Brain strips PII on share and
+inject; the hook store strips nothing. The installed hooks pass no
+<code>--success</code> or <code>--error</code>, so every command is
+recorded as succeeded (<code>:4810</code>).</p>
+<p><strong>The brain's inject route has no credential.</strong>
+<code>pipeline_inject</code> (<code>routes.rs:3760-3776</code>) takes no
+<code>AuthenticatedContributor</code>, no nonce and no rate limit, and
+<code>process_inject</code> creates the contributor
+<code>pipeline:&lt;source&gt;</code>, with the source chosen by the
+caller, as a system contributor (<code>:3648-3653</code>). A system
+contributor starts at composite reputation 1.0 against a new key's 0.1
+(<code>store.rs:1031-1038</code>; <code>types.rs:240-247</code>), and
+search weights every result by its author's reputation
+(<code>routes.rs:1903-1907</code>). Delete is owner-only by pseudonym
+(<code>store.rs:671-693</code>), and no API key hashes to
+<code>pipeline:…</code>, so injected memories cannot be deleted through
+the API. Whether a deployment fronts the route with anything else is
+outside the tree; <code>deploy.sh:132-136</code> offers
+<code>--allow-unauthenticated</code>.</p>
+<p><strong>The promotion quorum can be met by one caller on one
+clause.</strong> Promotion needs quality at least 0.7 over five votes
+and three evidence links from two distinct contributors
+(<code>store.rs:1285-1303</code>). <code>add_evidence</code> overwrites
+<code>contributor_id</code> with the caller
+(<code>routes.rs:4871-4873</code>); <code>submit_delta</code> passes the
+delta's <code>evidence_links</code> through untouched
+(<code>:4788-4798</code>) and the store appends them to the page
+evidence (<code>store.rs:1227-1232</code>). The vote clause is held by
+one vote per pseudonym and per IP (<code>store.rs:888-893</code>;
+<code>routes.rs:2278-2293</code>).</p>
+<p><strong>Corrections and evidence live in process memory.</strong>
+<code>submit_delta</code> and <code>add_evidence</code> write only the
+<code>page_deltas</code> and <code>page_evidence</code> maps
+(<code>store.rs:1215-1256</code>); hydration loads memories,
+contributors, page status and nodes and nothing else
+(<code>:536-632</code>). A <code>Correction</code> delta never touches
+the page's <code>content</code>. A Firestore write that fails is logged
+and the handler returns success (<code>store.rs:240-298</code>).</p>
+<p><strong>The repository's own development hooks.</strong> The
+committed <code>.claude/settings.json</code> posts each
+<code>git commit</code> message and a session summary of branch, last
+five commits and diff stat to <code>pi.ruv.io/v1/pipeline/inject</code>,
+with a fallback bearer string written into the file. It is not what
+<code>hooks init</code> installs; it runs for anyone opening this
+checkout in Claude Code.</p>
+<p><strong>What is solid.</strong> A corrupt store is renamed to
+<code>.corrupt-&lt;timestamp&gt;</code> and the command fails loudly
+(<code>cli.js:3256-3274</code>); the MCP server quarantines and starts
+empty (<code>mcp-server.js:282-302</code>). On-disk fields are
+shape-checked so a hand edit cannot crash a reader
+(<code>cli.js:3277-3302</code>).</p>
+<p><strong>Marks withheld.</strong></p>
+<ul>
+<li><code>tombstone</code> — no record keyed on a rejected value on
+either store. The brain's negative cache blacklists query signatures,
+off by default (<code>routes.rs:1757-1771</code>).</li>
+<li><code>trust_state</code> — <code>PageStatus</code> has
+<code>Draft</code> and <code>Canonical</code> writers and is read only
+for display and to refuse deltas to <code>Archived</code>; search never
+filters on it, and <code>Contested</code> and <code>Archived</code> have
+no writer. The TARL ledger's <code>Rejected</code>
+(<code>crates/ruvector-agent-memory/src/ops.rs:51-58</code>) does
+withhold: <code>accept</code> refuses an entry whose dependency is not
+<code>Accepted</code> (<code>ledger.rs:450</code>). It sits in a crate
+nothing in the tree calls and that persists nothing.</li>
+<li><code>bitemporal</code> — one <code>timestamp</code> or
+<code>created</code>; the brain's <code>updated_at</code>
+overwrites.</li>
+<li><code>scope_enforced</code> — the hook store is partitioned by
+directory with no key on a row; the brain is one global corpus.</li>
+<li><code>audit_log</code> — the brain's <code>brain_votes</code>
+collection records votes, one document per memory and voter, not creates
+or deletes; the page delta log is not persisted.
+<code>AgenticDB::WitnessLog::append</code> is a caller-invoked API that
+no write path calls, stored in a vector table <code>delete</code> can
+reach.</li>
+<li><code>human_review</code> — promotion is a vote-and-evidence quorum
+any pseudonym can contribute to, and <code>brain_page_promote</code> is
+a tool on the agent's MCP surface
+(<code>crates/mcp-brain/src/tools.rs:254</code>).</li>
+<li><code>negative_eval</code> — no committed case asserts that a memory
+is absent from a hook-store recall or a brain search; section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests and ran none of them.</p>
+<p><strong>Provenance and durability are tested with assertions that can
+fail.</strong> <code>tests/adr-210-acceptance.test.mjs</code> drives the
+CLI against fixture stores and asserts a legacy 256-dimension store
+refuses a write with <code>ERR_LEGACY_STORE_READONLY</code>, that
+<code>reembed</code> unlocks it, and that a MiniLM store refuses a
+forced hash write naming both sides (<code>:156-231</code>). CI runs
+<code>node --test tests/*.test.mjs</code>
+(<code>.github/workflows/ruvector-npm-ci.yml:132</code>).
+<code>test/mcp-intel-durability.js</code> writes a torn store, calls
+<code>hooks_remember</code>, and asserts one quarantine file with the
+original bytes and no leftover temp files.</p>
+<p><strong>The remember and recall smoke tests cannot fail.</strong>
+Both cases in <code>test/cli-commands.js:535-544</code> assert
+<code>code === 0 || stdout.length &gt; 0 || true</code>.</p>
+<p><strong>No retrieval test on either store checks what comes
+back.</strong> The ADR-210 recall gate
+(<code>tests/adr-210-recall-benchmark.test.mjs:45-150</code>) measures
+recall@10 at least 0.9 on 600 documents through <code>VectorDB</code>,
+not through the hook store. The brain server's 148 tests cover
+embeddings, PII stripping, witness chains, graph and learning
+components; <code>store.rs</code> has none and no test builds the
+router. A CI job asserts the four hydration log lines exist
+(<code>.github/workflows/regression-guard.yml:325-345</code>), which
+also fixes the four collections the server reloads.</p>
+<p>Missing before trusting either store: concurrent hook writes
+asserting no lost append; a CLI-write, MCP-read round trip; a per-memory
+forget with a recall asserting its absence; and an inject call without
+credentials expected to fail. No paper describes the system; the arXiv
+references in <code>ruvector-agent-memory</code> cite third-party work
+it draws on.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Stamp the embedding space on the store and refuse writes
+from another.</strong> Record embedder kind, model, dimension,
+normalization and prefix policy on first write; refuse a mismatch naming
+both sides; make an unstamped store read-only until re-embedded. Keep
+source text so re-embedding is possible.</li>
+<li><strong>Quarantine a corrupt store, never default it.</strong> A
+parse failure that becomes an empty object and is saved back is the
+silent total loss; rename the file aside and fail.</li>
+<li><strong>Demote dependents when a belief is rejected.</strong> The
+TARL ledger's containment cascade — a rejected or revised entry pulls
+every accepted entry that depends on it back to pending — is a small,
+testable answer to poisoned premises, even though nothing here uses
+it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>One FIFO for telemetry and memory.</strong> When every tool
+call writes an entry, explicit memories age out by volume. Keep ambient
+records in a separate, separately capped structure.</li>
+<li><strong>Two writers with two schemas for one file.</strong> Share
+one serializer, or the field each reader expects is missing on half the
+rows.</li>
+<li><strong>Ids from a clock.</strong> A one-second or one-millisecond
+id collides under hooks; use a random suffix, as the engine's own
+<code>remember</code> does.</li>
+<li><strong>A privileged route beside an authenticated one.</strong> A
+convenience ingest endpoint that skips auth, nonce and rate limits, and
+writes as a system principal, undoes every control on the main
+route.</li>
+<li><strong>A correction that only logs.</strong> A delta typed
+<code>Correction</code> that never rewrites the record is an
+annotation.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>The hook store fits a single developer who wants a local,
+dependency-free scratch memory and will delete the ambient recorders
+<code>hooks init</code> writes, which even <code>--minimal</code> keeps.
+It does not fit anyone who needs to retract a memory, share a store
+between concurrent agents, or keep command lines out of a file on disk.
+The Shared Brain is a hosted commons with a vote-weighted ranking; its
+correction and audit paths are not persisted, so treat it as a public
+board rather than a memory of record. For a vector engine to build
+memory on, the Rust crates are the product, and the memory design is
+left to the adopter, as the README says.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does Claude Code set <code>$TOOL_INPUT_file_path</code> and
+<code>$TOOL_INPUT_pattern</code> in a hook's environment? If not, the
+installed PreToolUse hooks record the prefix alone; running the hooks
+would settle it.</li>
+<li>Is <code>/v1/pipeline/inject</code> reachable without credentials on
+the hosted <code>pi.ruv.io</code>, or fronted by something outside the
+tree?</li>
+<li>How often do concurrent hooks lose appends in practice, on the
+Claude Code harness's hook scheduling?</li>
+<li>Does inserting 64-dimension hash vectors into the engine's
+256-dimension <code>VectorDB</code> fail silently in
+<code>import</code>, leaving the MCP engine index empty for a
+hash-stamped store?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Hook store:</strong>
+<code>npm/packages/ruvector/bin/cli.js</code> (<code>Intelligence</code>
+at <code>:3126</code>, the <code>hooks</code> commands from
+<code>:4001</code>),
+<code>npm/packages/ruvector/bin/mcp-server.js</code>
+(<code>Intelligence</code> at <code>:220</code>, handlers at
+<code>:2036-2310</code>),
+<code>npm/packages/ruvector/bin/mcp-policy.js</code>.</li>
+<li><strong>Engine and provenance:</strong>
+<code>npm/packages/ruvector/src/core/intelligence-engine.ts</code>,
+<code>npm/packages/ruvector/src/core/embedding-provenance.ts</code>.</li>
+<li><strong>Shared Brain:</strong>
+<code>crates/mcp-brain-server/src/routes.rs</code>,
+<code>store.rs</code>, <code>types.rs</code>, <code>auth.rs</code>,
+<code>verify.rs</code>, <code>deploy.sh</code>;
+<code>crates/mcp-brain/src/tools.rs</code>.</li>
+<li><strong>Library crates:</strong>
+<code>crates/ruvector-agent-memory/src/{ops,ledger,lib}.rs</code>,
+<code>crates/ruvector-core/src/agenticdb.rs</code>.</li>
+<li><strong>Tests:</strong>
+<code>npm/packages/ruvector/tests/adr-210-acceptance.test.mjs</code>,
+<code>test/mcp-intel-durability.js</code>,
+<code>test/cli-commands.js</code>,
+<code>crates/mcp-brain-server/src/tests.rs</code>,
+<code>crates/ruvector-agent-memory/tests/tarl_ledger.rs</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -n "tryRemember\|data.memories\s*=\|memories.filter\|memories.splice\|forget\|hooks_forget\|memory_delete\|deleteMemory" bin/cli.js bin/mcp-server.js</code>
+in <code>npm/packages/ruvector</code> — assignments only in
+<code>reembedAll</code>, the two imports and the FIFO splice; no forget
+command or tool.</li>
+<li><code>grep -rn "PageStatus::Contested\|PageStatus::Archived" crates npm --include='*.rs' --include='*.js' --include='*.ts'</code>
+— one read at <code>routes.rs:4771</code>, no writer.</li>
+<li><code>grep -n "page_status\|get_page_status" crates/mcp-brain-server/src/*.rs</code>
+— list, get, delta and evidence handlers; none in
+<code>search_memories</code>.</li>
+<li><code>grep -rn "brain_page_deltas\|brain_page_evidence" crates/mcp-brain-server/src/</code>
+— MCP tool names only; no Firestore collection.</li>
+<li><code>grep -rln "ruvector_agent_memory\|ruvector-agent-memory" --include='*.rs' --include='*.toml' --include='*.js' --include='*.ts' .</code>
+— the crate itself, the workspace manifest, and doc comments in
+<code>ruvector-staged-workspace</code>.</li>
+<li><code>grep -rn "witness_log()" --include='*.rs' .</code> — only
+<code>ruvix</code> kernel tests; no caller of
+<code>AgenticDB::witness_log</code>.</li>
+<li><code>grep -rn "oneshot\|create_router\|TestServer" crates/mcp-brain-server/src/</code>
+— the router is built in <code>main.rs</code> and the worker binary,
+never in a test.</li>
+<li><code>grep -rln "TieredMemoryStore\|agentdb-retrieval-guard\|HybridBackend" --include='*.ts' --include='*.js' --include='*.mjs' --include='*.cjs' .</code>
+— no match; ruflo's memory package is not in this tree.</li>
+<li><code>grep -n "arxiv\|bibtex\|@article\|@misc\|doi.org\|citation" README.md</code>
+(case-insensitive) and <code>ls CITATION*</code> — no match, no
+file.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/ruvnet/RuVector/commit/5356a84e2f784a33fa497da2e73440d469eb5542"><code class="commit-id" title="5356a84e2f784a33fa497da2e73440d469eb5542">5356a84e…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 23
+September 2026. No marks. Screened before reading: four auto-run
+findings (<code>.claude/settings.json</code> hooks that post to
+<code>pi.ruv.io</code>, <code>.claude/hooks/</code>, a
+<code>.githooks/</code> payload inert until installed, and
+<code>.gitmodules</code>, whose three submodules were left
+uninitialised), 71 build-time execution points, 79 unpinned surfaces,
+and 594 dependency surfaces inside the cooldown — inflated, since a
+depth-1 clone dates every file to the tip. <code>CLAUDE.md</code> was
+read as data. Read with <code>grep</code>, <code>sed</code> and
+<code>awk</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
