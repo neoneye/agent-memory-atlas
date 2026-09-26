@@ -776,7 +776,11 @@ at <a
 href="https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8"><code class="commit-id" title="6c5d85ed0ecd7fe8567124bd4890b16c329970d8">6c5d85ed…</code></a></li>
 <li><a href="https://github.com/moltis-org/moltis">moltis-org/moltis</a>
 at <a
-href="https://github.com/moltis-org/moltis/commit/8f633cc36e5a053d6ccd0d1af22e767665a7cb93"><code class="commit-id" title="8f633cc36e5a053d6ccd0d1af22e767665a7cb93">8f633cc3…</code></a></li>
+href="https://github.com/moltis-org/moltis/commit/1f6d28ea750d6654d52d5899b8be67727ebf7a19"><code class="commit-id" title="1f6d28ea750d6654d52d5899b8be67727ebf7a19">1f6d28ea…</code></a>
+— audited at the third pin, where no memory path had moved; nothing
+installed, built or run. Session logs are written raw by a hook while
+the sanitizing exporter has no caller, and the agent-scope predicate
+sits on the memory tools and not on the per-turn prefetch</li>
 <li><a
 href="https://github.com/cosmicstack-labs/mercury-agent">cosmicstack-labs/mercury-agent</a>
 at <a
@@ -5268,6 +5272,25 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Moltis report called its session capture sanitized, said
+memory had no scope beyond the indexed directory, and credited a
+reranker, a batch embedder and hash-addressed citations the default path
+does not use; corrected 2026-09-26.</strong> At <a
+href="https://github.com/moltis-org/moltis/commit/8f633cc36e5a053d6ccd0d1af22e767665a7cb93"><code class="commit-id" title="8f633cc36e5a053d6ccd0d1af22e767665a7cb93">8f633cc3…</code></a>
+the <a href="../systems/moltis/">Moltis</a> report took "sanitized" from
+<code>session_export.rs</code>, which nothing calls; the live
+<code>session-memory</code> hook writes the last 50 messages raw. That
+overstated the system. On scope it understated it: the agent's memory
+tools filter results to the agent's workspace path, and the default-on
+prefetch does not, so <code>scope_enforced</code> stays withheld on that
+split rather than on an absent key. <code>LlmReranker</code> and
+<code>BatchEmbeddingProvider</code> have no caller,
+<code>resolve_file_by_hash_prefix</code> resolves qmd document ids
+rather than citations, and <code>crates/cron/src/store_memory.rs</code>
+is a test cron store. Three model extraction turns and a checkpoint
+before every agent write went unreported. All of it held at the first
+pin, <a
+href="https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872"><code class="commit-id" title="1f53cd27b1a21c36b61ceda7a8ea65a35deb7872">1f53cd27…</code></a>.</li>
 <li><strong>The MenteDB report said MQL can express agent scope, that no
 case asserts cross-user absence, and that a query without
 <code>AS OF</code> keeps rows valid now; corrected 2026-09-26.</strong>
@@ -6517,10 +6540,10 @@ scored results were found committed.</li>
 depending on Hindsight; its recall module cites the source paper's
 equation numbers, but no check was made that this implementation
 reproduces the published behaviour.</li>
-<li>Moltis's session sanitization was identified from its module
-documentation; exactly what it strips was not traced, which matters
-because transcripts can carry secrets, tool output, and previously
-injected memory blocks.</li>
+<li>Moltis's cross-agent prefetch and its shared-channel tool path were
+traced by reading and not exercised; whether either reaches a prompt
+depends on a deployment running more than one agent, or on a channel
+configured with a trusted audience and a policy tool set.</li>
 <li>Five further repositories examined in this round have no reports:
 <code>he-yufeng/CoreCoder</code> (1,166 lines whose
 <code>context.py</code> is conversation-window compaction with nothing

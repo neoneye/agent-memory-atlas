@@ -309,9 +309,10 @@ same hazard the atlas flags in [agentmemory](../../systems/agentmemory/) — the
 safe value should be the one nobody has to remember to set.
 [nanobot](../../systems/nanobot/) is one workspace, one memory, while its UI lets
 users switch projects — an invitation to assume isolation that does not exist.
-[Moltis](../../systems/moltis/) scopes only by indexed directory, and
-[A-MEM](../../systems/a-mem/) and [Swafra](../../systems/swafra/) remain global
-corpora.
+[Moltis](../../systems/moltis/) filters its agent memory tools by workspace path
+and leaves the predicate off the prefetch that injects recalled context every
+turn, and [A-MEM](../../systems/a-mem/) and [Swafra](../../systems/swafra/)
+remain global corpora.
 
 [Memory Engine](../../systems/memory-engine/) makes a delegated credential a
 **ceiling** rather than a grant. Grants are `(space, principal, ltree path,

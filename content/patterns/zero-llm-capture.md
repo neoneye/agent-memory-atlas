@@ -129,8 +129,8 @@ defaults to off. It also demonstrates the cost: what is stored is conversational
 prose rather than a normalized claim, which then degrades the contradiction
 detection built on top of it.
 
-[Moltis](../../systems/moltis/) exports sanitized session transcripts into its
-Markdown corpus; [GenericAgent](../../systems/genericagent/) archives raw sessions
+[Moltis](../../systems/moltis/) writes the last 50 messages of a session raw into
+its Markdown corpus on `/new` or `/reset`, beside a sanitizing exporter nothing calls; [GenericAgent](../../systems/genericagent/) archives raw sessions
 to an L4 layer on a 12-hour cron; [agentmemory](../../systems/agentmemory/) keeps
 a synthetic observation path on the hot loop; [Claude-Mem](../../systems/claude-mem/)
 queues hook events durably before its observer runs; and

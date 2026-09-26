@@ -2049,9 +2049,9 @@ bypasses it. Gating recall rather than the write is the right way round for
 procedural memory and almost nothing else here does it. Everything the agent
 learns in a run is still discarded. **MeMex Zero-RAG** is the family's clearest case of the convention/code line. It packages the Karpathy LLM Wiki pattern — `raw/` immutable, `wiki/` derived, git as the whole history — and then expresses its citation rule, its human-adjudication stop and its operation log as instructions returned to the model, none of which has a code path. Read it for the layout and for what delegating every invariant to a prompt costs. **DeepCode** is the family's sharpest split between two durable stores in one repository: conversational turns are event-sourced with typed provenance — a `ClientSurface` and a `TurnInputSource` recording whether a turn came from a person steering or an automation retrying — while the durable facts are flat markdown notes with no metadata at all, and a scheduled `autodream` pass holds `delete` over them. The harness that stamps provenance on every turn records nothing when a note is destroyed. **MemPalace** keeps verbatim drawers authoritative and treats extracted layers
 as navigation aids. **Basic Memory** makes human-editable Markdown canonical
-and every index a rebuildable projection. **Moltis** indexes a Markdown corpus that sanitized
-session transcripts are exported into, so conversations become searchable notes
-in the same substrate as curated ones. **open-cowork** separates core from experience memory and
+and every index a rebuildable projection. **Moltis** indexes a Markdown corpus that raw
+session logs and model-extracted notes are written into, so conversations become searchable notes
+in the same substrate as curated ones; the sanitizing exporter its docs describe has no caller. **open-cowork** separates core from experience memory and
 ships the atlas's most complete memory benchmark. **ReMe** is the one that
 publishes its *results* rather than its harness — per-category LongMemEval and
 BEAM tables committed to the repository, its worst score among them — and carries

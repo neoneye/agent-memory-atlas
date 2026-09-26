@@ -17013,21 +17013,31 @@ permanent until scripted away</td>
 <tr>
 <td><code>moltis</code></td>
 <td>Chunk of a Markdown file</td>
-<td>Two interchangeable backends behind one contract — the built-in
-SQLite database with vectors, or zvec collections on disk with a redb
-cache — plus pluggable local, OpenAI, batch and fallback embeddings</td>
-<td>Hybrid keyword plus vector fused by reciprocal rank or a weighted
-sum, optional LLM rerank, citation modes</td>
-<td>Corpus files plus sanitized session transcripts, one
-<code>sync()</code> chokepoint</td>
-<td>Edit or delete the file and reindex</td>
-<td>Indexed directory only</td>
-<td>In-process library inside the host workspace</td>
-<td>File watcher and scheduled memory work</td>
-<td>Citations to path and chunk; content-hash addressing</td>
-<td><code>keyword_only()</code> makes a no-embeddings mode constructible
-and inspectable</td>
-<td>Transcripts and curated notes rank identically; no trust state</td>
+<td>Markdown files as the source of truth, indexed into one SQLite
+database with FTS5 and embedding blobs, or into zvec collections with a
+redb cache, or handed to the external qmd CLI</td>
+<td>FTS5 plus a brute-force cosine scan fused by reciprocal rank or a
+weighted sum; the agent's tools post-filter to its workspace, the
+per-turn prefetch does not</td>
+<td>Agent save, delete and forget tools, three model extraction turns, a
+raw session-log hook on new or reset, and hand edits, all reindexed by
+sync_path or a periodic sync</td>
+<td>Delete exact text or the file and reindex; agent-initiated writes
+first copy the prior file into a restorable checkpoint</td>
+<td>Agent tools filter results by the agent's workspace path; the
+default-on prompt prefetch searches every agent's files</td>
+<td>In-process crates inside the Moltis gateway: agent tools, a prompt
+prefetch, and MEMORY.md injected into the system prompt</td>
+<td>File watcher, a full resync every 15 minutes, a model extraction
+turn every 5 turns</td>
+<td>A longterm or daily label derived from the filename; citations to
+path and line</td>
+<td>Every agent-initiated memory write snapshots the prior file first;
+keyword_only() makes a no-embeddings mode constructible and
+inspectable</td>
+<td>Prefetch ignores the agent scope and indexes every agent's persona
+files; session logs are raw while a sanitizer sits unwired; transcripts
+and curated notes rank identically</td>
 </tr>
 <tr>
 <td><code>monet</code></td>

@@ -376,12 +376,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need the conflict workflow the schema implies — the vocabulary ships and the writers do not.
 
 ### [`moltis`](../systems/moltis/)
-- Best idea: a no-embeddings mode that is a constructor and a predicate rather than a degraded state, plus content-hash file addressing.
-- Biggest risk: exported session transcripts share one index and one rank with curated notes, with nothing distinguishing them.
-- Most reusable component: `MemoryManager::keyword_only()` / `has_embeddings()`, and the single `sync()` chokepoint.
-- Maturity impression: carefully built, with feature-gated backends and committed plans naming its own gaps.
-- Study when: memory and documents should be one substrate, or you need a genuinely offline path.
-- Do not copy when: a chunk is not a good enough unit — there is no claim, status, or correction record.
+- Best idea: every agent-initiated memory write snapshots the prior file into a restorable checkpoint, and a no-embeddings mode is a constructor and a predicate rather than a degraded state.
+- Biggest risk: the agent-scope predicate sits on the memory tools and not on the per-turn prefetch, which searches every agent's files, persona files included; session logs enter the corpus raw while the documented sanitizer has no caller.
+- Most reusable component: the pre-write checkpoint, `MemoryManager::keyword_only()` / `has_embeddings()`, and `memory_forget`'s exact-match validation.
+- Maturity impression: carefully built tools inside an unfinished perimeter — the sanitizer and the LLM reranker are documented and unwired on the default backend.
+- Study when: memory and documents should be one substrate, or you want an undo for every agent memory write.
+- Do not copy when: more than one agent or person shares the index, or a chunk is not a good enough unit — there is no claim, status, or correction record.
 
 ### [`mentedb`](../systems/mentedb/)
 - Best idea: `AS OF t` judges every memory against the instant asked for rather than dropping whatever is currently invalid, so a superseded fact is visible when you ask about a moment it was true — and `Created` and `ValidAt` are both members of the planner's field enum, so the two axes are queryable in one statement.

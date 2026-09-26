@@ -1063,20 +1063,25 @@ test that means something.</li>
 <h3 id="moltis"><a
 href="../systems/moltis/"><code>moltis</code></a></h3>
 <ul>
-<li>Best idea: a no-embeddings mode that is a constructor and a
-predicate rather than a degraded state, plus content-hash file
-addressing.</li>
-<li>Biggest risk: exported session transcripts share one index and one
-rank with curated notes, with nothing distinguishing them.</li>
-<li>Most reusable component: <code>MemoryManager::keyword_only()</code>
-/ <code>has_embeddings()</code>, and the single <code>sync()</code>
-chokepoint.</li>
-<li>Maturity impression: carefully built, with feature-gated backends
-and committed plans naming its own gaps.</li>
+<li>Best idea: every agent-initiated memory write snapshots the prior
+file into a restorable checkpoint, and a no-embeddings mode is a
+constructor and a predicate rather than a degraded state.</li>
+<li>Biggest risk: the agent-scope predicate sits on the memory tools and
+not on the per-turn prefetch, which searches every agent's files,
+persona files included; session logs enter the corpus raw while the
+documented sanitizer has no caller.</li>
+<li>Most reusable component: the pre-write checkpoint,
+<code>MemoryManager::keyword_only()</code> /
+<code>has_embeddings()</code>, and <code>memory_forget</code>'s
+exact-match validation.</li>
+<li>Maturity impression: carefully built tools inside an unfinished
+perimeter — the sanitizer and the LLM reranker are documented and
+unwired on the default backend.</li>
 <li>Study when: memory and documents should be one substrate, or you
-need a genuinely offline path.</li>
-<li>Do not copy when: a chunk is not a good enough unit — there is no
-claim, status, or correction record.</li>
+want an undo for every agent memory write.</li>
+<li>Do not copy when: more than one agent or person shares the index, or
+a chunk is not a good enough unit — there is no claim, status, or
+correction record.</li>
 </ul>
 <h3 id="mentedb"><a
 href="../systems/mentedb/"><code>mentedb</code></a></h3>
