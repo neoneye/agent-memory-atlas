@@ -102,9 +102,10 @@ value is gone, only to prefer the new one at answer time.
 **BEAM's `contradiction_resolution` category** goes one step further, and it is
 the only public benchmark in this atlas that scores correction at all. The
 published numbers are the interesting part: [ReMe](../systems/reme/) commits
-per-category BEAM results, and reports **0.100** on its prompted configuration
-and 0.384 on its agentic one. So correction is measured, barely, in one place, and
-what is measured is done badly.
+per-category BEAM tables and reports **0.438** at 100K and **0.391** at 1M,
+against 0.661 and 0.650 overall, from forked benchmark steps rather than its
+shipped search. So correction is measured, barely, in one place, and it is the
+lowest-scoring category at both sizes.
 
 It still measures only the easy half. `contradiction_resolution` asks the system
 to answer with the right value; it never asks whether the rejected one is still

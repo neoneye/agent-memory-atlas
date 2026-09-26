@@ -1136,11 +1136,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`reme`](../systems/reme/)
 - Best idea: correction gets a validated verb set — `CREATE | CORROBORATE | REFINE | CORRECT` — with contradictions written *into* the memory pointing at their cause, rather than resolved silently.
-- Biggest risk: the vocabulary is enforced as a returned label, not as a constraint on the edit, so a validated verb can accompany an unvalidated action.
-- Most reusable component: publishing the category you are worst at. ReMe commits per-category LongMemEval and BEAM tables including its own lowest score, which almost nothing else here does.
-- Maturity impression: integration suites running the pipelines end to end against a workspace fixture, and committed results rather than a harness with no numbers.
+- Biggest risk: the vocabulary is enforced as a returned label, not as a constraint on the edit, and a receipt that fails validation still lands the edit when exactly one digest file changed.
+- Most reusable component: publishing the category you are worst at. ReMe commits per-category LongMemEval and BEAM tables in which contradiction resolution is the lowest BEAM category at both context sizes.
+- Maturity impression: 1,286 test functions, integration suites running the pipelines against a seeded workspace and a live model, and committed tables rather than a harness with no numbers; one of seven capability marks, `negative_eval`, on two store cases asserting that an edited or deleted note stops being returned. The tables come from forked benchmark steps, not the shipped search.
 - Study when: you want a personal knowledge base an agent maintains and a person can open in an editor, and you want to see what an honest benchmark report looks like.
-- Do not copy when: you need a multi-user service — the scope key, the read-path filter and the per-tenant index are all yours to add — or you are unwilling to have your correctness rules live in prompts.
+- Do not copy when: you need a multi-user service — the scope key, the read-path filter and per-tenant tool confinement are all yours to add, and the tag filter fails open — or you are unwilling to have your correctness rules live in prompts.
 
 ### [`risuai`](../systems/risuai/)
 - Best idea: every derived summary carries the ids of the messages it came from, so deleting a source drops the summaries built on it — the cheapest correct answer to a problem most summarizers never notice.
