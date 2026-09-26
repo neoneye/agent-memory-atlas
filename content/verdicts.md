@@ -1014,9 +1014,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`lemmalog`](../systems/lemmalog/)
 - Best idea: a hypothetical that proves it left nothing behind. `what_if` asserts the assumption derived a closure, then that the store is untouched, the change feed recorded nothing, and the assembled context does not mention it — the last two being the half that catches a leak into downstream incremental views.
-- Biggest risk: the shipped agent layer sets `asserted_at` to the same value as `valid_from` on every assertion, and the one rule that reads `edge` discards the position — so the transaction-time axis the status table marks shipped is not usable through the facade.
+- Biggest risk: the shipped writer sets `asserted_at` to the same value as `valid_from` on every assertion, a backdated MCP write included, and the default rule over `edge` discards the position — so the transaction-time axis the status table marks shipped is not usable through the facade or the MCP server.
 - Most reusable component: deriving an `alias_conflict` fact when a local has two canonicals, instead of merging two identities — a refusal to guess at the error that cannot be undone.
-- Maturity impression: ~11,700 lines of Rust, a stratified interpreter with seminaive fixpoint, magic-sets demand evaluation, proof trees with cycle protection, a status table with one honest "not yet" among twenty-seven shipped rows, and a clean screen.
+- Maturity impression: ~13,000 lines of Rust, a stratified interpreter with seminaive fixpoint, magic-sets demand evaluation, proof trees with cycle protection, 450 seeded random programs checked against a brute-force oracle, a status table with one honest "not yet" among thirty-one shipped rows, and a clean screen.
 - Study when: you would rather debug a rule than a ranking function, and want "why do I believe this" answered by a derivation rather than a citation.
 - Do not copy when: memory must be scoped between principals, a wrong belief must be recorded as wrong rather than dated out, or the team cannot write Datalog — the rules are the memory.
 

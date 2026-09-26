@@ -11961,34 +11961,37 @@ committed token A/B in the tree is an archived April run reporting a
 asserted_at — annotated with a confidence in a product t-norm and a
 provenance set of episode ids</td>
 <td>An in-process interned fact store with per-position secondary
-indexes, snapshotted to disk as episodes, EDB facts and rules with
-derived views rebuilt on load</td>
+indexes, snapshotted to disk as episodes, EDB facts, rules and
+escalations with derived views rebuilt on load</td>
 <td>BM25 with entity and graph boosting under a token budget, a semantic
 side index behind an <code>Embedder</code> trait, and <code>ask</code> /
 <code>ask_deep</code> Datalog queries with magic-sets demand
 evaluation</td>
-<td>An extractor asserts base facts at the ingestion boundary and a
-deterministic policy chooses ADD, UPDATE, NOOP or escalate; exclusive
-predicates close the previous edge rather than overwriting it</td>
+<td>An extractor, or the host model through MCP, asserts base facts at
+the ingestion boundary and a deterministic policy chooses ADD, UPDATE,
+NOOP or ADD with an escalation; exclusive predicates close the previous
+edge rather than overwriting it</td>
 <td>Supersession closes <code>valid_to</code> and re-declares the old
-tuple with <code>superseded</code> provenance; retraction recomputes
-only transitive dependents</td>
+tuple with <code>superseded</code> provenance; retraction removes the
+open row and recomputes only transitive dependents</td>
 <td>None. One store per process, with no principal, tenant or agent key
 on a tuple</td>
-<td>A Rust crate, an MCP server behind a feature flag, a REPL and an
-agent skill</td>
+<td>A Rust crate, an MCP server behind a feature flag with an installer
+script, a CLI, a REPL and an agent skill</td>
 <td>Incremental maintenance on a time advance — the sleep-time slot —
-rather than a daemon</td>
+rather than a daemon; the MCP server syncs the clock to the wall clock
+before every read</td>
 <td>Continuous. Confidence is a semiring annotation fused by a product
-t-norm, and provenance is a set union; no discrete status exists on a
-fact</td>
+t-norm, and provenance is a set union; the annotation type is a trait
+parameter, and no shipped carrier holds a discrete status</td>
 <td>Proof trees with cycle protection, a hypothetical that provably
-leaves no trace, and identity conflicts that derive a fact instead of
-merging two entities</td>
-<td>The shipped agent layer sets <code>asserted_at</code> to the same
-value as <code>valid_from</code> on every assertion and no rule reads
-the position, so the transaction-time axis the design describes is not
-usable through <code>AgentMemory</code></td>
+leaves no trace, identity conflicts that derive a fact instead of
+merging two entities, and a seeded differential oracle over 450 random
+programs</td>
+<td>The shipped writer sets <code>asserted_at</code> to the same value
+as <code>valid_from</code> on every assertion, including a backdated MCP
+observe, and the default rules discard the position, so the store cannot
+answer what it believed at a past time</td>
 </tr>
 <tr>
 <td><code>lerim</code></td>

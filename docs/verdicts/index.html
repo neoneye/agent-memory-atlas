@@ -3316,18 +3316,20 @@ href="../systems/lemmalog/"><code>lemmalog</code></a></h3>
 the store is untouched, the change feed recorded nothing, and the
 assembled context does not mention it — the last two being the half that
 catches a leak into downstream incremental views.</li>
-<li>Biggest risk: the shipped agent layer sets <code>asserted_at</code>
-to the same value as <code>valid_from</code> on every assertion, and the
-one rule that reads <code>edge</code> discards the position — so the
-transaction-time axis the status table marks shipped is not usable
-through the facade.</li>
+<li>Biggest risk: the shipped writer sets <code>asserted_at</code> to
+the same value as <code>valid_from</code> on every assertion, a
+backdated MCP write included, and the default rule over
+<code>edge</code> discards the position — so the transaction-time axis
+the status table marks shipped is not usable through the facade or the
+MCP server.</li>
 <li>Most reusable component: deriving an <code>alias_conflict</code>
 fact when a local has two canonicals, instead of merging two identities
 — a refusal to guess at the error that cannot be undone.</li>
-<li>Maturity impression: ~11,700 lines of Rust, a stratified interpreter
+<li>Maturity impression: ~13,000 lines of Rust, a stratified interpreter
 with seminaive fixpoint, magic-sets demand evaluation, proof trees with
-cycle protection, a status table with one honest "not yet" among
-twenty-seven shipped rows, and a clean screen.</li>
+cycle protection, 450 seeded random programs checked against a
+brute-force oracle, a status table with one honest "not yet" among
+thirty-one shipped rows, and a clean screen.</li>
 <li>Study when: you would rather debug a rule than a ranking function,
 and want "why do I believe this" answered by a derivation rather than a
 citation.</li>
