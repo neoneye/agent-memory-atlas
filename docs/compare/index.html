@@ -4950,15 +4950,17 @@ design rather than a settled one</td>
 </tr>
 <tr>
 <td><code>compartment</code></td>
-<td>An encrypted record in a namespace, with a kind, tags and optional
-validity bounds, beside a relation table of subject-predicate-object
-triples</td>
+<td>An encrypted record in a namespace, with a kind, tags, a discovery
+date and an optional expiry, beside a relation table of
+subject-predicate-object triples with validity bounds</td>
 <td>One sealed <code>.vault</code> file — SQLite and ciphertext inside
 an encrypted payload, journaled and fsynced per write, with a
 hash-chained audit log inside the seal and ACLs in a plaintext config
 beside it</td>
-<td>Keyword search over FTS, vectors rebuilt into RAM on unlock, and a
-deterministic relation filter with an <code>as_of</code> instant</td>
+<td>Keyword search over FTS and vectors rebuilt into RAM on unlock, with
+the semantic channel aged by the share of the searched namespaces
+written since; save-date and discovery-date windows; a deterministic
+relation filter with an <code>as_of</code> instant</td>
 <td>Every write is journaled and fsynced; a store gate refuses a memory
 whose shape would embed badly, rather than asking the model not to send
 one</td>
@@ -4968,18 +4970,19 @@ channel can never surface it again</td>
 <td>Per-caller ACLs over namespace patterns, resolved to a readable set
 before every search, with <code>packs/*</code> read-only for
 everyone</td>
-<td>An MCP server, a Claude Code plugin, a Gemini extension, a menu-bar
-and systray app, and a CLI</td>
+<td>An MCP server, a Claude Code plugin, a Gemini extension, a Hermes
+memory provider, a menu-bar and systray app, and a CLI</td>
 <td>An embedding daemon; the vector index is rebuilt in RAM on unlock
 rather than persisted</td>
-<td>None as a status. A record carries a kind and tags, and no epistemic
-state</td>
+<td>None as a status. A record carries a kind, tags and a writer-set
+quarantined flag that labels a result and never withholds it</td>
 <td>An audit chain that anchors its own length so a tail truncation is
 reported as removal; a store gate whose justification is a measurement
 of the prompt it replaced</td>
-<td>Supersession is keyed on the record id, so nothing prevents the same
-claim being stored again; the record-time axis is stored and not
-queryable</td>
+<td>Supersession is keyed on the record id and the duplicate guard sees
+live records only, so a superseded claim can be stored again;
+supersession carries no time, so past belief cannot be
+reconstructed</td>
 </tr>
 <tr>
 <td><code>context-engineering</code></td>
