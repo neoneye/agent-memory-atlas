@@ -27487,26 +27487,41 @@ above</td>
 <code>SCRATCHPAD.md</code>, project notes, and a daily log per date</td>
 <td>Plain files on disk under a store root, with project-scoped
 subdirectories and <code>YYYY-MM-DD.md</code> daily logs</td>
-<td><code>memory_read</code> with a source selector and
-<code>memory_search</code> with a case-insensitive regex, both capped at
-32 KB of injected context</td>
+<td>An injected block of open scratchpad items, the two newest non-empty
+daily logs and <code>MEMORY.md</code> under a 32 KB budget;
+<code>memory_read</code> by source; <code>memory_search</code> with
+literal case-insensitive terms, files ranked <code>MEMORY.md</code>
+first and then by distinct terms matched</td>
 <td><code>memory_write</code> and <code>memory_edit</code> as agent
-tools, each preceded by a permission check that can prompt the user</td>
-<td>An edit without <code>old_str</code> deletes a whole note; every
-destructive mutation first copies the file to a sibling
-<code>.bak</code> — one version, not a history</td>
-<td>A project slug scopes scratchpad, notes and daily logs;
-<code>MEMORY.md</code> is deliberately global and shared across
-projects</td>
-<td>Four tools behind the agent's ordinary permission checker, plus a
-<code>/memory</code> slash command</td>
-<td>None</td>
-<td>None. A line is in a file or it is not</td>
+tools behind the permission checker; the pre-compaction flush appends
+the model-written summary to today's log outside it;
+<code>/memory</code> for the operator</td>
+<td>An edit without <code>old_str</code> deletes a whole note and is
+refused for other targets; <code>long_term</code> and
+<code>scratchpad</code> overwrites and edits, and note deletions, copy
+the file to a single <code>.bak</code> first; note overwrites and daily
+or note edits take no backup; the TUI's <code>/memory editor</code>
+empties <code>MEMORY.md</code> before opening it</td>
+<td>A project slug derived from the working directory's full path scopes
+scratchpad, notes and daily logs by directory; <code>MEMORY.md</code> is
+deliberately global and shared across projects</td>
+<td>Four tools when built with the memory feature, a read-only pair for
+subagents, system-prompt guidance, and a <code>/memory</code> command in
+the TUI and the headless engine</td>
+<td>No worker. Every compaction appends its summary to today's daily
+log: /compact on demand, and automatic compaction when compact_enabled
+is set, off by default</td>
+<td>None. A line is in a file or it is not; the injected block is
+wrapped as reference-only</td>
 <td>Atomic write-then-rename, a <code>.bak</code> whose extension keeps
-it out of the <code>.md</code> listing and search, and
-truncation-with-warning instead of rejection on oversized writes</td>
-<td>The backup is one version deep and overwritten on the next
-destructive edit, so two bad edits in a row lose the original</td>
+it out of listing and search, truncation-with-warning on oversized
+writes, whitespace-normalised dedup on long-term appends, and a context
+budget that truncates by priority with markers</td>
+<td>The TUI's <code>/memory editor</code> empties the global
+<code>MEMORY.md</code> with no backup; backups are one version deep and
+skip note overwrites and daily or note edits; the default permission
+mode allows all four tools; appends race across sessions; a
+<code>MEMORY.md</code> over 128 KB drops out of injection silently</td>
 </tr>
 </tbody>
 </table></div>
@@ -28572,7 +28587,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>362 of 646:</em> <a
+<p><em>363 of 646:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -28944,7 +28959,8 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 href="../systems/yantrikdb-hermes-plugin/"><code>yantrikdb-hermes-plugin</code></a>,
 <a href="../systems/yantrikdb-mcp/"><code>yantrikdb-mcp</code></a>, <a
 href="../systems/yesmem/"><code>yesmem</code></a>, <a
-href="../systems/zer0dex/"><code>zer0dex</code></a></p>
+href="../systems/zer0dex/"><code>zer0dex</code></a>, <a
+href="../systems/zerostack/"><code>zerostack</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
 <p>Three observations follow from the counts, stated no more strongly
@@ -28964,7 +28980,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-362 repositories of
+363 repositories of
 646 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

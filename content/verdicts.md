@@ -1243,9 +1243,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`zerostack`](../systems/zerostack/)
 - Best idea: atomic write-then-rename with the reason in the comment, and a `.bak` whose extension deliberately keeps it out of the `.md` listing and out of search — a backup that cannot become a search result.
-- Biggest risk: a destructive default on a missing argument, and a one-deep undo presented as safety.
+- Biggest risk: the TUI's `/memory editor` writes an empty string to the global `MEMORY.md` before opening it, with no backup; beside that, backups are one version deep and skip note overwrites and daily or note edits.
 - Most reusable component: the global-versus-project split and the atomic-write-plus-backup pair, liftable wholesale into any notebook system in any language.
-- Maturity impression: 65 test functions in 1,203 lines — a ratio just under one to one — with a separate permission-path suite including `check_perm_skipped_when_permission_is_none`, which asserts the gate is a gate.
+- Maturity impression: 58 memory tests in 1,204 lines, run by CI under `--all-features`, with a separate permission-path suite including `check_perm_skipped_when_permission_is_none`. One capability mark, `negative_eval`, on committed cases that keep closed scratchpad items and stray files out of the injected block beside a populated control. Nothing tests the editor path.
 - Study when: you want a Markdown memory in a Rust agent and care more about not corrupting a file than about recalling the right line.
 - Do not copy when: memory has to hold claims. There is nothing to mark uncertain, nothing to supersede, and no record that anything changed beyond one overwritable `.bak`.
 
