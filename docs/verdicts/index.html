@@ -2138,21 +2138,27 @@ operational history is the thing worth pooling.</li>
 <h3 id="elastic-atlas"><a
 href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></h3>
 <ul>
-<li>Best idea: a committed retrieval eval matched on document id rather
-than judged by a model, so Recall@k and MRR are arithmetic and
-reproducible — shipped beside a stress test.</li>
-<li>Biggest risk: a research demo by its own description, with synthetic
-personas and an ungated single-pass consolidation that writes both facts
-and playbooks.</li>
-<li>Most reusable component: the eval and stress-test scripts, which are
-more transferable than the memory layer.</li>
-<li>Maturity impression: a demo that measures itself more than most
-production systems in this atlas do.</li>
-<li>Study when: you want the clearest small example of the
-episodic/semantic/procedural split, or an eval design you can actually
-rerun.</li>
-<li>Do not copy when: you need correction, trust state, or an audit
-trail — none is present.</li>
+<li>Best idea: supersession that separates "no longer true" from "never
+true" — a natural contradiction keeps the old fact as prior state, an
+in-turn denial marks it <code>retracted</code>, and every default read
+withholds both — with validity dates kept apart from record time.</li>
+<li>Biggest risk: the filter that hides a retracted fact from recall
+also hides it from the extractor's comparison set and the dedup search,
+so nothing on the write path can stop a denied value being re-extracted;
+the supersede update checks no owner.</li>
+<li>Most reusable component: <code>_drop_ungrounded</code> in
+<code>consolidate.py</code>, a token diff that keeps assistant-only
+claims out of the customer's record, and a recall eval matched on
+document id and gated together with a cross-persona isolation
+sweep.</li>
+<li>Maturity impression: a demo on Elastic Cloud with unauthenticated
+routes, whose correction model and live-cluster harnesses are more
+developed than its README describes; four marks, and none of the
+harnesses was run for the report.</li>
+<li>Study when: you build memory on an Elasticsearch deployment you run,
+or want a supersession design that tells retraction from change.</li>
+<li>Do not copy when: you need a correction that survives re-extraction,
+an audit trail, or authenticated multi-tenant access.</li>
 </ul>
 <h3 id="nemoclaw"><a
 href="../systems/nemoclaw/"><code>nemoclaw</code></a></h3>

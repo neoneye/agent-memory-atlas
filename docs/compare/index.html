@@ -7064,27 +7064,42 @@ path; a forgotten key can be re-asserted by the next write</td>
 </tr>
 <tr>
 <td><code>elastic-atlas</code></td>
-<td>Document in one of three indices: episodic event, semantic fact,
-procedural playbook</td>
-<td>Elasticsearch — <code>atlas_memory_episodic</code>,
-<code>atlas_memory_semantic</code>,
-<code>atlas_memory_procedural</code></td>
-<td>RRF retriever fusing BM25 with a semantic query over auto-embedded
-fields</td>
-<td>Agent writes on every turn; auto-embedding via
-<code>semantic_text</code> inference, no client-side calls</td>
-<td>Consolidation dedupes episodic into semantic and updates playbooks;
-no tombstone</td>
-<td><code>user_id</code> per persona, applied on recall</td>
-<td>Backend service plus an MCP server for Claude Code, Claude Desktop,
-Cursor</td>
-<td>Consolidation — one model pass distils episodic events into semantic
-facts and playbooks</td>
-<td>Provenance by index and source event; no trust state on a fact</td>
-<td>A committed recall eval computing Recall@k and MRR, plus a stress
-test</td>
-<td>A research demo by its own description; consolidation is a single
-model pass with no gate</td>
+<td>A document in one of three indices: an episodic customer message, a
+semantic fact with fact_type, confidence, source episodes and optional
+validity dates, or a procedural playbook with steps and outcome
+counts</td>
+<td>Elasticsearch — atlas_memory_episodic, atlas_memory_semantic,
+atlas_memory_procedural, a shared atlas_catalog, and atlas_memory_state
+holding the consolidation watermark</td>
+<td>RRF over BM25 and a semantic query on auto-embedded text, each leg
+filtered by user_id and by the absence of superseded_by and scaled by
+time decay and a use-count boost, then a Jina cross-encoder rerank to
+top-k</td>
+<td>The customer's message is stored as an episode each turn and the
+agent writes facts through a tool; after the reply an inline
+consolidation pass extracts facts, drops assistant-only claims in code,
+and dedups against nearest neighbours</td>
+<td>Supersession stamps the old fact superseded_by and superseded_at,
+plus retracted on an in-turn denial, and hides it from recall;
+forget_memory hard-deletes one document with an owner check and a
+best-effort event. No tombstone</td>
+<td>user_id on every memory document, filtered on recall, core memory
+and consolidation, with optional per-user DLS keys; a REST recall
+without user_id and the supersede write carry no owner predicate</td>
+<td>FastAPI chat over SSE, REST memory routes, and an unauthenticated
+MCP JSON-RPC endpoint per user_id exposing recall, write and forget</td>
+<td>None scheduled; consolidation runs inline after every chat turn from
+a per-user watermark, one extraction call plus one batched dedup
+judgement</td>
+<td>Superseded and retracted states withheld from default recall;
+confidence and pending_outcome surfaced to the model; a code filter
+drops extracted facts carrying tokens only the assistant said</td>
+<td>A supersession filter with a value-level must-not case and a
+positive control, validity dates separate from record time, and a
+grounding filter enforced in code rather than in the prompt</td>
+<td>Nothing on the write path consults a retracted value, the supersede
+write has no owner check, REST recall without user_id reads every user,
+and the harnesses need a live cluster and were not run</td>
 </tr>
 <tr>
 <td><code>eliot-memory-os</code></td>
@@ -27693,7 +27708,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>163 of 646:</em> <a
+<p><em>164 of 646:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -27729,6 +27744,7 @@ href="../systems/cortana/"><code>cortana</code></a>, <a
 href="../systems/cortex-hypermnesia/"><code>cortex-hypermnesia</code></a>,
 <a href="../systems/dense-mem/"><code>dense-mem</code></a>, <a
 href="../systems/deus/"><code>deus</code></a>, <a
+href="../systems/elastic-atlas/"><code>elastic-atlas</code></a>, <a
 href="../systems/eliot-memory-os/"><code>eliot-memory-os</code></a>, <a
 href="../systems/elizaos/"><code>elizaos</code></a>, <a
 href="../systems/empirica/"><code>empirica</code></a>, <a
@@ -27863,7 +27879,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>110 of 646:</em> <a
+<p><em>111 of 646:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -27891,6 +27907,7 @@ href="../systems/core-redplanet/"><code>core-redplanet</code></a>, <a
 href="../systems/cortana/"><code>cortana</code></a>, <a
 href="../systems/daem0n-mcp/"><code>daem0n-mcp</code></a>, <a
 href="../systems/dense-mem/"><code>dense-mem</code></a>, <a
+href="../systems/elastic-atlas/"><code>elastic-atlas</code></a>, <a
 href="../systems/elizaos/"><code>elizaos</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
@@ -28614,7 +28631,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>364 of 646:</em> <a
+<p><em>365 of 646:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -28708,6 +28725,7 @@ href="../systems/ean-agentos/"><code>ean-agentos</code></a>, <a
 href="../systems/ecc/"><code>ecc</code></a>, <a
 href="../systems/echo-agent/"><code>echo-agent</code></a>, <a
 href="../systems/elai/"><code>elai</code></a>, <a
+href="../systems/elastic-atlas/"><code>elastic-atlas</code></a>, <a
 href="../systems/elizaos/"><code>elizaos</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-cognitive/"><code>engram-cognitive</code></a>,
@@ -29009,7 +29027,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-364 repositories of
+365 repositories of
 646 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

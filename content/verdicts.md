@@ -691,12 +691,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: corrections must survive re-extraction.
 
 ### [`elastic-atlas`](../systems/elastic-atlas/)
-- Best idea: a committed retrieval eval matched on document id rather than judged by a model, so Recall@k and MRR are arithmetic and reproducible — shipped beside a stress test.
-- Biggest risk: a research demo by its own description, with synthetic personas and an ungated single-pass consolidation that writes both facts and playbooks.
-- Most reusable component: the eval and stress-test scripts, which are more transferable than the memory layer.
-- Maturity impression: a demo that measures itself more than most production systems in this atlas do.
-- Study when: you want the clearest small example of the episodic/semantic/procedural split, or an eval design you can actually rerun.
-- Do not copy when: you need correction, trust state, or an audit trail — none is present.
+- Best idea: supersession that separates "no longer true" from "never true" — a natural contradiction keeps the old fact as prior state, an in-turn denial marks it `retracted`, and every default read withholds both — with validity dates kept apart from record time.
+- Biggest risk: the filter that hides a retracted fact from recall also hides it from the extractor's comparison set and the dedup search, so nothing on the write path can stop a denied value being re-extracted; the supersede update checks no owner.
+- Most reusable component: `_drop_ungrounded` in `consolidate.py`, a token diff that keeps assistant-only claims out of the customer's record, and a recall eval matched on document id and gated together with a cross-persona isolation sweep.
+- Maturity impression: a demo on Elastic Cloud with unauthenticated routes, whose correction model and live-cluster harnesses are more developed than its README describes; four marks, and none of the harnesses was run for the report.
+- Study when: you build memory on an Elasticsearch deployment you run, or want a supersession design that tells retraction from change.
+- Do not copy when: you need a correction that survives re-extraction, an audit trail, or authenticated multi-tenant access.
 
 ### [`nemoclaw`](../systems/nemoclaw/)
 - Best idea: a per-agent state contract that says which directories are snapshotted, which are wiped, which are regenerated and which the user owns — written down rather than left to whoever wrote the backup script.
