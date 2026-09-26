@@ -25323,89 +25323,94 @@ it trustworthy is a large part of why</td>
 <tr>
 <td><code>thoughtdag</code></td>
 <td>A node on a canvas — a question, answer versions with the model,
-time and context hash of each, highlights, attachments with page
-provenance, a role, an archived flag, an import source and a frozen
-source snapshot — joined by wires that are the context; on a node that
-ran an agent turn, footprint attachments for its tool calls and for what
-the file system saw change, excluded from context by default; beside it
-an ambient memory entry of one sentence in a category, with a kind, a
-project and a date; and, in the why layer, a fact index of observed
-events from other agents' session files</td>
+time and context hash of each, a per-upstream record of what each input
+contributed, highlights, attachments with page provenance, a role, an
+archived flag, an import source and a frozen source snapshot — joined by
+wires that are the context; on a node that ran an agent turn, footprint
+attachments excluded from context by default; beside it two profile
+documents, preferences and identity, one fact per line, and one dossier
+per topic in four sections whose sentences cite the turns they rest on;
+in the why layer, a fact index over other agents' session files and the
+memory files Claude Code and Codex keep</td>
 <td>IndexedDB per canvas (idb-keyval) with a one-minute debounced
 <code>.thoughtdag.json</code> folder backup; <code>localStorage</code>
-for the memory library and switches; <code>~/.thoughtdag/</code> for the
-why layer's fact index, interpretation cache and verbatim text index;
-<code>&lt;cwd&gt;/.thoughtdag/</code> for an agent turn's guard file and
-copied materials, with per-canvas workspaces under the app's data
-directory or <code>~/.thoughtdag/workspaces/</code>; the source agents'
-session files are read and never written</td>
+for the profile documents, the memory inbox and switches;
+<code>~/.thoughtdag/</code> for the why layer's fact index, text index,
+topic labels and dossiers, and a slim record of each canvas; a
+<code>.thoughtdag</code> folder in an agent turn's working directory for
+its guard file and copied materials; the source agents' session and
+memory files are read and never written</td>
 <td>For a generation, a deterministic walk of the graph — materials,
 dashed reference blocks, the solid chain in order, the question last —
-with archived nodes skipped, stale answers marked, and an excluded
-footprint contributing one line naming the files it touched with the
-contents withheld; for an agent runtime the messages are flattened into
-one block ahead of the question, or the question alone on a continued
-session; for the why layer, exact phrase and path lookup over the index
-with reads hidden by default; no vectors anywhere</td>
+with archived nodes skipped, stale answers marked and an excluded
+footprint reduced to one line naming its files; with recall switched on,
+up to two topic dossiers whole and verbatim excerpts found by the
+question's exact words or by judged topic labels, ranked by a decision
+model when one answers, inside a 4k, 12k or 40k token ceiling; for the
+why layer, exact phrase and path lookup with reads hidden by default; no
+vectors anywhere</td>
 <td>A person asks, edits, wires and imports; a model's answer lands as a
-version on its node; a background judge proposes at most three ambient
-memories per canvas per session under a constitution in code; Session
-Atlas mirrors other agents' turns idempotently past a ledger; the
-DeepSeek Harness bridge can fork a session, inject context and queue a
-prompt into the harness; from the desktop, the local proxy or the plugin
-host, a turn is handed to Pi or Codex in a working directory, with a
-tool call outside that directory held for the person's answer on the
-node</td>
+version on its node; after an ordinary generation a decision model or
+the chat model decides whether something durable was said, a preference
+or identity fact is merged into its document by a model rewrite, and a
+project fact is filed to a topic dossier's inbox or to the memory inbox;
+dossiers are written by the chat model from labelled turns; Session
+Atlas mirrors other agents' turns idempotently; the harness bridge
+forks, injects and queues into live sessions; Pi and Codex turns edit
+files in a working directory behind a guard</td>
 <td>Answers are versioned and never overwritten; a node can be archived
-— kept, dimmed and excluded from every context walk — or deleted; a wire
-can be removed or converted; an upstream change marks dependants stale
-and replay regenerates them in dependency order; an ambient memory can
-be undone at the toast, edited or deleted in the manager, and project
-entries stop flowing after 45 days</td>
+— kept, dimmed and excluded from every context walk on its canvas — or
+deleted; a wire can be removed or converted; an upstream change marks
+dependants stale and replay regenerates them in dependency order; a
+profile rewrite can be undone at the toast or edited by hand; a dossier
+section can be edited, the dossier rebuilt from the turns or deleted; a
+recalled item can be struck from a node</td>
 <td>One canvas per IndexedDB key and reachability by wire as the only
-filter inside it; ambient memory is global to the install, labelled with
-the canvas it came from and not filtered by it; the why index is one per
-machine over every runner's sessions; an agent turn is fenced to one
-working directory per canvas with a per-canvas allow list, and the proxy
-starts a run in any absolute directory a localhost request names</td>
+filter inside it; the profile documents are global to the install;
+recall reads every project's sessions, canvases and agent memory files
+on the machine and leaves out only the active canvas's own record; the
+why layer's JSON find honours a working-directory filter that no in-tree
+caller passes; an agent turn is fenced to one working directory per
+canvas</td>
 <td>A React canvas in the browser, an Electron desktop app with fenced
-session roots, an Express proxy for any OpenAI-compatible, Anthropic,
-Google, DeepSeek or Zhipu endpoint plus MCP tools, a Cloudflare Pages
-demo with no server state, a <code>dsh-thoughtdag</code> plugin mounting
-the canvas inside DeepSeek Harness, a CLI exposing
-<code>why_check</code>, <code>why_file</code>, <code>find</code> and
-<code>recall_turn</code> over MCP, and Pi and Codex as agent runtimes
-behind the model picker — IPC in the desktop app,
-<code>/api/agents</code> on the local proxy and the plugin host</td>
+session roots, an Express proxy for OpenAI-compatible, Anthropic,
+Google, DeepSeek and Zhipu endpoints plus MCP tools and a pass-through
+for decision endpoints, a Cloudflare Pages demo with no server state, a
+<code>dsh-thoughtdag</code> plugin mounting the canvas and the why layer
+inside DeepSeek Harness, a CLI exposing <code>why_check</code>,
+<code>why_file</code>, <code>find</code> and <code>recall_turn</code>
+over MCP, and Pi and Codex as agent runtimes behind the model
+picker</td>
 <td>A file watcher appends new turns of a subscribed session to its
 mirror; the why index refreshes when a source file's size or mtime
 moved; the memory judge runs fire-and-forget after ordinary generations;
-a snapshot of an agent turn's working directory before and after it
-records what changed, and a turn silent for ten minutes is stopped;
-nothing consolidates or rewrites the graph on its own</td>
+a labelling job asks the decision model one yes or no per topic for up
+to 600 turns per click; a stale judge asks whether an upstream change
+bears on each newly stale answer; a dossier with six filed facts merges
+when the memory page opens; nothing rewrites the graph on its own</td>
 <td>A stale mark on any answer whose upstream fingerprint drifted,
-prepended to its text in downstream context rather than withholding it;
-a footprint whose contents are withheld names its files; a
-<code>basis</code> of observed, reconstructed or inferred and a
-<code>completeness</code> on every why-layer event, displayed and never
-filtered; an identity memory admitted only when the user stated it; a
-credential pattern that blocks a memory in code; an outcome per agent
-question kept on the node</td>
+prepended in downstream context; a judge can dismiss the mark from the
+badge and the preview but not from the request; a footprint whose
+contents are withheld names its files; a basis and completeness on every
+why-layer event, displayed and never filtered; an identity fact admitted
+only when the user stated it; a credential pattern checked on the fact
+and not on the rewritten document; conclusiveness levels on takeaways,
+display only</td>
 <td>The preview and the request share one compiler; a request hash
-written at dispatch; a benchmark whose conditions are graph operations,
-whose traces are immutable and whose scorer can re-score without an API
-call, and whose status file records its own corrections; source sessions
-that are read and never rewritten</td>
-<td>Stale is a label the model is asked to respect, not an exclusion,
-and no benchmark condition carries it; archive is exclusion without a
-record, so a pruned claim can be re-wired or re-imported; the event log
-rotates past 10,000 and does not see memory admissions or agent
-approvals; an agent-lane commit hashes the compiled messages rather than
-the block or bare question the runtime received; ambient memory is
-global across canvases with a project label nobody filters on; the
-harness bridge writes into live sessions and the proxy's agent endpoints
-accept any absolute directory from any localhost origin; 640 commits in
-ten weeks by one author</td>
+written at dispatch; dossier sentences that carry the keys of the turns
+they rest on; recall items listed, priced and strikeable on the node; a
+benchmark whose conditions are graph operations, whose traces are
+immutable and whose scorer can re-score without an API call; source
+sessions and agent memory files read and never rewritten</td>
+<td>Stale is a label, and a judge's dismissal removes it from the
+preview while the request keeps it; recall crosses every project on the
+machine and can bring back an archived node from another canvas; the
+profile rewrite is a free model rewrite outside the constitution; the
+event log sees no profile, dossier or recall write; the
+working-directory filter has no caller and its one test does not
+exercise it; ambient identity and preferences ride every canvas; the
+proxy's agent and judge endpoints accept any target from any localhost
+origin</td>
 </tr>
 <tr>
 <td><code>throughline</code></td>
