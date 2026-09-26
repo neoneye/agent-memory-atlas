@@ -19561,31 +19561,35 @@ without recording what it changed</td>
 <td><code>openlore</code></td>
 <td>An ordinary Markdown file in a docset, optionally carrying OKF
 frontmatter for provenance, trust and lifecycle</td>
-<td>Markdown on disk behind a virtual filesystem, with a sharded JSONL
-history journal beside it; no database, no vector index</td>
+<td>Markdown on disk behind a virtual filesystem; beside it a JSONL
+history index, a commit journal carrying every committed changeset, and
+content-addressed pre-image blobs. No database, no vector index</td>
 <td>The Unix toolchain reimplemented in Go — ls, cat, grep, find, awk,
 jq — run against the scoped virtual filesystem over SSH, plus MCP</td>
 <td>Compare-and-swap against the version the session last read,
 serialized through one ordered log with a single applier</td>
-<td>Whole-file writes and removes, both logged; a remove purges that
-file's history shard. Nothing records that a claim was wrong</td>
+<td>Whole-file writes and removes, both logged with before and after
+hashes; a remove keeps its per-file history and the removed file's
+pre-image. Nothing records that a claim was wrong</td>
 <td>Per-identity grants on named docsets, applied as a read filter on
-the session filesystem, with the most-specific docset overriding its
-ancestor</td>
-<td>SSH as the primary interface, MCP for agents, an HTTP API, and a
-generated AGENTS.md block</td>
-<td>None for memory content; the history index is written inline at
-commit</td>
-<td>A validated vocabulary that nothing reads — OKF <code>status</code>
-is draft, stable or deprecated and <code>verified</code> is a list of
-{by, at} events, both shape-checked on write and consulted by no read
-path</td>
+the session filesystem with the most-specific docset overriding its
+ancestor; the history query filters by plain prefix and skips that
+override</td>
+<td>SSH as the primary interface, MCP for agents, an HTTP API, a
+read-only web dashboard, and a generated AGENTS.md block</td>
+<td>None for memory content; an analytics indexer computes per-file size
+and usage facts, and a daily job rotates the commit journal</td>
+<td>A validated vocabulary that nothing filters on — OKF
+<code>status</code> is draft, stable or deprecated and
+<code>verified</code> is a list of {by, at} events, both shape-checked
+on write and selected on by no read path</td>
 <td>A read scope where a nested docset overrides an ancestor grant, and
 a startup check that refuses two docsets sharing a display root because
 read and write authorization would resolve the tie differently</td>
 <td>The human-approval protocol is complete on every side except the one
 that asks a person; the only producers of a pending change are three
-test files</td>
+test files. A removed file's content stays in the history store unless
+retention is configured</td>
 </tr>
 <tr>
 <td><code>openmake-llm</code></td>

@@ -4017,10 +4017,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`openlore`](../systems/openlore/)
 - Best idea: every configured docset root is an access carve-out, so a path is readable only when the most-specific docset covering it is granted — a grant on the root docset does not reach into the per-user namespaces nested underneath it.
-- Biggest risk: the human-approval protocol is complete except for the approver. The deferral error, six commands that handle it, the inbox, the resume path and its re-admission guard all ship; the only callers of `WriteOp.Pending` are three test files, and the approvals plugin is named in a comment and absent from the repository.
+- Biggest risk: the human-approval protocol is complete except for the approver. The deferral error, six commands that handle it, the inbox, the resume path and its re-admission guard all ship; the only callers of `WriteOp.Pending` are three test files, and the approvals plugin is named in a comment and absent from the repository. The shell `history` command skips the carve-out, so an ancestor grant lists paths, actors and content hashes inside nested docsets it cannot read.
 - Most reusable component: putting the scope on the filesystem rather than on the query, so forty reimplemented Unix commands inherit the boundary without knowing docsets exist.
-- Maturity impression: Apache-2.0, ~38,600 lines of Go serving Markdown over SSH and MCP with no index, no database and no model, a startup check that refuses two docsets sharing a display root because read and write authorization would break the tie differently, and `awk` and `jq` reimplemented against the virtual filesystem.
-- Study when: several agents or people must read one Markdown corpus and the hard requirement is who may see what.
+- Maturity impression: Apache-2.0, ~49,700 lines of Go serving Markdown over SSH, MCP and a read-only dashboard with no index, no database and no model, a startup check that refuses two docsets sharing a display root because read and write authorization would break the tie differently, an append-only commit journal with before and after hashes and pre-image blobs, and `awk` and `jq` reimplemented against the virtual filesystem.
+- Study when: several agents or people must read one Markdown corpus and the hard requirement is who may see which file.
 - Do not copy when: the knowledge needs a lifecycle — OKF defines draft, stable and deprecated, validates them on write, and no read path filters on any of them.
 
 ### [`agent-memoryforge`](../systems/agent-memoryforge/)
