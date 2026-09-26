@@ -251,6 +251,8 @@ dedupe opens its loop with `if (!isActiveMemoryEvidence(candidate)) continue;`,
 so a retired claim does not block the identical text being written again as a
 new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 
+[Emulo](../../systems/emulo/) retains evidence more strictly than most, and shows the same gap. Every rule reaches verbatim quotes bound to the dated message they came from, and the profile is rebuilt from cached, content-addressed worker reports. There is no correction in the retained layer: a hand edit to the active profile fails its hash, and re-mining over unchanged reports reactivates the same version. The rebuild also consumes the host's log retention, so evidence that rolls off disk takes its rules with it at the next update — deletion upstream acts as a forgetting policy nobody chose.
+
 ### Related: admission gates rather than evidence
 
 These decide what may become a belief — a shared derivation, a confirmation turn,

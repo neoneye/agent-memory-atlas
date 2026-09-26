@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A stdlib Python tool that mines
+the messages a developer typed to coding agents into receipt-backed
+rules, installed as a profile agents load whole.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Emulo — Agent Memory Atlas">
+    <meta property="og:description" content="A stdlib Python tool that
+mines the messages a developer typed to coding agents into
+receipt-backed rules, installed as a profile agents load whole.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Emulo — Agent Memory Atlas">
+    <meta name="twitter:description" content="A stdlib Python tool that
+mines the messages a developer typed to coding agents into
+receipt-backed rules, installed as a profile agents load whole.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Emulo — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Emulo",
+      "description": "A stdlib Python tool that mines the messages a developer typed to coding agents into receipt-backed rules, installed as a profile agents load whole.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A personal profile mined from session logs,
+with verbatim receipts</p>
+          <h1>Emulo</h1>
+          <p class="document-deck">A stdlib Python tool that mines the
+messages a developer typed to coding agents into receipt-backed rules,
+installed as a profile agents load whole.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ohad6k/emulo">
+              <span>Source</span>
+              <strong>ohad6k/emulo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ohad6k/emulo/commit/a8552916c5920c1a5ee16b8fa1c1857f6c1ad9b4" title="a8552916c5920c1a5ee16b8fa1c1857f6c1ad9b4">
+              <span>Analyzed revision</span>
+              <code>a8552916…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ohad6k--emulo" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ohad6k--emulo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>4,979
+lines of Python in emulo.py and 2,767 in emulo_autopilot/, beside a
+3,983-line TypeScript sync worker</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>409
+commits on main by 3 contributors, 8 July – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>571
+Python test functions in 11,573 lines, and 113 worker test
+cases</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Emulo reads the local session logs of Claude Code, Codex, Copilot
+CLI, OpenCode and Antigravity, keeps only the messages the developer
+typed, and has the developer's own coding agent distil them into rules
+about how that person works, designs, writes and edits video. Every rule
+cites short quotes from those messages, and the result is installed
+where an agent reads it. The README insists this is <em>"Not
+memory"</em>; by this atlas's test it is a profile store that persists
+across sessions and makes claims that can be false.</p>
+<p>What is notable is the evidence discipline on the way in. A worker's
+quote must appear verbatim in the message dated as it claims, an
+inferred rule needs two sessions and two source-quarter strata, a rule
+citing contradicted evidence is refused, and every artifact is
+content-addressed so an unchanged update costs nothing.</p>
+<p>What is weak is everything after admission. The served profile file
+is written by the reducer model and checked only for containing the
+validated rules. A wrong rule has no correction path short of re-mining,
+which reuses the cached result.</p>
+<p>The system has two halves. <code>emulo.py</code> is one stdlib file
+holding the extractor, the redactor, the plugin runtime, the validators,
+the install adapters and the MCP server. <code>emulo_autopilot/</code>
+is a second design — candidates, review decisions, generations with
+rollback, end-to-end encrypted sync through a Cloudflare worker — whose
+candidate queue nothing in the tree fills.</p>
+<p>No mark is awarded; section 9 names each near-miss.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <strong>rule</strong>: a sentence, an operational
+implication, a <code>kind</code> of <code>inferred</code> or
+<code>explicit</code>, and a list of evidence ids. An evidence item is a
+worker's reading of one segment — an instruction, an implication, one or
+more quotes of at most 200 characters, and any contradicting quotes. The
+quotes are the only part Python can check against the source.</p>
+<p><strong>A message becomes evidence</strong> when a worker cites it
+and <code>validate_report</code> finds the quoted text inside the
+message carrying the claimed date (<code>emulo.py:2022-2031</code>,
+<code>:2086-2093</code>). <strong>Evidence becomes a rule</strong> when
+the reducer writes it into <code>draft-manifest.json</code> and
+<code>validate_rule</code> accepts it: not on a generic-phrase list, two
+distinct sessions and two strata for <code>inferred</code>, one
+uncontradicted quote with <code>confidence: low-frequency</code> for
+<code>explicit</code>, and no contradiction on any cited item
+(<code>:1096-1135</code>). <strong>A rule becomes a belief</strong> when
+<code>plugin activate</code> swaps <code>current.json</code> to the new
+version, after which every loader serves it as an instruction.</p>
+<p><strong>How a rule stops being one.</strong> A newer activation
+replaces the whole version. A session log the host deletes — Claude
+Code's retention defaults to 30 days, which the README's FAQ names —
+deactivates every segment that held it at the next
+<code>sync_segments</code>, and nothing rebuilds a segment from a
+session that is gone (<code>:946-962</code>). So the next full update
+reduces over less history and the rule can lapse without anyone
+rejecting it. There is no path by which a person rejects one rule.</p>
+<p>The model never sees the evidence. <code>you.md</code> holds rules
+and implications; the receipts live in a private
+<code>appendix.md</code> that no loader returns
+(<code>:4023-4050</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a typed message becomes an installed rule in Emulo, where the checks stop, and the three ways a rule leaves</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a typed message becomes an installed rule in Emulo, where the checks stop, and the three ways a rule leaves
+flowchart TD
+    LOG[&quot;host session logs&quot;] --&gt; X[&quot;user_messages: human-typed turns only,&lt;br/&gt;injected context and own chunks dropped,&lt;br/&gt;redacted&quot;]
+    X --&gt; SEG[&quot;content-addressed segments&quot;]
+    SEG --&gt; W[&quot;worker model: one report per segment&quot;]
+    W --&gt; V1{&quot;validate_report:&lt;br/&gt;quote verbatim in the&lt;br/&gt;message of that date?&quot;}
+    V1 -- &quot;no&quot; --&gt; REJ1[&quot;report refused&quot;]
+    V1 -- &quot;yes&quot; --&gt; EV[&quot;evidence items,&lt;br/&gt;cached by segment hash&quot;]
+    EV --&gt; R[&quot;reducer model: writes you.md,&lt;br/&gt;appendix.md, draft-manifest.json&quot;]
+    R --&gt; V2{&quot;validate_rule per manifest rule:&lt;br/&gt;non-generic, 2 sessions + 2 strata,&lt;br/&gt;no contradiction on cited evidence&quot;}
+    V2 -- &quot;fails&quot; --&gt; REJ2[&quot;pack refused&quot;]
+    V2 -- &quot;passes&quot; --&gt; V3{&quot;each validated rule&#39;s text&lt;br/&gt;present in you.md?&quot;}
+    V3 -- &quot;yes, extra text allowed&quot; --&gt; ACT[&quot;immutable version,&lt;br/&gt;current.json swapped&quot;]
+    ACT --&gt; LOAD[&quot;profile-path, MCP tool,&lt;br/&gt;or --install copy&quot;]
+    LOAD --&gt; MODEL[&quot;model reads rules&lt;br/&gt;as instructions&quot;]
+    OV[&quot;Autopilot overlay:&lt;br/&gt;approved candidates&quot;] -. &quot;appended by the MCP loader;&lt;br/&gt;no producer of candidates&quot; .-&gt; LOAD
+    ACT -- &quot;log rolls off disk&quot; --&gt; GONE[&quot;segment inactive,&lt;br/&gt;rule may lapse at next update&quot;]
+    ACT -- &quot;hand edit&quot; --&gt; REF[&quot;hash mismatch: loaders refuse&quot;]
+    ACT -- &quot;mine again, same inputs&quot; --&gt; SAME[&quot;cached reduction reactivated,&lt;br/&gt;same rules&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>emulo.py</code> is a single stdlib-only file for Python 3.8 and
+later. Its <code>plugin</code> subcommands are the runtime the host
+agent drives: <code>preflight</code> and <code>prepare</code> build a
+plan and a run directory, <code>validate-report</code> and
+<code>cache-report</code> gate worker output, <code>validate-pack</code>
+and <code>activate</code> gate the reducer's pack, and
+<code>profile-path</code> resolves what to load
+(<code>emulo.py:3717-3793</code>, <code>:4387-4454</code>). The model
+work is done by whatever agent runs the skill; Emulo makes no network
+call and calls no model itself.</p>
+<p>State lives in <code>~/.emulo</code> or <code>EMULO_HOME</code>.
+Segments are stored under their hash; worker reports under
+<code>cache/</code> keyed by prompt schema and segment hash; a reduction
+under the hash of its report set; and each profile version in
+<code>profiles/default/versions/&lt;version&gt;/</code> with a
+<code>manifest.json</code> that pins every file's SHA-256.
+<code>current.json</code> names the active version and its manifest
+hash, and <code>active_profile_state</code> refuses any mismatch
+(<code>:3995-4021</code>).</p>
+<p>The one-file path skips all of this: <code>emulo</code> writes
+<code>emulo-out/</code> with chunks and a <code>RUN_ME.md</code> for the
+agent, the agent writes <code>you.md</code> on its own, and
+<code>--install</code> copies it into place. Nothing validates that
+profile beyond the separate <code>emulo verify</code> quote search
+(<code>:4886-4897</code>).</p>
+<p><code>emulo_autopilot/</code> is a second store under
+<code>~/.emulo/autopilot</code>: JSON candidates, append-only decision
+files, immutable generations with parent pointers and a
+<code>head.json</code>, a session scanner, and continuity code that
+encrypts a generation and pushes it to a Cloudflare worker with D1. The
+package installs as the <code>emulo-autopilot</code> CLI
+(<code>pyproject.toml:29</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run. <code>pip install emulo</code> or a plugin
+install is the whole setup, no API key is needed by Emulo, and mining is
+offline if the host agent uses a local model. The cost is model passes:
+full history is the default, and the plan prints worker and reducer
+counts before approval. The store is JSON and Markdown, readable by
+hand, but not repairable by hand: an edited profile file fails its
+manifest hash and the loaders stop serving it
+(<code>docs/PROFILE-FLOW.md:221</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Extraction.</strong> <code>user_messages</code>
+(<code>emulo.py:396-461</code>) parses each log format, keeps user turns
+that <code>is_human_turn</code> accepts (<code>:374-394</code>), strips
+Codex control envelopes, and drops injected context, pasted stack traces
+and Emulo's own chunk headers. <code>mine_files</code>
+(<code>:531-602</code>) deduplicates messages of 200 characters or more
+across sessions, redacts, and emits one record per session with a
+content hash.</p>
+<p><strong>Segmentation.</strong> <code>sync_segments</code>
+(<code>:910-986</code>) packs records into segments by source and date,
+keyed by <code>segment_hash</code> over session ids and content hashes.
+A session whose hash changed or vanished deactivates its segment; only
+sessions still present are rebuilt (<code>:949-962</code>).</p>
+<p><strong>Planning.</strong> Full mode, the default, takes every active
+segment (<code>build_deep_preflight</code>, <code>:2309-2355</code>).
+<code>--preview</code> selects four to eight segments under a
+160,000-token cap. <code>prepare</code> refuses to run unless the plan
+hash equals the one the user approved (<code>:4302-4312</code>).</p>
+<p><strong>Worker gate.</strong> <code>validate_report</code>
+(<code>:2033-2100</code>) checks coverage against the segment, four
+domain states, at most twelve evidence items, and the verbatim receipt
+check for every quote and contradiction.</p>
+<p><strong>Reducer gate.</strong> <code>validate_profile_pack</code>
+(<code>:1251-1353</code>) requires four domain states with
+<code>work</code> active, exact frontmatter names,
+<code>validate_rule</code> on every manifest rule, each rule's text and
+implication present in its file, every cited quote present in
+<code>appendix.md</code>, and card counts equal to distinct
+sessions.</p>
+<p><strong>Activation.</strong> <code>activate_profile_pack</code>
+(<code>:1585-1677</code>) stages the version, validates it, renames it
+into place, writes <code>current.json</code>, and on any failure
+restores the previous pointer bytes.
+<code>activate_cached_reduction</code> (<code>:1679-1711</code>)
+repoints to an existing version with no model call.</p>
+<p><strong>Loading.</strong> <code>resolve_profile_paths</code>
+(<code>:4023-4050</code>) returns the core file and one domain file
+after re-hashing both. <code>mcp_load_profile_text</code>
+(<code>:4630-4647</code>) concatenates them and appends the Autopilot
+overlay. <code>install_profile</code> (<code>:3541-3634</code>) writes a
+marked block or a skill file.</p>
+<p><strong>Autopilot.</strong> <code>classify_candidate</code>
+(<code>emulo_autopilot/policy.py:23-44</code>),
+<code>record_review</code> (<code>service.py:76-93</code>), and
+<code>AutopilotStore.activate</code> and <code>rollback</code>
+(<code>store.py:630-701</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Where</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session record</td>
+<td>in memory during a run</td>
+<td>session id (hash of the path), source, dates, message list, content
+hash</td>
+</tr>
+<tr>
+<td>segment</td>
+<td><code>segments/1/&lt;hash&gt;.txt</code> plus an index</td>
+<td>redacted typed messages under <code>===== session:… =====</code>
+headers</td>
+</tr>
+<tr>
+<td>report</td>
+<td><code>cache/reports/2/&lt;segment hash&gt;.json</code></td>
+<td>evidence items: domain, kind, instruction, implication, quotes,
+contradictions, write register</td>
+</tr>
+<tr>
+<td>pack</td>
+<td><code>runs/&lt;id&gt;/pack/</code></td>
+<td><code>you.md</code> and up to three domain files,
+<code>appendix.md</code>, <code>card.json</code>,
+<code>draft-manifest.json</code></td>
+</tr>
+<tr>
+<td>version</td>
+<td><code>profiles/default/versions/&lt;v&gt;/</code></td>
+<td>the pack plus <code>manifest.json</code> with file hashes,
+report-set hash, segment hashes, source coverage</td>
+</tr>
+<tr>
+<td>pointer</td>
+<td><code>profiles/default/current.json</code></td>
+<td>active version and manifest hash</td>
+</tr>
+</tbody>
+</table></div>
+<p>A manifest rule carries <code>text</code>, <code>implication</code>,
+<code>kind</code>, <code>evidence_ids</code>, and optionally
+<code>confidence</code> and <code>register</code>. There is no status,
+no timestamp of its own, no scope and no identity that survives a
+re-reduction: a rule is its text inside a version.</p>
+<p><strong>Provenance is real but private.</strong> Each rule reaches
+its quotes through evidence ids, and each quote names a session hash and
+a date. The appendix holds them; the served file does not.</p>
+<p><strong>Time.</strong> Quotes carry the date the message was typed.
+Versions carry no creation time beyond the filesystem. Strata are source
+and calendar quarter (<code>:1137-1141</code>).</p>
+<p><strong>Autopilot records</strong> are richer: a candidate has
+<code>kind</code> from
+<code>directive | correction | preference | workflow | retirement</code>,
+a <code>scope</code> list, receipts with <code>observed_at</code>, a
+contradiction count and risk categories, and an id that hashes all of it
+(<code>emulo_autopilot/contracts.py:15-17</code>, <code>:78-84</code>,
+<code>:108-190</code>). A decision is <code>approve</code> or
+<code>reject</code> with a reason and a policy class
+(<code>:193-222</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval. The loading skill for a domain returns two
+files and the agent reads both whole; the MCP tool returns the same
+text; an install writes the whole profile into a file the host loads at
+session start. The skills carry the routing: <code>emulo:work</code> for
+execution and debugging, <code>emulo:write</code> for copy, and so on,
+and <code>emulo:write</code> further picks a casual or professional
+register section from the task.</p>
+<p>Nothing bounds the size of what is injected. The reducer decides how
+many rules to write, and no constant in <code>emulo.py</code> caps a
+profile file.</p>
+<p>Whether it is loaded at all depends on the host. The README's support
+matrix, from a host-by-host test on 25 September 2026, records a Codex
+<code>AGENTS.md</code> install reaching the model end to end, OpenCode
+loading it into the system prompt, and Claude Code not reliably opening
+the <code>you</code> skill without <code>/you</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are a batch the user starts. The agent runs
+<code>preflight</code>, shows the plan, waits for approval, runs one
+worker per uncached segment and one reducer, then <code>activate</code>.
+Nothing runs in the background, and a new rule is loadable the moment
+<code>activate</code> returns.</p>
+<p><strong>What the gates check, and what they do not.</strong> The
+verbatim check binds a quote to a message. Nothing binds the evidence
+item's <code>instruction</code> to its quotes, or the rule's
+<code>text</code> to its evidence: both are model prose, constrained
+only by the generic-phrase list and word counts
+(<code>:1096-1101</code>). A rule can cite two real quotes and say
+something neither says.</p>
+<p><strong>The served file is not the validated set.</strong>
+<code>validate_profile_pack</code> asserts
+<code>rule["text"] in profile</code> and the same for the implication
+(<code>:1323-1326</code>), so a reducer that adds unvalidated rules to
+<code>you.md</code> passes. The function builds a
+<code>validated_rules</code> dictionary that would support the reverse
+check and never reads it (<code>:1290</code>, <code>:1341</code>). The
+experimental adaptive path renders the file from the manifest with
+<code>render_domain_profile</code> (<code>:1371-1393</code>) and would
+not have this gap; the release path lets the reducer write the file.</p>
+<p><strong>Contradiction handling is refusal.</strong> A worker records
+counter-quotes on the evidence item; any rule citing that item is
+refused. The reducer is told to discard such rules rather than resolve
+them (<code>MINING_PROMPT.md:86</code>, <code>:94</code>).</p>
+<p><strong>Updates re-reduce everything.</strong> Unchanged segments
+reuse cached reports, and an identical report set reactivates the cached
+version with zero calls. Any change reruns the reducer over every
+report.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous with the user's approval, model-heavy on first
+run, zero model calls on an unchanged update, one reducer pass plus
+affected workers otherwise.</li>
+<li>Background: none.</li>
+<li>Read: the whole core profile plus one domain file each time a skill
+or the MCP tool loads it; unbounded in code. An <code>AGENTS.md</code>
+install sits in the host's standing instructions, so it stays stable
+across turns.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The Claude Code and Codex plugins register <code>emulo:mine</code>,
+<code>emulo:work</code>, <code>emulo:design</code>,
+<code>emulo:write</code> and <code>emulo:video</code>; each loader skill
+runs <code>plugin profile-path</code> and tells the agent to read every
+returned path completely (<code>skills/work/SKILL.md</code>). The
+skills.sh bootstrap in <code>.agents/skills/emulo/</code> fetches
+<code>emulo.py</code> and <code>MINING_PROMPT.md</code> at an exact
+release tag and checks their SHA-256 against <code>runtime.json</code>
+before use.</p>
+<p>The MCP server exposes one read tool,
+<code>load_emulo_profile</code>, over stdio
+(<code>emulo.py:4603-4628</code>). No tool writes.</p>
+<p>The agent orchestrates mining but cannot activate an unvalidated
+pack. It can write a pack the validator accepts, which includes adding
+text to it (section 7). Every step before model work stops for the
+user's approval of a plan hash.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Extraction is the strongest part.</strong> Only human-typed
+turns are kept, harness-injected text is dropped, and since 0.6.5 any
+message carrying Emulo's own chunk header is dropped whole, because
+agents that were handed chunks in a prompt logged them as the user's
+words (<code>docs/PROFILE-FLOW.md:344-348</code>). Redaction runs before
+anything is written.</p>
+<p><strong>Activation is fail-safe.</strong> A failure after staging,
+after rename or after the pointer write restores the previous pointer
+bytes, and a test injects each failure
+(<code>tests/test_profile_store.py:396-417</code>). Loaders refuse any
+version whose file hashes differ from its manifest.</p>
+<p><strong>No uncertainty survives to the model.</strong>
+<code>kind</code> and <code>confidence</code> stay in the manifest. A
+profile migrated from a pre-plugin install is flagged
+<code>legacy_unverified</code> and served with a trailing note, not
+withheld (<code>emulo.py:4045-4049</code>, <code>:4640-4643</code>).</p>
+<p><strong>Autopilot is built and not fed.</strong>
+<code>put_candidate</code> and <code>SessionScanner</code> have no
+caller outside tests, and <code>auto_activate_enabled</code> is
+<code>False</code> at both call sites, so the <code>safe</code> class
+never occurs (<code>emulo_autopilot/service.py:10</code>,
+<code>:78</code>). Activation appends each approved candidate's
+statement as a bullet without reading <code>kind</code>, so an approved
+<code>retirement</code> would add a line rather than remove one
+(<code>store.py:580-604</code>). A later <code>reject</code> does not
+remove an active candidate; only <code>rollback</code> does. The MCP
+loader reads the overlay on every call
+(<code>emulo.py:4644-4646</code>).</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — none. The guide's answer to a wrong rule is
+"mine again", and the same inputs reactivate the same version.
+Autopilot's <code>reject</code> decision is keyed on a candidate id that
+hashes the whole candidate, and nothing produces candidates.</li>
+<li><code>trust_state</code> — Autopilot's pending, approve and reject
+decisions do gate activation, which is a filter, but the queue has no
+producer. The mined profile has no status on a rule.</li>
+<li><code>bitemporal</code> — quote dates are when a message was typed;
+nothing records when a rule held.</li>
+<li><code>scope_enforced</code> — one person per store. Domains are
+separate files picked by the calling skill, with no key on a rule.</li>
+<li><code>audit_log</code> — versions are immutable and retained, which
+is history; no event records an activation or a replaced pointer.
+Autopilot's decision files are append-only and have nothing to decide
+on.</li>
+<li><code>human_review</code> — the approval gate prices model work, not
+content. The Autopilot <code>review</code> command is a person's verb
+over a queue nothing fills.</li>
+<li><code>negative_eval</code> —
+<code>test_mcp_reflects_append_only_rollback</code> asserts a
+rolled-back rule is absent from the MCP text after asserting the kept
+rule is present (<code>tests/test_mcp_server.py:196-212</code>). It is a
+well-formed read-path exclusion, and the only writer of the material it
+excludes is the test's own fixture, so it tests a layer that is empty in
+any real install. The mined profile's exclusion tests are write-time
+refusals.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin. CI runs
+<code>python -m unittest discover -s tests -v</code> on Python 3.8 and
+3.12, with the continuity tests skipping on 3.8 where the
+<code>cryptography</code> extra is not installed
+(<code>.github/workflows/tests.yml:35</code>).</p>
+<p><strong>The gates are tested on their refusals.</strong> An invented
+quote is rejected (<code>tests/test_plugin_runtime.py:586-590</code>),
+as are quotes from unknown sessions, oversized reports and a missing
+domain state. <code>validate_rule</code> refuses a single session, a
+contradiction and a generic rule
+(<code>tests/test_profile_store.py:183-219</code>). No test gives
+<code>validate_profile_pack</code> a <code>you.md</code> carrying a rule
+absent from the manifest.</p>
+<p><strong>The update path is tested on a function it does not
+call.</strong>
+<code>test_update_selection_retains_history_and_marks_only_new_work</code>
+exercises <code>select_run_segments</code>
+(<code>tests/test_plugin_runtime.py:467-480</code>), which has no caller
+outside that test. The full-mode planner takes every active segment, and
+no test removes a session between two syncs.</p>
+<p><strong>Evaluation of effect is published, and says what it
+measures.</strong> The <code>site/fable/</code> tree commits a
+pre-registered study with its raw outputs, scoring scripts and
+<code>data.json</code>. The README's figures recompute from it: the
+mined profile separated from a same-length invented profile on 5 of 9
+comparisons on Fable 5.1 and 1 of 9 on Opus 5 (<code>H2</code> in
+<code>site/fable/data.json</code>). The pre-registration predicted fewer
+than 2 of 9, so its <code>FAIL</code> verdict is the pessimistic
+prediction failing. The metrics are border radius, saturation,
+containers and length: whether output changed, not whether it improved.
+<code>docs/proof/</code> describes a further benchmark as unexecuted. No
+paper or citation block is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Bind a quote to the dated message, not the corpus.</strong>
+The check that a quote sits inside the message carrying its claimed date
+is a few lines and stops a model inventing or relocating evidence.</li>
+<li><strong>Keep only what the human typed, and drop your own output on
+re-read.</strong> A profile mined from logs that contain its previous
+chunks is mining itself.</li>
+<li><strong>Content-address every stage.</strong> Segment, report and
+reduction hashes make an unchanged update free and a changed one
+proportional.</li>
+<li><strong>Swap an active version by pointer, with the old pointer
+restored on any failure, and inject failures at each step in a
+test.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Validating a manifest and serving a file the model
+wrote.</strong> Render the served file from the validated records, or
+assert set equality between them.</li>
+<li><strong>Treating source-log retention as the forgetting
+policy.</strong> When evidence disappears upstream, decide on purpose
+whether the belief lapses.</li>
+<li><strong>A correction path that is "run it again".</strong> When
+re-running is deterministic over cached inputs, it restores the rule the
+person wanted gone.</li>
+<li><strong>Shipping a review queue before its producer.</strong> A
+policy, decisions, generations and encrypted sync around a queue nothing
+fills cost maintenance and read as a feature.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants a standing description of their
+own habits in several agents, is willing to spend model passes on a full
+history, and will read the result before installing it. It does not suit
+anyone who needs to retract a rule and have it stay retracted, anyone
+sharing a repository where an <code>AGENTS.md</code> install would
+publish verbatim quotes, or a team: the store is one person and the
+design has no second. The published evaluation shows the profile changes
+output style, and the project states it has not shown the work gets
+better.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any shipped build, the Cloudflare worker's founding beta, or an
+unpublished client produce Autopilot candidates?</li>
+<li>How often does a reducer write text into <code>you.md</code> beyond
+the manifest rules, on real histories?</li>
+<li>After a log rolls off, how many rules lapse at the next update on a
+typical 30-day Claude Code retention?</li>
+<li>Does the reducer, in practice, discard every rule whose evidence
+carries a contradiction, or re-cite uncontradicted items to keep
+it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Extraction and redaction:</strong>
+<code>emulo.py:96-600</code> (<code>redact</code>,
+<code>is_human_turn</code>, <code>user_messages</code>,
+<code>mine_files</code>).</li>
+<li><strong>Segments, caches, planning:</strong>
+<code>emulo.py:820-1036</code>, <code>:2189-2355</code>,
+<code>:4285-4385</code>.</li>
+<li><strong>Validation and activation:</strong>
+<code>emulo.py:1086-1711</code>, <code>:2010-2100</code>.</li>
+<li><strong>Loading and MCP:</strong> <code>emulo.py:3995-4050</code>,
+<code>:4538-4712</code>; install at <code>:3520-3634</code>; verify at
+<code>:4799-4962</code>.</li>
+<li><strong>Contracts for the model:</strong>
+<code>MINING_PROMPT.md</code>, <code>skills/*/SKILL.md</code>,
+<code>.agents/skills/emulo/</code>.</li>
+<li><strong>Autopilot:</strong>
+<code>emulo_autopilot/contracts.py</code>, <code>policy.py</code>,
+<code>service.py</code>, <code>store.py</code>,
+<code>sessions.py</code>, <code>cli.py</code>,
+<code>continuity*.py</code>; worker in
+<code>cloud/worker/src/</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_plugin_runtime.py</code>,
+<code>tests/test_profile_store.py</code>,
+<code>tests/test_mcp_server.py</code>,
+<code>tests/test_autopilot_store.py</code>,
+<code>tests/test_verify_receipts.py</code>.</li>
+<li><strong>Evaluation artifacts:</strong>
+<code>site/fable/data.json</code>,
+<code>site/fable/method/PREREGISTRATION.md.txt</code>,
+<code>docs/proof/README.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'put_candidate\|SessionScanner(' --include='*.py' .</code>
+— the definitions in <code>emulo_autopilot/store.py:245</code> and
+<code>sessions.py:90</code>, otherwise only files under
+<code>tests/</code>.</li>
+<li><code>grep -rn 'auto_activate_enabled=True' --include='*.py' .</code>
+— only <code>tests/test_autopilot_policy.py</code>.</li>
+<li><code>grep -rn 'emulo-autopilot\|emulo_autopilot\|autopilot' README.md docs skills .agents SECURITY.md CHANGELOG.md MINING_PROMPT.md</code>
+— no match.</li>
+<li><code>grep -n 'validated_rules' emulo.py</code> — lines 1290 and
+1341 only; never read.</li>
+<li><code>grep -rn 'select_run_segments' --include='*.py' .</code> — the
+definition and <code>tests/test_plugin_runtime.py:472</code>.</li>
+<li><code>grep -n -iE 'blocklist|denylist|tombstone|forget|retire' emulo.py MINING_PROMPT.md</code>
+— no match.</li>
+<li><code>grep -nE '^[A-Z_]*MAX[A-Z_]* =' emulo.py</code> — report,
+quote, scout and preview caps; none on a profile file.</li>
+<li><code>grep -n -iE 'extra|unvalidated' tests/test_profile_store.py</code>
+— no match.</li>
+<li><code>grep -rn '\["kind"\]\|retirement' emulo_autopilot/</code> —
+<code>contracts.py</code>, <code>policy.py</code> and
+<code>service.py</code>; <code>store.py</code> never reads a candidate's
+kind.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/ohad6k/emulo/commit/a8552916c5920c1a5ee16b8fa1c1857f6c1ad9b4"><code class="commit-id" title="a8552916c5920c1a5ee16b8fa1c1857f6c1ad9b4">a8552916…</code></a>
+— first reading, at the head of <code>main</code>, a merge dated 25
+September 2026. The project was named Ditto until v0.5.0. No mark
+awarded; section 9 names each near-miss. Screened before reading: three
+auto-run surfaces (<code>.claude-plugin/</code> manifests with no hooks,
+<code>server.json</code> and <code>smithery.yaml</code> declaring the
+MCP start command), no build-time execution point, three unpinned
+surfaces, and six dependency files inside the cooldown, every file in
+the depth-1 clone dating to the tip. Read with <code>grep</code>,
+<code>sed</code> and <code>awk</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

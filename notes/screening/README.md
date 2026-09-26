@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 636 of 636 screened at the report's current pin.**
+**Progress: 637 of 637 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 287 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 352 |
+| Repositories with an auto-run surface (`RUNS`) | 288 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 353 |
 | Repositories with build-time execution (`EXEC`) | 463 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
@@ -111,6 +111,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`egc`](../../content/systems/egc.md) | `.cursor/rules/`, `.githooks/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `hooks/`, `hooks/hooks.json` |
 | [`elizaos`](../../content/systems/elizaos.md) | `.gitmodules` |
 | [`empirica`](../../content/systems/empirica.md) | `.cursorrules`, `.github/copilot-instructions.md`, `.gitmodules` |
+| [`emulo`](../../content/systems/emulo.md) | `.claude-plugin/`, `server.json`, `smithery.yaml` |
 | [`engram`](../../content/systems/engram.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json` |
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
 | [`engram-nickcirv`](../../content/systems/engram-nickcirv.md) | `.cursorrules`, `server.json` |

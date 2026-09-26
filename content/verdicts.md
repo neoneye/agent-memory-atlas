@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 636 reports.**
+**This page covers all 637 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5691,3 +5691,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 25,199 lines of TypeScript in `src/` and 225 commits by 3 contributors from 9 April to 22 September 2026, with 1,197 Vitest cases run in CI on two operating systems. One mark, `negative_eval`, on a per-file lookup that leaves out another file's mistakes after a positive control. The mistake memory is about 1,300 of those lines.
 - Study when: you want a coding agent warned before it edits a file with reverts in its history, and want a regex miner with a false-positive gate rather than a model call.
 - Do not copy when: taught lessons must survive a re-index, several agents write at once, or a wrong warning must be retractable. There is no delete verb, no lock, and no state between present and gone.
+
+### [`emulo`](../systems/emulo/)
+
+- Best idea: **bind every quote to the dated message it came from.** `receipt_is_verbatim` splits a segment into `[YYYY-MM-DD]` messages and accepts a quote only when its text is inside a message carrying the claimed date, so a worker model can neither invent evidence nor move it between days. Beside it, the extractor keeps only human-typed turns and drops any message carrying Emulo's own chunk header, so a profile is never mined from its own earlier output.
+- Biggest risk: **the served file is not the validated set.** On the release path the reducer model writes `you.md`, and `validate_profile_pack` asserts only that each manifest rule's text and implication appear in it. Extra rules pass. The function builds a `validated_rules` dictionary that would support the reverse check and never reads it.
+- Most reusable component: `receipt_is_verbatim` and `validate_rule` in `emulo.py` (lines 2022-2031 and 1096-1135) — a date-bound quote check and a rule-support check (two sessions, two strata, no contradiction, not generic) that any evidence-backed extractor can lift without the rest of the tool.
+- Second risk: **nothing retracts a rule.** Active versions are hash-checked, so a hand edit is refused; the guide says to mine again, and unchanged inputs reactivate the same cached version. Meanwhile a session log the host deletes deactivates its segment, so a rule can lapse at the next update without anyone rejecting it. The Autopilot review queue that would add correction has no producer.
+- Maturity impression: MIT, 4,979 lines of Python in `emulo.py` and 2,767 in `emulo_autopilot/`, 409 commits from 3 contributors between 8 July and 25 September 2026, and 571 Python test functions, strongest on the admission gates' refusals. No mark; the one read-path exclusion test covers an overlay whose only writer is its fixture. A committed pre-registered study shows the profile changes output style on one of two models and does not claim it improves the work.
+- Study when: you are building an extractor over user-authored logs and want receipts that a model cannot fake, content-addressed stages that make an unchanged re-run free, and an activation that restores the previous pointer on any failure.
+- Do not copy when: a person must be able to retract one rule and have it stay retracted, or the served text must equal what was validated. Neither holds here.
