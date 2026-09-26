@@ -16617,16 +16617,18 @@ pruning the entity backreferences the promotion made unsafe. Three
 marks.</li>
 <li>Biggest risk: <strong>the retraction marker is also the deletion
 trigger, and the only thing that reads it is a threshold callers default
-to zero.</strong> Retraction sets a status no read path consults and a
+to zero.</strong> Retraction sets a status no read path filters on and a
 salience of zero, which is the sole signal retrieval can act on, through
 a minimum that is zero in both SDKs; the lifecycle eval passes a
-positive floor to make its own retraction scenario pass. That same zero
-satisfies the prune condition against a default auto-prune policy and a
-zero floor, so the next hourly sweep deletes the record and the audit
-table's cascade erases its history, including the entry written in the
-deleting transaction. A retracted fact observed again before that is
-reinforced back above zero by consolidation, still labelled
-retracted.</li>
+positive floor and asks for roots only to make its own retraction
+scenario pass, and a positive floor never reaches graph neighbours, so a
+superseded record can return one hop from its replacement. That same
+zero satisfies the prune condition against a default auto-prune policy
+and a zero floor, so the next hourly sweep deletes the record and the
+audit table's cascade erases its history, including the entry written in
+the deleting transaction. A retracted fact observed again before that is
+reinforced back above zero by the episodic consolidator's fixed gain,
+still labelled retracted.</li>
 <li>Most reusable component: the derived-sensitivity policy — 158 lines
 of monotone sensitivity for background-derived records, computed under
 lock with backreference pruning — together with the checker test that

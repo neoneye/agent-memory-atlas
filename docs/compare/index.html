@@ -13660,15 +13660,16 @@ working, semantic, competence, plan_graph, entity — carrying a typed
 payload, sensitivity, confidence, salience, scope, tags, provenance
 sources, typed graph relations, an ingest-side interpretation and an
 audit log</td>
-<td>One Postgres database with pgvector: fifteen tables keyed on
-<code>memory_records(id)</code> with <code>ON DELETE CASCADE</code>, an
-ivfflat cosine index over per-record embeddings, and an entity
-term/identifier index</td>
+<td>One Postgres database with pgvector: fifteen tables, thirteen of
+them children of <code>memory_records(id)</code> with
+<code>ON DELETE CASCADE</code>, an ivfflat cosine index over per-record
+embeddings, and an entity term/identifier index</td>
 <td>Layered candidate list in a fixed type order under a SQL
 scope/sensitivity/salience predicate, then vector cosine ranking when an
 embedding provider is configured, a three-signal selector for competence
 and plan_graph, and bounded graph expansion from ranked roots plus
-entity-term roots</td>
+entity-term roots, whose neighbour hydration applies no salience
+floor</td>
 <td><code>CaptureMemory</code> over gRPC or the Go library writes the
 source record, resolves mentions to canonical entities and materializes
 edges in one transaction; an ingest LLM interpretation is optional and
@@ -13694,16 +13695,17 @@ backfill at start</td>
 metadata view; derived records inherit the maximum sensitivity of their
 sources and unsafe entity backreferences are pruned; a semantic
 <code>active</code>/<code>contested</code>/<code>retracted</code> status
-is written and never read</td>
-<td>A genuinely typed record model wired to a written specification, a
-byte- and row-bounded retrieval contract enforced below the network
-boundary, a monotone sensitivity policy for derived records, and a
-checker with its own committed negative controls</td>
+is written, copied into the response and never filtered on</td>
+<td>A typed record model wired to a written specification, a byte- and
+row-bounded retrieval contract enforced below the network boundary, a
+monotone sensitivity policy for derived records, and a checker with its
+own committed negative controls</td>
 <td>Retraction is only a salience of zero that callers must opt into
-filtering, the same zero makes an auto-prune record eligible for hard
-deletion with its audit history, consolidation can reinforce a retracted
-fact back above zero, and the decay sweep compounds because it never
-advances <code>last_reinforced_at</code></td>
+filtering and that graph-neighbour hydration never filters, the same
+zero makes an auto-prune record eligible for hard deletion with its
+audit history, the episodic consolidator can reinforce a retracted fact
+back above zero, and the decay sweep compounds because it never advances
+<code>last_reinforced_at</code></td>
 </tr>
 <tr>
 <td><code>membukkit</code></td>
