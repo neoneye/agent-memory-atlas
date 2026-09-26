@@ -220,6 +220,16 @@ comparing feature lists will see `as_of` and `valid_to` and assume the pair.
 
 [Spector](../../systems/spector/) carries the mark and shows how the pattern fails at the unit boundary. Its fact rows hold `validFrom`, `validTo` and a millisecond `txTime`, and supersession appends a retraction row rather than overwriting. Every production writer documents or defaults to epoch seconds for valid time, while `TemporalFact.validAtInstant` compares milliseconds, so the lower bound never binds and any finite upper bound excludes the fact at every present-day instant; the display code guesses the unit and the filter does not. Name the unit in the field and test the read with the writer's own values.
 
+[mempalace-code](../../systems/mempalace-code/) is the same schema as
+[MemPalace](../../systems/mempalace/) taken down the other branch. Both carry
+`valid_from`, `valid_to` and `extracted_at` on a triple; upstream later made the
+window half-open and added a `supersede` that closes and opens at one instant,
+while the fork, diverged on 7 April 2026, keeps a closed window with a date-only
+`valid_to` read as 23:59:59, so an invalidate-and-add on one date leaves both
+facts visible on that date. Its miner also closes every triple from a changed
+file and re-adds each relation with `valid_from` NULL, so an unchanged fact
+gains a closed copy and an open copy that both claim validity from the start.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal

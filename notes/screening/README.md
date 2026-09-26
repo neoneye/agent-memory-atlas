@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 633 of 633 screened at the report's current pin.**
+**Progress: 634 of 634 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 285 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 349 |
-| Repositories with build-time execution (`EXEC`) | 461 |
+| Repositories with an auto-run surface (`RUNS`) | 286 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 350 |
+| Repositories with build-time execution (`EXEC`) | 462 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -188,6 +188,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`memory-ts`](../../content/systems/memory-ts.md) | `hooks/` |
 | [`memory-vault`](../../content/systems/memory-vault.md) | `server.json` |
 | [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/`, `mcp.json` |
+| [`mempalace-code`](../../content/systems/mempalace-code.md) | `.claude/settings.json`, `hooks/` |
 | [`memsearch`](../../content/systems/memsearch.md) | `.claude-plugin/` |
 | [`memspec`](../../content/systems/memspec.md) | `hooks/` |
 | [`memtomem`](../../content/systems/memtomem.md) | `.claude-plugin/` |

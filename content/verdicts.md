@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 633 reports.**
+**This page covers all 634 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5661,3 +5661,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 with an attribution `NOTICE`, 308,930 lines of Java outside tests, of which the memory engine is 120,899, and 776 commits on main from 16 contributors since 13 May 2026. Three marks — `trust_state` on the contradicted flag, `bitemporal` on the fact log with the unit mismatch as its limit, `negative_eval` on a contradiction case and a cross-namespace case, each with a positive control. 6,174 Java test methods.
 - Study when: you want an embeddable JVM engine with physical namespace isolation, fused SIMD recall and an honest forget/purge split, or a worked example of LLM-judged contradiction flagging with a test that pins it.
 - Do not copy when: you need facts that answer "what was true then", or corrections that survive an export and import. The valid-time filter mismatches its writers, retraction never reaches a reader, and the importer re-asserts retraction rows and drops the contradicted flag.
+
+### [`mempalace-code`](../systems/mempalace-code/)
+
+- Best idea: **an index that knows which of its rows it may delete.** Every mined drawer carries the blake2b hash of its file, `ingest_mode = 'file'` and an empty `type`; an unchanged file is skipped before the embedder loads, and the stale sweep puts all three conditions plus the project root into the SQL delete predicate itself, so a note a person filed against the same path survives a sweep that cannot prove it regenerable.
+- Biggest risk: **`mempalace_delete_drawer` can delete every row.** `LanceStore.get` and `LanceStore.delete` build `id IN ('…')` by string interpolation with no escaping, the handler passes the agent's `drawer_id` through, and its existence check uses the same interpolation — so `x') OR ('1'='1` passes the check and matches the table. Upstream handed ids to ChromaDB as parameters; the port introduced it. Read from code, not run; the plugin's minimal profile does not expose the tool.
+- Most reusable component: `delete_by_source_files(..., project_root=…)` in `storage.py` with `get_source_file_hashes` beside it — a scoped inventory and a guarded bulk delete that share one definition of "regenerable", plus `replace_source`, a single `merge_insert` that swaps one source's rows atomically.
+- Second risk: **the documented mining command fills a graph the MCP tools never read.** `mempalace-code mine <dir>` without `--palace` writes type relations to `~/.mempalace/knowledge_graph.sqlite3`; the MCP server always opens `<palace>/knowledge_graph.sqlite3`, and a test pins the CLI half as intended. Scope is enforced on search only: the duplicate check returns another wing's drawer text, and the graph has no wing column.
+- Maturity impression: Apache-2.0, 35,098 lines of Python in the package, 1,104 commits on main by 14 contributors, of which 1,031 are the fork author's since 13 April 2026. 3,937 test functions against real LanceDB with a stub embedder. Three marks — `scope_enforced` on the vector prefilter, `bitemporal` on the inherited graph schema, `negative_eval` on a wing exclusion and an expired-fact exclusion with positive controls. No mutation audit: upstream's write-ahead log postdates the fork.
+- Study when: you are building memory over a source tree and need incremental re-indexing that never deletes what a person wrote, or you maintain a fork and want a release gate that refuses to publish until the upstream commits since the last pin have been classified.
+- Do not copy when: manual notes are the product. They have no update verb, no audit, no provenance beyond a caller-supplied `added_by`, and a correction is a delete followed by an add.

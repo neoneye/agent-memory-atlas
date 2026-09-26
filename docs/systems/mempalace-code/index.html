@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A code-first fork of MemPalace
+that mines repositories into LanceDB with structure-aware chunks,
+hash-gated re-mining and a type-relationship graph in SQLite.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mempalace-code — Agent Memory Atlas">
+    <meta property="og:description" content="A code-first fork of
+MemPalace that mines repositories into LanceDB with structure-aware
+chunks, hash-gated re-mining and a type-relationship graph in SQLite.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mempalace-code — Agent Memory Atlas">
+    <meta name="twitter:description" content="A code-first fork of
+MemPalace that mines repositories into LanceDB with structure-aware
+chunks, hash-gated re-mining and a type-relationship graph in SQLite.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mempalace-code — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "mempalace-code",
+      "description": "A code-first fork of MemPalace that mines repositories into LanceDB with structure-aware chunks, hash-gated re-mining and a type-relationship graph in SQLite.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Code-first fork of MemPalace on LanceDB</p>
+          <h1>mempalace-code</h1>
+          <p class="document-deck">A code-first fork of MemPalace that
+mines repositories into LanceDB with structure-aware chunks, hash-gated
+re-mining and a type-relationship graph in SQLite.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/rergards/mempalace-code">
+              <span>Source</span>
+              <strong>rergards/mempalace-code</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/rergards/mempalace-code/commit/3594fbce1050bd0471a3e3b40ed6ebe72473a440" title="3594fbce1050bd0471a3e3b40ed6ebe72473a440">
+              <span>Analyzed revision</span>
+              <code>3594fbce…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rergards--mempalace-code" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>rergards--mempalace-code</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0;
+the NOTICE credits the MIT-licensed upstream it forked</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>35,098
+lines of Python in mempalace_code/; storage, graph and search are 3,567
+of them, and the wing-merge operator alone is 5,398</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,104
+commits on main by 14 contributors, 5 April – 21 September 2026; the
+fork's own history starts 13 April 2026 with 1,031 commits by one
+author</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>3,937
+test functions in 90 files, 86,960 lines of Python under
+tests/</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mempalace-code is a fork of <a href="../mempalace/">MemPalace</a>
+rebuilt for source code. It keeps the palace vocabulary — wings, rooms,
+drawers holding verbatim text — and the MCP surface, and replaces the
+storage and the ingest: LanceDB instead of ChromaDB, chunks cut on
+declaration boundaries with symbol and line-range metadata, per-file
+content hashes that make re-mining incremental, and a SQLite graph of
+type relationships extracted from .NET and Python sources. What is
+strong is the ingest bookkeeping around a code index. What is weak is
+the manual memory beside it, which gained a SQL injection in the port
+and still lacks an update verb, a mutation audit and a trust state.</p>
+<p><strong>The relationship to upstream is a hard fork with a pinned
+review.</strong> The history begins with MemPalace's own commits. The
+last shared commit is <a
+href="https://github.com/MemPalace/mempalace/commit/c30bc9e71e890d50b2019788e8d5a89a2164cc79"><code class="commit-id" title="c30bc9e71e890d50b2019788e8d5a89a2164cc79">c30bc9e7…</code></a>,
+dated 7 April 2026. The fork's first commit, <a
+href="https://github.com/rergards/mempalace-code/commit/66ff5a61f2c335b3827050df287839f89effb15b"><code class="commit-id" title="66ff5a61f2c335b3827050df287839f89effb15b">66ff5a61…</code></a>,
+on 13 April 2026, swaps in LanceDB. Upstream's package at the fork point
+was 8,580 lines of Python; the fork's is 35,098. GitHub does not list
+the repository as a fork.</p>
+<p>Some modules came across almost unchanged — <code>dialect.py</code>,
+<code>spellcheck.py</code>, <code>entity_detector.py</code>,
+<code>palace_graph.py</code>, <code>layers.py</code> — and the manual
+add and delete handlers keep upstream's code nearly line for line.
+Everything else this report describes was written in the fork. The fork
+tracks upstream deliberately rather than merging it:
+<code>docs/UPSTREAM_COMPARISON.md</code> pins the upstream commit last
+reviewed (<code>e038af97</code>, 20 September 2026) and classifies each
+upstream commit since the previous pin. A release gate refuses to
+publish when upstream's head has moved past the pin.</p>
+<p>Four findings shape the rest of this report.</p>
+<ul>
+<li><strong><code>mempalace_delete_drawer</code> can delete the whole
+store.</strong> <code>LanceStore.get</code> and
+<code>LanceStore.delete</code> build <code>id IN ('…')</code> by string
+interpolation with no escaping (<code>storage.py:1228-1230</code>,
+<code>:1315-1316</code>). The handler passes the agent's
+<code>drawer_id</code> straight through, and its existence check uses
+the same interpolation. An id carrying <code>') OR ('1'='1</code> passes
+the check and matches every row. Upstream at the fork point handed ids
+to ChromaDB as parameters; the port introduced it. Read from code, not
+run.</li>
+<li><strong>The CLI and the MCP server read different knowledge graphs
+by default.</strong> <code>mempalace-code mine &lt;dir&gt;</code>
+without <code>--palace</code> writes type relations to
+<code>~/.mempalace/knowledge_graph.sqlite3</code>. The MCP server always
+opens <code>&lt;palace&gt;/knowledge_graph.sqlite3</code>, so the five
+code-intelligence tools query a graph the documented mining command did
+not fill.</li>
+<li><strong>Mined memory has an authority, manual memory has
+none.</strong> A mined drawer is a projection of a file, and the file
+corrects it. A manual drawer is corrected only by deleting it and
+writing a new one.</li>
+<li><strong>Scope is enforced on search and nowhere else.</strong> The
+duplicate check and the graph read across wings.</li>
+</ul>
+<p>Three marks are carried: <code>bitemporal</code>,
+<code>scope_enforced</code> and <code>negative_eval</code>. Section 9
+names the four withheld and why.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A drawer is one verbatim chunk. It becomes a belief when it is
+written and stays one until a delete removes it. Nothing marks it
+provisional, nothing expires it, and a search returns it as text with
+its wing, room and source.</p>
+<p>There are two kinds of drawer, and they die differently.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Written by</th>
+<th>Authority</th>
+<th>How it stops being true</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mined file chunk</td>
+<td><code>mine</code>, the watcher, <code>mempalace_mine</code></td>
+<td>The source file at the recorded <code>source_hash</code></td>
+<td>The file changes: every drawer for <code>(source_file, wing)</code>
+is deleted and the new chunks are added. The file disappears: the stale
+sweep deletes it</td>
+</tr>
+<tr>
+<td>Manual drawer</td>
+<td><code>mempalace_add_drawer</code>, <code>diary write</code></td>
+<td>None; the text is the record</td>
+<td><code>mempalace_delete_drawer</code> by id, or
+<code>mempalace_delete_wing</code></td>
+</tr>
+<tr>
+<td>KG triple</td>
+<td><code>mempalace_kg_add</code>, the miner, the architecture pass</td>
+<td>Caller dates, or the source file</td>
+<td><code>valid_to</code> is set; the row stays</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>For mined drawers the model is "the code is true, the index
+follows it".</strong> The hash on each row is what makes that cheap: an
+unchanged file is skipped without re-chunking, and a deleted mined
+drawer comes back on the next mine because its file is no longer in the
+hash inventory. That is correct for a code index. A person cannot
+suppress a mined chunk except by excluding the file.</p>
+<p><strong>For manual drawers there is no model beyond add and
+delete.</strong> The usage rules the project ships route two cases
+apart: a <em>wrong</em> drawer is searched, deleted by id and re-added;
+an <em>evolved</em> fact gets an additive write, or a KG
+invalidate-and-add, and the history stands
+(<code>docs/LLM_USAGE_RULES.md:219-230</code>). The plugin's minimal
+profile has no delete, and its skill tells the agent to stop and ask for
+a richer registration rather than write a competing drawer.</p>
+<p><strong>KG triples are the one place a belief is closed rather than
+erased.</strong> A manual invalidation stamps <code>valid_to</code> with
+a caller date or the current UTC instant. The miner, re-reading a
+changed file, closes every triple from that file and writes each
+relation again with no <code>valid_from</code>.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a mined drawer follows its file and a manual drawer follows nothing; the graph closes rows instead of deleting them</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a mined drawer follows its file and a manual drawer follows nothing; the graph closes rows instead of deleting them
+flowchart TD
+    F[&quot;source file&quot;] --&gt; H{&quot;blake2b hash equals&lt;br/&gt;stored source_hash?&quot;}
+    H -- &quot;yes&quot; --&gt; SKIP[&quot;skip: drawers&lt;br/&gt;stay as they are&quot;]
+    H -- &quot;no, file known&quot; --&gt; DEL[&quot;delete every drawer for&lt;br/&gt;(source_file, wing)&lt;br/&gt;no ingest_mode guard&quot;]
+    H -- &quot;no, file new&quot; --&gt; CH
+    DEL --&gt; CH[&quot;chunk on declarations,&lt;br/&gt;batch embed, add&quot;]
+    DEL --&gt; KI[&quot;KG: close every triple&lt;br/&gt;from the file at now&quot;]
+    KI --&gt; KA[&quot;KG: re-add each relation&lt;br/&gt;valid_from NULL&quot;]
+    GONE[&quot;file no longer walked&quot;] --&gt; SW[&quot;stale sweep: delete only rows&lt;br/&gt;ingest_mode file, type empty,&lt;br/&gt;32-hex hash, inside project root&quot;]
+    SW --&gt; KI
+    A[&quot;mempalace_add_drawer&quot;] --&gt; DUP{&quot;any drawer, any wing,&lt;br/&gt;similarity at least 0.9?&quot;}
+    DUP -- &quot;yes&quot; --&gt; REF[&quot;refused as duplicate,&lt;br/&gt;match text returned&quot;]
+    DUP -- &quot;no&quot; --&gt; MAN[&quot;manual drawer&lt;br/&gt;id: content prefix + now&quot;]
+    MAN --&gt; MD[&quot;only mempalace_delete_drawer&lt;br/&gt;or delete_wing removes it&quot;]
+    CH --&gt; Q[&quot;search: vector query,&lt;br/&gt;wing and room prefilter&quot;]
+    MAN --&gt; Q</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The package is a Python CLI, <code>mempalace-code</code>, an MCP
+stdio server, <code>mempalace-code-mcp</code>, and an optional file
+watcher. A palace is a directory holding one LanceDB table and
+optionally a SQLite graph beside it. Embeddings come from FastEmbed's
+ONNX build of <code>all-MiniLM-L6-v2</code>, normalised;
+<code>sentence-transformers</code> models are an opt-in extra. ChromaDB
+is gone: opening a palace that holds <code>chroma.sqlite3</code> raises
+<code>ChromaRuntimeRetiredError</code>
+(<code>storage.py:2195-2241</code>).</p>
+<p><code>storage.py</code> defines the store. <code>DrawerStore</code>
+keeps the ChromaDB call shapes — <code>add</code>, <code>upsert</code>,
+<code>get</code>, <code>query</code>, <code>delete</code> taking lists
+of ids, documents and metadata dicts — and <code>LanceStore</code>
+translates them. The <code>where</code> dicts become SQL through
+<code>_where_to_sql</code>, which escapes string values
+(<code>:2110-2190</code>). The metadata schema is one tuple,
+<code>_META_FIELD_SPEC</code>, from which the Arrow schema, defaults and
+migrations all derive (<code>:719-767</code>).</p>
+<p>Maintenance is LanceDB's version model. <code>optimize()</code>
+compacts fragments, <code>cleanup_stale_fragments</code> prunes versions
+older than seven days by default, and
+<code>recover_to_last_working_version</code> walks older versions and
+can <code>restore()</code> one (<code>:1575-1579</code>,
+<code>:1752</code>, <code>:2000-2104</code>). A pre-optimize backup and
+a pre-watch backup write <code>.tar.gz</code> archives of the table and
+the graph (<code>backup.py</code>).</p>
+<p>The graph is SQLite with the upstream schema: <code>entities</code>
+and <code>triples</code> with a validity window,
+<code>extracted_at</code>, <code>confidence</code> and source columns
+(<code>knowledge_graph.py:202-234</code>). The miner feeds it from regex
+extractors for C#, F#, VB.NET and Python type declarations and from
+<code>.sln</code>, <code>.csproj</code> and XAML files
+(<code>mining/kg_extract.py</code>). A post-mine architecture pass adds
+naming-rule facts such as <code>is_pattern Service</code> and
+<code>is_layer Data</code> (<code>architecture.py</code>).</p>
+<p><strong>Which graph a process opens depends on how it was
+started.</strong> The MCP runtime always opens
+<code>palace_kg_path(config.palace_path)</code>
+(<code>mcp/runtime.py:30-36</code>). The CLI <code>mine</code>,
+<code>mine --watch</code> and <code>mine-all</code> pass
+<code>db_path=None</code> unless <code>--palace</code> was given
+(<code>cli_commands/ingest.py:184-185</code>, <code>:220-221</code>,
+<code>:345</code>). <code>None</code> resolves to
+<code>~/.mempalace/knowledge_graph.sqlite3</code>
+(<code>knowledge_graph.py:166</code>, <code>:196-200</code>).
+<code>watch --all</code> and <code>mempalace_mine</code> use the palace
+path. A test pins the CLI half of this as intended
+(<code>tests/test_installed_cli_palace_scope.py:162</code>).</p>
+<p>Much of the tree is release engineering, not memory: an upgrade
+orchestrator (<code>updater.py</code>, 1,780 lines), a wing-merge
+operator that works only through sealed receipts
+(<code>wing_migration.py</code>, 5,398 lines), and gates for dependency
+age, documentation drift and the upstream pin.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running. A <code>pip install</code>, then
+<code>mempalace-code init &lt;dir&gt;</code> and
+<code>mine &lt;dir&gt;</code>, produce a working palace, fully local,
+with no API key. The first run fetches the embedding model unless an
+owned cache exists. The store is not hand-editable: LanceDB fragments
+need the library to read. <code>export</code> writes drawers and triples
+as JSONL, with <code>--only-manual</code> selecting the
+<code>manual_v1</code> and <code>diary_v1</code> strategies that
+re-mining cannot regenerate. The watcher needs the <code>watch</code>
+extra and refuses to start if its pre-watch backup fails.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Mine.</strong> <code>mine()</code> in
+<code>mining/orchestrator.py</code> precomputes a blake2b hash per
+walked file and loads two inventories: every
+<code>(source_file, source_hash)</code> in the wing, and a
+project-scoped one that marks rows as regenerable only when
+<code>ingest_mode = 'file'</code>, <code>type</code> is empty and the
+hash is 32 hex digits (<code>:530-556</code>;
+<code>storage.py:841-848</code>, <code>:1381-1429</code>). A run where
+nothing changed returns before the embedder loads. Per file, an
+unchanged hash skips; otherwise <code>_collect_specs_for_file</code>
+chunks it, and if the file was known,
+<code>delete_by_source_file(source_file, wing)</code> removes its
+drawers (<code>:636-717</code>). Specs buffer until the batch size and
+flush through <code>add_drawers_batch</code>.</p>
+<p><strong>KG emission while mining.</strong> For files with a
+<code>_KG_EXTRACT_EXTENSIONS</code> suffix, the same branch calls
+<code>kg.invalidate_by_source_file(source_file)</code> and then
+<code>kg.add_triple(subj, pred, obj, source_file=source_file)</code> for
+each extracted relation (<code>orchestrator.py:716-731</code>). After
+the loop, the architecture pass closes architecture predicates for the
+project root and re-emits them (<code>:795-825</code>).</p>
+<p><strong>Stale sweep.</strong> Only with <code>limit == 0</code> and a
+successful scoped inventory, the files in the inventory that were not
+walked go to
+<code>delete_by_source_files(..., project_root=project_path)</code>.
+That call adds the regenerable predicate to the SQL and checks each path
+lies inside the project root (<code>orchestrator.py:756-790</code>;
+<code>storage.py:1342-1379</code>). Their triples are closed only if
+every deletion succeeded.</p>
+<p><strong>Conversation mining.</strong> <code>convo_miner.py</code>
+uses <code>replace_source</code>, a single <code>merge_insert</code>
+keyed on <code>(id, source_file, wing)</code> with
+<code>when_not_matched_by_source_delete</code> scoped to that source, so
+a re-mined conversation is replaced atomically
+(<code>convo_miner.py:417</code>; <code>storage.py:1161-1215</code>).
+The project miner does not use it.</p>
+<p><strong>Manual write.</strong> <code>tool_add_drawer</code> runs
+<code>tool_check_duplicate(content, 0.9)</code>, builds
+<code>drawer_{wing}_{room}_{md5(content[:100] + now)[:16]}</code>, and
+calls <code>col.add</code> with
+<code>chunker_strategy: "manual_v1"</code>
+(<code>mcp/tools/write.py:12-51</code>). Diary entries go to wing
+<code>wing_&lt;agent&gt;</code> and room <code>diary</code> with a UUID
+id (<code>mcp/tools/diary.py:10-52</code>).</p>
+<p><strong>Delete.</strong> <code>tool_delete_drawer</code> calls
+<code>col.get(ids=[drawer_id])</code> and then
+<code>col.delete(ids=[drawer_id])</code> (<code>write.py:54-67</code>).
+<code>tool_delete_wing</code> counts and deletes on an escaped
+<code>wing = '…'</code> predicate (<code>:70-83</code>;
+<code>storage.py:1318-1327</code>).</p>
+<p><strong>Search.</strong> <code>tool_search</code> calls
+<code>search_memories</code>, which validates the wing and room against
+the palace taxonomy, builds the <code>where</code> dict and calls
+<code>store.query</code> (<code>searcher.py:189-273</code>).
+<code>code_search</code> adds language and symbol type to the prefilter,
+overfetches three times, or five with the hybrid rerank, and applies
+<code>symbol_name</code> and <code>file_glob</code> as Python
+post-filters (<code>:333-496</code>).</p>
+<p><strong>Code intelligence.</strong>
+<code>find_implementations</code>, <code>find_references</code>,
+<code>show_project_graph</code>, <code>explain_subsystem</code> and
+<code>extract_reusable</code> read the graph through
+<code>query_entity</code> or <code>query_relationship</code> and keep
+only facts whose <code>current</code> flag is true
+(<code>mcp/tools/architecture.py:77</code>, <code>:118</code>,
+<code>:152</code>, <code>:228</code>, <code>:268</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Every drawer row is <code>id</code>, <code>text</code>,
+<code>vector</code> and the 30 columns of <code>_META_FIELD_SPEC</code>
+(<code>storage.py:724-764</code>). The ones that matter here:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Written by</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wing</code>, <code>room</code></td>
+<td>every writer</td>
+<td>the search prefilter, delete-by-wing, taxonomy validation</td>
+</tr>
+<tr>
+<td><code>source_file</code>, <code>source_hash</code></td>
+<td>miner; caller-supplied <code>source_file</code> on manual
+writes</td>
+<td>incremental skip, stale sweep, the reader</td>
+</tr>
+<tr>
+<td><code>ingest_mode</code>, <code>type</code></td>
+<td>miner sets <code>file</code>; diary sets
+<code>type: diary_entry</code></td>
+<td>the regenerable-row guard</td>
+</tr>
+<tr>
+<td><code>symbol_name</code>, <code>symbol_type</code>,
+<code>language</code></td>
+<td>chunkers</td>
+<td><code>code_search</code> prefilter and post-filter</td>
+</tr>
+<tr>
+<td><code>line_start</code>, <code>line_end</code></td>
+<td>miner</td>
+<td><code>mempalace_read</code> line slices</td>
+</tr>
+<tr>
+<td><code>added_by</code>, <code>filed_at</code>,
+<code>extractor_version</code>, <code>chunker_strategy</code></td>
+<td>every writer</td>
+<td><code>export --only-manual</code> selects on the strategy</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scope is a column.</strong> <code>wing</code> is the project,
+or <code>wing_&lt;agent&gt;</code> for a diary; <code>room</code> is an
+aspect within it. Nothing on the row names a user or tenant, and palaces
+are separate directories selected by config or
+<code>--palace</code>.</p>
+<p><strong>Mined ids are positional.</strong>
+<code>md5(source_file + chunk_index)</code> makes a chunk's id stable
+across re-mines while the file's structure holds
+(<code>orchestrator.py:306</code>). Manual ids include the wall-clock
+time, so the same text written twice gets two ids. The duplicate check
+is what stops that, and the shipped skill states that the write has no
+stable deduplication identity to retry against.</p>
+<p><strong>The graph has no scope column.</strong> <code>triples</code>
+carries <code>subject</code>, <code>predicate</code>,
+<code>object</code>, <code>valid_from</code>, <code>valid_to</code>,
+<code>confidence</code>, <code>source_closet</code>,
+<code>source_file</code> and <code>extracted_at</code>
+(<code>knowledge_graph.py:213-226</code>). Entity ids are the
+lower-cased name with spaces replaced (<code>:254-255</code>), so a
+<code>Config</code> class in two projects in one palace is one
+entity.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Search is one vector query with a prefilter.</strong>
+<code>LanceStore.query</code> embeds the text, opens
+<code>table.search(vec).limit(fetch_limit)</code> and attaches the SQL
+<code>where</code> (<code>storage.py:1255-1307</code>). At the locked
+LanceDB 0.33.0 <code>where()</code> defaults to
+<code>prefilter=True</code> (<a
+href="https://github.com/lancedb/lancedb/blob/c0a9a4d48a384096dbfd928fbbf808f6527dba9c/python/python/lancedb/query.py#L910"><code>query.py:910</code></a>),
+so a scoped query returns the top rows <em>within</em> the scope. The
+manifest allows <code>lancedb&gt;=0.20</code>; a resolver that picks
+another release gets that release's default.</p>
+<p><strong>Reranking is deterministic and never adds
+candidates.</strong> For queries that look like a project-file or symbol
+lookup, <code>query</code> overfetches and
+<code>retrieval_rerank.py</code> promotes <code>.csproj</code> rows or
+rows whose <code>symbol_name</code> matches.
+<code>code_search(rerank="hybrid")</code> scores token overlap over the
+text and metadata of the overfetched pool and uses storage rank as the
+tie-break (<code>search_reranker.py</code>). There is no lexical index
+and no LLM reranker.</p>
+<p><strong>Post-filters can starve the result.</strong>
+<code>symbol_name</code> and <code>file_glob</code> run in Python after
+an overfetch capped at 150, or 200 with the hybrid rerank
+(<code>searcher.py:417-484</code>). A narrow glob over a large wing can
+return fewer hits than asked with matches left unread.</p>
+<p><strong>Context arrives by tool call.</strong> Nothing injects
+drawers automatically. The wake-up stack in <code>layers.py</code> — an
+identity file plus the top drawers grouped by room, capped near 3,200
+characters — is a port of upstream reached through the CLI
+<code>wake-up</code> command, not through a hook in this tree.</p>
+<p><strong>The graph read returns history by default.</strong>
+<code>mempalace_kg_query</code> without <code>as_of</code> returns past,
+current and future facts, each with a <code>current</code> flag computed
+at the wall clock. The tool description tells the model to filter on it.
+The code-intelligence tools filter for it themselves.</p>
+<p><code>similarity</code> is reported as <code>1 - _distance</code> on
+LanceDB's default L2 distance over normalised vectors. The duplicate
+check's 0.9 threshold is applied to that number, not to a cosine.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Mining is synchronous and batched.</strong> The CLI blocks
+while it hashes, chunks, embeds in batches sized to the hardware, and
+adds. <code>mempalace_mine</code> runs the same path inside the MCP
+server with stdout and stderr redirected at the file descriptor, so the
+agent waits for the whole mine (<code>mcp/runtime.py:92-117</code>). A
+drawer is searchable when its batch flushes.</p>
+<p><strong>A changed file is deleted before its replacement is
+written.</strong> The delete happens per file inside the loop; the add
+happens when the batch fills or at the end. A
+<code>KeyboardInterrupt</code> flushes the pending batch
+(<code>orchestrator.py:846-850</code>). Any other exception in a flush
+leaves the changed files without drawers until the next incremental
+mine, which re-adds them because they are no longer in the hash
+inventory. <code>replace_source</code> would make each file's swap
+atomic; only the conversation miner calls it.</p>
+<p><strong>The changed-file delete lacks the stale sweep's
+guard.</strong> <code>delete_by_source_file</code> deletes every row
+matching <code>(source_file, wing)</code>
+(<code>storage.py:1329-1340</code>). A manual drawer written into the
+project's wing with <code>source_file</code> equal to a mined file's
+absolute path is therefore deleted the next time that file changes. The
+stale sweep protects exactly that row, and its test covers the
+protection only with the manual drawer in another wing
+(<code>tests/test_miner.py:2186-2245</code>). Read from code, not
+reproduced.</p>
+<p><strong>The graph accumulates a pair of rows per re-mine.</strong>
+<code>invalidate_by_source_file</code> closes every open triple from the
+file at the current instant; <code>add_triple</code> then finds no open
+duplicate and inserts the relation again with <code>valid_from</code>
+NULL (<code>knowledge_graph.py:272-331</code>, <code>:333-363</code>).
+An unchanged <code>class Foo(Base)</code> in an edited file yields one
+closed row and one open row, both unbounded below.</p>
+<p><strong>Manual writes are hot-path and refuse near-duplicates across
+wings.</strong> The duplicate check queries the five nearest drawers
+with no <code>where</code> (<code>mcp/tools/search.py:44-78</code>). A
+note refused as a duplicate of a drawer in another project comes back
+with that drawer's id, wing, room and first 200 characters in the
+response.</p>
+<p>Nothing filters injected or agent-generated text. Content is stored
+as given.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Mining: one embedding pass per changed chunk, no model call. A no-op
+mine hashes every file and returns before loading the embedder.</li>
+<li>Watcher: re-mines on a 5-second debounce
+(<code>watcher.py:516</code>), reusing one warmed model; each cycle is
+incremental.</li>
+<li>Manual write: one vector query for the duplicate check and one add,
+both local.</li>
+<li>Read: one vector query per search; nothing is injected per turn, so
+there is no prefix-cache interaction.</li>
+<li>Background: <code>optimize</code> after a mine by default; version
+cleanup is explicit.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 29 tools and resolves a static profile at
+startup — <code>minimal</code>, <code>kg</code>, <code>code</code>,
+<code>notes</code>, or <code>full</code>, the default
+(<code>mcp_tool_profiles.py:19-71</code>). <code>--tools</code>,
+<code>--include</code> and <code>--exclude</code> edit the set. The
+packaged agent plugin registers the server with
+<code>--profile=minimal</code>: status, search, duplicate check and add
+(<code>agent_plugin/mcp.json</code>). The destructive tools are
+reachable only through a direct registration with a wider profile.</p>
+<p>The plugin's <code>SKILL.md</code> is the most careful prose in the
+tree. It says a search miss does not prove absence, forbids dropping an
+unknown wing filter to broaden a search, and routes corrections to the
+owner because the profile cannot delete. It also handles an ambiguous
+write: search for the content before retrying, since the write has no
+stable identity.</p>
+<p><code>hooks/mempal_save_hook.sh</code> is upstream's Stop hook,
+ported: every 15 human messages it blocks the stop and tells the model
+to save to the palace. The PreCompact hook does the same before
+compaction. Neither is registered by anything in the package; the script
+headers describe adding them to Claude Code settings by hand.</p>
+<p>The agent has full agency on the <code>full</code> profile: add,
+delete by id, delete a wing, re-mine any directory holding a
+<code>mempalace.yaml</code>, and add or close graph facts. Porting to
+another MCP client is a config line.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>SQL built from an agent argument.</strong>
+<code>get(ids=…)</code> and <code>delete(ids)</code> wrap each id in
+quotes without doubling embedded quotes
+(<code>storage.py:1228-1230</code>, <code>:1315-1316</code>).
+<code>tool_delete_drawer</code> passes <code>drawer_id</code> from the
+tool call. With <code>drawer_id</code> set to
+<code>x') OR ('1'='1</code>, the existence check becomes
+<code>id IN ('x') OR ('1'='1')</code>, returns a row, and the delete
+runs the same predicate over the whole table. Every other predicate in
+<code>storage.py</code> escapes, and
+<code>wing_migration.py:2536-2537</code> escapes ids in the same
+<code>IN</code> shape. The path was read, not executed; whether
+LanceDB's SQL parser accepts that exact string was not tested. The
+minimal profile does not expose the tool.</p>
+<p><strong>Provenance is good for mined drawers and absent for manual
+ones.</strong> A mined row names its file, hash, line range, chunker and
+extractor version. A manual row records a caller-supplied
+<code>added_by</code>, which defaults to <code>mcp</code>, and whatever
+<code>source_file</code> the caller typed.</p>
+<p><strong>Deletion is not erasure.</strong> LanceDB keeps prior
+versions until <code>cleanup_stale_fragments</code> prunes them, seven
+days by default, and <code>repair --rollback</code> can restore one,
+which brings deleted drawers back. Backups taken before optimize or
+before a watch hold them too.</p>
+<p><strong>The graph path divergence</strong> in section 3 is a silent
+data-loss shape: triples mined through the documented CLI command are
+written and never read by the MCP tools that exist to use them. Not
+reproduced; derived from the two path rules and the test that pins one
+of them.</p>
+<p><strong>Uncertainty cannot be represented.</strong> No drawer field
+says a text is doubted, and the graph's <code>confidence</code> column
+is left at its 1.0 default by every live path.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — carried. <code>wing</code> and
+<code>room</code> are applied as a prefilter on the vector query. The
+limits are in the record: the scope is optional and caller-supplied, the
+duplicate check reads across wings, and the graph has no wing.</li>
+<li><code>bitemporal</code> — carried, for the graph. The miner's NULL
+<code>valid_from</code> and the inclusive end-of-day bound are in the
+record.</li>
+<li><code>negative_eval</code> — carried, on a wing exclusion and an
+expired-fact exclusion, each with a positive control (section 10).</li>
+<li><code>audit_log</code> — withheld. No append-only record of memory
+mutations exists in the tree. Upstream added a write-ahead log after the
+fork point, and <code>docs/UPSTREAM_COMPARISON.md</code> classifies it
+as having no owner here. LanceDB's version list is version history, not
+a mutation record, and cleanup prunes it.</li>
+<li><code>tombstone</code> — withheld. A deleted manual drawer leaves
+nothing keyed on its text; a deleted mined drawer is re-mined from its
+file by design.</li>
+<li><code>trust_state</code> — withheld. No status field on drawers or
+triples.</li>
+<li><code>human_review</code> — withheld. Nothing waits for approval;
+<code>status</code> and the listing tools display.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report. Everything below
+is from reading the tests at the pin.</p>
+<p>The suite is large and specific: 3,937 test functions across 90
+files. An autouse fixture replaces the embedder with a deterministic
+stub, so the tests run against real LanceDB and a fake model
+(<code>tests/conftest.py:45-77</code>). Storage tests cover the
+<code>where</code> translation including escaping, <code>$in</code>,
+<code>$or</code> and <code>$ne</code>, the scoped bulk delete, quote
+handling in paths and wings, and schema migration.</p>
+<p><strong>The negative cases that carry the mark.</strong>
+<code>test_in_end_to_end</code> seeds three wings, queries with two of
+them, and asserts both included drawers returned and the third did not
+(<code>tests/test_storage_lance.py:573-595</code>). The graph's
+<code>test_query_as_of_filters_expired</code> and
+<code>test_query_as_of_shows_current</code> assert an employer is
+returned at one date and excluded at another, with the other employer as
+control (<code>tests/test_knowledge_graph.py:142-152</code>). Those two
+came from upstream unchanged.</p>
+<p><strong>The vacuous shape is also present.</strong>
+<code>test_wing_filter</code>, <code>test_room_filter</code> and
+<code>test_wing_and_room_filter</code> assert
+<code>all(r["wing"] == "notes" …)</code> over the results
+(<code>tests/test_searcher.py:36-46</code>), and the MCP-level twins do
+the same (<code>tests/test_mcp_server.py:374-386</code>). Each passes on
+an empty result.</p>
+<p><strong>What no test covers.</strong> No test passes a quote in a
+<code>drawer_id</code> to <code>get</code> or <code>delete</code>. No
+test changes a mined file while a same-wing manual drawer names it. No
+test runs the CLI <code>mine</code> and then an MCP graph tool against
+the same palace.</p>
+<p><strong>Benchmarks.</strong> <code>benchmarks/BENCHMARKS.md</code> is
+upstream's conversation-memory record, marked historical in its own
+header. The fork's numbers are a 20-query code-retrieval set run on the
+project's own source — R@5 0.95 for MiniLM
+(<code>benchmarks/results_embed_ab_2026-04-09.json</code>) — and a
+token-delta benchmark against grep-and-read: median 14.5x fewer tokens
+with retrieval precision@5 of 0.5
+(<code>benchmarks/token_delta_fixture_facts.json</code>). The ratio
+counts tokens returned whether or not they answer the query.
+<code>BENCHMARKS.md</code> names an arXiv draft by title only; no
+identifier or citation file is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A content hash per source file on every derived
+row.</strong> It makes a no-op re-index free, detects change without
+reading the index, and tells a deletion sweep which rows it may
+remove.</li>
+<li><strong>A deletion sweep that proves a row is regenerable before
+removing it.</strong> Require the ingest mode, an empty user-type field,
+a well-formed hash and a path inside the project root, all in the delete
+predicate itself. Anything a person wrote survives a sweep that cannot
+prove otherwise.</li>
+<li><strong>An atomic per-source replace.</strong> A merge keyed on
+<code>(id, source, scope)</code> with a scoped delete-when-not-matched
+swaps one source's rows in one commit.</li>
+<li><strong>Ship the narrowest tool profile as the default
+integration.</strong> The plugin registers four tools and no delete, and
+its skill says what to do when the profile cannot perform a
+correction.</li>
+<li><strong>Distinguish wrong from evolved in the usage rules.</strong>
+Wrong content is deleted and replaced; an evolved fact is added and the
+history stands.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Porting a parameterised API onto string-built SQL.</strong>
+Escape in one function and route every predicate through it, ids
+included. A translation layer that escapes values in <code>where</code>
+and not in <code>ids</code> is correct in the place tests look.</li>
+<li><strong>A default path that differs between the writer and the
+reader.</strong> Derive the graph path from the palace in one function
+used by both.</li>
+<li><strong>Reading across scope to answer a write-side
+question.</strong> A duplicate check is a read path; unscoped, it
+refuses writes and discloses content across projects.</li>
+<li><strong>Re-emitting unchanged facts with an unbounded
+start.</strong> Diff the relation set against what is open for the
+source and close only what disappeared.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer indexing their own repositories for an MCP
+client who wants code search that returns the function rather than a
+paragraph near it, and treats notes as a secondary feature. The
+maintenance budget is modest because the store follows the source tree.
+It does not suit anyone who needs corrections to be recorded, notes kept
+apart from other projects, or the full tool surface exposed to an agent
+reading untrusted text. Anyone relying on the code-intelligence tools
+should mine with <code>--palace</code> or through the MCP server until
+the graph paths agree.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does LanceDB 0.33.0's SQL parser accept
+<code>id IN ('x') OR ('1'='1')</code> inside <code>where()</code> and
+<code>delete()</code>? The reading says yes; a two-line run would settle
+it.</li>
+<li>Does anything outside this tree set <code>--palace</code> for users
+who follow the README, so the two graph paths coincide in practice?</li>
+<li>How often does a manual drawer carry a mined file's absolute path as
+its <code>source_file</code>? The skill does not suggest it; the tool
+schema invites it.</li>
+<li>Will the fork adopt upstream's write-ahead log or its half-open
+validity bound? The comparison document classifies the first as unowned
+and does not mention the second.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>mempalace_code/storage.py</code> (<code>_META_FIELD_SPEC</code>,
+<code>LanceStore.add</code>, <code>upsert</code>,
+<code>replace_source</code>, <code>get</code>, <code>query</code>,
+<code>delete</code>, <code>delete_by_source_file</code>,
+<code>delete_by_source_files</code>,
+<code>get_source_file_hashes</code>, <code>_where_to_sql</code>,
+<code>recover_to_last_working_version</code>).</li>
+<li><strong>Graph:</strong>
+<code>mempalace_code/knowledge_graph.py</code>,
+<code>mempalace_code/mining/kg_extract.py</code>,
+<code>mempalace_code/architecture.py</code>.</li>
+<li><strong>Write path:</strong>
+<code>mempalace_code/mining/orchestrator.py</code>,
+<code>mempalace_code/mining/chunkers.py</code>,
+<code>mempalace_code/convo_miner.py</code>,
+<code>mempalace_code/mcp/tools/write.py</code>,
+<code>mempalace_code/mcp/tools/diary.py</code>.</li>
+<li><strong>Retrieval:</strong> <code>mempalace_code/searcher.py</code>,
+<code>mempalace_code/retrieval_rerank.py</code>,
+<code>mempalace_code/search_reranker.py</code>,
+<code>mempalace_code/mcp/tools/search.py</code>,
+<code>mempalace_code/mcp/tools/architecture.py</code>,
+<code>mempalace_code/reader.py</code>,
+<code>mempalace_code/layers.py</code>.</li>
+<li><strong>MCP and CLI:</strong>
+<code>mempalace_code/mcp/registry.py</code>,
+<code>mempalace_code/mcp/dispatch.py</code>,
+<code>mempalace_code/mcp/runtime.py</code>,
+<code>mempalace_code/mcp_tool_profiles.py</code>,
+<code>mempalace_code/cli_commands/ingest.py</code>,
+<code>mempalace_code/agent_plugin/</code>.</li>
+<li><strong>Background:</strong> <code>mempalace_code/watcher.py</code>,
+<code>mempalace_code/backup.py</code>.</li>
+<li><strong>Docs read as claims:</strong>
+<code>docs/WHY_THIS_FORK.md</code>,
+<code>docs/UPSTREAM_COMPARISON.md</code>,
+<code>docs/LLM_USAGE_RULES.md</code>,
+<code>docs/BENCH_TOKEN_DELTA.md</code>, <code>NOTICE</code>.</li>
+<li><strong>Tests:</strong> <code>tests/conftest.py</code>,
+<code>tests/test_storage_lance.py</code>,
+<code>tests/test_storage.py</code>, <code>tests/test_searcher.py</code>,
+<code>tests/test_knowledge_graph.py</code>,
+<code>tests/test_miner.py</code>, <code>tests/test_mcp_server.py</code>,
+<code>tests/test_installed_cli_palace_scope.py</code>.</li>
+<li><strong>Upstream at the fork point:</strong> MemPalace at
+<code class="commit-id" title="c30bc9e71e890d50b2019788e8d5a89a2164cc79">c30bc9e7…</code>,
+<code>mempalace/mcp_server.py</code> and
+<code>mempalace/knowledge_graph.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run at the tree root of the checkout at the pinned revision unless
+stated.</p>
+<ul>
+<li><code>grep -rniE '_wal_log|write_ahead|audit|O_APPEND' --include='*.py' mempalace_code</code>
+— one hit, a comment in <code>architecture.py</code>; no mutation
+log.</li>
+<li><code>grep -rnE "open\([^)]*['\"]a['\"]" --include='*.py' mempalace_code</code>
+— <code>updater.py:1704</code> only, an upgrade log.</li>
+<li><code>grep -rn 'id IN' --include='*.py' mempalace_code</code> —
+<code>storage.py:1230</code> and <code>:1316</code> unescaped;
+<code>wing_migration.py:2537</code> escaped.</li>
+<li><code>grep -rn 'replace_source(' --include='*.py' mempalace_code</code>
+— called only from <code>convo_miner.py:417</code>.</li>
+<li><code>grep -rn 'delete_by_source_file(' --include='*.py' mempalace_code</code>
+— the per-file call at <code>orchestrator.py:715</code> and the fallback
+loop inside <code>storage.py</code>.</li>
+<li><code>grep -rn 'update_drawer' --include='*.py' .</code> — no match;
+there is no update verb.</li>
+<li><code>grep -rn 'supersede' --include='*.py' .</code> — no graph
+supersession primitive; the hits are in the wing-merge operator and
+release tests.</li>
+<li><code>grep -n 'where' mempalace_code/mcp/tools/search.py</code> —
+lines 98 and 106, both in <code>tool_file_context</code>;
+<code>tool_check_duplicate</code> (44-78) has none.</li>
+<li><code>grep -rn 'wing' mempalace_code/knowledge_graph.py</code> —
+docstrings and a legacy-migration helper only; no wing column on
+<code>triples</code>.</li>
+<li><code>grep -rnE 'confidence=' --include='*.py' mempalace_code</code>
+— <code>export.py:408</code> on import and an onboarding print; no live
+path sets graph confidence.</li>
+<li><code>grep -rnE '"(status|verified|candidate|rejected|approved|pending)"' --include='*.py' mempalace_code/storage.py mempalace_code/knowledge_graph.py mempalace_code/mcp</code>
+— no match.</li>
+<li><code>grep -rnE 'tombstone|blocklist|denylist|suppress' --include='*.py' mempalace_code</code>
+— no memory-related match.</li>
+<li><code>grep -rnE 'def test_.*(manual|protect|preserv).*' tests/test_miner.py tests/test_miner_modules.py tests/test_mine_source_exact.py tests/test_watcher.py</code>
+— no test of a same-wing manual drawer across a changed-file
+re-mine.</li>
+<li><code>grep -rn -i 'precompact\|mempal_save' mempalace_code</code> —
+no match; nothing in the package registers the hook scripts.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— <code>benchmarks/BENCHMARKS.md</code> only, naming a draft title at
+line 602; no <code>CITATION.cff</code>.</li>
+<li><code>grep -rn 'prefilter' --include='*.py' mempalace_code</code> —
+no match; the library default applies. LanceDB
+<code>python/python/lancedb/query.py</code> at
+<code>python-v0.33.0</code>
+(<code class="commit-id" title="c0a9a4d48a384096dbfd928fbbf808f6527dba9c">c0a9a4d4…</code>) declares
+<code>prefilter: bool = True</code> at line 910.</li>
+<li>In MemPalace at the fork point:
+<code>grep -rn '_wal_log' mempalace/*.py</code> — no match; the
+write-ahead log postdates the fork.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/rergards/mempalace-code/commit/3594fbce1050bd0471a3e3b40ed6ebe72473a440"><code class="commit-id" title="3594fbce1050bd0471a3e3b40ed6ebe72473a440">3594fbce…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 21
+September 2026. Three marks: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>. MemPalace was
+read at the fork point, <code>c30bc9e7</code>, to separate inherited
+code from new. Screened before reading: two auto-run surfaces
+(<code>.claude/settings.json</code>, whose hooks run the test suite and
+linters on <code>git commit</code> and log edited paths to
+<code>/tmp</code>; <code>hooks/</code>, registered by nothing in the
+tree), one build-time execution point (<code>tests/conftest.py</code>),
+four dependency files inside the cooldown, which a depth-1 clone
+over-counts because every file dates to the tip, and no unpinned
+surface. <code>AGENTS.md</code> and <code>CLAUDE.md</code> were treated
+as data. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
