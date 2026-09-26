@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Git-shared Markdown wiki for
+coding agents whose claims are grounded to code-graph symbols, with
+drift detection, an operation ledger and a reviewed Inbox.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MEX — Agent Memory Atlas">
+    <meta property="og:description" content="A Git-shared Markdown wiki
+for coding agents whose claims are grounded to code-graph symbols, with
+drift detection, an operation ledger and a reviewed Inbox.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MEX — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Git-shared Markdown wiki
+for coding agents whose claims are grounded to code-graph symbols, with
+drift detection, an operation ledger and a reviewed Inbox.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MEX — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MEX",
+      "description": "A Git-shared Markdown wiki for coding agents whose claims are grounded to code-graph symbols, with drift detection, an operation ledger and a reviewed Inbox.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A Git-shared project wiki for coding
+agents, grounded in a code graph</p>
+          <h1>MEX</h1>
+          <p class="document-deck">A Git-shared Markdown wiki for coding
+agents whose claims are grounded to code-graph symbols, with drift
+detection, an operation ledger and a reviewed Inbox.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mex-memory/mex">
+              <span>Source</span>
+              <strong>mex-memory/mex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mex-memory/mex/commit/5b6e02c9efa047f62cda247f7b01113b0ec7aab5" title="5b6e02c9efa047f62cda247f7b01113b0ec7aab5">
+              <span>Analyzed revision</span>
+              <code>5b6e02c9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mex-memory--mex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mex-memory--mex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>159,071
+lines of TypeScript outside tests; the Wiki layer is 33,811 of them and
+the Team layer 35,771</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>724
+commits on main by 23 contributors, 19 March 2026 – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>about
+3,884 it and test cases in 317 test files, 116,435 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MEX is a repository-resident project memory for coding agents and the
+engineers beside them. Canonical knowledge is Markdown under
+<code>.mex/</code> — architecture, decisions, conventions, patterns,
+specs — shared through ordinary Git, with per-checkout SQLite indexes
+for full-text search over the Wiki and for a Tree-sitter code graph. A
+<code>mex-agent</code> CLI, instruction anchors for six agent hosts, two
+skills and a loopback Hub web UI sit on top.</p>
+<p>What is notable is how claims stay tied to code. A Wiki entity can
+ground to a code-graph node by id, identity fingerprint and body hash,
+and drift checks flag the claim when that code moves or changes.
+Structured writes go through an operation layer with preconditions,
+re-planning and a crash-safe, body-free ledger.</p>
+<p>What is weak is that the default write path goes around all of it.
+The shipped agent instructions tell the agent to edit
+<code>context/</code> files directly after each task, and the router
+tells it to read those files whole, so neither the ledger nor the
+lifecycle filter touches the ordinary loop.</p>
+<p>The engineering density is high: 33,811 lines for the Wiki layer and
+35,771 for the Team workflows (Members, Inbox, Relays, Activity), with
+comments that state the invariant each quirk protects. The code graph is
+a code index, not memory, and this report covers it only where Wiki
+groundings depend on it. The committed benchmark
+(<code>evaluate/RESULTS.md</code>) measures graph retrieval, not
+memory.</p>
+<p>Two marks. <code>audit_log</code>, for the operation ledger, and
+<code>negative_eval</code>, for a committed case asserting an archived
+entity stays out of a default listing with both controls. Section 9
+names the five withheld, including a stricter lifecycle predicate
+declared and tested with no caller.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a Wiki entity: a typed block of Markdown bound to a
+heading, with a <code>mex:</code> metadata block holding its id,
+lifecycle, revision, relations, sources, provenance and groundings
+(<code>src/wiki/model/entity.ts:164-180</code>). Beside it sit three
+other stores that hold claims: free-text notes in
+<code>.mex/events/decisions.jsonl</code>, Inbox proposals, and Relay
+handoffs.</p>
+<p><strong>A thing becomes a belief by being written into a scaffold
+file.</strong> Most arrive by the agent editing Markdown under the GROW
+checklist (<code>templates/ROUTER.md:64-69</code>), or by the Hub
+setup's population step, which launches a headless Claude session with
+<code>--permission-mode acceptEdits</code> to write the scaffold
+(<code>src/setup/headless-population.ts:110</code>;
+<code>src/agent-command.ts:38-50</code>). A smaller share arrives
+through <code>mex wiki apply</code>, Inbox approval or model synthesis,
+all of which run the operation layer.</p>
+<p><strong>Lifecycle is governance, and it is one enum</strong> —
+<code>in_flight</code>, <code>promoted</code>, <code>deprecated</code>,
+<code>archived</code> (<code>entity.ts:84-97</code>). The comment is
+explicit that grounding health is a separate, derived, per-checkout
+axis, so one branch's code drift cannot rewrite what the team agreed.
+<code>in_flight</code> is not a candidate that waits: it is included in
+default retrieval, and synthesis assigns it to any unit whose
+self-reported confidence is at least 0.4 and below 0.7
+(<code>src/wiki/synthesis/candidates.ts:175-179</code>).</p>
+<p><strong>A belief stops being one in three ways, and only one of them
+hides it.</strong> <code>supersede-entry</code> sets the old entity to
+<code>deprecated</code> and adds a <code>supersedes</code> relation on
+the replacement
+(<code>src/wiki/operations/operations.ts:825-845</code>).
+<code>archive-entry</code> sets <code>status: archived</code> and leaves
+body, relations and sources in place (<code>:813-821</code>). A hand
+edit deletes it; no operation deletes. Query excludes
+<code>archived</code> by default and returns <code>deprecated</code>,
+ranked after the other states
+(<code>src/wiki/query/rank.ts:44-56</code>, <code>:91-96</code>).</p>
+<p><strong>Notes are history, not knowledge.</strong>
+<code>mex log</code> appends a line with a kind (<code>decision</code>,
+<code>note</code>, <code>risk</code>, <code>todo</code>) and an optional
+free-text <code>status</code> (<code>src/events.ts:92-108</code>). The
+instructions call them <em>"historical notes, not accepted current
+knowledge"</em> (<code>templates/AGENTS.md:60</code>), and nothing reads
+the status.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a MEX Wiki entity is written, how its lifecycle moves, and which read path honours the lifecycle</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a MEX Wiki entity is written, how its lifecycle moves, and which read path honours the lifecycle
+flowchart TD
+    GROW[&quot;agent GROW step:&lt;br/&gt;edit context/*.md directly&quot;] --&gt; MD[&quot;canonical Markdown&lt;br/&gt;in .mex/&quot;]
+    SETUP[&quot;setup population:&lt;br/&gt;headless agent, acceptEdits&quot;] --&gt; MD
+    APPLY[&quot;mex wiki apply --apply&lt;br/&gt;(operation envelope)&quot;] --&gt; OPS{&quot;plan, preconditions,&lt;br/&gt;re-plan on apply&quot;}
+    INBOX[&quot;mex inbox proposal approve&lt;br/&gt;(CLI or Hub)&quot;] --&gt; OPS
+    SYN[&quot;synthesis: model confidence&lt;br/&gt;at least 0.7 promoted,&lt;br/&gt;at least 0.4 in_flight&quot;] --&gt; APPLY
+    OPS --&gt; LEDGER[&quot;operations.jsonl:&lt;br/&gt;intent line, then complete line&quot;]
+    OPS --&gt; MD
+    MD --&gt; LC{&quot;lifecycle in the mex: block&quot;}
+    LC -- &quot;supersede-entry&quot; --&gt; DEP[&quot;deprecated&quot;]
+    LC -- &quot;archive-entry&quot; --&gt; ARC[&quot;archived&quot;]
+    LC -- &quot;hand edit&quot; --&gt; GONE[&quot;removed, no entry&quot;]
+    MD --&gt; ROUTER[&quot;ROUTER.md routing table:&lt;br/&gt;agent reads whole files,&lt;br/&gt;no lifecycle filter&quot;]
+    MD --&gt; IDX[&quot;wiki.db FTS5 index,&lt;br/&gt;rebuilt per checkout&quot;]
+    IDX --&gt; Q{&quot;mex wiki query / list&quot;}
+    Q -- &quot;archived&quot; --&gt; HID[&quot;excluded by default&quot;]
+    Q -- &quot;deprecated&quot; --&gt; LAST[&quot;returned, ranked last&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>mex-agent</code> is a Node 22.5+ TypeScript CLI
+(<code>package.json</code>, bin <code>mex</code>). The canonical store
+is files: entity-bearing Markdown under <code>.mex/context/</code>,
+<code>.mex/patterns/</code>, <code>.mex/specs/</code> and
+<code>.mex/topics/</code>, JSONL under <code>.mex/events/</code>, one
+Markdown file per Activity event under
+<code>.mex/events/activity/</code>, and Team artefacts (members,
+workstreams, inbox, relays). Everything under <code>.mex/local/</code>
+stays in the checkout: drafts, the current-member selection, jobs and a
+receipt-signing key.</p>
+<p>Two SQLite databases are derived. <code>wiki.db</code> indexes
+entities, relations, topics, sources, groundings and diagnostics, with
+an FTS5 table over title, summary, body, aliases and metadata
+(<code>src/wiki/index/schema.ts:98-126</code>, <code>:248</code>).
+<code>graph.db</code> is the code graph built from bundled Tree-sitter
+grammars for TypeScript, JavaScript, Python and Rust. Both are rebuilt
+by explicit commands (<code>mex wiki rebuild-index</code>,
+<code>mex graph rebuild</code>) and reads never migrate or rebuild them
+silently.</p>
+<p>The Hub is a local web UI served on <code>127.0.0.1</code> from the
+same process, with a server-side session and CSRF token
+(<code>src/hub/</code>). An MCP server exists as a workspace
+(<code>packages/mex-mcp/</code>, five tools: check, heartbeat, log,
+read-file, timeline) and is not published. CLI and Hub telemetry is on
+by default and can be disabled (<code>TELEMETRY.md</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing runs but the CLI. No API key is needed to store or retrieve;
+a model is needed only for setup population, synthesis and
+<code>mex sync</code>, and those shell out to an installed Claude Code,
+Codex or OpenCode CLI. The store is Markdown and JSONL a person reads
+and edits in any editor, and sharing is <code>git push</code>. The cost
+is operational discipline: indexes go stale after every pull or branch
+switch until someone rebuilds them, and MEX never pushes or pulls
+itself.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Direct write (default).</strong> The instruction files
+installed by setup tell the agent to update <code>ROUTER.md</code> and
+the relevant <code>context/</code> file after meaningful work and bump
+<code>last_updated</code> (<code>templates/AGENTS.md:50-55</code>;
+<code>templates/ROUTER.md:64-69</code>). No MEX code runs on this path.
+<code>mex check</code> later validates the result.</p>
+<p><strong>Operation write.</strong>
+<code>mex wiki apply &lt;file&gt; --apply</code> → <code>runApply</code>
+(<code>src/wiki/cli/commands.ts:381-430</code>), which the comment calls
+<em>"the agent's write door"</em> → <code>wikiApplyOperation</code>
+(<code>src/wiki/service/write.ts:137-166</code>) →
+<code>applyOperation</code> in
+<code>src/wiki/operations/apply.ts</code>, <em>"the only module under
+<code>src/wiki/</code> that writes Markdown"</em>. Apply re-plans from
+the current tree, checks each entity's content-hash precondition,
+optionally binds to a preview hash, writes the gaining file before the
+losing one, and appends the intent and completion ledger lines
+(<code>apply.ts:538-551</code>, <code>:586-595</code>). Without
+<code>--apply</code> it prints the diff and writes nothing.</p>
+<p><strong>Operation vocabulary.</strong> Eleven types: create, update,
+set-property, add and remove relation, add and remove source,
+set-grounding, supersede, move and archive
+(<code>src/wiki/model/operation.ts:42-54</code>). No delete.</p>
+<p><strong>Synthesis.</strong> <code>mex wiki build</code> and
+<code>mex wiki prepare</code> emit clustered context and prompts;
+<code>mex wiki propose &lt;response&gt;</code> validates the model's
+units, drops any below confidence 0.4, and turns the rest into operation
+plans with lifecycle chosen by <code>statusForConfidence</code>
+(<code>candidates.ts:175-179</code>). The global pass can merge a group
+into one canonical unit and deprecate the rest
+(<code>src/wiki/synthesis/global-pass.ts:529-566</code>). Plans are
+written only by <code>mex wiki apply --apply</code>.</p>
+<p><strong>Inbox.</strong> <code>mex inbox draft save</code> keeps a
+local draft; <code>mex inbox publish</code> writes a canonical proposal
+in state <code>pending</code>; <code>mex inbox proposal approve</code>,
+<code>reject</code>, <code>withdraw</code>, <code>mark-stale</code> and
+<code>repair</code> move it
+(<code>src/team/inbox/cli/builder.ts:63-82</code>). Approval re-checks
+target revisions, previews the Wiki operation, stamps
+<code>reviewer</code> and <code>reviewedAt</code> from the resolved
+actor, applies the Wiki write and records an Activity event
+(<code>src/team/workflow/repository-team-workflow-port.ts:2506-2560</code>).
+The same actions are Hub services
+(<code>src/hub/services.ts:2597-2600</code>).</p>
+<p><strong>Search.</strong> <code>mex wiki query</code> →
+<code>wikiSearch</code> → <code>WikiQuerySession.search</code>
+(<code>src/wiki/query/session.ts:187-230</code>): exact id, then FTS5
+over title, summary, and body with aliases and metadata, each hit passed
+through <code>isVisible</code>, then the total order in
+<code>compareHits</code> (<code>rank.ts:111-125</code>). The Hub reads
+through <code>contract-session.ts</code>, whose filter adds
+<code>status &lt;&gt; 'archived'</code> unless asked
+(<code>src/wiki/query/contract-session.ts:1436-1441</code>).</p>
+<p><strong>Notes.</strong> <code>mex log</code> →
+<code>appendEvent</code> (<code>src/events.ts:92-108</code>), one
+<code>appendFileSync</code>. <code>mex timeline</code> →
+<code>runTimeline</code> (<code>:111-160</code>) reads the last 8 MiB or
+10,000 lines, filters by kind, date, literal substring and exact file,
+and returns at most 200 entries within 64 KiB (<code>:74-81</code>).</p>
+<p><strong>Drift.</strong> <code>mex check</code> runs the checkers
+under <code>src/drift/checkers/</code> and scores from 100, ten per
+error and three per warning (<code>src/drift/scoring.ts:3-24</code>).
+<code>mex sync</code> hands the brief to one interactive agent session
+(<code>src/sync/index.ts:32-54</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>mex:</code> block</td>
+<td><code>mx_</code> plus a ULID; never a free string</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td><code>mex:</code> block</td>
+<td>fourteen Wiki types plus seven Team-owned readable types;
+unregistered types are a diagnostic</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>mex:</code> block</td>
+<td><code>in_flight</code>, <code>promoted</code>,
+<code>deprecated</code>, <code>archived</code></td>
+</tr>
+<tr>
+<td><code>revision</code></td>
+<td><code>mex:</code> block</td>
+<td>starts at 1, incremented only by accepted operations</td>
+</tr>
+<tr>
+<td><code>relations</code></td>
+<td><code>mex:</code> block</td>
+<td>typed edges, including <code>supersedes</code>; cycles refused</td>
+</tr>
+<tr>
+<td><code>sources</code></td>
+<td><code>mex:</code> block</td>
+<td>evidence, kept apart from provenance</td>
+</tr>
+<tr>
+<td><code>grounds_to</code></td>
+<td><code>mex:</code> block or frontmatter</td>
+<td>node id, MinHash fingerprint, body hash, file, commit,
+<code>verifiedAt</code></td>
+</tr>
+<tr>
+<td><code>provenance</code></td>
+<td><code>mex:</code> block</td>
+<td><code>createdBy</code> and <code>lastModifiedBy</code> with kind
+human, agent or system; times; agent session id</td>
+</tr>
+</tbody>
+</table></div>
+<p>The interface is <code>WikiEntity</code>
+(<code>entity.ts:164-180</code>); <code>WikiGrounding</code> is at
+<code>src/wiki/model/grounding.ts:50-80</code>. Location offsets and two
+content hashes are computed at index time and are the operation
+preconditions.</p>
+<p><strong>Time.</strong> Provenance carries <code>createdAt</code> and
+<code>lastModifiedAt</code>, a grounding carries
+<code>verifiedAt</code>, and each operation and note carries a
+<code>timestamp</code>. None is a validity interval. The shipped
+decisions template adds a second status in prose —
+<code>**Date:**</code> and
+<code>**Status:** Active | Superseded by</code> in each entry
+(<code>templates/context/decisions.md:48-49</code>) — which no reader
+parses.</p>
+<p><strong>Scope is the repository.</strong> A scaffold belongs to one
+checkout and one branch. Members are <em>"attribution, not a sign-in or
+permission system"</em> (<code>README.md:135</code>), resolved from a
+local selection or the Git identity
+(<code>src/team/identity/actor-resolver.ts:46-60</code>). No entity
+carries a scope key.</p>
+<p><strong>The operation ledger</strong> is <code>AuditEntry</code>
+(<code>src/wiki/operations/audit.ts:80-96</code>): format version,
+phase, op id, type, entity ids, minted ids, actor, timestamp, reason,
+files, payload hash, revisions and session id.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The retrieval an agent performs by default is file reading. The
+anchor points to <code>.mex/AGENTS.md</code>, which points to
+<code>ROUTER.md</code>, whose frontmatter edges name context files with
+a condition each; the agent opens whole files. Every entity in a file
+comes with it, whatever its lifecycle, and the only sign of an archived
+entity is the <code>status: archived</code> line in its HTML
+comment.</p>
+<p>The indexed paths are opt-in. Search ranks by which field matched,
+then lifecycle (<code>promoted</code>, <code>in_flight</code>,
+<code>deprecated</code>), then worst grounding health, then title and
+id, with nothing falling back to row order (<code>rank.ts:44-56</code>,
+<code>:111-125</code>). Because field rank comes first, a deprecated
+entity whose title matches outranks a promoted entity matched in its
+body.</p>
+<p>Grounding health <em>"lowers rank and never hides"</em>
+(<code>rank.ts:58-64</code>), on the stated argument that a hidden stale
+entity sends the user off to write a duplicate. That argument is applied
+to lifecycle too: only <code>archived</code> is filtered.</p>
+<p><code>wiki related</code> walks relations and backlinks bounded by
+depth, count and an estimated token budget
+(<code>session.ts:241-260</code>). <code>wiki for-code</code> and
+<code>mex impact</code> return entities grounded to given code nodes,
+including ones a rename reconciled, with the same archived default
+(<code>src/wiki/query/for-code.ts:142</code>).</p>
+<p>Timeline matching is a lowercase literal substring and exact recorded
+paths. The README warns that <em>"a filtered empty result does not prove
+the full history has no match"</em> (<code>README.md:345</code>), and
+JSON output carries <code>truncated</code> and
+<code>sourceTruncated</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. On the default path the agent
+edits a file with its own tools and nothing else happens. On the
+operation path a plan is computed, previewed, and written only with
+<code>--apply</code>; the precondition is the entity's own content hash,
+so a concurrent edit to an unrelated entity in the same file is carried
+through and one to the subject blocks as
+<code>CONTENT_HASH_CONFLICT</code> (<code>apply.ts:10-26</code>).</p>
+<p><strong>Model output is gated on structure, not on truth.</strong>
+Synthesis validates ids against the context the model was given and
+re-derives groundings from the live graph before writing
+(<code>candidates.ts:13-34</code>). The confidence thresholds are
+constants and deliberately not configurable. What they decide is only
+<code>promoted</code> versus <code>in_flight</code>, and both are
+retrieved by default.</p>
+<p><strong>Correction is supersession or archival.</strong> Both keep
+the old text. Supersession needs an existing or inline replacement and
+refuses a cycle. Deletion exists only as a hand edit, which no ledger
+records.</p>
+<p><strong>Agent-generated content is labelled, not filtered.</strong>
+Operation provenance records <code>kind: agent</code> when the envelope
+says so; the repository's own ledger shows two operations by actor
+<code>codex</code>. Nothing screens content.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, no model call on either path; an operation
+fsyncs the Markdown and two ledger lines.</li>
+<li>Background: none. <code>mex check</code> and <code>mex sync</code>
+run on request, or after each commit when <code>mex watch</code>
+installed its hook.</li>
+<li>Read: the router loads whole files chosen by the agent, so injection
+is bounded only by the scaffold's size; the CLI reads are bounded by
+count, bytes and estimated tokens and report truncation.</li>
+<li>Synthesis and population re-read clusters of the repository through
+a model; their cost scales with the code, not the day's activity.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Setup writes an instruction anchor for each selected host (Claude
+Code, Codex, Cursor, Windsurf, GitHub Copilot, OpenCode) and, for Claude
+Code and Codex, the <code>mex-inbox</code> and <code>mex-relay</code>
+skills under <code>.claude/skills/</code> or
+<code>.agents/skills/</code>. There is no session hook; loading memory
+depends on the host following the anchor.</p>
+<p>The agent's interface is the whole CLI. The skills require a semantic
+preview and <em>"fresh explicit confirmation"</em> before publish,
+approve or reject (<code>skills/mex-inbox/SKILL.md:36-43</code>). That
+is a request to the model.</p>
+<p>One place constrains the agent in code. Headless Claude during setup
+population is pre-approved for read-only graph commands and the note log
+and nothing else of MEX's (<code>src/agent-command.ts:15-31</code>).
+Headless Codex in the same step runs
+<code>exec --sandbox workspace-write</code>, which does not ask
+(<code>:51-56</code>).</p>
+<p>Adapting to another agent means copying an instruction anchor; the
+CLI emits JSON envelopes and <code>mex capabilities --json</code>
+describes itself.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The ledger is careful and partial.</strong> The intent line
+carries the ids a create will mint, so a replay after a crash reuses
+them instead of duplicating knowledge (<code>audit.ts:14-27</code>). The
+writer re-reads prior bytes before and after appending and refuses a
+swapped file or symlink. It excludes bodies, prompts and transcripts by
+construction (<code>:30-36</code>). Its own header scopes it:
+<em>"Manual Markdown edits stay valid with no entry here"</em>
+(<code>:38</code>). The repository's own ledger holds 134 lines: 130
+from migration, all stamped with the fixed default
+<code>2026-01-01T00:00:00.000Z</code>
+(<code>src/wiki/migration/migrate.ts:437</code>), and four from two
+agent operations.</p>
+<p><strong>The ledger has a ceiling.</strong> <code>appendAudit</code>
+throws once the file would exceed 4,096 non-empty lines or 2 MiB
+(<code>audit.ts:69-71</code>, <code>:598-614</code>). The diagnostic a
+reader then sees says a line <em>"is not valid JSON"</em>. What apply
+reports at the cap was not traced.</p>
+<p><strong>Integrity is not identity.</strong> The README says so:
+signed previews and the plan/apply boundary <em>"protect mutation
+integrity—not authentication, OS isolation, repository permissions, or
+proof that a human issued the command"</em>. The operation actor is
+taken from the envelope.</p>
+<p><strong>Git is the replication layer.</strong> Two checkouts can edit
+the same entity and meet as a Git conflict; Relays state there is no
+cross-clone lock.</p>
+<p><strong>Uncertainty is partly representable.</strong> Grounding
+health says the code under a claim changed. Nothing says a claim is
+disputed.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>audit_log</code> — awarded on the operation ledger; the
+default direct-edit path is outside it.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — a rejected Inbox proposal keeps
+<code>reviewRationale</code> on the proposal record; nothing checks a
+later draft or synthesis unit against rejected content.</li>
+<li><code>trust_state</code> — the lifecycle has no state that withholds
+a claim from being used except <code>archived</code>, which is
+retirement. <code>ACTIVE_LIFECYCLE_STATES</code> excludes
+<code>deprecated</code> and is documented as <em>"included in default
+active retrieval"</em> (<code>entity.ts:96-97</code>), but
+<code>isActiveEntity</code> has no caller outside its test; the live
+predicate <code>isVisible</code> returns <code>deprecated</code>. The
+<code>includeInFlight: false</code> option exists and no production
+caller passes it.</li>
+<li><code>bitemporal</code> — timestamps are record times; no validity
+interval exists.</li>
+<li><code>scope_enforced</code> — the partition is the repository. Relay
+recipients filter only an opt-in <code>--perspective mine</code> view
+(<code>repository-team-workflow-port.ts:1207-1216</code>).</li>
+<li><code>human_review</code> — a proposal waits in
+<code>pending</code>, and the agent can clear it:
+<code>mex inbox proposal approve</code> is on the CLI it runs, and the
+actor resolves from the same checkout identity as a person's. The Wiki
+is also writable directly, so Inbox is not the only door.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin. CI runs <code>npm run test</code>, which
+is <code>vitest run</code> over the root suite
+(<code>.github/workflows/ci.yml:48</code>;
+<code>vitest.config.ts</code>).</p>
+<p><strong>The negative case.</strong> <code>query.test.ts</code>
+indexes one file holding a promoted, an in_flight, a deprecated and an
+archived entity (<code>:94-99</code>). <em>"excludes archived entities
+by default"</em> asserts the listing contains the promoted title, omits
+<code>Rotate passwords</code>, and that the archived id is still in the
+index (<code>:173-180</code>); the next case asserts it returns with
+<code>includeArchived</code>. The code-driven twin is
+<code>for-code.test.ts:161-164</code>. Neither suite has a skip
+path.</p>
+<p><strong>Ranking.</strong> The same file asserts promoted before
+in_flight before deprecated and that a stale entity ranks down without
+disappearing. It asserts the deprecated one is returned, which is the
+design.</p>
+<p><strong>The ledger.</strong> <code>operations.test.ts:240</code>
+applies each operation type, checks unrelated bytes are untouched, the
+audit line is appended and a replay is a no-op.
+<code>integrity.test.ts</code> asserts the log survives deleting
+<code>wiki.db</code> (<code>:230</code>), a malformed line degrades to a
+diagnostic (<code>:274</code>), a body never reaches the log
+(<code>:387</code>), and a count past the cap is reported
+(<code>:332-335</code>).</p>
+<p><strong>An unwired predicate, tested.</strong>
+<code>src/wiki/model/__tests__/entity.test.ts:74-78</code> pins
+<code>isActiveEntity</code> to exclude <code>deprecated</code>. The
+function has no production caller.</p>
+<p><strong>Evaluation.</strong> <code>evaluate/RESULTS.md</code> reports
+a 12-task, one-repetition pilot of <code>mex graph scope</code> against
+file search, dated 19 and 20 August 2026: 7 of 12 blind-correct against
+6 of 12, with 54.5% fewer new tokens. It measures code retrieval.
+Per-session artefacts go to <code>.mex/eval-results/</code>, which
+<code>.gitignore</code> excludes, so the table does not recompute from
+the tree. <code>EVAL_SYSTEM_PLAN.md</code> lists LongMemEval,
+MemoryAgentBench, LoCoMo and others as deferred memory milestones. No
+paper of the project's own is cited in the tree.</p>
+<p><strong>Not covered.</strong> No test asserts what an agent following
+the router reads. Nothing asserts that a superseded entity stays out of
+anything.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Ground each claim to a code symbol by identity and by body
+hash.</strong> The fingerprint finds the symbol after a move; the hash
+says it changed. Keep both in the canonical file so drift survives an
+index rebuild.</li>
+<li><strong>Keep governance and health on separate axes.</strong> A
+per-checkout "stale" must never rewrite what the team marked
+promoted.</li>
+<li><strong>Journal an operation with an intent line that carries the
+ids it will mint.</strong> Replay after a crash then finishes the create
+instead of duplicating it.</li>
+<li><strong>Build ledger records field by field and assert a body cannot
+enter.</strong> Privacy by construction beats a redaction pass.</li>
+<li><strong>Precondition on the entity's own hash and re-plan at apply
+time,</strong> so an edit to another entity in the same file does not
+block and an edit to the subject does.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A governed gateway beside an ungoverned default.</strong> If
+the instructions tell the agent to edit files directly, the ledger,
+preconditions and review cover the rare path.</li>
+<li><strong>Filtering on the query path while the agent reads
+files.</strong> Put the lifecycle predicate where the context is
+assembled, or render retired entities out of the files the router
+names.</li>
+<li><strong>A stricter predicate nobody calls.</strong>
+<code>isActiveEntity</code> states the right default and is only
+tested.</li>
+<li><strong>Letting model confidence choose the lifecycle.</strong> A
+self-reported 0.7 buys <code>promoted</code> with no reviewer in the
+loop beyond whoever runs apply.</li>
+<li><strong>A hard ceiling on an append-only log without
+rotation.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team already disciplined about Git review that wants its
+architecture, decisions and handoffs in the repository, tied to code,
+and is willing to run rebuild commands after pulls. Its guarantees are
+about integrity and drift, not about who wrote a claim or whether it is
+still believed. A reader who needs memory to be correctable with an
+audit trail on every change, or filtered by what the team has retired,
+would have to route all agent writes through <code>mex wiki apply</code>
+and change the router's reads. It is the wrong shape for a personal
+recall store of chat facts: nothing extracts from conversation, and
+nothing ranks by relevance beyond FTS5 over titles and bodies.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does <code>mex wiki apply</code> return once
+<code>operations.jsonl</code> passes 4,096 lines, and is there a
+documented way to roll the ledger?</li>
+<li>How often do real teams route writes through operations rather than
+direct edits? The repository's own ledger suggests rarely.</li>
+<li>Does the Hub's Context view or Search show deprecated entities with
+any marking beyond order?</li>
+<li>Is the fixed migration timestamp intended for production runs, given
+the comment beside it says a reader should see the run's own time?</li>
+<li>Is <code>isActiveEntity</code> intended to replace
+<code>isVisible</code> on some path?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Model:</strong> <code>src/wiki/model/entity.ts</code>,
+<code>src/wiki/model/operation.ts</code>,
+<code>src/wiki/model/grounding.ts</code>,
+<code>src/wiki/model/diagnostic.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/wiki/cli/commands.ts</code>,
+<code>src/wiki/service/write.ts</code>,
+<code>src/wiki/operations/apply.ts</code>,
+<code>src/wiki/operations/operations.ts</code>,
+<code>src/wiki/operations/audit.ts</code>,
+<code>src/wiki/migration/migrate.ts</code>.</li>
+<li><strong>Synthesis:</strong>
+<code>src/wiki/synthesis/candidates.ts</code>,
+<code>src/wiki/synthesis/global-pass.ts</code>,
+<code>src/wiki/synthesis/prompts.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/wiki/index/schema.ts</code>,
+<code>src/wiki/query/session.ts</code>,
+<code>src/wiki/query/rank.ts</code>,
+<code>src/wiki/query/for-code.ts</code>,
+<code>src/wiki/query/contract-session.ts</code>,
+<code>src/wiki/service/read.ts</code>.</li>
+<li><strong>Notes:</strong> <code>src/events.ts</code>,
+<code>src/cli.ts:893-960</code>.</li>
+<li><strong>Team:</strong> <code>src/team/inbox/cli/builder.ts</code>,
+<code>src/team/workflow/repository-team-workflow-port.ts</code>,
+<code>src/team/identity/actor-resolver.ts</code>,
+<code>src/team/activity/repository.ts</code>.</li>
+<li><strong>Integration:</strong> <code>templates/AGENTS.md</code>,
+<code>templates/ROUTER.md</code>,
+<code>skills/mex-inbox/SKILL.md</code>,
+<code>src/agent-command.ts</code>, <code>src/sync/index.ts</code>,
+<code>src/watch.ts</code>,
+<code>packages/mex-mcp/src/tools/</code>.</li>
+<li><strong>Tests:</strong>
+<code>src/wiki/query/__tests__/query.test.ts</code>,
+<code>src/wiki/query/__tests__/for-code.test.ts</code>,
+<code>src/wiki/operations/__tests__/operations.test.ts</code>,
+<code>src/wiki/operations/__tests__/integrity.test.ts</code>,
+<code>src/wiki/model/__tests__/entity.test.ts</code>;
+<code>evaluate/RESULTS.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn -E 'isActiveEntity|ACTIVE_LIFECYCLE_STATES' src packages test --include='*.ts' --include='*.tsx'</code>
+— the definition in <code>entity.ts</code> and
+<code>entity.test.ts</code> only.</li>
+<li><code>grep -rn -E 'includeInFlight|includeArchived|statuses:' src packages --include='*.ts' --include='*.tsx'</code>,
+excluding tests — <code>includeInFlight</code> appears only in
+<code>rank.ts</code>.</li>
+<li><code>grep -rn -E 'appendAudit' src --include='*.ts'</code>,
+excluding tests — three calls, all in <code>apply.ts</code>.</li>
+<li><code>grep -rn -iE 'rotat|compact' src/wiki/operations/*.ts</code> —
+no ledger rotation.</li>
+<li><code>grep -rn -E '"rejected"' src/team --include='*.ts'</code>,
+excluding tests — codecs, state lists and the reject transition; no read
+that compares new content with a rejected proposal.</li>
+<li><code>grep -rn -il 'tombstone' src packages templates skills</code>
+— no match.</li>
+<li><code>grep -rn -E '\b(valid_?[Ff]rom|valid_?[Tt]o|valid_?[Aa]t|valid_?[Uu]ntil|invalid_?[Aa]t|effective_?[Ff]rom)\b' src packages --include='*.ts'</code>
+— no match.</li>
+<li><code>grep -rn -iE 'self.?approv|selfApprov|isTTY|isatty' src/team</code>
+— no actor or terminal check on approval.</li>
+<li><code>grep -rn -E 'SessionStart|PreCompact|UserPromptSubmit' src --include='*.ts'</code>
+— no match; <code>src/watch.ts</code> installs only a Git post-commit
+hook.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— <code>EVAL_SYSTEM_PLAN.md</code> only, citing third-party benchmarks;
+no <code>CITATION.cff</code>.</li>
+<li><code>find evaluate -type f | grep -iE 'result|run|session|transcript'</code>
+— <code>RESULTS.md</code> and runner code; no committed run
+artefacts.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/mex-memory/mex/commit/5b6e02c9efa047f62cda247f7b01113b0ec7aab5"><code class="commit-id" title="5b6e02c9efa047f62cda247f7b01113b0ec7aab5">5b6e02c9…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 25
+September 2026. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>. Screened before reading: one auto-run
+surface (<code>.claude-plugin/marketplace.json</code>, a skills
+marketplace entry that runs nothing on its own), one build-time
+execution point (npm <code>prepare</code>), five dependency files inside
+the cooldown — every file in a depth-1 clone dates to the tip — and five
+unpinned surfaces; <code>AGENTS.md</code> and <code>CLAUDE.md</code>
+recorded as data. No <code>.gitmodules</code>;
+<code>.gitattributes</code> carries no filter. Read with
+<code>grep</code> and <code>sed</code>; nothing installed, built or run.
+The code graph is covered only where Wiki groundings depend on it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

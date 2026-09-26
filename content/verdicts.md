@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 639 reports.**
+**This page covers all 640 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5721,3 +5721,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 19,197 lines of Python in the service core, 480 commits on `develop` by 14 contributors between 16 September 2025 and 28 August 2026, and 623 test functions run in CI, including negative recall cases with positive controls. The mcp-automem client adds 18,397 lines of TypeScript and 986 mocked test cases.
 - Study when: you are adding supersession to a memory store and want the read side to answer with the current version rather than hide the stale one.
 - Do not copy when: more than one person or project shares the store, or when the vector index is written by more than one code path — build the payload in one function and test the state filter on a point the default path wrote.
+
+### [`mex`](../systems/mex/)
+
+- Best idea: **ground a claim to a code symbol by identity and by content.** A Wiki entity stores the graph node id, a MinHash fingerprint that finds the symbol again after a move, and a body hash that says it changed, all in the canonical Markdown, so drift is detectable after both SQLite indexes are deleted. Grounding health is a separate, per-checkout axis that lowers rank and never rewrites the team's lifecycle.
+- Biggest risk: **the governed path is not the default path.** `mex wiki apply` plans, checks preconditions and writes the ledger; the GROW checklist the setup installs tells the agent to edit `context/` files directly, and the router tells it to read them whole. Neither the ledger nor the archived filter sees that loop.
+- Most reusable component: `src/wiki/operations/audit.ts` — an append-only ledger whose intent line carries the ids a create will mint, so a replay after a crash reuses them, built field by field so no body or prompt can enter, with the prior bytes re-read before and after each append.
+- Second risk: **the stricter lifecycle predicate has no caller.** `isActiveEntity` excludes `deprecated` and is pinned by a test; retrieval uses `isVisible`, which returns superseded entities by default. Model confidence alone picks `promoted` over `in_flight` in synthesis, and the Inbox approve verb is on the CLI the agent runs.
+- Maturity impression: MIT, 159,071 lines of TypeScript outside tests and 724 commits on main from 23 contributors between 19 March and 25 September 2026, with about 3,884 test cases. Two marks: `audit_log` on the operation ledger and `negative_eval` on a case asserting an archived entity stays out of a default listing with both controls. The committed benchmark measures code retrieval, not memory.
+- Study when: you want claims in a repository tied to the code they describe, or a crash-safe operation journal for file-backed memory.
+- Do not copy when: every agent write must be recorded or reviewed, or retired knowledge must stay out of what the agent reads.

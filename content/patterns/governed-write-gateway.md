@@ -176,6 +176,8 @@ than deciding it, and nothing downstream can mark a promoted fact wrong.
 
 [yantrikdb-mcp](../../systems/yantrikdb-mcp/) is a counterexample: a gate that is thorough and not exclusive. `skill(action="define")` runs a write gate off by default and frozen at import, schema validation, content scanners, a namespace allowlist, attribution, an audit line and a stamped hash, while the generic `remember` tool writes into the same `skill_substrate` namespace with any metadata. The catalog reader filters on namespace and a metadata tag and accepts a missing hash as a legacy row, so a skill written past the gate is served. The server's own cluster-mode warning states the fix — "the MCP server's gate alone is not sufficient" — and it applies in embedded mode too.
 
+[MEX](../../systems/mex/) builds the gateway and then routes the ordinary loop around it. `mex wiki apply` is the only module that writes Wiki Markdown, re-plans against the current tree, blocks on the subject's content hash, and journals an intent and a completion line to a committed, body-free ledger. The GROW checklist its setup installs tells the agent to edit `context/` files directly after every task, and the ledger's own header says manual edits leave no entry. The gateway's guarantees therefore cover the rare path, and the repository's own ledger holds two agent operations beside 130 migration lines.
+
 ### Gates on something other than a write
 
 These are analogies rather than instances. Each puts one gate, or one stated
