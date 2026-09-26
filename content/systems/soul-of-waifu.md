@@ -1,7 +1,7 @@
 ---
 title: "Soul of Waifu"
 eyebrow: "The guard the redirect walks past"
-description: "Markdown memory rewritten by three sub-agents, guarded against degenerate writes — and a de-duplication step that redirects a write onto the one file the guard above it protects."
+description: "Markdown memory rewritten by three sub-agents behind degenerate-write guards, plus a de-duplication redirect that can land a write in the diary a guard protects."
 root: ../..
 page_kind: system
 source_name: "jofizcd/Soul-of-Waifu"
@@ -9,34 +9,39 @@ source_url: https://github.com/jofizcd/Soul-of-Waifu
 archive_name: "jofizcd--Soul-of-Waifu"
 revision: 747048b3b3ad7d321a667630018f7ffc04eb5f6d
 revision_url: https://github.com/jofizcd/Soul-of-Waifu/commit/747048b3b3ad7d321a667630018f7ffc04eb5f6d
-analyzed_at: 2026-09-13
+analyzed_at: 2026-09-26
+licence: "GPL-3.0"
+size: "67,140 lines of Python in 43 files; the memory pipeline is app/utils/soul_memory.py at 1,135 lines, read by prompt_engine.py and edited through a dialog in custom_widgets.py"
+activity: "350 commits on main by one author name, 2 September 2023 – 18 August 2026; tags v2.5.0 and v2.5.1 both point at the pinned commit"
+tests: "none — no test file among the 87 tracked files"
 capabilities: "audit_log"
 capability_evidence:
-  audit_log: "the memory directory — agent_logs.txt beside the documents it describes | app/utils/soul_memory.py:1130-1136, :887, :1011, :1019, :1026, :1107 | `_append_log` opens the file in `\"a\"` mode and writes one timestamped line per mutation; nothing in the module truncates, rotates or rewrites it, and `grep -n 'rotat\\|truncat\\|RotatingFile' app/utils/soul_memory.py` returns only the unrelated per-message cap. Five producers reach it on paths a user drives by chatting: a diary write, a declined batch recorded as NO_SIGNIFICANT_CHANGE, an index write carrying both the write status and the Router's healing_log account of which contradictions it resolved, a user-profile write with its status, and each topic create or update with its filename and write status. Both refusal outcomes are recorded, not only successes — a length-floor rejection is logged as SKIPPED (safety check) rather than dropped. The log is the mutation record and is never consulted by any read path | none — no test suite exists in the repository: `find . -path ./.git -prune -o \\( -iname \"test_*.py\" -o -iname \"*_test.py\" -o -iname \"conftest.py\" \\) -print` and `find . -path ./.git -prune -o -type d -iname \"tests\" -print` both return nothing at the pin"
+  audit_log: "the memory directory — agent_logs.txt beside the documents it describes | app/utils/soul_memory.py:1130-1135, :887-891, :1011, :1019, :1026, :1108-1111 | `_append_log` opens the file in `\"a\"` mode and writes one timestamped line per mutation; nothing in the module truncates, rotates or rewrites it, and `grep -n 'rotat\\|truncat\\|RotatingFile' app/utils/soul_memory.py` returns only the unrelated per-message cap. Five producers reach it on paths a user drives by chatting: a diary write, a declined batch recorded as NO_SIGNIFICANT_CHANGE, an index write carrying both the write status and the Router's healing_log account of which contradictions it resolved, a user-profile write with its status, and each topic create or update with its filename and write status. Both refusal outcomes are recorded, not only successes — a length-floor rejection is logged as SKIPPED (safety check) rather than dropped. It records the pipeline's mutations only: a person's edit or deletion in the memory viewer (app/gui/custom_widgets.py:3379-3412) writes no line, and a Router parse failure reaches only the application logger. No prompt reads the file; the viewer's Logs tab displays it read-only | none — no test suite exists in the repository: `find . -path ./.git -prune -o \\( -iname \"test_*.py\" -o -iname \"*_test.py\" -o -iname \"conftest.py\" \\) -print` and `find . -path ./.git -prune -o -type d -iname \"tests\" -print` both return nothing at the pin"
 stack_storage: "files"
 stack_retrieval: "vector"
 stack_source: "reviewed"
 matrix:
   memory_unit: "Four kinds of Markdown file — a psychological state index, a user profile, per-subject topic files, and a dated diary that shares the topics directory"
-  storage: "Plain files under `.soul/<character>/chats/<chat>/memory/`, with five rolling backups each of the index and the profile"
-  retrieval: "Two independent implementations — `TopicRAG` ranks topics for the Router, and a separate loop in the prompt builder ranks them for the character above a 0.42 cosine floor"
+  storage: "Plain files under `.soul/`, one directory per character and chat, with five rolling backups each of the index and the profile"
+  retrieval: "Two independent implementations — `TopicRAG` ranks topics for the Router and the desktop companion, and a separate loop in the prompt builder ranks them for the character above a 0.42 cosine floor"
   write: "A Router sub-agent returns JSON that the code renders into a fixed Markdown skeleton; an Archivist writes topic files; a Diary agent rewrites the day's file with one entry appended"
-  update_delete: "The index and profile are overwritten wholesale, backed up first; a `create` action within 0.82 cosine of an existing file is redirected onto it; nothing is ever deleted"
+  update_delete: "The index and profile are overwritten wholesale, backed up first; a `create` action within 0.82 cosine of an existing file is redirected onto it; the pipeline deletes nothing, and a person can edit any file and delete topic and diary files in the memory viewer"
   scoping: "Per character and per chat, as a filesystem path; no principal or tenant key"
-  integration: "The companion app's own prompt builder and a tool registry that carries no memory tool"
-  background: "The pipeline runs every `soul_memory_batch` messages, with the diary generated as a concurrent task"
+  integration: "The companion app's own prompt builder, the desktop companion's memory snapshot, a memory viewer that edits and deletes files, and a tool registry that carries no memory tool"
+  background: "The pipeline runs every `soul_memory_batch` messages as an asyncio task launched after the reply, with the diary generated as a concurrent task; a batch size of 0 leaves only a manual trigger"
   trust: "None. The `trust_level` field is the character's feeling about the user, not confidence in a memory"
   strengths: "Short-output writes are rejected rather than stored; a truncated JSON generation is repaired, and an unrepairable one retries the batch instead of defaulting it"
-  risks: "The de-duplication redirect is applied after the guard that protects the diary, so a `create` action can land the Archivist inside a diary file"
+  risks: "The de-duplication redirect is applied after the guard that protects the diary, and that guard's lowercase prefix would not match the capitalised diary name even below it, so a `create` action can land the Archivist inside a diary file"
 ---
 
 ## 1. Executive Summary
 
-Soul of Waifu is a desktop AI companion, GPL-3.0, and its `SoulMemoryAgent`
-(`app/utils/soul_memory.py`, 1,135 lines) is a more careful piece of engineering
-than its context suggests. It is a **full-rewrite Markdown memory** — the riskiest
-shape in this atlas, since an LLM regenerates the whole store on a schedule — and
-most of the mechanism in it exists to make that shape survivable:
+Soul of Waifu is a desktop AI companion, GPL-3.0, whose `SoulMemoryAgent`
+(`app/utils/soul_memory.py`) has a model regenerate the whole Markdown memory on
+a schedule. Most of the code exists to make that shape survivable, and it is more
+careful than its context suggests. The weakness is one ordering mistake: a
+de-duplication step reassigns a filename after the guard that protects the diary
+has checked it. The guards:
 
 - **Degenerate output is rejected, not stored.** An index rewrite shorter than
   `MIN_INDEX_CHARS = 100` is refused with *"Keeping old memory"* (`:462-466`);
@@ -51,18 +56,20 @@ most of the mechanism in it exists to make that shape survivable:
   advancing the batch tracker"* (`:1001`) and the same messages are tried again on
   the next turn — nothing is written from a failed parse.
 - **Both rewritten files are backed up**, five deep each, rolling and
-  prefix-scoped (`_backup_file`, `:444`; called for `MEMORY` at `:473` and for
-  `USER` at `:519`), through a temp file and an atomic `replace`.
+  prefix-scoped (`_backup_file`, `:444`; called for `MEMORY` at `:470` and for
+  `USER` at `:519`), and then replaced through a temp file and an atomic
+  `replace`.
 - **The Router may decline.** `no_significant_change` (`:650`) lets the model
-  report that a batch of small talk carried nothing worth recording; every write
-  is skipped, the batch is marked processed, and `NO_SIGNIFICANT_CHANGE` goes to
-  the audit log (`:1011`). A memory that can be told *nothing happened* fabricates
-  less than one that must produce an update every cycle.
+  report that a batch of small talk carried nothing worth recording; the index,
+  profile and topic writes are skipped, the batch is marked processed, and
+  `NO_SIGNIFICANT_CHANGE` goes to the audit log (`:1011`). The diary agent has no
+  such exit: it is launched for the declined batch too (`:1037-1038`), and its
+  prompt asks for four to six sentences.
 - **Contradictions are logged.** The Router prompt instructs it to *"Resolve any
   direct contradictions between user action and previous beliefs, and document
   this in the `healing_log`"* (`:196`), and that log is appended to a timestamped
   `agent_logs.txt` alongside every index, profile, topic and diary mutation
-  (`:1019`, `:1026`, `:1107`, `:887`). That earns `audit_log`.
+  (`:1019`, `:1026`, `:1108`, `:887`). That earns `audit_log`.
 
 And then the finding that gives this report its title. The Archivist loop refuses
 two classes of filename in sequence — the placeholder names a model emits when it
@@ -79,15 +86,25 @@ it, and `_safe_write_topic` replaces it — the one store in this system with a
 distinct lifecycle, overwritten through the redirect that sits four lines below
 the guard protecting it from exactly that.
 
-The similarity is not a remote one. The diary for the current day is a
-first-person reflection on the same delta the Router has just summarised, so a
-`create` action derived from that delta is competing against a passage written
-about it.
+The guard would miss that name even if it ran after the redirect. It tests the
+lowercase prefix `diary_` against a name it lowercased itself (`:1062`), and the
+diary agent writes `Diary_<date>.md` (`:876`), which the redirect returns
+unchanged.
+
+A diary competes for the redirect on its opening, not on its latest entry. The
+write path embeds each file's first 600 characters (`EMBED_CHARS`, `:112`,
+`:152`), which for a diary is its heading and the day's earliest entries; the
+entry about the current delta is generated concurrently and lands at the end of
+the file. The rival is the same conversation's earlier batches.
+
+A second defect sits under the whole pipeline. The per-chat lock lives on an
+agent object the caller builds per call, so two runs for one chat can overlap,
+and the later write of each file wins (section 4).
 
 ## 2. Mental Model
 
-A memory is one of four Markdown documents, and they have genuinely different
-lifecycles — which is the design's best idea:
+A memory is one of four Markdown documents, and they have different lifecycles —
+which is the design's best idea:
 
 | File | Written by | Lifecycle |
 | --- | --- | --- |
@@ -107,8 +124,8 @@ flowchart TB
     B["every soul_memory_batch messages"] --> D["delta = last MAX_DELTA_MSGS (14) messages,<br/>overlapping the previous batch by MSG_OVERLAP (2)"]
     D --> R["Router sees: MEMORY.md + USER.md +<br/>RAG-selected topics + delta + world lore"]
     R --> P{"parses?"}
-    P -->|"no, after 4 repair attempts"| RT["abort, tracker not advanced,<br/>batch retried next turn"]
-    P -->|"no_significant_change"| NOP["all writes skipped,<br/>NO_SIGNIFICANT_CHANGE logged"]
+    P -->|"no, after the repair ladder"| RT["abort, tracker not advanced,<br/>batch retried next turn"]
+    P -->|"no_significant_change"| NOP["index, profile and topic writes skipped,<br/>NO_SIGNIFICANT_CHANGE logged;<br/>the diary runs anyway"]
     P -->|"yes"| J["JSON: character_memory, user_memory,<br/>topic_plan, healing_log"]
     J --> REN["rendered into a fixed skeleton,<br/>defaults for missing fields"]
     REN -->|too short| REJ["write REJECTED, old memory kept"]
@@ -116,7 +133,7 @@ flowchart TB
     J --> TP["topic_plan actions"]
     TP --> G1{"name in _BAD_TOPIC_NAMES?"}
     G1 -->|yes| SKIP[skipped]
-    G1 -->|no| G2{"name starts diary_?"}
+    G1 -->|no| G2{"lowercased name starts diary_?"}
     G2 -->|yes| SKIP
     G2 -->|no| DD{"action is create,<br/>and a file scores >= 0.82?"}
     DD -->|yes| RED["target replaced by that filename —<br/>including a Diary_*.md"]
@@ -126,10 +143,11 @@ flowchart TB
 ```
 
 The state machine is short because there is only one transition: **a memory is
-rewritten, or it is not.** There is no supersession, no expiry, no decay of a
-record, and **no deletion of anything** — not of topics, not of diary entries,
-not of backups beyond the rolling five per prefix. A fact enters the index and
-stays until a later rewrite happens not to carry it forward, silently.
+rewritten, or it is not.** There is no supersession, no expiry and no decay of a
+record. The pipeline deletes nothing — not a topic, not a diary entry, not a
+backup beyond the rolling five per prefix. Deletion belongs to a person, by whole
+file, in the viewer described in section 8. A fact enters the index and stays
+until a later rewrite happens not to carry it forward, silently.
 
 The index does model decay, but of the character's *mood*, not of belief:
 `emotional_decay_counter` is a field the Router maintains inside the document,
@@ -147,8 +165,7 @@ Full's prompt contains one — the lite template has no topic section at all.
 ## 3. Architecture
 
 Python with a Qt desktop GUI. No server, no database, no queue — the store is a
-directory tree, which makes it one of the most operationally trivial systems in
-this atlas.
+directory tree, which makes it operationally trivial.
 
 ```mermaid
 %% caption: one shared embedder serves two separately written retrieval paths, and the model it loads is named by a path that is not in the repository
@@ -174,8 +191,11 @@ flowchart TB
     EMB --> PR
     IDX --> PE[prompt_engine.py]
     USR --> PE
-    T --> PR["second ranking loop in prompt_engine<br/>cosine > 0.42, full file text"]
+    T --> PR["second ranking loop in prompt_engine<br/>cosine > 0.42, whole topic files"]
     PR --> PE
+    V["SoulMemoryViewer — a person"] -->|"edit, delete"| T
+    V -->|edit| IDX
+    V -->|edit| USR
 ```
 
 ### Deployment and ergonomics
@@ -189,8 +209,9 @@ flowchart TB
   `reset_failure_state()` is called. Callers handle `None`: `TopicRAG` falls back
   to the first N topic files, and the prompt builder skips topic injection
   entirely.
-- **Hand-repairable: entirely.** The store is Markdown a person can open, and the
-  log next to it says what the model did to it.
+- **Hand-repairable: entirely.** The store is Markdown a person can open, the app
+  ships an editor over it (section 8), and the log next to it says what the model
+  did to it.
 
 ### The embedding model is named but not shipped
 
@@ -205,11 +226,11 @@ the archive from there"*, meaning the Releases page, whose single asset is a
 1.8 GB archive — large enough to carry a model directory the repository does not.
 
 The consequence for a reader who clones this repository and runs it is concrete
-rather than theoretical: `get_embedder` returns `None`, so topic ranking falls
-back to the first three files by modification time, the de-duplication redirect
-never fires, and the character's prompt receives **no topic files at all** — the
-injection loop is gated on the embedder at `prompt_engine.py:644`, and that gate
-covers explicitly named topics too.
+rather than theoretical. `get_embedder` returns `None`, so topic ranking passes
+every file when there are four or fewer and otherwise the three most recently
+modified. The de-duplication redirect never fires. The character's prompt
+receives **no topic files at all**: the injection loop is gated on the embedder
+at `prompt_engine.py:644`, and that gate covers explicitly named topics too.
 
 Searches behind the paragraph above:
 
@@ -266,11 +287,16 @@ copies with `copy2` to a `<prefix>_<timestamp>.md` name and prunes that prefix t
 message to `MAX_MSG_CHARS = 2000` with a visible `…[truncated]` marker before it
 reaches a prompt.
 
-**Batch trigger.** `_run_update_pipeline` (`:896`) reads `soul_memory_batch` from
-settings, defaulting to 4 (`:911-913`), and returns early while the count is
-below it unless `force` is set (`:942`). The tracker file is written in a
-`finally` (`:1126`) — but the parse-failure path returns before that block is
-entered, which is what makes the retry work.
+**Batch trigger.** The chat window launches the pipeline with
+`asyncio.create_task` once the reply has streamed
+(`app/gui/interface_signals.py:15180`), so the answer never waits on memory.
+`_run_update_pipeline` (`:896`) reads `soul_memory_batch` from settings,
+defaulting to 4 (`:911-913`), and returns early while the count is below it
+unless `force` is set (`:942`). A batch size of 0 disables the automatic run
+(`:915`); the force-memory button then runs it with `force=True`
+(`interface_signals.py:6653-6660`). The tracker file is written in a `finally`
+(`:1126`) — but the parse-failure path returns before that block is entered,
+which is what makes the retry work.
 
 **Topic actions.** `:1054-1122` — sanitise the filename to alphanumerics and
 `._-`, lowercase, force `.md`, skip if in `_BAD_TOPIC_NAMES` (`:1066`), skip if
@@ -286,7 +312,7 @@ more than 20 characters, appended under a `**[HH:MM]**` heading to
 `[timestamp] MESSAGE`. Callers: `DIARY_UPDATED | file=…` (`:887`),
 `NO_SIGNIFICANT_CHANGE` (`:1011`), `INDEX_UPDATE | status=… | healing: …`
 (`:1019`), `USER_PROFILE_UPDATE | status=…` (`:1026`), and
-`TOPIC_CREATED|TOPIC_UPDATED | file=… | write=…` (`:1107`). No rotation and no
+`TOPIC_CREATED|TOPIC_UPDATED | file=… | write=…` (`:1108`). No rotation and no
 truncation anywhere.
 
 **Injection.** `app/utils/ai_clients/prompt_engine.py:617-708` — the index is
@@ -298,7 +324,16 @@ the path logic without the ability to write. The write entry point builds the
 same class with a generator attached (`:906`).
 
 **Concurrency.** `_get_lock` (`:376`) keeps an `asyncio.Lock` per
-`character::chat`. The dict is never pruned.
+`character::chat` in `self._locks`, an instance attribute (`:374`). Every caller
+reaches the pipeline through `PromptEngine.update_memory_after_response`, which
+builds a new `SoulMemoryAgent` on each call (`prompt_engine.py:906`), so each run
+takes a lock no other run can hold. Two runs for one chat are not serialised.
+
+The tracker advances only in the `finally` at the end of a run (`:1126`), so a
+reply that lands while a run is in progress passes the batch check against the
+same old count and starts a second run over the same files. The two rewrite the
+index, profile, topics and diary independently, and the later write of each file
+wins. This is read from the code; it was not run.
 
 ## 5. Memory Data Model
 
@@ -310,10 +345,9 @@ relationship metadata, preferences, shared milestones and promises), `topic_plan
 and `healing_log` — and the code renders exactly those headings with a default
 for each missing field.
 
-**The consequence is worth stating for anyone building on an LLM rewrite:** the
-model cannot invent a section, cannot drop a section, and cannot emit prose where
-a list belongs. The document's shape is a property of the code, not of the
-generation.
+**The consequence for anyone building on an LLM rewrite:** the model cannot
+invent a section, cannot drop a section, and cannot emit prose where a list
+belongs. The document's shape is a property of the code, not of the generation.
 
 `trust_level` appears under relationship metadata, constrained by the prompt to
 one of *Distrustful / Wary / Neutral / Developing Trust / Deeply Bound /
@@ -324,24 +358,27 @@ the character trusts the user, roleplay state, not confidence in a stored claim.
 ### A pin marker with no producer
 
 `prompt_engine.py:631` parses the index for `[TOPIC FILE: <name>.md]` markers and
-treats each named file as explicitly pinned: it is injected in full, ahead of the
-ranking loop and exempt from the 0.42 similarity floor. It is the one mechanism
-in this system by which the memory can *direct its own retrieval*.
+treats each named file as explicitly pinned: it is injected ahead of the ranked
+files and exempt from the 0.42 similarity floor. It is the one mechanism in this
+system by which the memory can *direct its own retrieval*.
 
 Nothing writes the marker. The Router's output schema is enumerated field by
-field in `_ROUTER_SYSTEM` (`:177-248`) and contains no such token; the renderer
+field in `_ROUTER_SYSTEM` (`:177-247`) and contains no such token; the renderer
 in `_parse_router_response` emits fixed headings and the field values it was
 given; no prompt in the file mentions the syntax. The marker can only appear if
 the model volunteers a bracket convention it was never shown, inside a free-text
-field, in a form matching the regex.
+field, in a form matching the regex. A person can type one into `MEMORY.md`
+through the viewer, and the next Router rewrite drops it unless the model copies
+it into a field.
 
 ```sh
 grep -rn "TOPIC FILE" --include="*.py" .
 ```
 
-Three hits at the pinned commit: the regex itself, and two lines of the Router
-prompt describing *"RELEVANT TOPIC FILES"* as an input section. This is a read
-path waiting on a write path that was not built.
+Three hits at the pinned commit: the regex itself, a line of the Router prompt
+describing *"RELEVANT TOPIC FILES"* as an input section (`:187`), and the header
+`_call_router_agent` writes over that section (`:560`). This is a read path
+waiting on a write path that was not built.
 
 No provenance: nothing records which messages produced which line of the index,
 which is the field [RisuAI](../risuai/) added in its second generation and the
@@ -352,11 +389,14 @@ versioning of individual claims — the backups version two whole documents, whi
 is coarse but real.
 
 **Scoping** is the filesystem path: `.soul/<character>/chats/<chat>/memory/`.
-Reads derive their path from the same `get_memory_paths`, so a character cannot
-read another character's memory. But there is no principal — no user, tenant or
-agent key — because the deployment is one person's desktop.
-**`scope_enforced` is withheld** on the same basis as
-[SillyTavern](../sillytavern/) and [RisuAI](../risuai/).
+Reads derive their path from the same `get_memory_paths`, or, in the desktop
+companion, from an equivalent sanitiser applied to the same pattern
+(`app/utils/soul_companion/soul_companion.py:2818-2821`), so a character cannot
+read another character's memory. The key is the directory, not a field on any
+record, and there is no principal — no user, tenant or agent key — because the
+deployment is one person's desktop. **`scope_enforced` is withheld**: this is a
+physical partition, as in [SillyTavern](../sillytavern/) and
+[RisuAI](../risuai/).
 
 ## 6. Retrieval Mechanics
 
@@ -378,19 +418,20 @@ other selects context for the character that answers the user.
 | Score floor | none — always the top 3 | cosine > 0.42 |
 | Small-corpus shortcut | ≤ 4 files: pass everything | none |
 | What is embedded | first 600 chars of the body | `"Topic: <stem>. Content: <first 200 chars>"`, or for a diary `"Diary: <stem>. Recent thoughts: <last 600 chars>"` |
-| What is passed | truncated to 8,000 chars | the **entire file**, untruncated |
+| What is passed | truncated to 8,000 chars | a topic's **entire file**, untruncated; a diary's last 2,500 chars |
 | Cache key | directory + filename, invalidated by an md5 of the snippet | `topic_<character>_<filename>`, **never invalidated** |
-| No embedder | first 3 files by mtime | nothing injected, pins included |
+| No embedder | all files at ≤ 4, else the 3 most recent by mtime | nothing injected, pins included |
 | Query | the last two non-empty turns of the delta | the last four chat messages plus the pending one |
 
 The cache row is the one to read twice. `prompt_engine.py:673` stores a vector
 under `topic_<character_name>_<filename>` and reuses it whenever that key is
 present, with no content hash and no modification time. Topic files are
 overwritten by the Archivist on most batches, and the day's diary is rewritten on
-every batch that runs the diary agent — so the read-path ranking scores a stale
-vector against every query for the life of the process. The write path in the
-same feature hashes its snippet and re-embeds on change (`:42-53`). Two caches,
-one project, one correct.
+every batch that runs the diary agent. The read-path ranking therefore scores a
+stale vector against every query for as long as its `PromptEngine` lives, and
+each GUI owner builds one in its constructor (`interface_signals.py:246`). The
+write path in the same feature hashes its snippet and re-embeds on change
+(`:42-53`). Two caches, one project, one correct.
 
 The key also omits the chat id while the files are per chat, so two chats of the
 same character with a topic file of the same name share one cached vector.
@@ -398,9 +439,15 @@ same character with a topic file of the same name share one cached vector.
 Ranking on a 200-character prefix on the read path — a 600-character prefix on
 the write path — makes a long topic file compete on its opening lines, so a fact
 buried at the end of a file is invisible to selection while being fully injected
-once the file is chosen. And selecting up to three files at their full length,
-with no character cap on the read path, means the per-turn context is bounded by
-what the Archivist happened to write rather than by any constant in the code.
+once the file is chosen. And selecting up to three topic files at their full
+length means the per-turn context is bounded by what the Archivist happened to
+write rather than by any constant in the code; only diaries are capped, at 2,500
+characters (`:660`, `:692`).
+
+A third consumer reuses `TopicRAG` rather than writing a ranker. The desktop
+companion's `_get_memory_snapshot` reads the first 1,000 characters of the index,
+800 of the profile, and two ranked topics at 400 characters each, and caches the
+result for 120 seconds (`soul_companion.py:2810-2851`).
 
 Failure modes: the index is a summary of a summary of a summary, since each
 rewrite reads only the previous version plus fourteen messages, so anything not
@@ -409,11 +456,12 @@ silent to the model, which sees a marker but not what was cut.
 
 ## 7. Write Mechanics
 
-Writes are **batched and inline**: every `soul_memory_batch` messages (default 4)
-the pipeline runs, taking the last `MAX_DELTA_MSGS = 14` messages with
-`MSG_OVERLAP = 2` carried over from the previous batch. The overlap is a small,
-deliberate choice — a fact stated across a batch boundary appears in both windows,
-so it is not lost to the seam.
+Writes are **batched and run after the reply**: every `soul_memory_batch`
+messages (default 4) the chat window launches the pipeline as an asyncio task,
+taking the last `MAX_DELTA_MSGS = 14` messages with `MSG_OVERLAP = 2` carried
+over from the previous batch. The overlap is a small, deliberate choice — a fact
+stated across a batch boundary appears in both windows, so it is not lost to the
+seam.
 
 Two to three LLM calls per batch in Full mode: Router, then one Archivist call
 *per topic action* (sequential, in a loop), and a Diary call launched
@@ -422,25 +470,28 @@ topic actions issues five sequential model calls inside the batch.
 
 ### Three ways a write does not happen
 
-Each is a different judgement, and all three are logged or visible:
+Each is a different judgement:
 
-1. **The model declines.** `no_significant_change` skips every write for the
-   batch and advances the tracker, so the messages are not reconsidered.
-2. **The output is unusable.** A parse failure after four repair attempts aborts
-   the pipeline *before* the `try/finally` that advances the tracker, so the same
-   messages are retried on the next turn. The cost of this is worth knowing: the
-   trigger is `diff >= soul_memory_batch`, and `diff` only grows while the
+1. **The model declines.** `no_significant_change` skips the index, profile and
+   topic writes for the batch and advances the tracker, so the messages are not
+   reconsidered. The diary is written regardless.
+2. **The output is unusable.** A parse failure after the repair ladder aborts the
+   pipeline *before* the `try/finally` that advances the tracker, so the same
+   messages are retried on the next turn and no diary task is launched. The cost:
+   the trigger is `diff >= soul_memory_batch`, and `diff` only grows while the
    tracker is frozen, so a persistently unparseable Router means a Router call on
    every subsequent message rather than every fourth.
 3. **The rendered document is too short.** The length floor refuses the write and
    the previous file stands, logged as `status=SKIPPED (safety check)`.
 
 The first is a model judgement, the second a parser judgement, the third a code
-judgement, and the audit log distinguishes all three.
+judgement. The audit log records the first and third. The second reaches only the
+application logger (`:1000-1003`), so `agent_logs.txt` shows a gap where a failed
+batch was.
 
 ### Where the de-duplication sits
 
-`find_similar_topic` is a genuine improvement on the shape it replaces: a Router
+`find_similar_topic` is a real improvement on the shape it replaces: a Router
 that invents `cafe_meeting.md` when `the_cafe.md` already covers the subject would
 otherwise fragment the store, and nothing here merges files after the fact.
 Redirecting the write is the cheap correct answer.
@@ -449,14 +500,24 @@ It is applied in the wrong place. The two filename guards above it operate on
 `safe_fname`; the redirect **reassigns** `safe_fname` from a directory listing and
 nothing re-checks it. `_BAD_TOPIC_NAMES` cannot be hit by a real filename, so the
 first guard is unaffected; the diary guard is not so lucky, because diaries are
-real files in the directory being searched. Moving the two guards below the
-redirect, or filtering `diary_` out of `_load_all_topics`, closes it.
+real files in the directory being searched.
 
-The same sequence has a smaller consequence worth naming: the redirect turns a
-`create` into an overwrite of a file the Archivist is given as `existing_content`,
-so nothing is lost when the target is an ordinary topic. It is a merge, not a
-supersession — no record is kept of the name that was proposed and dropped, and
-`tombstone` is withheld.
+Moving the guards below the redirect does not close it on its own. The redirect
+returns the on-disk name, `Diary_<date>.md`, and the guard tests the lowercase
+`diary_`. Filtering diaries out of `_load_all_topics` case-insensitively, or
+lowercasing the redirected name and re-running both guards on it, closes it.
+
+When the redirect lands on the current day's diary, two writers hold the file.
+The Archivist reads it (`:1090`), awaits a model call, and replaces it (`:1104`).
+The diary task launched at `:1038` can append the batch's entry in between, and
+the Archivist's replace then drops that entry. This is read from the ordering; it
+was not run.
+
+The same sequence has a smaller consequence: the redirect turns a `create` into an
+overwrite of a file the Archivist is given as `existing_content`, so nothing is
+lost when the target is an ordinary topic. It is a merge, not a supersession — no
+record is kept of the name that was proposed and dropped, and `tombstone` is
+withheld.
 
 ### The blocklist does not cover the prompt's own examples
 
@@ -467,16 +528,23 @@ supersession — no record is kept of the name that was proposed and dropped, an
 `{"action": "update", "filename": "existing_topic.md", ...}` (`:242-243`).
 Neither is in the set, and the sanitiser preserves both intact — `example_topic.md`
 survives the alphanumeric filter unchanged. A model that copies the instructions
-instead of following them writes the file, and has been able to at both commits
-this report has covered: the same two example names and the same seven blocked
-names appear in `3d032badc07335012ae6917e29ea16b8203252f5`.
+instead of following them writes the file. The mismatch dates back at least to
+`3d032badc07335012ae6917e29ea16b8203252f5`, which carries the same two example
+names and the same seven blocked names.
 
-**There is no delete path of any kind.** No topic file is ever removed, no diary
-entry retracted, no line of the index tombstoned. The only `unlink` calls in the
-module are on temp files and on backups beyond the fifth. The Router's
-`healing_log` is the nearest thing to correction, and it is a *description* of a
-contradiction it resolved, written to a log rather than a record keyed on the
-rejected value.
+### Deletion is a person's, by whole file
+
+The pipeline has no delete path: the only `unlink` calls in `soul_memory.py` are
+on temp files and on backups beyond the fifth. The memory viewer removes a topic
+or diary file with `os.remove` behind a confirmation dialog, and refuses
+`MEMORY.md` (`app/gui/custom_widgets.py:3391-3403`). Deleting a character removes
+its whole `.soul/<name>` tree (`interface_signals.py:4161-4165`).
+
+Nothing records a deleted file, so the next `create` action that names the same
+subject writes it again. No line of the index can be retracted except by editing
+it, and the next rewrite may restore it. The Router's `healing_log` is the
+nearest thing to correction, and it is a *description* of a contradiction it
+resolved, written to a log rather than a record keyed on the rejected value.
 
 Malicious input is unfiltered — chat text reaches the Router, whose output becomes
 a system-injected document. The length floors, the fixed skeleton and the
@@ -485,18 +553,20 @@ empty the memory or invent a section) without addressing the *content*.
 
 ### Operational cost
 
-- **The write path is batched but not deferred** — the pipeline runs inline every
-  `soul_memory_batch` messages, so every fourth turn by default pays for a Router
-  call plus one call per topic action.
-- **The lag to retrievability is up to `soul_memory_batch` messages**, except
-  after a parse failure, which defers the batch and then re-runs the pipeline on
-  every message until one parses.
+- **Writes do not block the reply.** The pipeline runs as a task after the
+  response has streamed, every `soul_memory_batch` messages, and each run costs a
+  Router call, one call per topic action and a diary call. Runs for the same chat
+  can overlap, because the per-chat lock is rebuilt with the agent on every call
+  (section 4).
+- **The lag to retrievability is up to `soul_memory_batch` messages** plus the
+  task's own run time, except after a parse failure, which defers the batch and
+  then re-runs the pipeline on every message until one parses.
 - **No background pass re-reads the whole store.** Cost scales with activity, not
   with corpus size — the index rewrite reads only the previous index, not its
   history, which is exactly why it loses things.
 - **On the read path the injection is bounded** by the 5,000 + 3,000 character
-  truncations for the index and profile, and **unbounded** for topic files, which
-  are injected whole.
+  truncations for the index and profile and the 2,500-character diary tail, and
+  **unbounded** for topic files, which are injected whole.
 
 ## 8. Agent Integration
 
@@ -509,17 +579,37 @@ is also an MCP *client* (`app/utils/ai_clients/mcp_client.py`), which consumes
 other people's servers rather than publishing this one. The model has no agency
 over its own memory beyond being the thing that rewrites it when called.
 
-The agentic tools do carry a `needs_approval` / `get_confirmation_summary` pair,
-so the same application knows how to put a person in front of an action. That
-gate covers clicking and shell commands; no memory write passes through it, and
-**`human_review` is withheld.** A project with a confirmation mechanism already
-written and a memory path that does not use it is the cheapest possible version
-of this gap.
+**The app ships an editor over the store.** `SoulMemoryViewer`
+(`app/gui/custom_widgets.py:2957`) opens from the main window's memory button
+(`main.py:445`) and from Soul Stage's party menu (`interface_signals.py:2555`).
+It lists the index, the profile, every topic and every diary. In edit mode a
+person can overwrite any of them (`save_file`, `:3379`) and delete a topic or
+diary file (`delete_file`, `:3391`). The writes go through a bare `write_text`,
+with no backup, no length floor, no lock and no line in `agent_logs.txt` — which
+the same dialog displays read-only (`:3414`).
+
+An edit to `MEMORY.md` or `USER.md` is input to the Router's next full rewrite
+and survives only if the Router carries it forward. **`human_review` is
+withheld.** The viewer edits after the write has landed, which is authoring
+rather than a gate. The agentic tools' `needs_approval` /
+`get_confirmation_summary` pair puts a person in front of clicking and shell
+commands, and no memory write passes through it.
 
 The transferable piece is not an interface but the `SoulMemoryAgent(None)`
 construction — instantiating the memory manager without an LLM function to get a
 read-only view. A memory class that is inert without its generator is a cheap way
 to make read paths structurally unable to write.
+
+**Other persistent state sits outside this pipeline.** Soul Stage, the
+multi-character RPG mode, embeds each NPC reply into
+`.soul_stage/npc_memory/<name>.json`, keeps the last 200, and injects the top five
+above 0.30 cosine into that NPC's next prompt (`soul_stage_engine.py:1155-1301`,
+written at `:2896`, read at `:2856`). The file is keyed on the NPC's name alone,
+so a name reused in another scene reads the first scene's memories, and
+`clear_memory` has no caller. The desktop companion keeps eight recent thoughts in
+`scratchpad.json` and dated promises in `goals.json` (`soul_companion.py:276`,
+`:2939`). None carries a mark: the NPC boundary is one file per name, and a goal's
+`pending` or `completed` is task status, not belief.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -529,17 +619,18 @@ catastrophic failure — the model returns something empty, truncated or malform
 and the memory is gone. Four mechanisms address exactly that: a length floor that
 refuses the write, a fixed skeleton that defaults missing fields, a repair ladder
 that recovers a truncated JSON object, and a backup taken before the replace.
-Most systems in this atlas that rewrite whole documents have none of the four.
 
-**Atomicity is handled**: temp file plus `replace`, with the temp unlinked on
-error. A crash mid-write leaves the previous version intact.
+**Atomicity is handled** on the pipeline's writes: temp file plus `replace`, with
+the temp unlinked on error. A crash mid-write leaves the previous version intact.
+The viewer's saves are a plain `write_text`.
 
 **`audit_log` is earned.** `agent_logs.txt` lives in the memory directory, is
 opened append-only, is never rotated or truncated, and records every index,
-profile, topic and diary mutation with a timestamp, a write status, a declined
-batch, and — for the index — the Router's account of which contradictions it
-resolved. That last part is unusual: most audit logs in this atlas record *that*
-a memory changed, not *how a conflict was settled*.
+profile, topic and diary mutation the pipeline makes with a timestamp, a write
+status, a declined batch, and — for the index — the Router's account of which
+contradictions it resolved. That last part records *how a conflict was settled*,
+not only *that* a memory changed. The log covers the pipeline, not people: an
+edit or deletion in the viewer leaves no line.
 
 **Five backups of each rewritten document, and nothing that reads them.** The
 index and the profile are each copied before every overwrite and pruned to five.
@@ -549,12 +640,13 @@ No code in the repository opens a file from `backups/`:
 grep -rn "backups" --include="*.py" .
 ```
 
-At the pinned commit the hits are the docstring, the path construction, and the
-pruning loop — all writers. A user whose memory has been degraded by a bad
-rewrite has ten good files on disk and no path to them that does not involve a
-file manager. Backups without a restore are a diagnostic aid, not a recovery
-mechanism, and the asymmetry between the two documents that had it is gone in the
-direction of covering both.
+At the pinned commit the hits are the docstring, the path construction and the
+pruning loop in `soul_memory.py`, plus one tuple element in the viewer's
+`get_memory_paths_safe` (`custom_widgets.py:3352`) that its one caller discards
+(`:3328`). A user whose memory has been degraded by a bad rewrite has ten good
+files on disk, and the viewer's Open Folder button (`:3229`) hands them a file
+manager. Backups without a restore are a diagnostic aid, not a recovery
+mechanism.
 
 **The diary is the least protected store and the one most treated as protected.**
 It is explicitly guarded from the Archivist by name, it is the only file with a
@@ -590,23 +682,25 @@ the invariants here are unusually easy to state and unusually cheap to assert:
   it.
 - A response truncated mid-object is repaired and written.
 - A malformed JSON response produces no write at all.
-- `{"no_significant_change": true}` writes nothing and logs one line.
+- `{"no_significant_change": true}` writes no index, profile or topic file and
+  logs one line.
 - A `topic_plan` naming `example_topic.md` writes no file.
 - A `topic_plan` naming `Diary_2026-09-13.md` writes no file — **including by way
   of the de-duplication redirect.**
 - After six index writes, exactly five `MEMORY_*` backups exist, and the `USER_*`
   series is pruned independently.
 
-Every one of those is a behaviour the code deliberately implements, several of
-them guarding against a total loss of memory, and none is asserted anywhere. The
-seventh is the one the code gets wrong, and it is the one a test would have
-caught at the moment the redirect was added, because writing that test means
-listing the paths a filename can arrive by.
+Every one of those is a behaviour the code sets out to implement, several of them
+guarding against a total loss of memory, and none is asserted anywhere. The sixth
+and seventh are the two the code gets wrong. A test catches each the moment it is
+written: the sixth by typing the prompt's own example name, the seventh because
+writing it means listing the paths a filename can arrive by.
 
 `negative_eval` is withheld; `_BAD_TOPIC_NAMES` and the diary guard are precisely
 must-not-be-written rules and neither has a test.
 
 No benchmarks, and none in [this atlas's survey](../../benchmarks/) would apply.
+The README cites no paper.
 
 ## 11. For Your Own Build
 
@@ -623,7 +717,9 @@ No benchmarks, and none in [this atlas's survey](../../benchmarks/) would apply.
   and it turns the most common LLM output failure into a non-event.
 - **Let the writer say "nothing happened".** A memory pipeline that must produce
   an update every cycle will produce one, and it will be invented. Give the model
-  a no-op token, log that it used it, and advance the batch anyway.
+  a no-op token, log that it used it, and advance the batch anyway. Give every
+  writer in the batch the same exit: the diary agent here has none, and writes
+  four to six sentences about a batch the Router declined.
 - **On an unusable response, do not advance the cursor.** Retrying the batch is
   better than writing a default over real memory — but bound the retry, because a
   frozen cursor turns a periodic job into a per-message one.
@@ -631,8 +727,8 @@ No benchmarks, and none in [this atlas's survey](../../benchmarks/) would apply.
   name files hits this, and almost nobody writes it down. Then check the list
   against the prompt: the seven names blocked here are plausible placeholders and
   none of them is either of the two the prompt actually demonstrates. A constant
-  that encodes a fact about a string elsewhere in the same file wants a test, or
-  to be derived from that string rather than retyped.
+  that encodes a fact about a string in the same file wants a test, or to be
+  derived from that string rather than retyped.
 - **Overlap your batches.** `MSG_OVERLAP = 2` costs two messages of context and
   removes the seam where a fact stated across a boundary is summarized by neither
   pass.
@@ -640,7 +736,8 @@ No benchmarks, and none in [this atlas's survey](../../benchmarks/) would apply.
   `healing_log` line in the audit trail is the most reviewable artifact in this
   system.
 - **Redirect a duplicate write instead of creating a near-duplicate file** — and
-  put the redirect *above* your filename guards, not below them.
+  run your filename guards on the name the redirect returns, normalised the way
+  the guards expect.
 
 ### Avoid
 
@@ -648,7 +745,11 @@ No benchmarks, and none in [this atlas's survey](../../benchmarks/) would apply.
   filename; a de-duplication step four lines later assigns a different filename
   from a directory listing and nothing re-validates. Any check that runs before a
   value can still change is decoration. If a variable is guarded, make the guard
-  the last thing that touches it.
+  the last thing that touches it, and compare names the way they are stored.
+- **A lock on an object you build per call.** `_get_lock` is correct code on the
+  wrong owner: the lock dict lives on an agent the caller discards after one run,
+  so the mutual exclusion it was written for never happens. Put a lock where its
+  lifetime is the resource's, not the request's.
 - **Two retrieval implementations over one store.** The write path and the read
   path here rank the same files with different prefixes, different thresholds,
   different truncation and different caching. One of the two caches invalidates
@@ -657,7 +758,10 @@ No benchmarks, and none in [this atlas's survey](../../benchmarks/) would apply.
 - **Caching an embedding under a key that cannot express staleness.** A vector
   keyed on a filename, over files an agent overwrites continuously, is a ranking
   that drifts silently away from its own corpus. Hash the content into the key,
-  as the same feature does forty lines away.
+  as the same feature does in `TopicRAG`.
+- **An editor that bypasses the log the pipeline keeps.** Every automatic
+  mutation here gets a timestamped line; a person's edit or deletion in the
+  viewer gets none, so the log cannot say who last changed a file.
 - **Naming a model your repository does not contain.** A single string constant
   decides whether every semantic feature works, resolves against a directory that
   is not in the tree, and fails to a silent fallback. If a model is required,
@@ -679,22 +783,22 @@ No benchmarks, and none in [this atlas's survey](../../benchmarks/) would apply.
 
 This suits exactly what it is: one person, one desktop, a character whose
 consistency matters more than factual recall. Within that, the design is
-well-judged — no services to run, a store you can read in a text editor, local
+well-judged — no services to run, a store you can read and edit in the app, local
 embeddings that degrade gracefully to no embeddings, and guards in the places
 where an LLM-rewritten memory actually breaks.
 
 It is the wrong shape for anything that must answer questions about the past.
-There is no retrieval over history, no provenance, no deletion, and the index
-forgets by omission. If your users will ask *"what did I tell you about X"*, this
-architecture cannot answer, and adding retrieval to it means adding the store it
-does not have.
+There is no retrieval over history and no provenance, deletion is by whole file
+and by hand, and the index forgets by omission. If your users will ask *"what did
+I tell you about X"*, this architecture cannot answer, and adding retrieval to it
+means adding the store it does not have.
 
-The reason to read it even if neither applies: it is the clearest small example
-in this atlas of **how to make a full-rewrite memory safe**, and those guards
-transfer to any system where a model regenerates a document. The second reason is
-the one in section 7 — a well-judged feature added four lines below the guard it
-defeats is an ordinary way for a safety property to be lost, and here it is
-small enough to read in one screen.
+The reason to read it even if neither applies: it is a small, clear example of
+**how to make a full-rewrite memory safe**, and those guards transfer to any
+system where a model regenerates a document. The second reason is the one in
+section 7 — a well-judged feature added four lines below the guard it defeats is
+an ordinary way for a safety property to be lost, and here it is small enough to
+read in one screen.
 
 ## 12. Open Questions
 
@@ -711,9 +815,10 @@ small enough to read in one screen.
   to have been written against a format someone had in mind.
 - **Were `PASS_CHARS = 8000` and the read path's uncapped injection chosen
   together?** One path truncates at 8,000 characters and the other injects whole
-  files, for the same three-file budget.
-- **Does the `_locks` dict leak?** One `asyncio.Lock` per `character::chat` is
-  created on demand and never removed; harmless on a desktop, worth knowing.
+  topic files, for the same three-file budget.
+- **Was the per-chat lock meant to live on a shared agent?** `_get_lock` is
+  written as if one `SoulMemoryAgent` served the whole session; the one entry
+  point builds a fresh instance per call, which leaves the lock guarding nothing.
 - **What happens when the index passes 5,000 characters in normal use?** The
   truncation is silent to the model and cuts the newest sections; whether users
   reach it depends on how verbose the Router is over months.
@@ -729,9 +834,9 @@ small enough to read in one screen.
   no-op detection (197–200), `trust_level` values (225), worked topic examples (242–243)
 - Lite router prompt (249), Archivist prompt (301), Diary prompt (325)
 - `SoulMemoryAgent` (341), constants (359–364), `_BAD_TOPIC_NAMES` (366)
-- `_get_lock` (376), `_cap_message_lengths` (387), `get_memory_paths` (397)
+- `_locks` (374), `_get_lock` (376), `_cap_message_lengths` (387), `get_memory_paths` (397)
 - `_read_index` with truncation (429, 436), `_backup_file` (444)
-- `_safe_write_index` with the length floor (460), `_safe_write_topic` (482)
+- `_safe_write_index` with the length floor and the MEMORY backup (460, 470), `_safe_write_topic` (482)
 - `_read_user_profile` (497, 504), `_safe_write_user_profile` with the USER backup (512, 519)
 - `_call_router_agent` and prompt selection (531, 542)
 - `_extract_json_object` repair ladder (579), `_parse_router_response` (634),
@@ -739,20 +844,39 @@ small enough to read in one screen.
 - `_call_archivist_agent` (747), `update_memory_after_response` (797)
 - `_update_daily_diary` (829), diary filename (876), diary audit line (887),
   diary task launch and await (1038, 1122)
-- `_run_update_pipeline` (896), batch trigger (942), guard initialisers (983–984)
+- `_run_update_pipeline` (896), manual mode (915), batch trigger (942), guard
+  initialisers (983–984)
 - Parse-failure abort (1000–1004), no-op branch (1006–1011), index and profile
   writes (1013–1026), batch tracker in `finally` (1126)
-- Topic action handling: name sanitising (1060–1064), `_BAD_TOPIC_NAMES` guard
-  (1066), diary guard (1070), de-duplication redirect (1076–1084), unguarded use
-  of the redirected name (1086)
+- Topic action handling: name sanitising and lowercasing (1060–1064),
+  `_BAD_TOPIC_NAMES` guard (1066), diary guard (1070), de-duplication redirect
+  (1076–1084), unguarded use of the redirected name (1086), read and write of the
+  target (1090, 1104), topic audit line (1108–1111)
 - `_append_log` (1130)
 
 **Injection and write entry point**
 
 - `app/utils/ai_clients/prompt_engine.py` — `embedding_cache` (194),
   read-only agent construction (621), `[TOPIC FILE: …]` parsing (631),
-  embedder gate on topic injection (641–644), read-path cache key (673),
-  similarity floor (688), write entry point (900–907)
+  embedder gate on topic injection (641–644), diary tail on injection (660, 692),
+  read-path cache key (673), similarity floor (688), write entry point building a new agent per call (900–907)
+- `app/gui/interface_signals.py` — `PromptEngine` construction (246), post-reply
+  memory task (15180), manual trigger with `force=True` (6653–6660), character
+  deletion removing the `.soul` tree (4161–4165)
+
+**Memory viewer**
+
+- `app/gui/custom_widgets.py` — `SoulMemoryViewer` (2957), Open Folder (3229),
+  `get_memory_paths_safe` (3349–3352), `save_file` (3379), `delete_file`
+  (3391–3412), `load_agent_logs` (3414)
+- `main.py` — memory button wiring (445)
+
+**Other readers and stores**
+
+- `app/utils/soul_companion/soul_companion.py` — `Scratchpad` (276),
+  `_get_memory_snapshot` (2810–2851), `GoalsManager` (2939)
+- `app/utils/ai_clients/soul_stage_engine.py` — `NPCMemoryRegistry`
+  (1155–1301), NPC recall and store (2856, 2896), party memory sync (3503)
 
 **Embedding provider**
 
@@ -761,7 +885,7 @@ small enough to read in one screen.
 
 **Tools** (no memory tool)
 
-- `app/utils/ai_clients/tools.py` — `ToolRegistry.default_tools` (192)
+- `app/utils/ai_clients/tools.py` — `ToolRegistry` (187), `default_tools` (192)
 - `app/utils/soul_companion/plugins/agentic_tools.py` — `needs_approval` (248, 500, 737)
 
 **Tests**
@@ -778,9 +902,12 @@ grep -rn "TOPIC FILE" --include="*.py" .
 grep -rn "backups" --include="*.py" .
 grep -rn -i "e5-small\|e5_small" . --exclude-dir=.git
 grep -n "unlink\|rmtree\|os.remove" app/utils/soul_memory.py
-grep -n "user_id\|tenant\|principal\|owner_id" app/utils/soul_memory.py
+grep -rn "os.remove\|\.unlink(\|rmtree" --include="*.py" app main.py
+grep -nw "user_id\|tenant\|principal\|owner_id" app/utils/soul_memory.py
 grep -n "rotat\|truncat\|RotatingFile" app/utils/soul_memory.py
-grep -rn -i "arxiv\|bibtex\|@article\|@misc\|citation\|doi\." README.md
+grep -rn "clear_memory(" --include="*.py" .
+grep -rn "_append_log" --include="*.py" .
+grep -rn -i "arxiv\|bibtex\|@article\|@misc\|citation\|doi\." README.md README_RU.md
 ```
 
 ## Appendix: Recorded Searches
@@ -794,6 +921,8 @@ The command is the check that was actually run, not a local equivalent.
 
 
 ## History
+
+**2026-09-26** — [`747048b3b3ad7d321a667630018f7ffc04eb5f6d`](https://github.com/jofizcd/Soul-of-Waifu/commit/747048b3b3ad7d321a667630018f7ffc04eb5f6d) — audit at an unchanged pin: upstream HEAD is the pinned commit. Marks unchanged at `audit_log`. Six published claims were wrong. The report said nothing deletes memory; `SoulMemoryViewer`, present at both pins, edits every file and deletes topics and diaries ([section 8](#8-agent-integration)). A declined batch was said to skip every write; the diary runs anyway. The offered fix, moving the diary guard below the redirect, fails on case: `diary_` does not match `Diary_<date>.md` ([section 7](#7-write-mechanics)). Parse failures were said to reach the audit log; they reach only the application logger. Diaries were said to be injected whole; the read path takes their last 2,500 characters. The per-chat lock was treated as working; it lives on an agent rebuilt per call, so runs can overlap ([section 4](#4-essential-implementation-paths)). Screen: 2 files, no findings; nothing installed, built or run.
 
 **2026-09-13** — [`747048b3b3ad7d321a667630018f7ffc04eb5f6d`](https://github.com/jofizcd/Soul-of-Waifu/commit/747048b3b3ad7d321a667630018f7ffc04eb5f6d) — re-read 80 commits past the previous pin. The backup, restore and inspection API this report was previously titled for (`restore_backup`, `list_backups`, `list_topic_files`, `get_memory_stats`) was deleted in `4eb36d1123e380552a9720ef0c43c9ac373c27ae`; the backups it would have read are still written, and both rewritten documents are now covered rather than one, so the published criticism that `USER.md` went unbacked is corrected here. Four mechanisms were added: a JSON repair ladder with a batch retry on failure, a model-declared no-op, a de-duplication redirect for `create` actions, and a second topic-ranking implementation on the read path. The redirect is applied after the guard protecting diary files and reassigns the guarded variable, which is the finding this reading is titled for. The embedder moved to a shared provider naming a model the repository does not contain. The published claim that `_BAD_TOPIC_NAMES` blocks "the placeholder names the prompt's own examples teach the model to emit" was wrong when it was made: the prompt's examples are `example_topic.md` and `existing_topic.md` at both commits, and neither is in the set. Marks unchanged at `audit_log`; `human_review` re-checked against the new approval gate in the agentic tools and withheld, since no memory write passes through it.
 

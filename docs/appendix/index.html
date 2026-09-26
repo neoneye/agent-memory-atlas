@@ -5286,6 +5286,28 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Soul of Waifu report said nothing deletes its memory,
+that a declined batch skips every write and that moving the diary guard
+would close the redirect, and treated its per-chat lock as working;
+corrected 2026-09-26.</strong> At <a
+href="https://github.com/jofizcd/Soul-of-Waifu/commit/747048b3b3ad7d321a667630018f7ffc04eb5f6d"><code class="commit-id" title="747048b3b3ad7d321a667630018f7ffc04eb5f6d">747048b3…</code></a>
+the <a href="../systems/soul-of-waifu/">Soul of Waifu</a> report said
+there is no delete path of any kind; its recorded grep covered
+<code>soul_memory.py</code> only. <code>SoulMemoryViewer</code>, in the
+app since 25 July 2026 and so present at both pins, edits the index,
+profile, topics and diaries and deletes topic and diary files, which
+understated the system; <code>human_review</code> stays withheld because
+the viewer edits after the write lands. It said
+<code>no_significant_change</code> skips every write; the diary agent
+runs on the declined batch. It offered moving the guards below the
+redirect as the fix; the guard tests lowercase <code>diary_</code> and
+the redirect returns <code>Diary_&lt;date&gt;.md</code>. It said the
+audit log distinguishes parse failures, that diaries are injected whole,
+and that the day's diary competes as a passage about the current delta;
+parse failures reach only the application logger, the read path takes a
+diary's last 2,500 characters, and the write path embeds a diary's
+opening 600. Its per-chat <code>asyncio.Lock</code> lives on an agent
+built per call, so runs for one chat can overlap.</li>
 <li><strong>The XERJ report awarded <code>scope_enforced</code> to a
 reserved index per namespace behind an authorizer, miscounted its MCP
 tools and misfiled a positive control; corrected 2026-09-26.</strong> At

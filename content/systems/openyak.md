@@ -296,7 +296,7 @@ are about *relevance*, not about trust.
 **Data loss is the standing risk.** A short rewrite replaces a long one, a
 250-line rewrite loses fifty lines off the end, and neither event is logged or
 surfaced. The fix for the first is a length floor — refuse a rewrite under some
-fraction of the previous document, as Soul of Waifu does — and for the second, a
+fraction of the previous document, where Soul of Waifu uses a fixed 100-character minimum — and for the second, a
 marker or a warning instead of a slice.
 
 ## 10. Tests, Evals, and Benchmarks

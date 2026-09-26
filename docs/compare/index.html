@@ -23958,32 +23958,37 @@ lesson re-distilled from a fresh interaction can return</td>
 <td>Four kinds of Markdown file — a psychological state index, a user
 profile, per-subject topic files, and a dated diary that shares the
 topics directory</td>
-<td>Plain files under
-<code>.soul/&lt;character&gt;/chats/&lt;chat&gt;/memory/</code>, with
-five rolling backups each of the index and the profile</td>
+<td>Plain files under <code>.soul/</code>, one directory per character
+and chat, with five rolling backups each of the index and the
+profile</td>
 <td>Two independent implementations — <code>TopicRAG</code> ranks topics
-for the Router, and a separate loop in the prompt builder ranks them for
-the character above a 0.42 cosine floor</td>
+for the Router and the desktop companion, and a separate loop in the
+prompt builder ranks them for the character above a 0.42 cosine
+floor</td>
 <td>A Router sub-agent returns JSON that the code renders into a fixed
 Markdown skeleton; an Archivist writes topic files; a Diary agent
 rewrites the day's file with one entry appended</td>
 <td>The index and profile are overwritten wholesale, backed up first; a
 <code>create</code> action within 0.82 cosine of an existing file is
-redirected onto it; nothing is ever deleted</td>
+redirected onto it; the pipeline deletes nothing, and a person can edit
+any file and delete topic and diary files in the memory viewer</td>
 <td>Per character and per chat, as a filesystem path; no principal or
 tenant key</td>
-<td>The companion app's own prompt builder and a tool registry that
-carries no memory tool</td>
-<td>The pipeline runs every <code>soul_memory_batch</code> messages,
-with the diary generated as a concurrent task</td>
+<td>The companion app's own prompt builder, the desktop companion's
+memory snapshot, a memory viewer that edits and deletes files, and a
+tool registry that carries no memory tool</td>
+<td>The pipeline runs every <code>soul_memory_batch</code> messages as
+an asyncio task launched after the reply, with the diary generated as a
+concurrent task; a batch size of 0 leaves only a manual trigger</td>
 <td>None. The <code>trust_level</code> field is the character's feeling
 about the user, not confidence in a memory</td>
 <td>Short-output writes are rejected rather than stored; a truncated
 JSON generation is repaired, and an unrepairable one retries the batch
 instead of defaulting it</td>
 <td>The de-duplication redirect is applied after the guard that protects
-the diary, so a <code>create</code> action can land the Archivist inside
-a diary file</td>
+the diary, and that guard's lowercase prefix would not match the
+capitalised diary name even below it, so a <code>create</code> action
+can land the Archivist inside a diary file</td>
 </tr>
 <tr>
 <td><code>sovereign</code></td>

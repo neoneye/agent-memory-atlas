@@ -1207,7 +1207,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: having the model fill a schema and letting your code render the document, plus a repair ladder that rebuilds a truncated JSON response and retries the batch rather than writing a default over real memory.
 - Maturity impression: no test suite exists — no `tests/` directory, no `test_*.py`, nothing.
 - Study when: you want to see the guards that make a rewrite-the-whole-document memory survivable, or a small readable case of a safety check placed one step too early.
-- Do not copy when: users will ask "what did I tell you about X". There is no retrieval over history, no provenance and no deletion, and the index forgets by omission.
+- Do not copy when: users will ask "what did I tell you about X". There is no retrieval over history and no provenance, deletion is by whole file and by hand in the memory viewer, and the index forgets by omission.
 
 ### [`tigrimosr`](../systems/tigrimosr/)
 - Best idea: the skill synthesizer stages a proposed skill as `SKILL.md.proposed` beside the live file, keeps the rationale and the sessions it came from, waits for a person, and promotes by rename — forcing review when the target was authored by a human rather than by the automation.

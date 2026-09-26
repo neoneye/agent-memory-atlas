@@ -109,9 +109,16 @@ bulk re-summarise **with the result previewed before it is accepted**. That last
 one is the same operation its 2023 generation performed silently on a threshold,
 which makes a clear before-and-after of this pattern.
 
-**[Soul of Waifu](../../systems/soul-of-waifu/)** is the cautionary version, and
-it shows both ways the gap can close. At
-`3d032badc07335012ae6917e29ea16b8203252f5` the API was right —
+**[Soul of Waifu](../../systems/soul-of-waifu/)** is the cautionary version. Its
+`SoulMemoryViewer` carries two of the five verbs: a person can edit the index,
+the profile, any topic and any diary in place, and delete a topic or diary file.
+Neither holds against the automatic path. A deleted topic can come back with the
+next `create` action that names it, an edit to the index survives only if the
+next full rewrite carries it forward, and neither reaches the log that records
+every automatic mutation.
+
+Restore is the verb that went missing, and it shows both ways the gap can close.
+At `3d032badc07335012ae6917e29ea16b8203252f5` the API was right —
 `restore_backup` took a backup of the current state before overwriting, so a
 restore was itself undoable — and nothing in the application called it, alongside
 `list_backups`, `list_topic_files` and `get_memory_stats`. At
