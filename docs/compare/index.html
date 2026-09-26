@@ -3376,39 +3376,50 @@ and a <code>timeline</code> of append-only entries typed
 fixed root pages plus <code>pages/</code> — with an
 <code>index.md</code> regenerated rather than hand-kept, and a
 <code>brainRoot</code> redirect for a sidecar brain</td>
-<td>Section extraction by marker, a regenerated index and wiki-links
-between pages; no embeddings, no search engine, nothing to rank</td>
-<td>Every mutation goes through <code>brain</code> subcommands — create,
-update, append-timeline, update-truth, archive, tag, root-page rewrite,
-reindex — so frontmatter is never hand-shaped</td>
+<td>Section extraction by marker, a regenerated <code>index.md</code>
+carrying each page's first compiled-truth sentence,
+<code>list-pages</code> metadata rows and wiki-links; no embeddings, no
+search, and no status filter — archived and draft pages list beside
+active ones</td>
+<td>Every mutation goes through <code>brain</code> subcommands —
+create-page, update-truth, append-timeline, archive-page, set-tags,
+update-root, reindex — so frontmatter is never hand-shaped; only
+<code>create-page</code> validates the page id</td>
 <td><code>update-truth</code> rewrites the compiled truth and appends
-its timeline entry in one atomic write; <code>archive-page</code> sets
-<code>status: archived</code> and can append a
-<code>kind: reversal</code> entry; nothing is deleted</td>
-<td>One brain per repository, resolved by <code>resolveBrainDir</code>
-and redirectable through <code>.mindmux/preferences.json</code>, so
-another project's brain is another directory</td>
+its timeline entry in one atomic write, keeping no copy of the replaced
+text; <code>archive-page</code> sets <code>status: archived</code> and
+appends a <code>kind: reversal</code> entry only when given a summary;
+nothing is deleted</td>
+<td>One brain per repository — a physical partition:
+<code>resolveBrainDir</code> picks the directory from
+<code>.mindmux/preferences.json</code> or <code>./brain</code>, no
+record carries a scope key and no read applies a predicate;
+<code>read-page</code> and the write subcommands other than
+<code>create-page</code> take an unvalidated id, so <code>../</code>
+leaves the pages directory</td>
 <td>Four skills, a zero-dependency Node CLI published to npm, a
 <code>wire</code> command that writes a marked instruction block into
 CLAUDE.md and AGENTS.md, and opt-in SessionStart hooks for Claude Code
 and Codex</td>
-<td>None over the store. <code>reindex</code> and
-<code>lint-links</code> run on demand or from the pre-commit hook, which
-blocks a commit on a broken link; a SessionStart hook shells out to
-<code>list-pages</code> and injects the index at the start of an agent
-session</td>
-<td>None as a status. A <code>reversal</code> is a timeline entry kind
-rather than a state on the page, and <code>status: archived</code> is
-lifecycle</td>
+<td>None over the store. Every page write reindexes synchronously;
+<code>lint-links</code> runs on demand or from an optional pre-commit
+hook that blocks a commit on a broken link; a SessionStart hook shells
+out to <code>list-pages</code> and injects the listing at the start of
+an agent session</td>
+<td>None as a status. <code>active / draft / archived</code> is
+lifecycle that no code filters on, and no subcommand moves a page out of
+<code>draft</code>; a <code>reversal</code> is a timeline entry kind
+rather than a state on the page</td>
 <td>A compiled-truth rewrite that cannot skip its timeline entry, a
 linter that deliberately excludes the append-only layer from link
 validation, a stated boundary on its own guarantee, and a hook whose
-test asserts page bodies cannot reach the injected snapshot</td>
+tests assert page bodies cannot reach the injected snapshot</td>
 <td>The correct-by-construction guarantee holds only while nobody
-hand-edits a file, and the project says so — there is no validator, by
-choice, so a manual edit is unrecoverable by any check. The Claude Code
-hook injects the whole index with no byte budget; only the Codex branch
-is bounded</td>
+hand-edits a file, and the project says so. A line break in a timeline
+summary can plant a marker that makes the next <code>update-truth</code>
+discard earlier entries (traced, not run). Page ids are validated only
+on creation. The Claude Code hook injects the whole listing with no byte
+budget; only the Codex branch is bounded</td>
 </tr>
 <tr>
 <td><code>brainapi</code></td>
@@ -27998,7 +28009,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>301 of 646:</em> <a
+<p><em>300 of 646:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -28044,7 +28055,6 @@ href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
 href="../systems/beever-atlas/"><code>beever-atlas</code></a>, <a
 href="../systems/beevibe/"><code>beevibe</code></a>, <a
 href="../systems/brain-db/"><code>brain-db</code></a>, <a
-href="../systems/brain-md/"><code>brain-md</code></a>, <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/buzz/"><code>buzz</code></a>, <a
 href="../systems/bwmem/"><code>bwmem</code></a>, <a
