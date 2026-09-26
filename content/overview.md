@@ -1807,11 +1807,12 @@ better ones here — five buckets with trigger phrases, an exact entry format, s
 numbered guardrails, and a close-out sweep whose three bars come with the
 expected answer attached (*"The expected answer for most files on most tasks is
 'no'"*) — and the binary enforces none of it. What it adds is a *compliance
-instrument on the read side*: `flow stats` parses the harness's own session
-transcripts and counts every `Read` whose path falls under the memory directory,
-reported beside the other retrieval kinds. It says nothing about whether the
-write rules were followed, and it turns "is anyone reading this?" from a hope
-into a number.
+instrument on the read side*: `flow stats` parses Claude Code session
+transcripts and counts every `Read` whose path contains `/.flow/kb/`, reported
+beside the other retrieval kinds. It says nothing about whether the write rules
+were followed, it matches the default root literally — so a relocated
+`FLOW_ROOT` reads zero — and it turns "is anyone reading this?" from a hope into
+a number.
 
 [NanoClaw](../systems/nanoclaw/) ships the same kind of artifact with one
 difference worth copying and one worth avoiding.
