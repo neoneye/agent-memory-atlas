@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 646 reports.**
+**This page covers all 647 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5791,3 +5791,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 166,989 lines of Python under `src/mind_mem` and 12,538 pytest functions in 747 files, 1,790 commits on main from 5 contributor identities, one of them dependabot, between 18 February and 24 September 2026. Five marks — `trust_state`, `scope_enforced`, `audit_log`, `human_review`, `negative_eval` — each with a stated limit; the exclusion tests pair every retrieval leg with its served control. Benchmark results are first-party with committed raw rows and were not re-run.
 - Study when: you want untrusted writes withheld by construction rather than by a filter each read path must remember, or a template for per-leg exclusion tests with positive controls.
 - Do not copy when: the agent that writes memory also has file access to the store, you need a scope that can propose without approving, or deleted content must actually be gone.
+
+### [`paperclip`](../systems/paperclip/)
+
+- Best idea: **bind every generated page to the source hash it was built from.** The distiller snapshots a redacted bundle of issues, comments and documents per run, and `paperclip_page_bindings` records the hash each page was last applied from, so re-running an unchanged window is a no-op and a page can be traced to the issue history behind it.
+- Biggest risk: **the scope key is the caller's argument, and plugin SQL is not company-bound.** Every wiki read filters on `company_id` and `space_id`, both taken from tool parameters while the run context that carries the caller's company is ignored. The host checks local-folder calls against the invoking run's company and not `db.query`, so `wiki_search` and the list tools return another company's page paths and titles given its UUID. Traced, not reproduced.
+- Most reusable component: the distillation provenance chain in `packages/plugins/plugin-llm-wiki/src/wiki/core.ts` — cursor, run, source snapshot and page binding keyed on source hash — with `protectDistillationSourceBody` suppressing a comment or document that matches any of nine secret patterns, and a committed test that planted tokens stay out of the generated patches.
+- Second risk: **review_required stores nothing to review.** A distillation with a bundle warning, or on a public deployment, returns its patches and persists none; the board's only caller discards the result. Search matches titles only, and revision rows keep a hash without the text, the previous hash or the writer.
+- Maturity impression: MIT, 1,175,068 lines of TypeScript outside tests and 4,593 commits on master from 219 contributors between February and September 2026, of which the wiki plugin is 13,887 lines and ships as experimental with its agent and routines paused. Its 101 test cases run against a harness whose SQL returns nothing, so no scope predicate is executed; one server test applies the migrations to embedded Postgres.
+- Study when: you want an agent-maintained project wiki derived from a work tracker and need the provenance plumbing — source windows, snapshots, hash-keyed bindings, secret suppression, auto-apply refused by deployment exposure.
+- Do not copy when: companies or users sharing one instance must not see each other's page names, recall must work from page content, or a wrong page must be traced to who wrote it.

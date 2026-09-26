@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent-company control plane
+whose memory is an experimental LLM Wiki plugin: agent-written markdown
+pages in a local folder, indexed in Postgres, searched by title.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Paperclip — Agent Memory Atlas">
+    <meta property="og:description" content="An agent-company control
+plane whose memory is an experimental LLM Wiki plugin: agent-written
+markdown pages in a local folder, indexed in Postgres, searched by
+title.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Paperclip — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent-company control
+plane whose memory is an experimental LLM Wiki plugin: agent-written
+markdown pages in a local folder, indexed in Postgres, searched by
+title.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Paperclip — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Paperclip",
+      "description": "An agent-company control plane whose memory is an experimental LLM Wiki plugin: agent-written markdown pages in a local folder, indexed in Postgres, searched by title.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An LLM wiki plugin inside a multi-agent
+control plane</p>
+          <h1>Paperclip</h1>
+          <p class="document-deck">An agent-company control plane whose
+memory is an experimental LLM Wiki plugin: agent-written markdown pages
+in a local folder, indexed in Postgres, searched by title.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/paperclipai/paperclip">
+              <span>Source</span>
+              <strong>paperclipai/paperclip</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/paperclipai/paperclip/commit/01d9a121859a3d8298dce91452f75516e837e819" title="01d9a121859a3d8298dce91452f75516e837e819">
+              <span>Analyzed revision</span>
+              <code>01d9a121…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-27</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/paperclipai--paperclip" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>paperclipai--paperclip</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>1,175,068
+lines of TypeScript outside tests and stories; the LLM Wiki plugin is
+13,887 of them plus 402 lines of SQL</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4,593
+commits on master by 219 contributors (anonymous included), 16 February
+2026 – 26 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>About
+23,300 it/test cases in 2,203 test files; the wiki plugin's three spec
+files hold 101</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Paperclip is a Node.js server and React board that runs a company of
+coding agents — an org chart, heartbeats, issues, budgets, approvals and
+a tool gateway. Almost everything it persists is work state. Its memory
+is an experimental plugin in the same repository, LLM Wiki: a managed
+maintainer agent writes markdown pages into a local folder, Postgres
+indexes their paths, titles and backlinks, and agents find pages by
+title substring and read them by path. The notable part is the
+Paperclip-side distillation, which records what issue history a page
+came from with source hashes and snapshots. The weak part is the read
+path. Search never looks at page text, and both scope keys are tool
+arguments the agent supplies.</p>
+<p>The plugin is one of three the board lists as experimental
+(<code>server/src/routes/plugins.ts:182-186</code>), is installed from
+the plugin page, and ships its maintainer agent and three routines
+paused
+(<code>packages/plugins/plugin-llm-wiki/src/manifest.ts:173, 241, 268, 295</code>).</p>
+<p>Four findings shape the rest of this report.</p>
+<ul>
+<li><strong>The company key reaches every query, and the caller chooses
+it.</strong> Every metadata read filters on <code>company_id</code> and
+<code>space_id</code> (<code>src/wiki/core.ts:4071-4081</code>). Both
+values come from the tool's arguments. The host checks a plugin's
+local-folder calls against the invoking run's company, and does not
+check its SQL, so <code>wiki_search</code> accepts another company's id
+and returns that company's page paths and titles. Page bodies stay
+behind the local-folder check. This is read from the code and was not
+reproduced.</li>
+<li><strong>Review-required means discarded.</strong> A distillation
+with a bundle warning, or on a public deployment, returns its proposed
+patches to the caller and stores none of them
+(<code>src/wiki/core.ts:3463-3490</code>). The only caller in the UI
+discards the result (<code>src/ui/app.tsx:5512-5517</code>).</li>
+<li><strong>Search reads titles.</strong> <code>wiki_search</code> is a
+<code>LIKE</code> on path and title; it never opens a page. Recall rests
+on the agent reading <code>wiki/index.md</code> and following
+links.</li>
+<li><strong>Revisions record that a page changed, not what it
+said.</strong> Each write inserts a revision row carrying the new
+content hash. The prior text is gone unless the operator keeps the
+folder under version control.</li>
+</ul>
+<p>Two other things in the tree carry the word memory and are not
+scored. The <code>para-memory-files</code> skill tells the CEO agent to
+keep facts in YAML files under <code>$AGENT_HOME/life/</code> and search
+them with <code>qmd</code>, and no Paperclip code reads or writes those
+files. The memory connectors are ordinary tool connections to Mem0, Zep,
+Supermemory, Cognee and Honcho, off by default
+(<code>packages/shared/src/validators/instance.ts:57</code>). The design
+document <code>doc/memory-landscape.md</code> plans a company-level
+memory binding with provenance and cost rows; no code implements it, and
+<code>evals/promptfoo/tests/phase5-memory-control-surfaces.yaml</code>
+grades a model's prose about that design.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a markdown page. It becomes a belief the moment the file
+is written: there is no candidate state, no status on a page, and no
+check against other pages. The writer is almost always the Wiki
+Maintainer agent. It follows an operation issue and one of five skills —
+<code>wiki-ingest</code>, <code>wiki-query</code>,
+<code>wiki-lint</code>, <code>paperclip-distill</code>,
+<code>index-refresh</code> — and writes with
+<code>wiki_write_page</code>. A person can write through the board, and
+a deterministic distiller can write project pages without a model.</p>
+<p>A page stops being believed only by being rewritten. There is no
+delete tool and no page-delete path in the plugin. Contradiction is
+handled in prose. The wiki's schema tells the agent to add a
+<code>&gt; ⚠ contradicted by</code> callout rather than overwrite
+(<code>templates/AGENTS.md:77</code>), and the lint skill is read-only
+and reports contradictions as findings
+(<code>skills/wiki-lint/SKILL.md:19-20</code>). The callout is text on
+the page. No reader treats it differently.</p>
+<p>Two layers of page do different jobs, by instruction rather than by
+code. <code>wiki/projects/&lt;slug&gt;/standup.md</code> is rewritten to
+the current state on every distillation. <code>index.md</code>,
+<code>decisions.md</code> and <code>history.md</code> accumulate, and
+the distill skill tells the agent to supersede an accepted decision with
+a callout rather than remove it
+(<code>skills/paperclip-distill/SKILL.md</code>, <em>Workflow</em> step
+2).</p>
+<p><code>raw/</code> holds captured sources and is immutable by
+instruction. The path check lets <code>wiki_write_page</code> write only
+under <code>wiki/</code> and a few named root files, so the agent's tool
+cannot rewrite <code>raw/</code>
+(<code>src/wiki/core.ts:1181-1190</code>). <code>AGENTS.md</code> and
+<code>IDEA.md</code> are writable only by the board
+(<code>src/wiki/core.ts:1192-1196</code>).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Paperclip-side record</th>
+<th>What it holds</th>
+<th>Can it be false about the world?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Distillation cursor</td>
+<td>Last processed time and source hash per project or root issue</td>
+<td>No — it is processing state</td>
+</tr>
+<tr>
+<td>Source snapshot</td>
+<td>The redacted issue bundle a run read, with source refs</td>
+<td>No — it is what was read</td>
+</tr>
+<tr>
+<td>Page binding</td>
+<td>Which source hash a generated page was last applied from</td>
+<td>No — it is provenance</td>
+</tr>
+<tr>
+<td>Wiki page</td>
+<td>Agent or template prose about projects, entities and concepts</td>
+<td>Yes — this is the memory</td>
+</tr>
+</tbody>
+</table></div>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every write path into a wiki page, the one read path, and where the company key comes from</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every write path into a wiki page, the one read path, and where the company key comes from
+flowchart TD
+    A[&quot;Wiki Maintainer agent&lt;br/&gt;wiki_write_page&lt;br/&gt;companyId, spaceSlug = arguments&quot;] --&gt; W
+    B[&quot;board UI&lt;br/&gt;write-page action&quot;] --&gt; W
+    Q[&quot;file-as-page&lt;br/&gt;from a query answer&quot;] --&gt; W
+    D[&quot;deterministic distiller&lt;br/&gt;issues, comments, documents&quot;] --&gt; R{&quot;bundle warning, or&lt;br/&gt;public deployment?&quot;}
+    R -- &quot;yes&quot; --&gt; X[&quot;status review_required&lt;br/&gt;patches returned to caller,&lt;br/&gt;stored nowhere&quot;]
+    R -- &quot;no, auto-apply on&quot; --&gt; W
+    W[&quot;writeWikiPage:&lt;br/&gt;expected hash matches&lt;br/&gt;or none given?&quot;] -- &quot;no&quot; --&gt; REF[&quot;refuse&quot;]
+    W -- &quot;yes&quot; --&gt; F[&quot;write markdown file&lt;br/&gt;host checks company&quot;]
+    F --&gt; P[&quot;upsert wiki_pages&lt;br/&gt;path, title, backlinks, hash&quot;]
+    P --&gt; V[&quot;insert wiki_page_revisions&lt;br/&gt;hash and summary, no text&quot;]
+    S[&quot;wiki_search&lt;br/&gt;companyId = argument&quot;] --&gt; L[&quot;SQL LIKE on path and title&lt;br/&gt;WHERE company_id, space_id&lt;br/&gt;host does not check company&quot;]
+    L --&gt; RD[&quot;wiki_read_page by path&lt;br/&gt;host checks company&quot;]
+    RD --&gt; CTX[&quot;agent&#39;s context&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Paperclip is a monorepo: an Express server with an embedded Postgres
+by default, a React board, a CLI, adapters for Claude Code, Codex,
+Gemini, Cursor and others, and a plugin host that runs each plugin in a
+worker process over JSON-RPC. The LLM Wiki is one such plugin
+(<code>packages/plugins/plugin-llm-wiki/</code>). Its manifest asks for
+34 capabilities, from <code>database.namespace.write</code> to
+<code>agents.managed</code> (<code>src/manifest.ts:89-124</code>).</p>
+<p>Memory adds three things to a running Paperclip. The first is a
+declared local folder, <code>wiki-root</code>, with <code>raw/</code>,
+<code>wiki/</code> and its subfolders
+(<code>src/manifest.ts:134-150</code>). The second is a Postgres
+namespace built by three migrations: instances, sources, pages,
+revisions, operations, query sessions, resource bindings, five
+distillation tables, and spaces
+(<code>migrations/001_llm_wiki.sql</code>,
+<code>002_paperclip_distillation.sql</code>,
+<code>003_spaces.sql</code>). The third is a managed agent, a managed
+project and three routines. Each space other than the default is a
+subfolder <code>spaces/&lt;slug&gt;/</code> of the same root, and each
+carries its own key.</p>
+<p>The plugin's SQL runs through the host's <code>db.query</code> and
+<code>db.execute</code>, which validate that the statement stays in the
+plugin's namespace or its four declared core read tables and nothing
+more (<code>server/src/services/plugin-database.ts:557-570</code>). File
+reads and writes go through the host's local-folder service, which
+resolves the folder per company and applies path containment and symlink
+checks
+(<code>server/src/services/plugin-host-services.ts:1486-1502</code>).</p>
+<p>Retrieval has no index beyond Postgres B-trees and a <code>?</code>
+match on the <code>backlinks</code> JSON array. There is no full-text
+index, no embedding, and no model in the read path.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nobody runs this memory without running Paperclip: Node 24, the
+server, its Postgres, a configured local folder, and a coding-agent CLI
+for the maintainer. It runs fully local. Storing a page needs no API
+key; the maintainer agent needs whatever its adapter needs. The store is
+plain markdown, readable and repairable in any editor, and the board
+lists files that exist on disk and not in the index
+(<code>src/wiki/core.ts:1726-1741</code>). Adoption is a plugin install,
+a root-folder bootstrap, and unpausing the agent and routines.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Tool registration.</strong> <code>registerWikiTools</code>
+(<code>src/wiki/core.ts:4059-4276</code>) registers ten tools. Each
+handler reads <code>companyId</code> with <code>requireString</code>
+from its own parameters and resolves a space with
+<code>resolveSpace</code>. The SDK passes a second <code>runCtx</code>
+argument carrying the run's company
+(<code>packages/plugins/sdk/src/worker-rpc-host.ts:1969-1975</code>); no
+wiki handler takes it.</p>
+<p><strong>Write.</strong> <code>writeWikiPage</code>
+(<code>src/wiki/core.ts:1842-1862</code>) resolves the space, runs
+<code>assertPagePath</code> and <code>assertPageWriteAllowed</code>, and
+reads the current file through <code>readCurrentWithHash</code>, which
+returns a null hash on any error (<code>:1678-1690</code>). It refuses
+on a hash mismatch only when both hashes exist
+(<code>:1759-1763</code>). It then calls
+<code>localFolders.writeTextAtomic</code> and
+<code>upsertPageMetadata</code> (<code>:1787-1840</code>). That function
+upserts <code>wiki_pages</code> on
+<code>(company_id, wiki_id, space_id, path)</code>, and inserts a
+<code>wiki_page_revisions</code> row (<code>:1831-1836</code>). Title
+comes from the first <code>#</code> heading, page type from the folder,
+backlinks from markdown links and bare <code>wiki/…md</code> tokens
+(<code>:1649-1676</code>).</p>
+<p><strong>Search.</strong> <code>wiki_search</code>
+(<code>:4060-4087</code>) runs one <code>UNION ALL</code> over
+<code>wiki_pages</code> and <code>wiki_sources</code> with
+<code>lower(path) LIKE lower($3)</code> or the same on title, and on URL
+for sources, ordered by kind and path, capped at 50.</p>
+<p><strong>Read.</strong> <code>wiki_read_page</code>
+(<code>:4089-4101</code>) reads the file by path through the
+local-folder service and returns it with its hash.
+<code>readWikiPage</code> for the board does the same and joins the
+metadata row (<code>:4420-4445</code>).</p>
+<p><strong>Deterministic distillation.</strong>
+<code>distillPaperclipProjectPage</code> (<code>:3334-3538</code>)
+assembles a bounded bundle of issues, comments and documents
+(<code>assemblePaperclipSourceBundle</code>, <code>:2609</code>),
+records a run and a source snapshot, and skips low-signal windows by
+regex (<code>:3000-3012</code>) and unchanged source hashes via
+<code>paperclip_page_bindings</code>. It builds standup, index,
+decisions and history pages from templates. It then either returns the
+patches as <code>review_required</code> (<code>:3464-3490</code>) or
+writes each through <code>writeWikiPage</code> and upserts a page
+binding (<code>:3492-3516</code>).</p>
+<p><strong>Agent distillation.</strong>
+<code>distill-paperclip-now</code> creates a work item and a hidden
+operation issue assigned to the maintainer
+(<code>src/worker.ts:590-622</code>); the agent follows
+<code>skills/paperclip-distill/SKILL.md</code> and writes with the same
+tools.</p>
+<p><strong>Query.</strong> <code>startWikiQuerySession</code>
+(<code>:3836</code>) opens a hidden <code>query</code> operation issue,
+starts an agent session with a prompt naming the company, wiki and space
+(<code>:3788-3800</code>), and streams events to the board.
+<code>fileQueryAnswerAsPage</code> (<code>:3986-4057</code>) writes an
+answer as a page.</p>
+<p><strong>Events.</strong> <code>handlePaperclipEventIngestion</code>
+(<code>:3733-3782</code>) turns issue, comment and document events into
+cursor observations and writes nothing.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Key columns</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wiki_pages</code></td>
+<td>company_id, wiki_id, space_id, path</td>
+<td>title, page_type, <code>frontmatter</code> (always <code>{}</code>),
+<code>source_refs</code>, <code>backlinks</code>, content_hash,
+current_revision_id</td>
+</tr>
+<tr>
+<td><code>wiki_page_revisions</code></td>
+<td>company_id, wiki_id, space_id, page_id</td>
+<td>operation_id, path, content_hash, summary; no text, no actor</td>
+</tr>
+<tr>
+<td><code>wiki_sources</code></td>
+<td>company_id, wiki_id, space_id</td>
+<td>source_type, title, url, raw_path, content_hash, status
+<code>captured</code></td>
+</tr>
+<tr>
+<td><code>wiki_spaces</code></td>
+<td>company_id, wiki_id, slug</td>
+<td>path_prefix, access_scope, owner_user_id, owner_agent_id, team_key,
+status</td>
+</tr>
+<tr>
+<td><code>paperclip_page_bindings</code></td>
+<td>company_id, wiki_id, space_id, page_path</td>
+<td>last_applied_source_hash, last_distillation_run_id</td>
+</tr>
+</tbody>
+</table></div>
+<p>The page text lives only in the file. <code>frontmatter</code> is
+inserted as <code>'{}'</code> and never updated
+(<code>src/wiki/core.ts:1805-1808</code>), so the YAML frontmatter the
+skills require (<code>current_as_of</code>, <code>sources</code>,
+<code>type</code>) is not indexed.</p>
+<p><strong>Provenance on agent writes is empty.</strong>
+<code>wiki_write_page</code>'s declared schema has no
+<code>sourceRefs</code> property (<code>src/manifest.ts:352-368</code>),
+so an agent write stores <code>source_refs = []</code> unless the model
+adds an undeclared field. Citations exist only as links in the page
+text. The distiller and file-as-page do fill
+<code>source_refs</code>.</p>
+<p><strong>Scope</strong> is company, then wiki id, then space. Every
+read predicate names all three. The <code>access_scope</code> column
+takes <code>shared</code>, <code>personal</code> or <code>team</code>,
+and the only read of it refuses Paperclip ingestion into non-shared
+spaces <em>"until host permissions are enforced"</em>
+(<code>src/wiki/core.ts:869-876</code>). <code>owner_agent_id</code> and
+<code>owner_user_id</code> are always inserted null
+(<code>:1419-1456</code>).</p>
+<p><strong>Time.</strong> <code>created_at</code> and
+<code>updated_at</code> on rows; <code>current_as_of</code> exists only
+as agent-written frontmatter. Distillation runs record a source window,
+which describes what was read rather than when a claim was true.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated and agent-driven. The query prompt tells
+the agent to read <code>wiki/index.md</code> first, then use
+<code>wiki_search</code>, <code>wiki_read_page</code>,
+<code>wiki_list_sources</code> and <code>wiki_read_source</code>
+(<code>src/wiki/core.ts:3788-3800</code>). No hook injects wiki content
+into any agent's context. Other Paperclip agents reach the wiki only if
+their tool profile admits the plugin's tools; the plugin grants its own
+maintainer <code>pluginTools: [PLUGIN_ID]</code>
+(<code>src/manifest.ts:170-172</code>).</p>
+<p><strong><code>wiki_search</code> matches names.</strong> It is a
+substring test on path and title, lowercased, with the query wrapped in
+<code>%…%</code> (<code>:4071-4081</code>). A question phrased in the
+page's words and not its title finds nothing. The design leans on the
+index page and on backlinks, which <code>wiki_list_backlinks</code>
+serves from the <code>backlinks</code> array (<code>:4240-4249</code>).
+That is the Karpathy LLM-wiki shape, which
+<code>templates/IDEA.md</code> cites, and it scales with how well the
+agent keeps <code>wiki/index.md</code> current.</p>
+<p><strong>The agent's tools and the board read different
+lists.</strong> The board's <code>pages</code> data drops rows whose
+file no longer exists, through <code>filterReadableRows</code>
+(<code>:4363</code>, <code>:1692-1708</code>), and adds files present on
+disk and absent from the index. The agent's <code>wiki_list_pages</code>
+and <code>wiki_search</code> return index rows as they are. An agent can
+therefore be offered a page that no longer exists and miss one written
+outside the tools.</p>
+<p>Token budget is the agent's own: <code>wiki_search</code> caps at 50
+rows, list tools at 200, and <code>wiki_read_page</code> returns the
+whole file.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. The agent decides what to write.
+Each <code>wiki_write_page</code> call is a file write and two SQL
+statements, with no model call inside the tool. The model cost is the
+maintainer's own run, recorded as Paperclip cost against a per-space
+billing code (<code>src/wiki/core.ts:2277-2285</code>). A page is
+retrievable by <code>wiki_read_page</code> as soon as the file is
+written, and by <code>wiki_search</code> once the metadata upsert
+commits.</p>
+<p><strong>Conflict control is optional.</strong>
+<code>expectedHash</code> refuses a stale write only when the caller
+passes it and the file exists (<code>:1759-1763</code>). The distiller
+passes the hash it read. The agent's tool leaves it to the model.</p>
+<p><strong><code>wiki_append_log</code> can lose an entry.</strong> It
+reads <code>wiki/log.md</code>, appends a line, and writes the whole
+file back with no hash check (<code>:4196-4205</code>). Two concurrent
+operations can each drop the other's line. <code>wiki/log.md</code> is
+also writable through <code>wiki_write_page</code>, so
+<em>"append-only"</em> in the schema is an instruction.</p>
+<p><strong>Deterministic auto-apply.</strong> The distiller applies its
+templated pages when <code>autoApplyIngestPatches</code> is not false in
+config and the deployment is not <code>authenticated</code> and
+<code>public</code> (<code>:3309-3332</code>). In any
+<code>local_trusted</code> instance that means template output lands
+without review whenever the bundle carries no warning
+(<code>:3405</code>, <code>:3463-3464</code>). The
+<code>paperclip-distill</code> skill describes this templating as the
+thing it <em>"replaces"</em>. Both paths remain callable.</p>
+<p><strong>Secret suppression covers comments and documents.</strong>
+<code>protectDistillationSourceBody</code> replaces a comment or
+document body that matches any of nine secret patterns with a
+suppression notice (<code>:591-637</code>, called at <code>:2676</code>
+and <code>:2717</code>). Issue descriptions go into the bundle
+unfiltered (<code>:2640-2651</code>). Raw sources captured through
+<code>captureWikiSource</code> are not filtered either
+(<code>:1864-1894</code>).</p>
+<p><strong>Event capture writes nothing.</strong> Four formatters that
+once turned events into raw files have no caller
+(<code>:3540-3630</code>); events only update cursors.</p>
+<p>No background pass rewrites the store. The cursor-window routine,
+when unpaused, wakes the agent every six hours; the lint routine is
+read-only by skill; index refresh rewrites <code>wiki/index.md</code>
+hourly.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, one file write plus two SQL statements; no model
+call in the tool. Retrievable immediately.</li>
+<li>Background: none at install. Unpaused, one agent run per six-hour
+window per cursor, one nightly lint run and an hourly index refresh,
+each a full agent session.</li>
+<li>Read: one SQL query per search; a page read returns the whole file.
+Nothing is injected per turn, so nothing disturbs a prompt-prefix
+cache.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration is Paperclip's own. The plugin registers ten tools
+through the host's tool registry. The tool gateway lists them to an
+agent after the per-agent policy decision, and allows or queues each
+call (<code>server/src/services/tool-gateway.ts:8875-8903</code>).
+Plugin tools need an agent run context (<code>:10412-10420</code>) and
+dispatch with the run's company, agent and project
+(<code>:10444-10455</code>). The gateway passes the arguments through
+unchanged.</p>
+<p>Work arrives as hidden plugin-operation issues assigned to the
+managed Wiki Maintainer, a <code>claude_local</code> agent with
+sandboxing on (<code>src/manifest.ts:152-176</code>). Its instructions
+embed the wiki root's absolute path and the tool list
+(<code>agents/wiki-maintainer/AGENTS.md:7-13</code>). The operation
+prompt repeats a <em>"Space isolation requirement"</em> in prose
+(<code>src/wiki/core.ts:2297-2315</code>).</p>
+<p>The model has full agency over pages it can reach: read, write,
+overwrite, search. It has no delete, and cannot write <code>raw/</code>,
+<code>AGENTS.md</code> or <code>IDEA.md</code> through the tools.
+Porting the design needs the plugin host; the skills and the page layout
+port by copying.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Cross-company metadata reads.</strong> The host's invocation
+scope is the run's company, derived from <code>runContext</code>
+(<code>server/src/services/plugin-worker-manager.ts:1129-1132</code>).
+<code>requireInvocationCompanyScope</code> compares it with a
+<code>companyId</code> field in the worker's host-call parameters
+(<code>packages/plugins/sdk/src/host-client-factory.ts:571-635</code>).
+<code>db.query</code> parameters are <code>{ sql, params }</code>
+(<code>packages/plugins/sdk/src/protocol.ts:1577-1584</code>), so a
+plugin query is never checked. A comment in the host states the model:
+plugins are instance-wide and there is <em>"no per-company availability
+gate"</em>
+(<code>server/src/services/plugin-host-services.ts:802-806</code>).</p>
+<p>For the wiki this splits the tools in two.
+<code>wiki_read_page</code>, <code>wiki_read_source</code> and
+<code>wiki_write_page</code> touch the local folder, and a foreign
+<code>companyId</code> is refused. <code>wiki_search</code>,
+<code>wiki_list_pages</code>, <code>wiki_list_sources</code> and
+<code>wiki_list_backlinks</code> touch only SQL. Given another company's
+UUID, they return its page paths, titles and source URLs.
+<code>resolveSpace</code> also inserts a default space row for that
+company on the way (<code>src/wiki/core.ts:1331-1352</code>). The agent
+would need the UUID. This was traced, not run.</p>
+<p><strong>Prompt-injected memories.</strong> Issue text, comments and
+documents from any Paperclip actor become distillation input and,
+through the agent, page prose. Nothing marks a page as unverified, and
+the query skill tells the agent to cite pages as evidence.</p>
+<p><strong>Data loss.</strong> A write overwrites the file. The revision
+row keeps the new hash only. Without the operator's own git, the prior
+text is unrecoverable.</p>
+<p><strong>Deletion.</strong> There is no delete tool. A page removed on
+disk leaves its index row, which the agent's tools keep returning.</p>
+<p><strong>Uncertainty.</strong> Distillation patches carry
+<code>confidence</code> and <code>humanReviewRequired</code>. Both are
+returned in the action's result and stored nowhere; a page has no field
+for either.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — awarded, with the limit in its record:
+the predicates are on every read, and the values are the caller's
+arguments.</li>
+<li><code>audit_log</code> — awarded. <code>wiki_page_revisions</code>
+is insert-only, one row per write path. Its limits: no text, no actor,
+and an operation id on the file-as-page path only.</li>
+<li><code>human_review</code> — withheld. The distiller's
+<code>review_required</code> run holds no proposal to review: the
+patches are returned and discarded, a queue nothing fills.
+<code>wiki_propose_patch</code> returns a proposal and stores nothing.
+The gateway can hold any tool call for approval, and that gates an
+invocation rather than a memory. Nothing in the tree configures it for
+the wiki, and the board's writes bypass it.</li>
+<li><code>trust_state</code> — withheld. Pages have no status. The run
+status <code>review_required</code> describes a distillation run.</li>
+<li><code>tombstone</code> — withheld. Contradiction is a prose callout;
+nothing records a rejected claim.</li>
+<li><code>bitemporal</code> — withheld. <code>current_as_of</code> is
+unindexed frontmatter.</li>
+<li><code>negative_eval</code> — withheld; section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report. Everything below
+is from reading the tests at the pin.</p>
+<p>The plugin's suite is <code>tests/plugin.spec.ts</code> (81 cases), a
+UI spec (16) and an attachment spec (4). They run against the SDK's
+<code>createTestHarness</code>, whose <code>db.query</code> records the
+SQL and returns <code>[]</code>
+(<code>packages/plugins/sdk/src/testing.ts:895-899</code>). No case
+executes a scope predicate against a database. Most cases stub
+<code>localFolders</code> with a <code>Map</code>.</p>
+<p>The cases that can fail on memory behaviour:</p>
+<ul>
+<li><em>"writes pages atomically, records metadata, and rejects stale
+hashes"</em> (<code>tests/plugin.spec.ts:3455-3491</code>) asserts a
+stale <code>expectedHash</code> is refused and that a revision insert is
+issued.</li>
+<li><em>"keeps suppressed secret-like source content out of generated
+wiki patches"</em> (<code>:2509-2578</code>) asserts two planted tokens
+are absent from every patch and the suppression marker is present.</li>
+<li><em>"filters stale page and raw source rows out of browse data"</em>
+(<code>:1533-1604</code>) returns a live row and a stale row from a
+mocked query and asserts the board's list equals the live one
+exactly.</li>
+<li><em>"keeps default-space files at the root and isolates managed
+spaces under slug prefixes"</em> (<code>:3269-3367</code>) asserts two
+same-named writes land in two folders.</li>
+</ul>
+<p><strong><code>negative_eval</code> is withheld.</strong> The
+stale-row case is the nearest: a populated list, an excluded row, and a
+positive control. It asserts that the board's listing agrees with the
+disk. The rows it excludes are dangling index entries for a file that is
+gone, not memory kept out of a result. The filter it exercises is absent
+from the agent's tools (section 6). The secret case keeps material out
+of a write. The space case asserts where writes land, and ends in
+<code>.every(...)</code> over SQL strings.</p>
+<p><code>server/src/__tests__/plugin-database.test.ts:485-530</code>
+applies the three migrations through the production validator on
+embedded Postgres and asserts the space-keyed unique constraints. It
+skips where embedded Postgres is unsupported (<code>:30-31</code>).</p>
+<p><code>evals/promptfoo/tests/phase5-memory-control-surfaces.yaml</code>
+grades a model's answers about a memory-provider binding that no code
+implements. No paper, citation block or benchmark result is committed.
+<code>templates/IDEA.md</code> credits the pattern to Karpathy's LLM
+Wiki gist.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Bind a generated page to the source hash it was built
+from.</strong> A binding row with <code>last_applied_source_hash</code>
+makes re-distillation idempotent and answers <em>"what did this page
+come from"</em>.</li>
+<li><strong>Snapshot the input bundle, redacted, beside the
+run.</strong> The snapshot is what the page was derived from, so an
+auditor does not have to reconstruct issue state at run time.</li>
+<li><strong>Refuse auto-apply by deployment exposure, not by
+config.</strong> A public authenticated instance cannot turn it back
+on.</li>
+<li><strong>Protect the schema files from the agent's own write
+tool.</strong> The agent reads <code>AGENTS.md</code> and cannot rewrite
+the rules it follows.</li>
+<li><strong>Suppress, rather than mask, a source that matches a secret
+pattern.</strong> Replacing the whole body with a notice carrying the
+reason keeps a partial secret out of prose.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A scope key as a tool argument where the transport carries
+the identity.</strong> The run context arrived with the call and the
+handler ignored it. Derive the key from the caller; treat an argument as
+a request to validate. See <a
+href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
+key</a>.</li>
+<li><strong>A review state with nothing to review.</strong> If a run is
+marked for review, persist the proposal and an apply verb the agent does
+not hold.</li>
+<li><strong>An audit row that holds a hash of text you did not
+keep.</strong> It proves a change happened and cannot say what changed.
+Store the prior text, or record the writer and the run.</li>
+<li><strong>Two lists of the same pages with different filters.</strong>
+The person and the agent should see the same set.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an operator who already runs Paperclip, keeps the wiki
+folder under their own git, and wants a browsable project wiki that
+agents keep current. Pages read like documentation, and a person can
+correct one in an editor. It is not a memory to adopt on its own: it
+needs the plugin host, a paused agent brought to life, and a model run
+per operation. It stops fitting when recall has to work from page
+content rather than titles. It also stops fitting when companies on one
+instance must not see each other's page names, or when a wrong page has
+to be traced back to who wrote it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any deployment path bind plugin SQL to the invoking company,
+outside the host-client handlers read here? A run against two companies
+would settle the metadata read.</li>
+<li>Which agents does the default tool profile admit to the wiki's
+tools? The policy service was read at its entry point only.</li>
+<li>Does the maintainer's sandbox let it edit files under the wiki root
+directly? Its instructions carry the absolute path, and such edits
+produce no revision row.</li>
+<li>How large do wikis get in the maintainers' own use, and does title
+search hold up there? Nothing committed says.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>packages/plugins/plugin-llm-wiki/migrations/001_llm_wiki.sql</code>,
+<code>002_paperclip_distillation.sql</code>,
+<code>003_spaces.sql</code>; <code>src/manifest.ts:89-150</code>.</li>
+<li><strong>Write path:</strong> <code>src/wiki/core.ts:1156-1204</code>
+(path checks), <code>:1759-1862</code>, <code>:1864-1894</code>,
+<code>:4187-4232</code>; <code>src/worker.ts:316-328</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/wiki/core.ts:4060-4101</code>,
+<code>:4149-4185</code>, <code>:4234-4275</code>,
+<code>:4328-4445</code>.</li>
+<li><strong>Distillation:</strong>
+<code>src/wiki/core.ts:591-637</code>, <code>:2609-2765</code>,
+<code>:2846-2893</code>, <code>:3000-3012</code>,
+<code>:3231-3538</code>;
+<code>skills/paperclip-distill/SKILL.md</code>.</li>
+<li><strong>Spaces and scope:</strong>
+<code>src/wiki/core.ts:854-895</code>, <code>:1331-1460</code>;
+<code>packages/plugins/sdk/src/host-client-factory.ts:571-635, 749-755</code>;
+<code>packages/plugins/sdk/src/protocol.ts:1577-1584</code>;
+<code>server/src/services/plugin-worker-manager.ts:1115-1140</code>;
+<code>server/src/services/plugin-host-services.ts:802-806, 1486-1502</code>;
+<code>server/src/services/plugin-database.ts:557-570</code>.</li>
+<li><strong>Agent integration:</strong>
+<code>agents/wiki-maintainer/AGENTS.md</code>, <code>skills/</code>,
+<code>templates/AGENTS.md</code>;
+<code>server/src/services/tool-gateway.ts:8875-8903, 10412-10455</code>;
+<code>server/src/routes/plugins.ts:182-186</code>.</li>
+<li><strong>Not scored:</strong> <code>skills/para-memory-files/</code>,
+<code>server/src/onboarding-assets/ceo/AGENTS.md:49</code>,
+<code>doc/connections/MEMORY.md</code>,
+<code>packages/shared/src/memory-connectors.ts</code>,
+<code>doc/memory-landscape.md</code>.</li>
+<li><strong>Tests:</strong> <code>tests/plugin.spec.ts</code>;
+<code>packages/plugins/sdk/src/testing.ts:895-899</code>;
+<code>server/src/__tests__/plugin-database.test.ts:485-530</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run at the root of the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'deleteFile|DELETE FROM' packages/plugins/plugin-llm-wiki/src</code>
+— no match: the plugin deletes no page, source or row.</li>
+<li><code>rg -n 'wiki_page_revisions' packages/plugins/plugin-llm-wiki/src</code>
+— one match, the <code>INSERT</code> at <code>core.ts:1833</code>; no
+<code>UPDATE</code> or <code>DELETE</code>.</li>
+<li><code>rg -n 'writeWikiPage\(ctx' packages/plugins/plugin-llm-wiki/src</code>
+— five call sites; only <code>core.ts:4007</code> (file-as-page) passes
+<code>operationId</code>.</li>
+<li><code>rg -n 'filterReadableRows' packages/plugins/plugin-llm-wiki/src</code>
+— defined at <code>core.ts:1692</code>, called at <code>:4363</code> and
+<code>:4406</code> only; no agent tool calls it.</li>
+<li><code>rg -n 'access_scope|accessScope' packages/plugins/plugin-llm-wiki/src/wiki/core.ts</code>
+— the only branch on the value is <code>:869</code>, the
+Paperclip-ingestion refusal.</li>
+<li><code>rg -n 'formatIssueEventSource|formatCommentEventSource|formatDocumentEventSource|rawPathForPaperclipEvent' packages/plugins/plugin-llm-wiki</code>
+— definitions only, no caller.</li>
+<li><code>rg -n 'redactDistillationSensitiveText|protectDistillationSourceBody' packages/plugins/plugin-llm-wiki/src/wiki/core.ts</code>
+— called for documents (<code>:2676</code>) and comments
+(<code>:2717</code>); not for issue descriptions or
+<code>captureWikiSource</code>.</li>
+<li><code>rg -n '"db.query": gated' -A2 packages/plugins/sdk/src/host-client-factory.ts</code>
+and
+<code>rg -n '"db.query":' -A3 packages/plugins/sdk/src/protocol.ts</code>
+— the handler is gated, and its parameters carry no
+<code>companyId</code> for the scope check to read.</li>
+<li><code>rg -n -i 'memoryProvider|memory_provider|memory provider' --type ts</code>
+— a run-log test helper and connector UI strings; no memory-provider
+binding.</li>
+<li><code>rg -n 'para-memory-files|AGENT_HOME' --glob '!skills/para-memory-files/**' | grep -v '^doc/plans'</code>
+— skill defaults, onboarding prose and env propagation; no code reads
+<code>life/</code>, <code>items.yaml</code> or
+<code>MEMORY.md</code>.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' packages/plugins/plugin-llm-wiki README.md doc/memory-landscape.md</code>
+— no match, and no <code>CITATION.cff</code> at the root.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-27</strong> — <a
+href="https://github.com/paperclipai/paperclip/commit/01d9a121859a3d8298dce91452f75516e837e819"><code class="commit-id" title="01d9a121859a3d8298dce91452f75516e837e819">01d9a121…</code></a>
+— first reading, at the head of <code>master</code>, a commit dated 26
+September 2026; the wiki plugin last changed at <a
+href="https://github.com/paperclipai/paperclip/commit/d95c71027df0f9832a628968e5a3c17d2aed16f6"><code class="commit-id" title="d95c71027df0f9832a628968e5a3c17d2aed16f6">d95c7102…</code></a>
+on 3 September. <code>scope_enforced</code> and <code>audit_log</code>
+awarded; section 9 names the rest. Screened before reading: no auto-run
+surface, one build-time execution point (a root
+<code>postinstall</code>), 46 unpinned surfaces, 53 files inside the
+cooldown — inflated, since a depth-1 clone dates every file to the tip —
+and <code>AGENTS.md</code> recorded as data. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

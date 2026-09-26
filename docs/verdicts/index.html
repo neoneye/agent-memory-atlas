@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 646 reports.</strong></p>
+<p><strong>This page covers all 647 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26709,6 +26709,49 @@ per-leg exclusion tests with positive controls.</li>
 <li>Do not copy when: the agent that writes memory also has file access
 to the store, you need a scope that can propose without approving, or
 deleted content must actually be gone.</li>
+</ul>
+<h3 id="paperclip"><a
+href="../systems/paperclip/"><code>paperclip</code></a></h3>
+<ul>
+<li>Best idea: <strong>bind every generated page to the source hash it
+was built from.</strong> The distiller snapshots a redacted bundle of
+issues, comments and documents per run, and
+<code>paperclip_page_bindings</code> records the hash each page was last
+applied from, so re-running an unchanged window is a no-op and a page
+can be traced to the issue history behind it.</li>
+<li>Biggest risk: <strong>the scope key is the caller's argument, and
+plugin SQL is not company-bound.</strong> Every wiki read filters on
+<code>company_id</code> and <code>space_id</code>, both taken from tool
+parameters while the run context that carries the caller's company is
+ignored. The host checks local-folder calls against the invoking run's
+company and not <code>db.query</code>, so <code>wiki_search</code> and
+the list tools return another company's page paths and titles given its
+UUID. Traced, not reproduced.</li>
+<li>Most reusable component: the distillation provenance chain in
+<code>packages/plugins/plugin-llm-wiki/src/wiki/core.ts</code> — cursor,
+run, source snapshot and page binding keyed on source hash — with
+<code>protectDistillationSourceBody</code> suppressing a comment or
+document that matches any of nine secret patterns, and a committed test
+that planted tokens stay out of the generated patches.</li>
+<li>Second risk: <strong>review_required stores nothing to
+review.</strong> A distillation with a bundle warning, or on a public
+deployment, returns its patches and persists none; the board's only
+caller discards the result. Search matches titles only, and revision
+rows keep a hash without the text, the previous hash or the writer.</li>
+<li>Maturity impression: MIT, 1,175,068 lines of TypeScript outside
+tests and 4,593 commits on master from 219 contributors between February
+and September 2026, of which the wiki plugin is 13,887 lines and ships
+as experimental with its agent and routines paused. Its 101 test cases
+run against a harness whose SQL returns nothing, so no scope predicate
+is executed; one server test applies the migrations to embedded
+Postgres.</li>
+<li>Study when: you want an agent-maintained project wiki derived from a
+work tracker and need the provenance plumbing — source windows,
+snapshots, hash-keyed bindings, secret suppression, auto-apply refused
+by deployment exposure.</li>
+<li>Do not copy when: companies or users sharing one instance must not
+see each other's page names, recall must work from page content, or a
+wrong page must be traced to who wrote it.</li>
 </ul>
         </article>
       </div>

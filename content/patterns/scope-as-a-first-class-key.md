@@ -863,6 +863,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[Off Grid AI Desktop](../../systems/ogad/) puts the key on everything except the memory.** Conversations and uploaded documents carry `project_id`, and every project read applies it. The captured memories that `getChunkCandidates` appends to a project's knowledge base have no project column at all, gated only by a per-project `include_memory` flag that defaults to on, up to 2,000 rows in no order. **A pool with no key is not neutral in a scoped read: exclude it by default, or give it the key.**
 
+[Paperclip](../../systems/paperclip/)'s LLM Wiki plugin puts `company_id` and `space_id` on every row and in every metadata query, and takes both from the tool's own arguments while the SDK hands each handler a run context carrying the caller's company, which no wiki handler reads. The host then binds half the plugin: its local-folder calls are checked against the invoking run's company, and its SQL, whose parameters carry no company field, is not. So a page body is refused across companies and the page's path and title are returned. The key reaching the query is necessary; which of the plugin's I/O channels the host binds to the caller is a separate question, and here the answer differs by channel.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
