@@ -1,7 +1,7 @@
 ---
 title: "AI Agent Automation"
 eyebrow: "A threshold with no consumer"
-description: "A local-first workflow platform whose agents carry a per-agent vector memory — retrieved by a function whose similarity floor is a parameter the body never reads, and capped by a retention pass that counts one set of rows and deletes from another."
+description: "A workflow platform's per-agent vector memory, whose recall declares a similarity floor it never applies and whose rows name the chat model, not the embedder."
 root: ../..
 page_kind: system
 source_name: "vmDeshpande/ai-agent-automation"
@@ -9,327 +9,419 @@ source_url: https://github.com/vmDeshpande/ai-agent-automation
 archive_name: "vmDeshpande--ai-agent-automation"
 revision: 86b6072dd4c9bf6abe68c26c4265b3296a368737
 revision_url: https://github.com/vmDeshpande/ai-agent-automation/commit/86b6072dd4c9bf6abe68c26c4265b3296a368737
-analyzed_at: 2026-09-14
+analyzed_at: 2026-09-26
+licence: "Apache-2.0"
+size: "14,131 lines of JavaScript in 147 backend source files and 28,870 lines of TypeScript in 150 frontend files; the memory layer is 413 lines in four files; HEAD is the v0.12.0 release commit"
+activity: "535 commits on main by 49 author names, 28 December 2025 – 12 September 2026"
+tests: "372 Jest test() and it() cases in 42 files under backend/src/tests, ten of them in the one memory file; none run for this reading"
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
-  scope_enforced: "the agent memory collection, both read paths, with ownership asserted in the service | backend/src/services/memoryService.js:111-130 `retrieveMemory` and :28-45 `assertAgentOwnership`, backend/src/controllers/memory.controller.js `findOwnedAgent` | recall queries `AgentMemory.find({agentId: agent._id, 'metadata.type': 'conversation'})`, so the agent key is a predicate on the query rather than a tag on the row. Above it, `retrieveMemory(agent, queryText, userId, …)` calls `assertAgentOwnership(agent, userId)` before issuing any query, resolving the agent against the caller with `Agent.findOne({_id, userId})` and throwing `FORBIDDEN` when it does not match; a missing, null or empty `userId` throws `USER_CONTEXT_REQUIRED` rather than defaulting. The management API keeps its own layer, and a listing with no agent specified falls back to `agentId: {$in: ownedAgentIds}` rather than to everything | backend/src/tests/memoryService.handler.test.js — ten cases over the isolation boundary"
-  negative_eval: "the recall read path — one user's agent memory must not be reachable by another, and must not even be queried | backend/src/tests/memoryService.handler.test.js:49-70 | the suite `memoryService.retrieveMemory — cross-user isolation (H-P1-7)` pairs *'User A can retrieve memory belonging to User A agent'*, which asserts a result comes back and that the ownership lookup ran with the right pair, against *'User A CANNOT retrieve memory belonging to User B agent'*, which asserts the call rejects with `FORBIDDEN` and then that `AgentMemory.find` was never called at all — a stronger claim than an empty result, since it pins that the data was not read rather than that it was filtered afterwards. Eight further cases cover a forged agent, a non-existent one, undefined, null and empty user contexts, a stringified id, and a stale positional call. The suite mocks the Mongoose layer, so it pins the service's control flow rather than the database's behaviour | the positive control is at :50-58; the must-not assertions at :60-70"
+  scope_enforced: "the agent memory collection, both read paths, with ownership asserted in the service | backend/src/services/memoryService.js:111-145 `retrieveMemory` and :28-60 `assertAgentOwnership`, backend/src/controllers/memory.controller.js:17-24 `findOwnedAgent` | `agentId` is a required indexed field on every row, and recall queries `AgentMemory.find({agentId: agent._id, 'metadata.type': 'conversation'})` unconditionally, so the key is a predicate on the query rather than a tag on the row. Above it, `retrieveMemory(agent, queryText, userId, …)` calls `assertAgentOwnership(agent, userId)` before issuing any query, compares the agent's owner with the caller and re-resolves it with `Agent.findOne({_id, userId})`, throwing `FORBIDDEN` on a mismatch; a missing, null or empty `userId` throws `USER_CONTEXT_REQUIRED` rather than defaulting. The management API keeps its own layer, and a listing with no agent specified falls back to `agentId: {$in: ownedAgentIds}` rather than to everything | backend/src/tests/memoryService.handler.test.js — ten cases over the isolation boundary"
+  negative_eval: "the recall read path — one user's agent memory must not be reachable by another, and must not even be queried | backend/src/tests/memoryService.handler.test.js:60-71, control at :132-159 | *'User A CANNOT retrieve memory belonging to User B agent'* asserts the call rejects with `FORBIDDEN` and then that `AgentMemory.find` was never called — a stronger claim than an empty result, since it pins that the data was not read rather than filtered afterwards. The populated control is *'Successful retrieval still returns scored memories'*, where the owner's call returns both mocked rows. The excluded material has a reachable producer: `storeMemory` runs from the LLM and agent-call handlers and the playground for any user's agent. The suite mocks the Mongoose layer, so it pins the service's control flow rather than the database's behaviour | the must-not assertions at :65-70; the case at :50-58 returns an empty mock and asserts only that an array came back"
 stack_storage: "mongo"
 stack_retrieval: "vector"
 stack_source: "reviewed"
 matrix:
-  memory_unit: "An `AgentMemory` document — agentId, content, a dense embedding, metadata carrying taskId, workflowId and a type defaulting to `conversation`, plus the provider and model the vector was computed with"
+  memory_unit: "An `AgentMemory` document — agentId, content (a JSON user/assistant envelope), a dense embedding, metadata carrying taskId, workflowId and a type set to `conversation`, plus provider and model fields that record the agent's chat configuration"
   storage: "MongoDB via Mongoose, one collection, embeddings stored inline as a number array with no vector index"
   retrieval: "Load every conversation memory for the agent, cosine each in JavaScript, sort, take the top *k*. The `minScore` parameter is declared and never used"
-  write: "`storeMemory` embeds first, then discards anything under 20 characters, then inserts and runs a retention pass"
+  write: "`storeMemory` embeds first, then applies a 20-character guard that the JSON envelope every caller passes always clears, then inserts and runs a retention pass"
   update_delete: "No update path. A retention pass deletes the oldest conversation rows over a 500 cap, and the management API exposes delete-one and clear-per-agent behind an ownership check"
-  scoping: "`agentId` is a required indexed field and a predicate on every recall; the management API resolves agent ownership against the authenticated user before listing or deleting"
-  integration: "A workflow engine with typed handlers — LLM, agent call, HTTP, browser, email, file, MCP — where two handlers read and write memory around their model call"
+  scoping: "`agentId` is a required indexed field and a predicate on every recall; the recall service and the management API both resolve agent ownership against the authenticated user before reading or deleting"
+  integration: "A workflow engine with typed handlers — LLM, agent call, HTTP, browser, email, file, MCP — where two handlers and the agent playground read and write memory around their model call"
   background: "None for memory. Retention runs inline on every write"
-  trust: "None. No status, no confidence, no provenance beyond which provider and model produced the vector"
-  strengths: "The row records the embedding provider and model beside the vector, so a store cannot silently mix embeddings from two models and compare them"
-  risks: "`minScore` is a parameter with no consumer, so every top-*k* hit reaches the prompt however badly it scored; the retention pass counts all types and deletes only one; and every retrieval logs its results, content preview included, to stdout"
+  trust: "None. No status, no confidence, and the provenance fields name the agent's chat provider and chat model rather than what produced the vector"
+  strengths: "A changed recall signature fails closed on the old call shape, and ownership is re-checked against the database rather than trusted from the in-memory agent"
+  risks: "`minScore` is a parameter with no consumer, and a committed test asserts the unfloored result; the provenance fields mislabel the embedder; the retention pass counts all types and deletes only one; every retrieval logs a content preview to stdout"
 ---
 
 ## 1. Executive Summary
 
-AI Agent Automation is a local-first workflow platform — a Node/Express backend
-with a MongoDB store, a React frontend, Docker deployment, and a workflow engine
-whose handlers cover LLM calls, HTTP, browser automation, email, files and MCP.
-Apache 2.0, 517 commits since 28 December 2025, at release v0.11.0.
+AI Agent Automation is a local-first workflow platform whose agents carry a
+per-agent vector memory in MongoDB, recalled by cosine in JavaScript around two
+workflow handlers and a playground. The recall boundary is well built: ownership
+is asserted in the service, re-checked against the database, and pinned by a
+cross-user suite. The recall itself is not: a declared similarity floor is never
+applied, and a committed test asserts the unfloored result.
 
-The memory surface inside it is small and self-contained: one Mongoose model, a
-94-line service, a 208-line management controller and four routes. Two workflow
-handlers use it — `llm.handler.js` and `agentCall.handler.js` both retrieve
-before the model call and store after it — so an agent accumulates conversational
-memory across workflow runs and recalls it by embedding similarity. That is
-agent memory on this atlas's terms, and it earns `scope_enforced` on a clean
-`agentId` predicate.
+The memory surface is one Mongoose model, a service, a management controller
+and four routes. `llm.handler.js` and `agentCall.handler.js` both retrieve before
+the model call and store after it, and so does the agent playground in
+`agent.controller.js`. That is agent memory on this atlas's terms, and it earns
+`scope_enforced` on an `agentId` predicate and `negative_eval` on the isolation
+suite.
 
-**Three findings, and the first is the kind this atlas exists to catch.**
+**The floor is declared and unread.** `retrieveMemory(agent, queryText, userId,
+topK = 5, minScore = 0.45)` scores, sorts and slices, and `minScore` appears on
+one line of the backend, the signature, while the playground passes `0.45`
+explicitly. The filter that read it existed: it was deleted on 11 March 2026 in
+[`a39545994abfbc82d7fcfa7802969a25a241f397`](https://github.com/vmDeshpande/ai-agent-automation/commit/a39545994abfbc82d7fcfa7802969a25a241f397),
+a commit titled for the memory inspector, which also lowered the default from
+0.75. The fifth-best row reaches the prompt at whatever cosine it scored.
 
-`retrieveMemory(agent, queryText, userId, topK = 5, minScore = 0.45)` declares a
-similarity floor. The body scores, sorts and slices, and **never reads
-`minScore`**. A grep of the whole backend finds the identifier on exactly one
-line — the signature. The function was rewritten around it: a `userId` parameter
-was inserted before it, an ownership assertion added above it, a fail-closed
-guard added for stale callers, and 126 lines changed in the file. The dead
-parameter came through untouched, which is the ordinary way a declaration
-outlives the intent behind it. So the fifth-best match in a five-hundred-row cap
-reaches the prompt at whatever cosine it happened to score.
+**The test suite locks the missing floor in.** The case *"Successful retrieval
+still returns scored memories"* mocks two rows, one scoring 1 and one scoring 0
+against the query, passes `minScore` 0.45, and asserts both come back
+(`memoryService.handler.test.js:132-159`). Restoring the filter fails a
+committed test.
 
-**The retention pass counts one set and deletes from another.** It calls
-`countDocuments({agentId})` across every memory type, computes
-`excess = count - 500`, and then deletes `excess` of the oldest rows *restricted
-to* `metadata.type: "conversation"`. Both directions are wrong: if non-conversation
-memories exist the cap deletes more conversation history than the overflow
-justifies, and if fewer conversation rows exist than the excess it silently
-under-deletes and the cap never holds.
+**The provenance fields name the wrong model.** The row's `embeddingProvider`
+and `embeddingModel` are copied from the agent's chat provider and chat model,
+while `runEmbedding` picks its own provider and a per-provider default model. On
+the schema's default agent, `groq` with `llama-3.1-8b-instant`, the vector comes
+from Ollama's `nomic-embed-text` and the row says neither.
 
-**Every retrieval prints its results.** `retrieveMemory` ends with a
-`console.log` of each hit's score and a sixty-character content preview — in a
-platform whose README leads with local-first privacy and ships a `docs/privacy.md`.
-
-**Also worth naming, in the other direction:** the row stores
-`embeddingProvider` and `embeddingModel` beside the vector. That is a small
-field most stores in this corpus omit, and it is the one that stops a store from
-comparing a vector made by `ollama` against one made by `openai` as though the
-numbers meant the same thing.
+**The retention pass counts one set and deletes from another,** and **every
+retrieval prints a sixty-character content preview to stdout** in a product that
+leads with local-first privacy.
 
 ## 2. Mental Model
 
 ```text
-workflow run ──► llm.handler / agentCall.handler
+workflow run / playground ──► llm.handler, agentCall.handler, runAgent
                         │
-        retrieveMemory(agent, prompt, topK)
-                        │
+        retrieveMemory(agent, prompt, userId, topK)
+             ├── assertAgentOwnership ── FORBIDDEN / USER_CONTEXT_REQUIRED
+             │
         find({agentId, type: "conversation"})   ← every row for this agent
                         │
         cosine in JS ──► sort ──► slice(topK)   ← no floor, minScore unread
                         │
-                   into the prompt
+                   into the prompt               ← playground: "MEMORY is factual"
                         │
                    model call
                         │
-        storeMemory(agent, content, metadata)
+        storeMemory(agent, JSON {user, assistant}, {type: "conversation"})
              ├── embed FIRST
-             ├── then drop if content.length < 20   ← paid for, discarded
-             ├── insert
+             ├── drop if content.length < 20    ← envelope is ≥ 26 chars; never fires
+             ├── insert, labelled with the CHAT provider and model
              └── retention: count ALL types, delete oldest "conversation"
 ```
 
-The memory is per agent and per type, and the type is where the design goes
-sideways: it is written with a default of `conversation`, both read paths filter
-to `conversation`, and the retention counter ignores the filter. A memory stored
-under any other type would be durable, unreachable and still counted against the
-cap.
+A memory is one exchange, stored as a JSON envelope of the prompt and the reply
+and embedded as that string. It becomes recallable the moment the insert
+returns, and it stops being one only by deletion: the retention pass, a
+delete-one, or a clear-per-agent. Nothing marks a memory wrong, stale or
+superseded. The playground injects it under the line *"The following MEMORY is
+factual and must be used when relevant"*, so whatever the unfloored top-*k*
+returns is presented to the model as ground truth
+(`agent.controller.js:165`).
 
-## 3. Architecture
+The `type` field is the seam. Every writer sets `conversation`, both read paths
+filter to it, and the retention counter ignores it. A memory stored under any
+other type would be durable, unreachable and still counted against the cap.
 
 ```mermaid
 flowchart TD
-%% caption: two workflow handlers bracket their model call with recall and store, and the recall function declares a similarity floor its body never reads — so the caller that passes 0.45 gets every top-k hit regardless of score
-    RUN["workflow run"] --> H["llm.handler<br/>agentCall.handler"]
+%% caption: recall checks ownership first and then applies no floor, so every top-k row reaches the prompt; the store labels each vector with the chat model, and its length guard measures an envelope that always passes
+    RUN["workflow run or playground"] --> H["llm.handler<br/>agentCall.handler<br/>runAgent"]
     H --> RET["retrieveMemory(agent, prompt, userId, topK, minScore)"]
-    DB[("AgentMemory<br/>MongoDB")] --> RET
-    RET --> SCAN["find all rows for agentId<br/>type = conversation"]
-    SCAN --> COS["cosineSimilarity in JS<br/>per row"]
+    RET --> OWN{"assertAgentOwnership<br/>owner matches, DB re-check"}
+    OWN -->|"no"| FORB["throw FORBIDDEN<br/>no query issued"]
+    OWN -->|"yes"| SCAN["find all rows for agentId<br/>type = conversation"]
+    DB[("AgentMemory<br/>MongoDB")] --> SCAN
+    SCAN --> COS["cosineSimilarity in JS<br/>0 on a dimension mismatch"]
     COS --> SORT["sort desc, slice(topK)"]
     SORT -.->|"minScore never read"| FLOOR{{"no floor applied"}}
     SORT --> PROMPT["memories into the prompt"]
     PROMPT --> LLM["model call"]
     LLM --> STORE["storeMemory"]
-    STORE --> EMB["runEmbedding FIRST"]
+    STORE --> EMB["runEmbedding FIRST<br/>provider and model chosen here"]
     EMB --> GUARD{"content.length < 20?"}
-    GUARD -->|"yes"| DROP["discard<br/>embedding already paid for"]
-    GUARD -->|"no"| INS["insert row<br/>+ provider + model"]
+    GUARD -->|"never: envelope is 26+ chars"| DROP["discard"]
+    GUARD -->|"always"| INS["insert row<br/>labelled with chat provider + chat model"]
     INS --> DB
     INS --> RETN["retention: countDocuments(all types)<br/>delete oldest type=conversation"]
     RETN --> DB
 
-    UI["management API"] --> OWN["findOwnedAgent(agentId, userId)"]
-    OWN --> DB
+    UI["management API"] --> FOA["findOwnedAgent(agentId, userId)"]
+    FOA --> DB
 ```
+
+## 3. Architecture
 
 **Runtime.** An Express backend under `backend/src` with controllers, routes,
 models, services and an `agents/` tree holding the workflow runner and its
-handlers; a React frontend; Docker and infra directories; a Postman collection;
-husky hooks that the screen correctly notes are inert until installed.
+handlers; a React frontend with a memory inspector page; Docker and infra
+directories; a Postman collection; husky hooks that are inert until installed.
+Document retrieval under `backend/src/retrieval/` is a separate subsystem over
+uploaded document chunks and is not agent memory.
 
 **Persistence.** MongoDB through Mongoose. `AgentMemorySchema` has `agentId`
-required and indexed, `content` and `embedding` required, a `metadata` subdocument
+required and indexed, `content` and `embedding` required, a `metadata` object
 with `taskId`, `workflowId` and `type`, an `embeddingProvider` enumerated over
 `ollama | openai | gemini | huggingface | groq`, an `embeddingModel`, and
-Mongoose timestamps. **There is no vector index** — similarity is computed in
+Mongoose timestamps. **There is no vector index**: similarity is computed in
 application code over every row the query returns, which the 500-row cap keeps
-tractable and which is a reasonable trade at that size.
+tractable.
+
+**Embedding.** `runEmbedding` calls Ollama at `OLLAMA_HOST`, OpenAI, or Gemini.
+An agent on `groq`, the schema default, embeds through Ollama, so a default
+deployment needs a local Ollama with `nomic-embed-text` for memory to work at
+all. `huggingface` passes `supportsEmbedding` and then reaches no branch, so a
+memory-enabled Hugging Face agent throws on its first recall
+(`embeddingAdapter.js:7-9`, `:98`).
 
 ## 4. Essential Implementation Paths
 
+**`retrieveMemory`** rejects a numeric `userId` as a stale positional call,
+asserts ownership, embeds the query, loads every conversation row for the agent
+with `.lean()`, maps each into a new object with a `score`, sorts, slices and
+logs (`memoryService.js:111-145`). The working set is the agent's entire
+conversation memory, in process memory, per call.
+
+**`assertAgentOwnership`** throws `AGENT_REQUIRED` on a missing agent,
+`USER_CONTEXT_REQUIRED` on an absent user, `FORBIDDEN` when the in-memory
+agent's owner differs from the caller, and `FORBIDDEN` again when
+`Agent.findOne({_id, userId})` finds no row, so an in-memory agent carrying a
+forged `userId` does not pass (`memoryService.js:28-60`).
+
+**`storeMemory`** calls `runEmbedding` on its first line and checks
+`content.length < 20` after. Every in-tree caller passes
+`JSON.stringify({user, assistant})`, which is at least 26 characters with both
+fields empty, so the guard cannot fire from any of them and an empty exchange is
+stored (`memoryService.js:63-78`). It performs no ownership check. The project's
+`hardening_plan.md` accepts that as a remaining risk, and each writer is guarded
+by call order instead: both handlers call `retrieveMemory` in the same
+`useMemory` branch before storing, and it throws first, while the playground
+checks ownership itself (`agent.controller.js:135-138`).
+
 **`cosineSimilarity(vecA, vecB)`** returns `0` when the lengths differ rather
-than throwing. That is a defensible guard against a stored vector from a
-different model — and it means such a row scores zero and sorts last rather than
-surfacing an error, so a whole population of mismatched embeddings would degrade
-recall silently. The `embeddingProvider` and `embeddingModel` columns are what
-would let something detect that; nothing reads them.
+than throwing. With no floor, those zero-scored rows are returned whenever
+the agent holds no more rows than `topK`.
 
-**`storeMemory(agent, content, metadata)`** calls `runEmbedding` on line one and
-checks `content.length < 20` on line three. The guard is real and the ordering
-wastes the call it was meant to avoid — a one-line move.
-
-**`retrieveMemory`** is quoted in full in section 1. Beyond the unread floor, note
-that it loads with `.lean()` and maps every document into a new object with a
-`score` field, so the working set is the agent's entire conversation memory in
-memory per call.
-
-**The management API is the careful part.** `memory.controller.js` derives the
-user from `req.user`, and `findOwnedAgent(agentId, userId)` validates the object
-id and resolves the agent against that owner. `listMemories` uses it when an
-agent is named and falls back to `agentId: {$in: ownedAgentIds}` when one is not;
-`deleteMemory` looks the memory up, then re-resolves ownership of its agent
-before deleting; `clearAgentMemory` resolves ownership first. Four routes, all
-behind `auth`. Every path checks; none of them is the one that forgot.
+**The management API** derives the user from `req.user`, and
+`findOwnedAgent(agentId, userId)` validates the object id and resolves the agent
+against that owner. `listMemories` uses it when an agent is named and falls back
+to `agentId: {$in: ownedAgentIds}` when one is not; `deleteMemory` looks the
+memory up, then re-resolves ownership of its agent before deleting;
+`clearAgentMemory` resolves ownership first. Four routes, all behind `auth`
+(`memory.controller.js`, `memory.routes.js`).
 
 ## 5. Memory Data Model
 
 One document type, no status, no confidence, no supersession, no soft delete.
-`createdAt` and `updatedAt` from Mongoose timestamps, and nothing that records
+`createdAt` and `updatedAt` come from Mongoose timestamps, and nothing records
 when a fact held as distinct from when it was written.
 
-The interesting field is the pair `embeddingProvider` / `embeddingModel`. Storing
-the identity of the model that produced a vector is the cheap defence against the
-failure where a config change re-points the embedder and every subsequent
-comparison is meaningless. This schema records it. Nothing checks it — the guard
-that would use it is the length comparison in `cosineSimilarity`, which catches
-only a dimension change and not a same-dimension model swap.
+**The provenance pair records configuration, not the embedder.** `storeMemory`
+writes `embeddingProvider: agent.config.provider` and
+`embeddingModel: agent.config.embeddingModel || agent.config.model`
+(`memoryService.js:76-77`). The `Agent` schema's `config` declares `provider`,
+`model`, `temperature`, `tools` and `metadata` and no `embeddingModel`, so
+Mongoose's strict mode drops that key and the fallback always wins
+(`agent.model.js:17-27`). The field therefore holds the chat model.
+
+`runEmbedding` chooses independently: the chat provider when it is one of
+`ollama | openai | gemini | huggingface`, otherwise Ollama, with a per-provider
+default model (`embeddingAdapter.js:26-44`). The provider field is right for
+OpenAI, Gemini and Ollama agents and wrong for Groq; the model field is wrong
+for all of them. The memory inspector displays both as recorded
+(`frontend/src/app/memory/page.tsx:403-407`), and no backend code reads them.
+
+The playground adds `source: 'playground'` to the metadata. `metadata` declares
+no `source`, so strict mode drops it too, and a playground memory is
+indistinguishable from a workflow one once stored (`agent.controller.js:181`).
 
 ## 6. Retrieval Mechanics
 
 Full scan of the agent's conversation memories, cosine in JavaScript, sort, take
-*k*. Callers pass `config.memoryTopK || 5`.
+*k*. The handlers pass `config.memoryTopK || 5` and no floor; the playground
+passes `5, 0.45`. The handlers cap the joined memory text at 4,000 characters
+(`llm.handler.js:42`, `agentCall.handler.js:89`); the playground does not.
 
 **The floor is the finding.** With no threshold, the number of memories injected
 is exactly `min(topK, available)` regardless of relevance: on an agent with three
-memories and an unrelated prompt, all three go into the prompt. The atlas records
-the same shape elsewhere as a *dead threshold*; what makes this instance sharp is
-that a caller supplies the value, so the intent is documented in the call and
-defeated in the callee.
+memories and an unrelated prompt, all three go into the prompt. A caller
+supplies the value, so the intent is documented in the call and defeated in the
+callee. The first version applied it, as `.filter(m => m.score >= minScore)`
+with a default of 0.75, in
+[`1ddd0d00d551324d2d03e2c9fbdbc89af6d2d1a6`](https://github.com/vmDeshpande/ai-agent-automation/commit/1ddd0d00d551324d2d03e2c9fbdbc89af6d2d1a6)
+on 2 March 2026.
 
 **The `type` filter is the second.** Both `retrieveMemory` and the retention
-delete filter to `metadata.type: "conversation"`, while the schema's default is
-the only thing that puts that value there. Any caller that sets another type
-writes a row that is stored, counted, never retrieved and never pruned.
+delete filter to `metadata.type: "conversation"`. All three writers set that
+value explicitly (`llm.handler.js:66`, `agentCall.handler.js:160`,
+`agent.controller.js:180`), so every stored row is reachable at this commit. A
+caller that set another type would write a row that is stored, counted, never
+retrieved and never pruned.
 
 ## 7. Write Mechanics
 
-Two handlers write after their model call, and the controller writes a third
-time. Retention runs inline on every insert — a `countDocuments` and, on
-overflow, a `find` plus a `deleteMany`, on the request path.
+Two handlers and the playground write after their model call, awaited on the
+request path: an embedding call, an insert, a `countDocuments`, and on overflow
+a `find` plus a `deleteMany`. A memory is retrievable as soon as the insert
+returns. No background pass touches the store.
 
 **The retention bug in full.** `count` is over `{agentId}`. `excess` is
 `count - 500`. The `find` that selects victims adds
-`"metadata.type": "conversation"` and `.limit(excess)`. So the numerator and the
-denominator disagree. With only conversation rows the pass behaves correctly,
-which is why it works today: nothing in the tree writes another type. It is a
-bug waiting on a feature, and the feature is one metadata field away.
+`"metadata.type": "conversation"` and `.limit(excess)`
+(`memoryService.js:83-102`). The numerator and the denominator disagree. With
+only conversation rows the pass behaves correctly, which is the state at this
+commit because every writer sets that type. It is a bug waiting on a feature,
+and the feature is one metadata field away.
 
 ## 8. Agent Integration
 
-Memory is an option on two node types rather than a service of its own:
-`llm.handler.js` retrieves with `config.memoryTopK || 5` before its call and
-stores after, and `agentCall.handler.js` does the same around a nested agent
-invocation. There is no memory node, no explicit remember tool, and no way for a
-workflow author to inspect what will be injected before a run — the management UI
-shows what was stored afterwards.
+Memory is an option on two node types and on the playground rather than a
+service of its own: a step with `config.useMemory` retrieves before its call and
+stores after it, and `POST /api/agents/:id/run` does the same when the body sets
+`useMemory`. There is no memory node, no explicit remember tool, and no way for
+a workflow author to inspect what will be injected before a run. The memory
+inspector shows what was stored afterwards, and the playground response returns
+the retrieved rows with their scores.
 
 ## 9. Reliability, Safety, and Trust
 
-**Ownership is enforced consistently on the management surface** and the agent
-key is enforced on recall, which together are the mark.
+**Ownership is enforced on both surfaces.** Recall asserts it in the service
+against the database, and the management API resolves it on every route. A
+workflow's default agent is loaded by `Agent.findById` with no owner filter
+(`runner.js:278`), and the recall assertion is what stops a foreign agent's
+memory from being read there.
 
-**No audit, no provenance, no trust state.** A memory is content and a vector; it
-cannot be marked wrong, superseded, or held back, and the only removal is a
-delete.
+**No audit, no trust state, and provenance that misleads.** A memory is content
+and a vector; it cannot be marked wrong, superseded or held back, and the only
+removal is a delete. The provider and model fields read as provenance and
+record the chat configuration (section 5).
 
 **Retrieval logs content to stdout.** The `console.log` in `retrieveMemory`
 prints a score and a sixty-character preview of every returned memory on every
-recall. In a deployment where the backend's stdout goes to a container log
-shipper, memory content leaves the machine that the product's positioning says it
-stays on. It is three lines to remove and it is the first thing to remove.
+recall (`memoryService.js:137-142`). Where the backend's stdout goes to a
+container log shipper, memory content leaves the machine the product's
+positioning says it stays on.
+
+**The inspector's search is an unescaped regular expression.** `listMemories`
+passes the `search` query parameter to `$regex` as given
+(`memory.controller.js:54-58`). The filter is scoped to the caller's own agents,
+so it leaks nothing, and a pathological pattern costs the database a
+full evaluation per row.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Test files under `backend/src/tests` cover handlers — browser, condition, delay,
-document, email, file, HTTP, MCP, tool, switch, resume, run partial — plus the
-workflow API, versioning, the strategy selector, a retrieval manager, and three
-added since the previous pin for SSRF protection, webhook payload size and
-workflow validation. I did not run them; a dependency surface was inside the
-seven-day cooldown.
+The backend suite under `backend/src/tests` covers handlers — browser,
+condition, delay, document, email, file, HTTP, LLM, agent call, MCP, tool,
+switch, resume, run partial — plus the workflow API, versioning, validation,
+SSRF protection, webhook payload size, rate limiting, socket auth, the document
+retrieval manager and the strategy selector. I did not run it.
 
-**One of them covers memory, and it covers the boundary rather than the
-mechanics.** `memoryService.handler.test.js` is ten cases named
-*"cross-user isolation (H-P1-7)"*: one positive control, then a cross-user call
-that must reject with `FORBIDDEN` **and** must not issue the memory query at all
-— `expect(AgentMemory.find).not.toHaveBeenCalled()` — then a forged agent, a
-non-existent one, undefined, null and empty user contexts, a stringified id, and
-a stale positional call. It earns `negative_eval`, and it is the right shape: the
-must-not assertion is paired with a control, and it pins that the data was never
-read rather than that it was filtered after reading. The Mongoose layer is
-mocked, so what it pins is the service's control flow.
+**One file covers memory, and it covers the boundary.**
+`memoryService.handler.test.js` holds ten cases named *"cross-user isolation
+(H-P1-7)"*. The cross-user case must reject with `FORBIDDEN` **and** must not
+issue the memory query — `expect(AgentMemory.find).not.toHaveBeenCalled()`
+(`:60-71`). The others cover a forged agent, a non-existent one, undefined,
+null and empty user contexts in one case, a stale positional call, a missing
+agent, and a stringified user id. The Mongoose layer is mocked, so what the
+suite pins is the service's control flow.
 
-What it does not cover is the arithmetic. The unread `minScore`, the retention
-count-versus-delete mismatch and the type filter remain untested, which is
-consistent with how they got this way — each is invisible to anything that does
-not read the function, and the suite that arrived reads the boundary instead.
+**It earns `negative_eval`, and the control is the populated case.** *"User A
+can retrieve memory belonging to User A agent"* mocks an empty collection and
+asserts only that an array came back (`:50-58`). *"Successful retrieval still
+returns scored memories"* returns both of the owner's mocked rows (`:132-159`),
+and that is the case that shows the retriever can return what the cross-user
+case keeps out.
 
-No benchmark and no retrieval-quality measurement.
+**That control also asserts the missing floor.** Its rows embed as `[1,0,0]`
+and `[0,1,0]` against a query of `[1,0,0]`, so the second scores 0; the call
+passes `minScore` 0.45, and the case asserts `result.length` is 2. A last case
+asserts that `storeMemory` succeeds with no user context (`:161-171`).
+
+Nothing exercises the retention pass, whose count the store case mocks to 0,
+or the length guard, which that case clears with a plain string. No benchmark
+and no retrieval-quality measurement.
 
 ## 11. For Your Own Build
 
 ### Steal
 
-- **Store the embedding provider and model beside the vector.** Two string
-  columns, and they are the difference between detecting a silent embedder swap
-  and comparing numbers from two different models forever.
-- **Resolve ownership before every read and every delete, and make the
-  no-argument case a scoped fallback.** `listMemories` without an agent id
-  returns `{$in: ownedAgentIds}` rather than everything — that default is where
-  most implementations leak.
-- **Return zero from your similarity function on a dimension mismatch rather
-  than throwing** — but pair it with something that notices, or a bad population
-  is invisible.
+- **Make a changed signature fail closed on its old call shape.** Inserting
+  `userId` before `topK` would silently shift a stale caller's `5` into the user
+  slot; `retrieveMemory` detects a numeric `userId` and throws instead.
+- **Re-check ownership against the store, not against the object you were
+  handed.** The in-memory comparison is cheap; the `findOne({_id, userId})`
+  after it is what defeats a forged agent.
+- **Make the no-argument case a scoped fallback.** `listMemories` without an
+  agent id returns `{$in: ownedAgentIds}` rather than everything, and that
+  default is where most implementations leak.
 
 ### Avoid
 
 - **Do not declare a threshold you do not apply.** `minScore = 0.45` sits in the
   signature, a caller passes it, and the body never reads it. A parameter is a
-  claim; an unread one is a false claim that survives review because the call
-  site looks right.
-- **Do not count one population and delete from another.** The retention pass
-  counts every memory type and prunes only conversations; it is correct only
-  because nothing writes another type yet.
-- **Do not pay for the embedding before the guard that discards the input.**
-- **Do not log memory content.** Especially not in a product whose first claim
-  is that data stays local.
+  claim; an unread one survives review because the call site looks right.
+- **Do not let a test assert a defect as behaviour preserved.** A fixture row
+  scoring 0 against a 0.45 floor, expected in the result, turns the missing
+  filter into a regression guard against its own repair.
+- **Record provenance from the value's producer.** Returning `{vector, provider,
+  model}` from the embedder and storing that is the only way the label matches
+  the vector; copying the fields from configuration beside it records intent.
+- **Do not count one population and delete from another.**
+- **Guard the content, not its envelope,** and before paying for the embedding.
+- **Do not log memory content.**
 
 ### Fit
 
 Take the workflow engine on its own terms; the memory layer is a small feature
-inside it and is best read as a worked example of how a per-agent vector store
-gets wired into a handler. The ownership checks are worth copying. The recall is
-worth copying only after the floor is applied.
+inside it, and reads best as a worked example of wiring a per-agent vector store
+into handlers with the ownership boundary done carefully. The recall is usable
+only after the floor is applied and its test corrected, and the provenance
+fields should be treated as unset until the embedder writes them.
 
 ## 12. Open Questions
 
-- **Was `minScore` ever applied?** The parameter, the default and a call site
-  passing `0.45` all exist. Whether it was removed or never written is not
-  visible from this commit, and either way one `filter` restores the intent.
-- **What other memory types are planned?** `metadata.type` defaults to
-  `conversation` and both read paths and the retention delete assume it. The
-  field is the seam the retention arithmetic breaks along.
+- **Why was the floor removed?** The filter and the 0.75 default were replaced
+  in a commit about the memory inspector, with the parameter and a 0.45 default
+  left behind. Whether 0.75 was filtering everything out on some embedder is not
+  visible from the code.
+- **What other memory types are planned?** `metadata.type` is set to
+  `conversation` by every writer and assumed by both read paths and the
+  retention delete. The field is the seam the retention arithmetic breaks along.
 - **Does the 500-row cap have a basis?** It is a constant inside the service
   with no configuration and no measurement behind it, and it is also what keeps
   the full-scan cosine affordable.
-- **Would a mismatch ever be noticed?** `embeddingProvider` and `embeddingModel`
-  are recorded and unread; a same-dimension model change would score every old
-  memory as noise and nothing would report it.
+- **Was `config.embeddingModel` meant to exist?** Both the adapter and the store
+  read it, and the `Agent` schema has no path for it, so neither ever receives
+  a value.
 
 ## Appendix: File Index
 
 - **Store:** `backend/src/models/agentMemory.model.js`
 - **Service:** `backend/src/services/memoryService.js` (`cosineSimilarity`,
-  `storeMemory` with the retention pass, `retrieveMemory` with the unread
-  `minScore`)
+  `assertAgentOwnership`, `storeMemory` with the retention pass,
+  `retrieveMemory` with the unread `minScore`)
 - **Management API:** `backend/src/controllers/memory.controller.js`
   (`findOwnedAgent`, `listMemories`, `listAgents`, `deleteMemory`,
   `clearAgentMemory`), `backend/src/routes/memory.routes.js`
 - **Callers:** `backend/src/agents/handlers/llm.handler.js`,
   `backend/src/agents/handlers/agentCall.handler.js`,
-  `backend/src/controllers/agent.controller.js` (the call that passes `0.45`)
+  `backend/src/controllers/agent.controller.js` (`runAgent`, the call that
+  passes `0.45`)
+- **Agent loading:** `backend/src/agents/runner.js`,
+  `backend/src/agents/executor.js`, `backend/src/models/agent.model.js`
 - **Embedding:** `backend/src/agents/embeddingAdapter.js`
-- **Tests:** `backend/src/tests/` — twenty files, none covering memory
+- **Inspector:** `frontend/src/app/memory/page.tsx`
+- **Tests:** `backend/src/tests/memoryService.handler.test.js`, the one memory
+  file among 42 under `backend/src/tests/`
+
+### Recorded searches
+
+Run from the repository root at the pinned commit.
+
+```sh
+rg -n 'minScore' --glob '!node_modules'                  # signature, plus hardening_plan.md
+git log -S minScore --format='%H %ad %s' --date=short   # 1ddd0d0 adds, a395459 drops the filter
+rg -n 'embeddingProvider|embeddingModel' backend/src frontend/src   # no backend reader
+rg -n 'embeddingModel' backend/src/models/agent.model.js           # nothing: no schema path
+rg -n 'AgentMemory\.(update|updateOne|updateMany|findOneAndUpdate|findByIdAndUpdate|replaceOne|insertMany|bulkWrite)' backend/src   # no update path
+rg -n 'AgentMemory\.create|storeMemory\(' backend/src --glob '!**/tests/**'   # one create, three callers
+rg -n "type: 'conversation'" backend/src   # every writer sets it
+rg -n 'vectorSearch|knnBeta|createIndex' backend/src     # no vector index
+rg -ln 'useMemory|memoryService|retrieveMemory|storeMemory|AgentMemory' backend/src/tests   # one file
+rg -n -i 'arxiv|bibtex|@article|@misc|citation|doi\.org' README.md docs   # no paper
+```
 
 ## History
+
+**2026-09-26** — [`86b6072dd4c9bf6abe68c26c4265b3296a368737`](https://github.com/vmDeshpande/ai-agent-automation/commit/86b6072dd4c9bf6abe68c26c4265b3296a368737) — audit at an unchanged pin (HEAD is the v0.12.0 release). Screened again: nothing inside the cooldown; nothing installed, built or run. Marks hold; `negative_eval`'s control is re-anchored to the populated case, since the one cited returns an empty mock. Four published claims were wrong. The provenance fields, credited as the best idea, record the chat provider and model, not the embedder ([section 5](#5-memory-data-model)). `minScore` was called untested; a committed case asserts the unfloored result ([section 10](#10-tests-evals-and-benchmarks)). The length guard was said to waste an embedding; it cannot fire from any caller. The schema default was said to be the only writer of `conversation`; all three writers set it. The floor's removal commit is identified ([section 6](#6-retrieval-mechanics)).
 
 **2026-09-14** — [`86b6072dd4c9bf6abe68c26c4265b3296a368737`](https://github.com/vmDeshpande/ai-agent-automation/commit/86b6072dd4c9bf6abe68c26c4265b3296a368737) — second reading, 18 commits on. Screened again: a dependency surface changed inside the seven-day cooldown, so nothing was installed and nothing was run. One memory file moved — `memoryService.js`, 126 lines changed — and the change is a hardening of the read path. `retrieveMemory` takes a `userId` and calls `assertAgentOwnership` before issuing any query, resolving the agent against the caller and throwing `FORBIDDEN` on a mismatch or `USER_CONTEXT_REQUIRED` on a missing one; a stale positional call, where the `userId` slot receives a number, is detected and fails closed rather than being coerced. `scope_enforced` is re-tested and strengthened accordingly. `negative_eval` is added: `memoryService.handler.test.js` is ten committed cases over cross-user isolation, whose must-not assertion pins that `AgentMemory.find` is never called once ownership fails, paired with a positive control in the same suite — which also fills the evidence record's `none` test field. The three published criticisms were each re-run against the new file and all three stand: `minScore` is still declared on the signature and read nowhere in the backend, the retention pass still counts every memory type and deletes only `conversation`, and every retrieval still writes scores and a sixty-character content preview to stdout.
 

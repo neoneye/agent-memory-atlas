@@ -1353,36 +1353,39 @@ approval exists only in a prompt string</td>
 </tr>
 <tr>
 <td><code>ai-agent-automation</code></td>
-<td>An <code>AgentMemory</code> document — agentId, content, a dense
-embedding, metadata carrying taskId, workflowId and a type defaulting to
-<code>conversation</code>, plus the provider and model the vector was
-computed with</td>
+<td>An <code>AgentMemory</code> document — agentId, content (a JSON
+user/assistant envelope), a dense embedding, metadata carrying taskId,
+workflowId and a type set to <code>conversation</code>, plus provider
+and model fields that record the agent's chat configuration</td>
 <td>MongoDB via Mongoose, one collection, embeddings stored inline as a
 number array with no vector index</td>
 <td>Load every conversation memory for the agent, cosine each in
 JavaScript, sort, take the top <em>k</em>. The <code>minScore</code>
 parameter is declared and never used</td>
-<td><code>storeMemory</code> embeds first, then discards anything under
-20 characters, then inserts and runs a retention pass</td>
+<td><code>storeMemory</code> embeds first, then applies a 20-character
+guard that the JSON envelope every caller passes always clears, then
+inserts and runs a retention pass</td>
 <td>No update path. A retention pass deletes the oldest conversation
 rows over a 500 cap, and the management API exposes delete-one and
 clear-per-agent behind an ownership check</td>
 <td><code>agentId</code> is a required indexed field and a predicate on
-every recall; the management API resolves agent ownership against the
-authenticated user before listing or deleting</td>
+every recall; the recall service and the management API both resolve
+agent ownership against the authenticated user before reading or
+deleting</td>
 <td>A workflow engine with typed handlers — LLM, agent call, HTTP,
-browser, email, file, MCP — where two handlers read and write memory
-around their model call</td>
+browser, email, file, MCP — where two handlers and the agent playground
+read and write memory around their model call</td>
 <td>None for memory. Retention runs inline on every write</td>
-<td>None. No status, no confidence, no provenance beyond which provider
-and model produced the vector</td>
-<td>The row records the embedding provider and model beside the vector,
-so a store cannot silently mix embeddings from two models and compare
-them</td>
-<td><code>minScore</code> is a parameter with no consumer, so every
-top-<em>k</em> hit reaches the prompt however badly it scored; the
-retention pass counts all types and deletes only one; and every
-retrieval logs its results, content preview included, to stdout</td>
+<td>None. No status, no confidence, and the provenance fields name the
+agent's chat provider and chat model rather than what produced the
+vector</td>
+<td>A changed recall signature fails closed on the old call shape, and
+ownership is re-checked against the database rather than trusted from
+the in-memory agent</td>
+<td><code>minScore</code> is a parameter with no consumer, and a
+committed test asserts the unfloored result; the provenance fields
+mislabel the embedder; the retention pass counts all types and deletes
+only one; every retrieval logs a content preview to stdout</td>
 </tr>
 <tr>
 <td><code>ai-agent-book</code></td>

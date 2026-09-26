@@ -2687,11 +2687,14 @@ may do with it is not established by this repository</li>
 href="https://github.com/vmDeshpande/ai-agent-automation">vmDeshpande/ai-agent-automation</a>
 at <a
 href="https://github.com/vmDeshpande/ai-agent-automation/commit/86b6072dd4c9bf6abe68c26c4265b3296a368737"><code class="commit-id" title="86b6072dd4c9bf6abe68c26c4265b3296a368737">86b6072d…</code></a>
-— read only at the second pin; a dependency surface inside the cooldown,
-so nothing was installed and no test was run. The recall path gained an
-ownership assertion and a cross-user isolation suite, which earns
-<code>negative_eval</code>; the three published defects were re-run
-against the rewritten file and all three stand</li>
+— read only, at release v0.12.0; screened again on a full clone on
+2026-09-26 at the same pin: one build-time execution point (the root
+<code>prepare</code> script running husky), three unpinned surfaces with
+lockfiles unchanged for 13 days, two inert husky hook payloads and an
+<code>AGENTS.md</code> treated as data. Nothing was installed and no
+test was run. The recall service, the store, the embedding adapter, the
+<code>Agent</code> schema and the one memory test file were read against
+each other</li>
 <li><a
 href="https://github.com/hellangleZ/Agent-MemoryForge">hellangleZ/Agent-MemoryForge</a>
 at <a
@@ -5280,6 +5283,29 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The AI Agent Automation report credited provenance fields
+that record the chat model, called its similarity floor untested while a
+committed case asserts its absence, and misdescribed its length guard
+and its type writers; corrected 2026-09-26.</strong> At <a
+href="https://github.com/vmDeshpande/ai-agent-automation/commit/86b6072dd4c9bf6abe68c26c4265b3296a368737"><code class="commit-id" title="86b6072dd4c9bf6abe68c26c4265b3296a368737">86b6072d…</code></a>
+the <a href="../systems/ai-agent-automation/">AI Agent Automation</a>
+report named <code>embeddingProvider</code> and
+<code>embeddingModel</code> its best idea, as the row recording which
+provider and model produced the vector. <code>storeMemory</code> copies
+the agent's chat provider and chat model, the <code>Agent</code> schema
+has no <code>embeddingModel</code> path, and <code>runEmbedding</code>
+picks its own provider and a default model, so on the default Groq agent
+both fields name something that did not embed; that overstated the
+system from the first reading. It said the unread <code>minScore</code>
+was untested; the populated case at
+<code>memoryService.handler.test.js:132-159</code> passes 0.45 and
+expects a row scoring 0 back. It said the length guard wastes an
+embedding; every caller passes a JSON envelope of at least 26
+characters, so the guard never fires. It said the schema default is the
+only writer of <code>conversation</code>; all three writers set it. It
+cited an empty-mock case as the <code>negative_eval</code> control, and
+carried <em>"twenty files, none covering memory"</em> and v0.11.0 into a
+pin with 42 test files, one on memory, at v0.12.0.</li>
 <li><strong>The Project N.E.K.O. report put an LLM rerank after its
 recall hard filter, called its ban-topic list prompt-only and its event
 log a journal of every mutation, and carried the first reading's census;
