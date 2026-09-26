@@ -629,7 +629,7 @@ problems, and building the first extremely well does not build the second.**
   The system pays three rollouts to learn the value is harmful and forgets that
   it learned it.
 - [Atomic Agent](../../systems/atomic-agent/) deprecates lessons and retains the
-  row — good for history, silent on re-distillation from the same cluster.
+  row — good for history, silent on re-distillation from later episodes.
 - [Mercury](../../systems/mercury-agent/) has a `dismissed` boolean on the record.
 - [Magic Context](../../systems/magic-context/), [MetaClaw](../../systems/metaclaw/),
   [Redis Agent Memory Server](../../systems/redis-agent-memory-server/),

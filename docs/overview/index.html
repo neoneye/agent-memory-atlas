@@ -157,7 +157,7 @@ shallowest.</strong> 301 of
 It is also the mark most often satisfied by a single predicate that a
 background job then ignores.</li>
 <li><strong>Negative evidence is almost never tested.</strong>
-361 of 646
+362 of 646
 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -335,7 +335,7 @@ the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
 59 tombstones,
-361 negative-eval suites — are
+362 negative-eval suites — are
 counts <em>over inspectable code</em>, and a closed system could hold
 any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -2749,14 +2749,15 @@ artifacts.</li>
 <li><code>magic-context</code>: 473 test files and roughly 131,000 lines
 of tests, including per-version migration suites and named CAS-race
 tests; no retrieval or verification-precision benchmark.</li>
-<li><code>atomic-agent</code>: the most developed evaluation
-<em>process</em> in the atlas — a design plan with §14 acceptance
-criteria (<code>MEMORY_FABRIC_V2.md</code>), an implementation ledger
-recording which phases landed (<code>MEMORY_FABRIC_V2.5.md</code>), and
-a campaign whose stated purpose is "is memory actually useful" with
-numbered experiments E9–E12 behind <code>npm run eval:memory:v25</code>.
-All three v2.5 features ship <code>default: false</code> pending its
-verdict. No scored artifacts were found committed.</li>
+<li><code>atomic-agent</code>: a developed evaluation <em>process</em> —
+a design plan with §14 acceptance criteria
+(<code>MEMORY_FABRIC_V2.md</code>), a v2.5 ledger
+(<code>MEMORY_FABRIC_V2.5.md</code>), pre-registered hypotheses marked
+DRAFT (<code>eval-memory/CAMPAIGN_HYPOTHESES.md</code>), and a campaign
+whose stated purpose is "is memory actually useful" with experiments
+E1–E15. The advanced layers ship on by default regardless, and the
+campaign writes to a gitignored <code>eval-memory/reports/</code>, so no
+scored result is committed.</li>
 <li><code>mateclaw</code>: tests under
 <code>src/test/java/vip/mate/memory/</code>; no memory benchmark. Its
 decorator chain already instruments every provider, so per-backend
@@ -3862,19 +3863,20 @@ the default trust of 0.5, three unhelpful ratings put a fact at 0.2 —
 below every default retrieval path, permanently, with no tombstone, no
 review queue, and no record that a suppression occurred. Feedback has
 quietly become deletion, and "unhelpful" has quietly become "false".</p>
-<p><a href="../systems/atomic-agent/">Atomic Agent</a> sits at the
-disciplined end of the same range. Votes are written to an append-only
+<p><a href="../systems/atomic-agent/">Atomic Agent</a> has the
+disciplined schema and not the store. Votes are written to a
 <code>vote_events</code> table (<code>kind</code>,
 <code>target_id</code>, <code>direction</code>, <code>session_id</code>,
-<code>turn_index</code>, <code>created_at</code>) and
-<code>vote_score</code> is a derived, indexed column on memories,
-lessons, and profile facts. Because the raw events are retained, a
-scoring rule can be recomputed, a suspicious pattern can be audited, and
-no single vote is destructive — the atlas's own "keep retrieval events
-append-only; derive counters from events" recommendation, implemented.
-Ranged against Holographic's in-place mutation, RainBox's human gate,
-and <a href="../systems/metaclaw/">MetaClaw</a>'s replay-gated policy
-tuning, it is the option that preserves the most future choices.</p>
+<code>turn_index</code>, <code>created_at</code>) in the same
+transaction as the score change, but <code>vote_score</code> is
+incremented, clamped and decayed in place, and the log is FIFO-capped at
+50,000 rows, so no scoring rule can be recomputed from it. The score
+acts on belief by default: it orders memory eviction and a 500-fact
+profile cap, deprecates lessons with no recorded success, and hides
+profile facts at −3. Ranged against Holographic's in-place mutation,
+RainBox's human gate, and <a href="../systems/metaclaw/">MetaClaw</a>'s
+replay-gated policy tuning, it keeps a bounded trail and lets model
+feedback delete — nearer Holographic than its schema suggests.</p>
 <p><a href="../systems/csm/">CSM</a> shows the failure one level further
 down, where the telemetry is not even about the memory. Its self-model
 maintains a confidence and an uncertainty per capability, updated from
@@ -4189,9 +4191,10 @@ names what must not appear. Every "tests to require" list in the pattern
 library asks for scope-leakage, rejected-value, and sensitivity
 assertions; this is what they look like as an executable fixture.</p>
 <p>Ship new memory behaviour off by default until an evaluation says
-otherwise. <a href="../systems/atomic-agent/">Atomic Agent</a>'s v2.5
-features are all <code>default: false</code> while its campaign
-runs.</p>
+otherwise. <a href="../systems/atomic-agent/">Atomic Agent</a> shows the
+cost of the reverse: its design table called the advanced layers dark
+while <code>USER_CONFIG_DEFAULTS</code> had shipped them on since 21 May
+2026, and its campaign's results are gitignored.</p>
 <p>Number your invariants and cite them from the code. Atomic Agent's
 schema comments reference "cross-phase invariant 7 in
 <code>MEMORY_FABRIC_V2.md</code> §13.7", invariant 20 on never

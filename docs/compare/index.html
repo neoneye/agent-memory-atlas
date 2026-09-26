@@ -2645,27 +2645,32 @@ are hand-set constants with no evaluation behind them</td>
 edges</td>
 <td>SQLite with versioned migrations; profile facts kept as a
 supersession chain on one time axis</td>
-<td>Heuristic-gated query rewriting, links, and vote-aware ranking</td>
+<td>FTS5 BM25 with one-hop link expansion, an opt-in embedding arm, a
+heuristic-gated query rewriter on by default, and vote-blended lesson
+and procedure ranking</td>
 <td>Consolidator clusters; lessons and procedures from one LLM call per
 cluster</td>
 <td><code>supersedes</code>/<code>superseded_by</code> chains under a
-partial unique index; deprecation retains the row; a one-way Obsidian
-export reads the corpus without mutating it</td>
+partial unique index; deprecation retains the row; a 500-fact cap on
+active unpinned profile facts deletes the lowest <code>vote_score</code>
+first; a one-way Obsidian export reads the corpus without mutating
+it</td>
 <td>A <code>working_dir</code> column filtered on the read path when the
 caller asks — <code>scope</code> defaults to <code>all</code>, and on
-the <code>memory.notes.recall</code> tool the model chooses it</td>
+the <code>memory.notes.recall</code> tool the model chooses it; profile
+facts carry no scope key</td>
 <td>Agent runtime with a separate reflection slot</td>
 <td>Consolidator, reflection, neighbour evolution, vote runner</td>
 <td>A FIFO-capped <code>vote_events</code> log written in the same
-transaction as an in-place, decayed <code>vote_score</code>, which
-drives eviction order, lesson deprecation and profile hiding when those
-options are on; surfaced-id allowlist</td>
-<td>Numbered invariants cited from code, features default-off until
-evaluated, and a supersession chain enforced by a partial unique index
-rather than by convention</td>
-<td>Large opt-in surface; evaluation campaign results not committed;
-three timestamp columns that always carry the same value, so the history
-is versions rather than validity</td>
+transaction as an in-place, decayed <code>vote_score</code>, which by
+default orders memory and profile eviction, deprecates lessons and hides
+profile facts; surfaced-id allowlist</td>
+<td>Numbered invariants cited from code, a supersession chain enforced
+by a partial unique index rather than by convention, and deprecated
+lessons asserted out of recall</td>
+<td>Large surface on by default with its evaluation results gitignored;
+model votes reach deletion; three timestamp columns that always carry
+the same value, so the history is versions rather than validity</td>
 </tr>
 <tr>
 <td><code>aukora-kernel</code></td>
@@ -27560,7 +27565,7 @@ that look like holders are not. <a
 href="../systems/rainbox/"><code>rainbox</code></a>'s
 <code>RetrievalEvent</code> and <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>'s
-<code>vote_events</code> are append-only event tables recording <em>use
+FIFO-capped <code>vote_events</code> are event tables recording <em>use
 and feedback</em> — the other half of the <a
 href="../patterns/append-only-memory-audit/">append-only memory
 audit</a> pattern, and valuable, but not a record of what changed. <a
@@ -28567,7 +28572,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>361 of 646:</em> <a
+<p><em>362 of 646:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -28605,6 +28610,7 @@ href="../systems/areev/"><code>areev</code></a>, <a
 href="../systems/argo/"><code>argo</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
 href="../systems/artesian/"><code>artesian</code></a>, <a
+href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/aurora/"><code>aurora</code></a>, <a
 href="../systems/automem/"><code>automem</code></a>, <a
@@ -28958,7 +28964,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-361 repositories of
+362 repositories of
 646 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

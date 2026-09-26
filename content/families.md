@@ -601,8 +601,8 @@ blocking. **TencentDB** layers L0 conversation evidence through L3 persona with
 symbolic tool-output offload. **Mercury** grades every record on confidence,
 importance, and durability separately, and keeps a subconscious tier below
 active recall. **Atomic Agent** cites numbered invariants from its schema into a
-design document, records votes as append-only events with derived scores, and
-ships new memory features off by default until an evaluation campaign reports. **GenericAgent** governs four file layers with written axioms
+design document, keeps a capped vote log beside a score that by default orders
+eviction and hides profile facts, and carries one mark, `negative_eval`. **GenericAgent** governs four file layers with written axioms
 instead of code. **Waku** organizes everything around refusing expensive work:
 a small model decides whether to retrieve at all, consolidation batches, and
 skill bodies load only on match. **LoongFlow** carries two unrelated memories in

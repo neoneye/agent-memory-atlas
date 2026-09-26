@@ -334,11 +334,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need per-user scope inside an agent, deletion that forgets a claim rather than a conversation, or consolidation that works in a language other than English.
 
 ### [`atomic-agent`](../systems/atomic-agent/)
-- Best idea: numbered cross-phase invariants cited from the schema into a design document, and votes kept as append-only events with derived scores.
-- Biggest risk: an elaborate opt-in surface whose evaluation campaign has no committed results, and a project boundary that is off unless the caller asks for it.
-- Most reusable component: the invariant-citation practice, the `vote_events` shape, and the surfaced-id allowlist in `neighbor-evolver.ts`.
-- Maturity impression: the most specification-like memory system in the atlas — design plan, acceptance criteria, implementation ledger, and features default-off pending evidence.
-- Study when: you want memory built as an engineering artifact rather than an accretion, or a feedback design that keeps every downstream option open.
+- Best idea: numbered cross-phase invariants cited from the schema into a design document, with scorecard tests named after them.
+- Biggest risk: model-cast votes reach deletion by default — an in-place, decayed `vote_score` orders memory eviction and a 500-fact profile cap, deprecates lessons and hides profile facts — while the evaluation campaign that would justify those defaults gitignores its results; and a project boundary the recall tool leaves to the model.
+- Most reusable component: the invariant-citation practice, the `vote_events` shape with the score derived from it rather than kept beside it, and the surfaced-id allowlist in `neighbor-evolver.ts`.
+- Maturity impression: a memory system built like a specification — design plan, acceptance criteria, pre-registered campaign hypotheses marked DRAFT, and a test pinning documented defaults to shipped ones — with the advanced layers on by default and one capability mark, `negative_eval`, on a deprecated lesson held out of recall beside an active control.
+- Study when: you want memory built as an engineering artifact rather than an accretion, or a worked case of why a feedback score should not be a deletion key.
 - Do not copy when: you need a value tombstone, a second time axis, or a scope the model cannot switch off — the supersession chain is valid-time history on one clock, and the `working_dir` filter defaults to off with the recall tool taking it from the model's arguments.
 
 ### [`mateclaw`](../systems/mateclaw/)

@@ -238,11 +238,12 @@ the clamp writes no event, each consolidator tick multiplies every score by a
 decay factor in bulk `UPDATE`s that write no event, and `evictOldestEvents` deletes
 the oldest events once the table passes `memory.voting.eventLogMaxRows`, 50,000
 by default. A changed scoring rule cannot be replayed over that history. And
-the score is read back into belief, behind options that switch each use on:
+the score is read back into belief, and every use is on by default:
 utility-weighted eviction deletes memories ordered by `vote_score ASC` ahead of
 recall count, a lesson with a negative score and no recorded success is
-deprecated at the next consolidator tick, and the profile renderer hides a fact
-whose score falls to minus the configured threshold. Set against the alternatives the
+deprecated at the next consolidator tick, the profile renderer hides a fact
+whose score falls to −3, and past 500 active unpinned profile facts the lowest
+score is deleted first. Set against the alternatives the
 atlas has collected — [Holographic](../../systems/holographic/) mutating a trust
 score in place until a fact falls below the retrieval floor,
 [RainBox](../../systems/rainbox/) holding feedback behind a human gate,
