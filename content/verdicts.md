@@ -4000,12 +4000,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need a tenant boundary inside one tier, a correction that survives the same fact being learned again, or an epistemic status a reader can act on.
 
 ### [`xerj`](../systems/xerj/)
-- Best idea: two clocks filled from genuinely different sources — an edge's `valid_at` is the source file's mtime and its `created_at` is the indexing run's wall clock, so the bitemporal record answers a question rather than storing one number twice.
+- Best idea: two clocks filled from different sources — an edge's `valid_at` is the source file's mtime and its `created_at` is the indexing run's wall clock, so the bitemporal record answers a question rather than storing one number twice.
 - Biggest risk: invalidation is keyed on an `edge_id` that hashes `valid_at` into itself, so saving the source file re-teaches the same claim under an id the invalidation never covered, and the rejection stays on disk describing an identity nothing will compute again.
 - Most reusable component: `brain_is_a_security_boundary.rs`, which walks every door that reaches the backing index — the generic ES surface, the native router and the percent-encoded spelling — on the premise that an access check on the feature-named handler alone is a boundary that only looks like one.
-- Maturity impression: Apache-2.0, about 380,000 lines of Rust across sixteen crates shipping as one static binary, with the memory API a 2,306-line adapter over the engine's own search paths and a module doc that states its audit log's coverage gaps in the file that implements it.
+- Maturity impression: Apache-2.0, 443,705 lines of Rust across seventeen crates shipping as one static binary, with the memory API a 2,306-line adapter over the engine's own search paths and a module doc that states its audit log's coverage gaps in the file that implements it.
 - Study when: a search node is already in the architecture and you would otherwise run a vector database beside it, or you want a worked example of a bitemporal edge schema.
-- Do not copy when: memories need epistemic state, review or a durable rejection — that machinery lives on the edges here, and it is keyed on an identity a text editor can change.
+- Do not copy when: memories need epistemic state, review or a durable rejection — that machinery lives on the edges here, and it is keyed on an identity a text editor can change — or when tenants need a scope key on the record: the boundary is an index per namespace behind an authorizer, and the one-command MCP setup holds the admin key.
 
 ### [`rekal`](../systems/rekal/)
 - Best idea: the recall citation graph keeps two counts apart and ranks on only one — a recall edge is the ranker's own past output, so boosting on it is a loop, while a drill edge is an agent's decision to open the session and is evidence from outside the ranker.
