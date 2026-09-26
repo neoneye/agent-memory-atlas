@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 631 reports.</strong></p>
+<p><strong>This page covers all 632 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25954,6 +25954,47 @@ auditable, and dependency pins that carry their reasons.</li>
 store — derive the namespace outside the model, as the <a
 href="../systems/yantrikdb-hermes-plugin/">Hermes plugin</a> does, and
 put any write gate where the namespace is written.</li>
+</ul>
+<h3 id="pmb"><a href="../systems/pmb/"><code>pmb</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the fire-and-forget write durable before it
+returns.</strong> <code>record_batch_async</code> commits the items to a
+<code>write_outbox</code> row and hands them to one drainer thread, and
+<code>recover_outbox</code> replays pending rows at the next start, so
+the agent never waits on an embedding and a crash loses nothing. Beside
+it, the lesson loop logs every surfacing with an id, infers
+follow-through at turn end, and calls a rule useful only when a Wilson
+interval clears the baseline — and says the verdict must not drive
+ranking.</li>
+<li>Biggest risk: <strong>restating a keyed fact erases it.</strong>
+<code>record_keyed_fact</code> writes the new value through
+<code>record_fact</code>, whose exact-text dedup returns the prior row's
+ulid when the text matches an active fact from the last 90 days; the
+supersession loop then archives that row as superseded by itself, and
+the key has no current value. The guard that names this collision runs
+only with <code>extract.anchor_keyed</code>, which defaults to off.</li>
+<li>Most reusable component: <code>src/pmb/core/engine/batch.py</code> —
+the outbox enqueue, drainer and recovery (lines 83-345), a crash-safe
+async write path for any memory whose write includes an embedding.</li>
+<li>Second risk: <strong>a negation does not hold, and a pickle travels
+with git sync.</strong> <code>closed_reason</code> is written and never
+read, so <code>pmb repair-keyed --apply</code> promotes the negated
+value back from the plain fact that first stated it. Git sync ships
+<code>bm25_index.pkl</code> by default and the loader unpickles it, so
+in a shared repository any collaborator who can push reaches every
+puller's process.</li>
+<li>Maturity impression: Apache-2.0, 52,485 lines of Python and 271
+commits on main from 11 contributors between 25 May and 23 September
+2026, with 1,435 pytest functions run in CI on three operating systems.
+One mark, <code>negative_eval</code>, on a superseded keyed value and a
+project-scoped recall, each asserted beside a positive control. No test
+restates a keyed value with default config.</li>
+<li>Study when: you are building hook-driven memory for a coding agent
+and want injection, ambient write-back, correction capture and measured
+rule follow-through, with no LLM on the default path.</li>
+<li>Do not copy when: the memory must hold a corrected fact. Nothing but
+active-or-archived expresses belief, the validity window is record time,
+and the correction path has the two failures above.</li>
 </ul>
         </article>
       </div>

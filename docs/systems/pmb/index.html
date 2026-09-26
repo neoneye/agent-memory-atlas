@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local SQLite and LanceDB memory
+for coding agents, injected by hooks each turn, with keyed facts
+superseded in place and archive-only forgetting.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="PMB — Agent Memory Atlas">
+    <meta property="og:description" content="A local SQLite and LanceDB
+memory for coding agents, injected by hooks each turn, with keyed facts
+superseded in place and archive-only forgetting.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PMB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local SQLite and LanceDB
+memory for coding agents, injected by hooks each turn, with keyed facts
+superseded in place and archive-only forgetting.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>PMB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "PMB",
+      "description": "A local SQLite and LanceDB memory for coding agents, injected by hooks each turn, with keyed facts superseded in place and archive-only forgetting.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Local hybrid memory for coding agents over
+MCP</p>
+          <h1>PMB</h1>
+          <p class="document-deck">A local SQLite and LanceDB memory for
+coding agents, injected by hooks each turn, with keyed facts superseded
+in place and archive-only forgetting.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/oleksiijko/pmb">
+              <span>Source</span>
+              <strong>oleksiijko/pmb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/oleksiijko/pmb/commit/59b6800cfed6797f7afcace83f3c23ecd5b0f638" title="59b6800cfed6797f7afcace83f3c23ecd5b0f638">
+              <span>Analyzed revision</span>
+              <code>59b6800c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/oleksiijko--pmb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>oleksiijko--pmb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>52,485
+lines of Python under src/pmb</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>271
+commits on main by 11 contributors, one of them an anonymous CI
+identity, 25 May – 23 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,435
+pytest functions in 24,674 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>PMB is a local memory server for coding agents: a SQLite event store
+with a LanceDB vector index beside it, reached through an MCP server, a
+warm local daemon and five Claude Code hooks. What is notable is how
+little the model has to cooperate. A UserPromptSubmit hook classifies
+each message by regex and injects lessons and recall hits, a Stop hook
+writes an activity entry when the agent recorded nothing, and every
+write returns after one SQLite insert into a durable outbox. What is
+weak is the correction path it advertises most: the keyed-fact
+supersession that is meant to make <em>"I moved to Warsaw"</em> replace
+<em>"I live in Kyiv"</em> archives its only current row when the same
+value is restated, and the as-of query that the tool description offers
+the agent has no caller outside tests.</p>
+<p>The design is explicitly write-heavy and filter-light. Every memory
+becomes a belief at insert, ranking does the rest, and forgetting is
+archive-only except for an explicit hard delete. The daemon's
+maintenance tick decays importance across the whole store daily and
+archives cold rows; it never deletes and never resolves a conflict on
+its own.</p>
+<p>Two engineering choices are worth more than the retrieval stack. The
+write outbox (<code>src/pmb/core/engine/batch.py:83-126</code>) turns a
+fire-and-forget MCP write into a crash-safe one without making the agent
+wait on an embedding. The lesson loop logs every time a rule is surfaced
+and judges it <code>useful</code>, <code>harmful</code> or
+<code>unverified</code> only when a Wilson interval clears the baseline,
+and states that the verdict must not drive ranking
+(<code>src/pmb/health/earned_memory.py:212-225</code>).</p>
+<p>One mark, <code>negative_eval</code>, on two CI-run cases: a
+superseded keyed value must not be recalled, and a project-scoped recall
+must not return another project's fact, each beside a positive control.
+Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row in <code>events</code>. It becomes a belief the
+moment it is inserted: there is no candidate state, and nothing between
+the write and the recall filter asks whether it is true. It stops being
+one when <code>archived_at</code> is set — by <code>forget</code>, by
+supersession of a keyed fact, by a user negation of a keyed value, by
+the decay pass, or by a dedup merge — or when <code>delete --hard</code>
+removes the row. Every read path filters
+<code>archived_at IS NULL</code>, so archived is the only state that
+withholds anything (<code>src/pmb/core/events.py:427-467</code>).</p>
+<p><strong>The tiers are decay rates, not trust levels.</strong>
+<code>working</code>, <code>episodic</code> and <code>semantic</code>
+differ only in how fast importance decays, and recall reads all three
+equally (<code>src/pmb/core/events.py:38-58</code>). A row is promoted
+by being recalled twice, then seven times.</p>
+<p><strong>A keyed fact is the correction mechanism.</strong>
+<code>record_keyed_fact(subject, attribute, value)</code> canonicalises
+the attribute, finds active rows with the same
+<code>keyed_fact_key</code>, writes
+<code>"{subject} {attribute}: {value}"</code> with
+<code>valid_from</code>, and archives each prior row with
+<code>superseded_by</code> and <code>valid_to</code>
+(<code>src/pmb/core/engine/write.py:497-648</code>). A plain user fact
+that states a current attribute is promoted into one, and a plain fact
+that negates one archives the current value with
+<code>closed_reason</code> (<code>write.py:389-452</code>).</p>
+<p><strong>Restating the current value erases it.</strong> The new text
+goes through <code>record_fact</code>, whose exact-text dedup returns
+the ulid of any active fact with the same normalised content in the last
+90 days, without writing (<code>write.py:148-160</code>;
+<code>src/pmb/reasoning/dedup.py:142-181</code>). On a restatement that
+ulid is the prior keyed row itself. <code>record_keyed_fact</code> then
+archives it and stamps it <code>superseded_by</code> its own ulid
+(<code>write.py:604-632</code>), so the key has no current value. The
+guard beside it names the collision — <em>"identical content would
+otherwise dedup-collide with the very row we'd archive"</em> — and runs
+only when <code>extract.anchor_keyed</code> is on and the model is warm
+(<code>write.py:566-584</code>). That flag defaults to false. This was
+read, not reproduced.</p>
+<p><strong>A negation does not stay negated.</strong> The plain fact
+that stated the old value stays active after
+<code>_close_keyed_attr</code> archives the keyed row.
+<code>pmb repair-keyed --apply</code> promotes the newest current-state
+plain fact back into a keyed value, and the new value's write archives
+the negation as obsolete
+(<code>src/pmb/cli/commands/maintenance.py:26-90</code>;
+<code>write.py:650-708</code>, <code>:1049-1120</code>). Nothing reads
+<code>closed_reason</code>.</p>
+<p>Memory is hybrid-controlled: the agent writes through tools, the
+hooks write activity and correction drafts, the daemon decays and
+archives, and the user forgets, pins and deletes from the CLI or
+dashboard.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a keyed fact becomes current, how a restatement loses it, and how a negated value comes back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a keyed fact becomes current, how a restatement loses it, and how a negated value comes back
+flowchart TD
+    W[&quot;record_keyed_fact: subject, attribute, value&quot;] --&gt; P[&quot;find active rows&lt;br/&gt;with the same keyed_fact_key&quot;]
+    P --&gt; R[&quot;record_fact on&lt;br/&gt;&#39;subject attribute: value&#39;&quot;]
+    R --&gt; D{&quot;exact-text dedup:&lt;br/&gt;same active text&lt;br/&gt;within 90 days?&quot;}
+    D -- &quot;no&quot; --&gt; N[&quot;new row,&lt;br/&gt;valid_from = now&quot;]
+    D -- &quot;yes: a restatement&quot; --&gt; OLD[&quot;returns the prior&lt;br/&gt;row&#39;s ulid, writes nothing&quot;]
+    N --&gt; A[&quot;archive each prior row:&lt;br/&gt;superseded_by, valid_to = now&quot;]
+    OLD --&gt; LOST[&quot;archives the row it just returned:&lt;br/&gt;the key has no current value&quot;]
+    A --&gt; CUR[&quot;current value:&lt;br/&gt;the only active keyed row&quot;]
+    NEG[&quot;plain fact:&lt;br/&gt;&#39;I no longer live in X&#39;&quot;] --&gt; C[&quot;archive the current keyed row,&lt;br/&gt;closed_reason written, never read&quot;]
+    C --&gt; PL[&quot;the plain fact &#39;I live in X&#39;&lt;br/&gt;stays active&quot;]
+    PL --&gt; RK[&quot;pmb repair-keyed --apply:&lt;br/&gt;promotes X again,&lt;br/&gt;archives the negation&quot;]
+    RK --&gt; CUR
+    CUR --&gt; REC[&quot;every recall fetch:&lt;br/&gt;archived_at IS NULL&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>PMB is a Python package with three entry points over one
+<code>Engine</code>: the <code>pmb</code> CLI, the <code>pmb-mcp</code>
+server, and <code>pmb-hook</code>, a stdlib-only client that forwards
+hook calls to a warm daemon on <code>127.0.0.1</code> and falls back to
+a cold engine when none is running
+(<code>src/pmb/cli/hooks.py:85-135</code>). The engine is twelve mixins
+over one workspace (<code>src/pmb/core/engine/base.py:45-58</code>).</p>
+<p>A workspace is a directory,
+<code>~/.pmb/workspaces/&lt;id&gt;/</code>, holding
+<code>events.sqlite</code>, <code>vectors.lance</code> and
+<code>bm25_index.pkl</code>
+(<code>src/pmb/core/workspace.py:73-87</code>). The graph, arcs, dedup
+queue, write outbox, lesson surfaces and error log are further tables in
+the same SQLite file. The id comes from <code>PMB_WORKSPACE</code>, a
+<code>.pmb/workspace.yaml</code> in the working directory or any of ten
+parents, a persisted default, or a hash of the git remote or path
+(<code>workspace.py:159-219</code>). The yaml's id is joined to the
+storage root without sanitising it (<code>workspace.py:187-200</code>,
+<code>:237-238</code>).</p>
+<p>The default embedder is
+<code>paraphrase-multilingual-MiniLM-L12-v2</code>, loaded locally.
+Writes land in SQLite first and embed through an in-process queue backed
+by a durable <code>embed_queue_pending</code> table when the model is
+cold (<code>base.py:156-167</code>). No LLM is called on the read path
+or on the default write path. Optional LLM backends serve consolidation,
+borderline dedup verification and entity extraction.</p>
+<p>Team use runs one streamable-HTTP server with a single shared bearer
+token (<code>src/pmb/mcp/server.py:497-528</code>,
+<code>:630-664</code>). If middleware installation fails, the server
+logs a warning and runs unauthenticated rather than refusing to
+start.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install pmb-ai</code>, <code>pmb setup</code> and
+<code>pmb warmup</code>; nothing else has to run, no API key is needed,
+and everything works offline once the embedder is cached. The store is
+plain SQLite and readable by hand; <code>pmb export</code> writes
+Markdown or JSON, <code>pmb snapshot</code> makes verified backups, and
+<code>pmb workspace export</code> makes an encrypted bundle.
+<code>pmb workspace init --remote</code> versions the directory in
+git.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write, batched.</strong> <code>record_batch_async</code>
+inserts the items into <code>write_outbox</code> and returns; a drainer
+thread replays pending rows through <code>record_batch</code>
+(<code>src/pmb/core/engine/batch.py:83-126</code>,
+<code>:259-345</code>). <code>record_batch</code> dispatches by item
+type — <code>lesson</code> and <code>failure</code> become facts with
+<code>metadata.kind</code> (<code>batch.py:474-501</code>).</p>
+<p><strong>Write, single.</strong> <code>record_fact</code> redacts
+secrets, runs dedup, flags suspected junk (capping importance at 0.2),
+caps high-importance writes per day, appends, embeds or defers, indexes
+the graph, parses <code>event_time</code>, then runs the current-state
+promotion and negation close (<code>write.py:119-318</code>).</p>
+<p><strong>Keyed facts.</strong> <code>record_keyed_fact</code>
+(<code>write.py:497-648</code>), <code>_close_keyed_attr</code>
+(<code>:420-452</code>), <code>keyed_fact_as_of</code>
+(<code>:805-856</code>), <code>get_keyed_fact_history</code>
+(<code>:898-931</code>), and the repair passes
+<code>backfill_keyed_from_facts</code>, <code>repair_keyed_facts</code>
+and <code>archive_negations_for_current_keys</code>, reachable only
+through <code>pmb repair-keyed</code>.</p>
+<p><strong>Retrieval.</strong> <code>recall</code> wraps
+<code>_recall_impl</code> in a singleflight
+(<code>src/pmb/core/engine/recall.py:137-189</code>). The pipeline runs
+typo correction, query routing, the predictive cache, BM25 plus vectors
+at <code>top_k * 5</code>, graph expansion, PageRank, causation and arc
+expansion, keyed-fact injection for personal questions, one batched
+fetch with <code>only_active=True</code>, and scoring
+(<code>recall.py:191-1431</code>). <code>recall_scoped</code>
+post-filters by project (<code>recall.py:1662-1702</code>).</p>
+<p><strong>Injection.</strong> The UserPromptSubmit hook runs
+<code>prepare-context --max-chars 4000</code>: intent classification,
+<code>find_lessons</code>, and an unscoped <code>engine.recall</code>
+for past-query and factual intents
+(<code>src/pmb/hooks/auto_recall.py:690-800</code>).</p>
+<p><strong>Forget.</strong> <code>forget</code> archives,
+<code>unforget</code> restores, <code>purge</code> removes the row, the
+vector and graph links (<code>recall.py:1438-1478</code>;
+<code>events.py:627-663</code>).</p>
+<p><strong>Background.</strong> <code>run_maintenance_tick</code>
+(<code>src/pmb/maintenance/tick.py</code>), decay in
+<code>src/pmb/signals/decay.py:70-147</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ulid</code></td>
+<td>millisecond hex timestamp plus eight hex characters of a UUID4</td>
+</tr>
+<tr>
+<td><code>workspace_id</code></td>
+<td>equals the store's own workspace; every query predicates on it</td>
+</tr>
+<tr>
+<td><code>event_type</code></td>
+<td><code>fact</code>, <code>qa</code>, <code>activity</code>,
+<code>preference</code>, <code>summary</code>, <code>goal</code>,
+<code>git</code> and others</td>
+</tr>
+<tr>
+<td><code>content</code>, <code>metadata_json</code></td>
+<td>text, and a free-form JSON blob holding kind, source, project, keyed
+key and value, validity window, supersession pointers</td>
+</tr>
+<tr>
+<td><code>timestamp</code>, <code>last_accessed</code>,
+<code>access_count</code></td>
+<td>record time and reinforcement</td>
+</tr>
+<tr>
+<td><code>importance</code>, <code>tier</code></td>
+<td>ranking weight and decay rate</td>
+</tr>
+<tr>
+<td><code>archived_at</code></td>
+<td>the one filter every read applies</td>
+</tr>
+<tr>
+<td><code>source_session_id</code></td>
+<td>session binding</td>
+</tr>
+</tbody>
+</table></div>
+<p>The schema is <code>src/pmb/core/events.py:155-170</code>. Everything
+epistemic lives in the metadata blob, which callers read-modify-write
+over separate connections (<code>write.py:420-452</code>,
+<code>:612-632</code>), so two writers can overwrite each other's
+keys.</p>
+<p><strong>Scope is the database file.</strong>
+<code>workspace_id</code> is on every row and every query, and it can
+only hold one value per file: <code>migrate_workspace_into</code> copies
+another workspace's rows in under the target's id and tags them
+<code>project</code> (<code>write.py:1311-1420</code>). The project tag
+is what <code>recall_scoped</code> reads.</p>
+<p><strong>Provenance is a label.</strong> <code>metadata.source</code>
+is set by the writing path (<code>lesson</code>, <code>autowrite</code>,
+<code>correction-capture</code>, <code>current_state_auto</code>, import
+names) and rendered by <code>describe_source</code>
+(<code>src/pmb/provenance.py:15-60</code>). The agent can set it in
+<code>record_batch</code> item metadata.</p>
+<p><strong>Time is record time.</strong> <code>valid_from</code> and
+<code>valid_to</code> on keyed facts are both <code>time.time()</code>
+at the writing call (<code>write.py:600-601</code>, <code>:626</code>).
+<code>event_time</code> is a date parsed from the content by regex and
+used as a ranking boost (<code>recall.py:1791-1826</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is hybrid and tuned for LoCoMo-style questions. BM25 weight
+defaults to 0.7 against the vector score, both min-max normalised over
+the candidate set (<code>src/pmb/core/search.py:246-247</code>,
+<code>:934-935</code>). Graph expansion adds events linked to entities
+in the query, weighted by rarity; personalized PageRank runs by default;
+a keyed-fact boost fires only when the query has both a question word
+and a first-person cue (<code>recall.py:776-813</code>). The
+cross-encoder rerank is off by default, and the config text says it
+regresses LoCoMo.</p>
+<p><strong>The score the model is told to trust is relative.</strong>
+The server instructions say <em>"Trust results with score &gt; 0.2 -
+that's the user's recorded reality, more authoritative than your
+inferences from code / docker / env / web"</em>
+(<code>src/pmb/mcp/server.py:190-191</code>). The auto-recall hook's own
+comment says the score is min-max normalised, <em>"top hit ≈ 1.0 even
+for an irrelevant corpus"</em> (<code>auto_recall.py:715-717</code>).
+The absolute-cosine gate that would fix this,
+<code>recall_evidence_min</code>, defaults to off.</p>
+<p>The predictive cache, on by default, returns precomputed ulids for a
+query within cosine 0.85 of a cached one, and still filters archived
+rows on hydrate (<code>recall.py:428-494</code>). It is filled only by
+<code>precompute_predictive_cache</code>, which calls an LLM.</p>
+<p>Injection is bounded by character caps on the hook commands: 4,000 on
+UserPromptSubmit and 3,000 on SessionStart
+(<code>hooks.py:97-103</code>). Lessons are always attached, up to
+three; correction drafts are kept out of lesson lists by
+<code>source</code>
+(<code>src/pmb/core/engine/lessons.py:665-671</code>) and surfaced
+through a separate correction banner.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls, hook-generated entries and imports.
+The minimal tool profile, the default, exposes one general write
+(<code>record_batch</code>) and <code>record_keyed_fact</code>
+(<code>src/pmb/mcp/_toolspec.py:28-50</code>). The Stop hook's
+autowrite, on by default, writes an <code>activity</code> tagged
+<code>source=autowrite</code> when the agent recorded nothing and the
+turn cleared an outcome bar; <code>pmb forget-auto</code> archives those
+rows (<code>src/pmb/core/engine/ambient.py:138-161</code>). The
+correction hook writes a lesson draft tagged <code>draft: True</code>
+when a user message reads as pushback
+(<code>lessons.py:145-288</code>).</p>
+<p>Dedup has three layers at write time: exact text over 90 days, cosine
+at or above 0.92 against active rows of the same type, and a borderline
+band from 0.80 queued for an LLM verdict. A duplicate returns the
+existing ulid and bumps its access count, so an agent's repetition
+reinforces rather than accumulates. The cosine layer is skipped inside a
+batch.</p>
+<p>Secrets are redacted before persistence (<code>write.py:78-81</code>,
+<code>:126-127</code>). The junk gate flags and down-weights rather than
+rejects. Nothing filters content for truth or for injected
+instructions.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Write:</strong> <code>record_batch_async</code> blocks for
+one outbox insert; its docstring puts the lag before recall sees the
+items at 100 to 1,000 ms (<code>batch.py:95-97</code>). A direct
+<code>record_fact</code> embeds inline when the model is warm and defers
+otherwise.</li>
+<li><strong>Background:</strong> once per 24 hours of daemon uptime,
+after five idle minutes, the tick loads up to 100,000 active rows and
+writes a new importance to each, then archives rows below 0.05
+importance past an age floor (<code>decay.py:95-147</code>). It is a
+whole-store pass, with no model call.</li>
+<li><strong>Read:</strong> a hook-driven recall per substantive prompt,
+capped at 4,000 characters, placed in the prompt where it changes every
+turn.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>pmb connect</code> writes the MCP entry and appends usage rules
+to the global and project <code>CLAUDE.md</code> or
+<code>AGENTS.md</code> (<code>src/pmb/cli/connect.py:275-282</code>).
+<code>pmb hooks install claude-code</code> registers UserPromptSubmit,
+SessionStart, a PreToolUse lesson guard on Bash and edit tools, a
+PostToolUse action logger and three Stop hooks
+(<code>hooks.py:95-135</code>). The guard matches the pending tool call
+against failures and correction drafts and is advisory.</p>
+<p>The agent's reach is broad: it writes, records keyed facts, and under
+the <code>default</code> profile also pins and forgets; under
+<code>full</code> it can run <code>auto_resolve_conflicts</code>,
+<code>dedupe_run_pending</code> and <code>compact_storage</code>
+(<code>_toolspec.py:55-80</code>). The <code>recall</code> tool takes an
+optional <code>project</code>
+(<code>src/pmb/mcp/tools.py:36-59</code>).</p>
+<p>The <code>record_keyed_fact</code> tool description tells the agent
+history is available through
+<code>engine.keyed_fact_as_of('user', 'city', past_timestamp)</code>
+(<code>tools.py:283-286</code>). No tool, CLI command or dashboard route
+calls it.</p>
+<p>Adapting PMB to another MCP host costs one config entry. The hook
+layer is Claude Code's; Codex gets a notify command, and MCP-only hosts
+get a git observer.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Crash safety is real on the async path.</strong> A batch is
+durable once its outbox row commits, and <code>recover_outbox</code>
+replays pending rows at the next start (<code>batch.py:170-245</code>).
+Concurrency relies on SQLite WAL and a busy timeout set globally by
+patching <code>sqlite3.connect</code> (<code>base.py:9-15</code>).</p>
+<p><strong>The keyed path loses current values.</strong> The restatement
+collision in section 2 empties a key without any error. The same shape
+may follow from the cosine layer if two values of one attribute embed
+above 0.92; that was not measured.</p>
+<p><strong>A pickled index travels with git sync.</strong>
+<code>bm25_index.pkl</code> is synced by default so a clone is queryable
+at once (<code>src/pmb/core/git_sync.py:27-30</code>, <code>:50</code>),
+and the loader calls <code>pickle.load</code> on it
+(<code>search.py:708-716</code>). In the team setup the git sync module
+describes, any collaborator who can push can place a file every puller
+unpickles on the next search. Pull resolves conflicts with
+<code>-X theirs</code> by default, so the remote's
+<code>events.sqlite</code> replaces local writes made since the last
+push (<code>git_sync.py:255-280</code>).</p>
+<p><strong>The dashboard's writes check no origin.</strong> It binds to
+<code>127.0.0.1</code> and omits CORS headers, which stops a foreign
+page reading responses (<code>src/pmb/dashboard/server.py:50-54</code>).
+<code>do_POST</code> parses any body as JSON and checks neither
+<code>Origin</code>, <code>Host</code> nor content type
+(<code>server.py:174-220</code>), so a simple cross-site POST can reach
+<code>/api/config_set</code> and <code>/api/run</code>, whose handlers
+need no identifier (<code>server.py:264-273</code>,
+<code>:299-334</code>). Whether a browser delivers it depends on its
+local-network policy. Read, not reproduced.</p>
+<p><strong>Uncertainty is not representable.</strong> A memory is active
+or archived.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — a negation archives the keyed row and
+writes <code>closed_reason</code>, which nothing reads, and
+<code>pmb repair-keyed --apply</code> re-asserts the value from the
+plain fact that stated it. A <code>failure</code> lesson is a rule for
+the agent, not a record keyed on a rejected value.</li>
+<li><code>trust_state</code> — no status field. <code>draft: True</code>
+on a correction lesson has one writer and no reader
+(<code>lessons.py:255</code>); drafts are left out of lesson lists by
+<code>source</code> and still returned by recall.
+<code>quality_flag</code> caps importance and blocks promotion, and
+recall still reads the row. Lesson verdicts are computed per report and
+not stored.</li>
+<li><code>bitemporal</code> — both ends of the validity window are write
+time, and the as-of query is reachable only from tests.</li>
+<li><code>scope_enforced</code> — the boundary is the workspace's own
+SQLite file. The <code>workspace_id</code> predicate cannot exclude a
+row, since a file holds one id. The project filter is optional per call,
+matches a substring of the content as well as the tag
+(<code>recall.py:53-72</code>), and is absent from the hook's recall
+(<code>auto_recall.py:708</code>).</li>
+<li><code>audit_log</code> — rows are updated in place and purged by
+<code>DELETE</code>. <code>write_outbox</code> records async batches
+only and rewrites its own status column; git sync history is git.</li>
+<li><code>human_review</code> — the dashboard edits after the write. A
+borderline duplicate is active before any verdict, and
+<code>dedupe_run_pending</code> is an agent tool under the
+<code>full</code> profile.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin. CI runs the whole suite on Linux,
+Windows and macOS, excluding <code>quarantined</code> tests and, off
+Linux, <code>platform_sensitive</code> ones, and enforces a 61%
+line-coverage floor (<code>.github/workflows/ci.yml:36-112</code>,
+<code>:119-150</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>test_keyed_upsert_recall_returns_only_current</code> records Kyiv
+then Warsaw under one key and asserts Warsaw is recalled and Kyiv is not
+(<code>tests/engine/test_hardening.py:314-325</code>).
+<code>test_recall_scoped_filters_by_project</code> asserts an unscoped
+recall returns both project facts before asserting the alpha-scoped
+recall drops the beta one
+(<code>tests/recall/test_recall_scoped.py:15-34</code>). Both assert the
+included case, so an empty result fails. A third, the hard-delete case,
+asserts absence on a workspace the purge has emptied
+(<code>tests/engine/test_delete.py:36-47</code>).</p>
+<p><strong>What the keyed tests do not cover.</strong> The keyed suites
+supersede with a different value each time
+(<code>test_hardening.py:288-325</code>;
+<code>tests/engine/test_keyed_canonical.py:104-147</code>). The one
+restatement test is the anchor-alias case, which runs with the guard
+switched on
+(<code>tests/lang/test_extract_anchor_wiring.py:113-118</code>). No test
+records the same keyed value twice with default config, and none runs
+<code>repair-keyed</code> after a negation.</p>
+<p><strong>Benchmarks.</strong> A LoCoMo harness is committed
+(<code>scripts/benchmarks/benchmark_locomo.py</code>), reporting
+evidence recall@K and token F1 over a dataset fetched at run time, from
+the paper <a
+href="https://arxiv.org/abs/2402.17753">arXiv:2402.17753</a>. Its header
+says F1 is not comparable to LLM-graded numbers. The 94.5% recall@10 in
+the README and <code>CITATION.cff</code> has no result file in the tree.
+No paper about PMB is cited; <code>CITATION.cff</code> is a software
+citation.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the async write durable before returning.</strong> One
+synchronous insert into an outbox table, then a drainer — the agent gets
+a sub-millisecond acknowledgement and a crash loses nothing.</li>
+<li><strong>Measure whether a surfaced rule was followed, and keep the
+verdict out of ranking.</strong> Log each surfacing with an id, infer
+follow-through at turn end, and call a rule useful only when a
+confidence interval clears the baseline.</li>
+<li><strong>Floor the decay of rules.</strong> A lesson that decays
+below retrieval stops surfacing, and the agent repeats the mistake it
+encoded.</li>
+<li><strong>Capture the correction at the first complaint.</strong> A
+draft written the moment the user pushes back beats a rule written at
+the seventh.</li>
+<li><strong>Filter the archived state on every fetch</strong>, including
+cache hydration.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Routing a supersession through a dedup that can return the
+row being superseded.</strong> Check whether the new value equals the
+current one before writing, not after.</li>
+<li><strong>A closure reason nothing reads.</strong> If a value was
+negated, every path that can promote it again must consult the
+negation.</li>
+<li><strong>Advertising an as-of query to the model that is not a
+tool.</strong> The model will cite it and cannot call it.</li>
+<li><strong>Syncing a pickle between machines.</strong> Rebuild derived
+indexes locally.</li>
+<li><strong>Telling the model to trust a relative score.</strong> A
+min-max score is always high for the top hit.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>PMB suits one developer who wants a coding agent to carry decisions,
+lessons and project structure between sessions on one machine, with no
+service and no API key, and who accepts a large, fast-moving codebase
+with over a hundred tunables. It does not suit anyone relying on it to
+hold a corrected personal fact, since the correction path has the two
+failures above. Nor does it suit a team sharing memory through git sync
+without reviewing what the sync ships.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the cosine dedup layer merge two values of one keyed attribute,
+for example two city names, at the default 0.92 threshold? Measuring it
+needs the embedder.</li>
+<li>Does the daemon honour a repository's
+<code>.pmb/workspace.yaml</code> when a hook arrives from that
+directory, or does it serve the workspace it started with?</li>
+<li>How large does the per-row decay pass get on a real workspace, and
+how long does the tick hold the database?</li>
+<li>Is the dashboard's cross-site POST exposure blocked by the
+local-network policies of current browsers in practice?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>src/pmb/core/events.py</code>,
+<code>src/pmb/core/workspace.py</code>,
+<code>src/pmb/core/search.py</code>,
+<code>src/pmb/graph/store.py</code>,
+<code>src/pmb/reasoning/dedup.py</code>.</li>
+<li><strong>Write path:</strong>
+<code>src/pmb/core/engine/write.py</code>,
+<code>src/pmb/core/engine/batch.py</code>,
+<code>src/pmb/core/engine/dedup.py</code>,
+<code>src/pmb/core/engine/lessons.py</code>,
+<code>src/pmb/core/engine/ambient.py</code>,
+<code>src/pmb/security/redact.py</code>.</li>
+<li><strong>Retrieval and injection:</strong>
+<code>src/pmb/core/engine/recall.py</code>,
+<code>src/pmb/hooks/auto_recall.py</code>,
+<code>src/pmb/reasoning/temporal.py</code>.</li>
+<li><strong>Background:</strong>
+<code>src/pmb/maintenance/tick.py</code>,
+<code>src/pmb/signals/decay.py</code>,
+<code>src/pmb/health/conflicts.py</code>,
+<code>src/pmb/health/earned_memory.py</code>.</li>
+<li><strong>MCP, CLI, dashboard, sync:</strong>
+<code>src/pmb/mcp/server.py</code>, <code>src/pmb/mcp/tools.py</code>,
+<code>src/pmb/mcp/_toolspec.py</code>,
+<code>src/pmb/cli/hooks.py</code>,
+<code>src/pmb/cli/commands/maintenance.py</code>,
+<code>src/pmb/dashboard/server.py</code>,
+<code>src/pmb/core/git_sync.py</code>,
+<code>src/pmb/core/encryption.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/engine/test_hardening.py</code>,
+<code>tests/recall/test_recall_scoped.py</code>,
+<code>tests/engine/test_delete.py</code>,
+<code>tests/engine/test_keyed_canonical.py</code>,
+<code>tests/engine/test_keyed_close_negation.py</code>,
+<code>tests/lang/test_extract_anchor_wiring.py</code>,
+<code>.github/workflows/ci.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rn 'keyed_fact_as_of' --include='*.py' .</code> —
+callers only in <code>tests/recall/test_jscore_levers.py</code> and
+<code>tests/engine/test_keyed_close_negation.py</code>; the rest are
+docstrings and config text.</li>
+<li><code>grep -rn 'closed_reason\|closed_by' --include='*.py' .</code>
+— writers at <code>write.py:446-447</code> and one test assertion; no
+reader in <code>src/</code>.</li>
+<li><code>grep -rnE '"draft"|\.get\("draft' --include='*.py' .</code> —
+one match, the writer at <code>lessons.py:255</code>.</li>
+<li><code>grep -rn -iE 'quarantin|unverified|"candidate"|verified|trust_state|provisional|pending_review|needs_review' src --include='*.py'</code>
+— no status field; <code>needs_review</code> is a conflict-report label
+and <code>unverified</code> a lesson-report verdict.</li>
+<li><code>grep -rn -iE 'tombstone|blocklist|denylist|rejected_value|suppress' src --include='*.py'</code>
+— "negation tombstone" names negation facts archived when a value
+arrives; no value-keyed refusal.</li>
+<li><code>grep -rn 'CREATE TABLE' src</code> — twenty-two statements;
+none is a mutation log.</li>
+<li><code>grep -rn -E 'mutation|audit_log|memory_history|event_log' --include='*.py' src</code>
+— one config comment.</li>
+<li><code>grep -rn 'engine.recall\|recall_scoped\|project_scope\s*=' src/pmb/hooks/auto_recall.py</code>
+— the hook's recall at <code>:708</code> takes no project; only
+<code>find_lessons</code> is scoped.</li>
+<li><code>grep -rn -iE 'HTTP_ORIGIN|headers.get\("(origin|host)' --include='*.py' src</code>
+— no match.</li>
+<li><code>grep -rn 'pickle\|bm25_index' src --include='*.py'</code> —
+<code>pickle.load</code> at <code>search.py:714</code>; the file is in
+git sync's cache list and the encrypted bundle's members.</li>
+<li><code>grep -rn -iE 'arxiv|bibtex|@article|@misc|doi\.org' --exclude-dir=.git .</code>
+— LoCoMo, Zep and RAG-Fusion cited in comments and the benchmark; no
+paper about PMB. <code>CITATION.cff</code> is a software citation.</li>
+<li><code>find . -path ./.git -prune -o \( -iname '*locomo*' -o -iname '*result*' \) -print</code>
+— the harness and a judge module; no result file.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/oleksiijko/pmb/commit/59b6800cfed6797f7afcace83f3c23ecd5b0f638"><code class="commit-id" title="59b6800cfed6797f7afcace83f3c23ecd5b0f638">59b6800c…</code></a>
+— first reading, at the head of <code>main</code>, a merge dated 23
+September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: one auto-run surface (<code>server.json</code>, an MCP registry
+manifest naming the PyPI package, with no command), three build-time
+execution points (<code>Makefile</code>, an npm
+<code>postinstall</code>, <code>tests/conftest.py</code>), two
+dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip — and one unpinned surface. No <code>AGENTS.md</code>
+or <code>CLAUDE.md</code> at the root; <code>.claude/launch.json</code>
+was read as data. Nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

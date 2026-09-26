@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 631 reports.**
+**This page covers all 632 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5641,3 +5641,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 6,435 lines of Python over the Apache-2.0 engine at 0.23.1, 101 commits by 2 contributors between 20 March and 19 September 2026, and 286 test functions, with CI on Python 3.10, 3.12 and 3.14 against both MCP SDK majors. The manifest bounds the engine and SDK to tested minors and records why each bound moved.
 - Study when: you are exposing a memory engine over MCP and want a model of honest parameter handling, response fields that make a ranking auditable, and dependency pins that carry their reasons.
 - Do not copy when: several people, projects or pipelines share one store — derive the namespace outside the model, as the [Hermes plugin](../systems/yantrikdb-hermes-plugin/) does, and put any write gate where the namespace is written.
+
+### [`pmb`](../systems/pmb/)
+
+- Best idea: **make the fire-and-forget write durable before it returns.** `record_batch_async` commits the items to a `write_outbox` row and hands them to one drainer thread, and `recover_outbox` replays pending rows at the next start, so the agent never waits on an embedding and a crash loses nothing. Beside it, the lesson loop logs every surfacing with an id, infers follow-through at turn end, and calls a rule useful only when a Wilson interval clears the baseline — and says the verdict must not drive ranking.
+- Biggest risk: **restating a keyed fact erases it.** `record_keyed_fact` writes the new value through `record_fact`, whose exact-text dedup returns the prior row's ulid when the text matches an active fact from the last 90 days; the supersession loop then archives that row as superseded by itself, and the key has no current value. The guard that names this collision runs only with `extract.anchor_keyed`, which defaults to off.
+- Most reusable component: `src/pmb/core/engine/batch.py` — the outbox enqueue, drainer and recovery (lines 83-345), a crash-safe async write path for any memory whose write includes an embedding.
+- Second risk: **a negation does not hold, and a pickle travels with git sync.** `closed_reason` is written and never read, so `pmb repair-keyed --apply` promotes the negated value back from the plain fact that first stated it. Git sync ships `bm25_index.pkl` by default and the loader unpickles it, so in a shared repository any collaborator who can push reaches every puller's process.
+- Maturity impression: Apache-2.0, 52,485 lines of Python and 271 commits on main from 11 contributors between 25 May and 23 September 2026, with 1,435 pytest functions run in CI on three operating systems. One mark, `negative_eval`, on a superseded keyed value and a project-scoped recall, each asserted beside a positive control. No test restates a keyed value with default config.
+- Study when: you are building hook-driven memory for a coding agent and want injection, ambient write-back, correction capture and measured rule follow-through, with no LLM on the default path.
+- Do not copy when: the memory must hold a corrected fact. Nothing but active-or-archived expresses belief, the validity window is record time, and the correction path has the two failures above.

@@ -505,6 +505,8 @@ user's tombstone does not bind another. The one softness is
 `INSERT OR REPLACE`: a second deletion of the same value overwrites the
 first row's reason and time.
 
+[PMB](../../systems/pmb/) shows why a closure reason has to be read by every path that can promote. A user negation archives the current keyed value and writes `closed_reason`, which nothing in the tree reads. The plain fact that first stated the value stays active, and `pmb repair-keyed --apply` promotes it back into a keyed value and archives the negation as obsolete. The record exists; it is keyed on the row rather than the value, and the repair pass walks past it.
+
 ### Sorted by what actually stops the value
 
 The mark covers four different mechanisms. The table sorts the holders this page
