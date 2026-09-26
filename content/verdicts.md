@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 632 reports.**
+**This page covers all 633 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5651,3 +5651,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 52,485 lines of Python and 271 commits on main from 11 contributors between 25 May and 23 September 2026, with 1,435 pytest functions run in CI on three operating systems. One mark, `negative_eval`, on a superseded keyed value and a project-scoped recall, each asserted beside a positive control. No test restates a keyed value with default config.
 - Study when: you are building hook-driven memory for a coding agent and want injection, ambient write-back, correction capture and measured rule follow-through, with no LLM on the default path.
 - Do not copy when: the memory must hold a corrected fact. Nothing but active-or-archived expresses belief, the validity window is record time, and the correction path has the two failures above.
+
+### [`spector`](../systems/spector/)
+
+- Best idea: **say what forget did not do.** `memory_forget` answers that the memory is hidden from recall while its bytes remain on disk and in backups, and names `memory_purge`; purge zeroes the payload and text and reports the references it removed, the deduplicated text it could not erase, and the copies it does not reach. An agent relaying a deletion to a user relays the distinction with it.
+- Biggest risk: **the fact plane's reader undoes its writer.** Every production writer documents or defaults to epoch seconds for `validFrom` and `validTo`, and `TemporalFact.validAtInstant` compares epoch milliseconds, so `validFrom` never excludes a fact and a finite `validTo` excludes it at every present-day instant. `factsAbout` never calls `excludeRetracted`, so a retracted fact with no successor is still returned and woven into recall.
+- Most reusable component: `memory/spector-memory/src/test/java/com/spectrayan/spector/memory/ConsolidationIntegrationTest.java:110-156` — a 47-line contradiction case with a mock LLM that asserts the older memory is flagged, default recall omits it and returns the newer one, and `includeContradictions(true)` returns both.
+- Second risk: **governance declared ahead of its wiring.** `GovernedReleaseGateRelay` drops `RETRACTED`, `RESTRICTED` and `UNVERIFIED` records on every recall, and only tests set those flags; the E2E test named for them cannot fail and skips without `OLLAMA_LIVE`. The recall and remember tool schemas promise `workspace_id` scoping with RBAC, and no handler reads the argument.
+- Maturity impression: Apache-2.0 with an attribution `NOTICE`, 308,930 lines of Java outside tests, of which the memory engine is 120,899, and 776 commits on main from 16 contributors since 13 May 2026. Three marks — `trust_state` on the contradicted flag, `bitemporal` on the fact log with the unit mismatch as its limit, `negative_eval` on a contradiction case and a cross-namespace case, each with a positive control. 6,174 Java test methods.
+- Study when: you want an embeddable JVM engine with physical namespace isolation, fused SIMD recall and an honest forget/purge split, or a worked example of LLM-judged contradiction flagging with a test that pins it.
+- Do not copy when: you need facts that answer "what was true then", or corrections that survive an export and import. The valid-time filter mismatches its writers, retraction never reaches a reader, and the importer re-asserts retraction rows and drops the contradicted flag.

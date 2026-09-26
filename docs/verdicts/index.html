@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 632 reports.</strong></p>
+<p><strong>This page covers all 633 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25995,6 +25995,56 @@ rule follow-through, with no LLM on the default path.</li>
 <li>Do not copy when: the memory must hold a corrected fact. Nothing but
 active-or-archived expresses belief, the validity window is record time,
 and the correction path has the two failures above.</li>
+</ul>
+<h3 id="spector"><a
+href="../systems/spector/"><code>spector</code></a></h3>
+<ul>
+<li>Best idea: <strong>say what forget did not do.</strong>
+<code>memory_forget</code> answers that the memory is hidden from recall
+while its bytes remain on disk and in backups, and names
+<code>memory_purge</code>; purge zeroes the payload and text and reports
+the references it removed, the deduplicated text it could not erase, and
+the copies it does not reach. An agent relaying a deletion to a user
+relays the distinction with it.</li>
+<li>Biggest risk: <strong>the fact plane's reader undoes its
+writer.</strong> Every production writer documents or defaults to epoch
+seconds for <code>validFrom</code> and <code>validTo</code>, and
+<code>TemporalFact.validAtInstant</code> compares epoch milliseconds, so
+<code>validFrom</code> never excludes a fact and a finite
+<code>validTo</code> excludes it at every present-day instant.
+<code>factsAbout</code> never calls <code>excludeRetracted</code>, so a
+retracted fact with no successor is still returned and woven into
+recall.</li>
+<li>Most reusable component:
+<code>memory/spector-memory/src/test/java/com/spectrayan/spector/memory/ConsolidationIntegrationTest.java:110-156</code>
+— a 47-line contradiction case with a mock LLM that asserts the older
+memory is flagged, default recall omits it and returns the newer one,
+and <code>includeContradictions(true)</code> returns both.</li>
+<li>Second risk: <strong>governance declared ahead of its
+wiring.</strong> <code>GovernedReleaseGateRelay</code> drops
+<code>RETRACTED</code>, <code>RESTRICTED</code> and
+<code>UNVERIFIED</code> records on every recall, and only tests set
+those flags; the E2E test named for them cannot fail and skips without
+<code>OLLAMA_LIVE</code>. The recall and remember tool schemas promise
+<code>workspace_id</code> scoping with RBAC, and no handler reads the
+argument.</li>
+<li>Maturity impression: Apache-2.0 with an attribution
+<code>NOTICE</code>, 308,930 lines of Java outside tests, of which the
+memory engine is 120,899, and 776 commits on main from 16 contributors
+since 13 May 2026. Three marks — <code>trust_state</code> on the
+contradicted flag, <code>bitemporal</code> on the fact log with the unit
+mismatch as its limit, <code>negative_eval</code> on a contradiction
+case and a cross-namespace case, each with a positive control. 6,174
+Java test methods.</li>
+<li>Study when: you want an embeddable JVM engine with physical
+namespace isolation, fused SIMD recall and an honest forget/purge split,
+or a worked example of LLM-judged contradiction flagging with a test
+that pins it.</li>
+<li>Do not copy when: you need facts that answer "what was true then",
+or corrections that survive an export and import. The valid-time filter
+mismatches its writers, retraction never reaches a reader, and the
+importer re-asserts retraction rows and drops the contradicted
+flag.</li>
 </ul>
         </article>
       </div>

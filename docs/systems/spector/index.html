@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A JVM memory engine for agents:
+off-heap engrams with decay and contradiction flags, a bitemporal fact
+log, and 29 MCP tools, one directory per namespace.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Spector — Agent Memory Atlas">
+    <meta property="og:description" content="A JVM memory engine for
+agents: off-heap engrams with decay and contradiction flags, a
+bitemporal fact log, and 29 MCP tools, one directory per namespace.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Spector — Agent Memory Atlas">
+    <meta name="twitter:description" content="A JVM memory engine for
+agents: off-heap engrams with decay and contradiction flags, a
+bitemporal fact log, and 29 MCP tools, one directory per namespace.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Spector — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Spector",
+      "description": "A JVM memory engine for agents: off-heap engrams with decay and contradiction flags, a bitemporal fact log, and 29 MCP tools, one directory per namespace.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An off-heap cognitive memory engine with a
+bitemporal fact log</p>
+          <h1>Spector</h1>
+          <p class="document-deck">A JVM memory engine for agents:
+off-heap engrams with decay and contradiction flags, a bitemporal fact
+log, and 29 MCP tools, one directory per namespace.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/spectrayan/spector">
+              <span>Source</span>
+              <strong>spectrayan/spector</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/spectrayan/spector/commit/b901299265c327079e77f20cae641545798a506a" title="b901299265c327079e77f20cae641545798a506a">
+              <span>Analyzed revision</span>
+              <code>b9012992…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/spectrayan--spector" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>spectrayan--spector</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+with a NOTICE requiring visible attribution</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>308,930
+lines of Java outside tests; the memory engine (spector-memory and
+spector-kernel) is 120,899 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>776
+commits on main by 16 contributors, 13 May 2026 – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>6,174
+Java test methods in 175,998 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Spector is a Java 25 memory engine for agents. It stores each memory
+as an off-heap "engram" — a quantized vector with importance, valence,
+decay and two flag bytes — and ranks recall with a fused SIMD score over
+similarity, importance and a power-law decay, widened by BM25, SPLADE
+and a Hebbian and entity graph. Beside the engrams sits a temporal
+knowledge graph of subject-predicate-object facts with valid time and
+transaction time. It runs embedded, as a standalone MCP server, or as
+the Synapse server with REST, gRPC and per-account namespaces.</p>
+<p>What is notable is the deletion vocabulary and one working correction
+mechanism. <code>memory_forget</code> tells the agent that the bytes
+remain on disk and names <code>memory_purge</code>, which zeroes the
+payload and lists the copies it cannot reach. A background consolidator
+asks an LLM whether two near-duplicate memories contradict each other,
+flags the older one, and default recall skips it; a committed test
+asserts exactly that.</p>
+<p>What is weak is the fact plane and the declared-but-unwired
+governance. Valid time is written in epoch seconds and compared in
+milliseconds. The fact read path never excludes a retracted fact. A
+"fail-closed" release gate filters on retracted, unverified and
+restricted flags that nothing in the tree sets.</p>
+<p>The licence is Apache-2.0. The <code>NOTICE</code> adds that anyone
+using Spector <em>"MUST provide visible attribution"</em>, with "Powered
+by Spector" text and a repository link, and withholds permission to
+offer it as a SaaS product under another brand. A reader deploying
+Spector should read both files.</p>
+<p>Three marks: <code>trust_state</code> on the contradicted flag,
+<code>bitemporal</code> on the fact log with the unit mismatch stated as
+its limit, and <code>negative_eval</code> on two committed exclusion
+cases with positive controls. Section 9 names the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Spector holds two kinds of belief and treats them differently.</p>
+<p><strong>An engram becomes a belief when it is written.</strong>
+<code>remember</code> embeds the text, writes the record and indexes the
+id, with no candidate state. The id is the identity:
+<code>DedupGuardRelay</code> refuses a second write under an id already
+in the index (<code>DedupGuardRelay.java:41</code>), and nothing
+compares content at the door. The source (<code>USER_STATED</code>,
+<code>OBSERVED</code>, <code>INFERRED</code> and six more) is a caller
+argument carrying a declared weight
+(<code>MemorySource.java:34-77</code>), not a gate.</p>
+<p><strong>An engram stops being a belief in five ways.</strong>
+<code>forget</code> sets the tombstone bit and removes the id from the
+index, so the same id can be written again
+(<code>DefaultSpectorMemory.java:1132-1134</code>). <code>purge</code>
+also zeroes the payload. Consolidation can mark it contradicted, or
+merge it with a duplicate into a new <code>cns-</code> memory and
+tombstone both sources (<code>AbstractConsolidator.java:233-236</code>).
+<code>suppress</code> hides it from recall until the process ends. Decay
+lowers its rank but, by the README's formula, never below a floor.</p>
+<p><strong>The contradicted flag is the only status the system
+moves.</strong> After a SEMANTIC or PROCEDURAL write,
+<code>EagerConsolidator</code> scans the tier for records within an L2
+threshold and asks an LLM whether each pair contradicts
+(<code>EagerConsolidator.java:229-296</code>). On a YES,
+<code>CadpContradictionResolver</code> decides by timestamp, then
+storage strength, then id — newer wins — and sets
+<code>FLAG_CONTRADICTED</code> on the loser
+(<code>CadpContradictionResolver.java:68-117</code>). Default recall
+skips it.</p>
+<p><strong>Simulated and dreamed traces are a genre, not a
+status.</strong> Dream and constructive-simulation relays write records
+with <code>FLAG_SIMULATED</code> or <code>FLAG_DREAMED</code>, and
+recall withholds them unless <code>allowSimulated</code> is set. The
+flag is fixed at write.</p>
+<p><strong>A fact is a row in an append-only log.</strong>
+<code>assertFactWithSupersession</code> retracts every active fact with
+the same subject and predicate by appending a retraction row, then
+appends the new fact (<code>TemporalKnowledgeGraph.java:348-378</code>).
+A retraction never mutates the original. Whether a retracted fact stays
+hidden depends on the reader, and no production reader asks.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an engram and a fact become beliefs in Spector, and where each stops being one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an engram and a fact become beliefs in Spector, and where each stops being one
+flowchart TD
+    W[&quot;memory_remember / REST / SDK&quot;] --&gt; D{&quot;id already&lt;br/&gt;in index?&quot;}
+    D -- yes --&gt; SKIP[&quot;write skipped&quot;]
+    D -- no --&gt; E[&quot;engram written,&lt;br/&gt;consolidation flags = 0&quot;]
+    E --&gt; R[&quot;default recall&quot;]
+    E -- &quot;SEMANTIC or PROCEDURAL&lt;br/&gt;and an LLM provider&quot; --&gt; EC[&quot;EagerConsolidator:&lt;br/&gt;neighbours within L2 threshold&quot;]
+    EC --&gt; J{&quot;LLM reply&lt;br/&gt;contains YES?&quot;}
+    J -- no --&gt; E
+    J -- yes --&gt; C[&quot;older record:&lt;br/&gt;FLAG_CONTRADICTED&quot;]
+    C -. &quot;skipped unless&lt;br/&gt;includeContradictions&quot; .-&gt; R
+    C --&gt; RF[&quot;every fact about the loser&#39;s&lt;br/&gt;entities retracted&quot;]
+    E -- &quot;memory_forget&quot; --&gt; T[&quot;tombstone bit,&lt;br/&gt;id freed, bytes remain&quot;]
+    T --&gt; P[&quot;memory_purge:&lt;br/&gt;payload zeroed&quot;]
+    G[&quot;release gate: RETRACTED,&lt;br/&gt;UNVERIFIED, RESTRICTED&quot;] -. &quot;no writer&lt;br/&gt;in the tree&quot; .-&gt; R
+    F[&quot;memory_fact_assert:&lt;br/&gt;valid_from in seconds&quot;] --&gt; L[&quot;fact row: validFrom, validTo,&lt;br/&gt;txTime in milliseconds&quot;]
+    L --&gt; Q{&quot;factsAbout: validAt&lt;br/&gt;compares milliseconds&quot;}
+    Q -- &quot;validTo finite&quot; --&gt; X[&quot;excluded at every&lt;br/&gt;present-day instant&quot;]
+    Q -- &quot;validTo open&quot; --&gt; Y[&quot;returned, retracted&lt;br/&gt;or not&quot;]
+    RT[&quot;memory_fact_retract&quot;] --&gt; RR[&quot;retraction row appended&quot;]
+    RR -. &quot;no production read&lt;br/&gt;calls excludeRetracted&quot; .-&gt; Y</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The Maven reactor has four tiers. <code>nucleus/</code> holds
+configuration, SIMD kernels, a GPU path and a vector index.
+<code>memory/</code> holds <code>spector-kernel</code>, the off-heap
+storage layouts, and <code>spector-memory</code>, the cognitive engine.
+<code>synapse/</code> holds the MCP module, the Spring Boot server, the
+CLI, batch import and export, and connectors. <code>cortex/</code> is an
+Angular dashboard.</p>
+<p>Persistence is Panama <code>MemorySegment</code> regions in
+memory-mapped files, one bundle per partition, under one directory per
+namespace, with a chunked write-ahead log that
+<code>CheckpointEngine</code> truncates after each checkpoint
+(<code>CheckpointEngine.java:344</code>). There is no external database;
+the <code>NOTICE</code> states that the core modules depend on the JDK
+alone.</p>
+<p>The recall pipeline is a chain of relays assembled in
+<code>RecallPathway</code> (<code>RecallPathway.java:333-359</code>):
+query transduction, the governed release gate, the cortical tier scan,
+neuromodulatory scoring, graph expansion with temporal fact weaving,
+evidence fusion, lateral inhibition, BM25 and SPLADE fusion, RRF,
+sort-and-truncate with suppression, optional ColBERT rerank, MMR and
+temperature softmax. The AISME relays join the chain when
+<code>spector.memory.aisme.enabled</code> is true, which it is not by
+default (<code>SpectorPropertyConstants.java:736</code>).</p>
+<p>Background work runs on Quartz: sleep consolidation, REM dreaming,
+default-mode wandering, homeostatic decay, graph enrichment every 30
+seconds, index reconcile and checkpoint
+(<code>QuartzMemoryScheduler.java:221-306</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Embedded use needs JDK 25 with <code>--enable-preview</code> and the
+incubating Vector API module, and an embedding provider (Ollama, ONNX,
+OpenAI and others under <code>memory/spector-providers</code>).
+Contradiction detection and entity extraction need an LLM provider;
+without one they do nothing. The standalone MCP runner starts an
+in-process kernel or connects to a local daemon, and Docker Compose
+starts the server and dashboard. The store is binary and not repairable
+by hand; the batch exporter writes JSONL.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>DefaultSpectorMemory.remember</code>
+checks the <code>MutationPolicy</code>, chunks long text, embeds, and
+calls <code>rememberPathway.ingestCognitive</code>
+(<code>DefaultSpectorMemory.java:453-490</code>). The pathway runs
+<code>DedupGuardRelay</code>, tag transduction, a surprise relay,
+<code>CorticalWriteTransactionRelay</code>, synaptic graph linking and
+knowledge-graph enrichment. For SEMANTIC and PROCEDURAL writes it then
+submits the id to <code>EagerConsolidator</code>
+(<code>:482-484</code>).</p>
+<p><strong>Recall.</strong> <code>DefaultSpectorMemory.recall</code> →
+<code>RecallPathway</code>. The tier scan's <code>SlabScanner</code>
+skips tombstoned, contradicted and simulated records inside the scan
+loop (<code>SlabScanner.java:75-98</code>);
+<code>SemanticRecallStrategy</code> and
+<code>RecallCandidateGatherer</code> repeat the contradicted check
+(<code>SemanticRecallStrategy.java:161-162</code>,
+<code>RecallCandidateGatherer.java:173</code>).</p>
+<p><strong>Contradiction.</strong>
+<code>AbstractConsolidator.evaluateAndResolvePair</code> asks
+<code>ContradictionDetector.areContradictory</code> and, on true, calls
+<code>CadpContradictionResolver.resolve</code>
+(<code>AbstractConsolidator.java:119-126</code>). The detector returns
+false when no LLM provider is set and treats any reply containing
+<code>YES</code> as a contradiction
+(<code>ContradictionDetector.java:45-47</code>, <code>:62</code>). The
+resolver marks the loser, adds a <code>TYPE_CONTRADICTS</code>
+hyperedge, and retracts every fact about the loser's entities whose
+object is not one of the winner's
+(<code>CadpContradictionResolver.java:163-180</code>).</p>
+<p><strong>Forget and purge.</strong> <code>forgetWithResult</code>
+tombstones, appends a WAL <code>FORGET</code>, and removes the id
+(<code>DefaultSpectorMemory.java:1114-1140</code>).
+<code>MemoryForgetTool</code> reports a missing id as nothing forgotten
+rather than a success (<code>MemoryForgetTool.java:48-61</code>).
+<code>purge</code> zeroes payload and text bytes and reports graph
+references removed and copies not reached.</p>
+<p><strong>Facts.</strong> <code>memory_fact_assert</code> →
+<code>DefaultSpectorMemory.assertFact</code> →
+<code>assertFactWithSupersession</code>
+(<code>DefaultSpectorMemory.java:2190-2204</code>). REST
+<code>GET /api/v1/memory/facts</code> →
+<code>factsAbout(entity, asOf)</code> →
+<code>factsAbout(entityId).validAt(asOf).resolve()</code>
+(<code>:2216-2227</code>). During recall,
+<code>TemporalFactWeavingStage</code> appends
+<code>[Temporal Fact: …]</code> lines to matching results
+(<code>TemporalFactWeavingStage.java:144</code>).</p>
+<p><strong>MCP.</strong> <code>SpectorToolRegistry.handlers</code>
+registers 29 tools (<code>SpectorToolRegistry.java:86-114</code>); the
+README's table says 16. In Synapse, each call binds a namespace from the
+<code>namespace</code> argument through a deny check before the tool
+runs (<code>McpServerConfig.java:249-255</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id, text, tags, source, tier</td>
+<td>index and text store</td>
+<td>caller-chosen id; source is one of nine enum values</td>
+</tr>
+<tr>
+<td>timestampMs, importance, valence, arousal</td>
+<td>encoding header</td>
+<td>write time only; no valid time on an engram</td>
+</tr>
+<tr>
+<td>flags</td>
+<td>header byte</td>
+<td>tombstone, tier, consolidated, pinned, resolved, modality</td>
+</tr>
+<tr>
+<td>consolidationFlags</td>
+<td>header byte</td>
+<td>contradicted, retracted, unverified, restricted, crystallized,
+simulated, purged, dreamed
+(<code>EncodingHeaderFields.java:250-280</code>)</td>
+</tr>
+<tr>
+<td>storageStrength, recall counts</td>
+<td><code>StrengthMemory</code></td>
+<td>mutable telemetry</td>
+</tr>
+<tr>
+<td>temporal fact</td>
+<td><code>TemporalFactLayout</code>, 64 bytes</td>
+<td>factId, subject, predicate, object, validFrom, validTo, txTime,
+confidence, retractsFactId, flags</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scope is the directory.</strong> A namespace is a directory
+tree with its own bundles, created per account or per named namespace.
+There is no namespace key on a record and no scope predicate on a read.
+ADR 0062 states the security property directly: client-supplied
+<code>namespace</code>, <code>workspace_id</code> or
+<code>agent_id</code> <em>"never change which memory is returned"</em>
+(<code>docs/adr/0062-memory-organization-three-plane-architecture.md:356</code>).</p>
+<p><strong>The tool schemas say otherwise.</strong>
+<code>memory_recall.json</code> describes <code>workspace_id</code> as
+scoping recall <em>"to the workspace's shared memory pool"</em> with
+<code>agent_id</code> <em>"for RBAC"</em>, and
+<code>memory_remember.json</code> makes the same promise for writes
+(<code>memory_recall.json:71-78</code>,
+<code>memory_remember.json:69-75</code>). No Java file outside tests
+reads either argument, so a model told it wrote to a shared pool wrote
+to its own namespace.</p>
+<p><strong>Provenance.</strong> <code>ProvenanceMemory</code> records
+which session turns a consolidated semantic memory came from
+(<code>ProvenanceMemory.java:41-45</code>). It is lineage for
+consolidation; forgets, suppressions and flag changes do not appear in
+it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is automatic within the engine and tool-mediated for the
+agent. By the README, the core score is <code>α·sim + β·I·D(t)</code>,
+with decay as a bucketed power law, after gates for the live bit, tag
+containment and a valence window. BM25 and SPLADE candidates are fused
+with the vector list by RRF, and graph expansion admits Hebbian
+neighbours at a discount, then temporal and entity hops.</p>
+<p>Status filters sit in the scan. Contradicted records drop unless
+<code>includeContradictions</code> is set, which defaults to false
+(<code>SpectorPropertyConstants.java:1215</code>); the MCP recall tool
+does not expose the option. Simulated and dreamed records drop unless
+<code>allowSimulated</code>. Suppressed ids drop in
+<code>SortAndTruncateRelay</code>.</p>
+<p><code>GovernedReleaseGateRelay</code> drops a candidate whose
+consolidation flags carry <code>RETRACTED</code>, a
+<code>RESTRICTED</code> one when no persona is supplied, and an
+<code>UNVERIFIED</code> one below <code>minTrustScore</code>
+(<code>GovernedReleaseGateRelay.java:58-81</code>). The setters
+<code>withRetracted</code>, <code>withUnverified</code> and
+<code>withRestricted</code> exist
+(<code>EncodingHeaderFields.java:454-468</code>) and only tests call
+them. The production writes to that byte set <code>CONTRADICTED</code>,
+<code>PURGED</code> or, through the remember overlay,
+<code>CRYSTALLIZED</code>. The gate runs on every recall and has nothing
+to drop.</p>
+<p>Temporal fact weaving reads
+<code>tkg.factsAbout(entityId).validAt(asOf).resolve()</code>
+(<code>TemporalFactWeavingStage.java:144</code>). Its display code
+guesses the unit — a value above 10^11 is read as milliseconds, anything
+else as seconds (<code>:160-163</code>) — while the filter above it does
+not guess.</p>
+<p><code>point_in_time</code> on <code>memory_recall</code> bounds the
+engram write timestamp, which is record time, not validity.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous up to the engram: an embedding
+call and an off-heap write, visible to the next recall. No LLM is on the
+hot path. Eager contradiction checks run afterwards from a queue of
+capacity 256 (<code>SpectorPropertyConstants.java:1028</code>). Each
+check scans the tier and makes one LLM call per neighbour within the
+threshold. A contradicted flag therefore lands seconds after the write
+when an LLM is configured, and never otherwise. Entity and fact
+extraction runs in the 30-second graph enrichment job.</p>
+<p><strong>Agent-generated content is admitted as stated.</strong> The
+agent chooses the tier, the source and the id. Nothing filters content.
+A write under <code>USER_STATED</code> from an agent is
+indistinguishable from one a person made.</p>
+<p><strong>Newer wins contradictions.</strong>
+<code>determineWinnerLoser</code> compares timestamps first
+(<code>CadpContradictionResolver.java:68-82</code>). Any writer that can
+store a newer, contradictory SEMANTIC memory near an older one can bury
+the older one, subject only to the LLM's YES.</p>
+<p><strong>Fact extraction writes seconds.</strong>
+<code>GraphEnrichmentEngine</code> stamps extracted facts with
+<code>System.currentTimeMillis() / 1000L</code>
+(<code>GraphEnrichmentEngine.java:287</code>, <code>:514-535</code>).
+Its re-extraction path looks up a <code>retractFactsForMemory</code>
+method by reflection and swallows the <code>NoSuchMethodException</code>
+(<code>:419-430</code>). No such method exists in the tree, so
+re-extraction appends new facts beside the old ones.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous embed and write; no LLM on the hot path.</li>
+<li>Eager consolidation: per semantic or procedural write, a scan of the
+tier and one LLM call per near neighbour; lag of seconds with an LLM
+configured.</li>
+<li>Background: graph enrichment every 30 seconds, with LLM extraction
+per pending memory; sleep consolidation and dreaming on their own
+schedules.</li>
+<li>Read: bounded by <code>top_k</code>, and by a token budget on
+<code>memory_context_pack</code>. Nothing is injected automatically, so
+prompt-cache placement is the caller's.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds 29 MCP tools, among them remember, recall, graph
+recall, forget, purge, suppress, resolve, reinforce, fact assert, fact
+retract, fact history, context pack, consolidate, compile skill and
+persona enact. Every write and correction verb sits on the agent's own
+surface. The README gives setup for Claude Desktop, Cursor, Windsurf and
+Claude Code through <code>npx -y @spectrayan/spector mcp</code>. The
+OpenClaw plugin registers tools and skills and no lifecycle hook, so
+nothing injects memory at session start; the agent recalls when it
+chooses to.</p>
+<p><code>memory_context_pack</code> assembles a budgeted pack from
+recall and, for capitalised query words, fact histories
+(<code>MemoryContextPackTool.java:84-93</code>).</p>
+<p><strong>The default fact-history predicate is a literal.</strong>
+<code>memory_fact_history</code> defaults <code>predicate</code> to
+<code>"*"</code> (<code>MemoryFactHistoryTool.java:49</code>), and the
+context pack and multi-evidence recall pass <code>"*"</code> explicitly
+(<code>MemoryContextPackTool.java:93</code>,
+<code>MemoryMultiEvidenceRecallTool.java:71</code>).
+<code>DefaultSpectorMemory.factHistory</code> resolves it with
+<code>getOrRegister</code>
+(<code>DefaultSpectorMemory.java:2234</code>), which registers a
+predicate named <code>*</code>, and filters facts by that id. No fact
+carries it, so all three return no history. The tool's unit tests mock
+<code>SpectorMemory</code> with explicit predicates.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The deletion vocabulary is honest.</strong>
+<code>memory_forget</code> states that the content bytes remain on disk
+and in backups and names <code>memory_purge</code>
+(<code>MemoryForgetTool.java:55-61</code>). Purge reports bytes zeroed,
+graph references removed, text shared through deduplication that it
+could not erase, and the copies it does not reach.
+<code>PurgeEndToEndTest</code> asserts the report says <em>"No
+cryptographic erasure was performed"</em>.</p>
+<p><strong>The fact plane's read path undoes its write path.</strong>
+<code>TemporalFact.validAtInstant</code> tests
+<code>validFrom &lt;= epochMilli &amp;&amp; epochMilli &lt; validTo</code>
+(<code>TemporalFact.java:136-139</code>). The public interface documents
+epoch seconds (<code>SpectorMemory.java:867-868</code>), the MCP schema
+asks for seconds, the REST service defaults to seconds, and the
+extractor writes seconds (<code>MemoryService.java:1280</code>,
+<code>GraphEnrichmentEngine.java:287</code>). The kernel's own Javadoc
+says milliseconds (<code>TemporalKnowledgeGraph.java:217-219</code>). A
+seconds value is always below a present-day millisecond instant, so
+<code>validFrom</code> never excludes a fact and a finite
+<code>validTo</code> always does.</p>
+<p><strong>Retraction does not reach the reader.</strong>
+<code>TemporalQuery.resolve</code> filters retracted facts only when
+<code>excludeRetracted()</code> was called
+(<code>TemporalQuery.java:208</code>, <code>:217</code>), and no
+production code calls it. A fact retracted with no successor is still
+returned by <code>factsAbout</code> and woven into recall. The kernel
+test pins that behaviour: <code>retractFactExcludesFromQueries</code>
+asserts one result without the call and none with it
+(<code>TemporalKnowledgeGraphTest.java:118-139</code>). Supersession
+hides the old value only because <code>LatestTxWinsResolver</code> keeps
+the newest fact per predicate.</p>
+<p><strong>Export and import lose correction state.</strong> The
+importer re-asserts every exported fact row, retraction rows included,
+with <code>allowCoexisting</code> true and a fresh transaction time
+(<code>SpectorMemoryImporter.java:346-370</code>). It restores engrams
+through <code>remember</code>, dropping the exported
+<code>consolidationFlags</code> (<code>:127-178</code>). A round trip
+revives retracted facts and contradicted memories.</p>
+<p><strong>Human approval gates a different agent.</strong>
+<code>DefaultAgentApprovalService</code> holds every write tool of
+Synapse's built-in chat agent for a person at
+<code>/api/v1/agent/approvals</code>, enabled by default
+(<code>DefaultAgentApprovalService.java:51-67</code>). The queue is
+<code>InMemoryAgentApprovalRepository</code>, and the call blocks on a
+future for up to 300 seconds (<code>:95-107</code>). External MCP
+clients write without it.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded; the contradicted flag moves by
+consolidation and is a filter at three read sites. Evidence and limits
+are in the frontmatter record.</li>
+<li><code>bitemporal</code> — awarded on the fact log; the unit
+mismatch, the unused <code>asOf</code> and the unused
+<code>excludeRetracted</code> are its limits.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — <code>forget</code> sets a bit on the
+record and frees the id. Suppression is an id set in process memory
+(<code>SuppressionSet.java:27-37</code>). Fact retraction is keyed on
+<code>factId</code>. Nothing keyed on a rejected value is consulted on
+write.</li>
+<li><code>scope_enforced</code> — the partition is the namespace
+directory. No record carries a scope key and no read applies a scope
+predicate; the advertised <code>workspace_id</code> has no reader.</li>
+<li><code>audit_log</code> — the WAL records <code>REMEMBER</code>,
+<code>FORGET</code> and other events and is truncated at each checkpoint
+(<code>MemoryWal.java:850</code>,
+<code>CheckpointEngine.java:344</code>). <code>ProvenanceMemory</code>
+records consolidation lineage, not mutations.</li>
+<li><code>human_review</code> — the approval queue lives in process
+memory and covers only the built-in chat agent. <code>forget</code>,
+<code>purge</code>, <code>suppress</code>, <code>consolidate</code> and
+<code>fact_retract</code> are on the external agent's own tool
+surface.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I built and ran nothing; everything below is from reading the tests
+at the pin. CI runs <code>mvn -B clean install</code> across the reactor
+(<code>.github/workflows/ci.yml:77-83</code>), excluding the
+<code>functional</code> group (<code>pom.xml:185</code>), then bench
+property and unit tests.</p>
+<p><strong>The contradiction case.</strong>
+<code>testContradictoryDuplicatesFlagged_cadpDirectional</code> stores
+<em>"The capital of France is Paris."</em> and <em>"The capital of
+France is Lyon."</em> under one vector, answers the mock LLM with YES,
+and consolidates. It asserts the older is contradicted and the newer is
+not, that default recall has no <code>fact-a</code> and has
+<code>fact-b</code>, and that <code>includeContradictions(true)</code>
+returns both (<code>ConsolidationIntegrationTest.java:110-156</code>).
+The positive side is asserted on the same recall, so an empty result
+fails.</p>
+<p><strong>The isolation case.</strong>
+<code>testCrossNamespaceRecallIsolation</code> attaches two namespaces
+to one runtime, asserts each recalls its own document, then asserts
+neither returns the other's, including for a query built from the
+other's text (<code>EngineSharingIsolationTest.java:95-141</code>).</p>
+<p><strong>Purge.</strong> <code>PurgeEndToEndTest</code> reads raw
+bytes to show that <code>forget</code> leaves the payload intact and
+<code>purge</code> zeroes it, and checks recall, inspect and export
+after a purge beside an untouched survivor.</p>
+<p><strong>Tests named for mechanisms they do not test.</strong>
+<code>GovernedMemoryE2ETest</code> is titled for the retracted,
+restricted and unverified gates. Its retraction case asserts a fact and
+checks that recall text does not contain <code>$50M</code>, but no
+memory with that text was ever stored, so it cannot fail
+(<code>GovernedMemoryE2ETest.java:44-70</code>). The restricted and
+unverified cases assert only non-empty results. The whole E2E suite
+skips unless <code>OLLAMA_LIVE</code> is true
+(<code>AbstractE2ETest.java:55-58</code>).</p>
+<p><strong>Not covered.</strong> No test drives the fact plane through
+the public API with seconds-valued input and a finite
+<code>valid_to</code>; the kernel tests use milliseconds. No test
+exercises the <code>"*"</code> predicate default. No committed
+LongMemEval or LoCoMo result was found; the bench module carries runners
+and three MF-001 conformance fixtures. No paper describes the system;
+<code>docs/</code> cites cognitive-science literature, and ADR 0064
+cites one arXiv paper for a related method.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Say what forget did not do.</strong> A delete verb that
+returns "hidden, bytes remain, use purge to destroy" stops an agent from
+relaying a false erasure to a user. Make the stronger verb report what
+it could not reach.</li>
+<li><strong>Pin the corrected-value exclusion with a forensic
+twin.</strong> Assert the winner is present, the loser absent, and the
+loser back when the caller asks for contradictions. An exclusion that
+removes everything cannot pass all three.</li>
+<li><strong>Append retractions; never mutate a fact row.</strong> The
+supersession chain is then a query, not a reconstruction.</li>
+<li><strong>Put status gates inside the scan loop</strong>, before
+scoring, so a flagged record never competes for a top-k slot.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two units for one field.</strong> Pick seconds or
+milliseconds, name it in the field (<code>validFromMs</code>), and make
+the comparison take what the writer produced. A display that guesses the
+unit is the symptom.</li>
+<li><strong>Exclusion as an opt-in builder option.</strong>
+<code>excludeRetracted</code> as a flag means every new reader forgets
+it. Make exclusion the default and inclusion the flag.</li>
+<li><strong>Gates on flags with no writer.</strong> A release gate with
+nothing to release reads as defence in depth and is none. Test it
+against a record the production path flagged.</li>
+<li><strong>Tool schemas that promise scoping the handler
+ignores.</strong> The model acts on the description; an ignored
+<code>workspace_id</code> is a silent scope error.</li>
+<li><strong>Newest-wins contradiction resolution without
+provenance.</strong> Recency is not evidence. Weigh the source, and keep
+the loser reachable to a person.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Spector suits a team that wants an embeddable, single-process JVM
+engine with fast fused recall, physical tenant separation and a large
+tool surface, and will run an LLM for consolidation. It does not suit a
+reader who needs its temporal facts to answer "what was true then": the
+valid-time path is broken at this commit, and retraction is invisible to
+readers. The governance vocabulary is ahead of the wiring, and the
+surface — 29 tools, many neuroscience-named relays, AISME behind a flag
+— is large for what is wired. Adopt it for engram recall and correction,
+with its contradiction test as the contract, and treat the fact plane
+and the release gate as unfinished.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Do deployments assert only open-ended facts, where
+<code>validFrom</code> never binds and the unit mismatch is silent?</li>
+<li>Does the batch consolidator run on a schedule by default, or only
+through <code>memory_consolidate</code>?</li>
+<li>Which records does the eager consolidator compare when a namespace
+spans several partitions, given it scans one store?</li>
+<li>Is the <code>NOTICE</code> attribution clause intended as a licence
+condition beside Apache-2.0's section 4?</li>
+<li>Does the Cortex dashboard's edit surface write through the same
+verbs as the agent?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>memory/spector-kernel/.../engram/field/EncodingHeaderFields.java</code>,
+<code>.../engram/EncodingHeaderLayout.java</code>,
+<code>.../kernel/store/TemporalFact.java</code>,
+<code>.../kernel/store/ProvenanceMemory.java</code>,
+<code>.../kernel/scan/SlabScanner.java</code>.</li>
+<li><strong>Write path:</strong>
+<code>memory/spector-memory/.../DefaultSpectorMemory.java</code>,
+<code>.../pathway/remember/RememberPathway.java</code>,
+<code>.../pathway/remember/relay/DedupGuardRelay.java</code>,
+<code>.../pathway/remember/relay/CorticalWriteTransactionRelay.java</code>,
+<code>.../graph/GraphEnrichmentEngine.java</code>.</li>
+<li><strong>Correction:</strong>
+<code>.../cortex/consolidation/AbstractConsolidator.java</code>,
+<code>EagerConsolidator.java</code>,
+<code>BatchConsolidator.java</code>,
+<code>ContradictionDetector.java</code>,
+<code>CadpContradictionResolver.java</code>;
+<code>.../neuromod/inhibition/SuppressionSet.java</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>.../pathway/recall/RecallPathway.java</code>,
+<code>.../pathway/recall/relay/GovernedReleaseGateRelay.java</code>,
+<code>.../cortex/SemanticRecallStrategy.java</code>,
+<code>.../pathway/pipeline/gatherer/RecallCandidateGatherer.java</code>,
+<code>.../pathway/pipeline/graph/TemporalFactWeavingStage.java</code>.</li>
+<li><strong>Facts:</strong>
+<code>.../graph/temporal/TemporalKnowledgeGraph.java</code>,
+<code>TemporalQuery.java</code>,
+<code>LatestTxWinsResolver.java</code>.</li>
+<li><strong>Background:</strong>
+<code>.../scheduler/QuartzMemoryScheduler.java</code>,
+<code>.../sync/MemoryWal.java</code>,
+<code>.../sync/CheckpointEngine.java</code>.</li>
+<li><strong>MCP and server:</strong>
+<code>synapse/spector-mcp/.../tools/SpectorToolRegistry.java</code>,
+<code>synapse/spector-mcp/.../tools/memory/*.java</code>,
+<code>synapse/spector-mcp/src/main/resources/mcp/tools/*.json</code>,
+<code>synapse/spector-synapse/.../config/McpServerConfig.java</code>,
+<code>synapse/spector-synapse/.../memory/MemoryService.java</code>,
+<code>synapse/spector-synapse/.../agent/approval/</code>.</li>
+<li><strong>Import and export:</strong>
+<code>synapse/spector-batch/.../importing/SpectorMemoryImporter.java</code>,
+<code>synapse/spector-batch/.../exporting/SpectorMemoryExporter.java</code>.</li>
+<li><strong>Tests:</strong>
+<code>memory/spector-memory/src/test/.../ConsolidationIntegrationTest.java</code>,
+<code>.../runtime/EngineSharingIsolationTest.java</code>,
+<code>.../PurgeEndToEndTest.java</code>,
+<code>.../graph/temporal/TemporalKnowledgeGraphTest.java</code>,
+<code>.../e2e/GovernedMemoryE2ETest.java</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rn --include='*.java' -E 'FLAG_RETRACTED|FLAG_UNVERIFIED|FLAG_RESTRICTED' . | grep -v '/src/test/'</code>
+— only definitions, predicates and the <code>with*</code> setters in
+<code>EncodingHeaderFields.java</code>.</li>
+<li><code>grep -rn --include='*.java' -E 'withRetracted|withUnverified|withRestricted' . | grep -v EncodingHeaderFields.java</code>
+— two test files only.</li>
+<li><code>rg -n 'writeConsolidationFlags\(|markRetracted|markUnverified|markRestricted' --type java -g '!**/src/test/**'</code>
+— writes of <code>CONTRADICTED</code> and <code>PURGED</code> only, plus
+the cursor setter.</li>
+<li><code>rg -n '\.consolidationFlagsOverlay\(' --type java</code> — one
+production setter, <code>FLAG_CRYSTALLIZED</code> in
+<code>SkillPersistRelay.java:107</code>.</li>
+<li><code>grep -rn --include='*.java' 'excludeRetracted()' . | grep -v '/src/test/'</code>
+— the Javadoc example and the method itself.</li>
+<li><code>grep -rn --include='*.java' -E '\.asOf\(' . | grep -v '/src/test/'</code>
+— no caller of <code>TemporalQuery.asOf</code>; the hits are
+graph-recall and enactment options.</li>
+<li><code>grep -rn --include='*.java' 'retractFactsForMemory' .</code> —
+one hit, the reflective lookup at
+<code>GraphEnrichmentEngine.java:423</code>.</li>
+<li><code>rg -n -i 'workspace_id|workspaceId' -g '!*.lock' .</code> —
+two tool schemas, ADR 0025, ADR 0062 and two Synapse tests; no
+production Java.</li>
+<li><code>rg -n '"\*"' --type java memory/spector-memory/src/main memory/spector-kernel/src/main synapse/spector-mcp/src/main</code>
+— the three <code>"*"</code> defaults; no wildcard handling.</li>
+<li><code>rg -n 'truncateBefore\(' --type java -g '!**/src/test/**'</code>
+— <code>CheckpointEngine.java:344</code>.</li>
+<li><code>rg -n -i 'class \w*(Journal|EventStore|EventLog|AuditLog|MutationLog|ChangeLog)\w*' --type java -g '!**/src/test/**'</code>
+— the dream journal and the WAL journal relay; no mutation audit
+store.</li>
+<li><code>rg -n 'OLLAMA_LIVE|mvn ' .github/workflows/</code> — no
+<code>OLLAMA_LIVE</code> in any workflow.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— two docs pages, ADR 0064 and a LongMemEval script; no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/spectrayan/spector/commit/b901299265c327079e77f20cae641545798a506a"><code class="commit-id" title="b901299265c327079e77f20cae641545798a506a">b9012992…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 25
+September 2026. Three marks: <code>trust_state</code>,
+<code>bitemporal</code>, <code>negative_eval</code>. Screened before
+reading: no auto-run surface, 2 build-time execution points (npm
+<code>prepublishOnly</code> in two packages), 9 dependency files inside
+the cooldown — every file in the depth-1 clone dates to the tip — and 4
+unpinned surfaces; <code>AGENTS.md</code> was treated as data. The
+screen does not parse Maven. Read with <code>grep</code>,
+<code>rg</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
