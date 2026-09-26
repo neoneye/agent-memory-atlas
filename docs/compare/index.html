@@ -9841,26 +9841,29 @@ graph; undirected diffusion discards predicate direction</td>
 <td>One row per hook event — the prompt, tool call with full input and
 output, or assistant turn, as JSONB with a 768-dimension vector; beside
 it an LLM-written session summary, a mined <code>SKILL.md</code>, a team
-rule, a goal or KPI, and a per-source-file doc page</td>
+rule, a goal, and a per-source-file doc page</td>
 <td>No store of its own: seven tables in a Deeplake workspace reached by
-<code>POST /workspaces/&lt;id&gt;/tables/query</code> with SQL in the
-body, plus local files — the skills themselves under
-<code>.claude/skills/</code>, a pull manifest, a JSONL event cache, an
+a POST to the workspace's tables/query endpoint with SQL in the body,
+plus local files — the skills themselves under
+<code>.claude/skills/</code>, including skills mined from local
+transcripts before sign-in, a pull manifest, a JSONL event cache, an
 optimizer meta log and a code-graph snapshot</td>
 <td>Grep over <code>~/.deeplake/memory/</code> intercepted and compiled
 to one UNION ALL of an ILIKE arm scoring a constant 1.0 and a cosine
-arm, so any literal hit outranks every semantic hit; a separate
-semantic-only proactive recall on each substantive prompt; a docs search
-with a project predicate</td>
-<td>Every hook event embeds locally and INSERTs on the turn path after
-secret masking; a detached worker shells out to the host agent's own CLI
-for the summary; a second worker mines the last ten sessions in scope
-and asks Haiku for KEEP, SKIP or MERGE</td>
+arm, so any literal hit outranks every semantic hit, and lexical-only
+while embeddings are off, which is the default; a docs search with a
+project predicate; no per-prompt recall on any host, and at session
+start the model gets team rules while the resume brief goes to the user
+only</td>
+<td>Every hook event embeds locally and INSERTs on the turn path, after
+secret masking on every host except pi; a detached worker shells out to
+the host agent's own CLI for the summary; a second worker mines the last
+ten sessions in scope and asks Haiku for KEEP, SKIP or MERGE</td>
 <td><code>hivemind sessions prune</code> hard-deletes your own session
 rows and their summaries; <code>rm</code> under the memory mount is a
 <code>DELETE FROM</code>; skills, rules and docs append a new version
-row; goals and KPIs are updated in place and the <code>version</code>
-column is vestigial</td>
+row; goals are updated in place and the <code>version</code> column is
+vestigial</td>
 <td>Org and workspace are the real boundary and live in the request URL
 and an <code>X-Activeloop-Org-Id</code> header; a <code>.hivemind</code>
 file routes a directory tree to another workspace or opts it out of
@@ -9871,8 +9874,9 @@ a shared MCP server with four tools for Claude Cowork; memory is
 presented to the agent as a filesystem, so it uses Bash and Grep rather
 than a tool API</td>
 <td>Detached workers on Stop and SessionEnd: summary, skill mining,
-code-graph rebuild, doc refresh, skill auto-pull at SessionStart, and an
-event-driven skill optimizer armed by each org-skill invocation</td>
+code-graph rebuild, doc refresh, skill auto-pull at SessionStart, an
+event-driven skill optimizer armed by each org-skill invocation, and a
+one-shot install-time mining and backfill of past local sessions</td>
 <td>Provenance only — author, contributors, source sessions, source
 agent and plugin version per skill; no epistemic state, and nothing on
 any read path filters on trust</td>
@@ -9883,10 +9887,8 @@ protected region and a new version teammates pull automatically</td>
 <td>That loop publishes org-wide with no review by design, its own
 <code>applied</code>/<code>reverted</code> outcome states have no
 producer so it never learns whether an edit helped, auto-pull installs
-every author's skills with the user filter hardcoded empty, and
-proactive recall is semantic-only with no lexical fallback — so on a
-default install, where the embedding stack is absent, it never
-fires</td>
+every author's skills with the user filter hardcoded empty, and the pi
+extension's own capture writer inserts turns with no secret masking</td>
 </tr>
 <tr>
 <td><code>hivemind</code></td>
