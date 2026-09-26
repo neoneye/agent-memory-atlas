@@ -10986,6 +10986,40 @@ points, 30 dependency files inside the cooldown — every file in a
 depth-1 clone dates to the tip — and 15 unpinned surfaces; no
 agent-instruction file in the tree. Nothing was installed, built or
 run.</li>
+<li><strong><code>aws/strands-dynamodb-storage</code> was examined and
+has no report: it is a byte backend beneath the memory layer, not a
+memory.</strong> Apache-2.0, at <a
+href="https://github.com/aws/strands-dynamodb-storage/commit/91a7bd00f3ffd3a60cad98caa780f537ff53a083"><code class="commit-id" title="91a7bd00f3ffd3a60cad98caa780f537ff53a083">91a7bd00…</code></a>,
+66 commits from five contributors since 14 August 2026. It is a Python
+and a TypeScript implementation (826 and 863 lines) of the Strands SDK's
+<code>Storage</code> contract — <code>write</code>, <code>read</code>,
+<code>delete</code>, <code>list</code> and <code>namespace</code>, plus
+an optional vector <code>search</code> over DynamoDB
+<code>SearchVectors</code> — with S3 offload, gzip and TTL. No file
+under <code>python/src</code>, <code>typescript/src</code> or either
+test tree names <code>MemoryStore</code> or <code>MemoryManager</code>.
+The only <code>MemoryStore</code> in the repository is a
+<code>DynamoDBMemoryStore</code> bridge that two examples define as
+application code, with <code>add</code> and <code>search</code> and no
+delete (<code>examples/semantic-memory/semantic_memory.py:60-94</code>).
+What would hold memories on this table is the SDK's own
+<code>FileMemoryStore</code>, which the <a
+href="../systems/strands-agents/">Strands Agents</a> report covers.
+<strong>One seam between the two packages belongs on the
+record.</strong> At SDK release 1.55.0, the newest before the pin, the
+Python <code>FileMemoryStore.search</code> passes its natural-language
+string straight to <code>storage.search</code>
+(<code>store.py:159</code>), and <code>DynamoDBStorage.search</code>
+reads <code>query.pk</code> on line 432, outside its <code>try</code>,
+so a string raises <code>AttributeError</code>.
+<code>MemoryManager</code> gathers store searches with
+<code>return_exceptions=True</code> and logs a warning
+(<code>memory_manager.py:327-353</code>), so extraction writes to
+DynamoDB and every search of that store returns nothing. The TypeScript
+package rejects a string with a tested <code>StorageError</code>, and
+the TypeScript <code>FileMemoryStore</code> scans with <code>list</code>
+and <code>read</code> instead, so the seam is Python-only. Read, not
+run.</li>
 <li><strong><code>mcn92/pikelet</code> was examined and has no report,
 because nothing that happens after the build can contradict what it
 holds.</strong> Apache-2.0 (Matthew Noonan), 61,585 lines of JavaScript,
