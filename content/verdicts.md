@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 630 reports.**
+**This page covers all 631 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5632,3 +5632,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 20,281 lines of C# outside tests, 160 commits on `dev` by 6 contributors from July 2025 to September 2026, 402 xUnit test methods with an integration suite on Testcontainers Postgres and Ollama in CI. Two marks, `scope_enforced` and `negative_eval`, the second on a workspace-scope search and an archive-exclusion listing, each with a positive control. `HybridSearch` has no database-backed test.
 - Study when: you want an agent-maintained document store — plans, checklists, specs — with per-edit versioning, a human-facing diff and revert UI, and project and workspace organisation behind one MCP URL.
 - Do not copy when: memory must be isolated between users, explainable after a delete, or protected from a hostile page on the same machine. There is no authentication, CORS admits any origin by default, and a delete leaves no trace.
+
+### [`yantrikdb-mcp`](../systems/yantrikdb-mcp/)
+- Best idea: **refuse what the engine cannot honour, and name the fix.** Backdated `created_at`, stated `claims`, an as-of read and a `since`/`until` window each return an error naming the engine version they need, before anything is written, on a backend that cannot carry them. The code's stated reason is that stamping "now" on a memory the caller dated would corrupt exactly what backdating protects. The same file records the 15 August 2026 incident in which a preview-shaped maintenance cycle tombstoned 13 live records; the dry run is now forwarded, defaults to preview, and an explicit dry run on a pass with no dry form is refused.
+- Biggest risk: **scope is the model's to supply, and the default is everything.** `recall`, `memory(list)`, `temporal` and `graph(recall_with_links)` default `namespace` to none, which the engine treats as no predicate, and the cold-start digest the server instructions prescribe is whole-store unless the model passes `scope`. `forget`, `correct` and conflict resolution act by id. Network transports bind `0.0.0.0` with bearer auth optional and share one store across every client.
+- Most reusable component: the response shaping in `recall` — `created_at` in ISO form and a raw `similarity` beside the blended score on every hit, the time window echoed back, and a count of hits dropped by the relative cutoff, so a caller can overrule a ranking that picked a stale revision.
+- Second risk: **the skill gate is on one of two doors.** `skill(define)` runs a write gate off by default, schema validation, content scanners, attribution and an audit line; `remember` writes any namespace with any metadata, and `skill(surface)` serves any `skill_substrate` row tagged as a skill, treating a missing hash as a legacy row. Rule-type skills route to a review namespace that nothing reads and default recall returns, and the per-session rate limit is keyed on the JSON-RPC request id.
+- Maturity impression: MIT, 6,435 lines of Python over the Apache-2.0 engine at 0.23.1, 101 commits by 2 contributors between 20 March and 19 September 2026, and 286 test functions, with CI on Python 3.10, 3.12 and 3.14 against both MCP SDK majors. The manifest bounds the engine and SDK to tested minors and records why each bound moved.
+- Study when: you are exposing a memory engine over MCP and want a model of honest parameter handling, response fields that make a ranking auditable, and dependency pins that carry their reasons.
+- Do not copy when: several people, projects or pipelines share one store — derive the namespace outside the model, as the [Hermes plugin](../systems/yantrikdb-hermes-plugin/) does, and put any write gate where the namespace is written.

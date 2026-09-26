@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 630 of 630 screened at the report's current pin.**
+**Progress: 631 of 631 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 283 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 346 |
+| Repositories with an auto-run surface (`RUNS`) | 284 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 347 |
 | Repositories with build-time execution (`EXEC`) | 459 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
@@ -308,6 +308,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/` |
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |
 | [`windieos`](../../content/systems/windieos.md) | `.vscode/settings.json` |
+| [`yantrikdb-mcp`](../../content/systems/yantrikdb-mcp.md) | `.mcp.json`, `mcp.json`, `server.json` |
 | [`yourmemory`](../../content/systems/yourmemory.md) | `server.json` |
 | [`zcode`](../../content/systems/zcode.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |

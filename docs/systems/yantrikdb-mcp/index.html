@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP server running the
+YantrikDB engine in process, with twenty-one tools and a namespace the
+model may omit, so default recall spans every namespace.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="yantrikdb-mcp — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP server running the
+YantrikDB engine in process, with twenty-one tools and a namespace the
+model may omit, so default recall spans every namespace.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="yantrikdb-mcp — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP server running the
+YantrikDB engine in process, with twenty-one tools and a namespace the
+model may omit, so default recall spans every namespace.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>yantrikdb-mcp — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "yantrikdb-mcp",
+      "description": "An MCP server running the YantrikDB engine in process, with twenty-one tools and a namespace the model may omit, so default recall spans every namespace.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The engine over MCP, with the scope left to
+the model</p>
+          <h1>yantrikdb-mcp</h1>
+          <p class="document-deck">An MCP server running the YantrikDB
+engine in process, with twenty-one tools and a namespace the model may
+omit, so default recall spans every namespace.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/yantrikos/yantrikdb-mcp">
+              <span>Source</span>
+              <strong>yantrikos/yantrikdb-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrikdb-mcp/commit/364e19a5b33a6c4a81f46fa9eaee5ddce68fcfa3" title="364e19a5b33a6c4a81f46fa9eaee5ddce68fcfa3">
+              <span>Analyzed revision</span>
+              <code>364e19a5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yantrikos--yantrikdb-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>yantrikos--yantrikdb-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT;
+the engine it installs is Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>6,435
+lines of Python in the server package; the memory itself lives in the
+YantrikDB engine, a separate repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>101
+commits on main by 2 contributors, 20 March 2026 – 19 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>286
+test functions in 33 files under tests/, plus 8 in a root-level file
+outside the configured test path</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>yantrikdb-mcp is the MCP server its author ships for the <a
+href="../yantrikdb-engine/">YantrikDB engine</a>: twenty-one tools over
+the engine's Python binding, run in process against one SQLite file or
+forwarded to a <a href="../yantrikdb/">YantrikDB server</a> cluster. Its
+care is at the parameter level. When the engine cannot honour an
+argument, the tool refuses and names the fix instead of dropping it. Its
+weakness is that the boundaries it adds are per-tool while the store is
+shared. Scope is a namespace the model may omit, and omitted means every
+namespace. The skill gate guards one write door while
+<code>remember</code> reaches the same namespace through another.</p>
+<p><strong>The memory mechanism is the engine's.</strong> Decay,
+consolidation, contradiction detection, correction with revision
+history, supersession and the as-of read are described in the <a
+href="../yantrikdb-engine/">engine report</a>. This report covers what
+the MCP layer adds or changes: the tool surface, where scope is decided,
+how writes are gated, and what reaches the model.</p>
+<p><strong>The engine that runs at this pin is 0.23.1.</strong>
+<code>pyproject.toml:133</code> requires
+<code>yantrikdb&gt;=0.15.4,&lt;0.24.0</code>, and the documented install
+is <code>uvx yantrikdb-mcp</code>, which resolves the newest release in
+range. PyPI published 0.23.1 at 18:51 UTC on 19 September 2026, before
+the pinned commit at 23:19 UTC. Tag <code>v0.23.1</code> (<a
+href="https://github.com/yantrikos/yantrikdb/commit/597fdcee9d55a2f7f8ac511a40dc2c72f136f5c6"><code class="commit-id" title="597fdcee9d55a2f7f8ac511a40dc2c72f136f5c6">597fdcee…</code></a>)
+is four commits past the engine report's pin and changes only version
+strings and one CLI print, so the engine report's reading applies
+unchanged.</p>
+<p><strong>This is not the MCP server inside the engine
+package.</strong> The engine ships its own 628-line
+<code>src/yantrikdb/mcp/</code> with <code>memory_*</code> tools; that
+is the one the <a href="../yantrikdb/">server report</a> cites. This
+repository is the separately distributed one.</p>
+<p>Four findings, all read rather than run:</p>
+<ul>
+<li><strong>Default recall spans every namespace.</strong>
+<code>recall</code> declares <code>namespace=None</code> and forwards
+it, and the engine emits no namespace predicate for <code>None</code>.
+The cold-start <code>session(action="digest")</code> the server
+instructions prescribe is whole-store unless the model passes
+<code>scope</code>.</li>
+<li><strong>The skill gate has a second door.</strong>
+<code>skill(action="define")</code> runs a gate that is off by default,
+then schema, content scanners, attribution and an audit line.
+<code>remember</code> writes any namespace with any metadata, and
+<code>skill(action="surface")</code> serves any
+<code>skill_substrate</code> row tagged <code>record_type: skill</code>,
+treating a missing hash as a legacy row.</li>
+<li><strong>The review queue has no reader.</strong> Rule-type skills go
+to <code>skill_pending_review</code>; nothing in the tree reads that
+namespace by name, and default recall returns it.</li>
+<li><strong>The rate limit resets every call.</strong> The per-session
+limiter is keyed on the JSON-RPC request id.</li>
+</ul>
+<p>One mark: <code>negative_eval</code>. Section 9 names the six
+withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an engine row, and every state it can hold is the
+engine's: active, consolidated or tombstoned, a synthesis state, a
+supersession edge, a revision chain. The MCP layer adds no state of its
+own to that row. What it adds is who decides each step, and at this
+layer the answer is the agent for every one.</p>
+<ul>
+<li><strong>Becoming a memory.</strong> The agent calls
+<code>remember</code>, choosing the text, type, importance, certainty,
+source, domain and namespace. The injected instructions tell it to use
+memory "AUTOMATICALLY without the user asking"
+(<code>src/yantrikdb_mcp/server.py:43-45</code>).</li>
+<li><strong>Changing.</strong> <code>correct</code> updates in place
+with a required reason; the engine archives the prior state.</li>
+<li><strong>Stopping.</strong> <code>forget</code> by rid, a conflict
+resolution the agent picks, or an <code>auto_resolve</code> pass whose
+dry run defaults on.</li>
+<li><strong>Where it lives.</strong> A namespace string the agent
+passes, or <code>default</code>.</li>
+</ul>
+<p>Skills are the one place the server adds a lifecycle. A
+<code>define</code> lands in <code>skill_substrate</code> or, for a
+rule, in <code>skill_pending_review</code>. A skill replaced by
+<code>on_conflict="replace"</code> is forgotten first. Outcome events
+land in <code>outcome_substrate</code>. These are namespace conventions,
+not engine states, so every read that does not name a namespace sees all
+three.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two write doors into the skill namespace and a default read that names no namespace, so the pending queue and the catalog both reach the model through plain recall</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two write doors into the skill namespace and a default read that names no namespace, so the pending queue and the catalog both reach the model through plain recall
+flowchart TB
+    DEF[&quot;skill(action=define)&quot;] --&gt; GATE{&quot;YANTRIKDB_SKILLS_WRITE_ENABLED&lt;br/&gt;frozen at import, default off&quot;}
+    GATE --&gt;|&quot;off&quot;| REF[&quot;refused, audit line&quot;]
+    GATE --&gt;|&quot;on&quot;| CHK[&quot;schema, scanners, rate limit&lt;br/&gt;keyed on request_id,&lt;br/&gt;attribution, body_sha256&quot;]
+    CHK --&gt;|&quot;skill_type = rule&quot;| PEND[(&quot;skill_pending_review&quot;)]
+    CHK --&gt;|&quot;other types&quot;| LIVE[(&quot;skill_substrate&quot;)]
+    REM[&quot;remember(namespace=skill_substrate,&lt;br/&gt;metadata record_type=skill)&quot;] --&gt;|&quot;no gate, no hash&quot;| LIVE
+    REM2[&quot;remember(text)&quot;] --&gt; DEFNS[(&quot;default namespace&quot;)]
+    SURF[&quot;skill(action=surface)&quot;] --&gt; LIVE
+    SURF --&gt; HASH{&quot;body_sha256 present?&quot;}
+    HASH --&gt;|&quot;absent: treated as legacy&quot;| SERVED[&quot;served as a skill&quot;]
+    HASH --&gt;|&quot;present and matches&quot;| SERVED
+    REC[&quot;recall(query), namespace omitted&quot;] --&gt; NOPRED[&quot;engine: no namespace predicate&quot;]
+    NOPRED --&gt; PEND
+    NOPRED --&gt; LIVE
+    NOPRED --&gt; DEFNS
+    PEND -.-&gt;|&quot;no reader, no promote verb&quot;| NOWHERE[&quot;never resolved&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/yantrikdb_mcp/server.py</code></td>
+<td>Injected instructions, a lazily opened process-singleton engine,
+embedded or HTTP backend selection</td>
+</tr>
+<tr>
+<td><code>src/yantrikdb_mcp/tools.py</code></td>
+<td>All tools: 3,447 lines of argument shaping, refusals and response
+pruning</td>
+</tr>
+<tr>
+<td><code>src/yantrikdb_mcp/embedder.py</code></td>
+<td>Embedder selection: bundled 64-dim, ONNX 384-dim, multilingual
+256-dim</td>
+</tr>
+<tr>
+<td><code>src/yantrikdb_mcp/http_backend.py</code></td>
+<td>The same method names over a YantrikDB server, with unsupported ones
+raising a typed error</td>
+</tr>
+<tr>
+<td><code>src/yantrikdb_mcp/skill_security.py</code>,
+<code>skill_validation.py</code>,
+<code>skill_content_scanner.py</code></td>
+<td>The skill gate</td>
+</tr>
+<tr>
+<td><code>src/yantrikdb_mcp/_compat.py</code>, <code>auth.py</code></td>
+<td>MCP SDK 1.x and 2.x shims, network app, bearer-token middleware</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>One engine handle per process.</strong> <code>_LazyDB</code>
+opens the engine on the first tool call. Under SSE the lifespan
+re-enters per client session. A fresh handle per session raced on
+closing the same SQLite WAL, so the handle is now a singleton closed
+once at exit (<code>server.py:237-265</code>, issue #11).</p>
+<p><strong>Network mode is one principal.</strong>
+<code>--transport sse</code> or <code>streamable-http</code> binds
+<code>0.0.0.0</code> by default
+(<code>src/yantrikdb_mcp/__init__.py:77</code>). It wraps the app in
+bearer-token auth only when <code>YANTRIKDB_API_KEY</code> is set, and
+otherwise logs that the server is unauthenticated (<code>:89-98</code>).
+DNS-rebinding protection is disabled and all hosts and origins are
+allowed (<code>_compat.py:117-121</code>). Every client that holds the
+key reaches the same store with the same tools.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Install:</strong> <code>uvx yantrikdb-mcp</code>, no
+account, no API key. The engine wheel bundles its embedder, so the
+default path has no ML dependency.</li>
+<li><strong>Store:</strong> one SQLite file, not hand-readable; the
+<code>atlas</code> tool exports a static page of every memory and serves
+it on 127.0.0.1.</li>
+<li><strong>Cluster:</strong> set <code>YANTRIKDB_SERVER_URL</code>.
+<code>list_memories</code> and several other methods raise
+<code>RemoteUnsupportedError</code> there
+(<code>http_backend.py:525-551</code>), so skill <code>get</code>, skill
+<code>list</code> and <code>temporal(action="range")</code> without a
+query do not work in cluster mode.</li>
+</ul>
+<p><strong>Auto embedder selection misreads its own default
+store.</strong> With <code>YANTRIKDB_EMBEDDER</code> unset,
+<code>load_engine</code> picks ONNX whenever the file already holds
+memories, and bundled otherwise (<code>embedder.py:238-244</code>). The
+README says the ONNX branch is for "an existing pre-v0.6 database". The
+probe cannot tell one from the bundled store the same default created on
+first run. <code>tests/test_embedder_loader.py:99-117</code> builds its
+<code>legacy.db</code> fixture with <code>YantrikDB.with_default</code>,
+the bundled path, and asserts that a restart without the
+<code>[onnx]</code> extra raises. Every other test that spawns a server
+sets the embedder explicitly. Read, not reproduced; section 12 carries
+the question.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Remember</strong> — <code>tools.py:330-606</code>. Claims
+and backdating are refused before any write on an engine that cannot
+hold them (<code>:404-438</code>). A keyed batch skips
+<code>record_batch</code>, because that path would drop the keys
+(<code>:478-508</code>). Single mode forwards <code>namespace</code>,
+metadata and <code>event_time</code> bounds to <code>db.record</code>
+(<code>:586-596</code>).</li>
+<li><strong>Recall</strong> — <code>:661-922</code>. Default path
+<code>db.recall_with_response(..., namespace=namespace, ...)</code>
+(<code>:828-833</code>). An explicit <code>order</code> or
+<code>include_superseded</code> routes to <code>db.recall</code>
+(<code>:809-826</code>). <code>min_score_ratio</code> is applied
+client-side because the default engine path lacks it
+(<code>:834-856</code>).</li>
+<li><strong>Forget, correct</strong> — <code>:926-956</code>,
+<code>:960-1017</code>, by rid, no namespace.</li>
+<li><strong>Think</strong> — <code>:1021-1172</code>. An explicit
+<code>dry_run=True</code> on a plain think is refused; <code>None</code>
+means preview for the maintenance cycle (<code>:1109-1116</code>).</li>
+<li><strong>Skill</strong> — <code>:2317-2835</code>. Gate
+<code>:2422-2452</code>, define <code>:2455-2626</code>, surface
+<code>:2628-2689</code>.</li>
+<li><strong>Digest</strong> — <code>session(action="digest")</code>,
+<code>:1793-1845</code>; <code>scope</code> is forwarded only when given
+(<code>:1806</code>).</li>
+<li><strong>Engine side</strong> — the namespace branch in
+<code>crates/yantrikdb-core/src/engine/recall.rs:1850-1880</code> and
+<code>passes_recall_filters</code> (<code>:285-327</code>) at
+<code>v0.23.1</code>; <code>forget(rid)</code> in
+<code>crates/yantrikdb-python/src/py_engine/memory.rs:737-740</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The row is the engine's; section 5 of the <a
+href="../yantrikdb-engine/">engine report</a> describes it. The server
+adds three conventions in metadata and namespace.</p>
+<p><strong>Skills.</strong> A defined skill is a procedural memory in
+<code>skill_substrate</code>. Its metadata carries
+<code>record_type: skill</code>, <code>skill_id</code>,
+<code>skill_type</code>, <code>applies_to</code>,
+<code>body_sha256</code>, and attribution: request id, OS user,
+hostname, wall clock, origin and a nonce
+(<code>tools.py:2569-2585</code>,
+<code>skill_security.py:232-248</code>). A rule carries
+<code>pending_review: true</code> and lands in
+<code>skill_pending_review</code>
+(<code>skill_security.py:528-540</code>).</p>
+<p><strong>Outcomes.</strong> One episodic memory per reported use, in
+<code>outcome_substrate</code>, with no rollup onto the skill.</p>
+<p><strong>Valid time.</strong> <code>event_time</code> is written as
+<code>event_time_min</code> and <code>event_time_max</code> in metadata,
+which the engine mirrors to columns (<code>tools.py:609-618</code>).
+<code>created_at</code> backdates the record time.</p>
+<p><strong>The names are reserved by convention only.</strong> The
+engine mentions <code>skill_substrate</code> in one doc comment and
+guards none of the three names, and <code>remember</code> accepts any
+namespace string and any metadata.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The model sees the engine's hybrid recall: vector and FTS lanes,
+graph expansion, decay-weighted scoring. The server makes three changes
+to what reaches it.</p>
+<p><strong>It forces entity expansion on.</strong> The engine flipped
+the <code>expand_entities</code> default to off at 0.13, and the tool
+passes <code>True</code> explicitly (<code>pyproject.toml:78</code>).
+The manifest records why the floor rose to 0.14.1: a case-sensitive
+entity stoplist let "AT" become an entity that matched every query
+containing "at". The engine's benchmark missed it because the engine
+defaults expansion off and this server turns it on
+(<code>pyproject.toml:99-118</code>).</p>
+<p><strong>It makes each hit auditable.</strong> Every hit carries
+<code>created_at</code> in ISO form, <code>similarity</code> beside the
+blended score, and <code>why_retrieved</code>
+(<code>tools.py:860-898</code>). A <code>since</code>/<code>until</code>
+window filters on <code>created_at</code> before ranking and is echoed
+back (<code>:908-913</code>).</p>
+<p><strong>It leaves scope to the caller.</strong> <code>recall</code>,
+<code>memory(action="list")</code>,
+<code>graph(action="recall_with_links")</code> and <code>temporal</code>
+take <code>namespace=None</code>. The engine appends
+<code>AND m.namespace = ?</code> only when a namespace is supplied
+(<code>recall.rs:1859-1863</code>, <code>:1875-1879</code>). So an agent
+that follows the injected golden path, a digest and then a short recall,
+reads every namespace in the file, including the skill queue and any
+other pipeline's memories. The bundled Agent Skills skill asks job
+agents to pass a pipeline namespace "on every call"
+(<code>skills/persistent-memory/SKILL.md:73-74</code>), which is prose
+to the model.</p>
+<p><strong>Valid time is written and not read.</strong> No tool passes
+the engine's <code>event_after</code> or <code>event_before</code>.
+<code>temporal(action="as_of")</code> is the engine's record-time
+<code>recall_as_of</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous tool calls, visible to the next recall. No
+model runs in the server; extraction for
+<code>remember(summary=...)</code> and <code>session(capture)</code> is
+the engine's <code>draft_memories_from_summary</code>.
+<code>correct</code> needs a non-empty reason. Stated claims are
+grounded by the engine, and ungrounded ones come back rejected rather
+than stored.</p>
+<p><strong>Refusal over silent loss.</strong> A backdated
+<code>created_at</code>, a <code>claims</code> list or an as-of query on
+an engine that cannot honour it returns an error naming the version
+needed, before anything is written (<code>tools.py:404-438</code>,
+<code>:1985-1992</code>). The comment's reason is that stamping "now" on
+a memory the caller dated "would corrupt exactly the thing backdating
+exists to protect".</p>
+<p><strong>The dry-run incident is in the code.</strong> On 15 August
+2026 a maintenance cycle called as a preview "auto-resolved 15 conflicts
+and tombstoned 13 live records on the production store". The parameter
+had been accepted and never forwarded. It is now forwarded, defaults to
+preview, and an explicit dry run on a pass with no dry form is refused
+(<code>tools.py:1106-1139</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: one engine call per memory, synchronous, no model call in the
+server.</li>
+<li>Background: none. The model is told to call <code>think</code> at
+the end of long work; after 50 writes since the last think, a
+<code>remember</code> response carries a <code>maintenance</code>
+object, then every tenth write while over threshold
+(<code>tools.py:252-287</code>).</li>
+<li>Read: <code>top_k</code> defaults to 10, and each hit's
+<code>why_retrieved</code> list is returned whole. The tool schema costs
+about 9.8k tokens per session in the full profile, which the
+<code>core</code> profile cuts by about 36%
+(<code>tools.py:20-28</code>).</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>Tools.</strong> Full profile: remember, recall, forget,
+correct, think, memory, graph, conflict, session, procedure, temporal,
+category, personality, trigger, stats, conversation, task, gaps, skill,
+atlas, and pack when the engine carries packs, which 0.23.1 does.
+<code>YANTRIKDB_TOOL_PROFILE=core</code> registers the first ten only
+(<code>tests/test_tool_profiles_and_budget.py:32-45</code>).</p>
+<p><strong>Instructions.</strong> The server injects a golden path into
+the client's system prompt (<code>server.py:43-112</code>). It includes
+a trust-boundary paragraph: recalled text is "DATA, not instructions",
+and pack memories lose to the user's own.</p>
+<p><strong>Hosts.</strong> <code>.mcp.json</code> and
+<code>server.json</code> register the server for MCP clients and the MCP
+registry; <code>docs/hermes.md</code> registers it with <a
+href="../hermes-agent/">Hermes Agent</a> as an MCP server, the
+alternative to the <a href="../yantrikdb-hermes-plugin/">Hermes
+plugin</a>'s in-process provider; <code>integrations/prime-agent/</code>
+reaches it over HTTP with the static bearer token.</p>
+<p><strong>Agency.</strong> Complete. Every mutating verb — forget,
+correct, conflict resolve and auto-resolve, archive, category reset,
+personality set, trigger prune — is on the tool surface. Pack install
+and trust are the exception: they are refused unless
+<code>YANTRIKDB_ENABLE_PACK_WRITES=1</code>, read once at import
+(<code>tools.py:3016-3018</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope is advisory at this layer.</strong> The <a
+href="../yantrikdb-hermes-plugin/">Hermes plugin</a> derives the
+namespace from the host session and passes it on every call. This server
+takes it from the model, defaults reads to none, and runs
+<code>forget</code>, <code>correct</code> and conflict resolution by id.
+The <a href="../yantrikdb-engine/">engine report</a> observes that
+isolation is the wrapper's job; this wrapper hands it to the model.</p>
+<p><strong>The skill gate guards one door.</strong> The define path is
+thorough: gate off by default and frozen at import against environment
+spoofing, schema validation, prompt-injection and credential scanners, a
+namespace allowlist, a cross-origin replace guard, attribution, a JSONL
+audit line, a hash stamped for tamper detection. None of it sits on
+<code>remember</code>. <code>skill(surface)</code> filters on namespace
+and <code>record_type</code> and accepts a missing
+<code>body_sha256</code> as a pre-hash legacy row
+(<code>skill_security.py:449-455</code>). A skill written through
+<code>remember</code> is therefore served, with the gate closed, and the
+audit file records nothing.</p>
+<p>The README names the Hermes plugin and the server's
+<code>/v1/skills/*</code> among readers of the same namespace. The
+startup warning for cluster mode states the principle — "the MCP
+server's gate alone is not sufficient"
+(<code>skill_security.py:485-493</code>) — and it holds in embedded mode
+too.</p>
+<p><strong>The review queue is a namespace nothing reads.</strong>
+<code>PENDING_NAMESPACE</code> is assigned at <code>tools.py:2562</code>
+and read nowhere. The surface comment calls the queue "operator-only"
+and points to "a future tool extension or query the DB directly"
+(<code>:2637-2640</code>). No verb promotes a pending skill, and default
+recall returns it as an ordinary procedural memory.</p>
+<p><strong>The rate limit counts one call per bucket.</strong> Define
+and outcome take their session id from
+<code>ctx.request_context.request_id</code>
+(<code>tools.py:2408-2415</code>). In the MCP SDK that field is the
+JSON-RPC request id, which differs on every call, so the 30-per-minute
+sliding window never holds more than one entry per key. The limiter's
+tests pass fixed strings
+(<code>tests/test_skill_security.py:373-393</code>).</p>
+<p><strong>Capability marks:</strong></p>
+<ul>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>scope_enforced</code> — withheld. The row has a namespace and
+the engine filters on it, but every read at this layer takes the key
+from the model and defaults to none, and the cold-start digest is
+whole-store by default.</li>
+<li><code>trust_state</code>, <code>bitemporal</code>,
+<code>audit_log</code> — withheld at this layer; the <a
+href="../yantrikdb-engine/">engine</a> carries all three, in process.
+This server adds a <code>pending_review</code> flag no recall consults,
+writes valid time that no tool reads back, and keeps a skill-only JSONL
+file, off by default, outside the store, whose write failures are
+swallowed.</li>
+<li><code>tombstone</code> — withheld. Forget, conflict resolution and
+skill replace all act on a rid.</li>
+<li><code>human_review</code> — withheld. The conflict
+<code>resolve</code> and <code>auto_resolve</code> verbs are on the
+agent's tool surface, and the skill queue has no drain.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed or run for this report; everything below is
+from reading the tests at the pin. CI runs the unit suite on Python
+3.10, 3.12 and 3.14 against MCP SDK 1.x and 2.x with the
+<code>[onnx]</code> extra installed, and an end-to-end stdio suite per
+embedder backend (<code>.github/workflows/ci.yml</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>tests/test_temporal_as_of.py:99-120</code> records port 8420,
+takes a cut, records port 9000 in the same namespace, and asserts the
+<code>temporal</code> tool's as-of read returns 8420 and not 9000.
+<code>tests/test_time_window_range.py:71-94</code> seeds four in-window
+rows and a 300-day-old decoy and asserts the window keeps one and drops
+the other, in both directions. Both run the tool function against the
+real engine with the positive side asserted first. That earns
+<code>negative_eval</code>.</p>
+<p><strong>The contract gate.</strong>
+<code>tests/test_mcp_semantic_contract.py</code> drives a spawned server
+over JSON-RPC and states a 100% pass bar. Its namespace case C5
+(<code>:171-177</code>) remembers a secret in <code>tenant_alpha</code>
+and asserts it is absent from a <code>tenant_beta</code> recall. Nothing
+in the module writes to <code>tenant_beta</code>, so a recall returning
+nothing passes. Seeding one <code>tenant_beta</code> fact and asserting
+it present would repair it.</p>
+<p><strong>Not covered.</strong> No test writes through
+<code>remember</code> into <code>skill_substrate</code>, reads a pending
+skill through plain recall, or calls a gated skill action twice through
+the tool to exercise the limiter. The review queue is tested as a
+predicate (<code>tests/test_skill_security.py:493-503</code>).</p>
+<p><strong>The paper.</strong> The README links <em>Skill as Memory, Not
+Document</em> (<a
+href="https://doi.org/10.5281/zenodo.20128887">doi:10.5281/zenodo.20128887</a>),
+which the Zenodo record lists as a preprint dated 12 May 2026. The
+README calls it "peer-reviewed" (<code>README.md:350</code>,
+<code>:394</code>). Its abstract reports the substrate rejecting 70 of
+70 adversarially malformed skills at write time. In this server that
+validation runs in <code>skill(action="define")</code> and not on
+<code>remember</code>, which reaches the same namespace. The paper's
+harness was not read.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Refuse what you cannot honour, and name the fix.</strong> A
+backdated write on an engine that would stamp "now", a time window on a
+path that would drop it: an error with the required version beats a
+success that means something else.</li>
+<li><strong>Default destructive previews to preview.</strong> After a
+dry run ran wet, the default became preview, and an explicit dry run on
+an operation with no dry form became an error.</li>
+<li><strong>Surface maintenance debt as data inside the responses the
+agent already reads</strong>, rate-limited, with no urgency prose.</li>
+<li><strong>Put <code>created_at</code> and a similarity number on every
+hit</strong>, so a caller can overrule a ranking that picked a stale
+revision.</li>
+<li><strong>Bound each hard dependency to the tested minor, with the
+reason beside the pin.</strong> The manifest records the flipped default
+and the major release that broke installs.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A write gate on one tool when another tool writes the same
+records.</strong> Put the check where the namespace is written, or make
+the namespace unreachable from the generic writer.</li>
+<li><strong>Treating a missing integrity field as valid.</strong> A
+legacy exemption becomes the path of least resistance for every new
+writer.</li>
+<li><strong>A review queue with no reader.</strong> Either ship the
+promote path and exclude the queue from ordinary reads, or do not route
+to it.</li>
+<li><strong>Keying a per-session limit on a per-request
+identifier.</strong></li>
+<li><strong>An optional scope whose default is everything</strong>, on a
+server that serves several clients from one file.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants the YantrikDB engine behind Claude
+Code, Cursor or Hermes over MCP, on one machine, with the model deciding
+what to remember. The engine does the memory work well, and this layer
+passes it through with unusual honesty about what each argument does. It
+does not suit a shared deployment. Scope, deletion and skill admission
+all trust the model or the network, and the network mode binds wide with
+auth optional. A team wanting per-person or per-project isolation should
+derive the namespace outside the model, as the Hermes plugin does, or
+run one file per principal.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does a default install fail on its second start? The auto rule and
+its test say a bundled store with memories resolves to ONNX, which
+raises without the extra. Settling it needs one run with no
+<code>YANTRIKDB_EMBEDDER</code> set.</li>
+<li>Is a skill written through <code>remember</code> served by the
+Hermes plugin's and the server's skill readers too? The README says they
+share the namespace; their filters were not read here.</li>
+<li>Is the review queue meant to be drained by a server route? No reader
+was found in this repository or in the engine.</li>
+<li>Does the paper's admission harness drive <code>skill(define)</code>,
+the server's <code>/v1/skills/*</code>, or the engine directly?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Server and instructions:</strong>
+<code>src/yantrikdb_mcp/server.py</code>,
+<code>src/yantrikdb_mcp/__init__.py</code>,
+<code>src/yantrikdb_mcp/_compat.py</code>,
+<code>src/yantrikdb_mcp/auth.py</code>.</li>
+<li><strong>Tools:</strong> <code>src/yantrikdb_mcp/tools.py</code>
+(remember <code>:330</code>, recall <code>:661</code>, forget
+<code>:926</code>, correct <code>:960</code>, think <code>:1021</code>,
+session <code>:1681</code>, temporal <code>:1852</code>, skill
+<code>:2317</code>, pack <code>:3078</code>, atlas
+<code>:3370</code>).</li>
+<li><strong>Skill gate:</strong>
+<code>src/yantrikdb_mcp/skill_security.py</code>,
+<code>skill_validation.py</code>,
+<code>skill_content_scanner.py</code>.</li>
+<li><strong>Backends:</strong>
+<code>src/yantrikdb_mcp/embedder.py</code>,
+<code>src/yantrikdb_mcp/http_backend.py</code>.</li>
+<li><strong>Manifest and hosts:</strong> <code>pyproject.toml</code>,
+<code>.mcp.json</code>, <code>server.json</code>,
+<code>skills/persistent-memory/SKILL.md</code>,
+<code>docs/hermes.md</code>,
+<code>integrations/prime-agent/</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_temporal_as_of.py</code>,
+<code>tests/test_time_window_range.py</code>,
+<code>tests/test_mcp_semantic_contract.py</code>,
+<code>tests/test_skill_security.py</code>,
+<code>tests/test_embedder_loader.py</code>,
+<code>tests/test_tool_profiles_and_budget.py</code>,
+<code>tests/test_v010_engine_contract_cases.py</code>.</li>
+<li><strong>Engine at <code>v0.23.1</code>:</strong>
+<code>crates/yantrikdb-core/src/engine/recall.rs</code>,
+<code>crates/yantrikdb-python/src/py_engine/memory.rs</code>,
+<code>src/yantrikdb/mcp/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, and the engine
+at tag <code>v0.23.1</code> where marked.</p>
+<ul>
+<li><code>grep -rn 'event_after\|event_before' . --exclude-dir=.git</code>
+— no match; no tool binds the valid-time filter.</li>
+<li><code>grep -rn 'skill_substrate\|PENDING_NAMESPACE\|skill_pending_review\|OUTCOME_NAMESPACE\|SKILL_NAMESPACE' --include='*.py' . | grep -v '^./tests'</code>
+— <code>PENDING_NAMESPACE</code> is defined in
+<code>skill_security.py:528</code>, imported at
+<code>tools.py:2379</code> and assigned at <code>:2562</code>; no
+read.</li>
+<li>Engine:
+<code>grep -rn 'skill_substrate\|skill_pending_review\|outcome_substrate' crates src</code>
+— one doc comment in <code>py_engine/memory.rs:422-429</code>; no
+guard.</li>
+<li><code>grep -rn 'request_id' src/</code> — <code>tools.py:2408</code>
+and <code>:2413</code> only.</li>
+<li><code>grep -n 'rate' tests/test_skill_security.py tests/test_e2e_mcp.py</code>
+— the limiter tests at <code>test_skill_security.py:373-393</code> call
+<code>check_rate_limit</code> with fixed strings.</li>
+<li><code>grep -n 'YANTRIKDB_EMBEDDER' tests/*.py</code> — every spawned
+server sets it; only <code>test_embedder_loader.py</code> exercises
+auto.</li>
+<li><code>grep -rniE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION|zenodo' . --exclude-dir=.git</code>
+— the README's Zenodo link and BibTeX block; no
+<code>CITATION.cff</code>.</li>
+<li><code>gh api repos/yantrikos/yantrikdb/compare/49c7aac1b78b74b296f7708a95d227073b4a666b...v0.23.1</code>
+— four commits, seven files: version strings,
+<code>src/yantrikdb/cli.py</code> and
+<code>tests/test_cli.py</code>.</li>
+<li>PyPI <code>yantrikdb</code> release list — 0.23.1 uploaded
+2026-09-19T18:51:01Z, the newest release below 0.24.0 before the pin
+commit at 2026-09-19T23:19:17Z.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-26</strong> — <a
+href="https://github.com/yantrikos/yantrikdb-mcp/commit/364e19a5b33a6c4a81f46fa9eaee5ddce68fcfa3"><code class="commit-id" title="364e19a5b33a6c4a81f46fa9eaee5ddce68fcfa3">364e19a5…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 19
+September 2026. One mark, <code>negative_eval</code>. The engine was
+read at tag <code>v0.23.1</code>, the release the manifest range
+resolves to at the pin. Screened before reading: 3 auto-run surfaces
+(<code>.mcp.json</code>, <code>mcp.json</code> and
+<code>server.json</code>, each launching
+<code>uvx yantrikdb-mcp</code>), no build-time execution, 2 unpinned
+manifests, 2 inside the cooldown with every file of the depth-1 clone
+dated to the tip, and no agent-instruction file. The engine's partial
+checkout showed one <code>build.rs</code> and three files inside the
+cooldown. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

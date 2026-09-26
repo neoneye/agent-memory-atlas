@@ -312,6 +312,17 @@ user id, so an automation cannot approve the run it queued, and the
 queued proposal carries the snapshot it was built on, so a field a human
 edited in the meantime is skipped as stale instead of being clobbered by
 the approval.</p>
+<p><a href="../../systems/yantrikdb-mcp/">yantrikdb-mcp</a> is a
+counterexample: a gate that is thorough and not exclusive.
+<code>skill(action="define")</code> runs a write gate off by default and
+frozen at import, schema validation, content scanners, a namespace
+allowlist, attribution, an audit line and a stamped hash, while the
+generic <code>remember</code> tool writes into the same
+<code>skill_substrate</code> namespace with any metadata. The catalog
+reader filters on namespace and a metadata tag and accepts a missing
+hash as a legacy row, so a skill written past the gate is served. The
+server's own cluster-mode warning states the fix — "the MCP server's
+gate alone is not sufficient" — and it applies in embedded mode too.</p>
 <h3 id="gates-on-something-other-than-a-write">Gates on something other
 than a write</h3>
 <p>These are analogies rather than instances. Each puts one gate, or one
