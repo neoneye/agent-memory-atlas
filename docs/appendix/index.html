@@ -4832,23 +4832,25 @@ executed; the model was never trained or served</li>
 <li><a
 href="https://github.com/strands-agents/harness-sdk">strands-agents/harness-sdk</a>
 at <a
-href="https://github.com/strands-agents/harness-sdk/commit/880c5bd412b002254ad230da1394a3bbbca58d9f"><code class="commit-id" title="880c5bd412b002254ad230da1394a3bbbca58d9f">880c5bd4…</code></a>
+href="https://github.com/strands-agents/harness-sdk/commit/15da9dca2cd6f870684fdc27a2498bebbd00b62d"><code class="commit-id" title="15da9dca2cd6f870684fdc27a2498bebbd00b62d">15da9dca…</code></a>
 — read only, at the head of the default branch. Apache-2.0, Amazon.
-Screened before reading: <strong>0 auto-run surfaces</strong>, 27
-build-time execution points (18 <code>conftest.py</code>, the root
-<code>package.json</code>'s <code>prepare: husky</code>, and seven
-example manifests whose <code>prepare</code> runs
-<code>npm ci --prefix ../../..</code>), 32 unpinned dependency surfaces
-and 43 inside the seven-day cooldown — that last count is an artifact of
-a <code>--depth 1</code> clone dating every file to the tip, not a
-statement about the repository. <code>.gitattributes</code> carries
+Screened from a full clone before reading: <strong>0 auto-run
+surfaces</strong>, 27 build-time execution points (19
+<code>conftest.py</code>, the root <code>package.json</code>'s
+<code>prepare: husky</code>, and seven example manifests whose
+<code>prepare</code> runs <code>npm ci --prefix ../../..</code>), 32
+unpinned dependency surfaces and 19 inside the seven-day cooldown, dated
+by their own commits. <code>.gitattributes</code> carries
 <code>* text=auto eol=lf</code> and no <code>filter=</code>; there is no
 <code>.gitmodules</code>; <code>.claude/</code> and <code>.kiro/</code>
-are symlinks to <code>.agents/</code> holding skills and references,
-with no settings file and no hooks; <code>.husky/pre-commit</code> runs
-the project's own build, test, lint, format and type-check scripts and
-is inert in a clone. <code>AGENTS.md</code> and <code>CLAUDE.md</code>
-were treated as data. Nothing was installed, built or executed</li>
+hold only symlinks to <code>.agents/skills</code> and
+<code>.agents/references</code>, with no settings file and no hooks;
+<code>.husky/pre-commit</code> runs the project's own lint, build, test,
+format and type-check scripts, and since 23 September 2026 a
+staged-Python lint that fetches <code>ruff&gt;=0.16.0,&lt;0.17.0</code>
+through <code>uvx</code>; it is inert in a clone. <code>AGENTS.md</code>
+and <code>CLAUDE.md</code> were treated as data. Nothing was installed,
+built or executed</li>
 <li><a href="https://github.com/elizaOS/eliza">elizaOS/eliza</a> at <a
 href="https://github.com/elizaOS/eliza/commit/a7e56b58354643655f258c269549fa939784c862"><code class="commit-id" title="a7e56b58354643655f258c269549fa939784c862">a7e56b58…</code></a>
 — read only, at the head of the default branch <code>develop</code>.
@@ -5242,6 +5244,24 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>A report called a memory write unawaited, and the
+synchronous call waits on it.</strong> The <a
+href="../systems/strands-agents/">Strands Agents</a> report of 22
+September 2026 said the default extraction write <em>"does not block the
+agent and is not awaited anywhere."</em> At that pin Python's
+<code>Agent.__call__</code> already ran
+<code>_invoke_async_and_flush</code>, which awaits
+<code>memory_manager.flush()</code> after every synchronous invocation
+and forces extraction regardless of the trigger. The same report said no
+documentation example implements <code>add_messages</code> while its own
+recorded grep matched the memory guide's <code>ServerSideStore</code>,
+dated the history from 14 May 2025 rather than 16 May, and published a
+test census that does not reproduce. It also left out that the Python
+<code>FileMemoryStore</code> fails every search over a storage backend
+whose <code>search</code> does not take a string. Corrected 2026-09-26
+at a newer pin, over unchanged code. The check that would have caught
+the first: grep every caller of <code>flush</code> before calling a
+write unawaited.</li>
 <li><strong>The MemPalace report withheld <code>negative_eval</code> at
 three readings over committed cases present at each; corrected
 2026-09-26.</strong> From the first pin, <a

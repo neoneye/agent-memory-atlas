@@ -24165,12 +24165,16 @@ under a storage namespace, a JSON file of records, and Amazon Bedrock
 Knowledge Bases over S3</td>
 <td>Per store. Token-overlap keyword scoring for the two local stores,
 Bedrock semantic retrieval with an optional score bound for the third.
-The manager fans out to every store concurrently and concatenates in
-registration order with no cross-store ranking</td>
+The Python file store hands the query string to its storage backend's
+search, which only a backend accepting a string answers; the TypeScript
+file store scans with list and read. The manager fans out to every store
+concurrently and concatenates in registration order with no cross-store
+ranking</td>
 <td>Background extraction every 5 turns by default: a model call
 distills the conversation into discrete facts, written through the
-store's add. An optional add_memory tool lets the model write directly,
-off by default</td>
+store's add. Python's synchronous agent call flushes extraction after
+every invocation, so there the caller waits on it. An optional
+add_memory tool lets the model write directly, off by default</td>
 <td>Neither exists. The store protocol has no delete method, and no path
 in the memory subsystem calls the delete the storage layer underneath it
 provides. The design doc's correction story is recency weighting, which
@@ -24193,7 +24197,9 @@ own tools; extraction excludes tool traffic by default; the scope key is
 stamped by the writer and enforced by the reader in both SDKs</td>
 <td>Nothing can be deleted or superseded, and the harness writes to a
 local markdown store by default with extraction on; an explicit Bedrock
-filter silently unscopes search; the default file store merges
+filter silently unscopes search; the Python file store over a storage
+backend whose search does not take a string writes every fact and finds
+none, with only a warning logged; the default file store merges
 corrections into the same file as what they correct; extraction is
 at-least-once and the default store has no idempotency</td>
 </tr>
