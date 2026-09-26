@@ -2757,9 +2757,12 @@ three dependency files changed two days before the pin, inside the
 cooldown. Nothing was installed and the suite was not run</li>
 <li><a href="https://github.com/nambok/mentedb">nambok/mentedb</a> at <a
 href="https://github.com/nambok/mentedb/commit/4ba993dcf52f0a17065a9a2484fe59777dcd45d4"><code class="commit-id" title="4ba993dcf52f0a17065a9a2484fe59777dcd45d4">4ba993dc…</code></a>
-— read only; two cargo <code>build.rs</code> build-time execution points
-and a benchmark requirements file pinning nothing. Nothing was installed
-and <code>cargo test</code> was not run</li>
+— read only; screened on 2026-09-13 and again on a full clone on
+2026-09-26 at the same pin: two cargo <code>build.rs</code> build-time
+execution points, floating benchmark requirements and an
+agent-instructions file. Nothing was installed and
+<code>cargo test</code> was not run, so the claims about tests are
+claims about their committed source</li>
 <li><a
 href="https://github.com/iamtouchskyer/memex">iamtouchskyer/memex</a> at
 <a
@@ -5265,6 +5268,29 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The MenteDB report said MQL can express agent scope, that no
+case asserts cross-user absence, and that a query without
+<code>AS OF</code> keeps rows valid now; corrected 2026-09-26.</strong>
+At <a
+href="https://github.com/nambok/mentedb/commit/4ba993dcf52f0a17065a9a2484fe59777dcd45d4"><code class="commit-id" title="4ba993dcf52f0a17065a9a2484fe59777dcd45d4">4ba993dc…</code></a>
+the <a href="../systems/mentedb/">MenteDB</a> report said
+<code>Agent</code> and <code>Space</code> are <code>Field</code>
+members, <em>"so the language can express it"</em>. Both parse, and
+<code>filter_matches</code> has no arm for either and returns
+<code>true</code> for an unhandled field, so
+<code>WHERE agent = &lt;id&gt;</code> returns every agent's rows; that
+over-credited MQL. Its <code>scope_enforced</code> record said no
+committed case asserts a cross-user recall returns nothing;
+<code>user_isolation.rs</code> asserts it twice with positive controls,
+which under-credited the system. Its diagram said a query without
+<code>AS OF</code> keeps rows valid now; the MQL executor applies no
+window. The mark was anchored on the entity reads and is re-anchored on
+the hybrid recall core that <code>process_turn</code> and
+<code>recall_for_injection</code> call. It also counted the four
+withheld marks as three and the four AS OF negatives as three. The
+searches that would have caught the first two:
+<code>grep -rnE "Field::(Agent|Space)" --include="*.rs" .</code> and
+<code>ls crates/mentedb/tests/</code>.</li>
 <li><strong>The Linggen Memory report withheld
 <code>negative_eval</code>, did not assess <code>bitemporal</code>, and
 missed the archive its merges write; corrected 2026-09-26.</strong> At

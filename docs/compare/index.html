@@ -15807,30 +15807,37 @@ carrying agent, user and space ids and an optional validity window</td>
 <td>A purpose-built page store with a write-ahead log for crash
 recovery, an HNSW vector index and a BM25 index beside a graph
 crate</td>
-<td>MQL — a query language with similarity, substring and set operators
-over typed fields, including <code>Created</code> for record time and
-<code>AS OF</code> for validity</td>
+<td>MQL, a query language with similarity, substring and set operators
+over typed fields including <code>Created</code> for record time and
+<code>AS OF</code> for validity, beside a hybrid HNSW and BM25 core that
+the turn and injection paths call directly</td>
 <td>A turn is processed into extracted memories; a contradicting value
 closes the loser's validity window rather than deleting it</td>
-<td>Supersession by closing <code>valid_until</code>;
-<code>invalidate_memory</code> sets the bound so the row stays readable
-at an earlier instant</td>
-<td><code>agent_id</code>, <code>user_id</code> and
-<code>space_id</code> on the row, required as parameters on the entity
-and cluster reads and expressible in MQL, but not applied by the primary
-recall unless the query says so</td>
+<td>Supersession by closing <code>valid_until</code> and adding a
+<code>Supersedes</code> edge; the row stays readable at an earlier
+instant, and a bare MQL recall with no <code>AS OF</code> returns it
+beside the live value</td>
+<td><code>agent_id</code> and <code>user_id</code> on the row, compared
+on every candidate by the hybrid recall core the turn and injection
+paths use, with nil-owned rows shared; both ids are optional there, and
+MQL recall and the server's recall and search routes take none.
+<code>space_id</code> is stored and read by no retrieval path</td>
 <td>A Rust library with Python and TypeScript SDKs, a CLI, a server
-crate and a replication crate</td>
+crate with REST, gRPC and WebSocket surfaces, and a replication
+crate</td>
 <td>Consolidation, enrichment and entity linking run over the store; a
 WAL checkpoint underneath</td>
-<td>A confidence score and a salience score, both continuous; conflict
-resolution picks a strategy rather than recording a state</td>
-<td>Two time axes that are both queryable fields, an AS OF whose test
-asserts the superseded and the not-yet-valid are each absent, and a
-dedup regression written from a reported production bug</td>
-<td>The primary recall takes only a query string, so scope is enforced
-where a parameter demands it and absent where the caller writes the MQL;
-the WAL is crash recovery rather than an audit of what changed</td>
+<td>A confidence score and a salience score, both continuous;
+speculative ghost memories are tagged <code>unconfirmed</code> at write
+and kept out of injection only; conflict resolution picks a strategy
+rather than recording a state</td>
+<td>Two time axes that are both queryable fields, an AS OF test whose
+four negatives each sit beside a positive, and cross-user and
+cross-agent recall cases asserted against a populated store</td>
+<td>Scope is an optional argument: <code>None</code> recalls every
+owner, the server's recall and search routes pass none whatever the
+token says, and MQL's <code>Agent</code> filter is never evaluated; a
+bare MQL recall returns superseded rows</td>
 </tr>
 <tr>
 <td><code>mentisdb</code></td>

@@ -1087,22 +1087,23 @@ a superseded fact is visible when you ask about a moment it was true —
 and <code>Created</code> and <code>ValidAt</code> are both members of
 the planner's field enum, so the two axes are queryable in one
 statement.</li>
-<li>Biggest risk: the primary <code>recall(query: &amp;str)</code> takes
-only an MQL string, so the boundary lives in whatever the caller
-composed; the typed reads beside it demand agent and user ids, and the
-one an agent is most likely to call does not.</li>
-<li>Most reusable component: the AS OF regression test, whose three
+<li>Biggest risk: scope is an optional argument — the hybrid recall core
+filters by agent and user when given the ids and recalls every owner
+when not, the server's recall and search routes pass none whatever the
+token names, and MQL's <code>Agent</code> field parses and is never
+evaluated.</li>
+<li>Most reusable component: the AS OF regression test, whose four
 negatives each sit beside a positive over the same three-memory store,
-and a dedup test written from the production symptom it fixed.</li>
+and user-isolation cases built the same way.</li>
 <li>Maturity impression: ~61,800 lines of Rust across fourteen crates
 with its own page store, a WAL with a documented entry format and CRC32,
 HNSW and BM25 indexes, a replication crate and Python and TypeScript
 SDKs.</li>
 <li>Study when: your application needs to ask what it believed at a past
-moment — very little else in this atlas answers that as directly.</li>
-<li>Do not copy when: the boundary must be enforced by the engine rather
-than by the query, a wrong value must be unable to return, or a reviewer
-needs somewhere to stand.</li>
+moment — <code>AS OF</code> answers that directly.</li>
+<li>Do not copy when: the boundary between tenants must be enforced by
+the engine rather than by whoever calls it, a wrong value must be unable
+to return, or a reviewer needs somewhere to stand.</li>
 </ul>
 <h3 id="mercury-agent"><a
 href="../systems/mercury-agent/"><code>mercury-agent</code></a></h3>

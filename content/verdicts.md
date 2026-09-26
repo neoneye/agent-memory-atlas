@@ -385,11 +385,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`mentedb`](../systems/mentedb/)
 - Best idea: `AS OF t` judges every memory against the instant asked for rather than dropping whatever is currently invalid, so a superseded fact is visible when you ask about a moment it was true — and `Created` and `ValidAt` are both members of the planner's field enum, so the two axes are queryable in one statement.
-- Biggest risk: the primary `recall(query: &str)` takes only an MQL string, so the boundary lives in whatever the caller composed; the typed reads beside it demand agent and user ids, and the one an agent is most likely to call does not.
-- Most reusable component: the AS OF regression test, whose three negatives each sit beside a positive over the same three-memory store, and a dedup test written from the production symptom it fixed.
+- Biggest risk: scope is an optional argument — the hybrid recall core filters by agent and user when given the ids and recalls every owner when not, the server's recall and search routes pass none whatever the token names, and MQL's `Agent` field parses and is never evaluated.
+- Most reusable component: the AS OF regression test, whose four negatives each sit beside a positive over the same three-memory store, and user-isolation cases built the same way.
 - Maturity impression: ~61,800 lines of Rust across fourteen crates with its own page store, a WAL with a documented entry format and CRC32, HNSW and BM25 indexes, a replication crate and Python and TypeScript SDKs.
-- Study when: your application needs to ask what it believed at a past moment — very little else in this atlas answers that as directly.
-- Do not copy when: the boundary must be enforced by the engine rather than by the query, a wrong value must be unable to return, or a reviewer needs somewhere to stand.
+- Study when: your application needs to ask what it believed at a past moment — `AS OF` answers that directly.
+- Do not copy when: the boundary between tenants must be enforced by the engine rather than by whoever calls it, a wrong value must be unable to return, or a reviewer needs somewhere to stand.
 
 ### [`mercury-agent`](../systems/mercury-agent/)
 - Best idea: three independent grades — confidence, importance, durability — plus a subconscious tier and a user-facing learning pause.
