@@ -391,8 +391,8 @@ present-tense statement of what is true, and each of them discards the disagreem
 that produced it. Whether that is a loss depends on what the memory is for — a
 scheduling assistant does not need to know that the user changed their mind twice
 about a meeting, and a long-running collaborator arguably does. No system here has
-made the choice explicitly; this one has, and its output is written to a directory
-no read path loads, so the argument is the whole contribution.
+made the choice explicitly; this one has, and its output is loaded into a variable
+nothing reads and reaches no prompt, so the argument is the whole contribution.
 
 `generative-agents` is the origin of the reflection loop that several systems
 here descend from, and its trigger is still the most elegant: a countdown seeded

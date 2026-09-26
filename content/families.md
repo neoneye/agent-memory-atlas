@@ -856,7 +856,7 @@ the statement that produced the memory is still in front of the next pass. See
 [OpenSRE](../systems/opensre/).
 
 **AuraOS is the family's zero point, and worth keeping in view for that
-reason.** Four commits old, no tests, no licence: `server/main.py` reads the
+reason.** No tests, no licence file: `server/main.py` reads the
 `core/` identity folder whole, reads the caller's entire transcript whole, splices
 both in front of the current message, and appends both sides of the exchange
 afterwards. No extraction, no ranking, no budget, no deletion. Every other system
@@ -865,7 +865,7 @@ a useful baseline — the version with no retrieval has no retrieval bugs, and t
 question it cannot answer is what to drop when the context window fills, because
 nothing measures the prompt. What it does have is the caller naming its own
 `user_id`, unvalidated, straight into a file path, with the server bound to
-`0.0.0.0` by default. See [AuraOS](../systems/auraos/).
+`0.0.0.0` and open to every CORS origin by default. See [AuraOS](../systems/auraos/).
 
 **Muninn is the family's clearest demonstration that governance follows the
 watcher, not the risk.** It keeps two durable tiers in one Postgres database.
