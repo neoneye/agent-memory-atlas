@@ -62,7 +62,7 @@ FLAGS = {flag for flag, _, _ in CAPABILITIES}
 #: A withdrawn mark takes its evidence record with it, so a withdrawal lowers the
 #: floor by exactly its records, in the same commit, named here: 1265 -> 1264 on
 #: 2026-09-25 for ELAI's `bitemporal`.
-COVERAGE_FLOOR = 1264
+COVERAGE_FLOOR = 1308
 
 #: Reports analyzed on or after this date must carry an evidence record for
 #: *every* mark they declare. The floor above only stops coverage falling; it
