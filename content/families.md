@@ -3902,7 +3902,8 @@ primitive but mature, and the mechanisms are specific:
   instances are all in this group.
 - **Suppression as a first-class state.** `@@dont_activate` disables an entry
   without deleting it; N.E.K.O.'s ban-topic directive is keyed on the term and
-  withholds it from recall; RisuAI's pin exempts a summary from budget pressure.
+  drops any proactive draft that names it; RisuAI's pin exempts a summary from
+  budget pressure.
 - **Hysteresis on activation.** Sticky, cooldown and delay give a unit state about
   its own recent firing, so it neither repeats every turn nor drops mid-thread —
   see [retrieval hysteresis](../patterns/retrieval-hysteresis/). Nothing outside

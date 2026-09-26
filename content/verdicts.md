@@ -1103,10 +1103,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: memory must be correctable or provable. There is no supersession at the facade, no rejection, no audit, and the trust model grades where a memory came from rather than whether it holds.
 
 ### [`neko`](../systems/neko/)
-- Best idea: a *dispute* signal structurally separate from reinforcement, with a hard filter that drops disputed entries **before** the LLM rerank — the docstring giving the reason: stage two would either reinforce the dispute or, worse, cancel it.
+- Best idea: a *dispute* signal structurally separate from reinforcement, with a hard filter that drops disputed reflections before any ranker scores them — on the recall tool, and ahead of the LLM rerank that picks what Stage-2 signal detection sees, the docstring giving the reason: stage two would either reinforce the dispute or, worse, cancel it.
 - Biggest risk: status is derived from a score rather than stored, so no transitions are kept; and ban-topic directives expire 3 to 30 days after the last mention, scaled by how often they were said, which is still a TTL on a suppression the user asked for — and the constant's own comment records that no interface exists yet for deleting one.
 - Most reusable component: the durable do-not-mention list keyed on the term, and stating the false-positive policy in the code where the suppression lives.
-- Maturity impression: about 16,344 test functions under its two test trees — the largest suite in this atlas — including 267 scope cases and a committed test that a model calling the recall tool cannot widen its own scope by supplying subject arguments.
+- Maturity impression: 17,479 test functions under its two test trees, including 267 scope cases, a committed test that a model calling the recall tool cannot widen its own scope by supplying subject arguments, and a disputed reflection asserted absent from recall beside a reinforced control.
 - Study when: a memory mistake will be *felt* rather than merely wrong — a companion, a therapy-adjacent tool, a long-running personal assistant.
 - Do not copy when: you want a library. Memory is wired into a companion runtime with voice, vision and an avatar, and there is no API boundary to lift it out through. Take the designs, not the code.
 

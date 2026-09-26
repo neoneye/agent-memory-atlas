@@ -146,11 +146,11 @@ session. All three are a cooldown whose span is the rest of the session.
 
 **[Project N.E.K.O.](../../systems/neko/)** arrives at suppression from the
 correction side rather than the authoring side: a ban-topic directive keyed on
-`(kind, term.casefold())` withholds a term from recall, expires three days after
-it was last said scaled by repetition up to thirty, and a hard filter drops
-disputed entries before the rerank. Its anti-repeat module attacks the same
-repetition problem from the generation end, with a BM25 corpus over the agent's
-own prior output.
+`(kind, term.casefold())` goes into the system prompt and drops any proactive
+draft that names the term, expires three days after it was last said scaled by
+repetition up to thirty, and a hard filter drops disputed reflections before any
+ranker scores them. Its anti-repeat module attacks the same repetition problem
+from the generation end, with a BM25 corpus over the agent's own prior output.
 
 **[mini-AGI](../../systems/mini-agi/)** carries the moves on a unit that is not
 text at all. Its working set is 32 expert weight files chosen per chunk, and
