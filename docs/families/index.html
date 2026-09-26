@@ -8369,21 +8369,17 @@ own session.</strong> Its unit is a claim carrying
 <code>provenance</code> — one of eight named channels — beside a
 five-state <code>trust</code>, and
 <code>cap_trust(provenance, trust)</code> refuses <code>verified</code>
-to anything whose source is not in
+to anything whose declared source is not in
 <code>{git, tool, test, file, transcript}</code>
-(<code>src/portable_handoff/models.py:166</code>). The cap runs
-<strong>at parse time</strong>, so it applies to a capsule written by an
-older version, another tool or a stranger; an artifact cannot smuggle in
-an authority its source cannot support, and a model-authored record
-claiming <code>git</code> provenance is separately rewritten to
-<code>test</code>. The same instinct governs a carried shell command,
-classified at load against raw text <em>"so a capsule has no field it
-could populate to declare itself safe"</em>. Where the family's other
-members enforce trust inside a store they own, this one enforces it on a
-file arriving from outside — and where they filter, it only labels: no
-read path in it filters, ranks or omits on any of the five states, which
-is why the mark is withheld and the near-miss is the report's subject.
-See <a href="../systems/portable-handoff/">Portable Handoff</a>.</p>
+(<code>src/portable_handoff/models.py:166</code>), at parse time as well
+as at write. It binds the pairing, not the source: the draft author
+writes the provenance too, so a claim declared <code>tool</code> and
+<code>verified</code> passes. What holds outright is the repository
+snapshot, which <code>finalize</code> takes from local git alone. Where
+the family's other members enforce trust inside a store they own, this
+one enforces it on a file arriving from outside — and where they filter,
+it only labels, which is why the mark is withheld. See <a
+href="../systems/portable-handoff/">Portable Handoff</a>.</p>
 <p><strong>Heimdall is the family's outlier: it verifies at read time
 and stores no trust.</strong> Every other member here keeps a status a
 writer set; this one computes a verdict per search hit by checking

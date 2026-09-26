@@ -21025,33 +21025,36 @@ whose adapter mislabels a part has no second chance to be corrected</td>
 <td>A labelled claim — text plus <code>provenance</code>,
 <code>trust</code>, <code>evidence_refs</code> and
 <code>captured_at</code> — inside a single Markdown capsule</td>
-<td>One Markdown file per capsule with an embedded canonical JSON
-document; stdlib only, no database</td>
-<td>There is no query. <code>load</code> renders the whole capsule into
-a budgeted briefing and reports how far the repository has moved since
-it was written</td>
-<td>Two phases: <code>preflight</code> collects deterministic local
-facts, the model writes a semantic draft, <code>finalize</code> merges
-them and caps every trust label by its provenance</td>
-<td>A capsule is immutable once written; decisions carry
-<code>active</code>/<code>superseded</code>; there is no delete, and no
-capsule supersedes another</td>
-<td>One repository root per capsule, recorded and re-checked on load; no
-principal scope</td>
+<td>One Markdown file per capsule under .handoff/capsules/ in the
+repository, with an embedded canonical JSON document; stdlib only, no
+database</td>
+<td>There is no query. <code>load</code> renders a fixed subset of the
+newest or named capsule into a briefing and reports how far the
+repository has moved; <code>--format json</code> and <code>export</code>
+return the whole document or its prose half</td>
+<td>Two phases: <code>preflight</code> collects local git facts, the
+model writes a draft, <code>finalize</code> merges them, re-hashes named
+files, redacts and budgets; trust is capped against the provenance each
+claim declares</td>
+<td>A capsule is never rewritten and validation refuses an edited one;
+decisions carry <code>active</code>/<code>superseded</code>; there is no
+delete, and capsules are related only by filename order</td>
+<td>One repository per capsule directory; the recorded root is
+re-checked on load and a mismatch is reported, not refused; no principal
+scope</td>
 <td>A skill plus slash commands for Claude Code, Codex CLI and Cursor, a
-paste-only path for hosts with no shell, and read-only transcript
+draft-only path for hosts with no shell, and read-only transcript
 adapters</td>
 <td>None — every step is a command</td>
-<td>Five discrete states (<code>verified</code>, <code>observed</code>,
-<code>claimed</code>, <code>inferred</code>, <code>untrusted</code>)
-with <code>verified</code> refused to any non-deterministic provenance
-at parse time</td>
-<td>Trust is capped by source rather than asserted; the budget records
-what it dropped; the briefing states the capsule's age and whether its
-commit ever left the machine</td>
-<td>No state withholds anything — every label is rendered beside the
-text and nothing filters, so the discipline is entirely the
-reader's</td>
+<td>Five discrete states; <code>verified</code> is refused at parse time
+beside a conversational or inferred provenance, while the draft author
+declares both fields and file and evidence records skip the cap</td>
+<td>Repository facts and file hashes come from local code; the briefing
+states the capsule's age, publication state and drift; the secret scan
+records whether it ran</td>
+<td>No state withholds anything, and <code>verified</code> is open to
+any draft author who names a deterministic provenance; what the budget
+dropped is printed at finalize and not kept in the capsule</td>
 </tr>
 <tr>
 <td><code>potpie</code></td>

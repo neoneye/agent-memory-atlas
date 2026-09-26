@@ -3343,18 +3343,15 @@ failures simpler systems discover in production.
 nobody else guards: the thing a model writes about its own session.** Its unit
 is a claim carrying `provenance` — one of eight named channels — beside a
 five-state `trust`, and `cap_trust(provenance, trust)` refuses `verified` to
-anything whose source is not in `{git, tool, test, file, transcript}`
-(`src/portable_handoff/models.py:166`). The cap runs **at parse time**, so it
-applies to a capsule written by an older version, another tool or a stranger; an
-artifact cannot smuggle in an authority its source cannot support, and a
-model-authored record claiming `git` provenance is separately rewritten to
-`test`. The same instinct governs a carried shell command, classified at load
-against raw text *"so a capsule has no field it could populate to declare itself
-safe"*. Where the family's other members enforce trust inside a store they own,
-this one enforces it on a file arriving from outside — and where they filter,
-it only labels: no read path in it filters, ranks or omits on any of the five
-states, which is why the mark is withheld and the near-miss is the report's
-subject. See [Portable Handoff](../systems/portable-handoff/).
+anything whose declared source is not in `{git, tool, test, file, transcript}`
+(`src/portable_handoff/models.py:166`), at parse time as well as at write. It
+binds the pairing, not the source: the draft author writes the provenance too,
+so a claim declared `tool` and `verified` passes. What holds outright is the
+repository snapshot, which `finalize` takes from local git alone. Where the
+family's other members enforce trust inside a store they own, this one enforces
+it on a file arriving from outside — and where they filter, it only labels,
+which is why the mark is withheld. See
+[Portable Handoff](../systems/portable-handoff/).
 
 
 **Heimdall is the family's outlier: it verifies at read time and stores no trust.**

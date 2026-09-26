@@ -78,18 +78,18 @@ able to move a memory between them is worse than one honest bucket.
 
 ### Every instance
 
-[Portable Handoff](../../systems/portable-handoff/) contributes the enforcement
-half without the filtering half, and both are worth taking separately. Its
-`Trust` enum is `verified · observed · claimed · inferred · untrusted` and its
-`Provenance` enum names the eight channels a claim can arrive through, and
-`cap_trust(provenance, trust)` refuses `verified` to any claim whose provenance
-is not one of `git`, `tool`, `test`, `file` or `transcript` — **applied while
-parsing**, so a capsule written by another tool, an older version or a stranger
-cannot declare its own authority. That is the answer to the question this page
-raises and usually leaves open: who is allowed to set the state. What it does
-not do is act on it. Every state is rendered as a label beside the text and no
-read path filters, ranks or omits, so the mark is withheld: the vocabulary is
-right and nothing downstream is bound to it.
+[Portable Handoff](../../systems/portable-handoff/) contributes a narrow
+enforcement half without the filtering half. Its `Trust` enum is
+`verified · observed · claimed · inferred · untrusted`, its `Provenance` enum
+names eight channels, and `cap_trust(provenance, trust)` refuses `verified` to any claim whose provenance is not `git`, `tool`, `test`,
+`file` or `transcript` — **applied while parsing**, so a capsule from another
+tool meets the same rule. The draft author writes the provenance as well, so the
+cap binds the pairing rather than the source: a claim declared `tool` and
+`verified` passes. The question this page raises — who is allowed to set the
+state — gets half an answer: local code sets it for the repository snapshot and
+the re-hashed files, the author for everything else. Nothing acts on it:
+every state is rendered as a label and no read path filters, ranks or omits, so
+the mark is withheld.
 
 [Magic Context](../../systems/magic-context/) keeps **two independent axes**
 rather than one column, and only one of them is a state in this page's sense.
