@@ -107,7 +107,7 @@ and the two should not be read with the same confidence.
 - Best idea: verbatim drawers as the authoritative memory, with hybrid retrieval and extracted indexes as boosts.
 - Biggest risk: raw stores get large/noisy and do not resolve contradictions by themselves.
 - Most reusable component: `search_memories()` plus `_hybrid_rank()`, and the mining/write path around deterministic IDs.
-- Maturity impression: operationally mature local system with broad tests, integrations, repair tooling, and benchmark artifacts.
+- Maturity impression: operationally mature local system with broad tests, integrations, repair tooling, and benchmark artifacts. Four marks; `negative_eval` rests on committed cases that keep a superseded graph fact and an out-of-scope source out of results, each beside a positive control.
 - Study when: building local-first coding-agent memory or testing whether extraction is actually needed.
 - Do not copy when: you need compact verified user facts as the primary memory surface.
 

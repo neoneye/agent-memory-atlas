@@ -7,15 +7,20 @@ page_kind: system
 source_name: MemPalace/mempalace
 source_url: https://github.com/MemPalace/mempalace
 archive_name: "MemPalace--mempalace"
-revision: 25203ed6ee1a739103a77e87219a1f679dee81e9
-revision_url: https://github.com/MemPalace/mempalace/commit/25203ed6ee1a739103a77e87219a1f679dee81e9
-analyzed_at: 2026-09-16
-capabilities: "bitemporal, scope_enforced, audit_log"
+revision: 8c4865f70c49b6346c53474a9e5684c5f17d3fa9
+revision_url: https://github.com/MemPalace/mempalace/commit/8c4865f70c49b6346c53474a9e5684c5f17d3fa9
+analyzed_at: 2026-09-26
+licence: "MIT"
+size: "75,890 lines of Python in 138 files under mempalace/, beside a 992-line Rust workspace under crates/"
+activity: "2,049 commits reachable from develop by 179 author names, 4 April – 24 September 2026"
+tests: "5,272 test functions in 210 files, 111,366 lines of Python under tests/"
+capabilities: "bitemporal, scope_enforced, audit_log, negative_eval"
 stack_storage: "sqlite, postgres, chroma, qdrant, milvus"
 capability_evidence:
-  bitemporal: "the knowledge graph — a validity interval beside the extraction instant | mempalace/knowledge_graph.py:163-178,:106-120,:370-403 | a `triples` row carries `valid_from` and `valid_to` for when the fact held and `extracted_at DEFAULT CURRENT_TIMESTAMP` for when the row was written, and `_temporal_filter_sql` runs the as-of query against the validity pair with a deliberately strict upper bound: *\"a fact whose `valid_to` equals the query instant has already ended at that instant, so the interval is treated as half-open.\"* `supersede` closes the predecessor and opens the successor at one identical instant in one transaction, because hand-rolling it with a date-only boundary leaves both facts sharing the whole day — `valid_to` expanding to `T23:59:59Z` while `valid_from` expands to `T00:00:00Z` | tests/"
-  audit_log: "the palace directory — a write-ahead log of memory mutations | mempalace/wal.py:74-97 | `_wal_log(operation, params, result)` appends one JSON line per write through `os.open(..., O_APPEND | O_CREAT, 0o600)`, and the eight operations it is called with are the memory mutations: `add_drawer`, `update_drawer`, `delete_drawer`, `delete_by_source`, `kg_add`, `kg_invalidate`, `kg_supersede`, `diary_write`. Payload keys — `content`, `document`, `entry`, `query`, `text` — are redacted before the line is written, so the record says what changed without carrying it. The caveat belongs with the mark: a WAL failure is *\"logged and non-fatal, never crashing the tool call,\"* so the record is best-effort where [Veracium](../veracium/) makes it a precondition | tests/"
-  scope_enforced: "the searcher — wing/room/source scope applied as a where clause on the read path | mempalace/searcher/filters.py:6-23, mempalace/searcher/query.py:249, sqlite_bm25.py:376, cli_search.py:148 | `build_where_filter(wing, room, source_file)` turns the caller's scope into a ChromaDB `where` clause — bare for one clause, `$and` for several — and `search()` hands it to the collection query, so out-of-scope drawers are never scored rather than filtered after ranking. `_scoped_source_filter` narrows further to `parent_drawer_id` when the matched chunk carries one, so two unrelated pastes tagged the same `source_file` stop reading as siblings | tests/test_searcher.py:79-104 — `test_wing_filter`, `test_room_filter`, `test_wing_and_room_filter`, `test_source_file_filter`, and `test_source_file_with_wing_filter` each assert every returned row carries the requested scope"
+  bitemporal: "the knowledge graph — a validity interval beside the extraction instant | mempalace/knowledge_graph.py:168-180,:111-127,:375-403 | a `triples` row carries `valid_from` and `valid_to` for when the fact held and `extracted_at DEFAULT CURRENT_TIMESTAMP` for when the row was written, and `_temporal_filter_sql` runs the as-of query against the validity pair with a deliberately strict upper bound: *\"a fact whose `valid_to` equals the query instant has already ended at that instant, so the interval is treated as half-open.\"* `supersede` closes the predecessor and opens the successor at one identical instant in one transaction, because hand-rolling it with a date-only boundary leaves both facts sharing the whole day — `valid_to` expanding to `T23:59:59Z` while `valid_from` expands to `T00:00:00Z` | tests/test_knowledge_graph.py:364-404 — `TestSupersessionBoundary`"
+  audit_log: "the palace directory — a write-ahead log of memory mutations | mempalace/wal.py:75-113,:116-144 | `_wal_log(operation, params)` appends one JSON intent line before each write, opened with `O_APPEND` at mode `0600`, for nine operations: `add_drawer`, `update_drawer`, `delete_drawer` (one line per id in a bulk call), `delete_by_source`, `kg_add`, `kg_invalidate`, `kg_supersede`, `diary_write`, and `sync_prune` through the callable `sync` is handed. `_wal_result` appends an outcome line after `add_drawer` and `kg_add`. Drawer and diary text is redacted before the line is written; a graph write logs the triple itself. Mining and the CLI repair tools write without it, and a WAL failure is *\"logged and non-fatal, never crashing the tool call,\"* so the record is best-effort where [Veracium](../veracium/) makes it a precondition | tests/test_wal.py"
+  scope_enforced: "the searcher — wing/room/source scope applied as a where clause on the read path | mempalace/searcher/filters.py:6-23, mempalace/searcher/query.py:249, mempalace/searcher/sqlite_bm25.py:376, mempalace/searcher/cli_search.py:148 | `build_where_filter(wing, room, source_file)` turns the caller's scope into a ChromaDB `where` clause — bare for one clause, `$and` for several — and `search()` hands it to the collection query, so out-of-scope drawers are never scored rather than filtered after ranking. `_scoped_source_filter` narrows further to `parent_drawer_id` when the matched chunk carries one, so two unrelated pastes tagged the same `source_file` stop reading as siblings | tests/test_hybrid_search.py:188-221 — the only in-scope source returned from a four-drawer palace, and a strong closet for another source kept out; tests/test_searcher.py:79-101, whose wing and room cases assert `all(...)` over the results and pass on an empty list"
+  negative_eval: "the knowledge graph's as-of read and the searcher's scope filter | tests/test_knowledge_graph.py:102-112,:364-404; tests/test_hybrid_search.py:188-221; tests/test_sqlite_exact_backend.py:388-400 | `TestSupersessionBoundary` asserts that `query_entity` at the handover instant returns exactly the successor and one second earlier exactly the predecessor, so a superseded fact must not be retrieved at or after its boundary; the `seeded_kg` pair asserts an employer returned at one date and excluded at another, the other employer as control. `test_source_file_filter_excludes_other_sources` asks a four-drawer palace for five results under one `source_file` and asserts a non-empty result holding only that source. `test_sqlite_exact_lexical_search_filters_after_full_fts_window` fills the lexical window with twelve identical drawers in another wing and asserts the one in-scope drawer is the only hit | collected by `testpaths = [\"tests\"]` with no deselecting marker and run by the CI workflow on push and pull request; the suite runs a hash-based stub embedder, not the shipped model; not run for this report"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
 matrix:
@@ -23,13 +28,13 @@ matrix:
   storage: "Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG"
   retrieval: "Direct drawer vector search, BM25 rerank, closet boost, metadata filters, FTS fallback"
   write: "Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert verbatim text"
-  update_delete: "Delete/update drawers, delete by source, dedup, repair; in the graph, `supersede` closes the predecessor and opens the successor at one shared instant so an as-of query at the boundary returns only the successor"
+  update_delete: "Delete/update drawers, bulk get and delete of up to 500 ids, delete by source, dedup, repair, plan-then-apply room, wing and predicate rewrites; in the graph, `supersede` closes the predecessor and opens the successor at one shared instant so an as-of query at the boundary returns only the successor"
   scoping: "Palace, wing, room, source file, parent drawer, backend namespace"
   integration: "MCP, CLI, hooks, skills, wake-up stack, and a remote hub one host owns while a fleet of agents connects over MCP"
   background: "Mining, closet/hallway/tunnel computation, repair/sync/backup, and anti-entropy replication of the coordination log between palaces"
   trust: "Strong source provenance; weak candidate/verified/rejected trust state"
   strengths: "Evidence-preserving raw baseline, hybrid retrieval, operational hardening"
-  risks: "Raw stores get large/noisy; contradiction resolution mostly outside core recall"
+  risks: "Raw stores get large/noisy; contradiction resolution mostly outside core recall; the write-ahead log misses mining and the CLI repair tools"
 ---
 
 ## 1. Executive Summary
@@ -91,20 +96,20 @@ The system's answer to "what should be remembered?" is conservative: remember th
 
 Core files:
 
-- `mempalace/mempalace/palace.py`: shared collection access, backend resolution, embedder identity, closet helpers, mine locks.
-- `mempalace/mempalace/miner.py`: project/file mining, chunking, room detection, drawer writes, closet generation.
-- `mempalace/mempalace/convo_miner.py`: conversation mining.
-- `mempalace/mempalace/searcher.py`: CLI/programmatic search, hybrid ranking, FTS/BM25 fallback.
-- `mempalace/mempalace/mcp_server.py`: MCP tools for search, add/delete/update drawers, mine, graph/KG, diary, sync, status.
-- `mempalace/mempalace/backends/base.py`: typed backend contract.
-- `mempalace/mempalace/backends/chroma.py`: default Chroma backend.
-- `mempalace/mempalace/backends/sqlite_exact.py`: local exact-vector backend.
-- `mempalace/mempalace/backends/qdrant.py`, `pgvector.py`: external backend adapters.
-- `mempalace/mempalace/layers.py`: 4-layer wake-up/recall/search stack.
-- `mempalace/mempalace/knowledge_graph.py`: temporal SQLite entity-relation graph.
-- `mempalace/mempalace/fact_checker.py`: conservative contradiction/name-confusion checks.
-- `mempalace/mempalace/dedup.py`: near-duplicate drawer cleanup.
-- `mempalace/mempalace/repair.py`: index/schema/extraction repair utilities.
+- `mempalace/palace/`: shared collection access (`collection.py`), backend resolution, embedder identity, closet helpers, mine and palace locks.
+- `mempalace/miner.py`: project/file mining, chunking, room detection, drawer writes, closet generation.
+- `mempalace/convo_miner.py`: conversation mining.
+- `mempalace/searcher/`: programmatic search (`query.py`), hybrid ranking (`ranking.py`), scope filters (`filters.py`), SQLite BM25 fallback (`sqlite_bm25.py`), CLI search (`cli_search.py`).
+- `mempalace/mcp_server/`: MCP tools for search, add/delete/update drawers, mine, graph/KG, diary, sync, status (`tools_read.py`, `tools_write.py`, `tools_kg.py`, `tools_diary.py`).
+- `mempalace/backends/base.py`: typed backend contract.
+- `mempalace/backends/chroma.py`: default Chroma backend.
+- `mempalace/backends/sqlite_exact.py`: local exact-vector backend.
+- `mempalace/backends/qdrant.py`, `pgvector.py`, `milvus.py`: external backend adapters.
+- `mempalace/layers.py`: 4-layer wake-up/recall/search stack.
+- `mempalace/knowledge_graph.py`: temporal SQLite entity-relation graph.
+- `mempalace/fact_checker.py`: conservative contradiction/name-confusion checks.
+- `mempalace/dedup.py`: near-duplicate drawer cleanup.
+- `mempalace/repair.py`: index/schema/extraction repair utilities.
 
 Architecture:
 
@@ -129,7 +134,7 @@ The backend abstraction is unusually explicit. `BaseCollection` and `BaseBackend
 
 ### Collection and Backend Resolution
 
-`get_collection()` in `palace.py` resolves the configured backend, opens the collection, wraps backends that require explicit embeddings, and enforces embedder identity. This is a critical operational guardrail: a palace indexed with one embedding model should not be silently searched with another.
+`get_collection()` in `palace/collection.py` resolves the configured backend, opens the collection, wraps backends that require explicit embeddings, and enforces embedder identity. This is a critical operational guardrail: a palace indexed with one embedding model should not be silently searched with another.
 
 The backend contract in `backends/base.py` defines:
 
@@ -162,7 +167,7 @@ This is not a casual ingest path. It is engineered around concurrent agents, lar
 
 ### MCP Manual Writes
 
-`tool_add_drawer()` in `mcp_server.py` is the hot path for agent-supplied memory. It sanitizes wing/room/content/source metadata, computes a deterministic content-derived logical drawer ID, logs a WAL event, checks idempotency, and writes either a single row or chunked physical rows with `parent_drawer_id`.
+`tool_add_drawer()` in `mcp_server/tools_write.py` is the hot path for agent-supplied memory. It sanitizes wing/room/content/source metadata, computes a deterministic content-derived logical drawer ID, logs a WAL event, checks idempotency, and writes either a single row or chunked physical rows with `parent_drawer_id`.
 
 Important details:
 
@@ -174,7 +179,7 @@ Important details:
 
 ### Search
 
-`search_memories()` in `searcher.py` is the core retrieval implementation.
+`search_memories()` in `searcher/query.py` is the core retrieval implementation.
 
 It:
 
@@ -189,11 +194,11 @@ It:
 - enriches closet-boosted hits with neighboring drawer chunks;
 - returns source path, created/authored timestamps, similarity, raw/effective distance, and match mode.
 
-The comment in `searcher.py` is a good design rule: closets are a ranking signal, never a gate. This avoids the failure mode where a weak extracted index hides verbatim evidence that direct drawer search would have found.
+The docstring in `searcher/query.py` is a good design rule: closets are a ranking signal, never a gate. This avoids the failure mode where a weak extracted index hides verbatim evidence that direct drawer search would have found.
 
 ### Hybrid Ranking
 
-`_hybrid_rank()` combines backend vector similarity with BM25 over candidates:
+`_hybrid_rank()` in `searcher/ranking.py` combines backend vector similarity with BM25 over candidates:
 
 - vector similarity is derived from backend-declared metric;
 - BM25 is Okapi-style over the candidate set;
@@ -238,7 +243,7 @@ date reads as `T23:59:59Z`.
 `supersede` is where that asymmetry stops being a footnote. It closes the open
 `(subject, predicate, old_obj)` triple with `valid_to = at` and opens the
 successor with `valid_from = at` **in one transaction at one identical
-instant**, and the docstring works through the bug that motivates it: doing the
+instant**. The docstring works through the bug that motivates it: doing the
 handover by hand as `invalidate(ended=D)` plus `add_triple(valid_from=D)` with a
 date-only `D` leaves the two facts sharing the whole of day `D`, because the
 `valid_to` expands to the end of the day and the `valid_from` to its start, so
@@ -249,16 +254,31 @@ asymmetric. If no open predecessor exists the successor is opened anyway, so
 
 ### The write-ahead log
 
-`wal.py` appends one JSON line per write operation — `{timestamp, operation,
-params, result}` — through `os.open(..., O_WRONLY | O_APPEND | O_CREAT, 0o600)`.
-The eight operations it is called with are the memory mutations themselves:
-`add_drawer`, `update_drawer`, `delete_drawer`, `delete_by_source`, `kg_add`,
-`kg_invalidate`, `kg_supersede`, `diary_write`.
+`wal.py` appends JSON lines through `os.open(..., O_WRONLY | O_APPEND |
+O_CREAT, 0o600)`. `_wal_log` writes an intent line — `{timestamp, operation,
+params, result}` with `result` null — before the backend mutation, so the intent
+survives a crash inside it. It is called for nine operations: `add_drawer`,
+`update_drawer`, `delete_drawer`, `delete_by_source`, `kg_add`,
+`kg_invalidate`, `kg_supersede` and `diary_write` from the MCP tools, and
+`sync_prune` from `sync`, which the MCP tool, the CLI and the service each hand
+the logger as a callable. A bulk delete writes one `delete_drawer` line per id,
+marked `bulk`. `_wal_result` appends an outcome-only line after `add_drawer` and
+`kg_add`, on success and on the caught failures; the other seven operations
+leave only the intent.
 
-Two decisions in it are worth copying. Payload keys — `content`, `document`,
-`entry`, `query`, `text` — are redacted before the line is written, so the log
-records *what changed* without carrying the thing that changed, which is what
-lets it be kept as long as an operator wants. And `_ensure_wal` deliberately
+The log sees the agent-facing write surface and the sync prune, not every
+writer. Mining writes drawers without it, and the plan-then-apply tools in
+section 7 rewrite drawer rooms and wings and close graph facts with no line in
+it.
+
+Two decisions in it are worth copying. Payload keys — `content`,
+`content_preview`, `document`, `entry`, `entry_preview`, `query`, `text` — are
+redacted before the line is written, so a drawer or diary line records *what
+changed* without carrying the text that changed, which is what lets it be kept
+as long as an operator wants. A graph write is the exception: `kg_add` logs
+subject, predicate and object in full, and its outcome line repeats the fact as
+one string, because `_wal_result` applies none of the redaction its docstring
+promises. And `_ensure_wal` deliberately
 does not run at import time, because a user who deleted `~/.mempalace` has
 engaged the documented kill switch, and recreating the directory on import would
 *"silently re-arm the autosave/mining hooks they disabled."*
@@ -328,12 +348,29 @@ This is one of the better retrieval implementations in the workspace because it 
 Update/deletion is mostly storage-level, not epistemic:
 
 - `tool_delete_drawer()` deletes a logical drawer or chunk group by ID.
+- `tool_delete_drawers()` and `tool_get_drawers()` take 1 to 500 ids per call; each delete runs the single-id path, closet purge and WAL line included.
 - `tool_delete_by_source()` removes mined content from a source file.
 - `tool_update_drawer()` can update content and metadata.
 - `dedup.py` removes near-duplicate drawers by source group.
 - `repair.py` handles index/schema recovery.
 
 Contradiction handling is not a central write-time memory policy. The knowledge graph has temporal invalidation, and the fact checker can detect some relationship/stale conflicts, but normal drawer memory remains verbatim evidence. This is appropriate for its design: it avoids rewriting memory into false certainty, but it also means the system needs retrieval and context consumers that can reason over conflicting raw evidence.
+
+**Plan-then-apply repair.** `mempalace audit` scores a palace on rooms, naming,
+tunnels, hallways and the graph, and the CLI repairs what it finds in two steps:
+`rooms propose|apply`, `wings split`, `tunnels propose|prune` and `kg normalize`
+write a plan or print a dry run, and `--yes` carries it out. `kg normalize`
+has a model map each off-vocabulary predicate onto a closed list of eight and
+applies each row through `KnowledgeGraph.rewrite`, which closes the original and
+opens its rewording at one instant with the original's provenance and
+confidence, and writes nothing if the fact was closed after the plan was made.
+Nothing is deleted, so an as-of query before the boundary returns the original
+wording.
+
+The plan file is a review surface, not a gate. The packaged audit instructions
+tell the agent to show each plan, ask the user one question at a time and then
+run `--yes` itself, and nothing in the CLI checks who runs it, so approval is a
+convention the agent is asked to keep and `human_review` is withheld.
 
 ## 8. Trust, Provenance, and Safety
 
@@ -373,8 +410,7 @@ This is a system built by people who have hit local-agent failure modes in pract
 
 ## 9a. The shared brain, and the line it draws through itself
 
-The largest addition since the first reading is a fleet layer, and the project
-splits it from the memory on exactly the axis this atlas uses. From
+The fleet layer is split from the memory on exactly the axis this atlas uses. From
 `website/guide/shared-brain.md`:
 
 | | Memory (drawers, KG, diary) | Logstream (events, artifacts) |
@@ -413,7 +449,7 @@ from a bug report.
 drew.** The logstream is append-only with immutable events and corrections that
 reference prior ones, which is the shape of an audit log — but what it records is
 delegations, replies and patches between agents, not changes to the memory
-store. The mutations of memory are logged elsewhere, by the WAL in section 6.
+store. The mutations of memory go to the WAL in section 4.
 
 ## 10. Tests and Evidence
 
@@ -429,6 +465,41 @@ The repo has broad test coverage:
 - knowledge graph, fact checker, entity registry;
 - line numbers, authored-at backfill, dedup, collision scan;
 - benchmarks.
+
+Nothing was installed, built or run for this report; everything below is from
+reading the tests at the pin.
+
+**Negative retrieval cases.** The suite asserts that particular material must not
+come back, on the graph's as-of read and on drawer search, and all but one case
+carry a positive control, so a filter that returned nothing would fail them. In
+the graph, `TestSupersessionBoundary` writes a fact and its successor sharing one instant and asserts that
+`query_entity` returns exactly the predecessor one second before the boundary and
+exactly the successor at it (`tests/test_knowledge_graph.py:364-404`); the
+superseded fact is the excluded material. A second pair, on the shared
+`seeded_kg` fixture, asserts an employer returned at one date and excluded at
+another, with the other employer as control (`:102-112`).
+
+In the searcher, `test_source_file_filter_excludes_other_sources` asks a
+four-drawer palace for five results under one `source_file`, so an unfiltered
+query would return all four, and asserts a non-empty result holding only that
+source. Its companion puts a strong closet behind a different source and asserts
+that source stays out, with a subset check that an empty result also passes
+(`tests/test_hybrid_search.py:188-221`). At the backend,
+`test_sqlite_exact_lexical_search_filters_after_full_fts_window` fills the
+lexical window with twelve identical drawers in another wing and asserts the one
+in-scope drawer is the only hit (`tests/test_sqlite_exact_backend.py:388-400`),
+and `assert_partition_isolation` writes a record to one palace and asserts that a
+query, get or count through another palace does not return it and that the
+writer keeps it, for each local backend (`tests/_backend_conformance.py:19-60`).
+
+All of them are collected: `testpaths` is `tests`, and the only deselected
+markers are `benchmark`, `slow` and `stress`, which none of them carries. The CI
+workflow runs `pytest tests/ --ignore=tests/benchmarks` on every push and pull
+request to `main` and `develop`. An autouse fixture replaces the embedder with a
+hash-based stub (`tests/conftest.py:112-141`), so these cases test the filters
+against real ChromaDB and SQLite, not the shipped model's ranking. The wing and
+room cases in `tests/test_searcher.py:79-89` assert `all(...)` over the results
+and would pass on an empty list.
 
 The benchmark docs make strong claims, but also include caveats about metric comparability and overfitting. The most important internal result for design purposes is not the headline score; it is the empirical argument that verbatim storage plus good retrieval is a strong baseline before adding LLM extraction.
 
@@ -516,21 +587,37 @@ For your own memory system, MemPalace is the strongest reminder that extraction 
 
 ## Appendix: File Index
 
-- Core collection/backend access: `mempalace/mempalace/palace.py`.
-- Backend contract: `mempalace/mempalace/backends/base.py`.
-- Default backend: `mempalace/mempalace/backends/chroma.py`.
-- Other backends: `mempalace/mempalace/backends/sqlite_exact.py`, `qdrant.py`, `pgvector.py`.
-- Mining: `mempalace/mempalace/miner.py`, `mempalace/mempalace/convo_miner.py`, `mempalace/mempalace/format_miner.py`.
-- Search: `mempalace/mempalace/searcher.py`.
-- MCP server: `mempalace/mempalace/mcp_server.py`.
-- Context stack: `mempalace/mempalace/layers.py`.
-- Graph: `mempalace/mempalace/palace_graph.py`, `mempalace/mempalace/hallways.py`, `mempalace/mempalace/knowledge_graph.py`.
-- Fact checking: `mempalace/mempalace/fact_checker.py`.
-- Dedup/repair/sync: `mempalace/mempalace/dedup.py`, `repair.py`, `sync.py`.
-- Benchmarks: `mempalace/benchmarks/`.
-- Tests: `mempalace/tests/`.
+- Core collection/backend access: `mempalace/palace/collection.py`, `mempalace/palace/backend.py`.
+- Backend contract: `mempalace/backends/base.py`.
+- Default backend: `mempalace/backends/chroma.py`.
+- Other backends: `mempalace/backends/sqlite_exact.py`, `rust_exact.py`, `qdrant.py`, `pgvector.py`, `milvus.py`.
+- Mining: `mempalace/miner.py`, `mempalace/convo_miner.py`, `mempalace/format_miner.py`.
+- Search: `mempalace/searcher/` — `query.py`, `ranking.py`, `filters.py`, `candidates.py`, `sqlite_bm25.py`, `cli_search.py`.
+- MCP server: `mempalace/mcp_server/` — `tools_read.py`, `tools_write.py`, `tools_kg.py`, `tools_diary.py`.
+- Write-ahead log: `mempalace/wal.py`.
+- Context stack: `mempalace/layers.py`.
+- Graph: `mempalace/palace_graph.py`, `mempalace/hallways.py`, `mempalace/knowledge_graph.py`.
+- Fact checking: `mempalace/fact_checker.py`.
+- Dedup/repair/sync: `mempalace/dedup.py`, `repair.py`, `sync.py`.
+- Audit and plan-then-apply repair: `mempalace/palace_audit.py`, `rooms.py`, `wing_split.py`, `tunnels_tool.py`, `kg_normalize.py`, `mempalace/instructions/audit.md`.
+- Fleet layer: `mempalace/hlc.py`, `logstream.py`, `logsync.py`, `replica.py`.
+- Benchmarks: `benchmarks/`.
+- Tests: `tests/`; negative cases in `tests/test_knowledge_graph.py`, `tests/test_hybrid_search.py`, `tests/test_sqlite_exact_backend.py`, `tests/_backend_conformance.py`.
+
+Searches run at the pin, from the repository root:
+
+```sh
+grep -rn '_wal_log(\|_wal_result(\|wal_log(' mempalace
+grep -n -E '\bwal\b|_wal_|from \.+wal' mempalace/miner.py mempalace/convo_miner.py mempalace/rooms.py mempalace/wing_split.py mempalace/kg_normalize.py mempalace/tunnels_tool.py
+grep -rn -E 'assert .*not in ' tests --include='*.py'
+grep -n -A12 '\[tool.pytest' pyproject.toml
+grep -n 'pytest' .github/workflows/ci.yml
+grep -n -E 'isatty|input\(|getuser|getpass|confirm|MEMPALACE_' mempalace/cli/cmd_kg.py mempalace/cli/cmd_rooms.py mempalace/cli/cmd_wings.py mempalace/cli/cmd_tunnels.py
+```
 
 ## History
+
+**2026-09-26** — [`8c4865f70c49b6346c53474a9e5684c5f17d3fa9`](https://github.com/MemPalace/mempalace/commit/8c4865f70c49b6346c53474a9e5684c5f17d3fa9) — read at the head of `develop`, 13 commits past the previous pin. `negative_eval` added as a correction, not new capability: the as-of pair and the source-filter and lexical-window cases existed at the first pin and the supersession-boundary cases from the second, each asserting excluded material beside a positive control ([section 10](#10-tests-and-evidence)). The other three marks held. The WAL gained an outcome line after `add_drawer` and `kg_add`; it logs nine operations, not eight, since `sync_prune` was already wired, and a graph write logs the triple unredacted ([section 4](#the-write-ahead-log)). New: bulk get and delete, and plan-then-apply repair tools that write no WAL line ([section 7](#7-update-correction-and-deletion)). File paths corrected to the `palace/`, `searcher/` and `mcp_server/` packages. Screened first: five auto-run surfaces, two build-time execution points, two unpinned surfaces, none in the cooldown. Nothing was installed, built or run.
 
 **2026-09-16** — [`25203ed6ee1a739103a77e87219a1f679dee81e9`](https://github.com/MemPalace/mempalace/commit/25203ed6ee1a739103a77e87219a1f679dee81e9) — re-read at a commit dated 16 September 2026, 146 commits past the previous pin. All three marks re-tested and held. `mempalace/searcher.py` is gone as a file and back as a package: the 2,267-line module was split into `mempalace/searcher/`, and the scope predicate came out of it better placed than it went in. `build_where_filter(wing, room, source_file)` now lives in one fragment and is called from three read paths — the vector query, the SQLite BM25 arm and the CLI search — so all three narrow through the same builder rather than each assembling its own clause. The fragments refuse to be imported on their own, raising `ImportError` unless loaded into the package namespace. The write-ahead log is unchanged except for where it lives, moving from a hardcoded `~/.mempalace` to the configured directory, and the validity columns are threaded through the new entity-candidate lookups, which carry `valid_from`, `valid_to` and a derived `current` rather than dropping them. Screened before reading, from a full clone: five auto-run surfaces, two build-time execution points, two unpinned dependency surfaces and five dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
