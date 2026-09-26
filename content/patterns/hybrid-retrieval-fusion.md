@@ -177,6 +177,10 @@ RRF dutifully fuses that garbage with a sparse arm that is working correctly.
 Fusion makes this *harder* to notice than a single-arm retriever would, because
 the lexical hits keep the result list looking plausible. A width comparison at
 load is a one-line check against the highest-cost silent failure in the pattern.
+Qwen's loader catches the error, disables the dense arm and logs the cause, so
+the mismatched vectors never rank anything; its `search_nodes` result carries no
+field saying BM25 answered alone, which leaves it in the degraded-channel case
+above.
 
 The same system also shows why fusion earns its keep on content nobody wrote
 prose for. Its two arms are searched over a video's extracted events, and the

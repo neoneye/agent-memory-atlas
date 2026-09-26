@@ -2862,17 +2862,19 @@ replayed.
 **[Qwen MM Plugins](../systems/qwen-mm-plugins/) is the family's only memory of
 something nobody said.** Every other store in this atlas remembers an utterance,
 a fact extracted from one, or a trace of an agent's own work; this one remembers
-a *video*. One capability of eight in a multimodal plugin suite turns hours of
-footage into a four-level tree — Root, SuperEvent, MacroEvent, and a leaf
-subgraph of typed entities, timestamped micro-events, on-screen OCR text and
-edges labelled `SEMANTIC | CAUSAL | TEMPORAL | HIERARCHICAL | SPATIAL |
-IDENTITY` — and gives an agent a tool per level so it can start at a story arc
-and descend to a three-minute window. Retrieval is hybrid in the strict sense the
+a *video*. Its `video-memory` capability, one of two memories in a multimodal
+plugin suite, turns hours of footage into a four-level tree — Root, SuperEvent,
+MacroEvent, and a leaf subgraph of typed entities, timestamped micro-events,
+on-screen OCR text and edges labelled `SEMANTIC | CAUSAL | TEMPORAL |
+HIERARCHICAL | SPATIAL | IDENTITY` — and gives an agent a tool per level so it
+can start at a story arc and descend to a three-minute window. Retrieval is
+hybrid in the strict sense the
 [fusion pattern](../patterns/hybrid-retrieval-fusion/) argues for: a dense cosine
 arm and a BM25 arm over the same nodes, combined by reciprocal rank rather than a
-tuned score blend, with a `check_dimension_compatibility` guard that catches a
-store embedded by one model and queried by another — the failure that otherwise
-returns confidently ranked nonsense.
+tuned score blend. A `check_dimension_compatibility` guard catches a store
+embedded by one model and queried by another, and the loader answers it by
+dropping to BM25 alone with a log warning — no mismatched ranking, and no sign
+in the result that the dense arm is off.
 
 Two things separate it from the rest of this family, and they point in opposite
 directions. Its `time_range` is **content time with no record time beside it** —

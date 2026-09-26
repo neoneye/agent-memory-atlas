@@ -21527,34 +21527,44 @@ is unguarded</td>
 </tr>
 <tr>
 <td><code>qwen-mm-plugins</code></td>
-<td>A node in a four-level tree — Root, SuperEvent, MacroEvent, and a
-leaf Subgraph of typed entities, timestamped micro-events, on-screen
-text and labelled edges</td>
-<td>Two files beside the video: <code>graph_memory.json</code> and
-<code>embeddings.npz</code>, in a
-<code>&lt;video_path&gt;.memory/</code> directory</td>
-<td>Hybrid — dense cosine over DashScope embeddings and a sparse BM25
-index, fused with reciprocal rank fusion; plus exact time-range and
-substring lookups</td>
-<td>A two-phase offline batch pipeline over the video, driven by a
-vision-language model; nothing is written during a session</td>
-<td>Neither. No delete, forget, update or supersede surface exists in
-the capability; a memory is rebuilt or it is not changed</td>
-<td>The video path. Memory is addressed by where the file sits, and
-there is no user, tenant or agent key anywhere in the schema</td>
-<td>Nine MCP tools plus a <code>SKILL.md</code> that routes any video
-over thirty minutes away from frame sampling and into the memory</td>
-<td>Build only, and resumable — a JSONL checkpoint of completed macro
-events, a liveness check on the producer process, and a done marker</td>
+<td>In video-memory, a node in a four-level tree — Root, SuperEvent,
+MacroEvent, and a leaf Subgraph of typed entities, timestamped
+micro-events, on-screen text and labelled edges. In omni-memory, a
+semantic triple, an episodic clip record or a person entity</td>
+<td>video-memory writes graph_memory.json and embeddings.npz into a
+directory named after the video with a .memory suffix; omni-memory
+writes one store.json per video or per namespace directory</td>
+<td>Hybrid — dense cosine over DashScope embeddings and a BM25 index,
+fused with reciprocal rank fusion and filtered by node type; OCR and ASR
+search fall back to a word-overlap scan, and a store whose embedding
+width disagrees with the query backend is searched by BM25 alone</td>
+<td>An offline batch pipeline over the video, driven by a
+vision-language model in three phases — segmentation, per-segment
+subgraph extraction, hierarchical aggregation; nothing is written during
+a session</td>
+<td>Neither in video-memory. In omni-memory a contradiction found during
+a build overwrites a same-key triple or leaves both active; the stamped
+superseded copy is counted and discarded</td>
+<td>The video path, or in omni-memory a namespace directory. Both are
+physical partitions; no user, tenant or agent key exists in either
+schema</td>
+<td>Nine MCP tools plus a SKILL.md that routes any video over thirty
+minutes away from frame sampling and into the memory; omni-memory adds
+twelve tools of its own</td>
+<td>Build only, and resumable — a JSON checkpoint of phase-one segments,
+one subgraph file per completed segment, a liveness check on the
+producer process, and a done marker per phase</td>
 <td>None as a field. The skill instead instructs the agent to re-read
 the video at a narrow time range because memory is coarse and may be
 wrong</td>
-<td>Retrieval that is genuinely hybrid rather than
-vector-with-a-fallback; an embedding-dimension check that catches a
-store built by a different model; a routing rule that says when
-<em>not</em> to use the memory</td>
+<td>Retrieval that is hybrid rather than vector-with-a-fallback; an
+embedding-width check that keeps a mismatched store from ranking by the
+wrong vector space; a routing rule that says when not to use the
+memory</td>
 <td>Nothing can be corrected or deleted; a wrong extraction is permanent
-until the whole memory is rebuilt; the query surface has two tests</td>
+until the whole memory is rebuilt; a width mismatch drops the dense arm
+with only a log line; omni-memory's supersession stamp never reaches the
+store</td>
 </tr>
 <tr>
 <td><code>ragflow</code></td>
@@ -28692,7 +28702,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>367 of 646:</em> <a
+<p><em>368 of 646:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -28989,6 +28999,7 @@ href="../systems/projectmem/"><code>projectmem</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a>,
 <a href="../systems/qwen-code/"><code>qwen-code</code></a>, <a
+href="../systems/qwen-mm-plugins/"><code>qwen-mm-plugins</code></a>, <a
 href="../systems/ragflow/"><code>ragflow</code></a>, <a
 href="../systems/rck/"><code>rck</code></a>, <a
 href="../systems/re-call/"><code>re-call</code></a>, <a
@@ -29090,7 +29101,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-367 repositories of
+368 repositories of
 646 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

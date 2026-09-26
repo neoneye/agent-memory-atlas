@@ -9038,23 +9038,31 @@ guidance placed in the one string that is guaranteed to be in context
 every time the model considers the tool, rather than in a README nobody
 loads.</li>
 <li>Biggest risk: nothing can be corrected. No delete, update, supersede
-or tombstone surface exists in the capability, so a hallucinated entity
-or a wrong causal edge is in the graph until the whole memory is rebuilt
-from the video — and no node carries a confidence, a build id or a model
-name that a later pass could act on.</li>
-<li>Most reusable component: <code>check_dimension_compatibility</code>.
-A stored embedding matrix and a live embedding backend can drift apart
-with no error and no crash, producing plausible, confidently ranked
-garbage; one width comparison and a message naming the likely cause
-converts that into a startup error.</li>
-<li>Maturity impression: Apache-2.0, about 5,600 lines of Python for
-this capability inside a suite created 29 July 2026, with 21 test files
-across the repository. The build pipeline has 26 test functions and is
-properly resumable — a JSONL checkpoint per macro event, a liveness
-check on the producer PID, a done marker. The query surface has two
-tests: the server lists its tools, and it degrades gracefully with no
-memory. Hybrid fusion, RRF, the dimension check and all nine tools are
-untested, and no retrieval measurement is committed anywhere.</li>
+or tombstone surface exists in <code>video-memory</code>, so a
+hallucinated entity or a wrong causal edge is in the graph until the
+whole memory is rebuilt from the video — and no node carries a
+confidence, a build id or a model name that a later pass could act on.
+<code>omni-memory</code> has a supersession rule, and
+<code>_resolve</code> stamps the loser on a <code>dict(lose)</code> copy
+the writer never serialises: a same-key contradiction overwrites the old
+triple, and one that wins under a different key leaves both active.</li>
+<li>Most reusable component: <code>check_dimension_compatibility</code>,
+and the half it leaves undone. A stored embedding matrix and a live
+embedding backend can drift apart with no error; one width comparison at
+load keeps the wrong vector space from ranking anything. Here the loader
+catches the error, drops to BM25 alone and logs the cause, so the result
+an agent receives does not say which arm answered.</li>
+<li>Maturity impression: Apache-2.0, 5,572 lines of Python in
+<code>video-memory</code> and 6,907 in <code>omni-memory</code>, inside
+a suite created 29 July 2026, with 56 test files across the repository.
+The build is resumable per segment — a JSON checkpoint of segments
+rewritten through <code>os.replace</code>, one subgraph file per
+completed segment, a liveness check on the producer PID, a done marker
+per phase. Four tests cover the hybrid index, and one capability mark,
+<code>negative_eval</code>, rests on the node-type exclusion case among
+them. The dimension check, the loader's fallback, RRF against either arm
+and the nine tool handlers are untested, and no retrieval measurement is
+committed anywhere.</li>
 <li>Study when: an agent must answer questions about hours of recorded
 media it cannot hold in context, and you want to see a hierarchy with a
 real entry point at every level plus a skill that names the threshold
