@@ -11933,6 +11933,75 @@ subprocess process-group flag). The screen found 0 RUNS, 54 EXEC
 (per-task <code>Makefile</code>s and <code>conftest.py</code>s), 0 FRESH
 and 1 FLOAT (<code>pyproject.toml</code> with no lockfile), and nothing
 was installed, built or run.</li>
+<li><strong><code>WecoAI/aideml</code> was examined and has no report:
+its prompt section is literally named "Memory", and it is rebuilt from
+an empty journal at the start of every run.</strong> MIT, 3,432 lines of
+Python in 21 files under <code>aide/</code> plus 663 lines of tests, at
+<a
+href="https://github.com/WecoAI/aideml/commit/60b3978ddf65b71f86eb7c64506965048a1398cf"><code class="commit-id" title="60b3978ddf65b71f86eb7c64506965048a1398cf">60b3978d…</code></a>,
+3 September 2026, 94 commits since 3 April 2024. AIDE is an
+ML-engineering agent that searches a tree of candidate scripts. Each
+<code>Node</code> holds a plan, code, a model-written
+<code>analysis</code> and a metric, and
+<code>Journal.generate_summary</code>
+(<code>aide/journal.py:229-239</code>) joins plan, analysis and metric
+over every node not flagged <code>is_buggy</code> into the
+<code>"Memory"</code> key of the draft and improve prompts
+(<code>aide/agent.py:284</code>, <code>aide/agent.py:317</code>).</li>
+<li><strong><code>facebookresearch/HyperAgents</code> was examined and
+has no report: the memory its paper describes is something an evolved
+agent wrote, and it is not in the committed program.</strong>
+<em>Hyperagents</em> (<a
+href="https://arxiv.org/abs/2603.19461">arXiv:2603.19461</a>, submitted
+19 March 2026; Zhang, Zhao, Yang, Foerster, Clune, Jiang, Devlin,
+Shavrina) extends the Darwin Gödel Machine so the meta agent that
+rewrites the task agent can also rewrite itself (DGM-H). At <a
+href="https://github.com/facebookresearch/HyperAgents/commit/59a68f672dfb92c74aeb7e61535d776fb36e172d"><code class="commit-id" title="59a68f672dfb92c74aeb7e61535d776fb36e172d">59a68f67…</code></a>
+— CC BY-NC-SA 4.0, 26,398 lines of Python over 120 files, 9 commits from
+19 March to 14 April 2026 — the durable state is the HGM shape:
+<code>archive.jsonl</code> appends generation ids
+(<code>utils/gl_utils.py:160-176</code>), each generation stores a
+<code>metadata.json</code>, a <code>model_patch.diff</code> and its
+scores, and <code>select_parent</code> samples a parent by
+sigmoid-squashed score times a child-count penalty
+(<code>utils/gl_utils.py:571-584</code>, the CLI default
+<code>score_child_prop</code>). That is a population of program versions
+and their measurements, read by the outer loop. <code>ensemble.py</code>
+reads the archive per task, but only to return the cached prediction of
+the best-scoring generation for that question id. <strong>The paper's
+memory is emergent.</strong> Its §5.2 and Appendix E.3.7 show a
+<code>MemoryTool</code> over <code>./memory.json</code> holding
+timestamped, keyed entries — <em>"gen65 changes over-corrected"</em> is
+one — which the paper says later self-modification steps consulted.
+Those are claims that could be false, which HGM's tree never held, and
+this is the case the <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-goedel-machine-lineage.md">Gödel-machine
+note</a> said would enter the atlas. It does not enter at this pin,
+because the code is not in the tree: <code>MemoryTool</code>,
+<code>memory.json</code>, <code>PerformanceTracker</code> and
+<code>performance_history</code> return zero matches, and every Python
+use of <code>memory</code> means RAM. The evolved agents are published
+only as experiment logs on Google Drive, which were not read. The
+committed starting meta agent does not name the archive either:
+<code>meta_agent.py:16</code> builds the whole instruction as
+<em>"Modify any part of the codebase at <code>{repo_path}</code>"</em>
+and leaves the <code>eval_path</code> and <code>iterations_left</code>
+arguments unused, so the archive copied into its container by
+<code>copy_prev_eval_to_container</code>
+(<code>generate_loop.py:363-424</code>) is there on disk and never
+mentioned in a prompt. <strong>The harness does carry a file across
+generations without being designed to.</strong>
+<code>diff_versus_commit</code> includes untracked files in each child's
+patch (<code>utils/git_utils.py:36-69</code>) and descendants replay the
+lineage patches, so a note an agent writes inside the repository is
+inherited by its descendants as code. A note written under the
+git-ignored <code>outputs/</code>, where the paper's
+<code>PerformanceTracker</code> writes by default, is not carried.
+Nothing in the paper's excerpt corrects an entry except overwriting it
+by key. The licence is non-commercial with no rider on analysis. Screen:
+0 auto-run, 0 build-time exec, 0 inside cooldown, 1 unpinned surface
+(four git requirements, two without a commit); nothing installed, built
+or run.</li>
 <li><strong><code>mcn92/pikelet</code> was examined and has no report,
 because nothing that happens after the build can contradict what it
 holds.</strong> Apache-2.0 (Matthew Noonan), 61,585 lines of JavaScript,
