@@ -11879,6 +11879,60 @@ Every provider integration resends the whole log each turn. OpenAI's
 OpenAI's side, and no code reads them back;
 <code>previous_response_id</code> appears nowhere in
 <code>homeassistant/</code>.</li>
+<li><strong><code>WecoAI/SpecBench</code> was examined and has no
+report: it is a benchmark that measures coding agents, and the only
+thing it calls memory is a summary of the current search tree that dies
+with the run.</strong> Apache-2.0, Python, at <a
+href="https://github.com/WecoAI/SpecBench/commit/08607352adc8abd78be2193dd9f725f1f032b8f0"><code class="commit-id" title="08607352adc8abd78be2193dd9f725f1f032b8f0">08607352…</code></a>,
+a single commit by one contributor dated 21 May 2026: 5,231 lines of
+harness Python in <code>aide/</code>, <code>experiments/</code> and
+<code>benchmarks/</code> outside the 31 task directories under
+<code>benchmarks/spec_bench/tasks/</code>. It is the code for
+<em>"SpecBench: Measuring Reward Hacking in Long-Horizon Coding
+Agents"</em> (Zhao, Srikanth, Wu and Jiang, Weco AI; <a
+href="https://arxiv.org/abs/2605.21384">arXiv:2605.21384</a>, v1 20 May
+2026, v2 9 September 2026). The link is established from both ends
+rather than assumed. The paper names no URL — the v2 PDF says only
+<em>"We release the benchmark and methodology"</em>, and every GitHub
+link in the v2 HTML is a third-party citation (OpenCode, Gemini CLI,
+autoresearch, MiniMax) — but the paper's affiliation and correspondence
+address are Weco AI, and the repository's <code>README.md</code> links
+<code>arxiv.org/abs/2605.21384</code> as its paper. Each task pairs a
+visible validation suite with a held-out suite, and the gap between the
+two pass rates is the reward-hacking measure; an AIDE, linear or
+autoresearch outer loop drives Claude Code, Codex or OpenCode. Nothing
+persists agent memory across sessions. The prompt's <em>Memory</em>
+section is <code>generate_summary()</code> over the in-process solution
+tree (<code>aide/agent.py:251-260</code>, used at <code>:773</code>),
+rebuilt at each step. <code>dump_run</code> writes a per-run JSON for
+offline analysis (<code>benchmarks/spec_bench/run_loop.py:537</code>),
+and its counterpart <code>load_run</code>
+(<code>aide/agent.py:1172</code>) has no caller anywhere in the tree.
+Workspaces are per node, copied parent to child within one run
+(<code>benchmarks/spec_bench/workspace.py:88-96</code>), and a root
+workspace is deleted and recreated if present (<code>:57-58</code>). One
+thing bears on memory evaluation: that <em>Memory</em> section lists
+<code>good_nodes</code> — any non-buggy node with a metric
+(<code>aide/agent.py:235-236</code>), and the metric is the visible pass
+rate — so a node that raised it by memorising tests is fed to later
+steps as a successful experiment, and the paper reports that severe
+reward-hacking cases <em>"persist across the entire search
+trajectory"</em>. The hacking-critique <em>retrospection</em> path that
+could interrupt this ships disabled: <code>retrospection_prob</code>
+defaults to <code>0.0</code> and each metric trigger to
+<code>False</code> (<code>aide/agent.py:304-313</code>), and
+<code>experiments/</code> only passes those defaults through. Searches
+run at the tree root:
+<code>grep -rn -iE 'memor|remember|recall|persist|resume|session|journal|CLAUDE\.md|AGENTS\.md|history|summar|pickle|json\.dump|sqlite|embedding|vector'</code>
+over the harness Python (hits are the prompt <em>Memory</em> section,
+the run dump and the per-node workspace manager);
+<code>grep -rn 'load_run'</code> (definition only);
+<code>grep -rn -E '"--(resume|continue)|session_id|--session'</code>
+over the agent adapters (none; <code>start_new_session=True</code> is a
+subprocess process-group flag). The screen found 0 RUNS, 54 EXEC
+(per-task <code>Makefile</code>s and <code>conftest.py</code>s), 0 FRESH
+and 1 FLOAT (<code>pyproject.toml</code> with no lockfile), and nothing
+was installed, built or run.</li>
 <li><strong><code>mcn92/pikelet</code> was examined and has no report,
 because nothing that happens after the build can contradict what it
 holds.</strong> Apache-2.0 (Matthew Noonan), 61,585 lines of JavaScript,
