@@ -12005,6 +12005,36 @@ by key. The licence is non-commercial with no rider on analysis. Screen:
 0 auto-run, 0 build-time exec, 0 inside cooldown, 1 unpinned surface
 (four git requirements, two without a commit); nothing installed, built
 or run.</li>
+<li><strong><code>davidondrej/cloudroom-core</code> was examined and has
+no report: it saves every coding-agent session's history and hands none
+of it back to an agent.</strong> Apache-2.0, 18,056 lines of Rust in 44
+files under <code>src/</code> plus 5,325 lines of tests, at <a
+href="https://github.com/davidondrej/cloudroom-core/commit/17571eb7bf072d28ae1a9719f307e63c005144ec"><code class="commit-id" title="17571eb7bf072d28ae1a9719f307e63c005144ec">17571eb7…</code></a>,
+26 September 2026, 11 commits since 17 September 2026. It is one Rust
+service per Linux VM that runs Codex, Claude Code, Pi and Cursor as
+unprivileged child processes behind a token-authenticated HTTP API. Its
+one durable table, <code>cloudroom_records</code>
+(<code>docs/database/0001-session-records.sql:11-17</code>), is keyed
+<code>(store, session_id, sequence)</code> and holds ordered receipts
+and native output. Its readers select by <code>session_id</code> and
+serve <code>GET /v1/sessions/{id}/events</code> to clients
+(<code>src/session/history.rs:127-129</code>,
+<code>src/session/mod.rs:456-476</code>), and no statement in
+<code>src/</code> deletes from it. Continuity across idle periods is the
+harness's own native resume (<code>src/session/sleep.rs:193-198</code>),
+and compaction is forwarded to the harness
+(<code>src/session/mod.rs:1049</code>). The sync roots in
+<code>src/sync/mod.rs:148-182</code> copy skills, Cursor rules, settings
+files and MCP server entries from a Mac to the VM, which is
+configuration, not learned state. The dependencies are
+<code>axum</code>, <code>tokio</code>, <code>serde</code>,
+<code>serde_json</code>, <code>sqlx</code> and
+<code>tokio-stream</code>, so no memory engine sits behind it. What
+earns the entry is the upload upsert, which keeps the first stored
+record on a key collision and returns whether the retransmitted text
+matched (<code>src/session/history.rs:57-61</code>), so a retry after a
+lost commit reply is idempotent and a different record under the same
+sequence is detected rather than overwritten.</li>
 <li><strong><code>mcn92/pikelet</code> was examined and has no report,
 because nothing that happens after the build can contradict what it
 holds.</strong> Apache-2.0 (Matthew Noonan), 61,585 lines of JavaScript,
