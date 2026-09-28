@@ -505,6 +505,8 @@ producers; store, archive, move and delete write nothing, a purge tool deletes
 events by age, and `ON DELETE CASCADE` removes a memory's events with it — so
 the log explains edits to memories that still exist and nothing else.
 
+**[Mnemosyne (Nabzx)](../../systems/mnemosyne-nabzx/) removes the transactional-coupling problem by making the log the state.** Each write is a `Commit` object and a new `State` in an insert-only redb table, written with a per-commit change set and the branch compare-and-swap in one transaction, so the audit cannot describe a mutation that never committed. It shows the pattern's other obligation from the opposite side: because nothing ever leaves the table, `forget` is a new snapshot and not a deletion, and the agent's own `recall_at` tool reads the forgotten value back. The one gap in coverage is before the log — a staged node is served by `recall` before any commit records it.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

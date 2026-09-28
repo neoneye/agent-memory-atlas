@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 658 reports.**
+**This page covers all 659 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5907,3 +5907,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 88,749 lines of TypeScript and JavaScript outside tests and the viewer UI, 1,168 commits on main from 8 contributors since 21 November 2025, and an unreleased rebuild at this pin. Five marks: `trust_state`, `bitemporal`, `scope_enforced` (on the action-catalog tier), `audit_log` and `negative_eval`, the last on an exact-list vector search with superseded and stale rows present and a two-project read with a positive control. CI runs every suite with the embedding model switched off.
 - Study when: you are building an append-only memory where every change must leave a receipt and an event, and want a working reference for idempotent commands, host-stamped provenance and a fail-closed read bound.
 - Do not copy when: a user must be able to make the system forget, or a person must approve what the agent stores. Nothing deletes, and the agent both writes and retires the owner's guidance.
+
+### [`mnemosyne-nabzx`](../systems/mnemosyne-nabzx/)
+
+- Best idea: **the audit trail and the state are one structure.** Every write through the MCP server or an adapter stages and commits, the `objects` table only inserts when an id is absent, and no reset, rebase or gc verb exists. The history cannot disagree with the memory because there is nothing else to disagree with. A derived `commit_nodes` index makes `blame` fast and every reader falls back to recomputing it.
+- Biggest risk: **forget is not erasure, and the agent can read the forgotten value.** The MCP `forget` tool says *"Past snapshots keep it"*, and `recall_at` on the same core tool surface returns any past state. A memory a user asked to drop stays one tool call away, and `export` copies it to any machine.
+- Most reusable component: `crates/mnem-store/src/merge.rs` and `mergeflow.rs` — a per-id three-way merge on content hashes, with provenance inside the hash so two sources for the same fact conflict instead of converging, and conflicts returned typed with base, ours and theirs rather than guessed.
+- Second risk: **a failed commit leaves a node that recall serves, and scope is a colon.** Stage and commit are two transactions, so a commit refused on a detached HEAD leaves the node staged and readable, with no MCP tool to unstage it. The LangGraph adapter and the OpenAI Agents session join scope segments with an unvalidated `:`, so a session named `u1` reads and clears the items of `u1:x`.
+- Maturity impression: Apache-2.0, 4,749 lines of Rust outside test modules and 1,679 lines of Python, 367 commits from one contributor between 6 and 28 September 2026, with 103 Rust and 91 Python test functions. Two marks, `audit_log` on the commit graph and `negative_eval` on a CI-run by-id exclusion after `forget` with a positive control. The README calls a 50,000-case merge fuzz CI-gated; CI runs 600.
+- Study when: you want to replay, bisect and blame what an agent believed, step by step, and want a small, offline, well-specified substrate with its on-disk format frozen and its ADRs in the tree.
+- Do not copy when: memory must be found by relevance, kept apart by tenant, or forgotten on request. Search, scope, a context budget and trust are left to the adopter, and a time-travel read sits on the agent's own tool surface.

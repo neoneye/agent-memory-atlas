@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust commit graph for agent
+memory, with branches, merge, blame and bisect, where forget drops a
+node from the next snapshot, never from history.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mnemosyne
+(Nabzx) — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust commit graph for
+agent memory, with branches, merge, blame and bisect, where forget drops
+a node from the next snapshot, never from history.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mnemosyne
+(Nabzx) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust commit graph for
+agent memory, with branches, merge, blame and bisect, where forget drops
+a node from the next snapshot, never from history.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mnemosyne (Nabzx) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mnemosyne (Nabzx)",
+      "description": "A Rust commit graph for agent memory, with branches, merge, blame and bisect, where forget drops a node from the next snapshot, never from history.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A Git-style commit graph for agent
+memory</p>
+          <h1>Mnemosyne (Nabzx)</h1>
+          <p class="document-deck">A Rust commit graph for agent memory,
+with branches, merge, blame and bisect, where forget drops a node from
+the next snapshot, never from history.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Nabzx/mnemosyne">
+              <span>Source</span>
+              <strong>Nabzx/mnemosyne</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Nabzx/mnemosyne/commit/431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6" title="431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6">
+              <span>Analyzed revision</span>
+              <code>431f1f0e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Nabzx--mnemosyne" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Nabzx--mnemosyne</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>4,749
+lines of Rust outside test modules, 3,071 of them in the core crate, and
+1,679 lines of Python</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>367
+commits on main by 1 contributor, 6 September 2026 – 28 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>103
+Rust test functions and 91 Python test functions</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mnemosyne (Nabzx) is version control for an agent's memory: a Rust
+core that stores memory nodes as content-addressed objects in one redb
+file, commits a full state snapshot per write, and offers branch,
+three-way merge, <code>blame</code> and <code>bisect</code>. It ships a
+<code>mnem</code> CLI, a Python SDK, an MCP server and two framework
+adapters. What is notable is that the history is the store, not a log
+beside it: every agent write is a commit, and nothing in the code
+deletes an object. What is weak is everything past the history. There is
+no search, no scope key, no trust state, and <code>forget</code> removes
+a node from the next snapshot while the agent can still read it at any
+earlier commit.</p>
+<p>This is not the atlas's other <a href="../mnemosyne/">Mnemosyne</a>,
+a SQLite memory engine from <code>mnemosyne-oss</code>; the two share a
+name and nothing else. The crates here are published as
+<code>mnem-store</code> and <code>mnem-git</code>, renamed from
+<code>mnem-core</code> and <code>mnem-cli</code> for the first publish
+(<code>CHANGELOG.md:447-455</code>).</p>
+<p>The design is honest about its target. It makes no accuracy claim;
+the benchmark document says versioned memory does not make an agent
+answer better and measures reconstruction, blame, bisect and merge
+instead (<code>docs/benchmark.md:1-12</code>). Those properties are well
+tested: 40 seeded histories check <code>state_at</code> against the
+working memory recorded at each commit
+(<code>crates/mnem-store/tests/time_travel.rs:57-102</code>), and a
+chaos harness checks the merge algebra.</p>
+<p>Two marks. <code>audit_log</code>, on the commit graph in the
+system's own store with no rewriting path; and
+<code>negative_eval</code>, on a CI-run case asserting that a forgotten
+memory is not returned while a second one still is. Section 9 names the
+five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a node: a string id, JSON content, optional provenance
+(<code>agent_step</code>, <code>observation</code>,
+<code>tool_call</code>, <code>source</code>, <code>note</code>) and an
+optional <code>event_time</code>
+(<code>crates/mnem-store/src/object.rs:51-101</code>). A node object is
+immutable and addressed by the BLAKE3 hash of its canonical CBOR, so the
+same id with new content is a new object. The belief the agent holds is
+the set of node ids in the state its <code>HEAD</code> commit points
+at.</p>
+<p><strong>A node becomes current in two steps, and the first is already
+visible.</strong> <code>stage</code> writes the node object and records
+its id in the <code>staging</code> table in one transaction;
+<code>commit</code> builds the next state from the parent's state plus
+everything staged, in a second transaction
+(<code>crates/mnem-store/src/commit.rs:55-66</code>,
+<code>:90-163</code>). Working memory, which is what <code>recall</code>
+reads, is the <code>HEAD</code> state minus staged deletions with
+staging overlaid (<code>checkout.rs:84-126</code>). So a staged node is
+served before any commit records it.</p>
+<p><strong>It stops being current in one of three ways.</strong> A later
+write under the same id replaces it in the next state. <code>rm</code>,
+which MCP <code>forget</code> calls, stages a deletion the next commit
+applies (<code>checkout.rs:134-156</code>). A <code>checkout</code> of
+another branch or commit changes which state <code>HEAD</code> names.
+None of these removes anything: every earlier state still holds the
+node, and <code>recall_at</code>, <code>blame</code>,
+<code>bisect</code> and <code>export</code> read it there. Nothing
+expires or decays.</p>
+<p><strong>The staged deletion is keyed on the id and dies at the
+commit.</strong> Re-staging the id lifts it — <em>"re-adding
+un-deletes"</em> (<code>commit.rs:55-57</code>) — and the commit clears
+the table (<code>:158-159</code>). A forgotten value can therefore be
+remembered again with nothing consulted.</p>
+<p><strong>Merge is structural.</strong> Two branches are merged per
+node id on object hashes against their merge base
+(<code>merge.rs:66-89</code>). Because provenance is inside the hashed
+object, two branches that learned the same content from different
+sources conflict, and a conflict is returned to the caller, not stored
+(<code>merge.rs:27-29</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a node becomes current memory in Mnemosyne (Nabzx), how it leaves the current state, and where it stays</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a node becomes current memory in Mnemosyne (Nabzx), how it leaves the current state, and where it stays
+flowchart TD
+    W[&quot;remember / revise / put&quot;] --&gt; ST[&quot;stage: node object written,&lt;br/&gt;id recorded in staging&quot;]
+    F[&quot;forget / delete&quot;] --&gt; TS[&quot;staged deletion,&lt;br/&gt;keyed on the node id&quot;]
+    ST --&gt; WM[&quot;working memory =&lt;br/&gt;HEAD state + staging overlay&quot;]
+    ST --&gt; C{&quot;commit: HEAD attached&lt;br/&gt;and branch unmoved?&quot;}
+    TS --&gt; C
+    C -- &quot;yes&quot; --&gt; NC[&quot;new State + Commit object,&lt;br/&gt;change set in commit_nodes,&lt;br/&gt;branch moved by CAS&quot;]
+    C -- &quot;HEAD detached&quot; --&gt; STUCK[&quot;error; node stays staged,&lt;br/&gt;recall still serves it,&lt;br/&gt;switch refused while dirty&quot;]
+    NC --&gt; CUR[&quot;current: returned by&lt;br/&gt;recall and why&quot;]
+    NC --&gt; PAST[&quot;every earlier State keeps&lt;br/&gt;the replaced or forgotten node:&lt;br/&gt;recall_at, blame, bisect, export&quot;]
+    M[&quot;merge theirs&quot;] --&gt; MC{&quot;three-way per id&lt;br/&gt;on object hashes&quot;}
+    MC -- &quot;clean&quot; --&gt; NC
+    MC -- &quot;conflict&quot; --&gt; RES[&quot;returned to the caller, not stored;&lt;br/&gt;resolutions or a strategy settle it&quot;]
+    RES --&gt; NC
+    TS -. &quot;re-adding the id lifts it&quot; .-&gt; ST</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three crates and three Python packages. <code>mnem-store</code> is
+the object model, the store and every operation; <code>mnem-git</code>
+is the <code>mnem</code> CLI; <code>mnem-py</code> is the PyO3 binding
+behind the <code>mnem</code> Python package
+(<code>python/mnem/_sdk.py</code>). The MCP server
+(<code>packages/mnem-mcp</code>), the LangGraph <code>BaseStore</code>
+(<code>packages/mnem-langgraph</code>) and the OpenAI Agents SDK
+<code>Session</code> (<code>packages/mnem-openai-agents</code>) are
+built on the Python SDK.</p>
+<p>A store is a <code>.mnem/</code> directory: <code>store.redb</code>,
+a <code>HEAD</code> text file and a <code>config</code> file
+(<code>crates/mnem-store/src/store.rs:1-13</code>). The redb file has
+five tables — <code>objects</code>, <code>refs</code>,
+<code>staging</code>, <code>staging_tombstones</code> and
+<code>commit_nodes</code> (<code>docs/format/README.md:104-121</code>).
+<code>objects</code> holds every node, state and commit;
+<code>refs</code> maps branch names to commits;
+<code>commit_nodes</code> is a derived index of each commit's change set
+that readers fall back from when it is missing
+(<code>index.rs:9-13</code>). A state is a flat sorted map from node id
+to object id, so every commit writes a full map
+(<code>object.rs:103-111</code>).</p>
+<p>Nothing runs in the background. The crate never calls a model or the
+network, and <code>deny.toml</code> bans network-capable crates such as
+<code>tokio</code> and <code>reqwest</code>
+(<code>deny.toml:3-48</code>). <code>export</code> dumps every object,
+ref and <code>HEAD</code> as one JSON value, and <code>import</code>
+rebuilds a store at a new path after re-hashing every object against its
+claimed id (<code>portable.rs:157-205</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One binary or one <code>pip install</code>; no server, no API key, no
+model. The store is not human-readable on disk — CBOR in redb — but
+<code>mnem show</code>, <code>mnem log</code> and <code>export</code>
+render all of it as text or JSON. The MCP server holds one store handle
+for its lifetime, because redb allows one open handle per file per
+process (<code>packages/mnem-mcp/mnem_mcp/server.py:163-182</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> MCP <code>remember</code> and
+<code>revise</code> (<code>server.py:193-221</code>) call
+<code>agents.remember</code> (<code>python/mnem/agents.py:52-88</code>):
+<code>store.add</code> then <code>store.commit</code>, retried up to
+four times on <code>ConflictError</code>. The binding stages through
+<code>Store::stage</code> and commits through <code>Store::commit</code>
+(<code>commit.rs:58-66</code>, <code>:90-163</code>).
+<code>remember_many</code> stages a list and commits once
+(<code>agents.py:91-116</code>).</p>
+<p><strong>Forget.</strong> MCP <code>forget</code> →
+<code>agents.forget</code> → <code>store.rm</code> then
+<code>commit</code> (<code>agents.py:119-135</code>).
+<code>Store::rm</code> stages a deletion if the id is in the
+<code>HEAD</code> state, or unstages a pending add
+(<code>checkout.rs:134-156</code>).</p>
+<p><strong>Read.</strong> MCP <code>recall</code> with an id calls
+<code>working_node</code>, which checks staging, then staged deletions,
+then the <code>HEAD</code> state (<code>checkout.rs:112-126</code>);
+without an id it returns the whole working memory
+(<code>server.py:74-78</code>). <code>recall_at</code> calls
+<code>state_at</code>, a point read of any commit
+(<code>timetravel.rs:35-44</code>).</p>
+<p><strong>Explain.</strong> <code>why</code> is <code>blame</code>:
+walk from a commit toward the root, following the first parent that
+holds the exact node object, and return the commit that introduced it
+with the node's provenance and its <code>event_time</code> or the commit
+time (<code>blame.rs:31-89</code>). <code>when_did</code> is
+<code>bisect</code> over the first-parent chain with a predicate on the
+reconstructed state, assuming monotonicity
+(<code>bisect.rs:1-8</code>).</p>
+<p><strong>Merge.</strong> <code>Store::merge_with</code> refuses a
+detached <code>HEAD</code> or a dirty index, fast-forwards where it can,
+and otherwise computes the base, classifies each id and applies explicit
+resolutions, then the resolver, then a blanket strategy
+(<code>mergeflow.rs:108-178</code>, <code>:196-268</code>). Unresolved
+conflicts return without a commit (<code>:151-153</code>).</p>
+<p><strong>Adapters.</strong> The LangGraph store maps
+<code>(namespace, key)</code> to the node id
+<code>":".join([*namespace, key])</code> and filters <code>search</code>
+over the whole working memory by namespace prefix, a field filter and a
+substring
+(<code>packages/mnem-langgraph/mnem_langgraph/store.py:42-48</code>,
+<code>:129-144</code>). The OpenAI Agents session keys items
+<code>session_id:seq</code> and reads by prefix
+(<code>packages/mnem-openai-agents/mnem_openai_agents/session.py:114-123</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryNode</code> is <code>id</code>, <code>content</code> (any
+JSON value), <code>content_kind</code>, <code>provenance</code> and
+<code>event_time</code> (<code>object.rs:83-101</code>).
+<code>ContentKind::Claim</code> is declared <em>"so v2 can add it
+without a format break"</em> and has no reader that treats it
+differently (<code>object.rs:40-49</code>). <code>Commit</code> is
+<code>parents</code>, <code>state</code>, <code>message</code>,
+<code>author</code> and <code>time</code>, with a comment that a
+signature would live in a side table (<code>object.rs:113-128</code>);
+no signature code exists at this pin.</p>
+<p>There is no scope field, no status, no confidence and no validity
+interval. Provenance is five free strings with no required field.
+<code>event_time</code> is <em>"when the agent formed the node"</em>,
+distinct from the commit's record time, and only <code>blame</code> and
+the LangGraph adapter's timestamps read it. The agent-facing write
+helpers do not accept it: <code>agents.remember</code> has no
+<code>event_time</code> parameter, so the MCP server and both adapters
+never set it (<code>agents.py:52-65</code>); only
+<code>mnem add --event-time</code> and the SDK's <code>add</code>
+do.</p>
+<p>A branch is a row in <code>refs</code>; a deleted branch's commits
+stay in <code>objects</code> because nothing collects them
+(<code>branch.rs:51-66</code>). The staged-deletion table is local
+working state and is not exported (<code>staging.rs:16-20</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no ranking of any kind. The agent reads one node by exact
+id, the whole working memory, or the whole state at a named commit. No
+token budget applies: <code>recall</code> with no id returns every node,
+and the MCP resource <code>mnem://memory</code> does the same
+(<code>server.py:236-241</code>, <code>:278-280</code>). Injection is
+entirely the agent's or the harness's choice.</p>
+<p>The LangGraph adapter's <code>search</code> iterates every node in
+working memory and filters in Python, so its cost grows with the store
+(<code>mnem_langgraph/store.py:129-144</code>). Its timestamps come from
+<code>event_time</code> when set and otherwise from
+<code>datetime.now</code> (<code>:64-67</code>); since its own writes
+never set <code>event_time</code>, every <code>Item</code> it returns
+reports the read time as both <code>created_at</code> and
+<code>updated_at</code>.</p>
+<p><code>history</code> returns the newest commits by a full walk sorted
+on the commit's <code>time</code> (<code>log.rs:66-73</code>). Through
+the SDK that time is caller-supplied, so a backdated commit can fall
+outside <code>history(limit=20)</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is explicit and synchronous. One MCP call stages and
+commits; the commit writes a state holding the full id map, a commit
+object and a change-set entry, and the benchmark document reports about
+12 ms per write, dominated by the <code>fsync</code>
+(<code>docs/benchmark.md:60-75</code>); this reading did not run it. A
+memory is readable from the moment it is staged. No background pass
+exists and nothing rewrites the store.</p>
+<p><strong>One call is two transactions.</strong>
+<code>agents.py:8</code> says <em>"one call is one commit"</em>, and it
+is: but <code>stage</code> and <code>commit</code> each open their own
+redb write transaction. If the commit fails for any reason other than
+<code>ConflictError</code>, the node stays staged. With the harness
+tools enabled, <code>switch</code> to a commit id detaches
+<code>HEAD</code>; <code>remember</code> then stages its node and fails
+with <em>"cannot commit from a detached HEAD"</em>
+(<code>commit.rs:91-98</code>). <code>recall</code> serves the staged
+node, and <code>switch</code> back is refused while staging is
+non-empty, because <code>do_switch</code> calls <code>checkout</code>
+without <code>discard</code> (<code>server.py:145-147</code>;
+<code>checkout.rs:56-70</code>). No MCP tool unstages. This chain was
+traced in code, not run.</p>
+<p>No deduplication beyond content addressing, no extraction, no
+conflict detection between different ids, and no filter on malicious
+input: any string the agent supplies is stored verbatim with whatever
+provenance it claims.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes block for one durable commit. Reads are one redb read
+transaction, about 1.5 ms for a 100-key memory in the committed overhead
+table. Storage per commit is a full flat map, measured at 7.5 to 10.3 KB
+per step on that fixture; the ADRs defer a prolly tree until read
+latency demands it (<code>object.rs:103-106</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers ten core tools — <code>remember</code>,
+<code>revise</code>, <code>remember_many</code>, <code>forget</code>,
+<code>recall</code>, <code>recall_at</code>, <code>history</code>,
+<code>why</code>, <code>when_did</code>, <code>whats_new</code> — and
+four resources (<code>server.py:193-292</code>). <code>branch</code>,
+<code>switch</code> and <code>merge</code> are registered only with
+<code>tools="all"</code>, described as <em>"for an agent harness rather
+than the model"</em> (<code>:163-167</code>, <code>:294-315</code>), but
+they sit on the same server when enabled. No tool deletes a branch,
+unstages, or discards.</p>
+<p>The server's instructions tell the model to record what it learns
+with provenance and to trace wrong beliefs with <code>why</code> and
+<code>when_did</code> (<code>server.py:175-180</code>). Nothing injects
+memory automatically. The LangGraph adapter is a drop-in
+<code>BaseStore</code>, and the OpenAI Agents session is a drop-in for
+<code>SQLiteSession</code> whose optional hooks fill provenance from
+tool results (<code>session.py:1-26</code>, <code>:171-181</code>). Both
+add <code>branch</code>, <code>switch</code> and <code>history</code>
+methods that act on the whole store, a caveat the session's docstring
+states.</p>
+<p>Adapting it to another agent is cheap: the SDK is small and every
+operation has a CLI twin. What an adapter must add is everything above
+the store — search, scope and a context budget.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The history holds.</strong> Every writer to
+<code>objects</code> inserts only if the id is absent
+(<code>objects.rs:18-28</code>; <code>commit.rs:29-39</code>), the one
+bulk writer is <code>import</code> into a fresh path
+(<code>portable.rs:180-199</code>), and a search for gc, reset, rebase
+or purge verbs finds none. A commit's id covers its parents, so an
+edited commit would change every descendant's id. Nothing re-verifies
+stored bytes on read; <code>import</code> is the one place hashes are
+checked.</p>
+<p><strong>Forget is not erasure, and the agent knows it.</strong> The
+<code>forget</code> tool's own description is <em>"Past snapshots keep
+it"</em> (<code>server.py:231-234</code>), and <code>recall_at</code>
+returns any past state. A memory the user asked the agent to drop
+remains one tool call away, and <code>export</code> carries it to any
+machine. The design has no path for a privacy delete short of removing
+the store.</p>
+<p><strong>Adapter scope is a string convention.</strong> The LangGraph
+adapter joins namespace segments and the key with <code>":"</code> and
+documents that a colon in a segment is <em>"not supported"</em> without
+checking it (<code>mnem_langgraph/store.py:6-7</code>,
+<code>:42-48</code>). Namespace <code>("memories",)</code> with key
+<code>u1:plan</code> addresses the same node as namespace
+<code>("memories", "u1")</code> with key <code>plan</code>. The OpenAI
+Agents session reads by <code>startswith(f"{session_id}:")</code>
+(<code>session.py:114-123</code>), so session <code>u1</code> reads,
+pops and clears the items of a session named <code>u1:x</code>
+(<code>:238-251</code>).</p>
+<p><strong>A contradiction verdict can be silently overruled.</strong>
+The <code>SemanticMerge</code> seam's <code>Contradiction</code> verdict
+is documented as <em>"a human or another agent should see it"</em>
+(<code>semantic.rs:28-43</code>). In the resolution loop it falls
+through to the blanket strategy, so <code>--strategy ours</code> settles
+it and nothing records the draft (<code>mergeflow.rs:228-233</code>).
+Only <code>StructuralOnly</code> ships, which never returns it
+(<code>semantic.rs:64-73</code>).</p>
+<p><strong>Attribution is caller-supplied.</strong> <code>author</code>
+defaults to <code>$MNEM_AUTHOR</code> or <code>unknown</code> and
+<code>time_ms</code> to now, both overridable per call through the SDK
+(<code>_sdk.py:260-266</code>, <code>:365-381</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>audit_log</code> — awarded.</strong> The commit graph
+lives in the system's own redb store, every agent-reachable write path
+produces a commit, and no path deletes or rewrites an object. This is
+not the git-history exclusion the rubric draws for <a
+href="../gitlord/">GitLord</a>; it is the same shape as <a
+href="../ultracontext/">UltraContext</a>'s version chain. Limits are in
+the evidence record: attribution fields are the caller's, and a deleted
+branch leaves <code>log</code>.</li>
+<li><strong><code>negative_eval</code> — awarded</strong>, on the by-id
+exclusion in section 10.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>staging_tombstones</code> is keyed on a node id, lives until the
+next commit, and is lifted by re-adding the id
+(<code>staging.rs:81-93</code>; <code>commit.rs:55-66</code>). Nothing
+consults a forgotten value when it is written again.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No status
+field exists. <code>ContentKind::Claim</code> is declared and unread,
+and the <code>Contradiction</code> verdict is not persisted.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>event_time</code> is a second clock, but it records when the agent
+formed a node, no read filters on it, and no agent-facing writer sets
+it. Time travel is by commit, which is transaction time only, and that
+time is caller-supplied through the SDK.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> No scope
+key on a node. A store per directory is a physical partition; a branch
+is a pointer. The LangGraph adapter's namespace predicate accepts an
+empty prefix as everything, the case on which <a
+href="../langgraph/">LangGraph</a>'s own mark was withdrawn, and its
+separator collides.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No memory
+waits for anyone. Merge conflicts are transient values handed back to
+whoever called <code>merge</code>, and with the harness tools enabled
+that is the agent, which may pass <code>resolutions</code> or
+<code>strategy</code> itself (<code>server.py:306-315</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>103 Rust test functions and 91 Python test functions, none run for
+this reading. CI runs <code>cargo test</code> on the workspace, both
+Python suites, the overhead benchmark and the scripted Claude example
+(<code>.github/workflows/ci.yml:33</code>, <code>:64-66</code>,
+<code>:84-100</code>, <code>:125</code>).</p>
+<p><strong>The negative case.</strong>
+<code>test_forget_tombstones_in_one_commit</code> remembers
+<code>temp</code> and <code>keep</code>, forgets <code>temp</code>, and
+asserts <code>working_node("temp") is None</code> beside
+<code>working_node("keep").content == "real belief"</code>
+(<code>python/tests/test_agents.py:58-67</code>). The MCP suite asserts
+the whole-memory recall holds three ids, forgets <code>owner</code>, and
+asserts its recall is <code>None</code>
+(<code>packages/mnem-mcp/tests/test_server.py:36-58</code>). Both are
+by-id; neither checks the whole-memory read after a forget, and none
+tests that <code>recall_at</code> still returns the forgotten node,
+which is the behaviour a reader most needs pinned.</p>
+<p><strong>The correctness harness.</strong> <code>benchmark.rs</code>
+sweeps 80 seeds, three run lengths and three fault positions, and
+asserts exact reconstruction, bisect and blame; the published table
+shows 100% for each (<code>docs/benchmark.md:29-49</code>). Bisect is
+measured on a <em>"planted monotonic fault"</em>; a belief that goes
+wrong, is fixed and goes wrong again is outside what it claims.</p>
+<p><strong>The fuzz figure.</strong> The README says the merge algorithm
+holds <em>"across ... a separate 50,000-case fuzz test ... gated in CI
+on every change"</em> (<code>README.md:41</code>). CI runs the defaults,
+600 pure and 24 store trials
+(<code>crates/mnem-store/tests/merge_chaos.rs:24-31</code>), and
+<code>docs/chaos-report.md:50-57</code> says so and records the
+50,000-case run as manual.</p>
+<p><strong>Adapter scope.</strong>
+<code>test_read_items_scoped_to_one_session</code> and the LangGraph
+search test assert exact result sets over sessions and namespaces
+without a colon, so the collision in section 9 is untested.</p>
+<p>No paper; <code>CITATION.cff</code> cites the software. No
+retrieval-quality evaluation, consistent with a store that does not
+rank.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the history the store.</strong> When every write is a
+commit object in an insert-only table, the audit trail cannot disagree
+with the state, because there is only one of them.</li>
+<li><strong>Keep the change index derived.</strong>
+<code>commit_nodes</code> makes blame fast, every reader falls back to
+recomputing from two states, and a rebuild is one call.</li>
+<li><strong>Hash provenance into identity when merging.</strong> Two
+agents that learned the same thing from different sources surface as a
+conflict rather than silently converging, which is what a merge of
+beliefs should do.</li>
+<li><strong>Refuse rather than guess on merge.</strong> Conflicts return
+typed, with base, ours and theirs, and resolutions name ids that must be
+conflicts.</li>
+<li><strong>Verify imports by re-hashing.</strong> A hand-edited export
+is an error, not a misread.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A forget the agent can undo by reading.</strong> If users
+expect "forget that" to mean the agent stops seeing it, a time-travel
+read on the same tool surface breaks the promise. Put historical reads
+behind a different principal.</li>
+<li><strong>A stage visible before its commit.</strong> Serving staged
+nodes through the agent's read makes a failed commit indistinguishable
+from a successful one.</li>
+<li><strong>Scope as a joined string with an unchecked
+separator.</strong> Validate the separator or encode segments; prefix
+reads over joined ids leak.</li>
+<li><strong>A documented escalation that a default overrides.</strong>
+If a verdict means a person should look, no blanket strategy should be
+able to settle it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an agent developer who needs to debug what an agent
+believed and when — replaying a run, bisecting to the step where a bad
+fact entered, merging two exploratory branches — on one machine, with
+memory small enough to read whole. It does not suit anyone who needs the
+agent to find memories by relevance, keep tenants apart, or honour a
+deletion request. The store is a substrate: search, scope, a context
+budget and any trust model are left to the adopter, and the roadmap
+places review and semantic merge in a later era.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does redb refuse a second process opening the same store, and if so,
+how do the CLI and a running MCP server coexist on one store?</li>
+<li>How large does a store grow for a long-running agent, given a full
+id map per commit, and when does the deferred prolly tree become
+necessary?</li>
+<li>Will the Era 2 <code>Contradiction</code> object be consulted on
+later writes, which is where a value-level refusal would come from?</li>
+<li>Is the colon collision in the adapters known upstream?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Object model and storage:</strong>
+<code>crates/mnem-store/src/object.rs</code>, <code>objects.rs</code>,
+<code>store.rs</code>, <code>refs.rs</code>, <code>staging.rs</code>,
+<code>index.rs</code>, <code>codec.rs</code>, <code>id.rs</code>,
+<code>docs/format/README.md</code>.</li>
+<li><strong>Write path:</strong>
+<code>crates/mnem-store/src/commit.rs</code>, <code>checkout.rs</code>
+(<code>rm</code>), <code>python/mnem/agents.py</code>,
+<code>python/mnem/_sdk.py</code>,
+<code>crates/mnem-py/src/lib.rs</code>.</li>
+<li><strong>Read path:</strong>
+<code>crates/mnem-store/src/checkout.rs</code> (working memory),
+<code>timetravel.rs</code>, <code>blame.rs</code>,
+<code>bisect.rs</code>, <code>log.rs</code>, <code>diff.rs</code>.</li>
+<li><strong>Merge:</strong> <code>crates/mnem-store/src/merge.rs</code>,
+<code>mergeflow.rs</code>, <code>semantic.rs</code>,
+<code>graph.rs</code>.</li>
+<li><strong>Portability:</strong>
+<code>crates/mnem-store/src/portable.rs</code>.</li>
+<li><strong>Integration:</strong>
+<code>packages/mnem-mcp/mnem_mcp/server.py</code>,
+<code>packages/mnem-langgraph/mnem_langgraph/store.py</code>,
+<code>packages/mnem-openai-agents/mnem_openai_agents/session.py</code>,
+<code>crates/mnem-git/src/main.rs</code>.</li>
+<li><strong>Tests and benchmarks:</strong>
+<code>python/tests/test_agents.py</code>,
+<code>packages/mnem-mcp/tests/test_server.py</code>,
+<code>packages/mnem-langgraph/tests/test_store.py</code>,
+<code>packages/mnem-openai-agents/tests/</code>,
+<code>crates/mnem-store/tests/</code>,
+<code>benchmarks/overhead.py</code>,
+<code>benchmarks/baseline.json</code>, <code>docs/benchmark.md</code>,
+<code>docs/chaos-report.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, each run
+once.</p>
+<ul>
+<li><code>git grep -nE 'objects::delete|fn delete|OBJECTS.*remove' -- crates/mnem-store/src</code>
+— only <code>branch.rs:54</code> and <code>refs.rs:105</code>, both on
+refs; no object remover.</li>
+<li><code>git grep -nE '\b(gc|garbage|purge|prune|redact|erase|squash|rebase|reset|amend)\b' -- crates python packages</code>
+— no match.</li>
+<li><code>git grep -nE 'as_of|valid_(from|to|until)|event_time *[&lt;&gt;]' -- crates python packages</code>
+— no match; no read filters on a time.</li>
+<li><code>git grep -nE 'fn (tombstone|untombstone)|STAGING_TOMBSTONES:' -- crates/mnem-store/src</code>
+— the staging table and its four functions in <code>staging.rs</code>;
+nothing else.</li>
+<li><code>git grep -nE 'delete_branch|unstage|discard|rebuild_index' -- packages python/mnem/agents.py</code>
+— no match; no adapter or MCP tool reaches them.</li>
+<li><code>git grep -nE 'ContentKind::Claim|Contradiction\(' -- crates python packages</code>
+— the binding's name mapping, the unpersisted verdict, its fall-through
+at <code>mergeflow.rs:232</code>, and a test resolver.</li>
+<li><code>git grep -nE 'MNEM_CHAOS' -- .github justfile</code> — no
+match; CI runs the chaos defaults.</li>
+<li><code>git grep -niE 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md CITATION.cff</code>
+— no match.</li>
+<li><code>git grep -nE 'event_time' -- python/mnem/agents.py packages</code>
+— only the LangGraph adapter's reader at <code>store.py:65-66</code>; no
+agent-facing writer.</li>
+<li><code>git grep -nE 'join\(\[\*namespace|split\(":"\)|startswith\(prefix\)' -- packages</code>
+— the colon join and split in the LangGraph adapter and the prefix read
+in the session, with no separator check beside them.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/Nabzx/mnemosyne/commit/431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6"><code class="commit-id" title="431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6">431f1f0e…</code></a>
+— first reading, at the head of <code>main</code>, a commit from the
+same day. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>. Screened before reading: 1 auto-run surface
+(<code>.githooks/pre-commit</code>, inert unless
+<code>core.hooksPath</code> points at it), no build-time execution
+point, 8 dependency files inside the cooldown — every file in a depth-1
+clone dates to the tip — and 4 unpinned Python surfaces;
+<code>AGENTS.md</code> was treated as data. Read with
+<code>git grep</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

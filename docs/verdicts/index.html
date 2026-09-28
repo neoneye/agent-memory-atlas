@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 658 reports.</strong></p>
+<p><strong>This page covers all 659 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -27214,6 +27214,49 @@ bound.</li>
 <li>Do not copy when: a user must be able to make the system forget, or
 a person must approve what the agent stores. Nothing deletes, and the
 agent both writes and retires the owner's guidance.</li>
+</ul>
+<h3 id="mnemosyne-nabzx"><a
+href="../systems/mnemosyne-nabzx/"><code>mnemosyne-nabzx</code></a></h3>
+<ul>
+<li>Best idea: <strong>the audit trail and the state are one
+structure.</strong> Every write through the MCP server or an adapter
+stages and commits, the <code>objects</code> table only inserts when an
+id is absent, and no reset, rebase or gc verb exists. The history cannot
+disagree with the memory because there is nothing else to disagree with.
+A derived <code>commit_nodes</code> index makes <code>blame</code> fast
+and every reader falls back to recomputing it.</li>
+<li>Biggest risk: <strong>forget is not erasure, and the agent can read
+the forgotten value.</strong> The MCP <code>forget</code> tool says
+<em>"Past snapshots keep it"</em>, and <code>recall_at</code> on the
+same core tool surface returns any past state. A memory a user asked to
+drop stays one tool call away, and <code>export</code> copies it to any
+machine.</li>
+<li>Most reusable component: <code>crates/mnem-store/src/merge.rs</code>
+and <code>mergeflow.rs</code> — a per-id three-way merge on content
+hashes, with provenance inside the hash so two sources for the same fact
+conflict instead of converging, and conflicts returned typed with base,
+ours and theirs rather than guessed.</li>
+<li>Second risk: <strong>a failed commit leaves a node that recall
+serves, and scope is a colon.</strong> Stage and commit are two
+transactions, so a commit refused on a detached HEAD leaves the node
+staged and readable, with no MCP tool to unstage it. The LangGraph
+adapter and the OpenAI Agents session join scope segments with an
+unvalidated <code>:</code>, so a session named <code>u1</code> reads and
+clears the items of <code>u1:x</code>.</li>
+<li>Maturity impression: Apache-2.0, 4,749 lines of Rust outside test
+modules and 1,679 lines of Python, 367 commits from one contributor
+between 6 and 28 September 2026, with 103 Rust and 91 Python test
+functions. Two marks, <code>audit_log</code> on the commit graph and
+<code>negative_eval</code> on a CI-run by-id exclusion after
+<code>forget</code> with a positive control. The README calls a
+50,000-case merge fuzz CI-gated; CI runs 600.</li>
+<li>Study when: you want to replay, bisect and blame what an agent
+believed, step by step, and want a small, offline, well-specified
+substrate with its on-disk format frozen and its ADRs in the tree.</li>
+<li>Do not copy when: memory must be found by relevance, kept apart by
+tenant, or forgotten on request. Search, scope, a context budget and
+trust are left to the adopter, and a time-travel read sits on the
+agent's own tool surface.</li>
 </ul>
         </article>
       </div>
