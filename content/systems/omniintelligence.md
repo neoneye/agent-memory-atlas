@@ -1,15 +1,19 @@
 ---
 title: "OmniIntelligence"
 eyebrow: "Evidence-tiered pattern learning"
-description: "Patterns learned from session events and moved by an evidence FSM with a deliberate hysteresis band — where the cold-start path selects exactly what the gate refuses, and the only test of it replaces the gate."
+description: "A pattern-learning service whose evidence ladder and hysteresis band are argued in code, and whose cold-start path selects exactly what its gate refuses."
 root: ../..
 page_kind: system
 source_name: "OmniNode-ai/omniintelligence"
 source_url: https://github.com/OmniNode-ai/omniintelligence
 archive_name: "OmniNode-ai--omniintelligence"
-revision: 274f097fcd9a008d4888163834f8c459fbfea728
-revision_url: https://github.com/OmniNode-ai/omniintelligence/commit/274f097fcd9a008d4888163834f8c459fbfea728
-analyzed_at: 2026-09-19
+revision: 25ee01e7a8f9a9a2139456058fe8948e833b099a
+revision_url: https://github.com/OmniNode-ai/omniintelligence/commit/25ee01e7a8f9a9a2139456058fe8948e833b099a
+analyzed_at: 2026-09-28
+licence: "MIT"
+size: "176,327 lines of Python in 1,088 files under src, 66 ONEX node packages and 27 Postgres migrations"
+activity: "925 commits on dev by six author names, two of them bots, 13 November 2025 – 28 September 2026"
+tests: "7,228 test functions in 174,097 lines, under tests and the per-node node_tests"
 capabilities: "trust_state, audit_log, negative_eval"
 capability_evidence:
   trust_state: "learned_patterns.status, filtered on the injection read path | deployment/database/migrations/005_create_learned_patterns.sql:36, src/omniintelligence/repositories/learned_patterns.repository.yaml:80,134,228 | the column is constrained to `candidate, provisional, validated, deprecated`, and three injection queries in the repository contract carry an explicit lifecycle filter marked in the YAML as OMN-1894 -- only injectable states are returned, so a candidate or deprecated pattern is withheld from a session rather than ranked below the others | tests/unit/repositories/test_contract_lifecycle_filter.py"
@@ -20,7 +24,7 @@ stack_retrieval: "lexical"
 stack_source: "reviewed"
 matrix:
   memory_unit: "A learned pattern — a signature clustered from session events, carrying a lifecycle status, an evidence tier and rolling outcome counters"
-  storage: "One Postgres schema, 28 migrations, with the pattern row, its transition audit, its injections and its attributions as separate tables"
+  storage: "One Postgres schema, 27 migrations, with the pattern row, its transition audit, its injections and its attributions as separate tables"
   retrieval: "SQL over status, domain, keywords and a confidence floor, served to clients as `GET /api/v1/patterns`"
   write: "Kafka-dispatched ONEX nodes cluster session events into candidate patterns; outcomes arrive as separate events"
   update_delete: "A four-state lifecycle moved only by a reducer, with a 20-point hysteresis band between promotion and demotion and a 24-hour cooldown"
@@ -34,21 +38,21 @@ matrix:
 
 ## 1. Executive Summary
 
-OmniIntelligence is the memory half of a two-repository loop: it learns patterns from coding-session events, grades them on evidence, and serves the survivors over HTTP to [OmniClaude](../omniclaude/), which injects them into sessions and reports back what happened. Both are MIT-licensed. This repository is about 164,000 lines of Python across 1,057 source files, with a further 150,000 lines of tests, 68 ONEX node packages and 28 Postgres migrations.
+OmniIntelligence is the memory half of a two-repository loop: it learns patterns from coding-session events, grades them on an evidence ladder, and serves the survivors over HTTP to [OmniClaude](../omniclaude/), which injects them into sessions and reports back what happened. Its lifecycle thresholds are argued in the code, with demotion deliberately harder than promotion. Its weakness is wiring: the cold-start promotion path selects exactly the rows its own reducer refuses.
 
-It is the most thoroughly *reasoned* memory lifecycle in this atlas, and the reasoning is in the code rather than in a design document. Demotion is deliberately harder than promotion — ten injections rather than five, a failure streak of five rather than three, a 40% success floor against a 60% ceiling — and the docstring beside each constant says why, in the terms an experimentalist would use: *"The 20% gap between promotion (60%) and demotion (40%) ensures ... random variance doesn't cause flip-flopping between states."* Every transition is written to an append-only table carrying a `gate_snapshot` of the conditions that justified it. The evidence tier can only increase, and the guarantee is not a convention but the `WHERE` clause of the `UPDATE`.
+The reasoning is in the code rather than in a design document. Demotion is deliberately harder than promotion — ten injections rather than five, a failure streak of five rather than three, a 40% success floor against a 60% ceiling — and the docstring beside each constant says why, in the terms an experimentalist would use: *"The 20% gap between promotion (60%) and demotion (40%) ensures ... random variance doesn't cause flip-flopping between states."* Every transition is written to an append-only table carrying a `gate_snapshot` of the conditions that justified it. The evidence tier can only increase, and the guarantee is not a convention but the `WHERE` clause of the `UPDATE`.
 
 Three things are broken in the way this atlas exists to find, and all three are invisible from the outside.
 
 **The cold-start path selects exactly what the gate refuses.** `SQL_FETCH_CANDIDATE_PATTERNS` deliberately admits `evidence_tier = 'unmeasured'` rows for bootstrap promotion; `apply_transition` — which the same handler then calls — rejects any transition to `PROVISIONAL` from a tier below `OBSERVED`. The one test named "full promotion lifecycle" passes a mock in place of `apply_transition` that returns success, and asserts a promotion the real reducer would refuse.
 
-**The top evidence tier is unreachable.** `verified` is a valid column value, is gated on, and is written by nothing: `compute_evidence_tier` returns only `OBSERVED` or `MEASURED`, and its docstring says *"VERIFIED requires independent validation (not computed here)."*
+**The top evidence tier is unreachable.** `verified` is a valid column value, is gated on, and is written by nothing: `compute_evidence_tier` computes only `OBSERVED` or `MEASURED` and otherwise keeps the current tier, and its docstring says *"VERIFIED requires independent validation (not computed here)."*
 
 **The manual kill switch reads a stale view.** Disabling a pattern is a hard override that bypasses the cooldown — and it is read from `disabled_patterns_current`, a materialized view whose only `REFRESH` statements in the tree are inside integration tests.
 
 The Goodhart and reward-hacking guardrails are real, pure, and tested, and nothing calls them.
 
-**A scoping caveat about what can be read here.** The ONEX runtime, node base classes and several enums — including `EnumEvidenceTier` itself — come from `omnibase-core`, `omnibase-infra` and `omnimarket`, which `pyproject.toml` pins as git dependencies on `github.com/OmniNode-ai/…`. None of those three repositories was publicly readable at this reading, so the framework beneath the mechanism cannot be inspected at a pinned commit. Everything this report describes — the schema, the SQL, the handlers, the gates and the tests — is in this repository.
+**The framework beneath the mechanism is public and locked by version.** The ONEX runtime, the repository runtime that executes the SQL contracts, and `EnumEvidenceTier` itself come from `omnibase-core`, `omnibase-infra`, `omnibase-spi` and `omnimarket`. `pyproject.toml` declares them as version ranges, and `uv.lock` resolves each from pypi.org — `0.47.24`, `0.38.59`, `0.23.5` and `0.4.261` at this pin (`uv.lock:2883`, `2907`, `2969`, `2983`). All four are MIT repositories under `github.com/OmniNode-ai`, tagged per release. The evidence guard's verdict depends on the enum's ordering, which section 4 reads at the locked tag.
 
 ## 2. Mental Model
 
@@ -78,9 +82,11 @@ WHERE id = $1
        WHEN 'measured' THEN 20 WHEN 'verified' THEN 30 ELSE 0 END)
 ```
 
-A concurrent writer, a replayed Kafka message and a buggy caller all fail the same way: the statement matches no rows. The migration names one writer — *"The attribution binder is the SOLE writer of this column"* — and the guard holds even if that stops being true.
+A concurrent writer, a replayed Kafka message and a buggy caller all fail the same way: the statement matches no rows. The migration names one writer — *"The attribution binder is the SOLE writer of this column"* — and the guard holds even if that stops being true for updates. It does not cover inserts: an operator seeding script creates rows born `measured` (section 7).
 
-Status moves only through `apply_transition`, which the demotion handler calls the single source of truth, and which refuses `→ PROVISIONAL` below `OBSERVED` and `→ VALIDATED` below `MEASURED`. So the two axes are wired together in one direction: evidence gates status, and status never touches evidence.
+At runtime, status moves only through `apply_transition`, which the demotion handler calls the single source of truth, and which refuses `→ PROVISIONAL` below `OBSERVED` and `→ VALIDATED` below `MEASURED`. So the two axes are wired together in one direction: evidence gates status, and status never touches evidence.
+
+The enum those gates compare is one rung stricter in its own docstring. `omnibase-core` calls `MEASURED` sufficient for `PROVISIONAL` and `VERIFIED` *"Required for VALIDATED lifecycle state in production"* (`enum_evidence_tier.py:100`, `:107` at the locked tag). `apply_transition` asks `OBSERVED` and `MEASURED`. Read against that docstring, the tier nothing writes is the one it names for production validation.
 
 What kills a pattern is asymmetric on purpose. Promotion is optimistic, demotion conservative, and between them sits a 20-point band of success rate that belongs to neither.
 
@@ -100,9 +106,9 @@ stateDiagram-v2
 
 ## 3. Architecture
 
-An event-driven Python service. ONEX nodes — 68 package directories, each with a `contract.yaml`, handlers, models and its own `node_tests` — are dispatched from Kafka topics through a runtime plugin. Postgres is the only store this repository runs.
+An event-driven Python service. ONEX nodes — 66 package directories, each with a `contract.yaml`, handlers, models and its own `node_tests` — are dispatched from Kafka topics through a runtime plugin. Postgres is the only store this repository runs.
 
-- **`deployment/database/migrations/`** — 28 forward migrations with paired rollbacks. `005` is `learned_patterns`, `006` disable events, `007` injections, `010` the lifecycle audit, `011` the evidence tier, `012` measured attributions, `022` project scope.
+- **`deployment/database/migrations/`** — 27 forward migrations, numbered `000` to `028` with `026` and `027` absent, and 20 rollback scripts. `005` is `learned_patterns`, `006` disable events, `007` injections, `010` the lifecycle audit, `011` the evidence tier, `012` measured attributions, `022` project scope.
 - **`src/omniintelligence/nodes/node_pattern_*`** — learning, extraction, storage, promotion, demotion, feedback, lifecycle, projection, compliance, matching, assembly.
 - **`src/omniintelligence/repositories/learned_patterns.repository.yaml`** — the read SQL, declared as data rather than embedded in Python.
 - **`src/omniintelligence/api/router_patterns.py`** — the FastAPI surface that serves patterns to clients.
@@ -110,11 +116,11 @@ An event-driven Python service. ONEX nodes — 68 package directories, each with
 
 ### Deployment and ergonomics
 
-This is the heavy end of the atlas. An operator needs Postgres with 28 migrations applied, Kafka with the topics the node contracts declare, the ONEX runtime, and — for the loop to close — a separate repository running in the agent's session. It cannot run offline as a library; there is no embedded mode and no file-backed fallback.
+This is the heavy end of the atlas. An operator needs Postgres with 27 migrations applied, Kafka with the topics the node contracts declare, the ONEX runtime, and — for the loop to close — a separate repository running in the agent's session. It cannot run offline as a library; there is no embedded mode and no file-backed fallback.
 
 The store is inspectable and repairable in the way a SQL store is: every state is a row, the audit is a table, and an operator who knows SQL can answer any question this report asks. That is a genuine advantage over the file-and-vector stores that dominate this corpus, and it is bought with an operational floor most single-user memory systems would not accept.
 
-The three private git dependencies are the real adoption cost. `pyproject.toml` pins `omnibase-core` to a commit on a repository a reader cannot open, with a comment explaining that the needed version *"is only available via git"* because it is unreleased. A reader can install the published wheel; they cannot read the framework at the commit this code was written against.
+The framework is the larger adoption cost, and it is an open one. The four framework packages are version ranges in `pyproject.toml`, locked to PyPI releases, and each release has a matching tag in a public MIT repository. The block declaring them carries the comment *"ONEX private ecosystem dependencies (NOT on public PyPI)"* (`pyproject.toml:164`), which the lockfile beside it contradicts. Until 20 August 2026 `omnibase-core` was a git-rev override on an unreleased commit, and [`ac6817add14c33addb3d845aa26e522c46f07295`](https://github.com/OmniNode-ai/omniintelligence/commit/ac6817add14c33addb3d845aa26e522c46f07295) removed it. Only the dev-group `onex-change-control` stays a git source, at a public commit.
 
 ## 4. Essential Implementation Paths
 
@@ -160,6 +166,10 @@ if (to_status == EnumPatternLifecycleStatus.PROVISIONAL
 
 There is no bootstrap exemption in the guard. Every row admitted by the second branch is `unmeasured`, and every `unmeasured` row is refused. The handler records `promoted=False`, logs a warning, and continues; nothing raises.
 
+The refusal rests on the framework's comparison, and it holds. `EnumEvidenceTier` is a `str` enum in `omnibase-core`, and a plain one would compare lexicographically, where `"unmeasured" < "observed"` is false and every bootstrap row would pass. It overrides all four ordering operators to compare weights of 0, 10, 20 and 30, coercing a raw string operand first ([`enum_evidence_tier.py:27`, `:126`](https://github.com/OmniNode-ai/omnibase_core/blob/f873d2c30201c05d4be020fa0b281b5edbfb8307/src/omnibase_core/enums/pattern_learning/enum_evidence_tier.py)). The framework's tests assert the non-lexicographic order against raw strings (`tests/unit/enums/pattern_learning/test_enum_evidence_tier.py:216`).
+
+Both halves are tested, separately. `test_candidate_to_provisional_with_unmeasured_rejected` calls the real `apply_transition` with an `unmeasured` candidate and asserts failure (`tests/unit/nodes/node_pattern_lifecycle_effect/test_handler_transition_evidence_guards.py:320`). Every test that calls the auto-promote handler passes `mock_apply_transition`, eleven call sites in all, so no test joins the selection to the gate.
+
 So the loosening cannot have unblocked the 5,384 candidates, because the reducer refuses them for a reason the loosened thresholds do not touch. The two halves are individually correct and disagree about what the cold-start rule is.
 
 ### Demotion — `handler_demotion.py`
@@ -174,7 +184,7 @@ The handler also refuses to run without Kafka rather than degrading, and says so
 
 Manual disable is an append-only event — `pattern_disable_events`, with `event_type IN ('disabled', 're_enabled')`, a `reason TEXT NOT NULL` and an `actor VARCHAR(100) NOT NULL`. Requiring a reason and an actor on a memory override is rare here and right.
 
-The demotion and promotion queries do not read that table. They join `disabled_patterns_current`, a **materialized view** created in migration `008`, whose own comment carries the operating instruction: *"Refresh with: REFRESH MATERIALIZED VIEW CONCURRENTLY disabled_patterns_current;"*. Searching the tree for that statement returns the comment, one line of the migration explaining the unique-index requirement, and four calls inside `tests/integration/nodes/node_pattern_promotion_effect/test_promotion_integration.py`. No scheduler, no job, no dispatch handler refreshes it.
+The demotion and promotion queries do not read that table. They join `disabled_patterns_current`, a **materialized view** created in migration `008`, whose own comment carries the operating instruction: *"Refresh with: REFRESH MATERIALIZED VIEW CONCURRENTLY disabled_patterns_current;"*. Searching the tree for that statement returns three lines of migration `008` — two SQL comments and the view's `COMMENT ON` text — and four calls inside `tests/integration/nodes/node_pattern_promotion_effect/test_promotion_integration.py`. No scheduler, no job, no dispatch handler refreshes it.
 
 So the strongest correction the system offers — a person naming a pattern and a reason and turning it off — takes effect when somebody remembers a maintenance command that is documented in a SQL comment. The integration tests pass because they run it themselves.
 
@@ -200,9 +210,9 @@ An audit that stores the evidence a decision was made on, rather than only the d
 
 ### The guardrails nothing calls
 
-`node_anti_gaming_guardrails_compute` implements four defences as pure functions with 452 lines of tests: Goodhart detection over correlated metric pairs, reward-hacking detection when a score improves without matching human acceptance, distributional-shift detection by symmetric KL approximation, and a diversity constraint that is a veto. Its contract declares an operation and no topics. Outside its own package, `run_all_guardrails` appears nowhere in the repository.
+`node_anti_gaming_guardrails_compute` implements four defences as pure functions with 452 lines of tests: Goodhart detection over correlated metric pairs, reward-hacking detection when a score improves without matching human acceptance, distributional-shift detection by symmetric KL approximation, and a diversity constraint that is a veto. Its contract declares an operation and no topics. No module under `src/` outside its own package calls `run_all_guardrails`; the one other mention is an allowlist entry in a contract-validation test (`tests/unit/test_contract_validation.py:77`).
 
-The project records this itself. `docs/reference/NODE_INVENTORY.md` marks seven nodes *"(unregistered)"*, including this node's companion alerter and `node_objective_ab_framework_compute`. A published list of what is not wired is a better artifact than most projects offer, and it is the reason this finding is a citation rather than an accusation.
+The project records this itself. Its node inventory, linked from the README and kept in the project's public knowledge base, lists seven node directories as *"(unregistered)"*, including this node's companion alerter and `node_objective_ab_framework_compute` ([`reference/omniintelligence-node-inventory.md`](https://github.com/OmniNode-ai/knowledge-base/blob/1069ca46746e003840d0c556412d7df3af4eff10/reference/omniintelligence-node-inventory.md)). A published list of what is not wired is a better artifact than most projects offer, and it is the reason this finding is a citation rather than an accusation.
 
 ## 5. Memory Data Model
 
@@ -228,6 +238,10 @@ What is absent:
 
 Retrieval is SQL. `list_validated_patterns` filters on `status IN ('validated', 'provisional')`, `is_current = TRUE`, a confidence floor, an optional domain, an optional keyword against `keywords`, and the unreachable project predicate. Ordering puts `validated` before `provisional`, then confidence descending, then id — a stable order, which matters when the consumer takes a prefix.
 
+The SQL in the contract is the SQL Postgres runs. `omnibase-infra`'s `PostgresRepositoryRuntime` leaves a contract's `WHERE` clause untouched; for a multi-row read it appends `ORDER BY` the primary key when none is present, and `LIMIT` its `max_row_limit` when no limit is present ([`postgres_repository_runtime.py:584`, `:731`](https://github.com/OmniNode-ai/omnibase_infra/blob/7e3e593bc7a7d2caffe5842c5e1191c289515a76/src/omnibase_infra/runtime/db/postgres_repository_runtime.py)). The default is ten rows, and this repository constructs the runtime without a config. Every multi-row read in `learned_patterns.repository.yaml` binds its own `LIMIT $n`, so the default never truncates a pattern read.
+
+The framework also documents a boundary this read path leaves to the client. `omnibase-core`'s `EnumPatternLifecycleState` gives `PROVISIONAL` *"Limited eligibility (testing/staging only)"* (`enum_pattern_lifecycle_state.py:46` at the locked tag). This repository defines its own `EnumPatternLifecycleStatus`, and `list_validated_patterns` serves `provisional` beside `validated` with no environment predicate, as the bootstrap fallback its comment names.
+
 There is no vector search, no embedding, no reranker and no query rewriting in this repository's read path for patterns. For a store of a few thousand short signatures selected by domain and confidence, that is a defensible choice rather than a missing feature, and it is the reason the retrieval stack reads as `lexical` alone.
 
 The failure mode is over-supply at the client. The endpoint caps `limit` at 200, and [OmniClaude](../omniclaude/) requests ten times its injection budget precisely because its own filters *"each of which can eliminate the majority of candidates"* run after the fetch. The filtering that decides what an agent sees happens on the far side of an HTTP boundary from the store that knows the evidence.
@@ -242,6 +256,8 @@ CHECK ((run_id IS NULL AND evidence_tier = 'observed')
 ```
 
 Attribution inserts are idempotent against Kafka redelivery by `INSERT … WHERE NOT EXISTS` — chosen over `ON CONFLICT` because the unique indexes are partial, with the reasoning written beside it.
+
+A second writer enters beside the ladder rather than through it. `scripts/seed_patterns_from_families.py --execute` inserts one row per ONEX node family found on disk, built by `node_family_to_pattern_row`, born `status = 'validated'` and `evidence_tier = 'measured'` with no pipeline run and no row in `pattern_lifecycle_transitions` (`handler_store_node_families.py:67`, `:75`). On conflict it refreshes confidence and the compiled snippet and leaves status and tier alone, so a deprecated family stays deprecated. It is an operator script, not a runtime node, and the migration's *"SOLE writer"* comment describes the runtime.
 
 ### Operational cost
 
@@ -278,13 +294,13 @@ Gaps:
 - **`project_scope` cannot be passed by the API that serves the injector.**
 - **Confidence components are computed, warned about, and not persisted.**
 - **A deprecated pattern's signature can be relearned** as a new candidate from new sessions.
-- **The framework is private.** Three git dependencies on repositories a reader cannot open.
+- **An operator seeding script inserts rows born `validated` and `measured`**, outside both the evidence ladder and the transition audit.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**I ran nothing.** The screen found no auto-executing surfaces and a `uv.lock` untouched for 16 days — so this tree was outside the cooldown and could have been installed — but the default posture for this atlas is reading, and the findings above are all static. 29 `conftest.py` files execute at pytest collection.
+**I ran nothing.** The screen found no auto-executing surfaces, 29 `conftest.py` files that execute at pytest collection, and `uv.lock` inside the seven-day cooldown. The findings above are all static, and so are the framework readings, taken from the tags the lockfile names.
 
-Roughly 150,000 lines of tests, with per-node suites under `node_tests/` alongside shared `tests/unit`, `tests/integration` and `tests/integration/e2e`.
+Per-node suites sit under `node_tests/` alongside shared `tests/unit`, `tests/integration` and `tests/integration/e2e`.
 
 ### The retrieval eval, and what it refuses to claim
 
@@ -300,11 +316,11 @@ The **negative retrieval assertion** is `tests/unit/repositories/test_contract_l
 
 > *"DEPRECATED patterns have been demoted and should no longer be used. They MUST NOT be injected."*
 
-with a companion asserting the same for `candidate`. Because it asserts over the *query text*, it covers every caller of those operations at once, which an example-based test cannot. It is also a regex over SQL, so a differently-phrased predicate — a negated filter, a status passed as a parameter — would satisfy it without meaning the same thing. Both halves are worth knowing.
+with a companion asserting the same for `candidate`. Because it asserts over the *query text*, it covers every caller of those operations at once, which an example-based test cannot, and the framework's runtime executes that text with its `WHERE` clause unchanged (section 6). It is also a regex over SQL, so a differently-phrased predicate — a negated filter, a status passed as a parameter — would satisfy it without meaning the same thing. Both halves are worth knowing.
 
 `tests/unit/enums/test_enum_injection.py` is the other test worth naming: it asserts in both directions that the Python enum and the database `CHECK` constraint contain the same values, so the two cannot drift.
 
-What is missing is the measurement the design implies. The evidence tiers, the hysteresis band and the rolling windows are an argument that this loop improves outcomes, and no committed result evaluates it; the A/B framework node that would is documented as unregistered, and the guardrails that would watch for the metrics being gamed are not called. The most valuable missing test is narrower and would have caught the headline finding: run the bootstrap path through the real `apply_transition` and assert what happens.
+What is missing is the measurement the design implies. The evidence tiers, the hysteresis band and the rolling windows are an argument that this loop improves outcomes, and no committed result evaluates it; the A/B framework node that would is documented as unregistered, and the guardrails that would watch for the metrics being gamed are not called. The most valuable missing test is narrower and would have caught the headline finding: run the bootstrap path through the real `apply_transition` and assert what happens. A guard test asserts the refusal; the join between the two is what is absent.
 
 **No paper, arXiv reference or citation file exists in this repository.**
 
@@ -335,7 +351,7 @@ What is missing is the measurement the design implies. The evidence tiers, the h
 
 This suits a team, not a person: a platform group running Kafka and Postgres who want memory to be an auditable process with a lifecycle, and who will staff the operations that lifecycle implies. The design assumes a maintainer who thinks in gates, evidence and windows, and it rewards that — the argued constants and the gate snapshots are worth more than most of the retrieval sophistication elsewhere in this corpus.
 
-Walk away if you want memory as a library. There is no embedded mode, the framework beneath it is three private repositories, and the smallest useful deployment is a message bus plus a database plus a second service inside the agent.
+Walk away if you want memory as a library. There is no embedded mode, the framework beneath it is four packages it cannot run without, and the smallest useful deployment is a message bus plus a database plus a second service inside the agent.
 
 The uncomfortable judgement is about the gap between the design and its wiring. Four of the mechanisms this report praises — the bootstrap path, the top evidence tier, the kill switch, the guardrails — are specified more completely than they are connected, and each was found by following one call rather than by reading a diagram. A reader borrowing from here should borrow the *reasoning*, which is excellent and portable, and verify the wiring in their own tree rather than assuming it.
 
@@ -343,10 +359,10 @@ The uncomfortable judgement is about the gap between the design and its wiring. 
 
 - Has the bootstrap path ever promoted a pattern in production, and what did the 5,384 candidates do after the thresholds were lowered?
 - What is intended to write `verified` — an independent validator, a human, a second pipeline — and does the design want the tier gated on something that does not exist yet?
-- Is `disabled_patterns_current` refreshed by infrastructure outside this repository, such as a cron in a deployment chart not in the tree?
+- Is `disabled_patterns_current` refreshed by a deployment job outside the public repositories? `omnibase_infra` at the locked tag carries a copy of migration `008` and no refresh of it.
 - What consumes the anti-gaming guardrails in the intended design, and what topic would carry their alerts?
 - How long is the median path from a session event to an injectable validated pattern?
-- Is the private `omnibase-core` intended to become readable, given that the enums it exports are load-bearing for the mechanism this repository publishes as open source?
+- Which tier is `VALIDATED` meant to require: `MEASURED`, as `apply_transition` enforces, or `VERIFIED`, as the `omnibase-core` enum's docstring states?
 
 ## Appendix: File Index
 
@@ -359,10 +375,33 @@ The uncomfortable judgement is about the gap between the design and its wiring. 
 - Confirmed-only feedback: `src/omniintelligence/nodes/node_enforcement_feedback_effect/handlers/handler_enforcement_feedback.py`.
 - Guardrails: `src/omniintelligence/nodes/node_anti_gaming_guardrails_compute/handlers/handler_guardrails.py`.
 - Read SQL and API: `src/omniintelligence/repositories/learned_patterns.repository.yaml`, `src/omniintelligence/api/router_patterns.py`.
-- Tests cited: `tests/unit/repositories/test_contract_lifecycle_filter.py`, `tests/unit/enums/test_enum_injection.py`, `tests/integration/test_promotion_lifecycle_integration.py`, `tests/integration/nodes/node_pattern_promotion_effect/test_promotion_integration.py`.
-- Self-documented wiring: `docs/reference/NODE_INVENTORY.md`.
+- Seeding writer: `scripts/seed_patterns_from_families.py`, `src/omniintelligence/nodes/node_pattern_extraction_compute/handlers/handler_store_node_families.py`.
+- Framework versions: `pyproject.toml` (ranges, and the removed git-rev overrides in comments), `uv.lock`.
+- Tests cited: `tests/unit/repositories/test_contract_lifecycle_filter.py`, `tests/unit/enums/test_enum_injection.py`, `tests/unit/nodes/node_pattern_lifecycle_effect/test_handler_transition_evidence_guards.py`, `tests/unit/nodes/node_pattern_promotion_effect/test_handler_auto_promote.py`, `tests/integration/test_promotion_lifecycle_integration.py`, `tests/integration/nodes/node_pattern_promotion_effect/test_promotion_integration.py`.
+- Framework, at the locked tags: `omnibase_core` [`v0.47.24`](https://github.com/OmniNode-ai/omnibase_core/tree/f873d2c30201c05d4be020fa0b281b5edbfb8307) — `src/omnibase_core/enums/pattern_learning/enum_evidence_tier.py`, `enum_pattern_lifecycle_state.py`, `tests/unit/enums/pattern_learning/test_enum_evidence_tier.py`; `omnibase_infra` [`v0.38.59`](https://github.com/OmniNode-ai/omnibase_infra/tree/7e3e593bc7a7d2caffe5842c5e1191c289515a76) — `src/omnibase_infra/runtime/db/postgres_repository_runtime.py`, `src/omnibase_infra/runtime/db/models/model_repository_runtime_config.py`, `docker/migrations/intelligence/008_create_disabled_patterns_current_view.sql`.
+- Self-documented wiring: the node inventory in the project's knowledge base, [`reference/omniintelligence-node-inventory.md`](https://github.com/OmniNode-ai/knowledge-base/blob/1069ca46746e003840d0c556412d7df3af4eff10/reference/omniintelligence-node-inventory.md), linked from `README.md`.
+
+### Recorded searches
+
+Run from the repository root at the pinned commit unless a framework checkout is named.
+
+```sh
+git grep -n -A2 -E '^name = "(omnibase-core|omnibase-infra|omnibase-spi|omnimarket)"' -- uv.lock   # four registry sources, no git
+git grep -n -E '^(omnibase|omnimarket)[a-z_-]* *= *\{' -- pyproject.toml   # nothing: no framework git source
+git grep -n -E 'EnumEvidenceTier\.VERIFIED|evidence_tier *= *.verified' -- src   # nothing writes verified
+git grep -n -E 'REFRESH MATERIALIZED VIEW' -- .   # migration 008 comments and one integration test
+git grep -n -E 'run_all_guardrails' -- . ':!src/omniintelligence/nodes/node_anti_gaming_guardrails_compute'   # one test allowlist entry
+git grep -n -E 'apply_transition_fn=' -- tests 'src/*/node_tests/*'   # eleven sites, all mock_apply_transition
+git grep -n -E 'label_agreement|cluster_cohesion|frequency_factor' -- deployment   # nothing: components not persisted
+git grep -n -E 'project_scope' -- src/omniintelligence/api/router_patterns.py   # nothing: no project parameter
+git grep -n -E 'pattern_lifecycle_transitions' -- scripts/seed_patterns_from_families.py   # nothing: seeding writes no audit row
+git grep -n -E 'def __(lt|le|gt|ge)__' -- src/omnibase_core/enums/pattern_learning/enum_evidence_tier.py   # in omnibase_core v0.47.24: four overrides
+git grep -n -E 'REFRESH MATERIALIZED VIEW.*disabled_patterns_current' -- .   # in omnibase_infra v0.38.59: comment in the 008 copy only
+```
 
 ## History
+
+**2026-09-28** — re-pinned to [`25ee01e7a8f9a9a2139456058fe8948e833b099a`](https://github.com/OmniNode-ai/omniintelligence/commit/25ee01e7a8f9a9a2139456058fe8948e833b099a), 37 commits of CI and dependency bumps; no mechanism file changed. The framework was described as three private repositories, and `omnibase-core` as a git-rev pin. Both were wrong at the previous pin: the override was removed on 20 August 2026, and the repositories were public, with release sources on PyPI. Read at the locked tags, `EnumEvidenceTier` compares by weight, so the headline refusal holds ([section 4](#4-essential-implementation-paths)). Added: a seeding script that inserts `validated`/`measured` rows outside the ladder, and a guard test asserting the refusal. `NODE_INVENTORY.md` left the tree on 2 September 2026 and is cited in the knowledge base. Marks unchanged. Screened: no auto-run surface, 29 build-time execution points, `uv.lock` inside the cooldown. Nothing was installed, built or run.
 
 **2026-09-19** — re-pinned to [`274f097fcd9a008d4888163834f8c459fbfea728`](https://github.com/OmniNode-ai/omniintelligence/commit/274f097fcd9a008d4888163834f8c459fbfea728). `human_review` is **withdrawn** on three grounds, each already written in this report. The record itself supplied the second: the actor column *"does not distinguish a human actor from an automated one — the column admits `user, system, or automated process` by its own comment"*, so the mark rested on the surface existing rather than on who used it. The first is that a `pattern_disable_events` row is a disable applied to a pattern already promoted and already injected, so no memory waits in it. The third is section 4's own finding: the disable does not reach any reader until `REFRESH MATERIALIZED VIEW CONCURRENTLY disabled_patterns_current` is run by hand, and nothing in the tree runs it outside the integration tests. Requiring a reason and a named actor on an override is still rare and right, and it keeps that credit. `trust_state`, `audit_log` and `negative_eval` stand. Screened again first; nothing was installed, built or run.
 

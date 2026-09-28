@@ -3217,7 +3217,7 @@ append-only disable event carrying a required reason and actor, treated as a har
 override that bypasses the cooldown — is read through a materialized view whose
 only `REFRESH` statements in the tree are inside integration tests. And the
 Goodhart and reward-hacking guardrails are a tested pure-function node that
-nothing calls, which the repository's own node inventory records by marking seven
+nothing calls, which the project's own node inventory records by marking seven
 nodes *"(unregistered)"*. That last artifact is why these are citations rather
 than accusations, and a published list of what is not wired is a practice worth
 more than most of what it discloses.
