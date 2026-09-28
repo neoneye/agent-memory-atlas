@@ -1611,12 +1611,13 @@ there is no evaluation directory, no task definitions, no result files and no ru
 traces, and a search for any path containing *eval* returns nothing outside
 `node_modules`.
 
-Set that beside `vista-research.github.io`, recorded in the
-[comparative report](../appendix/#known-limitations): a harness with **no source at any commit** whose 320 MB
-of published per-run traces let its headline claim be recomputed by a reader who
-never sees the code. The two publish opposite halves of the same evidence, and
-the pairing is the useful part. **A reader can check an implementation or a
-result, and neither project lets them check both.** The version that does both
+Set that beside [VISTA](../systems/vista/), which published 320 MB of per-run
+traces on 5 August 2026 and its source a month later: for that month its headline
+claim could be recomputed by a reader who never saw the code, as the
+[Known Limitations](../appendix/#known-limitations) entry records. The two
+published opposite halves of the same evidence, and the pairing is the useful
+part. **Prime Agent lets a reader check the implementation and not the result;
+VISTA's first month allowed the result and not the implementation.** The version that does both
 — source at a pinned commit beside the numbers the claims were computed from —
 is [Knowledge Triage](#the-compaction-cliff-and-the-first-claim-on-this-page-that-recomputes),
 below.
