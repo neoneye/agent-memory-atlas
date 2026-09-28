@@ -1186,12 +1186,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you would deploy the text pillar behind a user-facing agent. The first support request you cannot answer is "remove what it learned about me".
 
 ### [`skales`](../systems/skales/)
-- Best idea: zero-LLM capture and retrieval that are both cheap and legible — regex capture on a 90-minute watermarked scan, retrieval scored `0.70 / 0.20 / 0.10` under a stated sub-100ms budget, with provenance on every extracted row.
-- Biggest risk: the documented deletion path for a fact is a chat phrase nothing implements — and that phrase is bound to *capture* and *retrieval* instead, so asking it to forget can store a new memory.
+- Status: the repository holds no source. The v7 snapshot was withdrawn with release 12.9.30 on 17 September 2026 and `main` was re-created without it in any commit; the entries below describe the snapshot at `ce47854`, which the atlas archive holds.
+- Best idea: zero-LLM capture and retrieval that are both cheap and legible — regex capture on a 90-minute watermarked scan with token-overlap deduplication, retrieval scored `0.70 / 0.20 / 0.10` under a stated sub-100ms budget, and a source conversation recorded on every extracted row, though nothing reads it.
+- Biggest risk: the documented deletion path for a fact is a chat phrase nothing implements — the phrase is bound to *capture* and *retrieval* instead, the request is saved as the turn's episodic record, and the fact goes on reaching every prompt as a value to use exactly.
 - Most reusable component: stating the retrieval budget in the file header, and invalidating the read cache inside the delete action rather than beside it.
-- Maturity impression: no tests of any kind, for a regex pipeline that is a pure function over strings — the cheapest gap in the atlas to close; and the tree is a frozen v7.1.0 snapshot from March 2026 while the product ships as closed binaries at 12.9, so the gap can only be closed elsewhere.
+- Maturity impression: no tests of any kind, for a regex pipeline that is a pure function over strings; the snapshot was a frozen v7.1.0 tree while the product shipped as closed binaries at 12.9, and with the source out of the repository only the project can close the gap.
 - Study when: you want a local assistant that quietly remembers preferences without shipping conversations to a vendor.
-- Do not copy when: you need a system of record, or you intend to reuse the implementation — the **BSL 1.1** licence makes this source-available rather than open source.
+- Do not copy when: you need a system of record, or you intend to reuse the implementation — the snapshot was supplied under **BSL 1.1** and the product is proprietary.
 
 ### [`sage-novelty-gate`](../systems/sage-novelty-gate/)
 - Best idea: every published headline number recomputes from committed artifacts, offline and without an API key — 1,540 per-question judge rows per arm, and the README's 53.5 against 52.2 falls straight out of them.

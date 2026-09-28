@@ -128,10 +128,12 @@ the user profile. The store gained a copy and lost its only reader. This pattern
 is a product property rather than an architectural one: unreachable correctness
 is not correctness, and deleting the unreachable half leaves the cost in place.
 
-**[Skales](../../systems/skales/)** shows partial adoption, which is worse than
-none. Two of its three stores delete correctly from the memory page; the third
-answers a delete request by telling the user to "ask in chat", and no such verb
-exists. One page, three stores, inconsistent authority.
+**[Skales](../../systems/skales/)**'s v7 snapshot, withdrawn from its repository
+in September 2026, shows partial adoption, which is worse than none. Two of its
+three stores delete correctly from the memory page; the third answers a delete
+request by telling the user to "ask in chat", and no such verb exists, while a
+chat phrase such as *"remember that"* can add the facts the page cannot remove.
+One page, three stores, inconsistent authority.
 
 **[Logseq](../../systems/logseq/)** inverts the framing usefully: it is an editor
 that acquired an agent, rather than an agent that acquired an editor. Its

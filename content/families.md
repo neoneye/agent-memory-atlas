@@ -2175,17 +2175,18 @@ can be believed. In both cases a read path was written against a state machine
 nobody checked a writer could reach, and in both cases it fails by rendering
 less rather than by raising anything.
 
-**Skales is the atlas's clearest case of a deletion affordance that does not
-delete.** Its memory page renders a bin icon beside every known fact; clicking it
-confirms *"Delete fact «key»?"*, computes the object with the key removed,
+**Skales's v7 snapshot, withdrawn from its repository and every commit in
+September 2026, has a deletion affordance that does not delete.** Its memory
+page renders a bin icon beside every known fact; clicking it confirms *"Delete fact «key»?"*, computes the object with the key removed,
 discards it, and shows a modal reading *"Deletion not yet supported in UI. Ask
 Skales to 'forget the fact {key}' in chat."* No forget verb exists in the
-application. The only two occurrences of the word outside the locale files point
-the other way — `forget` is a keyword that **boosts** `action_item` retrieval,
-and `don't forget …` is a capture pattern that **stores a new memory**. The
-product is otherwise a competent zero-LLM design: regex capture on a 90-minute
-watermarked scan, and retrieval scored `0.70 / 0.20 / 0.10` under a stated
-sub-100ms budget with no model in either path.
+application. Outside the locale files and `fire-and-forget` comments the word
+appears twice, and both point the other way — `forget` is a keyword that
+**boosts** `action_item` retrieval, and `don't forget …` is a capture pattern
+that **stores a new memory**. The request is saved as the turn's episodic
+record. The snapshot is a competent zero-LLM design: regex capture on
+a 90-minute watermarked scan, and retrieval scored `0.70 / 0.20 / 0.10` under a
+stated sub-100ms budget.
 
 **Logseq is the odd member and the only one here that is not developer-shaped**
 — a twelve-year-old outliner that grew an MCP server, filed beside Basic Memory
