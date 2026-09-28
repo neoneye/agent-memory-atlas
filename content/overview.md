@@ -564,20 +564,21 @@ This is where systems diverge sharply.
 
 `helm` has the shape of temporal correction and none of the temporality: a rewrite of an existing `(kind, key)` stamps `expired_at` on the old row, inserts the new one, and `history <key>` returns the chain — but `valid_from` is only ever written as the insert timestamp, so validity time is record time under a different name, and no caller can say "this became true in March". The instructive part is what the soft delete costs. Active rows are defined by the predicate `expired_at IS NULL`, enforced by a *partial* unique index that constrains writes and leaves every `SELECT` to remember the filter itself — and three readers do not. The agent's own autonomy setting is read back without it and therefore returns the stale pre-supersession value; the distiller's lookup can write onto a dead row; the dedupe pass can delete superseded history and sum retracted evidence onto the survivor. Any system that expresses correction as a nullable column needs a view or an accessor, because "remember the predicate" is not an invariant.
 
-`csm` is the cleanest demonstration of that sentence in the atlas, because it
-fails the test on the main path rather than in three stragglers. Its correction
-machinery is careful — an exact-content merge that sets `superseded_by` and
-appends a row to a `memory_merges` audit table, and an archive pass that stamps
-`archived_at`, a reason, a batch id and a note, with a documented un-archive
-that sets them all back to NULL. Then the retrieval WHERE-clause builder that
-serves vector, full-text and entity search composes project, type, tag and
-importance predicates and mentions **neither column**, and neither do the two
-fallback paths. The re-entry compiler does filter `archived_at IS NULL`, so the
-same store answers differently depending on which door you knock on, and the
-governance report — which does read both columns — will describe a store as
-cleanly deduplicated while `csm_memory_search` keeps returning the duplicates.
-Two predicates at three query sites separate the design from its behaviour, and
-no test asserts the difference.
+`csm` shows the same sentence from the other end: the predicate was added
+everywhere someone looked, in one morning, and missed the reader nobody looked
+at. Its correction machinery is careful — an exact-content merge that sets
+`superseded_by` and appends a row to a `memory_merges` audit table, and an
+archive pass that stamps `archived_at`, a reason, a batch id and a note, with a
+documented un-archive that sets them all back to NULL. On 17 September 2026 one
+commit added `superseded_by IS NULL AND archived_at IS NULL` to the WHERE
+builder that serves vector, full-text and entity search, to both fallbacks, and
+to list, cascade and graph recall, with a populated test; two more that morning
+covered governance vetoes and the evidence block. The lesson-trigger cache was
+not among them. It selects its own lessons once a minute with neither column
+nor the project and injects all of them on every turn, so a lesson merged away
+or archived in one repository keeps instructing the agent in all of them. A
+list of readers to patch is what "remember the predicate" looks like when it is
+done well, and it still leaves the one with its own cache.
 
 **`breadcrumbs` is the system that ships that test**, and it is the one that
 treats the *injection lane* — the ranked, capped packet a session receives
@@ -1654,12 +1655,12 @@ is where Helm failed: a partial unique index on pending candidates, a
 `messageId` index on transcripts with a unique-violation handler that returns
 the existing row rather than failing the capture, and an `md5` index on distilled
 summaries. What it did not decide is what a memory should be *called*. Its
-operational ledger declares twenty-six event types and its one writer — a
+operational ledger declares twenty-five event types and its one writer — a
 `classifyToolEvent` switch on the tool name — can emit seven, so `decision`,
 `blocker_identified`, `verification_evidence` and `goal_achieved` are schema
 that no code path ever produces. The repository's own committed front page is
 the evidence: 5,111 events across 49 sessions, and it reports no goal, no phase,
-no blockers, and a recent-work list in which seven of nine entries are truncated
+no blockers, and a recent-work list in which eight of ten entries are truncated
 dumps of CSM's own memory tools. Determinism removes the hallucination; it does
 not supply the judgement about what was worth writing down, and a classifier
 that falls through to `note` will happily record thousands of events that say
@@ -2304,7 +2305,7 @@ output — and the `csm_*` tools are not excluded, so `csm_memory_list`,
 `csm_continuity_report`, `csm_agentbook_events` and `csm_self_model` all land in
 the project's operational history as project activity. The committed
 `AGENTBOOK_STATE.md` at the pinned commit is the proof, because it is generated:
-of the nine entries under "Recent Work", seven are truncated dumps of CSM
+of the ten entries under "Recent Work", eight are truncated dumps of CSM
 reading its own memory, and none describes work on the repository. The store did
 not fail; it faithfully recorded the wrong thing.
 

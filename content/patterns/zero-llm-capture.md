@@ -183,7 +183,7 @@ routing the write through an existing key when one matches, is the work this
 pattern skips at its peril.
 
 [CSM](../../systems/csm/) holds the pattern at one of the largest single-author
-scales in the atlas — 46 tables and 55,000 lines in which the only outbound call
+scales in the atlas — 46 tables and 57,000 lines in which the only outbound call
 is an embedding request, and a failed embedding stores the row with a NULL
 vector rather than failing the capture — and it gets the keying right where Helm got it wrong: a
 partial unique index on pending candidates over `(candidate_type, dedup_key)`, a
@@ -192,7 +192,7 @@ unique-violation handler that returns the existing row rather than failing the
 capture, and an `md5(compressed)` index on distilled summaries.
 
 Its failure is the one *after* keying: **naming**. The operational ledger
-declares twenty-six event types and its single writer is a switch on the tool
+declares twenty-five event types and its single writer is a switch on the tool
 name that can produce seven, so `decision`, `blocker_identified`,
 `verification_evidence` and `goal_achieved` are schema no code path emits, and
 everything unrecognised becomes `note` with the first 200 characters of tool

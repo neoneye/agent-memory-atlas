@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 652 reports.**
+**This page covers all 653 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -782,9 +782,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`csm`](../systems/csm/)
 - Best idea: `context_injection_items` — every candidate for the injected block recorded with its position, score, a disposition of `injected | trimmed | omitted` and a reason code, so "why didn't the agent know that?" becomes a query instead of an argument.
-- Biggest risk: correction and retrieval have drifted apart. Merge sets `superseded_by`, archive sets `archived_at`, and the search WHERE-clause builder filters on neither — so the governance report calls the store clean while search keeps returning the duplicates.
+- Biggest risk: a correction that does not reach the prompt. Search, list, cascade and the evidence block all exclude superseded and archived rows, and the lesson-trigger cache, which injects up to 50 lessons as `<active_lessons>` on every turn, filters on neither column nor on the project — so a lesson retired in one repository keeps instructing the agent in all of them.
 - Most reusable component: `src/work-ledger-lineage.ts` — about 130 lines of line-hash multiset arithmetic that decide whether an edit the agent made still exists in the file, with no model and no diff library. Close behind it, `lesson-auto-promotion.ts` gating durability on cross-session recall rather than on a score assigned at write time.
-- Maturity impression: finished-looking in a way it is not. 57,122 lines in `src/`, 46 tables, 202 test files carrying 1,758 call sites, a checksummed migration ledger that fails fast on an unknown history, a committed backup/restore drill in the release gate — beside a beliefs layer whose four readers filter on a `promoted` status three writers never produce, a `memory_candidates` table selected, updated and swept by five statements and inserted into by none, and a `belief-promotion.ts` that promotes memory candidates rather than beliefs.
+- Maturity impression: finished-looking in a way it is not. 57,379 lines in `src/`, 46 tables, 212 test files carrying 1,782 call sites, a checksummed migration ledger that fails fast on an unknown history, a committed backup/restore drill in the release gate — beside a beliefs layer whose four readers filter on a `promoted` status three writers never produce, a `memory_candidates` table selected, updated and swept by five statements and inserted into by none, and a `belief-promotion.ts` that promotes memory candidates rather than beliefs.
 - Study when: you want to see how far deterministic capture scales, or you want the two mechanisms above, which are each a few hundred lines and copy cleanly.
 - Do not copy when: more than one person or tenant will share the deployment (there is one scope axis and a cross-project self-model), you cannot run Postgres and a local embedding server, or you need the SQLite mode to do hybrid retrieval — it degrades to substring matching without saying so.
 
@@ -5847,3 +5847,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: the paper's research code, 59 commits by two GitHub identities between 19 November 2025 and 10 April 2026, 2,744 lines of Python beside a vendored ReMEmbR tree under NVIDIA's non-commercial licence, and 125 test functions that all belong to a vendored ROSA and none of which touch memory. No capability mark.
 - Study when: you are pairing a cheap structured object memory with a caption vector store on a robot and want a NaVQA harness that switches the backends per run.
 - Do not copy when: you need memory that survives a restart, relations between objects, removal of what moved, tests, or a commercial licence for the vector half.
+
+### [`living-mind-cortex`](../systems/living-mind-cortex/)
+- Best idea: a salience field kept beside the store — each memory is also an in-process node whose temperature rises on recall and radiates every tick, so "what is hot right now" is a cheap signal the database never has to compute.
+- Biggest risk: **the field promotes on neglect.** No edge is ever wired in the service, so a node nobody recalls simply cools, and after eight cold ticks it is written back as a new `semantic` row at importance 0.90 tagged `identity` — the runtime's own 30-second heartbeat lines included, and the `identity` tag exempts them from the only prune.
+- Most reusable component: `ThermorphicSubstrate` and `encode_atom` in `cortex/thermorphic.py`, under 700 lines before the demo, numpy plus two sibling modules, with a `reset()` and a per-instance freeze dwell built for benchmark isolation.
+- Second risk: **every recall is a write.** The trigram arm decays confidence 5 percent and bumps access counts on each hit, so the fixed-seed `/api/agent/context` route that CSM polls on every prompt transform re-stamps the same rows, pushes them over the consolidation threshold and drives their confidence toward 0.1.
+- Maturity impression: archived by its author on 5 August 2026; 39 commits, all but the archive commit on 6–8 April 2026; 26 pytest functions, none on memory; no licence file; the app imports a module from a sibling repository and `asyncpg` is missing from `requirements.txt`. No capability mark.
+- Study when: you want a worked heat-equation salience model to reason about, or a clear case of how an organism metaphor turns into schema nobody writes.
+- Do not copy when: anything must stay correctable, scoped or authenticated — there is no update or delete route, no scope predicate on an agent-facing read, and no auth on a `0.0.0.0` bind.

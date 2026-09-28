@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **652 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **653 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -360,6 +360,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/light-mem/"><span class="az-id">light-mem</span><span class="az-what">A missing prompt row is not a redacted one</span><code class="az-repo">DevEstacion/light-mem</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/lightmem/"><span class="az-id">LightMem</span><span class="az-what">Compress before you store, consolidate while you sleep</span><code class="az-repo">zjunlp/LightMem</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/linggen-memory/"><span class="az-id">Linggen Memory</span><span class="az-what">The default account filter is a closed one</span><code class="az-repo">linggen/linggen-memory</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/living-mind-cortex/"><span class="az-id">Living Mind Cortex</span><span class="az-what">A hormone-bus agent runtime with a heat-equation memory overlay</span><code class="az-repo">NovasPlace/living-mind-cortex</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/livingfeed/"><span class="az-id">LivingFeed</span><span class="az-what">Forgetting as a feature, in Korean</span><code class="az-repo">showjihyun/livingfeed</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/llamaindex/"><span class="az-id">LlamaIndex</span><span class="az-what">Composable memory blocks</span><code class="az-repo">run-llama/llama_index</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/llm-memory-api/"><span class="az-id">LLM Memory</span><span class="az-what">A permission model with no test, and one call site wrong</span><code class="az-repo">jeffdafoe/llm-memory-api</code><span class="az-caps"></span></a></li>

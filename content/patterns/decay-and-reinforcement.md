@@ -356,6 +356,8 @@ about routing, not about truth, so a rare memory and a dead one are the same
 signal, and `prune()`'s docstring says so: *"an expert which is genuinely rare
 rather than dead is deleted, and deletion is permanent."*
 
+[Living Mind Cortex](../../systems/living-mind-cortex/) inverts the pattern. Each memory is also a node in a RAM-only heat-equation substrate that recall reheats and every tick cools, and a node that stays below the freeze temperature for eight ticks is written back to Postgres as a new `semantic` row at importance 0.90, tagged `identity` (`cortex/engine.py:482-541`). The service never wires edges between nodes, so heat never diffuses and neglect alone decides promotion: the runtime's 30-second heartbeat lines become permanent identity memories that the only prune exempts. Reinforcement lives in a recall side effect that lowers confidence 5 percent per read, so the most-used rows are the least trusted.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.
