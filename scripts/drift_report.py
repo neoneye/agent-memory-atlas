@@ -36,8 +36,9 @@ Usage:
 
     python3 scripts/drift_report.py --out scripts/state/drift.jsonl
 
-Exits 1 on an unreachable pin or a run that mostly failed, and 0 otherwise —
-drift itself is information, not an error.
+Exits 1 on an unreachable pin that neither the archive fork nor the report
+accounts for, or on a run that mostly failed, and 0 otherwise — drift itself is
+information, not an error.
 
 Set GITHUB_TOKEN. Up to three API calls per report and ~390 reports means the
 anonymous limit (60/hour) cannot finish a run; the script stops rather than
@@ -53,6 +54,7 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -78,6 +80,18 @@ ENTRY_RE = re.compile(r"^\*\*(\d{4}-\d{2}-\d{2})\*\*", re.M)
 # repository could not be reached. Lolaplex/agents-memory was the case: the repo
 # is live, its pin still resolves by SHA, and it is simply not in `main` any more.
 UNCHECKABLE = {"pin-not-in-branch", "pin-unresolvable", "repo-gone"}
+
+# The archive organisation exists for exactly those rows: `archive_sync.py` saves
+# a fork's head to a dated branch before an upstream rewrite can drop it, so a pin
+# cut out of its upstream branch, or whose repository was deleted, is usually
+# still reachable at `<ORG>/<archive_name>`. A row whose pin the archive holds
+# stays uncheckable upstream — the status still says so, and it is still a
+# re-read signal — but it is not a report nobody can check, and the run does not
+# fail on it. Neither does a deleted repository whose report says
+# `archive_name: ""`, which `check_archive_names.py` defines as deliberately not
+# archived: the report has recorded that its source is gone.
+ARCHIVE_ORG = "agent-memory-atlas-archive"
+BRANCHES_API = "https://api.github.com/repos/{repo}/branches?per_page=100"
 
 
 class RateLimited(Exception):
@@ -140,6 +154,8 @@ def rows_for(path: Path, as_of: dt.date, window: int) -> dict:
         "default_branch": None,
         "status": None,
         "revision": field(text, "revision"),
+        "archive_name": field(text, "archive_name"),
+        "archive_ref": None,
         "head": None,
         "commits_drift": None,
         "pin_ahead_of_head_by": None,
@@ -155,6 +171,40 @@ def rows_for(path: Path, as_of: dt.date, window: int) -> dict:
         "checked_at": as_of.isoformat(),
     }
     return row
+
+
+def held_in_archive(row: dict) -> str | None:
+    """The archive branch that contains the pin, as `<fork>@<branch>`, or None.
+
+    Only called for uncheckable rows, a dozen of several hundred, so the branch
+    walk is affordable: the default branch first, then every other branch until
+    one contains the pin (the dated `agent-memory-atlas-archive/...` branches are
+    where a rewritten history's old head is kept).
+    """
+    name, pin = row.get("archive_name"), row.get("revision")
+    if not name or not pin:
+        return None
+    fork = f"{ARCHIVE_ORG}/{name}"
+    meta = request(REPO_API.format(owner=ARCHIVE_ORG, repo=name))
+    if "_error" in meta:
+        return None
+    default = meta.get("default_branch") or "main"
+    branches = request(BRANCHES_API.format(repo=fork))
+    names = [default] + [b["name"] for b in branches if b.get("name") != default] \
+        if isinstance(branches, list) else [default]
+    for branch in names:
+        data = request(COMPARE_API.format(owner=ARCHIVE_ORG, repo=name, base=pin,
+                                          head=urllib.parse.quote(branch, safe="")))
+        if "_error" not in data and data.get("status") in ("ahead", "identical"):
+            return f"{fork}@{branch}"
+    return None
+
+
+def unaccounted(row: dict) -> bool:
+    """Uncheckable, and neither the archive nor the report accounts for it."""
+    if row["status"] not in UNCHECKABLE or row.get("archive_ref"):
+        return False
+    return not (row["status"] == "repo-gone" and row.get("archive_name") == "")
 
 
 def measure(row: dict) -> dict:
@@ -276,7 +326,10 @@ def main() -> int:
     rows = []
     try:
         for path in paths:
-            rows.append(measure(rows_for(path, as_of, args.window)))
+            row = measure(rows_for(path, as_of, args.window))
+            if row["status"] in UNCHECKABLE:
+                row["archive_ref"] = held_in_archive(row)
+            rows.append(row)
     except RateLimited as exc:
         when = ""
         if str(exc).isdigit():
@@ -320,7 +373,9 @@ def main() -> int:
     # a pin no longer reachable in its branch's history means every quotation and
     # line number in that report has stopped being checkable, and a run where most
     # requests failed measured nothing while looking exactly like a clean result.
-    broken = [r for r in rows if r["status"] in UNCHECKABLE]
+    # An uncheckable pin the archive fork still holds, or a deleted source the
+    # report records as gone, is accounted for and does not fail (see ARCHIVE_ORG).
+    broken = [r for r in rows if unaccounted(r)]
     unresolved = [r for r in rows if str(r["status"]).startswith("error-")]
     if broken:
         print(

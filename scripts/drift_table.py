@@ -85,8 +85,14 @@ def main() -> int:
         out.append("### Pins that no longer anchor — re-pin or re-review")
         out.append("")
         for r in sorted(broken, key=lambda r: r["slug"]):
+            if r.get("archive_ref"):
+                held = f"; held in the archive at `{r['archive_ref']}`"
+            elif r["status"] == "repo-gone" and r.get("archive_name") == "":
+                held = "; recorded as gone, deliberately not archived"
+            else:
+                held = "; **not held in the archive**"
             out.append(f"- `{r['slug']}` — {r['repo']} — **{r['status']}**: "
-                       f"{REASON.get(r['status'], r['status'])}")
+                       f"{REASON.get(r['status'], r['status'])}{held}")
         out.append("")
 
     if not stale:
