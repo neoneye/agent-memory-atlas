@@ -410,6 +410,15 @@ the same timestamp as <code>lastVerified</code>, so the one temporal
 fact it does record is stored twice rather than on two axes. A validity
 filter is only as good as its writer; grep for the assignment before
 trusting the read.</p>
+<p><a href="../../systems/vortx-emem/">emem (Vortx AI)</a> shows why a
+transaction-time bound has to read history rather than the current
+index. Its canonical index holds one fact per address, so the only
+candidate it offers is the newest, whose record time is later than any
+past bound, and an as-of query returned nothing at every bound until
+<code>resolve_as_of_transaction_time</code> began resolving each address
+over the multi-attester history the store already kept. The code comment
+dates the measurement to 11 August 2026; the fix routes three call sites
+through one helper so the rule cannot drift between copies.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

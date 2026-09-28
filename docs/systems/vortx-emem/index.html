@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust MCP server where agents
+write ed25519-signed notes and read signed, bi-temporal geospatial
+facts, both appended to a Merkle log.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="emem (Vortx
+AI) — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust MCP server where
+agents write ed25519-signed notes and read signed, bi-temporal
+geospatial facts, both appended to a Merkle log.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="emem (Vortx
+AI) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust MCP server where
+agents write ed25519-signed notes and read signed, bi-temporal
+geospatial facts, both appended to a Merkle log.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>emem (Vortx AI) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "emem (Vortx AI)",
+      "description": "A Rust MCP server where agents write ed25519-signed notes and read signed, bi-temporal geospatial facts, both appended to a Merkle log.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Signed, content-addressed notes beside an
+Earth-observation fact plane</p>
+          <h1>emem (Vortx AI)</h1>
+          <p class="document-deck">A Rust MCP server where agents write
+ed25519-signed notes and read signed, bi-temporal geospatial facts, both
+appended to a Merkle log.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Vortx-AI/emem">
+              <span>Source</span>
+              <strong>Vortx-AI/emem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Vortx-AI/emem/commit/4b26f9ef321c69b95b4123aa07edb92ce3449477" title="4b26f9ef321c69b95b4123aa07edb92ce3449477">
+              <span>Analyzed revision</span>
+              <code>4b26f9ef…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Vortx-AI--emem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Vortx-AI--emem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>210,465
+lines of Rust in 19 crates, tests inline;
+crates/emem-api-rest/src/lib.rs alone is 96,829</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,837
+commits on main by 6 contributors, 28 April 2026 – 28 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,574
+Rust test functions and 109 Python test functions</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>emem is a Rust server, exposed over MCP and REST, that Vortx AI runs
+at <code>emem.dev</code> and publishes for self-hosting. It holds two
+kinds of memory. The first is a fact plane: signed values about a
+geographic cell, band and time slot, materialised from open
+Earth-observation sources and cited by a token that resolves to
+byte-identical signed bytes. The second is a note plane: Markdown files
+an agent writes with the verbs of Anthropic's memory tool, each signed
+by an ed25519 key and addressed by the hash of its content.</p>
+<p>What is notable is the provenance engineering. Every receipt verifies
+offline, every attestation and every note create or edit lands in a
+Merkle log with inclusion and consistency proofs, and facts carry
+separate observation and record times. What is weak is the note plane's
+retrieval: the search index attributes every note to the server's own
+key and every note to kind <code>resource</code>, so the per-author
+filter that the code offers as tenant isolation matches no agent's
+key.</p>
+<p>This is not <a href="../emem/">eMEM</a>, the robot spatio-temporal
+memory from automatika-robotics that shares the name. The licence is
+Apache-2.0; <code>TERMS.md</code> governs only the hosted instance.</p>
+<p>The fact plane is closed to strangers. An address is written by the
+server's own materialiser, a device enrolled through its OS-trace gate,
+or a key the operator lists; any other key contributes a
+<em>derivation</em> that cites its parents, is attributed to its signer,
+and is absent from every default read
+(<code>crates/emem-storage/src/lib.rs:262-320</code>,
+<code>:1005-1039</code>). That rule is the design's answer to memory
+poisoning, and the tree records why it was needed:
+<code>emem-purge-fnkey</code> exists because model-guessed elevations
+signed under <code>claude_knowledge@1</code> had occupied real addresses
+and overridden the materialiser
+(<code>crates/emem-cli/src/bin/emem-purge-fnkey.rs:1-18</code>).</p>
+<p>The note plane is the part agents write. Reads are public by design —
+<em>"a shared, world-readable commons"</em> in the code's words
+(<code>crates/emem-api-rest/src/lib.rs:42124-42126</code>) — and writes
+are gated by signature and namespace.</p>
+<p>Three marks: <code>bitemporal</code> on the fact plane,
+<code>audit_log</code> on the Merkle log, and <code>negative_eval</code>
+on a committed scope-boundary test. Section 9 names the four withheld
+and the near miss behind each.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>A note becomes a belief when its signed write is accepted,
+and it never stops existing.</strong> <code>create</code> validates the
+signature over
+<code>blake3("emem.memory_write|" + verb + "|" + path + "|" + body_hash)</code>,
+checks the namespace, and stores the bytes under their content hash
+(<code>crates/emem-api-rest/src/lib.rs:43987-44080</code>,
+<code>:42846-43119</code>). An edit points the path at a new
+<code>file_cid</code> and appends to the path's history. The old bytes
+stay.</p>
+<p>A note leaves circulation in four ways, none of which removes the
+bytes:</p>
+<ul>
+<li><strong>Supersede</strong> stamps <code>superseded_by</code> on the
+note's meta, once. A second supersession with a different target is
+refused as <em>"re-aiming this pointer would rewrite history"</em>, and
+the target must already resolve (<code>:44352-44531</code>). Readers see
+a banner; search does not consult it.</li>
+<li><strong>Delete</strong> drops the path from the index and writes a
+tombstone keyed by path (<code>:44533-44566</code>,
+<code>:44576-44766</code>). The blob stays, and <code>memory_view</code>
+by <code>file_cid</code> still serves it: the code calls that <em>"what
+makes a citation outlive its author's retraction"</em>
+(<code>:43319-43420</code>).</li>
+<li><strong>Expiry</strong>, when
+<code>EMEM_MEMORY_TTL_ENABLED=1</code>, moves a path to an expired tree
+after its kind's TTL — 30 days for episodic, 90 for resource
+(<code>:45326-45470</code>).</li>
+<li><strong>Consolidation</strong>, when enabled, concatenates more than
+50 week-old episodic notes in one namespace directory into a
+responder-signed semantic note and marks each source superseded
+(<code>:45479</code>).</li>
+</ul>
+<p><strong>A fact is an observation at an address.</strong> Its valid
+time is the <code>tslot</code> it describes and its record time is
+<code>signed_at</code>; a read may bound either
+(<code>crates/emem-storage/src/lib.rs:191-257</code>). The canonical
+index at an address stays with the signer that first holds it; a second
+signer's fact is stored and reachable by its own id and in the
+multi-attester index, and does not take the slot
+(<code>crates/emem-cache/src/sled_hot.rs:976-1011</code>). When two
+signers disagree, the opt-in refinement loop draws a
+<code>disagrees_with</code> edge and marks the lower-confidence fact
+contested (<code>crates/emem-api-rest/src/lib.rs:45700-45860</code>). A
+contested fact is still returned, with the marker attached as advisory
+metadata
+(<code>crates/emem-primitives/src/recall.rs:513-534</code>).</p>
+<p>Nothing in either plane has a state that stops a memory from being
+treated as true. Signatures establish who said a thing and when, and the
+design says so: a derivation's receipt attests <em>"that this attester
+submitted this derivation … NOT that the value is true"</em>
+(<code>crates/emem-api-rest/src/lib.rs:33002</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a signed note enters emem, what each retraction does to it, and where the search index loses its author</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a signed note enters emem, what each retraction does to it, and where the search index loses its author
+flowchart TD
+    W[&quot;agent: memory_create / str_replace / insert&lt;br/&gt;ed25519 sig over verb, path, body_hash&quot;] --&gt; NS{&quot;namespace check&quot;}
+    NS -- &quot;by_attester/PUBKEY8/: first 8 base32 chars of key match&quot; --&gt; P
+    NS -- &quot;open path: first signer owns it&quot; --&gt; P
+    NS -- &quot;reserved prefix or wrong owner&quot; --&gt; R403[&quot;403 memory_namespace_violation&quot;]
+    P[&quot;persist_memory_write&quot;] --&gt; B[&quot;blob store: file_cid to bytes&lt;br/&gt;(never deleted)&quot;]
+    P --&gt; IDX[&quot;path index: path to file_cid&quot;]
+    P --&gt; H[&quot;history: path to list of file_cid&quot;]
+    P --&gt; M[&quot;meta: signer, signature, kind, receipt&quot;]
+    P --&gt; LOG[&quot;Merkle log entry emem.memory_write.v1&lt;br/&gt;(best-effort)&quot;]
+    IDX --&gt; SRC[&quot;SledMemoryFileSource.list_all&quot;]
+    SRC -- &quot;kind forced to resource&lt;br/&gt;signer = responder key&quot; --&gt; LANCE[&quot;BGE vectors in LanceDB&lt;br/&gt;(polled every 60 s)&quot;]
+    LANCE --&gt; Q[&quot;memory_search&lt;br/&gt;kind / attester filters compare these values&quot;]
+    IDX --&gt; V[&quot;memory_view by path&quot;]
+    B --&gt; VC[&quot;memory_view by file_cid&quot;]
+    IDX -- &quot;delete&quot; --&gt; T[&quot;tombstone keyed by path&lt;br/&gt;path unlisted&quot;]
+    T -.-&gt; VC
+    M -- &quot;supersede (once)&quot; --&gt; S[&quot;superseded_by pointer&lt;br/&gt;banner on view, ignored by search&quot;]
+    IDX -- &quot;TTL pass (opt-in)&quot; --&gt; E[&quot;expired tree; blob kept&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>One binary, <code>emem-server</code>, runs
+everything.</strong> It builds <code>MaterializingStorage::rooted</code>
+over a data directory: a sled database (<code>cache.sled</code>) holding
+the note trees, attester registry, indexes and trace gate; a redb file
+(<code>facts.redb</code>) holding facts after a completed migration; and
+a <code>log/</code> directory of Merkle segments
+(<code>crates/emem-cli/src/bin/emem-server.rs:103-106</code>,
+<code>crates/emem-storage/src/lib.rs:820-855</code>). The HTTP router in
+<code>crates/emem-api-rest/src/lib.rs</code> serves REST,
+<code>/mcp</code> JSON-RPC, SSE and static documentation, with
+<code>/v1/memory/search</code>, <code>/memories/*path</code> and the
+attest, log and derive routes among about four hundred
+<code>.route(</code> registrations (<code>:1100-1520</code>).</p>
+<p>The crates divide the rest: <code>emem-fact</code> (fact,
+attestation, receipt and scope types), <code>emem-cache</code> (sled and
+redb), <code>emem-fetch</code> (open-data connectors),
+<code>emem-primitives</code> (recall, search, contradictions, memory
+ACL), <code>emem-mcp</code> (tool descriptors), <code>emem-guard</code>
+(an action-verdict service unrelated to memory), and
+<code>emem-sleep-agent</code>, a separate daemon that drives a running
+server over its public API (<code>docs/sleep-agent.md</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What runs:</strong> one process and a data directory. Dense
+note search needs the BGE-base-en-v1.5 weights under
+<code>$EMEM_DATA/models/</code>; without them dense search returns a
+typed 503 and lexical search still works
+(<code>crates/emem-primitives/src/memory_search/mod.rs:447-470</code>).</li>
+<li><strong>Local and offline:</strong> reads of stored facts and notes
+need no network; materialising a new fact fetches from upstream HTTPS
+sources.</li>
+<li><strong>Keys:</strong> no API key to read. Writing a note on a
+release build requires a locally generated ed25519 key, because the
+default policy refuses unsigned writes
+(<code>crates/emem-api-rest/src/lib.rs:41574-41603</code>).</li>
+<li><strong>Install:</strong> a Docker image or a Cargo build; the CI
+comments record a 14 GB compile for the API crate's test harness
+(<code>.github/workflows/ci.yml</code>).</li>
+<li><strong>Repairable by hand:</strong> not easily. The note store is
+sled trees of CBOR, and the operator tools that exist
+(<code>emem-sled-slim</code>, <code>emem-purge-fnkey</code>) require the
+server to be stopped.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Note write.</strong> MCP <code>emem_memory_create</code> or
+REST reaches <code>memory_create_inner</code>
+(<code>crates/emem-api-rest/src/lib.rs:43987</code>), which runs
+<code>validate_attester_binding</code>,
+<code>enforce_open_namespace_owner</code> (<code>:42129-42230</code>)
+and the rate limit, then <code>persist_memory_write</code>
+(<code>:42846-43119</code>): blob, path index, by-kind index, history,
+Merkle log append (<code>:43030-43036</code>), meta, one awaited fsync,
+SSE event.</li>
+<li><strong>Namespace rule.</strong> <code>namespace_ownership_ok</code>
+compares the path segment after <code>/memories/by_attester/</code> with
+the first eight characters of the signer's base32 key
+(<code>crates/emem-primitives/src/memory_acl.rs:69</code>,
+<code>:93-96</code>, <code>:210-215</code>). For such a path
+<code>enforce_open_namespace_owner</code> returns before reading the
+stored note's signer
+(<code>crates/emem-api-rest/src/lib.rs:42161-42163</code>).</li>
+<li><strong>Retraction.</strong> <code>memory_supersede_inner</code>
+(<code>:44352-44531</code>), <code>memory_delete_inner</code> with
+<code>write_tombstone</code> (<code>:44533-44766</code>),
+<code>run_memory_ttl_pass</code> (<code>:45326-45470</code>),
+<code>run_memory_consolidation_pass</code> (<code>:45479</code>).</li>
+<li><strong>Note read.</strong> <code>memory_view_inner</code> by path
+or by <code>file_cid</code> (<code>:43319-43660</code>); a missing path
+with a tombstone answers "deleted", one without answers "never written"
+(<code>:43629-43655</code>).</li>
+<li><strong>Note search.</strong> <code>memory_search</code>
+(<code>crates/emem-primitives/src/memory_search/mod.rs:447-575</code>)
+tries the Lance table, then a brute-force embed of every note, or runs
+BM25 in <code>lexical</code> mode (<code>:295-330</code>). Both paths
+filter on the summaries <code>SledMemoryFileSource::list_all</code>
+builds (<code>crates/emem-api-rest/src/lib.rs:45882-45960</code>).</li>
+<li><strong>Fact write.</strong> <code>put_attestation</code>
+(<code>crates/emem-storage/src/lib.rs:1005-1102</code>): signature
+check, fact-plane admission, <code>put_many</code> into the cache,
+Merkle log append, then best-effort proof, multi-attester and
+scope-index rows.</li>
+<li><strong>Fact read.</strong> <code>recall</code>
+(<code>crates/emem-primitives/src/recall.rs:275-560</code>) selects the
+global index or <code>scan_cell_in_scope</code>, applies the as-of
+bound, attaches contested markers, and signs a receipt.</li>
+<li><strong>Tests.</strong> Inline <code>mod tests</code> in
+<code>lib.rs</code> from line 80,894; integration tests in
+<code>crates/emem-primitives/tests/</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Notes</strong> are spread over sled trees named in
+<code>crates/emem-storage/src/lib.rs:43-120</code>:
+<code>memory_files</code> (path to <code>file_cid</code>),
+<code>memory_file_blobs</code> (<code>file_cid</code> to bytes),
+<code>memory_file_history</code> (path to a CBOR list of cids),
+<code>memory_file_meta</code> (<code>file_cid</code> to
+<code>MemoryFileMeta</code>), <code>memory_files_by_kind</code>,
+<code>memory_files_expired</code>, <code>memory_tombstones</code> and
+<code>memory_vault</code>. <code>MemoryFileMeta</code> records path,
+<code>signed_at</code>, size, verb, kind, the attester key, its
+signature and signed body hash, the Merkle entry hash and
+<code>superseded_by</code>
+(<code>crates/emem-api-rest/src/lib.rs:42861-42879</code>).</p>
+<p>Meta is keyed by content, so two paths holding identical bytes share
+one meta row, and the later write's signer and path overwrite the
+earlier.</p>
+<p><strong>Facts</strong> are CBOR <code>Primary</code>,
+<code>Absence</code> or <code>Derivative</code> records in redb, indexed
+by <code>cell\0band\0tslot</code>
+(<code>crates/emem-cache/src/sled_hot.rs:967-1037</code>). The
+multi-attester index keeps every signer's cid at an address, and the
+scope index keys a fact under
+<code>user \0 agent \0 run \0 org \0 cell \0 band \0 tslot</code> when
+its attestation carries a scope
+(<code>crates/emem-storage/src/lib.rs:143-160</code>,
+<code>:1740-1768</code>).</p>
+<p><strong>Edges</strong> are <code>EdgeFact</code> rows with
+<code>valid_from</code>, <code>valid_to</code>, confidence and signer,
+indexed subject-first and object-first (<code>:115-140</code>).</p>
+<p><strong>Kinds</strong> follow the CoALA split: <code>episodic</code>
+(30-day TTL), <code>semantic</code> and <code>procedural</code> (no
+TTL), <code>resource</code> (90 days) and <code>vault</code>, which is
+sealed and kept out of the plaintext trees
+(<code>docs/memory.md</code>).</p>
+<p><strong>Scope</strong> differs by plane. Notes have no read scope at
+all; facts have an opt-in four-part scope with exact-tuple matching.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Note search scores every row.</strong> The Lance table
+carries no vector index, so each dense query is an exhaustive cosine
+scan, measured in the docs at 2.2 s over 18,269 rows
+(<code>docs/memory.md</code>). Lexical mode ranks by BM25 over the text
+read through the same source, and the MCP tool description says dense
+retrieval recovered numeric entries 0–16.7% of the time against 100% for
+BM25 (<code>crates/emem-mcp/src/lib.rs:1947</code>).</p>
+<p><strong>The search filters compare against values the index source
+invents.</strong> <code>SledMemoryFileSource::list_all</code> builds
+each row's <code>attester_pubkey_b32</code> from
+<code>m.receipt.responder</code> — the server's key — and sets
+<code>kind</code> to the literal <code>"resource"</code> under a comment
+saying the taxonomy has not landed
+(<code>crates/emem-api-rest/src/lib.rs:45927-45945</code>). The taxonomy
+has landed: writes store the real kind and
+<code>memory_list_by_kind</code> reads it. So a search with
+<code>attester_pubkey_b32</code> set to any agent's key returns nothing,
+a search with <code>kind: "semantic"</code> returns nothing, and every
+hit reports the responder as its author.</p>
+<p>The consequence reaches past ranking. The search primitive's own
+comment names <code>path_prefix</code> and
+<code>attester_pubkey_b32</code> as how <em>"Per-tenant memory-file
+isolation is expressed"</em>
+(<code>crates/emem-primitives/src/memory_search/mod.rs:52-63</code>),
+the MCP tool tells agents to filter by them, and the README says search
+returns a note's <em>"author's public key"</em>
+(<code>README.md:98</code>, <code>:111</code>). Of the three filters,
+only <code>path_prefix</code> works.</p>
+<p><strong>Superseded notes rank as if current.</strong> Nothing under
+<code>crates/emem-primitives/src/memory_search/</code> reads
+<code>superseded_by</code>. A reader who follows a hit to
+<code>memory_view</code> sees the banner; the hit list does not.</p>
+<p><strong>Fact recall is by address, not relevance.</strong> It reads
+the canonical index or the scope index for a cell, optionally narrowed
+by band and <code>tslot</code>, bounded by <code>as_of_tslot</code> and
+<code>as_of_signed_at</code>, and filtered by provenance class when
+asked (<code>crates/emem-primitives/src/recall.rs:275-445</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls; nothing extracts memories from
+conversation. The docs state the boundary: <em>"emem doesn't extract
+entities from free-form messages"</em>
+(<code>docs/memory.md</code>).</p>
+<p>A note write is synchronous: the handler awaits one sled fsync before
+returning, and refuses to report success if the flush fails
+(<code>crates/emem-api-rest/src/lib.rs:43040-43083</code>). The comment
+beside it records the failure that led there — fsyncs on async workers
+wedging the runtime, with 465 watchdog snapshots.</p>
+<p>Signing covers the whole body after an edit, and <code>rename</code>
+signs the destination with the source as body, so a captured signature
+cannot move a different file (<code>docs/memory.md</code>). Rename
+writes no history entry and no log record
+(<code>crates/emem-api-rest/src/lib.rs:44768-44990</code>).</p>
+<p>Deduplication is by content: identical bytes share a blob and a meta
+row. There is no paraphrase merging except in the separate LLM
+sleep-time daemon, which writes its merged note back through the public
+<code>memory_create</code> (<code>docs/sleep-agent.md</code>).</p>
+<p>Fact writes need admission. <code>FactPlanePolicy::admits</code>
+accepts the responder key, operator-listed keys, or
+<code>EMEM_FACT_PLANE_OPEN=1</code>; enrolled devices pass the trace
+gate first (<code>crates/emem-storage/src/lib.rs:262-320</code>,
+<code>:1005-1039</code>). Its doc comment records that until it existed
+the plane <em>"was open to any key that could produce a valid ed25519
+signature"</em>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Blocking:</strong> yes for writes, on one fsync plus the
+Merkle append.</li>
+<li><strong>Lag:</strong> a new note is found by lexical search at once,
+and by dense search after the next poll (60 s by default). The comment
+promising the brute-force fallback covers the gap holds only when the
+Lance scan returns nothing, since the fallback runs on an empty result
+(<code>crates/emem-primitives/src/memory_search/mod.rs:495-520</code>).</li>
+<li><strong>Whole-store passes:</strong> the indexer's
+<code>list_all</code> walks every path and meta row each poll; TTL walks
+every path hourly; consolidation daily. No model call runs in the
+server.</li>
+<li><strong>Injection:</strong> none. The server answers calls; what
+enters a prompt is the caller's choice.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP surface carries <code>emem_memory_create</code>,
+<code>_str_replace</code>, <code>_insert</code>, <code>_view</code>,
+<code>_rename</code>, <code>_delete</code>, <code>_supersede</code>,
+<code>_list_by_kind</code>, <code>_search</code>, <code>_token</code>,
+<code>_bundle</code> and <code>_contradictions</code>, beside the
+geospatial read tools (<code>crates/emem-mcp/src/lib.rs</code>). The
+verbs match Anthropic's memory tool, so a client built for that tool can
+point at emem, with the signature added.</p>
+<p>The agent has full control of its own namespace and no reach into
+another's beyond the 8-character prefix rule. Tokens are the integration
+idea: an <code>emem:fact:</code> or <code>file_cid</code> passed between
+agents resolves to the same signed bytes on any replica, so a handoff
+carries a reference rather than a paraphrase.</p>
+<p>A Claude Code plugin manifest, a <code>server.json</code> registry
+entry, Python and TypeScript SDKs, and LangMem and LlamaIndex adapters
+sit under <code>plugins/</code> and <code>sdks/</code>. There is no
+session hook: the agent decides when to read and write.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Namespace ownership is a 40-bit match.</strong> A
+<code>by_attester</code> path is owned by any key whose base32 encoding
+starts with the same eight characters
+(<code>crates/emem-primitives/src/memory_acl.rs:69</code>,
+<code>:210-215</code>), and <code>enforce_open_namespace_owner</code>
+returns before comparing the stored note's full signer key
+(<code>crates/emem-api-rest/src/lib.rs:42161-42163</code>). A key ground
+to collide on the prefix can edit, supersede or delete another agent's
+notes.</p>
+<p><strong>Delete is unlisting.</strong> The tombstone's stored note
+says <em>"The bytes were removed"</em> (<code>:44557</code>), while
+<code>memory_view</code> by <code>file_cid</code> serves them, and the
+Merkle log keeps the path and signer. That is the stated design for
+citations; it is not erasure.</p>
+<p><strong>A read can unlist a note without a tombstone.</strong> When a
+path points at a missing blob, <code>read_memory_file</code> removes the
+path entry and returns nothing (<code>:42291-42296</code>), so the next
+view reports <em>"never written"</em>.</p>
+<p><strong>Tests exercise a different write policy.</strong> Under
+<code>cfg(test)</code> the default policy is <code>Open</code>, while
+release builds refuse unsigned writes (<code>:41589-41600</code>), so
+in-crate note fixtures run unsigned.</p>
+<p><strong>Withheld marks, and the near miss behind each:</strong></p>
+<ul>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>memory_tombstones</code> records a deletion keyed by path, read
+only to tell "deleted" from "never written" (<code>:43629-43645</code>).
+<code>memory_create</code> does not consult it, so the same path or the
+same bytes can be written again at once.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> The contested
+marker is a severity float and a boolean attached after the fact set is
+fixed, <em>"deliberately NOT threaded"</em> into the receipt
+(<code>crates/emem-primitives/src/recall.rs:513-534</code>).
+<code>superseded_by</code> is a banner. The <code>provenance</code>
+recall filter keys on a band's fixed class, a write-time genre, and
+applies only when asked. Derivatives stay out of default reads by fact
+type, not by status.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> The scope
+index is a key on the row and <code>scan_scope_index</code> is a prefix
+predicate on recall, trajectory, <code>find_similar</code> and
+<code>query_region</code>
+(<code>crates/emem-storage/src/lib.rs:1774-1812</code>). But the scope
+is chosen by the reader: an unscoped recall reads the global index,
+which a scoped fact enters, and <code>scope_round_trip</code> asserts
+exactly that (<code>recall.rs:1080-1094</code>). Notes, the plane agents
+write, have no read scope.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No note or
+fact waits in a state for a person. <code>/v1/reviews</code> stores
+agent feedback about outcomes; the "flag for human review" severity of
+1.0 for unknown bands is a score.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The tree carries 1,574 Rust test functions, most inline in
+<code>crates/emem-api-rest/src/lib.rs</code> from line 80,894, and CI
+runs <code>cargo test --workspace --release</code> on Linux and macOS
+(<code>.github/workflows/ci.yml:88</code>, <code>:227</code>). I did not
+run them.</p>
+<p><strong>The negative case.</strong> <code>scope_round_trip</code>
+writes a fact under <code>{user_id: u1}</code> into a storage whose
+plane is set open, then asserts the unscoped recall returns one fact, a
+<code>u2</code> recall returns none, and a <code>u1</code> recall
+returns one
+(<code>crates/emem-primitives/src/recall.rs:1070-1134</code>). The
+positive controls sit in the same test, so an empty-returning recall
+fails it. <code>legacy_no_scope_unchanged</code> and
+<code>scope_partial_tuple_misses</code> assert the exact-tuple rule both
+ways.</p>
+<p><strong>The bi-temporal suite</strong> runs against a hand-written
+storage double and asserts exact <code>tslot</code> lists under each
+bound
+(<code>crates/emem-primitives/tests/bi_temporal.rs:253-436</code>).</p>
+<p><strong>Where the note-search defect hides.</strong>
+<code>filters_narrow_results</code> asserts the kind and attester
+filters narrow correctly, over an <code>InMemSource</code> that carries
+the fixture's real kind and signer
+(<code>crates/emem-primitives/tests/memory_search.rs:142-157</code>,
+<code>:381-458</code>). The production source is never exercised by it,
+and the test returns early without the BGE model, which no workflow
+installs. <code>vault_excluded_from_search</code> asserts
+<code>listed.iter().all(|f| f.path != path)</code> over a store holding
+only the vault entry, so it also passes on an empty listing
+(<code>crates/emem-api-rest/src/lib.rs:89072-89105</code>).</p>
+<p><strong>Benchmarks.</strong> <code>emem-scorecard</code> grades a
+live server on a LongMemEval-style fixture; the committed dataset is a
+roughly fifteen-item sample the docs label illustrative only
+(<code>docs/benchmarks.md</code>). Its conflict axis falls back to
+checking both values were stored, because the contradiction scan reads
+facts and not notes.</p>
+<p><strong>Paper.</strong> The README and <code>CITATION.cff</code> cite
+a preprint on Zenodo, <a
+href="https://doi.org/10.5281/zenodo.20706893">doi.org/10.5281/zenodo.20706893</a>,
+marked not peer-reviewed; several whitepaper versions are in
+<code>docs/</code>. I did not read the preprint.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Separate "who may add a claim" from "who may occupy an
+address".</strong> Outside keys register derivations that cite parents
+and are reachable by token, and default reads see only admitted writers.
+Poisoning becomes an attributed side channel.</li>
+<li><strong>Keep the address with its first holder.</strong> A second
+signer's value is stored and counted as a disagreement instead of
+silently replacing what every reader recalls.</li>
+<li><strong>Put note writes in the same append-only log as fact
+writes,</strong> with the content hash rather than the bytes, so
+inclusion proves existence by a time without republishing the text.</li>
+<li><strong>Resolve transaction-time bounds over history,</strong> not
+over the current index entry, which always post-dates the bound.</li>
+<li><strong>Make supersession point somewhere that resolves, and refuse
+to re-aim it.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A search index whose rows are built by a different function
+from the one that writes the notes.</strong> Here the indexer invented
+kind and author, and the filter test ran against a double that carried
+the real values.</li>
+<li><strong>A namespace keyed on a truncated identifier</strong> without
+comparing the full key recorded on the object.</li>
+<li><strong>Calling a path drop a deletion</strong> in a record that
+says the bytes were removed.</li>
+<li><strong>A test build that runs a looser write policy than
+release.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants agents to hand each other verifiable
+references — signed notes, signed observations of places — across models
+and vendors, and that values provenance over privacy. The note plane is
+a public commons with signed authorship, not a private memory, and the
+code says so. A reader who needs per-user isolation, erasure, or a store
+a person can repair should walk away. The single 96,829-line source file
+and about four hundred route registrations make the memory surface a
+small, hard-to-find part of a large geospatial service.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Has any hosted note been written into a colliding
+<code>by_attester</code> prefix?</li>
+<li>Does <code>emem.dev</code> run with TTL, consolidation or refinement
+enabled?</li>
+<li>How many notes on the hosted instance share a <code>file_cid</code>,
+and so a meta row, across different paths or signers?</li>
+<li>Does the preprint describe note search as attester-filterable, and
+was it measured against the production index source?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>crates/emem-storage/src/lib.rs</code> (tree constants,
+<code>AsOfBound</code>, <code>FactPlanePolicy</code>,
+<code>put_attestation</code>, scope index),
+<code>crates/emem-storage/src/merkle_log.rs</code>,
+<code>crates/emem-cache/src/sled_hot.rs</code>,
+<code>crates/emem-fact/src/scope.rs</code>.</li>
+<li><strong>Note write, retraction and read:</strong>
+<code>crates/emem-api-rest/src/lib.rs</code>
+(<code>memory_write_policy</code>,
+<code>enforce_open_namespace_owner</code>,
+<code>persist_memory_write</code>, <code>memory_view_inner</code>,
+<code>memory_supersede_inner</code>, <code>write_tombstone</code>,
+<code>memory_delete_inner</code>, <code>run_memory_ttl_pass</code>,
+<code>run_memory_consolidation_pass</code>),
+<code>crates/emem-primitives/src/memory_acl.rs</code>.</li>
+<li><strong>Search:</strong>
+<code>crates/emem-primitives/src/memory_search/mod.rs</code>,
+<code>crates/emem-primitives/src/memory_search/indexer.rs</code>,
+<code>SledMemoryFileSource</code> in
+<code>crates/emem-api-rest/src/lib.rs</code>.</li>
+<li><strong>Fact read and refinement:</strong>
+<code>crates/emem-primitives/src/recall.rs</code>,
+<code>crates/emem-primitives/src/memory_contradictions.rs</code>, the
+refinement pass in <code>crates/emem-api-rest/src/lib.rs</code>.</li>
+<li><strong>MCP:</strong> <code>crates/emem-mcp/src/lib.rs</code>.</li>
+<li><strong>Operator tools:</strong>
+<code>crates/emem-cli/src/bin/emem-purge-fnkey.rs</code>,
+<code>crates/emem-cli/src/bin/emem-sled-slim.rs</code>.</li>
+<li><strong>Tests:</strong>
+<code>crates/emem-primitives/src/recall.rs</code> (scope tests),
+<code>crates/emem-primitives/tests/bi_temporal.rs</code>,
+<code>crates/emem-primitives/tests/memory_search.rs</code>, inline tests
+in <code>crates/emem-api-rest/src/lib.rs</code>.</li>
+<li><strong>Docs:</strong> <code>docs/memory.md</code>,
+<code>docs/sleep-agent.md</code>, <code>docs/benchmarks.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>git grep -n -E 'TREE_MEMORY_TOMBSTONES|tombstone_for\(' -- '*.rs'</code>
+— five lines: the constant, <code>write_tombstone</code>,
+<code>tombstone_for</code> and its one caller in
+<code>memory_view_inner</code>; no write path reads it.</li>
+<li><code>git grep -n -E 'get_fact_contested\(|TREE_FACT_CONTESTED' -- '*.rs'</code>
+— one production read, <code>recall.rs:523</code>, which attaches the
+marker; the rest are the store and a test.</li>
+<li><code>git grep -n -E 'superseded_by' -- crates/emem-primitives/src/memory_search/</code>
+— no match.</li>
+<li><code>git grep -n -E 'remove_file|set_len|truncate|remove_dir' -- crates/emem-storage/src/merkle_log.rs</code>
+— one match, a doc comment saying <code>entries</code> truncates
+nothing.</li>
+<li><code>git grep -n -E 'append_cbor\(' -- 'crates/*.rs'</code> — one
+production caller, <code>persist_memory_write</code>.</li>
+<li><code>git grep -n -E 'MemoryFileSource for' -- '*.rs'</code> —
+<code>SledMemoryFileSource</code> in the API crate and
+<code>InMemSource</code> in the search test.</li>
+<li><code>git grep -n -i -E 'bge|install-topic-model' -- .github/workflows/</code>
+— no match.</li>
+<li><code>git grep -n -i -E 'approve|human_review|needs_review|review_queue' -- 'crates/*.rs'</code>
+— five matches: OAuth auto-approval, an MCP annotation note, a guard
+comment; none gates memory.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md CITATION.cff</code>
+— the Zenodo DOI and two BibTeX blocks.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/Vortx-AI/emem/commit/4b26f9ef321c69b95b4123aa07edb92ce3449477"><code class="commit-id" title="4b26f9ef321c69b95b4123aa07edb92ce3449477">4b26f9ef…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 28
+September 2026. Three marks: <code>bitemporal</code>,
+<code>audit_log</code>, <code>negative_eval</code>. Screened before
+reading: 3 auto-run surfaces (<code>.claude-plugin/</code>,
+<code>.gitmodules</code> naming four reference-list submodules left
+uninitialised, <code>server.json</code>), 3 build-time execution points,
+27 dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip — and 6 unpinned surfaces; <code>AGENTS.md</code> was
+treated as data. Read with <code>git grep</code> and <code>sed</code>;
+nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

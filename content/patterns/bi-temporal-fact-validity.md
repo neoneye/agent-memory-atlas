@@ -232,6 +232,8 @@ gains a closed copy and an open copy that both claim validity from the start.
 
 [engram (NickCirv)](../../systems/engram-nickcirv/) has the column and not the clock. Migration 8 adds `valid_until` and `invalidated_by_commit` to its node table, the Read-path provider and the pre-edit guard both drop a mistake whose `valid_until` has passed, and the changelog describes invalidation when the referenced code is refactored away — but no production path assigns the field, and the tests that exercise the filter set it by hand. Its revert miner's `foundFalseAt` is the same timestamp as `lastVerified`, so the one temporal fact it does record is stored twice rather than on two axes. A validity filter is only as good as its writer; grep for the assignment before trusting the read.
 
+[emem (Vortx AI)](../../systems/vortx-emem/) shows why a transaction-time bound has to read history rather than the current index. Its canonical index holds one fact per address, so the only candidate it offers is the newest, whose record time is later than any past bound, and an as-of query returned nothing at every bound until `resolve_as_of_transaction_time` began resolving each address over the multi-attester history the store already kept. The code comment dates the measurement to 11 August 2026; the fix routes three call sites through one helper so the rule cannot drift between copies.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal

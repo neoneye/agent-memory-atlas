@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **654 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **655 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -205,6 +205,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/elizaos/"><span class="az-id">elizaOS</span><span class="az-what">Facts retired when their evidence changes</span><code class="az-repo">elizaOS/eliza</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/embodied-lgr/"><span class="az-id">EmbodiedLGR</span><span class="az-what">An object graph that lives inside one ROS node</span><code class="az-repo">paolorv/lgr-agent</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/emem/"><span class="az-id">eMEM</span><span class="az-what">A robot&#x27;s observations, indexed three ways and aged into gists</span><code class="az-repo">automatika-robotics/emem</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/vortx-emem/"><span class="az-id">emem (Vortx AI)</span><span class="az-what">Signed, content-addressed notes beside an Earth-observation fact plane</span><code class="az-repo">Vortx-AI/emem</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/empirica/"><span class="az-id">Empirica</span><span class="az-what">A vocabulary argued from its own data</span><code class="az-repo">EmpiricaAI/empirica</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/empryo/"><span class="az-id">Empryo</span><span class="az-what">Retrieval that reads the repo</span><code class="az-repo">proxysoul/Empryo</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/emulo/"><span class="az-id">Emulo</span><span class="az-what">A personal profile mined from session logs, with verbatim receipts</span><code class="az-repo">ohad6k/emulo</code><span class="az-caps"></span></a></li>

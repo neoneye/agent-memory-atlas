@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-654, generated from each report's frontmatter —
+655, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-654, generated from each report's frontmatter —
+655, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-654, generated from each report's frontmatter —
+655, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 654, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 655, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-654, generated from each report's frontmatter —
+655, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 654 systems by the seven mechanisms
+filters all 655 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -27194,6 +27194,54 @@ score rather than a state, and the injected block lands before the
 conversation so it invalidates the cached prefix from there on</td>
 </tr>
 <tr>
+<td><a href="../systems/vortx-emem/"><code>vortx-emem</code></a></td>
+<td>Two planes. A note: a Markdown file at a path under /memories,
+content-addressed by file_cid, with kind (episodic, semantic,
+procedural, resource, vault), signer, signature and a signed receipt. A
+fact: a signed value at (cell, band, tslot) with provenance and
+signed_at</td>
+<td>sled trees for paths, blobs, history, meta, tombstones and indexes;
+redb for facts; append-only Merkle log segment files; a LanceDB table of
+768-dimension BGE vectors for note search</td>
+<td>Notes: view by path or by file_cid, list by kind, and search over
+the whole corpus, dense (BGE cosine scan) or BM25, with kind,
+path-prefix and attester filters. Facts: recall by cell with optional
+band, tslot, as_of bounds, scope and provenance filters</td>
+<td>Explicit, through MCP or REST: create, str_replace, insert, rename,
+supersede and delete, each signed by an ed25519 attester; the release
+default refuses unsigned writes. Facts are written only by the
+responder's materialiser, enrolled devices or operator-listed keys;
+other keys register derivations</td>
+<td>Edits replace the path's file_cid and append to a per-path history.
+supersede stamps superseded_by once and refuses to re-aim it. delete
+unlists the path and writes a path-keyed tombstone; the blob stays
+readable by file_cid. Opt-in TTL moves expired paths aside</td>
+<td>Writes: by_attester/PUBKEY8/ namespaces owned by an 8-character key
+prefix, first-writer ownership on open paths. Reads of notes are
+world-readable by design. Facts: an opt-in four-part scope index filters
+a scoped recall; an unscoped recall returns scoped facts</td>
+<td>MCP server (streamable HTTP) with memory tools named after the
+Anthropic memory-tool verbs, REST, SSE event stream, a Claude Code
+plugin, Python and TypeScript SDKs, LangMem and LlamaIndex adapters</td>
+<td>Polling indexer every 60 seconds; opt-in hourly TTL, daily
+consolidation of episodic notes into a responder-signed semantic file, a
+refinement loop drawing disagrees_with edges, and a separate LLM
+sleep-time merge daemon</td>
+<td>Signatures prove authorship, not truth. A contested marker, a
+superseded_by pointer and a per-band provenance class are shown to
+readers; the provenance filter is opt-in and nothing excludes a
+contested fact or a superseded note</td>
+<td>Offline-verifiable receipts over content-addressed bytes; a closed
+fact plane that routes outside contributions into derivations absent
+from default reads; append-only Merkle log with inclusion and
+consistency proofs; bi-temporal recall that walks history; code comments
+that record measured failures</td>
+<td>Note search attributes every note to the responder key and every
+kind to resource, so the attester and kind filters cannot match;
+namespace ownership compares 8 base32 characters; delete leaves the
+bytes readable by file_cid; one 96,829-line source file</td>
+</tr>
+<tr>
 <td><a href="../systems/voyager/"><code>voyager</code></a></td>
 <td>Executable JavaScript skill plus generated description</td>
 <td><code>skills.json</code> and flat files, Chroma index over
@@ -28287,7 +28335,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>59 of 654:</em> <a
+<p><em>59 of 655:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -28350,7 +28398,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>163 of 654:</em> <a
+<p><em>163 of 655:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -28520,7 +28568,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>112 of 654:</em> <a
+<p><em>113 of 655:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -28630,6 +28678,7 @@ href="../systems/veracium/"><code>veracium</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/vestige/"><code>vestige</code></a>, <a
 href="../systems/virtual-context/"><code>virtual-context</code></a>, <a
+href="../systems/vortx-emem/"><code>vortx-emem</code></a>, <a
 href="../systems/waggle/"><code>waggle</code></a>, <a
 href="../systems/wax/"><code>wax</code></a>, <a
 href="../systems/xerj/"><code>xerj</code></a>, <a
@@ -28640,7 +28689,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>301 of 654:</em> <a
+<p><em>301 of 655:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -28956,7 +29005,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>216 of 654:</em> <a
+<p><em>217 of 655:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -29172,6 +29221,7 @@ href="../systems/verimem/"><code>verimem</code></a>, <a
 href="../systems/vestige/"><code>vestige</code></a>, <a
 href="../systems/vibe-cognition/"><code>vibe-cognition</code></a>, <a
 href="../systems/virtual-context/"><code>virtual-context</code></a>, <a
+href="../systems/vortx-emem/"><code>vortx-emem</code></a>, <a
 href="../systems/wax/"><code>wax</code></a>, <a
 href="../systems/weave/"><code>weave</code></a>, <a
 href="../systems/widemem-ai/"><code>widemem-ai</code></a>, <a
@@ -29182,7 +29232,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>88 of 654:</em> <a
+<p><em>88 of 655:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
@@ -29274,7 +29324,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>371 of 654:</em> <a
+<p><em>372 of 655:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -29641,7 +29691,8 @@ href="../systems/veracium/"><code>veracium</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/virtual-context/"><code>virtual-context</code></a>, <a
 href="../systems/vllm-semantic-router/"><code>vllm-semantic-router</code></a>,
-<a href="../systems/waggle/"><code>waggle</code></a>, <a
+<a href="../systems/vortx-emem/"><code>vortx-emem</code></a>, <a
+href="../systems/waggle/"><code>waggle</code></a>, <a
 href="../systems/wax/"><code>wax</code></a>, <a
 href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/wenlan/"><code>wenlan</code></a>, <a
@@ -29676,8 +29727,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-371 repositories of
-654 assert that particular material must
+372 repositories of
+655 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -29750,7 +29801,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 654 is the real figure for the second kind, and
+of 655 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

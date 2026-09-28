@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 654 reports.**
+**This page covers all 655 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5867,3 +5867,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 61,589 lines of Python, shell and JavaScript outside tests and 46,208 lines of Markdown, 494 commits reachable from the pin by 9 contributors between 20 June and 27 September 2026. The memory tooling is 1,546 lines in two scripts, covered by 68 and 51 test functions that CI runs. No marks: no fact carries a status, scope or time, and no test writes a fact, because no code does.
 - Study when: you want a file-based memory for several coding harnesses and need the unglamorous parts — where the harness actually writes, when its index is truncated, how long provenance lasts, and how to keep private facts off a public remote.
 - Do not copy when: memory must be gated against the agent that writes it, scoped inside one instance, or recalled from more facts than a 200-line index holds.
+
+### [`vortx-emem`](../systems/vortx-emem/)
+
+- Best idea: **separate adding a claim from occupying an address.** The fact plane admits only the responder, enrolled devices and operator-listed keys at a `(cell, band, tslot)`; any other signer registers a derivation that cites its parents and is absent from every default read, and a second signer at a held address is stored as a disagreement rather than taking the slot. The tree keeps the incident that motivated it: model-guessed elevations under `claude_knowledge@1` had overridden the materialiser.
+- Biggest risk: **note search invents its own metadata.** `SledMemoryFileSource::list_all` stamps every row with the responder's key and kind `resource`, so the `attester_pubkey_b32` filter — named in code as the tenant-isolation mechanism and recommended in the MCP tool description — matches no agent's key, and a `kind` filter other than `resource` returns nothing. The filter test passes over a test double and skips without the model.
+- Most reusable component: `resolve_as_of_transaction_time` in `crates/emem-storage/src/lib.rs` — a transaction-time bound resolved over each address's recorded history rather than the current last-writer-wins entry, which always post-dates the bound and made every past-bound query empty.
+- Second risk: **ownership and deletion are weaker than they read.** A `by_attester` namespace belongs to any key sharing the first eight base32 characters, and the full signer recorded on a note is not compared; delete unlists a path and writes a tombstone saying the bytes were removed, while `memory_view` by `file_cid` still serves them.
+- Maturity impression: Apache-2.0, 210,465 lines of Rust in 19 crates — 96,829 in one API source file — and 1,837 commits by 6 contributors since 28 April 2026, with 1,574 Rust test functions run in CI on Linux and macOS. Three marks: `bitemporal`, `audit_log` and `negative_eval`, the last on a scope-boundary recall test with positive controls.
+- Study when: you want agents from different vendors to exchange references that verify offline, or need a worked example of closing a shared fact store to strangers without closing it to contribution.
+- Do not copy when: memory must be private, erasable or scoped per user on read. Notes are a world-readable commons by design, and the fact scope is a view the reader can omit.
