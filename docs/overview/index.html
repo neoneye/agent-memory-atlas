@@ -157,7 +157,7 @@ shallowest.</strong> 301 of
 It is also the mark most often satisfied by a single predicate that a
 background job then ignores.</li>
 <li><strong>Negative evidence is almost never tested.</strong>
-370 of 653
+371 of 653
 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -335,7 +335,7 @@ the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
 59 tombstones,
-370 negative-eval suites — are
+371 negative-eval suites — are
 counts <em>over inspectable code</em>, and a closed system could hold
 any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -2053,7 +2053,8 @@ derived sidecar shape in <code>build_learning_overlay</code>
 generated FTS), <code>00003_archive.sql</code>,
 <code>00010_audit_log.sql</code>,
 <code>00030_memory_ttl.sql</code>.</li>
-<li><code>clio</code>: <code>.clio/ltm.json</code> written by
+<li><code>clio</code>: <code>ltm.json</code> in
+<code>~/.clio/projects/&lt;uuid&gt;/</code>, written by
 <code>lib/CLIO/Memory/LongTerm.pm</code> — five typed arrays with
 <code>confidence</code>, <code>tier</code> and
 <code>corroboration_sources</code> per entry; no schema, no
@@ -2206,9 +2207,10 @@ answered question, outcome written to both frontmatter and body.</li>
 <code>memory_write</code> RPC — an upsert on the partial unique index,
 with <code>xmax</code> deciding create versus update.</li>
 <li><code>clio</code>: <code>lib/CLIO/Tools/MemoryOperations.pm</code>
-dispatching into <code>LongTerm.pm:117</code>–<code>:440</code>;
-corroboration and tier promotion at <code>:471</code> and
-<code>:537</code>.</li>
+dispatching into <code>LongTerm.pm:146</code>–<code>:441</code>;
+corroboration and tier promotion at <code>:511</code>, manual promotion
+at <code>:612</code>, and a text rewrite that keeps the tier in
+<code>update_entry</code> at <code>:307</code>.</li>
 </ul>
 <h3 id="searchretrieve-path">Search/Retrieve Path</h3>
 <ul>
@@ -2343,11 +2345,12 @@ the read-side annotation and preferred-first reordering in
 and <code>search.ts</code> — exact scope equality plus
 <code>websearch_to_tsquery</code>, each applying the archive and expiry
 filters.</li>
-<li><code>clio</code>: no query on the injection path —
-<code>score_entry</code> (<code>LongTerm.pm:852</code>) ranks everything
-and <code>render_budgeted_section</code> (<code>:945</code>) takes the
-top slice; substring matching in <code>search_entries</code>
-(<code>:755</code>).</li>
+<li><code>clio</code>: per-request keyword overlap in
+<code>ContextBuilder::score_ltm</code>
+(<code>ContextBuilder.pm:326</code>), threshold 5 and at most five
+entries, with no tier term; substring matching in
+<code>search_entries</code> (<code>LongTerm.pm:810</code>) behind the
+tool's <code>search</code>.</li>
 </ul>
 <h3 id="context-assembly">Context Assembly</h3>
 <ul>
@@ -2460,10 +2463,13 @@ skill in <code>graphify/skills/*/references/query.md</code>.</li>
 hooks call <code>memory.list</code>, and the narrow-to-broad ladder
 lives in
 <code>packages/cli/skill/lorekit-memory/references/scope-resolution.md</code>.</li>
-<li><code>clio</code>: <code>PromptManager.pm:1566</code> renders the
-LTM section into the system prompt at session start under a
-12,000-character budget, gated by <code>PromptBuilder.pm:119</code> for
-<code>--no-ltm</code> and <code>--incognito</code>.</li>
+<li><code>clio</code>:
+<code>MessageHistory::messages_to_prose_dynamic</code>
+(<code>MessageHistory.pm:192</code>–<code>:250</code>) renders up to
+five badged entries of 500 characters into a block prepended to the user
+message, skipped under <code>--no-ltm</code> and
+<code>--incognito</code>
+(<code>WorkflowOrchestrator.pm:1209</code>).</li>
 </ul>
 <h3 id="background-workers">Background Workers</h3>
 <ul>
@@ -2573,8 +2579,8 @@ the lessons doc best-effort, gated by <code>lessons_fresh()</code>.</li>
 <code>purge_expired_memories</code> are RPCs the migration suggests
 running under pg_cron.</li>
 <li><code>clio</code>: no worker — <code>maybe_consolidate</code>
-(<code>LongTerm.pm:1372</code>) runs inline on prompt build behind a
-24-hour and 20-entry gate.</li>
+(<code>LongTerm.pm:1217</code>) runs in-process at session start and
+session load behind a 24-hour and 20-entry gate.</li>
 </ul>
 <h3 id="mcpapisdk-surfaces">MCP/API/SDK Surfaces</h3>
 <ul>
@@ -2881,9 +2887,11 @@ memory layer, including the self-ingestion regression guard.</li>
 scope, TTL, tokens, org permissions and the archive lifecycle;
 <code>edge-parity.spec.ts</code> guards the two MCP implementations
 against drift.</li>
-<li><code>clio</code>: 3,434 assertions across 213 files, including
-<code>test_ltm_budget.pl</code> on scoring and budgeted rendering — and
-nothing at all on the tier or corroboration system.</li>
+<li><code>clio</code>: 353 test scripts, including
+<code>test_ltm_corroboration.pl</code> on the tier and three relevance
+tests asserting that an unrelated memory is not selected beside a
+control that is; nothing asserts that a trusted entry outranks an
+unverified one at injection.</li>
 </ul>
 <h2 id="5-design-patterns-that-recur">5. Design Patterns That Recur</h2>
 <p>These recurring moves are also documented as standalone

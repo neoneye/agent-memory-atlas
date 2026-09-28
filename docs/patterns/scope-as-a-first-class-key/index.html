@@ -995,13 +995,15 @@ restated. The key is real; the belt-and-braces is one belt.</p>
 <p><a href="../../systems/scope-recall-hermes/">Scope Recall</a> writes
 each scope component as <code>label:length:value</code>, so a delimiter
 inside a chat or user id cannot forge another scope, derives the key
-from the identity Hermes passes to <code>initialize</code>, and disables
-memory outright on a gateway runtime with no user id. The vector
-companion is searched once per accessible scope and each hit is re-read
-from SQLite under <code>scope_id IN (…)</code> before it counts, so a
-stale or mis-keyed companion row cannot cross the boundary; a committed
-test puts two users on one database and asserts one user's preference is
-absent from the other's prefetch and present in the owner's.</p>
+from the identity Hermes passes to <code>initialize</code>, and refuses
+a session that names no user anywhere but the CLI and a local surface
+the installer approved. The vector companion is sent every trusted
+partition literal in one request and filters by them before ranking, and
+each hit is then re-read from SQLite under <code>scope_id IN (…)</code>
+before it counts, so a stale or mis-keyed companion row cannot cross the
+boundary. A committed test hands recall five high-scoring vector
+candidates, one from a scope the caller may not read, and asserts the
+packet comes back empty.</p>
 <p><a href="../../systems/dsh-ai-memory/">dsh-ai-memory</a> puts the key
 where a model-supplied scope fails: at session open. The plugin passes
 its configured <code>projectId</code> to <code>HostSession</code>, no

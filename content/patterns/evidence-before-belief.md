@@ -264,16 +264,19 @@ rather than a derivation to its source: a lesson and its procedure are derived
 from the **same consolidator cluster** in one LLM call, so the how-to and the why cannot drift apart.
 
 [Nova AI](../../systems/nova-ai/) separates a parse from a belief with no model
-anywhere in the system, which makes the boundary unusually easy to see. A
+on any running path, which makes the boundary unusually easy to see. A
 sentence parsed into a candidate relation is held in a single `pending_relation`
-and is **not stored**; it becomes a belief only when the user answers "ja" to a
+and is **not stored**; it becomes a belief only when the user types "ja" to a
 question asked in plain language — *"Mag ik onthouden dat 'X' is een soort van
 'Y'?"* — with the sense disambiguated first, by number, if the word has more than
-one. An unparseable answer re-asks rather than defaulting. Because there is no
-extractor to trust or distrust, the pattern here is not a defence against a
-model's confidence; it is just the recognition that a parse and a belief are
-different objects, and it costs one conversational turn taken at the moment the
-user still has the context to answer.
+one. An unparseable answer re-asks rather than defaulting. The boundary covers
+the user's own sentences only: `_auto_extract_is_a` and the Wikipedia teacher
+append `unverified` edges from definitions without asking, and nothing promotes
+one later, because confirming an edge that is already stored is a no-op the
+gate announces as success. With no model to distrust, the pattern here is the
+recognition that a parse and a belief are different objects, and it costs one
+conversational turn taken at the moment the user still has the context to
+answer.
 
 [Helm](../../systems/helm/) has the belief half of this page and not the evidence
 half, and the split is worth studying. The belief side is right: a write

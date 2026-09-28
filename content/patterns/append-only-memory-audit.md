@@ -307,15 +307,18 @@ history is not privacy erasure.
 
 [Nova AI](../../systems/nova-ai/) puts the log on the record and pays the
 scaling cost for it. `ensure_concept` seeds an `audit_log` array on every
-concept, and creation, sense upgrade, confidence change and relation add each
-append an entry carrying `old_value`, `new_value`, the source and a timestamp,
-mirrored to an external `logs/concepts.jsonl`. Exporting one concept exports its
-whole history, which is the placement NOOA argues for. The cost is visible in the
-same file: the store is one JSON document rewritten in full on every save, so the
-history that makes a concept auditable is also what a single confidence bump
-rewrites — and non-atomically. It is also the atlas's sharpest demonstration that
-an audit log is not a correction mechanism: Nova can say exactly when and from
-whom it learned something wrong, and has no code anywhere that removes it.
+concept, and creation, sense upgrade, confidence change, relation add, rejection
+and reactivation each append an entry carrying `old_value`, `new_value`, the
+source and a timestamp; only concept creation and hard deletes are also written
+to an external `logs/concepts.jsonl`. Exporting one concept exports its whole
+history, which is the placement NOOA argues for. The cost is visible in the same
+file: the store is one JSON document rewritten in full, atomically, on every
+save, so the history that makes a concept auditable is also what a single
+confidence bump rewrites. The log's coverage stops at `add_relation`: the
+auto-extractor and the Wikipedia teacher append edges directly and log nothing,
+and a Wikipedia refresh replaces a sense's relations, rejected ones included,
+without an entry. The edges with the weakest provenance are the ones the log
+cannot explain.
 
 [memU](../../systems/memu/) is the clean separation of the two halves, one of
 which is missing. Its event spool is careful about everything telemetry is

@@ -4462,34 +4462,39 @@ it is an LLM verdict on a 0.25 confidence decrement</td>
 <td>A typed LTM entry — discovery, problem-solution, code pattern,
 workflow or failure — with confidence, tier and corroboration
 sources</td>
-<td><code>.clio/ltm.json</code> per project, plus a YaRN conversation
-archive and a session key-value store; pure Perl, no CPAN, no
-database</td>
-<td>No query on the injection path — every entry is scored and the top
-slice rendered into the system prompt under a 12,000-character
-budget</td>
+<td><code>ltm.json</code> in a per-project directory under
+<code>~/.clio/projects/</code>, named by a UUID in the project's
+gitignored <code>.clio/project_uuid</code>, beside a session key-value
+directory and YaRN conversation archives; pure Perl, no database</td>
+<td>Per request, keyword overlap with the current input, active task and
+unresolved state plus confidence; at most five entries scoring 5 or
+more, a 0.5 confidence floor, no tier term; substring search through the
+memory tool</td>
 <td>Agent-invoked <code>memory_operations</code> calls; no LLM
-extraction, no automatic capture (the AutoCapture test is disabled and
-its module is absent)</td>
-<td>Confidence decay, tier-differentiated age-out and Jaccard dedup in
-<code>consolidate</code>; a flat <code>prune</code>; no record of what
-was removed</td>
-<td>One store per working directory — a filesystem boundary, not a
-stored key</td>
-<td>A terminal-native Perl agent with slash commands, sub-agents, and an
-MCP client; memory reaches the model through prompt injection and one
-tool</td>
-<td><code>maybe_consolidate</code> runs inline on the prompt-build path,
-gated at 24 hours and 20 entries</td>
+extraction and no automatic capture</td>
+<td>Confidence decay, tier-differentiated age-out, Jaccard dedup and
+per-type hard caps in <code>consolidate</code>; a flat, tier-blind
+<code>prune</code>; <code>update_ltm</code> rewrites text in place; no
+record of what was removed</td>
+<td>One store per project directory, named by a UUID file at the project
+root — a filesystem boundary, not a stored key</td>
+<td>A terminal-native Perl agent with slash commands, sub-agents and an
+MCP client; memory reaches the model through a per-request block in the
+user message and one tool</td>
+<td><code>maybe_consolidate</code> runs in-process at session start and
+session load, gated at 24 hours and 20 entries</td>
 <td><code>unverified</code> until two distinct
-<code>agent:session</code> sources corroborate — 0.3x score,
-<code>[UNVERIFIED]</code> badge, 30-day age-out, doubled decay; a
-session restart is a distinct source</td>
-<td>A trust tier that reaches scoring, the rendered prompt and the decay
-schedule at once, with a promotion override only a human can call</td>
-<td>The library still collapses to <code>unknown:unknown</code> when the
-two env vars are unset, so only the two shipped entry points get working
-promotion; and one agent restarted twice can self-corroborate</td>
+<code>agent:session</code> sources corroborate — an
+<code>[UNVERIFIED]</code> badge, a 0.3x weight in the cap-eviction
+score, a 30-day age-out and doubled decay; the injection score has no
+tier term, and the memory tool takes both source names as arguments</td>
+<td>A tier that reaches the rendered memory block, the eviction order
+and the decay schedule; a manual promotion only a slash command reaches;
+committed relevance tests asserting unrelated memories stay out</td>
+<td>Two tool calls naming two sources promote an entry, and update_ltm
+rewrites a trusted entry's text without touching its tier; the docs
+credit the injection ranker with a tier penalty it does not apply; the
+library defaults to unknown:unknown</td>
 </tr>
 <tr>
 <td><code>codemem</code></td>
@@ -18349,41 +18354,46 @@ whatever the licence permits</td>
 <tr>
 <td><code>nova-ai</code></td>
 <td>Two units — an interaction event, and a concept with senses,
-relations and a per-record audit log</td>
+relations and a per-concept audit log</td>
 <td>SQLite for events (plus a JSONL mirror and an archive table); one
-<code>concepts.json</code> rewritten whole for knowledge</td>
+<code>concepts.json</code> rewritten whole, atomically, for
+knowledge</td>
 <td>SQL <code>LIKE</code> over the event JSON,
 <code>difflib.SequenceMatcher</code> over the newest 500 rows, and graph
 walks over <code>is_a</code>/<code>part_of</code>/<code>causes</code> —
 no embeddings anywhere</td>
-<td>Event-bus fan-in with a 50-event/5-second buffer; knowledge writes
-pass a spoken yes/no confirmation gate</td>
+<td>Event-bus fan-in with a 50-event/5-second buffer; a relation from a
+typed sentence waits for a typed yes, while auto-extraction and
+Wikipedia append unverified edges without asking</td>
 <td><code>weerleg</code> marks a sense, concept or relation
-<code>rejected</code> with a reason in the audit log; the reasoning
-layer ignores rejected rows while <code>get_senses()</code> still shows
-them; <code>add_sense</code> tests the rejected status before anything
-else and returns a <code>blocked</code> signal instead of absorbing the
-re-assertion, with re-admission behind a spoken yes/no that writes its
-own audit entry; a hard delete is refused until everything is rejected
-first</td>
+<code>rejected</code>; reasoning ignores rejected rows while
+<code>get_senses()</code> shows them; <code>add_sense</code> tests the
+rejected status first and returns a <code>blocked</code> signal, with
+re-admission behind a typed yes/no that writes its own audit entry; a
+placeholder upgrade that runs first bypasses the check, and a Wikipedia
+refresh replaces a sense's relations; a hard delete is refused until
+everything is rejected first</td>
 <td>None — a single named user, no scope key anywhere</td>
-<td>An in-process event bus across roughly 40 modules; a 24/7 loop that
-decides when to speak unprompted</td>
+<td>An in-process event bus; a Linux daemon in Docker with a Windows
+client over an unauthenticated WebSocket; a 24/7 loop that decides when
+to speak unprompted</td>
 <td>Six-hourly maintenance — RAM trim, 90-day archival, 365-day gzip,
 vacuum, backup rotation, health check; four-hourly classifier
-retraining; a periodic contradiction sweep that reports conflicts to the
-user</td>
+retraining; a 15-minute contradiction sweep that reports conflicts to
+the user</td>
 <td>A three-value <code>status</code> on every sense and relation —
 <code>unverified</code>, <code>confirmed</code>, <code>rejected</code> —
-set from the source, monotonic against automatic downgrades, beside
-<code>source</code>, <code>confidence</code> and a per-record audit
-log</td>
-<td>A rejection keyed on the definition text that no source can lift
-without a person answering for that value, negative cases that carry
-positive controls, and an audit log on the record itself</td>
-<td>The refusal matches definition text exactly, so a paraphrase evades
-it and there is no embedding to fall back on; the whole graph is
-rewritten on every mutation; and a licence that forbids reuse</td>
+set from the source and filtered on four reasoning reads, beside
+<code>source</code>, <code>confidence</code> and a per-concept audit
+log; nothing promotes an unverified relation</td>
+<td>A rejection keyed on the definition text that no automatic source
+can lift and a person lifts only by answering for that value, negative
+cases with positive controls, and an audit log on the concept
+itself</td>
+<td>The refusal matches definition text exactly and is skipped when a
+placeholder sense is upgraded first; a Wikipedia refresh resets a
+confirmed sense and replaces its relations, rejected ones included,
+unaudited; and a licence that forbids reuse</td>
 </tr>
 <tr>
 <td><code>npcpy</code></td>
@@ -23077,18 +23087,19 @@ it the <code>source_events</code> the claim was read out of, and
 episodes, artifacts and references built the same way</td>
 <td>One SQLite file as the only authority — <code>source_events</code>,
 <code>claims</code>, <code>claim_versions</code>,
-<code>evidence_links</code>, <code>deletion_operations</code> and the
-work queue, schema 1108 — with a vector companion in LanceDB holding
-metadata and a vector against an empty payload, deletable and
-rebuildable without losing a memory</td>
+<code>evidence_links</code>, <code>deletion_operations</code>,
+<code>entries</code> and the work queue, schema 1110 — with a vector
+companion in LanceDB holding metadata and a vector against an empty
+payload, deletable and rebuildable without losing a memory</td>
 <td>Five channels fused by reciprocal rank — exact reference, lexical
-projection, claim, recent and vector — then assembled into a packet with
-an explicit answerability verdict that can say the corpus cannot answer
-the question</td>
+index, claim, recent and vector — then assembled into a packet with an
+explicit answerability verdict that can say the corpus cannot answer the
+question</td>
 <td>A turn is captured as a source event; a leased background work item
-consolidates it into claim proposals; each proposal is stored only if
-the span it quotes is literally present in the source, and a
-deterministic ladder decides whether it lands proposed or active</td>
+consolidates what a person said or a document stated into claim
+proposals, never tool output; each proposal is stored only if the span
+it quotes is literally present in the source, and a deterministic ladder
+decides whether it lands proposed or active</td>
 <td>A change appends a claim version and closes the previous one's
 record interval; nothing overwrites content or state. Deletion is one
 operation record applied in dependency order across sources, claims,
@@ -23096,12 +23107,13 @@ evidence links, episode membership and the vector rows, with the derived
 layer fenced so a rebuild cannot resurrect it</td>
 <td>A <code>scope_id</code> bound from host identity and carried as
 <code>scope_id IN (allowed)</code> on every read; a vector hit is
-re-read from SQLite under the same predicate before it can enter the
-packet</td>
-<td>Host adapters rather than assumptions — a Hermes provider with seven
-tools and a Codex MCP server with nine, both read-mostly: the only write
-verbs are propose, revise and forget, and revise and forget must quote
-the session's own most recent human turn</td>
+filtered by the trusted partition list and then re-read from SQLite
+under the same predicate before it can enter the packet</td>
+<td>Host adapters rather than assumptions — a Hermes provider with eight
+tools and one MCP server with nine serving Codex and Claude Code,
+locally or as entries of a shared store over HTTP; the only write verbs
+are propose, revise and forget, and revise and forget must quote the
+session's own most recent human turn</td>
 <td>Durable work items with leases, attempt limits and at-most-once
 publication, for consolidation, embedding, projection rebuilds, purges
 and candidate evaluation; a crashed pass loses nothing and a provider
@@ -23114,11 +23126,10 @@ own prompt says
 <td>A stored claim can always name the sentence that caused it, and the
 check that the sentence is really there runs at the storage boundary
 rather than in a prompt</td>
-<td>The release gate does not pass and the project says so:
-<code>scripts/check.py --tier release</code> exits 2 with
-<code>missing_gates: ["model"]</code>, because the acceptance corpus it
-wants is not in the tree — the two rows that are there are flagged
-<code>"simulation": true</code></td>
+<td>Nothing in the tree measures recall quality: the README says every
+accuracy figure was measured by hand on the authors' own corpora, and
+the model-evaluation release gate meant to cover it was removed on 27
+September 2026 rather than passed</td>
 </tr>
 <tr>
 <td><code>second-brain-cloudflare</code></td>
@@ -29049,7 +29060,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>370 of 653:</em> <a
+<p><em>371 of 653:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -29112,6 +29123,7 @@ href="../systems/claude-mem-lite/"><code>claude-mem-lite</code></a>, <a
 href="../systems/claude-total-memory/"><code>claude-total-memory</code></a>,
 <a href="../systems/claudinio-brain/"><code>claudinio-brain</code></a>,
 <a href="../systems/clawmem/"><code>clawmem</code></a>, <a
+href="../systems/clio/"><code>clio</code></a>, <a
 href="../systems/codewiki-plus/"><code>codewiki-plus</code></a>, <a
 href="../systems/codex-dev-mcp-suite/"><code>codex-dev-mcp-suite</code></a>,
 <a href="../systems/cognee/"><code>cognee</code></a>, <a
@@ -29450,7 +29462,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-370 repositories of
+371 repositories of
 653 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

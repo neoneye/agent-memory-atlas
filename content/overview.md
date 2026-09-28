@@ -1198,7 +1198,7 @@ the same shape, and nothing in this corpus has one.
 - `csm`: `memories` in `src/schema/memory-table-schema.ts`; the other forty-five tables across `src/schema/` plus `belief-knowledge-schema.ts`, `candidate-schema.ts`, `experience-packet-schema.ts`, `self-model-schema.ts` and `work-ledger-schema.ts`.
 - `graphify`: Markdown frontmatter written by `save_query_result` in `graphify/ingest.py`; the derived sidecar shape in `build_learning_overlay` (`graphify/reflect.py:758`).
 - `lorekit`: `supabase/migrations/00001_memories.sql` (table, RLS, generated FTS), `00003_archive.sql`, `00010_audit_log.sql`, `00030_memory_ttl.sql`.
-- `clio`: `.clio/ltm.json` written by `lib/CLIO/Memory/LongTerm.pm` — five typed arrays with `confidence`, `tier` and `corroboration_sources` per entry; no schema, no database.
+- `clio`: `ltm.json` in `~/.clio/projects/<uuid>/`, written by `lib/CLIO/Memory/LongTerm.pm` — five typed arrays with `confidence`, `tier` and `corroboration_sources` per entry; no schema, no database.
 
 ### Add/Write Path
 
@@ -1243,7 +1243,7 @@ the same shape, and nothing in this corpus has one.
 - `csm`: `MemoryManager.saveMemory()` in `src/memory-manager.ts:185` — provenance defaults, project-ownership check, transcript dedup, redaction, type quota, embedding, insert, chunk dual-write; deterministic extraction in `src/memory-extractor.ts`.
 - `graphify`: `save_query_result()` in `graphify/ingest.py:274` — one append-only Markdown file per answered question, outcome written to both frontmatter and body.
 - `lorekit`: `packages/mcp-core/src/tools/write.ts` into the `memory_write` RPC — an upsert on the partial unique index, with `xmax` deciding create versus update.
-- `clio`: `lib/CLIO/Tools/MemoryOperations.pm` dispatching into `LongTerm.pm:117`–`:440`; corroboration and tier promotion at `:471` and `:537`.
+- `clio`: `lib/CLIO/Tools/MemoryOperations.pm` dispatching into `LongTerm.pm:146`–`:441`; corroboration and tier promotion at `:511`, manual promotion at `:612`, and a text rewrite that keeps the tier in `update_entry` at `:307`.
 
 ### Search/Retrieve Path
 
@@ -1288,7 +1288,7 @@ the same shape, and nothing in this corpus has one.
 - `csm`: `hybridSearch()` in `src/hybrid-search.ts:26` over `src/hybrid-search-sources.ts` and `src/hybrid-search-ranking.ts`; the three fallback tiers and the fail-closed scope branch in `src/memory-manager.ts:512`.
 - `graphify`: `aggregate_lessons()` and `_finalize_sources()` in `graphify/reflect.py`; the read-side annotation and preferred-first reordering in `graphify/serve.py:927` and `:1128`.
 - `lorekit`: `packages/mcp-core/src/tools/read.ts`, `list.ts` and `search.ts` — exact scope equality plus `websearch_to_tsquery`, each applying the archive and expiry filters.
-- `clio`: no query on the injection path — `score_entry` (`LongTerm.pm:852`) ranks everything and `render_budgeted_section` (`:945`) takes the top slice; substring matching in `search_entries` (`:755`).
+- `clio`: per-request keyword overlap in `ContextBuilder::score_ltm` (`ContextBuilder.pm:326`), threshold 5 and at most five entries, with no tier term; substring matching in `search_entries` (`LongTerm.pm:810`) behind the tool's `search`.
 
 ### Context Assembly
 
@@ -1333,7 +1333,7 @@ the same shape, and nothing in this corpus has one.
 - `csm`: `runSystemTransform()` in `src/hooks/system-transform.ts:31` — twelve stages per request; layer construction in `src/reentry-layer-builder.ts` under the budgets in `src/reentry-contract.ts`; per-item provenance in `src/context-injection-logger.ts`.
 - `graphify`: `render_lessons_md()` (`graphify/reflect.py:489`) into `reflections/LESSONS.md`, read whole at session start per the skill in `graphify/skills/*/references/query.md`.
 - `lorekit`: none server-side — the plugins' lifecycle hooks call `memory.list`, and the narrow-to-broad ladder lives in `packages/cli/skill/lorekit-memory/references/scope-resolution.md`.
-- `clio`: `PromptManager.pm:1566` renders the LTM section into the system prompt at session start under a 12,000-character budget, gated by `PromptBuilder.pm:119` for `--no-ltm` and `--incognito`.
+- `clio`: `MessageHistory::messages_to_prose_dynamic` (`MessageHistory.pm:192`–`:250`) renders up to five badged entries of 500 characters into a block prepended to the user message, skipped under `--no-ltm` and `--incognito` (`WorkflowOrchestrator.pm:1209`).
 
 ### Background Workers
 
@@ -1378,7 +1378,7 @@ the same shape, and nothing in this corpus has one.
 - `csm`: no worker — in-process timers only: a 2-second debounced doc flush in `src/hooks/tool-execute-memory.ts`, a 120-second belief consolidation, and self-model replay in `src/self-model-updater.ts`.
 - `graphify`: no worker — git post-commit and post-checkout hooks (`graphify/hooks.py:142`, `:191`) refresh the lessons doc best-effort, gated by `lessons_fresh()`.
 - `lorekit`: none committed — `purge_archived_memories` and `purge_expired_memories` are RPCs the migration suggests running under pg_cron.
-- `clio`: no worker — `maybe_consolidate` (`LongTerm.pm:1372`) runs inline on prompt build behind a 24-hour and 20-entry gate.
+- `clio`: no worker — `maybe_consolidate` (`LongTerm.pm:1217`) runs in-process at session start and session load behind a 24-hour and 20-entry gate.
 
 ### MCP/API/SDK Surfaces
 
@@ -1478,7 +1478,7 @@ often weak evidence — is covered separately in
 - `csm`: 1,686 `test(`/`it(` call sites across 189 files; the committed `full-test-output.txt` records 808 passing across 172 suites. Retrieval ground truth is `test/benchmark-hybrid.ts` — eight seeded memories, five labelled queries, hybrid against vector-only.
 - `graphify`: 3,308 test functions across 177 files and 59,500 lines against 15,959 of source; `tests/test_reflect.py` carries 58 of them for the ~900-line memory layer, including the self-ingestion regression guard.
 - `lorekit`: 1,184 cases across 90 files, concentrated on scope, TTL, tokens, org permissions and the archive lifecycle; `edge-parity.spec.ts` guards the two MCP implementations against drift.
-- `clio`: 3,434 assertions across 213 files, including `test_ltm_budget.pl` on scoring and budgeted rendering — and nothing at all on the tier or corroboration system.
+- `clio`: 353 test scripts, including `test_ltm_corroboration.pl` on the tier and three relevance tests asserting that an unrelated memory is not selected beside a control that is; nothing asserts that a trusted entry outranks an unverified one at injection.
 
 ## 5. Design Patterns That Recur
 

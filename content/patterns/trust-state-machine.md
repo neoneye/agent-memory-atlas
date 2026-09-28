@@ -198,14 +198,16 @@ reader has to correlate.
 
 [CLIO](../../systems/clio/) is a tier that costs something and withholds
 nothing. Its two states — `unverified` and `trusted` — act in **three
-independent channels**: a `0.3x` multiplier in the scoring function, a literal
-`[UNVERIFIED]` badge on the entry as it is rendered into the system prompt, and a
-30-day age-out against 90 with doubled confidence decay in the consolidation
-pass. Scoring, presentation and lifetime — and no filter, so a `0.3`-weighted
-entry still reaches the prompt. That is the ranking side of the line the rubric
-draws, and the report carries no `trust_state` for it. The three channels are
-the part to take: a tier that only filters is invisible to the model, and
-a tier that only badges is invisible to the ranker.
+independent channels**: a literal `[UNVERIFIED]` badge on the entry in the
+per-request memory block, a `0.3x` multiplier in the score that decides which
+entries survive when a type exceeds its cap, and a 30-day age-out against 90
+with doubled confidence decay in the consolidation pass. None of them filters.
+The selector, `score_ltm`, has no tier term, so the two states compete for
+injection on equal terms although the project's docs say otherwise. That is the
+ranking side of the line the rubric draws, and the report carries no
+`trust_state` for it. A tier that only filters is invisible to the model, and
+one that only badges is invisible to the ranker, which is where CLIO's selector
+leaves it.
 
 Promotion needs two corroborations from **distinct** `agent:session` pairs, with
 the source *identities* stored as an array rather than a count so independence
@@ -218,7 +220,8 @@ subtest asserting that two distinct sources promote. And `add_corroboration` is
 an operation of the model's own `memory` tool whose schema exposes
 `source_agent` and `source_session` as optional strings, passed straight into the
 sybil key, so two calls naming two sources promote an entry to `[TRUSTED]`
-without a second agent or a person.
+without a second agent or a person. `update_ltm`, on the same tool, rewrites a
+trusted entry's text and leaves its tier and source list in place.
 
 Two lessons generalize. **A trust threshold is only as good as the identity it
 counts**: if independence is the property, the identity must come from the

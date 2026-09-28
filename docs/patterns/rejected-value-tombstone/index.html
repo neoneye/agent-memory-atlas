@@ -621,9 +621,9 @@ rejected.</p>
 <p><strong>Nova AI began as Mnemosyne's mechanism in a different
 language, and it is the better instance.</strong> <a
 href="../../systems/nova-ai/">Nova AI</a> is a symbolic concept graph
-with no model anywhere in it. <code>weerleg</code> — refute — sets
-<code>status = "rejected"</code> on a sense, with the reason and
-timestamp in that record's own audit log; the reasoning query and the
+with no model on any running path. <code>weerleg</code> — refute — sets
+<code>status = "rejected"</code> on a sense, with the old status and a
+timestamp in the concept's audit log; the reasoning query and the
 disambiguation candidate list both filter it out, while
 <code>get_senses()</code> deliberately keeps showing it, so a person
 inspecting the graph sees exactly what the reasoner refuses to use. That
@@ -643,12 +643,17 @@ and nothing asked.</p>
 <em>first</em> and returns <code>{"blocked": "rejected", …}</code>
 without touching the stored sense. The signal is carried up to the layer
 holding the chat bus, where an automatic source is reported and never
-applied, and a person's re-assertion becomes a spoken <em>"I had already
+applied, and a person's re-assertion becomes a typed <em>"I had already
 rejected this — do you really want to confirm it again?"</em> whose
-<code>ja</code> writes a <code>sense_reactivated</code> audit entry. Six
-cases in <code>tests/test_tombstone.py</code> hold each link, and the
-one covering re-assertion says in its own name that it replaced a test
-pinning the previous behaviour.</p>
+<code>ja</code> writes a <code>sense_reactivated</code> audit entry.
+Seven cases in <code>tests/test_tombstone.py</code> hold each link, and
+the one covering re-assertion says in its own name that it replaced a
+test pinning the previous behaviour. The check lives in
+<code>add_sense</code>, and <code>TeachEngine.teach</code> calls
+<code>upgrade_unknown_sense</code> before it: on a concept that also
+holds an <code>unknown</code> placeholder, a refuted definition typed
+again fills the placeholder as <code>confirmed</code> without the
+question, and no test covers that order.</p>
 <p>That is the whole argument of this page, run once by somebody who had
 the shape already: <strong>the property falls out of writing dedup
 against content and rejection against the same record, and it is
@@ -1287,13 +1292,15 @@ its suppression on the claim rather than the row.
 <code>_inherits_suppression</code> runs inside <code>put_source</code>
 for every incoming source event and asks whether the text contains a
 suppressed claim's subject, predicate, <code>value_text</code> and every
-one of its conditions in the same scope; if it does, the event is
-written already suppressed, and a claim derived from it is suppressed
+one of its conditions in the same scope; the claim's head version must
+be <code>active</code> or <code>disputed</code>. If it does, the event
+is written already suppressed, and a claim derived from it is suppressed
 with it. So a statement suppressed once and said again in an unrelated
 later turn does not return. The match is literal containment, so a
-paraphrase passes, and the committed test exercises the other branch of
-the same condition — a restatement that cites the suppressed source; no
-test in the tree captures an uncited restatement.</p>
+paraphrase passes. The one committed test restates the claim in a source
+that also cites the suppressed source, which a separate rule,
+<code>link_source</code>, suppresses on its own, so no test isolates the
+value-keyed rule.</p>
 <p><a href="../../systems/uteke/">Uteke</a> asserts the opposite of a
 tombstone in a committed test. Its dedup gate checks each index hit
 against the database and skips rows that are deprecated or gone, which

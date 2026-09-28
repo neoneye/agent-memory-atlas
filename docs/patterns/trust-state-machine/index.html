@@ -353,16 +353,17 @@ a separate block a reader has to correlate.</p>
 <p><a href="../../systems/clio/">CLIO</a> is a tier that costs something
 and withholds nothing. Its two states — <code>unverified</code> and
 <code>trusted</code> — act in <strong>three independent
-channels</strong>: a <code>0.3x</code> multiplier in the scoring
-function, a literal <code>[UNVERIFIED]</code> badge on the entry as it
-is rendered into the system prompt, and a 30-day age-out against 90 with
-doubled confidence decay in the consolidation pass. Scoring,
-presentation and lifetime — and no filter, so a
-<code>0.3</code>-weighted entry still reaches the prompt. That is the
-ranking side of the line the rubric draws, and the report carries no
-<code>trust_state</code> for it. The three channels are the part to
-take: a tier that only filters is invisible to the model, and a tier
-that only badges is invisible to the ranker.</p>
+channels</strong>: a literal <code>[UNVERIFIED]</code> badge on the
+entry in the per-request memory block, a <code>0.3x</code> multiplier in
+the score that decides which entries survive when a type exceeds its
+cap, and a 30-day age-out against 90 with doubled confidence decay in
+the consolidation pass. None of them filters. The selector,
+<code>score_ltm</code>, has no tier term, so the two states compete for
+injection on equal terms although the project's docs say otherwise. That
+is the ranking side of the line the rubric draws, and the report carries
+no <code>trust_state</code> for it. A tier that only filters is
+invisible to the model, and one that only badges is invisible to the
+ranker, which is where CLIO's selector leaves it.</p>
 <p>Promotion needs two corroborations from <strong>distinct</strong>
 <code>agent:session</code> pairs, with the source <em>identities</em>
 stored as an array rather than a count so independence is checkable, and
@@ -378,7 +379,8 @@ model's own <code>memory</code> tool whose schema exposes
 <code>source_agent</code> and <code>source_session</code> as optional
 strings, passed straight into the sybil key, so two calls naming two
 sources promote an entry to <code>[TRUSTED]</code> without a second
-agent or a person.</p>
+agent or a person. <code>update_ltm</code>, on the same tool, rewrites a
+trusted entry's text and leaves its tier and source list in place.</p>
 <p>Two lessons generalize. <strong>A trust threshold is only as good as
 the identity it counts</strong>: if independence is the property, the
 identity must come from the runtime, not from a default and not from a

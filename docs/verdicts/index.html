@@ -2600,41 +2600,38 @@ and no opinion about the contents.</li>
 <h3 id="clio"><a href="../systems/clio/"><code>clio</code></a></h3>
 <ul>
 <li>Best idea: a trust tier that costs an entry something in three
-channels at once — a 0.3x ranking multiplier, an
-<code>[UNVERIFIED]</code> badge in the rendered prompt, and a lifetime
-cut from 90 days to 30 behind a higher confidence floor — rather than
-only filtering. The system prompt then names the dangerous
-<em>shape</em>: unverified procedural patterns, "always do X", which
-bypass normal reasoning.</li>
-<li>Biggest risk: the sybil boundary is <code>agent:session</code> and a
-session restart mints a new session, so one agent running twice supplies
-both votes. The library also still defaults to
-<code>unknown:unknown</code> when the identity vars are unset — the fix
-lives in the two shipped entry points, not in <code>LongTerm.pm</code>,
-and a test pins the default as intended.</li>
+channels — an <code>[UNVERIFIED]</code> badge beside the claim in the
+rendered memory block, a 0.3x weight in the score that decides eviction
+when a type exceeds its cap, and a lifetime cut from 90 days to 30
+behind a higher confidence floor. The system prompt tells the model to
+validate unverified procedural patterns before acting on them.</li>
+<li>Biggest risk: the model supplies the identities the sybil guard
+counts. <code>add_corroboration</code> is a tool operation taking
+<code>source_agent</code> and <code>source_session</code> as arguments,
+so two calls naming two sources promote an entry, and
+<code>update_ltm</code> rewrites a trusted entry's text without touching
+its tier. Selection for the prompt is keyword overlap with no tier term,
+although the project's docs say unverified entries rank lower.</li>
 <li>Most reusable component: <code>corroboration_sources</code> as an
-array of <code>agent:session</code> identities rather than a count — the
-only place in this atlas where "two independent sources" is checkable
-rather than assertable.</li>
-<li>Maturity impression: 180,634 lines of pure Perl with no CPAN
-dependency, atomic writes throughout, a stated memory-poisoning threat
-model — and, since 31 July 2026, a 412-line regression file on the tier
-mechanism that had none. I ran it: 92 assertions, none failing. No
-capability marks after the 2026-09-19 re-read: <code>human_review</code>
-fell because <code>add_corroboration</code> is a declared tool operation
-whose <code>source_agent</code> and <code>source_session</code>
-parameters build the sybil key, so two calls naming two sources promote
-an entry without a person; <code>trust_state</code> fell because the
-tier multiplies the injection score by 0.3 and shortens the age-out
-rather than filtering.</li>
-<li>Study when: you want the best-shaped answer here to "how do I stop
-my agent believing something it made up once", and a short lesson in
-what an unset variable does to it.</li>
-<li>Do not copy when: more than one person shares the store (there is no
-scope key and every entry is stamped
-<code>source_agent: 'unknown'</code>), or you need memory that survives
-being wrong — decay, age-out, dedup and prune all delete without a
-record.</li>
+array of <code>agent:session</code> identities rather than a count,
+which makes "two independent sources" checkable rather than
+assertable.</li>
+<li>Maturity impression: 114,919 lines of pure Perl with no CPAN
+dependency, atomic writes, a stated memory-poisoning threat model, and a
+408-line regression file on the tier mechanism, which I ran at an
+earlier pin: 92 assertions, none failing. One mark:
+<code>negative_eval</code>, for committed relevance tests asserting that
+an unrelated memory is not selected from a populated store beside a
+control that is. <code>human_review</code> is withheld because the
+model's tool can promote; <code>trust_state</code> is withheld because
+every read of the tier ranks, badges or ages an entry and none keeps it
+out of the prompt.</li>
+<li>Study when: you want a trust tier whose evidence has the right
+shape, and a short lesson in what happens when the caller can supply
+that evidence.</li>
+<li>Do not copy when: more than one person needs the store (each clone
+keeps its own), or you need memory that survives being wrong — decay,
+age-out, dedup, caps and prune all delete without a record.</li>
 </ul>
 <h3 id="potpie"><a
 href="../systems/potpie/"><code>potpie</code></a></h3>
@@ -4738,33 +4735,34 @@ does not distinguish.</li>
 <h3 id="nova-ai"><a
 href="../systems/nova-ai/"><code>nova-ai</code></a></h3>
 <ul>
-<li>Best idea: a relation is stored only after the user answers a spoken
-question — "may I remember that X is a kind of Y?" — with sense
-disambiguation asked first, so the only path from parsed language to a
-stored belief runs through a person, in the turn where they still have
-the context to answer.</li>
-<li>Biggest risk: every path to a refusal runs through the user. Nothing
-lets the system refuse its own bad inference, and the
-<code>unverified</code> backlog that Wikipedia and auto-extraction
-produce is never counted or offered for confirmation, so it grows
-silently while nothing prompts anyone to work it down.</li>
+<li>Best idea: a relation parsed from the user's sentence is stored only
+after the user answers a typed question — "may I remember that X is a
+kind of Y?" — with sense disambiguation asked first, and a refuted
+definition the user types again is re-admitted only after a second
+question, as an audited event.</li>
+<li>Biggest risk: the refusal holds only on the paths that consult it.
+<code>TeachEngine.teach</code> upgrades an <code>unknown</code>
+placeholder sense before <code>add_sense</code> checks for a rejected
+one, and a <code>wiki</code> refresh resets a confirmed Wikipedia sense
+to <code>unverified</code> and replaces its relation list, rejected
+edges included, with no audit entry. Every rejection runs through the
+user, and none records a reason.</li>
 <li>Most reusable component: a refusal keyed on the definition text that
-automatic re-extraction cannot lift, because the dedup lookup finds the
-rejected row without exempting it — the whole tombstone, in a loop that
-was written for deduplication.</li>
-<li>Maturity impression: 25,000 lines of one author's carefully
-documented Python with an unusually detailed changelog, five capability
-marks, and 21 test files holding five assertions between them — so the
-mechanisms that earn the marks are pinned by nobody, and the
-verification is a person's practice rather than the repository's.</li>
+<code>add_sense</code> tests before any other branch and returns as a
+<code>blocked</code> signal, so each caller has to choose between
+reporting it, for automatic sources, and asking, for the user.</li>
+<li>Maturity impression: one author's carefully documented Python with a
+detailed changelog, five capability marks, and 807 pytest functions,
+seven of them pinning the refusal on <code>add_sense</code>; the write
+paths that go around it are untested.</li>
 <li>Study when: you want to see what correction machinery looks like
 when there is no model to blame; every epistemic decision here had to be
 written down because nothing could be delegated to a language
 model.</li>
 <li>Do not copy when: literally — the licence is "Viewable, Not
 Reusable". Also when you need more than one user, since no scope key
-exists anywhere, or a store that survives an interrupted write, since
-the whole graph is rewritten non-atomically on every save.</li>
+exists anywhere, or a store that grows large, since the whole graph is
+rewritten on every save.</li>
 </ul>
 <h3 id="matrix-os"><a
 href="../systems/matrix-os/"><code>matrix-os</code></a></h3>
@@ -16255,22 +16253,23 @@ href="../systems/scope-recall-hermes/"><code>scope-recall-hermes</code></a></h3>
 <ul>
 <li>Best idea: <strong>a claim has to quote its source, and the quote is
 checked where it is stored.</strong>
-<code>claim_storage.py:340-341</code> refuses a derivation whose
+<code>claim_storage.py:339-340</code> refuses a derivation whose
 <code>span["quote"]</code> is not literally present in the stored source
 text, and two earlier passes check the same thing before it gets there.
 Asking a model to cite is a prompt; refusing the write is a constraint.
 Seven marks — every one this atlas tracks.</li>
-<li>Biggest risk: <strong>the release gate does not pass, and the
-project is the one saying so.</strong>
-<code>scripts/check.py --tier release</code> runs 900 tests with none
-failing and still exits 2 with <code>missing_gates: ["model"]</code>,
-because the acceptance corpus it demands is not in the tree — the two
-rows in <code>tests/eval/public_fixture.jsonl</code> are both flagged
-<code>"simulation": true</code>. Read the green count as a green count.
-Separately, <code>_inherits_suppression</code> is the strongest thing in
-the deletion path and the test beside it exercises the other branch of
-the same <code>or</code>, so the uncited restatement it exists for is
-untested.</li>
+<li>Biggest risk: <strong>nothing in the tree measures recall quality,
+and the project is the one saying so.</strong> The README says the
+release tier's tests check contracts, storage and host wiring and
+<em>"none of them measures recall quality"</em>; every accuracy figure
+was measured by hand on the authors' own corpora. The P18 gate written
+to close that needed an evaluation corpus and an independent scorer the
+project does not have, and it was removed on 27 September 2026 rather
+than passed. Separately, <code>_inherits_suppression</code> is the
+strongest thing in the deletion path, and its one test restates a claim
+in a source that also cites the suppressed source, which
+<code>link_source</code> catches on its own, so the uncited restatement
+the rule exists for is untested.</li>
 <li>Most reusable component: <code>qualify</code> in
 <code>core/claims.py</code>. Nine deterministic refusals over the cited
 roots decide whether a claim is <code>proposed</code> or
@@ -16279,14 +16278,15 @@ origin is <code>human_direct</code>, <code>tool_observation</code> or
 <code>external_document</code> — so authority is a property of the
 evidence rather than of the caller, and nothing on the tool surface has
 to be locked down because nothing on it grants anything.</li>
-<li>Maturity impression: MIT, 269 stars, five contributors, created 15
-May 2026 and pushed 18 September 2026, 48,289 lines of package Python
-beside 35,453 of tests and 1,479 test functions, four bounded runtime
+<li>Maturity impression: MIT, 632 commits on <code>main</code> from 14
+May to 28 September 2026, 55,244 lines of Python outside tests beside
+43,734 of tests and 1,817 test functions, four bounded runtime
 dependencies, every table <code>STRICT</code> with real CHECK
 vocabularies, and a <code>contracts/</code> directory of JSON Schemas
-that are the boundary rather than a description of it. Release candidate
-<code>3.1.0rc42</code>, and the 3.1 changelog opens by saying most of
-the project was rebuilt rather than patched.</li>
+that are the boundary rather than a description of it. Version
+<code>3.4.0rc9</code> after a 3.3.0 release; 3.1 rebuilt the 2.x Hermes
+provider rather than patching it, and 3.3 added one shared store for
+Hermes, Codex and Claude Code entries.</li>
 <li>Study when: you want a belief store where "why does it think that"
 resolves to a sentence, or you want the pattern of deriving write
 authority from a source event's origin instead of from a tool

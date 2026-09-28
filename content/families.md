@@ -1293,20 +1293,16 @@ into every session of the agent group. See [NanoClaw](../systems/nanoclaw/).
 
 **[Scope Recall](../systems/scope-recall-hermes/) is a local memory core where a
 claim has to quote its source, word for word, and the quote is checked.**
-Version 3.1 is a rebuild of the 2.x Hermes provider rather than a patch: SQLite
-is the only authority, and the vector index holds metadata against an empty
-payload, so it can be deleted and rebuilt without losing a memory.
-`claim_storage.py` refuses a derivation whose cited span is not literally
-present in the stored source, so recall can show why it believes something and a
-wrong memory traces to the sentence that caused it. Promotion is a property of
-the evidence rather than of whoever asked: a deterministic ladder keeps a
-proposal `proposed` unless a cited root survives nine refusal rules, one of
-which requires an origin of `human_direct`, `tool_observation` or
-`external_document`, and the agent's write tool stamps an origin that lends none
-of them. All seven marks; the `tombstone` is keyed on subject, predicate, value
-and conditions rather than on a row id, and runs inside every source write. The
-caveat is the project's own: the release gate exits 2 on a green test run,
-because the acceptance corpus it demands is not committed.
+It serves Hermes, Codex and Claude Code, alone or through one shared store, with
+SQLite as the only authority. `claim_storage.py` refuses a derivation whose
+cited span is not literally present in the stored source. Promotion is a
+property of the evidence rather than of whoever asked: a claim stays `proposed`
+unless a cited root survives nine refusal rules, one requiring an origin of
+`human_direct`, `tool_observation` or `external_document`, and the agent's write
+tool stamps none of them. Tool output roots no claim at all. All seven marks;
+the `tombstone` is keyed on subject, predicate, value and conditions rather than
+on a row id. The caveat is the project's own: nothing in the tree measures
+recall quality, and the gate written for it was removed unpassed.
 
 **[dsh-ai-memory](../systems/dsh-ai-memory/) is a [DeepSeek Harness](../systems/deepseek-harness/) plugin whose boundary is right and whose default lifecycle is not.** A Rust crate over one SQLite file sits under a thin Cordis plugin that registers six memory tools and a system-prompt section; before every model call the section recalls up to 128 hits for the latest user message and packs them into 8,192 estimated tokens, pins first. The project is bound when the session opens and never appears in a tool schema, the predicate is in the SQL, and two tests assert over populated results that another project's matching row stays out. But the plugin ships the `chat` preset, whose one-hour working TTL equals its promotion delay; consolidate checks expiry first, so a working note is hidden after an hour and deleted rather than promoted, against the preset type's own doc comment. The per-prompt prefetch increments the access count that decides promotion to the untimed profile tier, the only embedder is a 64-dimension token hash that `HostSession` cannot replace, and the default `projectId` puts every chat in a profile into one project.
 
@@ -2140,28 +2136,26 @@ skill promises: `dead_end` is documented to the agent as *"don't re-derive it
 next time"*, and no code path consults the dead-end list. It is prose in a
 generated Markdown file that a model is expected to obey.
 
-**CLIO is the family's one Perl entry and carries its best-wired trust state.**
-Pure Perl, no CPAN, 160 modules — so there is no vector index and no embedding
-call anywhere, and long-term memory is `.clio/ltm.json` plus arithmetic. Each
-entry holds a `tier` of `unverified` or `trusted`, and the tier costs something
-in three places at once: a `0.3x` multiplier in `score_entry`, a literal
-`[UNVERIFIED]` badge appended to the entry when it is rendered into the system
-prompt, and a halved age-out (30 days against 90) with doubled confidence decay
-in `consolidate`. Promotion requires two corroborations from *distinct*
-`agent:session` pairs, deduplicated so one source cannot vouch twice, and the
-unconditional override is absent from the model's tool list and reachable only
-from the `/memory promote` slash command. The threat model is named in the docs:
-memory poisoning.
+**CLIO is the family's one Perl entry, and its trust tier has the right shape and a caller-supplied input.**
+Pure Perl with core modules only means no vector index and no embedding call,
+and long-term memory is one `ltm.json` per project under
+`~/.clio/projects/<uuid>/`. Each entry holds a `tier` of `unverified` or
+`trusted`, and the tier costs something in three places: a literal
+`[UNVERIFIED]` badge in the per-request memory block, a `0.3x` weight in
+`score_entry`, whose one caller orders eviction when a type exceeds its cap, and
+a 30-day age-out against 90 with doubled decay in `consolidate`. Selection for
+the prompt is keyword overlap in `score_ltm`, which has no tier term. Promotion
+requires two corroborations from *distinct* `agent:session` pairs, and the
+unconditional override is reachable only from the `/memory promote` slash
+command. The docs name the threat: memory poisoning.
 
-Then the input fails. The source key defaults to
-`$ENV{CLIO_AGENT_ID} // 'unknown'` and `$ENV{CLIO_SESSION_ID} // 'unknown'`, and
-**neither variable is assigned anywhere in the repository** — so every
-corroboration computes `unknown:unknown`, the sybil dedup skips the second one,
-and no entry can reach the threshold of two. Nothing errors; every entry stays
-`[UNVERIFIED]` at `0.3x` forever, which is a uniform penalty and therefore
-reorders nothing. No test covers the mechanism, and one asserting that two
-corroborations promote an entry would have failed. It is the atlas's sharpest
-case of a correct design defeated by an unset variable.
+The identity is where it gives way. Until 31 July 2026 nothing assigned the two
+environment variables the source key defaults to, so no entry could be
+promoted; both entry points set them. The model's own tool takes
+`source_agent` and `source_session` as arguments, so two calls naming two
+sources promote an entry, and `update_ltm` rewrites a trusted entry's text
+without touching its tier. Committed relevance tests assert that an unrelated
+memory is not selected beside a control that is, which carries `negative_eval`.
 
 **ECC makes the honest declaration the rest of this family avoids**, and reading
 it next to CSM is the point of putting them together. Its vault

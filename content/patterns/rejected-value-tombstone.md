@@ -422,8 +422,8 @@ clear the flag would resurrect the value stronger than it was rejected.
 
 **Nova AI began as Mnemosyne's mechanism in a different language, and it is the
 better instance.** [Nova AI](../../systems/nova-ai/) is a symbolic concept graph
-with no model anywhere in it. `weerleg` — refute — sets `status = "rejected"` on
-a sense, with the reason and timestamp in that record's own audit log; the
+with no model on any running path. `weerleg` — refute — sets `status = "rejected"`
+on a sense, with the old status and a timestamp in the concept's audit log; the
 reasoning query and the disambiguation candidate list both filter it out, while
 `get_senses()` deliberately keeps showing it, so a person inspecting the graph
 sees exactly what the reasoner refuses to use. That split — invisible to
@@ -441,11 +441,15 @@ refusal and left it standing — but a person re-teaching the same sentence set
 `core/semantic.py:204` now tests the rejected status *first* and returns
 `{"blocked": "rejected", …}` without touching the stored sense. The signal is
 carried up to the layer holding the chat bus, where an automatic source is
-reported and never applied, and a person's re-assertion becomes a spoken
+reported and never applied, and a person's re-assertion becomes a typed
 *"I had already rejected this — do you really want to confirm it again?"* whose
-`ja` writes a `sense_reactivated` audit entry. Six cases in
+`ja` writes a `sense_reactivated` audit entry. Seven cases in
 `tests/test_tombstone.py` hold each link, and the one covering re-assertion says
-in its own name that it replaced a test pinning the previous behaviour.
+in its own name that it replaced a test pinning the previous behaviour. The
+check lives in `add_sense`, and `TeachEngine.teach` calls `upgrade_unknown_sense`
+before it: on a concept that also holds an `unknown` placeholder, a refuted
+definition typed again fills the placeholder as `confirmed` without the
+question, and no test covers that order.
 
 That is the whole argument of this page, run once by somebody who had the shape
 already: **the property falls out of writing dedup against content and rejection
@@ -950,7 +954,7 @@ named actor and a reason gets past. The two tables have no edge between them,
 which is the first tradeoff on this list in its plainest form: erasing a claim
 for being wrong does not record it, and recording it does not erase it.
 
-[Scope Recall](../../systems/scope-recall-hermes/) keys its suppression on the claim rather than the row. `_inherits_suppression` runs inside `put_source` for every incoming source event and asks whether the text contains a suppressed claim's subject, predicate, `value_text` and every one of its conditions in the same scope; if it does, the event is written already suppressed, and a claim derived from it is suppressed with it. So a statement suppressed once and said again in an unrelated later turn does not return. The match is literal containment, so a paraphrase passes, and the committed test exercises the other branch of the same condition — a restatement that cites the suppressed source; no test in the tree captures an uncited restatement.
+[Scope Recall](../../systems/scope-recall-hermes/) keys its suppression on the claim rather than the row. `_inherits_suppression` runs inside `put_source` for every incoming source event and asks whether the text contains a suppressed claim's subject, predicate, `value_text` and every one of its conditions in the same scope; the claim's head version must be `active` or `disputed`. If it does, the event is written already suppressed, and a claim derived from it is suppressed with it. So a statement suppressed once and said again in an unrelated later turn does not return. The match is literal containment, so a paraphrase passes. The one committed test restates the claim in a source that also cites the suppressed source, which a separate rule, `link_source`, suppresses on its own, so no test isolates the value-keyed rule.
 
 [Uteke](../../systems/uteke/) asserts the opposite of a tombstone in a committed test. Its dedup gate checks each index hit against the database and skips rows that are deprecated or gone, which is right for the stale-index bug it fixed; `test_dedup_skips_deprecated_stale_index_entry` then asserts that writing a soft-deleted memory's text again creates a new live memory. The rejection is recorded, as a `superseded_by` edge and a reason, but keyed on the row, and thirty days later the server prunes the row, the edge and its events.
 

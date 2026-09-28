@@ -206,12 +206,13 @@ record, and no consequence.
 incompatible category groups and returns a reason per conflict, and
 `modules/knowledge/contradiction_checker.py` calls it from a periodic sweep on
 the background loop, raising each conflict with the user with a concrete
-`weerleg:` proposal, so the refusal is one spoken sentence away. A
+`weerleg:` proposal, so the refusal is one typed line away. A
 `contradiction_state.json` keyed on the word plus its sorted conflict list
 remembers what has already been raised, so an unresolved conflict is mentioned
 once rather than every cycle — the bounded scan this page's *Cost to adopt*
 asks for. The disposition is the refutation itself: `weerleg` sets
-`status = "rejected"` with the reason in the record's audit log, reasoning
+`status = "rejected"` with the old status in the concept's audit log (the
+`reason` parameter has no caller that fills it), reasoning
 filters it out, and `add_sense` refuses to re-add a refuted definition, which is
 requirement 5 met by the
 [rejected-value tombstone](../rejected-value-tombstone/) rather than by a
