@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An embedded Python memory for
+robots: observations with position, time and perception layer in SQLite,
+HNSW and an R-tree, consolidated into gists, archived by age.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="eMEM — Agent Memory Atlas">
+    <meta property="og:description" content="An embedded Python memory
+for robots: observations with position, time and perception layer in
+SQLite, HNSW and an R-tree, consolidated into gists, archived by age.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="eMEM — Agent Memory Atlas">
+    <meta name="twitter:description" content="An embedded Python memory
+for robots: observations with position, time and perception layer in
+SQLite, HNSW and an R-tree, consolidated into gists, archived by age.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>eMEM — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "eMEM",
+      "description": "An embedded Python memory for robots: observations with position, time and perception layer in SQLite, HNSW and an R-tree, consolidated into gists, archived by age.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A robot's observations, indexed three ways
+and aged into gists</p>
+          <h1>eMEM</h1>
+          <p class="document-deck">An embedded Python memory for robots:
+observations with position, time and perception layer in SQLite, HNSW
+and an R-tree, consolidated into gists, archived by age.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/automatika-robotics/emem">
+              <span>Source</span>
+              <strong>automatika-robotics/emem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/automatika-robotics/emem/commit/82e3da61cf710c4379e0cd7bf7a6a21710caaa96" title="82e3da61cf710c4379e0cd7bf7a6a21710caaa96">
+              <span>Analyzed revision</span>
+              <code>82e3da61…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/automatika-robotics--emem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>automatika-robotics--emem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>4,453
+lines of Python in the emem package; 11,362 more in the benchmark
+harness</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>92
+commits on main by 2 contributors, 7 March – 22 May 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>469
+pytest functions in 8,446 lines, run on Python 3.8 to 3.12 in
+CI</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>eMEM is an <strong>embedded spatio-temporal memory for
+robots</strong>: a Python library in which a perception stack records
+observations — a VLM caption, a detector's object list, a battery
+reading — each with a position, a timestamp and a perception layer, and
+an LLM agent reads them back through ten tools that query by meaning,
+place and time. It is the code of <em>eMEM: A Hybrid Spatio-Temporal
+Memory System For Embodied Agents</em> (<a
+href="https://arxiv.org/abs/2606.03374">arXiv:2606.03374</a>, submitted
+2 June 2026, v2 22 June 2026), and the memory layer of Automatika
+Robotics' EMOS stack.</p>
+<p>What is notable is that the three axes share one filter set. A
+semantic search can be restricted to a radius, a time window, a layer
+and an episode in the same call, and <code>locate</code> turns a phrase
+such as <em>"kitchen"</em> into a centroid and spread that
+<code>recall</code> then queries spatially. Entity extraction attributes
+each entity to the observation it came from and refuses a merge when the
+two source texts disagree.</p>
+<p>What is weak is the lifecycle. Nothing can be deleted or corrected.
+Archival is keyed on how old an observation is, not on how long it has
+been consolidated, and observations DBSCAN calls noise are never
+archived at all. The benchmark's two external baselines are eMEM with
+fewer tools.</p>
+<p>The <code>LICENSE</code> file is MIT and so is the
+<code>pyproject.toml</code> classifier. The README's last line reads
+<em>"All rights reserved. Copyright (c) 2024 Automatika Robotics."</em>
+The file is the grant; the README line contradicts it.</p>
+<p>The paper names the repository as
+<code>automatikarobotics/emem</code> in its footnote, in both versions;
+that URL returns 404. The code is at
+<code>automatika-robotics/emem</code>, created 7 March 2026, whose first
+commit reads <em>"Initial public commit"</em>.</p>
+<p>One mark: <code>negative_eval</code>, on two CI-run cases asserting
+an archived observation stays out of a radius query and out of the BM25
+arm, each after a positive control. Section 9 names the six
+withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an observation, and it is taken as true when it is
+written. Perception is the only producer: the agent's tool surface has
+no write verb, so the model can read memory and never author it
+(<code>emem/tools.py:674-685</code>). There is no candidate state, no
+verification and no contradiction handling. <code>confidence</code> is
+stored and never read by a filter.</p>
+<p>An observation moves through tiers, and each move is triggered by a
+call, not by a timer. <code>add</code> puts it in an in-process buffer;
+a flush writes it as <code>short_term</code> to SQLite, FTS5, HNSW and
+the R-tree. <code>end_episode</code> summarises the episode into gists,
+one per run of observations without a 30-minute gap, and moves its
+observations to <code>long_term</code>
+(<code>emem/consolidation.py:225-255</code>).
+<code>consolidate_time_window</code> clusters old
+<code>short_term</code> observations with DBSCAN and does the same per
+cluster (<code>:257-292</code>). <code>maintenance</code> archives
+<code>long_term</code> rows: the text becomes <code>''</code> and the
+row leaves every index, but the row, its coordinates and its edges stay
+(<code>emem/store.py:534-564</code>).</p>
+<p><strong>Archival is forgetting, and it is the only way a memory stops
+being one.</strong> Every observation read path filters
+<code>tier != 'archived'</code>, so an archived observation survives
+only through the gist that summarised it. A gist or an entity never
+dies: no path deletes, archives or supersedes either.</p>
+<p><strong>Two parts of the lifecycle do not do what the configuration
+says.</strong> The archive query selects <code>long_term</code> rows
+whose observation <code>timestamp</code> is older than the cutoff
+(<code>emem/store.py:1643-1646</code>,
+<code>emem/consolidation.py:294-314</code>), while the setting is
+commented <em>"seconds in long_term before archival"</em>
+(<code>emem/config.py:26</code>). No column records when a row was
+promoted, so all but the last hour of a six-hour episode is archived by
+the first <code>maintenance()</code> after the episode ends, and the
+two-phase interval the paper describes never happens for it. And
+DBSCAN's noise points stay <code>short_term</code>
+(<code>emem/consolidation.py:363-364</code>); archival never selects
+that tier, so an isolated observation is searchable for as long as the
+file exists and is re-clustered on every call.</p>
+<p><strong>Entities are the one mutable belief.</strong> An LLM names
+objects in a batch of observations; each candidate merges into an
+existing entity when the name embedding is within cosine 0.85, the
+position within 5 m, and the source observation's text embedding within
+cosine 0.65 of the stored one (<code>emem/store.py:701-800</code>). A
+merge overwrites the entity's coordinates with the new sighting's and
+keeps the higher confidence
+(<code>emem/consolidation.py:509-522</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an eMEM observation is written, consolidated and forgotten, and how an entity is merged</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an eMEM observation is written, consolidated and forgotten, and how an entity is merged
+flowchart TD
+    P[&quot;perception: add(text, x, y, layer)&quot;] --&gt; WB[&quot;in-process buffer&lt;br/&gt;lost on crash&quot;]
+    WB -- &quot;5 items or 2 s,&lt;br/&gt;or any query&quot; --&gt; ST[&quot;short_term: SQLite row,&lt;br/&gt;FTS5, HNSW, R-tree&quot;]
+    ST -- &quot;end_episode(consolidate=True)&quot; --&gt; EG[&quot;LLM gist per chunk,&lt;br/&gt;split at 30-min gaps&quot;]
+    EG --&gt; LT[&quot;long_term&quot;]
+    ST -- &quot;consolidate_time_window:&lt;br/&gt;DBSCAN cluster of 3+&quot; --&gt; CG[&quot;LLM gist per cluster&quot;]
+    CG --&gt; LT
+    ST -- &quot;DBSCAN noise&quot; --&gt; NZ[&quot;stays short_term,&lt;br/&gt;never archived&quot;]
+    LT -- &quot;maintenance: observation&lt;br/&gt;timestamp over 1 h old&quot; --&gt; AR[&quot;archived: text blanked,&lt;br/&gt;out of HNSW, FTS5, R-tree;&lt;br/&gt;row and edges kept&quot;]
+    AR --&gt; GONE[&quot;excluded from every&lt;br/&gt;observation read&quot;]
+    ST -- &quot;every 10 flushes or 60 s&quot; --&gt; EX[&quot;LLM extracts entities,&lt;br/&gt;attributed per observation&quot;]
+    EX --&gt; MQ{&quot;name cosine 0.85,&lt;br/&gt;within 5 m,&lt;br/&gt;context cosine 0.65?&quot;}
+    MQ -- &quot;yes&quot; --&gt; MG[&quot;merge: coordinates&lt;br/&gt;overwritten, confidence max&quot;]
+    MQ -- &quot;no&quot; --&gt; NE[&quot;new entity&quot;]
+    AR -. &quot;source embedding gone:&lt;br/&gt;context check passes&quot; .-&gt; MQ</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>SpatioTemporalMemory</code> is a facade over four in-process
+parts: a <code>WorkingMemory</code> buffer, a <code>MemoryStore</code>,
+a <code>ConsolidationEngine</code> and <code>MemoryTools</code>
+(<code>emem/memory.py:36-69</code>). There is no server, worker or
+thread; every operation runs on the caller's thread.</p>
+<p><code>MemoryStore</code> holds one SQLite connection in WAL mode with
+six tables and an FTS5 virtual table over observation and gist text with
+the Porter tokenizer (<code>emem/store.py:76-178</code>). One hnswlib
+cosine index holds vectors for observations, gists and entities, with
+the integer-to-UUID map in the <code>hnsw_mappings</code> table
+(<code>:53-70</code>, <code>:294-312</code>). The R-tree lives in memory
+and is rebuilt from SQLite coordinates on every start
+(<code>:198-207</code>, <code>emem/spatial.py</code>).</p>
+<p>Embeddings come from a protocol: a sentence-transformers wrapper, a
+callable wrapper for EmbodiedAgents' Ollama client, or a null provider
+that returns zero vectors (<code>emem/embeddings.py</code>). The LLM is
+a protocol with <code>summarize</code>, <code>synthesize</code> and
+<code>extract_entities</code>; without one, gists are the observations
+joined with <code>|</code> and no entities are extracted
+(<code>emem/consolidation.py:179-195</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Running:</strong> nothing but the process. Dependencies are
+numpy, hnswlib, Rtree and scikit-learn; Rtree needs
+<code>libspatialindex</code>.</li>
+<li><strong>Offline:</strong> fully, with a local embedder and LLM. With
+neither, the store keeps zero vectors and concatenated gists, and BM25
+is the only working semantic arm.</li>
+<li><strong>API key:</strong> none required to store anything.</li>
+<li><strong>Install:</strong> <code>pip install emem</code>.</li>
+<li><strong>Repair by hand:</strong> SQLite is readable. The HNSW file
+is binary and is written only by <code>save()</code> and
+<code>close()</code> (<code>emem/store.py:1686-1694</code>).</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>SpatioTemporalMemory.add</code>
+builds an <code>ObservationNode</code> with
+<code>timestamp or self._get_time()</code> and hands it to
+<code>WorkingMemory.add</code> (<code>emem/memory.py:102-145</code>).
+The buffer stamps the active episode, sets tier <code>working</code>,
+updates <code>current_position</code> unless the source is
+interoception, and flushes on five items or two seconds
+(<code>emem/working_memory.py:41-66</code>). <code>add_body_state</code>
+is <code>add</code> with <code>source_type="interoception"</code>
+(<code>emem/memory.py:147-193</code>).</p>
+<p><strong>Flush.</strong> <code>WorkingMemory.flush</code> sets tier
+<code>short_term</code> and calls <code>add_observations_batch</code>,
+which embeds the batch, inserts rows, adds each vector to HNSW, inserts
+FTS5 text, adds the R-tree point and writes a <code>BELONGS_TO</code>
+edge, all under one lock and one commit
+(<code>emem/store.py:352-409</code>). The flush callback feeds the
+entity buffer (<code>emem/memory.py:71-98</code>).</p>
+<p><strong>Entity extraction.</strong>
+<code>_extract_and_merge_entities</code> skips observations already
+flagged <code>entities_extracted</code>, asks the LLM for a JSON array
+with a 1-based <code>observation_index</code>, resolves each entity to
+its observation, calls <code>find_matching_entity</code>, updates or
+inserts, writes <code>OBSERVED_IN</code> and <code>COOCCURS_WITH</code>
+edges, and sets the flag
+(<code>emem/consolidation.py:422-579</code>).</p>
+<p><strong>Consolidation.</strong> <code>end_episode</code> flushes,
+drains the entity buffer, calls <code>consolidate_episode</code>, and
+stores the joined gist text on the episode row
+(<code>emem/memory.py:219-252</code>). <code>consolidate_episode</code>
+splits at gaps over 30 minutes, writes one gist per chunk with
+<code>SUMMARIZES</code> edges, and promotes the observations
+(<code>emem/consolidation.py:225-255</code>,
+<code>emem/store.py:472-519</code>).</p>
+<p><strong>Retrieval.</strong> <code>MemoryStore.semantic_search</code>
+runs <code>semantic_search_by_vector</code> at twice the requested
+count, BM25 over observations and gists, a Python re-filter of the BM25
+hits, and <code>_rrf_merge</code> with k=60
+(<code>emem/store.py:1039-1098</code>). The vector path over-fetches
+five times, splits candidates by node type, and applies layer, time,
+episode and radius in SQL per type (<code>:1152-1325</code>).</p>
+<p><strong>Forgetting.</strong> <code>archive_long_term</code> calls
+<code>update_observation_tiers</code> with <code>drop_text=True</code>,
+which blanks the text, calls <code>mark_deleted</code> on the HNSW
+label, deletes the FTS5 row and removes the R-tree point
+(<code>emem/consolidation.py:294-314</code>,
+<code>emem/store.py:534-564</code>).</p>
+<p><strong>Agent surface.</strong> <code>get_tool_definitions</code> and
+<code>dispatch_tool_call</code>, which checks the tool name and passes
+the model's arguments as keyword arguments
+(<code>emem/tools.py:1149-1174</code>).</p>
+<p><strong>Tests.</strong> <code>tests/test_store.py</code>,
+<code>tests/test_consolidation.py</code>,
+<code>tests/test_tools.py</code>, <code>tests/test_memory.py</code>,
+<code>tests/test_integration.py</code>; the harness tests live under
+<code>tests/test_harness/</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Four node tables and one edge table
+(<code>emem/store.py:76-178</code>, <code>emem/types.py</code>):</p>
+<ul>
+<li><code>observations</code>: text, <code>x y z</code>,
+<code>timestamp</code>, <code>layer_name</code>,
+<code>source_type</code>, <code>confidence</code>,
+<code>episode_id</code>, JSON <code>metadata</code>, <code>tier</code>,
+<code>has_embedding</code>, <code>entities_extracted</code>.</li>
+<li><code>episodes</code>: name, start and end time,
+<code>status</code>, the joined gist text,
+<code>parent_episode_id</code>.</li>
+<li><code>gists</code>: text, centre and radius,
+<code>time_start</code>, <code>time_end</code>, the source count and a
+JSON list of source ids, <code>layer_name</code> when every source
+shared one, <code>episode_id</code>.</li>
+<li><code>entities</code>: name, <code>x y z</code>,
+<code>first_seen</code>, <code>last_seen</code>,
+<code>observation_count</code>, <code>confidence</code>,
+<code>entity_type</code>, <code>layer_name</code>.</li>
+<li><code>edges</code>: <code>BELONGS_TO</code>,
+<code>SUBTASK_OF</code>, <code>SUMMARIZES</code>,
+<code>OBSERVED_IN</code> and <code>COOCCURS_WITH</code> have writers.
+<code>FOLLOWS</code> is declared and has none.</li>
+</ul>
+<p><strong>Time is one axis.</strong> <code>timestamp</code> is whatever
+the caller passes, defaulting to now; there is no ingest time beside it.
+A gist's span is its sources' span.</p>
+<p><strong>Scope is a physical file.</strong> There is no user, agent or
+tenant column; one instance is one SQLite file and one HNSW file.
+<code>layer_name</code> separates perception sources and
+<code>episode_id</code> separates tasks, and both are optional filters
+the caller chooses.</p>
+<p><strong>The graph is written more than it is read.</strong> On the
+live paths the only edge query is the one
+<code>find_matching_entity</code> makes, joining the newest
+<code>OBSERVED_IN</code> edge to find an entity's source observation
+(<code>emem/store.py:969-990</code>).
+<code>get_cooccurring_entities</code> and
+<code>get_entity_observations</code> have callers only in tests, and no
+tool traverses an edge. The paper's example query <em>"what objects
+appear together with the red chair?"</em> has no tool. Each extraction
+writes new <code>COOCCURS_WITH</code> rows under fresh ids, so a pair
+seen often accumulates duplicate edges.</p>
+<p><code>EpisodeStatus.ABANDONED</code> has no writer; episodes are
+<code>active</code> or <code>completed</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated: nothing is injected automatically. The
+ten tools split into three kinds.</p>
+<p><strong>Fused semantic search.</strong> <code>semantic_search</code>
+returns observations, gists and entities in one ranking, fused by
+reciprocal rank between a dense top-k and a BM25 top-k. FTS5 is
+populated at every insert whatever the flag, so hybrid retrieval can be
+switched per configuration without re-ingesting
+(<code>emem/config.py:38-44</code>). The raw query is double-quoted with
+inner quotes doubled before <code>MATCH</code>, so an FTS5 operator in a
+model's query is matched as text
+(<code>emem/store.py:232-245</code>).</p>
+<p><strong>The two arms do not filter gists the same way.</strong> The
+dense arm drops a gist whose <code>layer_name</code> differs from the
+requested layer (<code>emem/store.py:1251-1253</code>). The BM25
+re-filter for gists checks time, episode and radius and not layer
+(<code>:1135-1149</code>). A layer-restricted search can therefore
+return a cross-layer gist, or one from another layer, whenever BM25
+matches it. The spatial test also differs: the dense arm requires the
+gist centre inside the radius, while the BM25 arm admits any gist whose
+disc overlaps it (<code>:1147</code>, <code>:1261-1270</code>).</p>
+<p><strong>Structured queries.</strong> <code>spatial_query</code> takes
+R-tree candidates and filters in SQL; <code>temporal_query</code> falls
+back to gists overlapping the window when no observation is left
+(<code>emem/tools.py:775-838</code>). <code>entity_query</code> is a
+<code>LIKE</code> on the name. <code>body_status</code> returns the
+newest reading per interoception layer.</p>
+<p><strong>Composed queries.</strong> <code>locate</code> runs a
+semantic search and returns the centroid and maximum spread of the hits'
+coordinates; <code>recall</code> runs <code>locate</code>, then a radius
+query, <code>search_gists_by_area</code> and an entity query around the
+centroid (<code>emem/tools.py:1001-1120</code>).
+<code>get_current_context</code> does the same around the last
+non-interoception position, plus five minutes of recent observations and
+the body status (<code>:879-933</code>).</p>
+<p><strong>Area summaries come back oldest-first.</strong>
+<code>search_gists_by_area</code> is
+<code>SELECT * FROM gists WHERE</code> distance <code>LIMIT ?</code>
+with no <code>ORDER BY</code> (<code>emem/store.py:1576-1587</code>).
+With no index on the centre columns, SQLite returns rowid order, so a
+robot that patrols one room daily gets that room's first five gists from
+<code>get_current_context</code> and <code>recall</code>, never the
+latest.</p>
+<p><strong>Failure modes.</strong> Filters apply after the vector
+over-fetch, so a narrow radius or layer can return fewer hits than
+exist. <code>search_gists</code> sizes its top-k from
+<code>get_current_count()</code>, which includes labels marked deleted
+by archival, where <code>semantic_search_by_vector</code> sizes it from
+the live map (<code>emem/store.py:1522-1524</code>,
+<code>:1179-1184</code>). Whether hnswlib raises when the live set falls
+below that k was not run here. Recency weighting exists and is off by
+default (<code>emem/config.py:46-48</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit calls from the host application, never from the
+model. Observations append; nothing updates an observation except the
+tier column and the text blanking at archival. There is no dedup of
+observations.</p>
+<p><strong>Entity merge is the only update, and it has three
+weaknesses.</strong></p>
+<ul>
+<li>A merge replaces the entity's coordinates with the new sighting's
+(<code>emem/consolidation.py:510</code>). The paper says merged
+coordinates are averaged. An object seen once in the wrong place moves
+there.</li>
+<li>Attribution maps <code>observation_index</code> to text and text
+back to an observation through a dict keyed on text
+(<code>:451-453</code>). Two observations in one batch with the same
+text, such as <em>"a red chair"</em> at two positions, collapse to the
+later one, and both entities anchor there.</li>
+<li>The context gate compares against the embedding of the entity's
+newest source observation and returns <code>True</code> when that
+embedding is missing (<code>emem/store.py:814-819</code>). Archival
+removes it from HNSW, so once an entity's latest sighting is archived,
+the gate stops applying and a generic name merges on name and distance
+alone.</li>
+</ul>
+<p><strong>Consolidation can summarise an observation twice.</strong>
+<code>consolidate_time_window</code> selects <code>short_term</code>
+rows regardless of episode, and <code>consolidate_episode</code> reads
+every observation of the episode regardless of tier
+(<code>emem/store.py:1004-1009</code>). If the host runs the first
+during a long episode, the episode's older observations get a
+time-window gist and then an episode gist.</p>
+<p><strong>Malicious input is not filtered.</strong> Observation text
+reaches the gist prompt, the entity prompt and every tool result
+verbatim. The FTS5 escaper is the only sanitisation, and it protects the
+query, not the content.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Blocking.</strong> A flush embeds synchronously inside the
+<code>add</code> that triggers it. Every tenth flush or sixtieth second,
+that same <code>add</code> also runs entity extraction, one LLM call per
+16 observations. <code>end_episode</code> runs one LLM summary per chunk
+before it returns.</li>
+<li><strong>Lag.</strong> Every query flushes the buffer first, so an
+observation is retrievable by the next query. An entity appears after up
+to ten flushes or sixty seconds, checked only when a flush happens.</li>
+<li><strong>Background passes.</strong> None run unless called.
+<code>consolidate_time_window</code> re-reads every old
+<code>short_term</code> row each call, including every noise point that
+will never leave that tier.</li>
+<li><strong>Injection.</strong> Bounded per tool: ten results by
+default; <code>get_current_context</code> returns up to ten nearby
+observations, five gists, ten entities, ten recent observations and one
+line per body layer.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The tools are OpenAI function schemas whose descriptions route the
+model between them: <em>"Do NOT use for time-focused questions (use
+temporal_query)"</em> (<code>emem/tools.py:21-474</code>).
+<code>get_tools_for_registration</code> wraps each as a callable for
+EmbodiedAgents' <code>LLM.register_tool()</code>
+(<code>emem/memory.py:388-410</code>). The relative-time parser accepts
+<code>-10m</code>, <em>"2 hours ago"</em> and <em>"last week"</em> so a
+weak tool-caller does not spend steps on format
+(<code>emem/tools.py:477-590</code>).</p>
+<p>The model has no write, no delete and no correction verb. That keeps
+a hallucinated fact from entering memory through the tool surface; it
+also means a wrong perception can be corrected by nobody, the operator
+included, because the library has no delete either.</p>
+<p>The surface would adapt to another agent as a read-only memory tool
+set with little work. The write side assumes a perception pipeline that
+knows its own position.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance</strong> is the layer name, the source type, the
+observation id and, for entities, the <code>OBSERVED_IN</code> edge to
+the source observation. A gist records its source ids; after archival
+those ids point at rows with empty text.</p>
+<p><strong>Crash behaviour.</strong> The buffer is in process, so up to
+five observations or two seconds of them are lost on a crash. HNSW is
+written only on <code>save()</code> or <code>close()</code>, while the
+<code>hnsw_mappings</code> rows commit with every batch
+(<code>emem/store.py:308-312</code>, <code>:1686-1694</code>). After a
+crash the index file lacks every vector added since the last save; those
+observations keep their FTS5 entries and lose the dense arm permanently,
+with nothing reporting it.</p>
+<p><strong>Concurrency.</strong> One SQLite connection is shared across
+threads, with a lock around writes and none around reads
+(<code>emem/store.py:44-47</code>).</p>
+<p><strong>Delete semantics.</strong> There are none to request.
+Archival blanks text and removes vectors from the live index with
+<code>mark_deleted</code>, which leaves the vector in the file.
+Coordinates, timestamps, layer, gists built from the text and entities
+extracted from it all persist.</p>
+<p><strong>The capability marks.</strong></p>
+<ul>
+<li><code>negative_eval</code> — <strong>awarded.</strong> See the
+record above; it covers the radius query and the BM25 arm, not the dense
+arm.</li>
+<li><code>tombstone</code> — withheld. Nothing records a rejected value;
+there is no rejection. Archival is keyed on the row and age.</li>
+<li><code>trust_state</code> — withheld. <code>confidence</code> is a
+float no read filters on (see Recorded searches). The tier column does
+withhold archived rows from retrieval, but it is retention by age, not a
+judgement that a memory is false, and its text is erased rather than
+kept as unbelieved.</li>
+<li><code>bitemporal</code> — withheld. One caller-supplied
+<code>timestamp</code>; no record time.</li>
+<li><code>scope_enforced</code> — withheld. No scope key exists; one
+file is one memory, a physical partition. Layer and episode filters are
+optional and model-chosen.</li>
+<li><code>audit_log</code> — withheld. Entity updates overwrite in place
+and nothing logs a mutation.</li>
+<li><code>human_review</code> — withheld. There is no review surface.
+The agent has no write verb, which removes the question rather than
+answering it.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>Unit and integration tests.</strong> 469 pytest functions; CI
+runs the suite with the <code>ollama</code>, <code>gemini</code>,
+<code>minigrid</code>, <code>ai2thor</code> and <code>slow</code>
+markers excluded on Python 3.8 to 3.12
+(<code>.github/workflows/tests.yml</code>). The store tests cover
+insert, the three query kinds, hybrid fusion, the FTS5 escaper, archival
+and persistence. The consolidation tests cover chunking, DBSCAN noise,
+cross-layer synthesis, per-observation attribution, and the context gate
+refusing a merge.</p>
+<p><strong>What is asserted and what only looks asserted.</strong> Two
+cases carry the mark (record above). Three nearby ones assert less than
+they read. In <code>tests/test_memory.py:162-171</code> a comment says
+<code>end_episode</code> archives the observations and the test asserts
+only that a search returns something; the observations are
+<code>long_term</code>. In
+<code>tests/test_integration.py:218-224</code> the archived check is a
+loop over results in a store where nothing was archived.
+<code>test_gists_survive_archival</code> states the observation's
+exclusion in a comment and asserts only the gist
+(<code>tests/test_store.py:266-287</code>). No test has two same-text
+observations in one extraction batch, merges an entity after its source
+is archived, or asserts a layer filter on the BM25 gist path.</p>
+<p><strong>The paper's evaluation.</strong> eMEM-Bench v1 is eight
+cognitive-psychology paradigms over 20 ProcTHOR-10K houses, 988 probes,
+scored 1 to 5 by <code>gemma3:27b</code> and reported as 80.8 weighted
+(<a href="https://arxiv.org/abs/2606.03374">arXiv:2606.03374</a>, Table
+4). The paradigm generators, schedules, runner and scorer are committed
+under <code>harness/benchmarks/academic/emem_bench_v1/</code>. No
+trajectory, probe set or result file is committed, so no number
+recomputes from the tree. The README's benchmark table describes a
+different eMEM-Bench: 492 questions over 12 scenes.</p>
+<p><strong>The baselines are eMEM with fewer tools.</strong> The paper
+describes Flat-RAG as <em>"semantic search over a vector store and a
+timestamp filter and nothing more"</em> and Gen-Agents as a
+recency-weighted stream. In the committed harness both are
+<code>AblationConfig</code> entries over the same store
+(<code>harness/benchmarks/academic/ablation.py:86-111</code>). The v1
+runner builds each from the same factory and reads only
+<code>available_tools</code> and <code>mem_config_overrides</code>
+(<code>harness/run_benchmark.py:197-211</code>,
+<code>harness/benchmarks/academic/emem_bench_v1/runner.py:143-150</code>,
+<code>harness/benchmarks/academic/replay_runner.py:138-173</code>). It
+never reads <code>use_consolidation</code> or
+<code>use_multi_layer</code>, and it runs
+<code>consolidate_time_window</code> and <code>maintenance</code> for
+every ablation (<code>runner.py:230-242</code>).</p>
+<p>So in v1 the baselines keep hybrid BM25 fusion, gists, archival and
+layer tags, and recency weighting is a run-wide CLI flag applied to
+every ablation in the sweep
+(<code>harness/run_benchmark.py:542-545</code>). The 19- and 8-point
+gaps measure what removing tools costs a 27B model, not how eMEM
+compares with another memory. The no-hybrid row is a real configuration
+ablation.</p>
+<p><strong>Episode consolidation is not what the benchmark
+exercises.</strong> Every v1 ingest phase ends its episode with
+<code>consolidate=False</code>
+(<code>emem_bench_v1/runner.py:187-203</code>), so observations reach
+gists only through the time-window path, and DBSCAN noise stays in
+<code>short_term</code>. The retention paradigm's year of virtual time
+therefore never archives noise points, which may be part of why it shows
+<em>"no measurable forgetting"</em>; that is an inference, not a
+measurement.</p>
+<p><strong>Paper against code.</strong> The paper matches the code on
+the two-phase tiers: <code>long_term</code> at episode end, archival by
+<code>maintenance()</code>. The README and the <code>end_episode</code>
+docstring say the observations are archived at episode end, and they are
+not (<code>README.md:81</code>, <code>emem/memory.py:219-229</code>).
+The paper's Table 6 describes <code>archive_after_seconds</code> as time
+in <code>long_term</code>, which the query does not implement. It calls
+the merge threshold <em>learned</em>; it is the constant 0.85. The
+repository does not cite the paper.</p>
+<p>Nothing here was run.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put every axis behind one filter set.</strong> A semantic
+query that can also be bounded by radius, time and source in the same
+call is what makes <em>"what did I see near here in the last hour"</em>
+one tool call instead of a plan.</li>
+<li><strong>Resolve a concept to a place before searching the
+place.</strong> <code>locate</code> followed by a radius query is a
+small composition that turns a vague noun into a spatial cue without a
+place primitive.</li>
+<li><strong>Attribute each extracted entity to one source and gate the
+merge on the source text.</strong> Two chairs in different rooms stay
+two chairs.</li>
+<li><strong>Populate the lexical index at every write, whatever the
+retrieval flag.</strong> The hybrid arm can then be switched per run
+without re-ingesting.</li>
+<li><strong>Escape the query before FTS5 <code>MATCH</code>.</strong>
+One function closes an operator injection.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Timing a tier from the wrong clock.</strong> A retention
+rule that reads the event timestamp when it means time since promotion
+archives long episodes on arrival. Store the promotion time.</li>
+<li><strong>A clustering step whose rejects have no exit.</strong>
+Whatever DBSCAN, a threshold or a quorum refuses needs its own path to
+archival, or it becomes the permanent residue of every pass.</li>
+<li><strong>Two retrieval arms with different filter code.</strong> Fuse
+after filtering in one function, or assert filter parity per arm in a
+test.</li>
+<li><strong>A gate that fails open on missing evidence.</strong> When
+the thing being compared can be deleted by another process, missing
+means refuse, or at least means log.</li>
+<li><strong>Calling a tool subset a baseline.</strong> An external
+comparison needs an external system, or a configuration that removes the
+mechanism, not the menu.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>eMEM fits a single robot, or a simulated one, whose operator wants an
+agent to answer where-and-when questions over its own perception, runs
+everything locally and can tolerate a store that only grows and only
+forgets by age. It does not fit a deployment where a wrong perception
+must be corrected, where two robots or two users share a store, or where
+losing the vector index to a crash must be noticed. Of the other spatial
+memories in the atlas, <a href="../tempomem/">Chronotope</a> fuses
+before it persists and rejects low-confidence sightings, and <a
+href="../magicore/">MagiCore</a> derives stale and missing beliefs by
+replaying evidence. eMEM is the one with a retrieval surface built for
+an LLM and the least machinery for being wrong.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Were the paper's Table 5 runs made from this commit, and with
+<code>--recency-weight</code> set? The harness cannot say.</li>
+<li>Does hnswlib raise in <code>search_gists</code> once archival leaves
+fewer live labels than the requested k? Not run.</li>
+<li>After a crash, do stale <code>hnsw_mappings</code> rows make
+<code>live_count</code> exceed the loaded index and change
+<code>knn_query</code> behaviour? Not run.</li>
+<li>How large do stores grow in EMOS deployments, and does anything
+there call <code>maintenance()</code> on a schedule?</li>
+<li>Does the ROS-side Memory component the <code>add_body_state</code>
+docstring mentions pass real poses for every layer?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong> <code>emem/store.py</code>,
+<code>emem/types.py</code>, <code>emem/config.py</code>,
+<code>emem/spatial.py</code>, <code>emem/embeddings.py</code>.</li>
+<li><strong>Write path:</strong> <code>emem/memory.py:71-252</code>,
+<code>emem/working_memory.py</code>,
+<code>emem/store.py:349-605</code>.</li>
+<li><strong>Consolidation and entities:</strong>
+<code>emem/consolidation.py</code>,
+<code>emem/store.py:701-826</code>.</li>
+<li><strong>Retrieval:</strong> <code>emem/store.py:1039-1629</code>,
+<code>emem/tools.py:667-1147</code>.</li>
+<li><strong>Agent surface:</strong> <code>emem/tools.py:21-474</code>,
+<code>emem/tools.py:1149-1174</code>,
+<code>emem/memory.py:369-410</code>.</li>
+<li><strong>Benchmark:</strong>
+<code>harness/benchmarks/academic/ablation.py</code>,
+<code>harness/benchmarks/academic/emem_bench_v1/runner.py</code>,
+<code>harness/run_benchmark.py:177-265</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_store.py</code>,
+<code>tests/test_consolidation.py</code>,
+<code>tests/test_tools.py</code>, <code>tests/test_memory.py</code>,
+<code>tests/test_integration.py</code>,
+<code>.github/workflows/tests.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run once each with <code>git grep</code> at the root of the checkout
+at the pinned revision.</p>
+<ul>
+<li><code>git grep -n -i -E 'DELETE FROM (observations|entities|gists|episodes|edges)|def (delete|forget|remove)_'</code>
+— no match; the only <code>DELETE</code> statements target
+<code>fts_index</code> and <code>hnsw_mappings</code>.</li>
+<li><code>git grep -n -E 'EdgeType\.FOLLOWS'</code> — one match,
+<code>tests/test_types.py:101</code>, asserting the enum's value; no
+writer.</li>
+<li><code>git grep -n -E 'get_cooccurring_entities|get_entity_observations' -- emem harness examples</code>
+— the two definitions only; callers are in <code>tests/</code>.</li>
+<li><code>git grep -n -E 'EpisodeStatus\.ABANDONED'</code> — no
+match.</li>
+<li><code>git grep -n -E '\.save\(\)|save_index' -- emem</code> —
+<code>memory.py:439</code>, <code>store.py:1688</code>,
+<code>store.py:1693</code>; no periodic save.</li>
+<li><code>git grep -n -E 'use_consolidation|use_multi_layer' -- harness</code>
+— <code>ablation.py</code> and <code>replay_runner.py:315,345</code>;
+nothing in <code>emem_bench_v1/</code>.</li>
+<li><code>git grep -n -i -E 'confidence *(&gt;|&lt;|&gt;=|&lt;=)|confidence *[!=]=' -- emem</code>
+— no match; no read compares confidence.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION'</code>
+— no match; the tree does not cite its paper.</li>
+<li><code>git grep -n -E 'user_id|tenant|agent_id|namespace' -- emem</code>
+— no match.</li>
+<li><code>git grep -n -i -E 'audit|history|event_log|journal' -- emem</code>
+— two matches, a WAL pragma and a tool description; no mutation
+log.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/automatika-robotics/emem/commit/82e3da61cf710c4379e0cd7bf7a6a21710caaa96"><code class="commit-id" title="82e3da61cf710c4379e0cd7bf7a6a21710caaa96">82e3da61…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 22 May
+2026. One mark, <code>negative_eval</code>. Screened before reading: no
+auto-run surface, one build-time execution point
+(<code>tests/test_harness/conftest.py</code>, run at pytest collection),
+two unpinned dependency surfaces (<code>harness/requirements.txt</code>,
+<code>pyproject.toml</code> with no lockfile) and nothing inside the
+cooldown; no agent instruction files. Read with <code>git grep</code>
+and <code>sed</code>; nothing installed, built or run. The paper (<a
+href="https://arxiv.org/abs/2606.03374">arXiv:2606.03374</a>, v2) was
+read in full.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

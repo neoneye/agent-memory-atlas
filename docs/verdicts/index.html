@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 648 reports.</strong></p>
+<p><strong>This page covers all 649 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26775,6 +26775,47 @@ the memory.</li>
 the offered <code>Memory</code> store is unwired and defaults to a
 shared <code>/tmp</code> path — or you need the reasons for a remembered
 item to travel with it.</li>
+</ul>
+<h3 id="emem"><a href="../systems/emem/"><code>emem</code></a></h3>
+<ul>
+<li>Best idea: <strong>one filter set across meaning, place, time and
+source.</strong> A semantic search can be bounded by radius, time
+window, perception layer and episode in the same call, and
+<code>locate</code> turns a phrase into a centroid and spread that
+<code>recall</code> then queries spatially, so <em>"what did I see near
+the kitchen"</em> is one tool call rather than a plan the model has to
+write.</li>
+<li>Biggest risk: <strong>the lifecycle does not do what its settings
+say.</strong> <code>maintenance()</code> archives <code>long_term</code>
+rows by observation timestamp while the setting is commented as time in
+<code>long_term</code>, so a long episode is archived as soon as it is
+consolidated. DBSCAN noise stays <code>short_term</code>, which archival
+never selects, and the library has no delete or edit at all.</li>
+<li>Most reusable component: <code>emem/tools.py</code> — ten
+OpenAI-format tool schemas whose descriptions route the model by
+question shape, a dispatcher, and a lenient relative-time parser,
+depending on nothing but the store's query methods.</li>
+<li>Second risk: <strong>the paper's baselines are eMEM with fewer
+tools.</strong> In the eMEM-Bench v1 runner, Flat-RAG and Gen-Agents are
+<code>AblationConfig</code> tool subsets over the same store;
+<code>use_consolidation</code> and <code>use_multi_layer</code> are
+never read and maintenance runs for every ablation, so both keep hybrid
+BM25, gists and archival. No trajectory or result file is
+committed.</li>
+<li>Maturity impression: MIT, 4,453 lines of Python in the package and
+11,362 in the benchmark harness, 92 commits by 2 contributors between 7
+March and 22 May 2026, 469 pytest functions run on Python 3.8 to 3.12.
+One mark, <code>negative_eval</code>, on two CI-run cases that keep an
+archived observation out of a radius query and out of the BM25 arm after
+a positive control; three nearby cases assert less than their comments
+say.</li>
+<li>Study when: you are building memory for an embodied agent and want a
+working composition of dense, lexical, spatial and temporal retrieval
+behind LLM tools, in one process with no services.</li>
+<li>Do not copy when: a wrong perception must be corrected, the store is
+shared by robots or users, or losing the vector index to a crash must be
+noticed — HNSW is written only on <code>save()</code> and
+<code>close()</code>.</li>
 </ul>
         </article>
       </div>

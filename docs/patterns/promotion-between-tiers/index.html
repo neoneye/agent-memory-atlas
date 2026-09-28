@@ -302,6 +302,16 @@ as <code>auto_lazy</code> at 0.85, three or four sentences in, with no
 gate consulted. Both land in one table and render identically as FACT in
 the context pack, so the tier boundary records who promoted a fact
 without changing how it is read.</p>
+<p><a href="../../systems/emem/">eMEM</a> computes its tier rule from
+the wrong clock. Its archival sweep selects <code>long_term</code>
+observations whose event <code>timestamp</code> is older than
+<code>archive_after_seconds</code>, while the setting is commented as
+time spent in <code>long_term</code>, and no column records when a row
+was promoted — so all but the last hour of a long episode is archived on
+the first sweep after consolidation. The tier DBSCAN rejects has no exit
+at all: noise points stay <code>short_term</code>, which archival never
+selects, and are re-clustered on every time-window pass for as long as
+the file exists.</p>
 <h3 id="separate-inputs-a-ceiling-a-recorded-decision--argued">Separate
 inputs, a ceiling, a recorded decision — argued</h3>
 <p>No system cited here has all three on a storage-tier move; each has

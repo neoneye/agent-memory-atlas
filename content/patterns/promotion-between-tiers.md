@@ -174,6 +174,8 @@ rather than moved to a lower tier.
 
 [sqlite-memory-mcp](../../systems/sqlite-memory-mcp/) builds a governed promotion from candidate claim to canonical fact and then opens two doors beside it. The governed door, `promote_candidate`, takes its mode from the caller and defaults to `human_confirmed`, so the agent that extracted a claim can promote it by omitting an argument. The ungoverned door runs on every observation write: a regex claim gains 0.1 confidence per matching observation and is inserted into `canonical_facts` as `auto_lazy` at 0.85, three or four sentences in, with no gate consulted. Both land in one table and render identically as FACT in the context pack, so the tier boundary records who promoted a fact without changing how it is read.
 
+[eMEM](../../systems/emem/) computes its tier rule from the wrong clock. Its archival sweep selects `long_term` observations whose event `timestamp` is older than `archive_after_seconds`, while the setting is commented as time spent in `long_term`, and no column records when a row was promoted — so all but the last hour of a long episode is archived on the first sweep after consolidation. The tier DBSCAN rejects has no exit at all: noise points stay `short_term`, which archival never selects, and are re-clustered on every time-window pass for as long as the file exists.
+
 ### Separate inputs, a ceiling, a recorded decision — argued
 
 No system cited here has all three on a storage-tier move; each has part.

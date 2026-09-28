@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 648 reports.**
+**This page covers all 649 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5810,3 +5810,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 19,592 lines of Python of which 3,101 are the search loop, 4 commits between 18 and 23 September 2026. 8 test functions, not run, covering the gate and the ledger summaries and not the git plumbing, the critic or the rewind. The paper is [arXiv:2609.24972](https://arxiv.org/abs/2609.24972); the project website publishes four runs with every candidate, and the evolved harnesses are not committed.
 - Study when: you are deciding what an accreting store may admit and want a gate that separates a real gain from noise and makes growth pay for itself, or you want a worked case of a search loop whose output is the memory.
 - Do not copy when: you need an agent that remembers across tasks — the offered `Memory` store is unwired and defaults to a shared `/tmp` path — or you need the reasons for a remembered item to travel with it.
+
+### [`emem`](../systems/emem/)
+
+- Best idea: **one filter set across meaning, place, time and source.** A semantic search can be bounded by radius, time window, perception layer and episode in the same call, and `locate` turns a phrase into a centroid and spread that `recall` then queries spatially, so *"what did I see near the kitchen"* is one tool call rather than a plan the model has to write.
+- Biggest risk: **the lifecycle does not do what its settings say.** `maintenance()` archives `long_term` rows by observation timestamp while the setting is commented as time in `long_term`, so a long episode is archived as soon as it is consolidated. DBSCAN noise stays `short_term`, which archival never selects, and the library has no delete or edit at all.
+- Most reusable component: `emem/tools.py` — ten OpenAI-format tool schemas whose descriptions route the model by question shape, a dispatcher, and a lenient relative-time parser, depending on nothing but the store's query methods.
+- Second risk: **the paper's baselines are eMEM with fewer tools.** In the eMEM-Bench v1 runner, Flat-RAG and Gen-Agents are `AblationConfig` tool subsets over the same store; `use_consolidation` and `use_multi_layer` are never read and maintenance runs for every ablation, so both keep hybrid BM25, gists and archival. No trajectory or result file is committed.
+- Maturity impression: MIT, 4,453 lines of Python in the package and 11,362 in the benchmark harness, 92 commits by 2 contributors between 7 March and 22 May 2026, 469 pytest functions run on Python 3.8 to 3.12. One mark, `negative_eval`, on two CI-run cases that keep an archived observation out of a radius query and out of the BM25 arm after a positive control; three nearby cases assert less than their comments say.
+- Study when: you are building memory for an embodied agent and want a working composition of dense, lexical, spatial and temporal retrieval behind LLM tools, in one process with no services.
+- Do not copy when: a wrong perception must be corrected, the store is shared by robots or users, or losing the vector index to a crash must be noticed — HNSW is written only on `save()` and `close()`.
