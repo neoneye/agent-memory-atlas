@@ -439,7 +439,7 @@ was wrong. It also states its own write lag in configuration
 (`feature_update_interval_sec = 2.0`), which almost nothing else here does.
 
 Tradeoff: the API surface is usually easier to study than the decision
-machinery. In `supermemory` the hosted core is not visible at all; in `mem0`
+machinery. In [`supermemory`](../systems/supermemory/) the hosted core is not visible at all; in [`mem0`](../systems/mem0/)
 several documented capabilities are managed-platform-only.
 
 
@@ -4185,7 +4185,7 @@ reference no embeddings, vectors, or persistent store; BeeAI keeps document
 retrieval in a separate `rag` module, so the framework's own architecture agrees
 these are different concerns. LlamaIndex's older `ChatMemoryBuffer` family and
 LangChain's original `ConversationBufferMemory` are the same category — which is
-why this atlas reviews `langmem` and LlamaIndex's newer block-based `Memory`
+why this atlas reviews [`langmem`](../systems/langmem/) and LlamaIndex's newer block-based `Memory`
 instead.
 
 **The 2026 form of this replaces the buffer with a state, and it sharpens the
@@ -4471,7 +4471,7 @@ word *memory*, and durable state that records an agent's *work* rather than its
 | --- | --- |
 | [kvcache-ai/AgentENV](https://github.com/kvcache-ai/AgentENV) | An orchestrator for Firecracker microVM sandboxes. Every one of its 176 files matching "memory" means guest RAM, memory ballooning or a memory snapshot; `InMemoryMetadataStore` holds sandbox metadata. Adjacent by name only |
 | [deftai/subspace](https://github.com/deftai/subspace) | ACP, A2A and MCP transport plumbing — framer, codec, wire. Its single "memory" match is a test fixture named `memory-message-a` |
-| [code-yeongyu/oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) | An agent harness whose durable state is `.omo/boulder.json`, a work ledger the prompt calls "the source of truth", plus a team mailbox with leases and an ack ledger. Its rules engine loads *human-authored* files into context and writes nothing back. This is the `beads` exclusion — a task database and a queue, not a belief store |
+| [code-yeongyu/oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) | An agent harness whose durable state is `.omo/boulder.json`, a work ledger the prompt calls "the source of truth", plus a team mailbox with leases and an ack ledger. Its rules engine loads *human-authored* files into context and writes nothing back. This is the [`beads`](../systems/beads/) exclusion — a task database and a queue, not a belief store |
 | [endomorphosis/ipfs_accelerate_py](https://github.com/endomorphosis/ipfs_accelerate_py) | A model-inference and hardware-routing framework. Its ~4,500 "memory" matches are `memory_mb`, `memory_bytes`, `memory_gb`, WebGPU memory optimisation and resource schedulers — the AgentENV shape again, RAM rather than recall |
 | [endomorphosis/swissknife](https://github.com/endomorphosis/swissknife) | A browser-based collaborative virtual desktop that vendors the previous entry's JS port; same `memory` vocabulary, same exclusion. It also ships **no licence file** |
 | [endomorphosis/lift_coding](https://github.com/endomorphosis/lift_coding) | A voice-first GitHub workflow assistant. No memory subsystem — the matches are in audio fetching, auth, metrics and a GitHub provider |
@@ -4479,8 +4479,8 @@ word *memory*, and durable state that records an agent's *work* rather than its
 | [xD4O/memento](https://github.com/xD4O/memento) | **Reviewed.** A licence appeared — PolyForm Noncommercial 1.0.0 — and the decision was revisited as this row said it should be. See [Memento](../systems/memento/) |
 
 Compaction appears in this atlas only as a component of systems that also
-persist — `mastra-observational-memory` with exact covered ranges and buffered
-activation, `hermes-agent` with a hard budget forcing in-turn consolidation,
-`pi` with deterministic file manifests on compaction entries. The test for
+persist — [`mastra-observational-memory`](../systems/mastra-observational-memory/) with exact covered ranges and buffered
+activation, [`hermes-agent`](../systems/hermes-agent/) with a hard budget forcing in-turn consolidation,
+[`pi`](../systems/pi/) with deterministic file manifests on compaction entries. The test for
 inclusion is not whether a system compacts, but whether anything survives the
 session with an identity you could later correct.

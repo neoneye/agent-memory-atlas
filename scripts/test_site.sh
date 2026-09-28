@@ -313,7 +313,7 @@ if ! check_output="$(python3 "$project_dir/scripts/generate_matrix.py" --check 2
   exit 1
 fi
 
-matrix_rows="$(grep -c '^| `' "$project_dir/content/compare.md" | tr -d ' ')"
+matrix_rows="$(grep -c '^| \[`' "$project_dir/content/compare.md" | tr -d ' ')"
 if [[ "$matrix_rows" != "$expected_systems" ]]; then
   echo "Expected $expected_systems matrix rows, found $matrix_rows" >&2
   exit 1

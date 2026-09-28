@@ -420,7 +420,7 @@ def build_table() -> str:
             problems.append(f"{slug}: placeholder matrix values: {', '.join(placeholder)}")
             continue
         cells = [escape_cell(fields[key]) for key, _ in COLUMNS]
-        rows.append("| `" + slug + "` | " + " | ".join(cells) + " |")
+        rows.append(f"| [`{slug}`](../systems/{slug}/) | " + " | ".join(cells) + " |")
 
     if problems:
         for problem in problems:
