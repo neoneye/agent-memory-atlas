@@ -543,6 +543,7 @@ href="../systems/context-engineering/"><code>context-engineering</code></a></li>
 <li><a href="../systems/graft/"><code>graft</code></a></li>
 <li><a href="../systems/mind-mem/"><code>mind-mem</code></a></li>
 <li><a href="../systems/paperclip/"><code>paperclip</code></a></li>
+<li><a href="../systems/rrsi/"><code>rrsi</code></a></li>
 </ul>
 <h2 id="repos-inspected">Repos Inspected</h2>
 <ul>
@@ -5200,6 +5201,16 @@ execution point (a root npm <code>postinstall</code>), 46 unpinned
 surfaces and 53 files inside the cooldown, every file in the depth-1
 clone dating to the tip; <code>AGENTS.md</code> was treated as data.
 Nothing was installed, built or executed.</li>
+<li><a
+href="https://github.com/google-research/rrsi">google-research/rrsi</a>
+at <a
+href="https://github.com/google-research/rrsi/commit/be50316e1db05914068a973f322770ef08ed7ba1"><code class="commit-id" title="be50316e1db05914068a973f322770ef08ed7ba1">be50316e…</code></a>
+— read only; Apache-2.0; no auto-run surface, no build-time execution
+point, two dependency files inside the cooldown (a depth-1 clone dates
+every file to the tip) and one unpinned manifest,
+<code>pyproject.toml</code> with no lockfile; <code>SKILL.md</code> and
+<code>PATTERNS.md</code> read as data; nothing installed, built or
+run</li>
 </ul>
 <h2 id="what-the-licences-actually-say">What the licences actually
 say</h2>
@@ -12071,84 +12082,6 @@ record on a key collision and returns whether the retransmitted text
 matched (<code>src/session/history.rs:57-61</code>), so a retry after a
 lost commit reply is idempotent and a different record under the same
 sequence is detected rather than overwritten.</li>
-<li><strong><code>google-research/rrsi</code> was examined and has no
-report: it is a harness optimizer whose edit history is the search state
-of one resumable run, and the memory component its harnesses offer is a
-primitive no committed harness calls.</strong> The code for <em>RRSI:
-Regularized Recursive Self-Improvement of Agent Harnesses</em> (<a
-href="https://arxiv.org/abs/2609.24972">arXiv:2609.24972</a>, v1 21
-September 2026, v2 23 September 2026; Xia, Han, Wang and eleven
-co-authors, Google Cloud AI Research with UNC-Chapel Hill, Stanford and
-Washington University in St. Louis), read at <a
-href="https://github.com/google-research/rrsi/commit/be50316e1db05914068a973f322770ef08ed7ba1"><code class="commit-id" title="be50316e1db05914068a973f322770ef08ed7ba1">be50316e…</code></a>,
-23 September 2026. Apache-2.0 with no rider, four commits from 18 to 23
-September 2026 by one contributor on the GitHub count, 19,592 lines of
-Python in 84 files: 3,101 in the search core (<code>rrsi/</code>,
-<code>rrsi.py</code>), 5,348 in three domain adapters, 10,950 in the
-vendored Apache-2.0 starting harnesses under <code>third_party/</code>,
-and 193 in <code>tests/test_core.py</code>. A proposer agent edits the
-harness in one git worktree per candidate, a critic screens the diff,
-candidates are evaluated, and the winner fast-forwards
-<code>evolve/&lt;domain&gt;</code>. <code>History</code>
-(<code>rrsi/history.py:55-185</code>) appends one JSONL record per edit
-— component, hypothesis, diff path, ΔS, ΔC, accepted, outcome — to
-<code>runs/&lt;domain&gt;/history.jsonl</code>
-(<code>rrsi/loop.py:80-87</code>), and derives the tried set, a
-recent-yield prune set and the stall directive from it. Its readers are
-the proposer's prompt, which gets the rendered rows, prune set and
-exploration text (<code>rrsi/loop.py:277-280</code>) under <em>"do not
-redraw it unchanged"</em> (<code>rrsi/propose.py:266-271</code>), and
-the selector's novelty count (<code>rrsi/loop.py:305</code>); the critic
-never receives it. The refusal of a falsified hypothesis is that
-sentence and the domain constitutions
-(<code>domains/coding/SKILL.md:204-206</code>): no code compares a new
-hypothesis with a rejected one, so there is no tombstone. The file
-belongs to one run — a fresh <code>--runs</code> root starts empty, and
-<code>readjudicate</code> rewrites a round's records in place
-(<code>rrsi/history.py:101-106</code>, <code>rrsi/loop.py:386</code>) —
-which is the aideml and HyperAgents case: measurements of candidate
-programs, read by the outer loop. <strong>The harness side is where
-memory could enter, and at this pin it has not.</strong> Each starting
-harness carries <code>mechanisms.Memory</code>: fcntl-locked
-<code>semantic</code> and <code>episodic</code> JSONL, a
-<code>_LEAKY</code> regex that refuses a note looking task-specific at
-write, substring-filtered reads capped at eight, and a
-<code>digest()</code> for prompt injection
-(<code>third_party/harbor_terminus2/mechanisms.py:57-132</code>,
-<code>third_party/archipelago/harness_eng/mechanisms.py:58-141</code>).
-Its docstring calls it an inert primitive the proposer must wire (lines
-30-31 of both), and
-<code>git grep -nE 'import mechanisms|from \.?mechanisms|mechanisms import|Memory\(' -- '*.py'</code>
-returns nothing, while
-<code>git grep -nE 'class Memory' -- '*.py'</code> finds the three
-definitions. <code>gh api repos/google-research/rrsi/branches</code>
-lists only <code>main</code>, so no evolved harness is committed, and
-the paper's Table 6 names no memory edit among its representative
-decisions. Two defects wait for the first candidate that wires it.
-<code>git grep -nE 'RRSI_STATE_DIR|APEX_STATE_DIR' -- . ':!*mechanisms.py'</code>
-returns nothing, so no runner sets the state directory and every
-candidate on a host resolves the same <code>/tmp</code> default, where
-lessons written while a rejected candidate was measured are read by the
-next one. And the critic's <code>STATE FILES</code> slot
-(<code>rrsi/critic.py:114</code>, <code>rrsi/critic.py:128</code>) is
-left empty by its one caller (<code>rrsi/loop.py:503-505</code>), so the
-memory-leakage rule judges the diff alone. The domain memory signals
-<code>TBMH_STATE_DIR</code> and <code>DRMH_STATE_DIR</code>
-(<code>domains/coding/adapter.py:123</code>,
-<code>domains/eng/adapter.py:101</code>,
-<code>domains/workspace/adapter.py:104</code>) name nothing else in the
-tree; the generic <code>Memory\(</code> signal
-(<code>rrsi/components.py:50</code>) still catches a wiring. The idea to
-take is the tag check: a declared component survives only when the diff
-carries that component's signal, and is otherwise re-tagged from the
-diff before the record is written
-(<code>rrsi/components.py:82-100</code>,
-<code>rrsi/loop.py:557-558</code>), so the history's component column is
-not the proposer's own word. Screen: 0 auto-run, 0 build-time exec, 2
-inside cooldown (inflated, since a depth-1 clone dates every file to the
-tip), 1 unpinned surface (<code>pyproject.toml</code> with no lockfile);
-the <code>SKILL.md</code> constitutions were read as data; nothing
-installed, built or run.</li>
 <li><strong><code>mcn92/pikelet</code> was examined and has no report,
 because nothing that happens after the build can contradict what it
 holds.</strong> Apache-2.0 (Matthew Noonan), 61,585 lines of JavaScript,

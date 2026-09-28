@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A harness optimizer that remembers
+only what its gate admits: the incumbent program on a git branch, which
+the next run starts from.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="RRSI — Agent Memory Atlas">
+    <meta property="og:description" content="A harness optimizer that
+remembers only what its gate admits: the incumbent program on a git
+branch, which the next run starts from.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RRSI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A harness optimizer that
+remembers only what its gate admits: the incumbent program on a git
+branch, which the next run starts from.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>RRSI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "RRSI",
+      "description": "A harness optimizer that remembers only what its gate admits: the incumbent program on a git branch, which the next run starts from.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Selection as the memory of what
+survives</p>
+          <h1>RRSI</h1>
+          <p class="document-deck">A harness optimizer that remembers
+only what its gate admits: the incumbent program on a git branch, which
+the next run starts from.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/google-research/rrsi">
+              <span>Source</span>
+              <strong>google-research/rrsi</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/google-research/rrsi/commit/be50316e1db05914068a973f322770ef08ed7ba1" title="be50316e1db05914068a973f322770ef08ed7ba1">
+              <span>Analyzed revision</span>
+              <code>be50316e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/google-research--rrsi" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>google-research--rrsi</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>19,592
+lines of Python in 84 files; the search loop is 3,101 of them in rrsi/
+and rrsi.py, the vendored starting harnesses 10,950</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4
+commits on main by one contributor on the GitHub count, 18 – 23
+September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>8
+test functions in tests/test_core.py; not run</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>RRSI is a search loop that rewrites an LLM agent's harness — prompts,
+control flow, tools, skills, subagents — and keeps a rewrite only when
+it survives a gate. What it remembers is the survivor: the incumbent
+harness is a commit on <code>evolve/&lt;domain&gt;</code> in the
+operator's own checkout, the next round drafts from it, and the next
+run's baseline starts from it. Notable: the gate is explicit about what
+may become permanent — a noise floor, a cost rule that makes added
+tokens pay for themselves, a leakage critic, and component tags checked
+against the diff. Weak: the evidence behind that program is scoped to
+one run while the program is not, so a later run inherits machinery with
+an empty ledger, and the refusal to retry a falsified idea is a sentence
+in a prompt.</p>
+<p>Three layers are memory-shaped and they differ in lifetime:</p>
+<ul>
+<li><strong>Durable, cross-run:</strong> the harness itself, on a branch
+that accepting a candidate fast-forwards
+(<code>rrsi/gitops.py:121-126</code>, <code>rrsi/loop.py:327-329</code>)
+and that <code>baseline</code> checks out as H_0
+(<code>rrsi/loop.py:181-184</code>).</li>
+<li><strong>Run-scoped:</strong>
+<code>runs/&lt;domain&gt;/history.jsonl</code> and four JSON siblings,
+read by the proposer's prompt and the selector
+(<code>rrsi/loop.py:80-87</code>, <code>rrsi/loop.py:277-280</code>,
+<code>rrsi/loop.py:305</code>).</li>
+<li><strong>Offered and unused:</strong> a JSONL <code>Memory</code>
+class in each starting harness that no committed harness imports
+(<code>third_party/harbor_terminus2/mechanisms.py:65-132</code>).</li>
+</ul>
+<p>The durable layer is what the paper calls permanent state: its §3.3
+says the selection side regularizes <em>which candidates are allowed to
+become permanent state</em>. That is the sense in which this is memory,
+and the only sense. The harness is program text; nothing stores a fact
+about a user or a task, and the committed harnesses carry no memory an
+agent reads across tasks.</p>
+<p>The project website's evolution explorer publishes four real runs,
+every candidate with its critic verdict, gate decision and diff. In the
+Claude Opus 4.8 coding run, three candidates were tagged
+<code>memory</code> and none was admitted; the five admitted edits were
+three prompt edits and two subagent edits. Those figures come from the
+website, not the repository; the evolved harnesses are published there
+as patches and are not committed.</p>
+<p>No marks. Section 9 names the seven and why each is withheld; the
+nearest misses are <code>audit_log</code>, on a ledger that one command
+rewrites in place, and <code>tombstone</code>, on a refusal that lives
+only in prompt text.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>A memory is an admitted edit.</strong> A candidate harness is
+a git commit on a branch
+<code>&lt;domain&gt;/r&lt;t&gt;&lt;variant&gt;</code> off the incumbent
+(<code>rrsi/loop.py:458-474</code>). It becomes part of what the system
+remembers when the round's selector picks it and
+<code>fast_forward</code> moves <code>evolve/&lt;domain&gt;</code> to it
+(<code>rrsi/loop.py:327-337</code>). From then on it is not a record
+anything consults; it is the code the next evaluation runs. The ledger
+row that says why it was admitted lives beside it and dies with the run
+directory.</p>
+<p><strong>The admission path has four refusals, in order.</strong> A
+deterministic denylist and an LLM critic reject diffs that encode task
+names, answers, grader paths or inert machinery, with up to five repair
+attempts (<code>rrsi/critic.py:105-121</code>,
+<code>rrsi/loop.py:499-552</code>). A smoke run rejects a harness that
+does not start (<code>rrsi/loop.py:562-568</code>). The full evaluation
+is voided when more than a configured fraction of trials is missing
+(<code>rrsi/loop.py:595-602</code>). Then <code>judge</code> applies the
+floor <code>S' &gt;= S* - delta</code>, the cost rule and the domain
+guards (<code>rrsi/selection.py:97-121</code>), and the admissible
+candidate with the highest score wins
+(<code>rrsi/selection.py:124-137</code>).</p>
+<p><strong>The cost rule decides what kind of memory
+accumulates.</strong> Above the noise band a gain buys at most
+<code>beta0 + beta1 * dS</code> of relative token growth; inside it a
+candidate needs <code>w_s*dS - w_c*dC + w_n*nu &gt; 0</code>, where
+<code>nu</code> counts structural component types never admitted before
+(<code>rrsi/selection.py:81-94</code>,
+<code>rrsi/components.py:103-108</code>). The coding instance sets
+<code>w_s</code> to 0 (<code>domains/coding/rrsi.json</code>), so a
+within-band score gain alone never admits a coding candidate. The floor
+is against the best score seen, <code>S*</code>, not the incumbent's, so
+a candidate slightly below the incumbent is admissible if it is
+cheaper.</p>
+<p><strong>A memory dies only by being overwritten by a later admitted
+edit.</strong> The prune set <code>B_t</code> names components with no
+strictly positive measured gain in the last <code>n_prune</code> rounds,
+together with the admitted edits carrying them
+(<code>rrsi/history.py:143-163</code>). It reaches the proposer as
+prompt text (<code>rrsi/propose.py:262-263</code>,
+<code>rrsi/propose.py:276-278</code>); nothing removes code. A removal
+is a candidate like any other and must pass the same gate. The one path
+that un-admits an edit is <code>readjudicate</code>, which re-runs the
+selector on stored measurements and may move the branch back to the
+previous incumbent (<code>rrsi/loop.py:398-420</code>).</p>
+<p><strong>The ledger is evidence, not belief.</strong> Each record
+states what a candidate's edit claimed and what was measured
+(<code>rrsi/history.py:77-99</code>). A record can be wrong only in its
+hypothesis, and nothing marks a hypothesis as falsified beyond
+<code>outcome: REJECTED</code> and a negative <code>delta_S</code>. The
+proposer is told to treat those as negative evidence and not to redraw
+them unchanged (<code>rrsi/propose.py:266-271</code>); no code compares
+a new hypothesis or diff with an old one.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a harness edit becomes part of what RRSI remembers, and what the next round and the next run read</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a harness edit becomes part of what RRSI remembers, and what the next round and the next run read
+flowchart TD
+    H0[&quot;baseline: check out the tip of&lt;br/&gt;evolve/domain as H_0&quot;] --&gt; AN[&quot;analyst: failure modes and&lt;br/&gt;success habits of the incumbent&quot;]
+    L[(&quot;runs/domain/history.jsonl&lt;br/&gt;one record per edit&quot;)] -- &quot;40 most recent rows,&lt;br/&gt;prune set, untried components&quot; --&gt; P
+    AN --&gt; P[&quot;proposer edits a candidate worktree&lt;br/&gt;on branch domain/rTV&quot;]
+    P --&gt; CR{&quot;regex denylist,&lt;br/&gt;then LLM critic,&lt;br/&gt;up to 5 repairs&quot;}
+    CR -- &quot;reject&quot; --&gt; DROP[&quot;candidate branch deleted;&lt;br/&gt;record without delta S&quot;]
+    CR -- &quot;accept&quot; --&gt; TAG[&quot;component tag checked&lt;br/&gt;against the diff; commit&quot;]
+    TAG --&gt; SM{&quot;smoke run&quot;}
+    SM -- &quot;fail&quot; --&gt; DROP
+    SM -- &quot;ok&quot; --&gt; EV[&quot;full evaluation,&lt;br/&gt;k trials per task&quot;]
+    EV --&gt; G{&quot;floor S&#39; ≥ S* − delta,&lt;br/&gt;cost rule, domain guards&quot;}
+    G -- &quot;not admissible, or lost&quot; --&gt; KEEP[&quot;candidate branch kept;&lt;br/&gt;record REJECTED or LOST&quot;]
+    G -- &quot;best admissible&quot; --&gt; FF[&quot;fast-forward evolve/domain;&lt;br/&gt;refused unless a descendant&quot;]
+    FF --&gt; NEXT[&quot;next round drafts from it&quot;]
+    FF --&gt; RUN[&quot;next run with a fresh runs root:&lt;br/&gt;H_0 is this tip, ledger empty&quot;]
+    DROP --&gt; L
+    KEEP --&gt; L
+    FF --&gt; L
+    RJ[&quot;readjudicate --t&quot;] -. &quot;update-ref to the winner or&lt;br/&gt;back to H_t; round&#39;s records rewritten&quot; .-&gt; FF</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>RRSI is a Python CLI (<code>rrsi.py</code>) driving a loop over one
+domain at a time. The operator's clone of the repository is also the
+store: candidate commits, the <code>evolve/&lt;domain&gt;</code> branch
+and the candidate branches are written into it by
+<code>rrsi/gitops.py</code>, which shells out to <code>git</code> with a
+fixed <code>rrsi@localhost</code> identity
+(<code>rrsi/gitops.py:45-56</code>). Worktrees live under
+<code>runs/&lt;domain&gt;/wt/</code> (<code>rrsi/loop.py:82</code>), and
+nothing pushes a branch anywhere.</p>
+<p>Three model roles run through LiteLLM (<code>rrsi/llm.py:92</code>):
+a proposer that edits files through a path-jailed JSON action protocol
+(<code>rrsi/propose.py:140-194</code>), an analyst that dispatches
+per-task digesters over the incumbent's traces
+(<code>rrsi/analyst.py:121</code>), and the critic. The configured model
+for all three is Claude Opus 4.8 (<code>rrsi/config.py:82-84</code>).
+Evaluation is the domain adapter's business: Terminal-Bench 2.1 through
+harbor and Docker for coding, Harvey LAB through a vendored archipelago
+runner and an MCP gateway for the workspace instance, and EngDesign
+behind a jailed tool gateway for engineering
+(<code>domains/*/adapter.py</code>).</p>
+<p>The run directory holds five files the loop reads back:
+<code>history.jsonl</code> (the ledger), <code>frontier.json</code>
+(incumbent, <code>S*</code>, trajectory), <code>attribution.jsonl</code>
+(per-edit prediction hits), <code>global_analysis.json</code> (the last
+round's failure modes and habits) and <code>calibration.json</code> (the
+noise band) (<code>rrsi/loop.py:80-87</code>). Per-round directories
+<code>r&lt;t&gt;/</code> hold proposals, critic verdicts, diffs and
+<code>eval.json</code> files, which make a crashed round resumable
+(<code>rrsi/loop.py:461-473</code>,
+<code>rrsi/loop.py:581-585</code>).</p>
+<p>A sequential driver runs each round as a subprocess, stops on a
+<code>STOP</code> file, and gives up after three consecutive rounds that
+do not settle (<code>rrsi/driver.py:54-99</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing needs to run for the memory itself: it is git refs and JSON
+files in a checkout. Everything around it is heavy. Each round evaluates
+two candidates on a whole evolve set — 178 trials for coding, 244 for
+engineering — against a hosted model; the README's configuration is
+Vertex AI with application default credentials, and the coding instance
+needs Docker and a harbor virtualenv (<code>README.md</code>). There is
+no offline mode: the proposer, analyst, critic and policy are all API
+calls.</p>
+<p>The store is readable and repairable by hand, which the loop depends
+on: <code>readjudicate</code> refuses to run while later rounds exist in
+the frontier and tells the operator to remove them first, and no command
+does that removal (<code>rrsi/loop.py:356-357</code>). The operator
+edits <code>frontier.json</code> and the branch directly.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture (drafting a candidate).</strong>
+<code>Run._draft</code> creates a worktree on a fresh branch from
+<code>evolve/&lt;domain&gt;</code> (<code>rrsi/loop.py:474</code>), then
+calls <code>propose</code> with the analyst report, the rendered ledger,
+the constitution files <code>SKILL.md</code> and
+<code>PATTERNS.md</code>, the edit budget <code>b_t</code>, the
+exploration directive and the prune set
+(<code>rrsi/loop.py:490-493</code>). The proposer finishes with
+<code>done(edits=[...])</code>; <code>done</code> bounces an
+over-budget, untagged or unreserved submission back to the model
+(<code>rrsi/propose.py:328-359</code>).</p>
+<p><strong>Screening.</strong> <code>review</code> runs the domain
+denylist first and returns a rejection without a model call on any hit
+(<code>rrsi/critic.py:116-121</code>); the coding denylist adds every
+Terminal-Bench task name as a word-bounded pattern
+(<code>domains/coding/adapter.py:137-141</code>). The LLM review
+follows, and a rejection goes back to the proposer as a repair brief, up
+to <code>repair_rounds</code> times
+(<code>rrsi/loop.py:500-547</code>).</p>
+<p><strong>Tagging.</strong> After the critic accepts, each edit's
+declared component is kept only if the diff carries that component's
+signal; otherwise it is re-tagged from the diff
+(<code>rrsi/components.py:82-100</code>,
+<code>rrsi/loop.py:554-558</code>). The commit follows
+(<code>rrsi/loop.py:559-560</code>).</p>
+<p><strong>Admission.</strong> <code>select_round</code> judges every
+candidate (<code>rrsi/selection.py:124-137</code>); the winner
+fast-forwards the branch (<code>rrsi/loop.py:328-329</code>), and
+<code>fast_forward</code> raises unless the branch tip is an ancestor of
+the commit (<code>rrsi/gitops.py:121-126</code>). <code>S*</code>
+becomes the maximum of itself and the winner's score
+(<code>rrsi/loop.py:335</code>).</p>
+<p><strong>Ledger writes.</strong> <code>append_candidate</code> writes
+one record per declared edit, all sharing the candidate's single
+measurement (<code>rrsi/history.py:77-99</code>), called for every
+candidate in the round (<code>rrsi/loop.py:310-322</code>). A resumed
+round skips candidates already recorded
+(<code>rrsi/loop.py:311-312</code>).</p>
+<p><strong>Ledger reads.</strong> <code>tried</code> (components with a
+measured edit), <code>prune_set</code>, <code>exploration</code> and
+<code>render</code> feed the proposer
+(<code>rrsi/loop.py:277-280</code>);
+<code>incumbent_component_counts</code> feeds the novelty term
+(<code>rrsi/loop.py:305</code>); <code>scoreboard</code> returns the
+last 20 attribution rows (<code>rrsi/loop.py:152-157</code>).</p>
+<p><strong>Correction.</strong> <code>readjudicate</code> replaces round
+<code>t</code>'s records (<code>rrsi/history.py:101-106</code>,
+<code>rrsi/loop.py:386</code>) and moves the branch with a bare
+<code>update-ref</code>: to the new winner after checking it descends
+from H_t, or back to H_t when nothing is admissible
+(<code>rrsi/loop.py:398-413</code>).</p>
+<p><strong>Inheritance across runs.</strong> <code>baseline</code> calls
+<code>ensure_branch</code>, which creates
+<code>evolve/&lt;domain&gt;</code> at <code>HEAD</code> only when it
+does not exist, and evaluates its tip
+(<code>rrsi/gitops.py:75-77</code>, <code>rrsi/loop.py:181-189</code>).
+A run pointed at a fresh <code>--runs</code> root therefore starts from
+the last run's winner with an empty ledger (<code>rrsi.py:69</code>). No
+option names a different base.</p>
+<p><strong>Tests.</strong> <code>tests/test_core.py</code> covers the
+schedule, estimator, calibration, cost rule, selection and ledger
+summaries; section 10 says what it leaves out.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The durable unit is a commit.</strong> Each candidate commit
+stages only the harness path (<code>rrsi/gitops.py:115-118</code>); its
+message is <code>r&lt;t&gt;&lt;variant&gt;: &lt;mechanism&gt;</code>
+(<code>rrsi/loop.py:559-560</code>). The frontier records the harness
+tree hash beside the commit, and that hash is the incumbent's identity,
+so commits outside the harness path do not register as a change
+(<code>rrsi/gitops.py:34-36</code>, <code>rrsi/gitops.py:67-68</code>).
+A round refuses to start when the branch's harness tree differs from the
+frontier's (<code>rrsi/loop.py:235-237</code>).</p>
+<p><strong>The ledger record</strong> carries <code>t</code>,
+<code>variant</code>, <code>edit_id</code>, <code>component</code>,
+<code>hypothesis</code>, <code>targets_mode</code>,
+<code>predicted_affected</code>, <code>diff</code> (a path to the patch
+file), <code>delta_S</code>, <code>delta_C</code>,
+<code>accepted</code>, <code>outcome</code>, <code>S</code>,
+<code>C</code>, <code>bundle</code>, <code>detail</code> (capped at 600
+characters) and a <code>ts</code> wall-clock string
+(<code>rrsi/history.py:72</code>, <code>rrsi/history.py:84-99</code>).
+Outcomes are <code>ACCEPTED</code>, <code>REJECTED</code>,
+<code>LOST</code> for measured candidates and the gate-failure name
+(<code>critic_reject</code>, <code>smoke_fail</code>,
+<code>eval_invalid</code>, <code>no_proposal</code>) for the rest
+(<code>rrsi/history.py:52</code>,
+<code>rrsi/loop.py:313-319</code>).</p>
+<p><strong>Components</strong> are a fixed vocabulary of nine:
+<code>prompt</code>, <code>control_flow</code>, <code>config</code>,
+<code>output_plumbing</code>, <code>context_mgmt</code>,
+<code>client_tool</code>, <code>skill</code>, <code>memory</code>,
+<code>subagent</code>; the last four are structural
+(<code>rrsi/components.py:44-46</code>). The tried set, the prune set
+and the novelty term are all keyed on component, not on hypothesis or
+diff.</p>
+<p><strong>Scope</strong> is physical: one branch and one run directory
+per domain name (<code>rrsi/loop.py:80-88</code>). No record carries a
+scope key.</p>
+<p><strong>Time.</strong> <code>ts</code> is record time only. The
+trajectory in <code>frontier.json</code> is indexed by round and is
+truncated and rewritten on each settlement
+(<code>rrsi/loop.py:341-344</code>).</p>
+<p><strong>The offered <code>Memory</code> store</strong> is two JSONL
+files, <code>semantic</code> and <code>episodic</code>, of
+<code>{"note", "tags"}</code> records with no timestamp, source or
+status (<code>third_party/harbor_terminus2/mechanisms.py:76-103</code>).
+The archipelago copies prefix the files with <code>mem_</code>
+(<code>third_party/archipelago/harness_eng/mechanisms.py:82-84</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Nothing is retrieved by relevance. The durable layer is read whole:
+the next round's worktree is a checkout of the branch tip, and the
+harness runs as it stands (<code>rrsi/loop.py:474</code>,
+<code>rrsi/domain.py:106-107</code>).</p>
+<p>The ledger reaches the proposer by recency. <code>render</code> walks
+the records backwards, keeps at most four without a measurement, and
+stops at 40 (<code>rrsi/history.py:166-185</code>), and
+<code>render()</code> is called with that default
+(<code>rrsi/loop.py:280</code>). The README says the proposer <em>is
+conditioned on the full edit history</em> (<code>README.md:23</code>),
+and the paper describes credit assigned over the full evolution history.
+The website's Opus coding run has about 58 edit records over 20 rounds,
+so late rounds see a window that no longer holds the early rejections.
+The derived summaries — tried set, prune set, untried components — are
+computed over all records and do survive.</p>
+<p>The analyst gets the previous round's failure-mode and habit names
+only for stable naming (<code>rrsi/analyst.py:131-137</code>);
+<code>global_analysis.json</code> is overwritten each round
+(<code>rrsi/loop.py:265-267</code>). The proposer also gets the last 20
+attribution rows, each listing predicted task ids that moved and
+unpredicted regressions (<code>rrsi/loop.py:152-178</code>).</p>
+<p>The unused <code>Memory.read</code> filters by a case-folded
+substring over note and tags and returns the last eight matches;
+<code>digest</code> formats them as a prompt block
+(<code>third_party/harbor_terminus2/mechanisms.py:105-132</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen once per round, after evaluation, on the loop's own
+thread; there is no agent-facing write. A candidate's ledger records are
+written in the same step that moves the branch, and the next round reads
+both (<code>rrsi/loop.py:304-346</code>).</p>
+<p><strong>What is refused at write.</strong> A diff hitting the
+denylist, a critic rejection that survives the repairs, a failed smoke
+run, or an evaluation with too many missing trials never reaches the
+branch, and its record carries no <code>delta_S</code>
+(<code>rrsi/loop.py:313-316</code>). Such records do not enter the tried
+set or the yield (<code>rrsi/history.py:113-119</code>). A measured
+candidate that fails the floor, the cost rule or a guard is recorded
+<code>REJECTED</code>; an admissible one that scored lower is
+<code>LOST</code> (<code>rrsi/loop.py:318-319</code>).</p>
+<p><strong>What the candidate branches keep.</strong> A candidate that
+fails a gate before evaluation has its branch deleted
+(<code>rrsi/loop.py:481-488</code>, <code>rrsi/gitops.py:88-94</code>).
+An evaluated one keeps its branch; only the worktree is removed
+(<code>rrsi/loop.py:345-346</code>). <code>worktree_add</code> deletes
+an existing branch of the same name before recreating it
+(<code>rrsi/gitops.py:80-84</code>), so a second run on the same
+checkout deletes the first run's candidate branches round by round.
+Admitted commits stay reachable from
+<code>evolve/&lt;domain&gt;</code>.</p>
+<p><strong>Deduplication.</strong> None across candidates. Two variants
+of a round are drafted independently from the same incumbent
+(<code>rrsi/loop.py:476-479</code>), and in the website's Opus run both
+variants of round 0 proposed a verification audit with long-running-work
+guidance.</p>
+<p><strong>The unused <code>Memory.write</code></strong> refuses an
+empty note or one matching a per-harness <code>_LEAKY</code> regex,
+deduplicates by exact note text under an exclusive <code>fcntl</code>
+lock, and appends
+(<code>third_party/harbor_terminus2/mechanisms.py:80-103</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks nothing an agent is doing, because no agent is
+running: it happens between rounds. The lag before an admitted edit
+takes effect is the rest of the round — the next draft is taken from the
+new tip. What dominates is the price of admission: each round is up to
+two full evaluations plus the proposer, critic and analyst calls, and
+the website's champion patch dates the 20-round Opus coding run from 4
+to 12 September 2026. No background pass rewrites anything;
+<code>readjudicate</code> is operator-invoked. Nothing is injected per
+turn, so there is no runtime prompt-cache question; the proposer's
+constitution and pattern library are passed as a stable cache prefix
+(<code>rrsi/propose.py:253-256</code>,
+<code>rrsi/propose.py:311-312</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There are two agents and neither holds a memory tool. The
+<strong>proposer</strong> is an agent over the harness source:
+<code>list_files</code>, <code>read_file</code>,
+<code>list_traces</code>, <code>read_trace</code>,
+<code>edit_file</code>, <code>write_file</code>, <code>done</code>
+(<code>rrsi/propose.py:71-105</code>). Its context holds the ledger
+window, the attribution scoreboard, exploration directives, prune set,
+analyst report, digests, the whole current harness source and the edit
+budget (<code>rrsi/propose.py:264-304</code>). It cannot touch the
+branch, the ledger or the gate; <code>Workspace._safe</code> jails every
+path to the harness directory
+(<code>rrsi/propose.py:147-155</code>).</p>
+<p>The <strong>policy agent</strong> is the harness being evolved, run
+by the domain adapter from a worktree. It receives whatever the admitted
+program does. The three starting harnesses — a Terminus-2 fork for
+coding and two archipelago ReAct toolbelts with ReSum context
+summarization — carry no cross-task state; ReSum summarizes within one
+trial
+(<code>third_party/archipelago/harness_eng/resum.py:15-20</code>).</p>
+<p>The constitution files are hand-kept cross-run memory of a different
+kind. The engineering <code>PATTERNS.md</code> says it exists so the
+proposer does not spend a round re-measuring a mechanism an earlier run
+already measured (<code>domains/eng/PATTERNS.md:3-6</code>), and each
+<code>SKILL.md</code> carries undated priors such as textual skills
+washing out and sub-calls hurting small policies
+(<code>domains/coding/SKILL.md:155-172</code>). The loop reads them from
+the main checkout (<code>rrsi/domain.py:109-111</code>) and the
+proposer's jail keeps it from editing them, so they change only by a
+person's commit.</p>
+<p>Adapting the loop to another agent is a <code>Domain</code> subclass:
+splits, <code>run</code>, <code>score</code>, trace rendering, smoke,
+denylist, component signals, briefs and guards
+(<code>rrsi/domain.py:55-111</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The durable layer outlives its evidence.</strong> The branch
+persists across runs and the ledger does not
+(<code>rrsi/loop.py:80-87</code>, <code>rrsi/gitops.py:75-77</code>). A
+second run's <code>accepted_edits</code> is empty, so its prune set
+cannot name the inherited machinery, and
+<code>incumbent_component_counts</code> is zero for every component, so
+the novelty bonus pays again for structure the first run already
+admitted (<code>rrsi/history.py:129-141</code>,
+<code>rrsi/components.py:103-108</code>). The website shows the shape in
+practice: its Gemini 3.5 Flash coding run is two 15-iteration legs,
+<em>v2 from the v1 champion</em>, by its own run note.</p>
+<p><strong>The branch is not append-only.</strong>
+<code>fast_forward</code> refuses a non-descendant
+(<code>rrsi/gitops.py:121-126</code>), but <code>readjudicate</code>
+uses <code>update-ref</code> directly and moves the branch back to H_t
+when the re-applied gate admits nothing
+(<code>rrsi/loop.py:412-413</code>). Its only precondition is that no
+later round remains in the frontier (<code>rrsi/loop.py:356-357</code>).
+The un-admitted commit stays reachable from its candidate branch until a
+later run reuses the name.</p>
+<p><strong>Refusal is prompt text.</strong> The proposer's context
+header says a rejected mechanism is negative evidence, <em>do not redraw
+it unchanged</em> (<code>rrsi/propose.py:266-270</code>), and each
+constitution repeats it (<code>domains/coding/SKILL.md:44-46</code>,
+<code>domains/coding/SKILL.md:204-206</code>). The code-enforced
+exploration checks are about untried components, not about retried
+hypotheses (<code>rrsi/propose.py:349-354</code>,
+<code>rrsi/loop.py:523-530</code>).</p>
+<p><strong>Leakage screening is the strongest part.</strong> The
+denylist rejects before a model call, the coding list includes every
+task name, and the critic's rule 5 asks specifically whether a memory or
+skill edit persists task-specific data across trials
+(<code>rrsi/critic.py:84-90</code>). The critic payload has a
+<code>STATE FILES</code> section for what a mechanism persisted
+(<code>rrsi/critic.py:114</code>, <code>rrsi/critic.py:128</code>), and
+its one caller never fills it (<code>rrsi/loop.py:503-505</code>), so
+that rule is judged on the diff alone.</p>
+<p><strong>The offered <code>Memory</code> store would share one
+path.</strong> No runner sets <code>RRSI_STATE_DIR</code> or
+<code>APEX_STATE_DIR</code>, so a harness that wires the store resolves
+the <code>/tmp</code> default
+(<code>third_party/harbor_terminus2/mechanisms.py:57</code>,
+<code>third_party/archipelago/harness_eng/mechanisms.py:58-62</code>).
+Every candidate, round and run on one host would read what earlier
+candidates wrote, including rejected ones. The domain memory signals
+<code>TBMH_STATE_DIR</code> and <code>DRMH_STATE_DIR</code> name
+variables nothing reads (<code>domains/coding/adapter.py:123</code>,
+<code>domains/eng/adapter.py:101</code>); the generic
+<code>Memory\(</code> signal still catches a wiring
+(<code>rrsi/components.py:50</code>).</p>
+<p><strong>Cost can pass silently.</strong>
+<code>relative_cost_change</code> returns 0 when either side has no
+token count (<code>rrsi/evaluate.py:131-135</code>), so a candidate
+whose token counts are missing passes the cost rule as cost-neutral.</p>
+<p><strong>Marks.</strong> None is awarded.</p>
+<ul>
+<li><code>audit_log</code> — withheld. The ledger is the closest thing:
+a named record in the system's own store with one row per edit to the
+remembered program, admitted or not. <code>replace_round</code> rewrites
+a round's rows in place (<code>rrsi/history.py:101-106</code>), and it
+is scoped to one run while the program it describes is not. The branch's
+history is git history.</li>
+<li><code>tombstone</code> — withheld. Rejected candidates keep branches
+and records, but no code consults them when a new candidate is drafted
+or admitted; the tried set and prune set are keyed on component.</li>
+<li><code>trust_state</code> — withheld. <code>outcome</code> and
+<code>accepted</code> are selection verdicts on edits.
+<code>accepted_edits</code> filters on <code>accepted</code> to build
+the prune set (<code>rrsi/history.py:129-138</code>), and
+<code>render</code> shows rejected rows to the proposer as evidence
+rather than withholding them.</li>
+<li><code>human_review</code> — withheld. The critic is a model and the
+gate is a function; no admission waits on a person.</li>
+<li><code>scope_enforced</code> — withheld. Branch and run directory per
+domain are a physical partition.</li>
+<li><code>bitemporal</code> — withheld. <code>ts</code> is record
+time.</li>
+<li><code>negative_eval</code> — withheld; section 10 gives the near
+miss.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>The suite is 8 test functions, and I did not run it.</strong>
+They cover the annealed budget, the estimator and weights, calibration,
+both branches of the cost rule, selection, ledger summaries, component
+normalization and config loading
+(<code>tests/test_core.py:56-180</code>).</p>
+<p><strong>The nearest <code>negative_eval</code> case is an admission
+test.</strong> <code>test_selection_floor_argmax_and_sstar</code> builds
+four candidates, asserts the two above the floor are admissible and the
+winner is the higher, then asserts the one below the floor and the
+critic-rejected one are not (<code>tests/test_core.py:99-125</code>).
+<code>test_history_summaries_prune_and_explore</code> asserts a
+critic-rejected <code>config</code> edit stays out of the tried set
+beside three measured components
+(<code>tests/test_core.py:128-140</code>). Both have positive controls.
+Both keep material out of a write decision or a derived summary, not out
+of a retrieval, and the mark is withheld on that.</p>
+<p><strong>Untested:</strong> <code>fast_forward</code> and the
+<code>readjudicate</code> rewind, <code>replace_round</code>, the 40-row
+<code>render</code> window, the critic and its denylists,
+<code>done()</code>'s budget and slot checks, the component re-tagging
+inside <code>_draft</code>, and every <code>Memory</code> method.
+<code>screen_subset</code> in
+<code>domains/eng/bench/score.py:206</code> has no caller in the
+tree.</p>
+<p><strong>The paper.</strong> <em>RRSI: Regularized Recursive
+Self-Improvement of Agent Harnesses</em> (<a
+href="https://arxiv.org/abs/2609.24972">arXiv:2609.24972</a>, v1 21
+September 2026, v2 23 September 2026). Its Table 2 ablates the two
+groups of regularizers on Harvey LAB: RRSI scores 90.5 on the evolve
+set, 89.2 on the in-distribution held-out split and 43.6 on the
+out-of-distribution average at 2.42 million tokens per trial, against
+92.8, 88.9, 40.3 and 3.80 for unregularized evolution. The appendix
+definitions of the ledger, tried set, prune set and novelty term (its
+Eqs. 10-16) match the code.</p>
+<p><strong>The website</strong> (<a
+href="https://regularized-rsi.com/">regularized-rsi.com</a>) serves the
+evolution explorer from <code>data/evolution.js</code>, which its header
+says was generated from the raw run directories. I parsed that file; the
+figures below come from it, not from the repository.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Evolve set</th>
+<th>H_0 → final</th>
+<th>Admitted</th>
+<th>Blocked</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coding, Claude Opus 4.8</td>
+<td>89 tasks × k=2, 20 rounds</td>
+<td>74.2% → 80.9%</td>
+<td>5: prompt ×3, subagent ×2</td>
+<td>35: floor 24, cost 8, smoke 2, critic 1</td>
+</tr>
+<tr>
+<td>Coding, Gemini 3.5 Flash</td>
+<td>89 tasks × k=2, 30 iterations</td>
+<td>64.6% → 78.7%</td>
+<td>10</td>
+<td>20</td>
+</tr>
+<tr>
+<td>Harvey LAB</td>
+<td>120 tasks × k=2, 20 rounds</td>
+<td>89.67% → 90.85%</td>
+<td>4: control_flow, client_tool ×3</td>
+<td>36</td>
+</tr>
+<tr>
+<td>EngDesign</td>
+<td>61 tasks × k=4, 40 rounds</td>
+<td>50.0% → 54.9%</td>
+<td>4</td>
+<td>36</td>
+</tr>
+</tbody>
+</table></div>
+<p>In the Opus coding run three candidates were tagged
+<code>memory</code>. <code>r6A</code> and <code>r6B</code> wired
+<code>Memory</code> and wrote a fixed list of proposer-authored lessons
+into it at task start, then injected the digest: the store was used as a
+route for constant prompt text, not for lessons written from outcomes.
+<code>r6A</code> scored 77.0% and failed the cost rule; <code>r6B</code>
+scored 74.2% and failed the floor. <code>r4B</code> was tagged
+<code>memory</code> and its published diff contains no memory wiring. In
+Harvey LAB the proposer declined a round, writing that memory <em>cannot
+hold the per-task source enumeration these modes need</em>. No champion
+patch references <code>Memory</code>.</p>
+<p>Three discrepancies are recorded. The website's Opus and Harvey
+finals (80.9%, 90.85%) differ from the paper and README (80.2, 90.5),
+which report a re-measurement against H_0 in one window. The Opus run's
+noise band is 0.034, recalibrated per its run note, where
+<code>domains/coding/rrsi.json</code> fixes 0.017. And only the Opus
+coding run is labelled <em>Unified RRSI codebase</em>; the Gemini run's
+note describes one candidate per iteration and a 24-task screen the
+committed loop does not run, and the published patch paths name a
+<code>domains/coding/harness/</code> layout that is not the pinned
+one.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the admitted state a commit and move it only
+forward.</strong> A fast-forward check makes "what is in force" one ref
+and its history one log, and resuming is checking out a tip.</li>
+<li><strong>Price growth at admission.</strong> Require added inference
+cost to be paid for by measured gain, and refuse gains inside a measured
+noise band unless they are cheaper; this keeps an accreting store from
+growing on noise.</li>
+<li><strong>Check the label against the payload.</strong> Keep a
+declared category only when the change carries evidence of it, and
+re-derive it otherwise, before the record is written. A ledger whose
+categories are the writer's own word is a ledger of claims.</li>
+<li><strong>Screen before you measure.</strong> A leaking candidate that
+is never scored never produces the inflated number that would make it
+attractive later.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Evidence with a shorter life than the state it
+justifies.</strong> When the remembered artifact persists and its
+provenance is per session, the next session inherits conclusions without
+reasons and re-credits them as new. Store the ledger with the artifact,
+or key it by the artifact's lineage.</li>
+<li><strong>Refusal by instruction.</strong> "Do not redraw" in a
+prompt, over a window that scrolls, is a hope. A durable refusal is a
+lookup the admission path runs.</li>
+<li><strong>A store whose default location is shared.</strong> A
+<code>/tmp</code> default for a per-candidate store turns an A/B
+comparison into a contaminated one.</li>
+<li><strong>A review payload with an empty slot.</strong> A reviewer
+told to judge what a mechanism persists, and never shown it, is judging
+the code's intent.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>RRSI suits a team with a fixed benchmark, a hosted-model budget large
+enough for hundreds of full evaluations, and a harness they are willing
+to let a model rewrite. As agent memory it fits only one reading: the
+program is the memory, and the gate is its admission policy. A reader
+wanting an agent that remembers across tasks will find a declared,
+unwired store and three published candidates in which it was not
+admitted. The part to take is the gate and the tag check; the loop
+around them is a research harness with a single-operator workflow,
+including hand edits to <code>frontier.json</code> before a
+re-adjudication.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How were the paper's per-run H_0 baselines produced on one checkout,
+given that <code>baseline</code> starts from the existing branch tip?
+Deleting the branch by hand would do it; nothing in the tree does.</li>
+<li>Do the published runs predate the component re-tagging?
+<code>r4B</code>'s published diff has no memory signal and keeps its
+<code>memory</code> tag.</li>
+<li>Were <code>r6A</code> and <code>r6B</code> evaluated on the same
+host, and did one read the other's lessons through the shared
+<code>/tmp/tbmh_state</code>?</li>
+<li>Is the 40-row <code>render</code> window deliberate, and was it the
+window in the published runs?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Durable layer:</strong> <code>rrsi/gitops.py</code>,
+<code>rrsi/loop.py:116-128</code>, <code>rrsi/loop.py:181-207</code>,
+<code>rrsi/loop.py:327-346</code>,
+<code>rrsi/loop.py:348-422</code>.</li>
+<li><strong>Ledger and summaries:</strong> <code>rrsi/history.py</code>,
+<code>rrsi/components.py</code>, <code>rrsi/loop.py:133-178</code>.</li>
+<li><strong>Admission:</strong> <code>rrsi/critic.py</code>,
+<code>rrsi/selection.py</code>, <code>rrsi/evaluate.py</code>,
+<code>rrsi/calibrate.py</code>, <code>rrsi/schedule.py</code>,
+<code>domains/*/rrsi.json</code>.</li>
+<li><strong>Proposal:</strong> <code>rrsi/propose.py</code>,
+<code>rrsi/analyst.py</code>, <code>rrsi/digester.py</code>,
+<code>domains/*/SKILL.md</code>, <code>domains/*/PATTERNS.md</code>,
+<code>domains/*/briefs.py</code>.</li>
+<li><strong>Domains:</strong> <code>rrsi/domain.py</code>,
+<code>domains/coding/adapter.py</code>,
+<code>domains/workspace/adapter.py</code>,
+<code>domains/eng/adapter.py</code>.</li>
+<li><strong>Offered memory:</strong>
+<code>third_party/harbor_terminus2/mechanisms.py</code>,
+<code>third_party/archipelago/harness_eng/mechanisms.py</code>,
+<code>third_party/archipelago/harness_workspace/mechanisms.py</code>.</li>
+<li><strong>CLI and driver:</strong> <code>rrsi.py</code>,
+<code>rrsi/driver.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_core.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>git grep -nE 'import mechanisms|from \.?mechanisms|mechanisms import|Memory\(' -- '*.py'</code>
+— no match; <code>git grep -nE 'class Memory' -- '*.py'</code> finds the
+three definitions.</li>
+<li><code>git grep -nE 'RRSI_STATE_DIR|APEX_STATE_DIR' -- . ':!*mechanisms.py'</code>
+— no match.</li>
+<li><code>git grep -nE 'TBMH_STATE_DIR|DRMH_STATE_DIR'</code> — only the
+three adapters' signal lists.</li>
+<li><code>git grep -n 'state_files'</code> —
+<code>rrsi/critic.py:114</code> and <code>:128</code> only.</li>
+<li><code>git grep -nE 'self\.history\.|History\(' -- rrsi rrsi.py</code>
+— every reader and writer of the ledger, all in
+<code>rrsi/loop.py</code>.</li>
+<li><code>git grep -nE 'redraw|re-propose' -- rrsi domains</code> — the
+proposer's context header and the three <code>SKILL.md</code> files; no
+code.</li>
+<li><code>git grep -nE '"push"|branch", "-[fD]"|"reset"|update-ref' -- rrsi rrsi.py domains</code>
+— <code>gitops.py:94</code>, <code>:102</code> and <code>:126</code>,
+<code>loop.py:402</code> and <code>:413</code>; no push.</li>
+<li><code>git grep -nE 'render\(' -- rrsi rrsi.py</code> — the
+definition at <code>history.py:166</code>, <code>loop.py:280</code> with
+the default 40, and <code>rrsi.py:131</code> with 60.</li>
+<li><code>git grep -n screen_subset</code> — the definition only.</li>
+<li><code>git ls-files | grep -iE 'champion|\.patch$'</code> — no
+match.</li>
+<li><code>git grep -nE -i 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- .</code>
+— the README's paper links and BibTeX block, and ReAct and ReSum
+references in the vendored harnesses.</li>
+<li><code>gh api repos/google-research/rrsi/branches --jq '.[].name'</code>
+— <code>main</code> only.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/google-research/rrsi/commit/be50316e1db05914068a973f322770ef08ed7ba1"><code class="commit-id" title="be50316e1db05914068a973f322770ef08ed7ba1">be50316e…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 23
+September 2026. No marks. The website's evolution data was parsed for
+the four published runs. Screened before reading: 0 auto-run surfaces, 0
+build-time execution points, 2 dependency files inside the cooldown —
+every file in a depth-1 clone dates to the tip — and 1 unpinned surface,
+<code>pyproject.toml</code> with no lockfile. The <code>SKILL.md</code>
+and <code>PATTERNS.md</code> constitutions were read as data. Nothing
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

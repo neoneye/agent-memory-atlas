@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 647 reports.**
+**This page covers all 648 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5801,3 +5801,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 1,175,068 lines of TypeScript outside tests and 4,593 commits on master from 219 contributors between February and September 2026, of which the wiki plugin is 13,887 lines and ships as experimental with its agent and routines paused. Its 101 test cases run against a harness whose SQL returns nothing, so no scope predicate is executed; one server test applies the migrations to embedded Postgres.
 - Study when: you want an agent-maintained project wiki derived from a work tracker and need the provenance plumbing — source windows, snapshots, hash-keyed bindings, secret suppression, auto-apply refused by deployment exposure.
 - Do not copy when: companies or users sharing one instance must not see each other's page names, recall must work from page content, or a wrong page must be traced to who wrote it.
+
+### [`rrsi`](../systems/rrsi/)
+- Best idea: **growth is priced at admission.** Above a calibrated noise band a gain buys at most `beta0 + beta1 * dS` of relative token growth; inside it a candidate is admitted only for a token saving or a structural component never admitted before, and the coding instance gives a within-band score gain zero weight. The floor is against the best score seen, so a store cannot ratchet on noise.
+- Biggest risk: **the program outlives its evidence.** The admitted harness persists on `evolve/<domain>` and the next run's `baseline` starts from it, while `history.jsonl` lives in a per-run directory. A second run's prune set cannot name the inherited machinery, and its novelty term pays again for structure the first run already admitted.
+- Most reusable component: the tag check in `rrsi/components.py:82-100` — a declared component survives only when the diff carries that component's signal, and is re-derived from the diff before the ledger record is written — together with `cost_rule` in `rrsi/selection.py:81-94`.
+- Second risk: **refusal by instruction.** *Do not redraw it unchanged* is prompt text over a ledger window of the 40 most recent records, while the README says the proposer is conditioned on the full history; `readjudicate` can also move the branch back with a bare `update-ref` and rewrites the round's records in place.
+- Maturity impression: Apache-2.0, 19,592 lines of Python of which 3,101 are the search loop, 4 commits between 18 and 23 September 2026. 8 test functions, not run, covering the gate and the ledger summaries and not the git plumbing, the critic or the rewind. The paper is [arXiv:2609.24972](https://arxiv.org/abs/2609.24972); the project website publishes four runs with every candidate, and the evolved harnesses are not committed.
+- Study when: you are deciding what an accreting store may admit and want a gate that separates a real gain from noise and makes growth pay for itself, or you want a worked case of a search loop whose output is the memory.
+- Do not copy when: you need an agent that remembers across tasks — the offered `Memory` store is unwired and defaults to a shared `/tmp` path — or you need the reasons for a remembered item to travel with it.

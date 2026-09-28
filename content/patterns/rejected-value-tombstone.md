@@ -628,6 +628,7 @@ problems, and building the first extremely well does not build the second.**
   the live bank, and the next similar failure regenerates the card at score zero.
   The system pays three rollouts to learn the value is harmful and forgets that
   it learned it.
+- [RRSI](../../systems/rrsi/) states the refusal as a property of the method — its README says the proposer is conditioned on the full edit history *so a falsified hypothesis is not redrawn* — and enforces it only as prompt text. The ledger keeps every rejected edit with its hypothesis and measured loss, and the proposer sees the 40 most recent records under an instruction not to redraw them unchanged. Nothing compares a new hypothesis or diff with a rejected one, the derived tried and prune sets are keyed on component rather than value, and the ledger does not survive into the next run.
 - [Atomic Agent](../../systems/atomic-agent/) deprecates lessons and retains the
   row — good for history, silent on re-distillation from later episodes.
 - [Mercury](../../systems/mercury-agent/) has a `dismissed` boolean on the record.

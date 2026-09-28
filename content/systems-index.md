@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **647 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **648 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -636,6 +636,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/retrodict/"><span class="az-id">Retrodict</span><span class="az-what">A briefing for the successor</span><code class="az-repo">ryanbbrown/Retrodict</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/ripwire/"><span class="az-id">ripwire</span><span class="az-what">Heal the two sidecars, and every consumer is rename-aware</span><code class="az-repo">redhat-et/ripwire</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/risuai/"><span class="az-id">RisuAI</span><span class="az-what">Three memory systems, one repository</span><code class="az-repo">kwaroran/RisuAI</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/rrsi/"><span class="az-id">RRSI</span><span class="az-what">Selection as the memory of what survives</span><code class="az-repo">google-research/rrsi</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/ruflo/"><span class="az-id">ruflo</span><span class="az-what">A guard on the retrieval path, off by default</span><code class="az-repo">ruvnet/ruflo</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/runar-forge/"><span class="az-id">RunarForge</span><span class="az-what">Postmortems in the comment above the fix</span><code class="az-repo">crlome/runar-forge</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/rushdb/"><span class="az-id">RushDB</span><span class="az-what">Memory as a client contract over a general graph store</span><code class="az-repo">rush-db/rushdb</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
