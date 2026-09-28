@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 659 of 659 screened at the report's current pin.**
+**Progress: 660 of 660 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 302 |
+| Repositories with an auto-run surface (`RUNS`) | 303 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 354 |
 | Repositories with build-time execution (`EXEC`) | 483 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
@@ -62,6 +62,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`aurora`](../../content/systems/aurora.md) | `.mcp.json` |
 | [`auto-company`](../../content/systems/auto-company.md) | `.claude/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
+| [`autoharness`](../../content/systems/autoharness.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`basic-memory`](../../content/systems/basic-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `server.json`, `smithery.yaml` |
 | [`beads`](../../content/systems/beads.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `.githooks/`, `.github/copilot-instructions.md` |
 | [`beever-atlas`](../../content/systems/beever-atlas.md) | `.mcp.json`, `server.json` |

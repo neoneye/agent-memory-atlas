@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 659 reports.**
+**This page covers all 660 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5917,3 +5917,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 4,749 lines of Rust outside test modules and 1,679 lines of Python, 367 commits from one contributor between 6 and 28 September 2026, with 103 Rust and 91 Python test functions. Two marks, `audit_log` on the commit graph and `negative_eval` on a CI-run by-id exclusion after `forget` with a positive control. The README calls a 50,000-case merge fuzz CI-gated; CI runs 600.
 - Study when: you want to replay, bisect and blame what an agent believed, step by step, and want a small, offline, well-specified substrate with its on-disk format frozen and its ADRs in the tree.
 - Do not copy when: memory must be found by relevance, kept apart by tenant, or forgotten on request. Search, scope, a context budget and trust are left to the adopter, and a time-travel read sits on the agent's own tool surface.
+
+### [`autoharness`](../systems/autoharness/)
+- Best idea: **the model stages, a deterministic writer lands.** The reflector, the curator and the working session hold one verb, `stage_skill`, which appends an intent to a queue. The promoter shapes the final text, runs six lint classes in memory and writes only on a pass, subfiles first and `SKILL.md` last, with the evidence slice redacted again and named by content hash so the model never picks a provenance file. Survival is loads per request since landing, with a probation window and a view that pardons but does not count. One mark, `negative_eval`.
+- Biggest risk: **"only its own skills" is checked on four verbs and not on `create`.** A create naming a hand-written skill in the same layer overwrites its `SKILL.md` and stamps `created_by: "agent"` in a new sidecar, which puts the skill in the index, the lifecycle pool and the curator's reach.
+- Most reusable component: `src/autoharness/hook/promoter.py` with `src/autoharness/lib/validate.py` — validate-before-any-write over the shaped text, per-family findings, no write to the library on a reject, and a run account that reports refusals at the next session start.
+- Second risk: **the record of a fold and of an eviction is lost.** `stage_skill` rebuilds the intent without `absorbed_into`, so every fold lands as a plain retirement and the umbrella check never runs; lifecycle eviction appends no ledger line; and archiving a name already in `.archive/` removes the older folder with its ledger.
+- Maturity impression: MIT, 2,221 lines of Python with no third-party dependency against 389 pytest functions, run in CI on Python 3.11 and 3.12. The one live-host case skips itself, and the calibration experiments the code comments cite are gitignored. 133 commits by 13 contributors, one with 117, 27 June – 28 September 2026.
+- Study when: you want a skill library a model maintains without write access to it, or a usage-based retirement rule that does not punish idle time.
+- Do not copy when: generated skills share a directory with hand-written ones, skills are shared across a team, or anything must be approved before it reaches a prompt.

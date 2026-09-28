@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code plugin that distills
+sessions into SKILL.md files through a lint-only promoter, injects their
+index, and archives skills nobody loads.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="autoharness — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code plugin that
+distills sessions into SKILL.md files through a lint-only promoter,
+injects their index, and archives skills nobody loads.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="autoharness — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code plugin that
+distills sessions into SKILL.md files through a lint-only promoter,
+injects their index, and archives skills nobody loads.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>autoharness — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "autoharness",
+      "description": "A Claude Code plugin that distills sessions into SKILL.md files through a lint-only promoter, injects their index, and archives skills nobody loads.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A self-maintaining skill library for Claude
+Code</p>
+          <h1>autoharness</h1>
+          <p class="document-deck">A Claude Code plugin that distills
+sessions into SKILL.md files through a lint-only promoter, injects their
+index, and archives skills nobody loads.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/tigerless-labs/autoharness">
+              <span>Source</span>
+              <strong>tigerless-labs/autoharness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/tigerless-labs/autoharness/commit/f74a9fb4db512f641bd241e1959fade53044bd7b" title="f74a9fb4db512f641bd241e1959fade53044bd7b">
+              <span>Analyzed revision</span>
+              <code>f74a9fb4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-29</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/tigerless-labs--autoharness" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>tigerless-labs--autoharness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>2,221
+lines of Python in 26 files under src/autoharness, plus two subagent
+prompts and a 122-line format spec; plugin 0.5.3</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>133
+commits reachable from the pin by 13 contributors, one of them with 117,
+27 June – 28 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>389
+pytest functions in 31 files, 3,827 lines; the one live-host case skips
+itself and is excluded from CI</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>autoharness is a Claude Code plugin whose memory is a library of
+<code>SKILL.md</code> folders it writes into
+<code>.claude/skills/</code> and <code>~/.claude/skills/</code>. What is
+notable is the split between proposing and landing. Every model — a
+background reflector, a periodic curator, the working session itself —
+can only stage an intent through one MCP tool, and a deterministic
+promoter lints the final text in memory before an atomic write. Survival
+is measured by loads per request since landing, not by age. What is weak
+is the boundary the README leads with. Ownership is checked only on
+modifying actions, so a <code>create</code> overwrites a hand-written
+skill of the same name and marks it as its own. The MCP tool drops the
+field that marks a fold, and no person approves anything.</p>
+<p>The memory is procedural. A reflector reads a redacted slice of the
+host transcript and decides whether to create, patch, update, drop a
+subfile or delete. The lesson it keeps is a rule of at most 25 non-blank
+lines, with a description short enough to survive a 60-character index
+line, and that index opens every session, grouped by category. A
+lifecycle pass at session start archives a skill that was neither loaded
+nor viewed through a whole probation, and the lowest-rate graduates once
+a layer's mature pool exceeds its cap.</p>
+<p>The design is careful about the failures it names. Rejected intents
+write nothing to the library and are reported in a one-line summary at
+the next session start. Evidence is redacted a second time and written
+by the promoter under a content hash, so the model never picks a
+provenance filename. A delete is a folder move, and a curator run tars
+both skill trees before it starts.</p>
+<p>Four gaps sit between that design and the code at this pin, each on a
+reachable path. The ownership test skips <code>create</code>; the
+<code>stage_skill</code> handler rebuilds the intent without
+<code>absorbed_into</code>; lifecycle archival appends nothing to the
+ledger; and archiving a name already in <code>.archive/</code> deletes
+the earlier folder with its ledger.</p>
+<p>One mark, <code>negative_eval</code>: a committed test asserts an
+archived skill is absent from the reflector's index while two live
+skills are present. Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a skill folder, and a skill is an instruction the next
+session is told to consider. The unit is deliberately a rule, not a
+fact. The promoter rejects a body over <code>SKILL_BODY_MAX_LINES</code>
+(25) as a transcript, and a description with neither a <code>when</code>
+clause nor a quoted phrase as a label that never fires
+(<code>src/autoharness/lib/validate.py:40-41</code>,
+<code>:68-82</code>, <code>:180-188</code>).</p>
+<p><strong>A lesson becomes a skill in two steps, and only the second is
+trusted.</strong> A model calls <code>stage_skill</code>, which checks
+the schema and structure and appends a JSON line to a per-run queue
+(<code>src/autoharness/stage_skill/server.py:157-168</code>). The
+promoter reads the queue, shapes the final text, runs six lint classes
+and only then writes
+(<code>src/autoharness/hook/promoter.py:142-187</code>). There is no
+candidate state after landing: a landed skill is in the next session's
+index.</p>
+<p><strong>Probation protects without withholding.</strong> For its
+first 100 project-layer requests (300 global) a skill is exempt from
+eviction and from the capacity count, and it is injected like any other
+(<code>src/autoharness/lib/lifecycle.py:21-41</code>). Probation is
+computed from a creation anchor on each pass, not stored as a
+status.</p>
+<p><strong>A skill stops being live in two ways, and they leave
+different records.</strong> A <code>delete</code> intent appends a
+ledger entry and moves the folder to <code>.archive/</code>
+(<code>promoter.py:118-123</code>). The lifecycle pass moves the folder
+and writes no ledger entry
+(<code>src/autoharness/hook/on_session_start.py:115-130</code>). Revival
+is a manual folder move; <code>skill_store.restore</code> has no caller
+outside the tests. The pipeline never deletes a skill, except that
+archiving a name already in <code>.archive/</code> removes the older
+copy first (<code>src/autoharness/lib/skill_store.py:58-67</code>).</p>
+<p><strong>Who may move it.</strong> Models propose; the promoter lands;
+the lifecycle archives; a person edits files. Memory is treated as
+instruction, not evidence: the injected header reads <em>"you MUST
+consider loading that skill before proceeding"</em>
+(<code>on_session_start.py:22-25</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every model stages intents and one deterministic promoter lands them; the lifecycle archives by load rate, and the fold marker, the ownership test and the archive record each fail on one path</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every model stages intents and one deterministic promoter lands them; the lifecycle archives by load rate, and the fold marker, the ownership test and the archive record each fail on one path
+flowchart TD
+    T[&quot;Main-session tool calls counted at PreToolUse&quot;] --&gt; S{&quot;Stop: count at least 50?&quot;}
+    S -- &quot;yes&quot; --&gt; R[&quot;Detached claude -p reflector (haiku)&quot;]
+    X[&quot;Description index of live skills, both layers; .archive excluded&quot;] --&gt; R
+    M[&quot;Main session or /learn&quot;] -- &quot;stage_skill&quot; --&gt; QI[&quot;intents/interactive.jsonl, drained at each Stop&quot;]
+    R -- &quot;stage_skill (absorbed_into dropped)&quot; --&gt; Q[&quot;intents/run-id.jsonl, drained when the child exits&quot;]
+    C[&quot;Curator every 250 Stops, after tarring both skill trees&quot;] -- &quot;stage_skill&quot; --&gt; Q
+    QI --&gt; P{&quot;Promoter: six lint classes in memory&quot;}
+    Q --&gt; P
+    P -- &quot;reject&quot; --&gt; A[&quot;runs/run-id.json and a one-line summary; the reflector reads neither&quot;]
+    P -- &quot;create: no ownership or existence check&quot; --&gt; L[&quot;Live SKILL.md, .sidecar.json created_by agent, .ledger.jsonl&quot;]
+    P -- &quot;update, patch, remove_file: sidecar must say created_by agent&quot; --&gt; L
+    P -- &quot;delete: ledger entry, then move&quot; --&gt; AR[&quot;.archive/name (an existing copy is removed first)&quot;]
+    L --&gt; SS{&quot;SessionStart: probation, load rate, capacity&quot;}
+    SS -- &quot;evict: move, no ledger entry&quot; --&gt; AR
+    SS -- &quot;survivors&quot; --&gt; I[&quot;Grouped index injected: MUST consider loading&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Claude Code plugin with no daemon and no third-party dependency.
+Four hook events — <code>SessionStart</code>, <code>Stop</code>,
+<code>PreToolUse</code>, <code>SessionEnd</code> — all run
+<code>python3 -m autoharness.hook.dispatch</code>, which routes on
+<code>hook_event_name</code> and swallows any handler exception so the
+host never sees a crash (<code>hooks/hooks.json</code>,
+<code>src/autoharness/hook/dispatch.py:94-141</code>).
+<code>.mcp.json</code> registers one stdio server,
+<code>stage_skill</code>, whose JSON-RPC loop is written by hand because
+the project forbids an MCP SDK dependency
+(<code>src/autoharness/stage_skill/server.py:179-216</code>).</p>
+<p>Reflection and curation run as child Claude Code sessions. The
+dispatcher launches <code>python -m autoharness.hook.spawn</code>
+detached with <code>start_new_session=True</code>. That process pipes a
+bundle into
+<code>claude -p --agent autoharness:reflector --dangerously-skip-permissions</code>,
+waits for it, and drains the run's queue
+(<code>dispatch.py:64-91</code>,
+<code>src/autoharness/hook/spawn.py:90-129</code>). An opt-in fork
+carrier, <code>AUTOHARNESS_CARRIER=fork</code>, resumes the parent
+session with <code>--fork-session</code> instead
+(<code>spawn.py:79-81</code>,
+<code>src/autoharness/config.py:76</code>).</p>
+<p>All state is files. Skills live under <code>.claude/skills/</code> at
+a layer root; the project root is the session's cwd, remapped to the
+main worktree root only inside a linked git worktree
+(<code>src/autoharness/lib/layer.py:36-58</code>). Counters, offsets,
+queues, run accounts and curator snapshots live under
+<code>.claude/autoharness/</code>. Writes go through one temp-file,
+<code>fsync</code>, <code>os.replace</code> primitive
+(<code>src/autoharness/lib/atomic.py:13-28</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li>Running: nothing. Each hook is a short-lived Python process; Python
+3.11 or later is needed for <code>tomllib</code>.</li>
+<li>No API key beyond Claude Code's own. Reflection and curation spend
+model tokens through a child <code>claude</code> on <code>PATH</code>,
+on haiku per the agent frontmatter
+(<code>agents/reflector.md:5</code>).</li>
+<li>Install is two plugin commands and a reload.</li>
+<li>Fully local and readable by hand: every skill, counter, ledger line
+and run account is a text file. Revival and snapshot restore are
+manual.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Trigger.</strong> Every main-session <code>PreToolUse</code>
+bumps a <code>session-</code> counter file
+(<code>dispatch.py:125-131</code>). At <code>Stop</code> the dispatcher
+bumps both layers' request counters, drains the interactive queue, and
+asks <code>on_stop</code> whether the count reached
+<code>REFLECT_EVERY_N</code> (50); if so it resets and launches
+reflection (<code>dispatch.py:103-114</code>,
+<code>src/autoharness/hook/on_stop.py:17-31</code>).
+<code>SessionEnd</code> flushes any remainder
+(<code>src/autoharness/hook/on_session_end.py:16-29</code>).</p>
+<p><strong>Capture.</strong> <code>capture.window</code> reads the host
+transcript from the session's byte watermark to EOF, clips each record
+at 4,000 bytes and the window at 200,000 from the tail, and redacts with
+ten regex rules (<code>src/autoharness/hook/capture.py:30-50</code>,
+<code>src/autoharness/lib/redaction_rules.toml</code>). A digest of up
+to 20 earlier exchanges rides beside it
+(<code>capture.py:77-105</code>). The watermark advances only after the
+run returns (<code>spawn.py:167-179</code>).</p>
+<p><strong>Reflect.</strong> <code>spawn.run</code> builds the bundle —
+window, digest, a description index of every live skill in both layers
+including hand-written ones, and the format spec — and runs the child
+(<code>spawn.py:24-53</code>, <code>:111-129</code>). The reflector's
+tools are <code>Read</code>, <code>Grep</code>, <code>Glob</code> and
+<code>stage_skill</code> (<code>agents/reflector.md:4</code>).</p>
+<p><strong>Stage.</strong> <code>server.stage</code> enforces the action
+enum, per-action required and exclusive fields, required
+<code>reason</code> and <code>evidence</code>, a 100,000-byte body cap,
+structure and the description gate. It then appends the intent that
+<code>_intent</code> builds (<code>server.py:68-168</code>).</p>
+<p><strong>Land.</strong> <code>promoter.drain</code> sweeps orphan temp
+files, promotes each intent in order, writes a run account and clears
+the queue (<code>src/autoharness/hook/promoter.py:234-243</code>).
+<code>promote</code> resolves the layer — the intent's
+<code>level</code> for a create, a two-layer <code>find</code> otherwise
+— then checks the fold umbrella and validates. It lands subfiles, the
+evidence slice, the body, the sidecar and the ledger in that order
+(<code>promoter.py:51-54</code>, <code>:118-187</code>).</p>
+<p><strong>Inject and evict.</strong> <code>on_session_start</code>
+evaluates each layer's members, moves the losers to
+<code>.archive/</code>, and builds the index afterwards
+(<code>on_session_start.py:42-65</code>, <code>:115-130</code>).</p>
+<p><strong>Count use.</strong> <code>PreToolUse(Skill)</code> bumps
+<code>use</code>; a main-session <code>Read</code> into a live skill
+folder bumps <code>view</code>; only self-authored skills are counted
+(<code>src/autoharness/hook/on_skill_call.py:47-74</code>).</p>
+<p><strong>Curate.</strong> When the project request count is a multiple
+of 250 the dispatcher launches <code>spawn --curate</code>. That tars
+both skill trees, shows the curator an index of self-authored skills
+only, and drains its intents (<code>dispatch.py:112-113</code>,
+<code>spawn.py:132-164</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Holds</th>
+<th>Writer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SKILL.md</code></td>
+<td><code>name</code>, <code>description</code>, optional
+<code>category</code>; the body</td>
+<td>promoter, atomically</td>
+</tr>
+<tr>
+<td><code>.sidecar.json</code></td>
+<td><code>created_by</code>, <code>use</code>, <code>view</code>,
+<code>patch</code>, <code>reused_gen</code>, <code>anchor</code>,
+<code>verification</code></td>
+<td>promoter at create; hooks bump counters</td>
+</tr>
+<tr>
+<td><code>.ledger.jsonl</code></td>
+<td>one line per landed intent: <code>action</code>,
+<code>reason</code>, <code>evidence</code>, and <code>path</code> or
+<code>absorbed_into</code> when present</td>
+<td>promoter only</td>
+</tr>
+<tr>
+<td><code>references/evidence-</code> files</td>
+<td>the redacted evidence slice, named by the first eight hex digits of
+its SHA-256</td>
+<td>promoter only</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Ownership is one field in one file.</strong>
+<code>created_by: "agent"</code> in <code>.sidecar.json</code> is the
+membership key for the lifecycle, the index, the use counters and the
+promoter's modify check
+(<code>src/autoharness/lib/sidecar.py:47-51</code>,
+<code>:75-76</code>). The README calls it a ledger marker; the code
+reads the sidecar. A skill folder that arrives with such a sidecar is
+treated as the plugin's own, whether it was copied in or committed by a
+teammate's plugin.</p>
+<p><strong>The ledger records what landed and why, not when or by
+whom.</strong> Entries carry no timestamp, run id or proposing agent
+(<code>promoter.py:74-82</code>). Line order within one file is the only
+sequence. The <code>verification</code> field is written as
+<code>None</code> at creation and read by nothing.</p>
+<p><strong>Scope is two directories.</strong> The global layer is
+<code>~/.claude</code>; the project layer is the cwd's
+<code>.claude</code>, or the main worktree's. A skill carries no layer
+or project key; the layer is where the folder sits. The same name in
+both layers makes <code>skill_store.find</code> raise. That rejects
+every later update, patch or delete of the name and stops its use
+counter (<code>src/autoharness/lib/skill_store.py:35-40</code>,
+<code>on_skill_call.py:50-53</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search. Two listings are the read paths, and the host's
+own description-based skill recall runs underneath both, unmodified.</p>
+<p><strong>The session-start index</strong> is every live self-authored
+skill in both layers, grouped by <code>category</code>, missing ones
+under <code>general</code>. Each line is
+<code>- name [layer]: description</code>, with the description flattened
+and cut to 60 characters with an ellipsis
+(<code>on_session_start.py:28-65</code>). Newlines are collapsed so a
+description cannot forge an index line. The index is injected once as
+<code>additionalContext</code>, after the lifecycle pass, so an evicted
+skill is not listed in the session that evicted it.
+<code>AUTOHARNESS_INDEX_SUSPENDED=1</code> turns it off and leaves the
+counters running, which is the switch for measuring what the index
+buys.</p>
+<p><strong>The README's bound on the index does not hold during
+probation.</strong> It says the index cannot exceed the two capacity
+caps combined. Probationary skills are outside the capacity count
+(<code>lifecycle.py:26-27</code>) and inside the index, which lists
+every self-authored live skill. A reflector told to <em>"capture
+liberally"</em> can therefore grow the index without limit while its
+skills are young (<code>agents/reflector.md:8</code>).</p>
+<p><strong>The reflector's index</strong> lists every live skill in both
+layers, hand-written ones included, with full descriptions. It skips
+<code>.archive/</code> because the glob is one level deep
+(<code>spawn.py:24-40</code>). The curator's version is filtered to
+self-authored skills (<code>spawn.py:34-35</code>). No listing carries
+use counts, so the reflector's compare-first choice rests on
+descriptions alone.</p>
+<p>Failure modes follow from the shape. Recall depends on the model
+matching a 60-character line and choosing to <code>Read</code> or invoke
+the skill; nothing checks that a loaded skill applies. An archived skill
+is invisible to the component that would otherwise re-create it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>What the promoter checks.</strong> Six classes run over the
+shaped text before any write (<code>validate.py:163-214</code>). A regex
+scan across six families — exfiltration, injection, destructive,
+persistence, network, obfuscation — covers the body and every subfile
+(<code>src/autoharness/lib/skills_guard.py:15-70</code>). Then come
+frontmatter, referenced-path and Python-syntax structure; no
+<code>TODO</code> or placeholder; for a global skill, no absolute home
+path; <code>reason</code> and <code>evidence</code> present; and
+<code>created_by: "agent"</code> on the target of an update, patch,
+remove_file or delete. A create or update must also fit the 25-line body
+cap and carry a trigger cue inside the 60-character budget. A patch is
+exempt from both, so an over-long legacy skill stays fixable.</p>
+<p><strong>The global check is half-wired.</strong>
+<code>validate</code> also rejects a global skill that names the current
+repository, when it is given <code>repo_name</code>. No reachable caller
+passes one: the Stop drain, <code>spawn.main</code> and the curator all
+leave it <code>None</code> (<code>dispatch.py:108</code>,
+<code>spawn.py:167-177</code>). Only the absolute-path test runs.</p>
+<p><strong>Landing order is the commit protocol.</strong> Subfiles land
+first, after every parent is resolved and a symlink escaping the folder
+is refused. Then the evidence slice, then <code>SKILL.md</code>, which
+is what recall reads, then the sidecar and the ledger
+(<code>promoter.py:94-139</code>). A crash between landing and clearing
+the queue replays the run; the sidecar is not recreated, and the ledger
+may gain a duplicate line, as the module docstring states
+(<code>promoter.py:27</code>).</p>
+<p><strong>Folds.</strong> A fold is a <code>patch</code> to an umbrella
+and a <code>delete</code> of the sibling with
+<code>absorbed_into</code>. The promoter refuses a fold whose umbrella
+is missing, is the target itself, or is not self-authored
+(<code>promoter.py:161-174</code>). Section 9 shows the field never
+reaches it.</p>
+<p><strong>Conflict handling</strong> is delegated to the reflector's
+prompt: a new rule that contradicts an old skill must be staged as a
+patch to the old one in the same run
+(<code>agents/reflector.md:40</code>). Nothing in code detects a
+contradiction.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Blocking:</strong> no. Reflection and curation are detached.
+The Stop hook bumps counters and drains the interactive queue, a few
+file operations when the queue is empty.</li>
+<li><strong>Lag:</strong> a reflected skill is live once the child exits
+and the drain runs, and reaches the model at the next session start.
+Reflection fires on the Stop after the 50th tool call, so the lag is
+that threshold plus one child session. A <code>/learn</code> intent
+lands at the end of the same turn.</li>
+<li><strong>Whole-store passes:</strong> the curator reads the whole
+self-authored index every 250 Stops and tars both skill directories,
+hand-written skills and the archive included, keeping five per layer
+(<code>spawn.py:132-146</code>). The lifecycle pass reads every sidecar
+at each session start and calls no model.</li>
+<li><strong>Read-side cost:</strong> one index per session in
+<code>additionalContext</code>, stable for the session, so it does not
+invalidate a prompt-prefix cache mid-session. Its size is bounded only
+as section 6 describes.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The working model has more agency than the pipeline diagram in the
+README suggests. <code>.mcp.json</code> registers
+<code>stage_skill</code> for every session with the plugin loaded, and a
+server started without a child's run id writes to the
+<code>interactive</code> queue (<code>server.py:204-208</code>,
+<code>config.py:82-86</code>). The Stop hook drains that queue on every
+turn (<code>dispatch.py:108</code>). So the working model can create,
+rewrite or archive any self-authored skill by calling the tool, and the
+change lands when the turn ends. <code>/learn</code> is a skill telling
+it to do exactly that (<code>skills/learn/SKILL.md</code>).</p>
+<p>Child sessions are fenced by an agent tool allowlist and one hook
+backstop. A <code>PreToolUse</code> for <code>Write</code>,
+<code>Edit</code>, <code>MultiEdit</code> or <code>NotebookEdit</code>
+from a child or a reflector is denied (<code>dispatch.py:36</code>,
+<code>:120-124</code>). The fence is narrower on the fork carrier, as
+section 9 says.</p>
+<p>Adapting it to another agent means replacing three host contracts:
+the hook payloads (<code>session_id</code>,
+<code>transcript_path</code>, <code>tool_name</code>,
+<code>agent_type</code>), the Claude Code transcript format the digest
+parses, and <code>claude -p --agent</code> as the child launcher. The
+promoter, validator, lifecycle and ledger are host-neutral.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>"Only its own skills" holds for four actions and not the
+fifth.</strong> <code>validate</code> applies the ownership test to
+<code>update</code>, <code>patch</code>, <code>remove_file</code> and
+<code>delete</code>; <code>create</code> is exempt
+(<code>validate.py:33</code>, <code>:211-212</code>).
+<code>_resolve_level</code> takes the intent's layer without looking for
+an existing skill (<code>promoter.py:51-54</code>). So a create naming a
+hand-written skill in the same layer overwrites its
+<code>SKILL.md</code>. The folder has no sidecar, so <code>_land</code>
+stamps one with <code>created_by: "agent"</code>
+(<code>promoter.py:129-139</code>), and the skill enters the index, the
+lifecycle pool and the curator's reach. The reflector sees hand-written
+names in its index (<code>spawn.py:24-40</code>), so a collision needs
+only a shared class name. The tests cover the four guarded actions and
+no create over an existing skill.</p>
+<p><strong>The fold marker is dropped at the only door a model
+has.</strong> The tool schema accepts <code>absorbed_into</code> on a
+delete (<code>server.py:53-57</code>, <code>:83-84</code>).
+<code>_intent</code> builds the queued intent from <code>action</code>,
+<code>name</code>, <code>reason</code>, <code>evidence</code> and
+per-action fields, and never copies it (<code>server.py:139-154</code>).
+Every fold staged through MCP reaches the promoter as a plain
+retirement. The umbrella check does not run, the ledger entry has no
+<code>absorbed_into</code>, and <code>metrics._deaths</code> counts it
+as pruned (<code>src/autoharness/lib/metrics.py:39-50</code>). The
+promoter tests pass the field by calling <code>promote</code> directly.
+The one cross-process fold test goes through <code>server.stage</code>
+and does not send it (<code>tests/test_spawn.py:231-269</code>).</p>
+<p><strong>The ledger is append-only per file and not per name.</strong>
+Its only writer opens it in append mode
+(<code>src/autoharness/lib/ledger.py:28-32</code>). Lifecycle eviction,
+the commonest death, writes no line, although the module docstring says
+the lifecycle records retirements (<code>ledger.py:4</code>). And
+<code>archive</code> removes an existing <code>.archive/</code> copy of
+the name before the move (<code>skill_store.py:62-66</code>). A name
+evicted once, re-created by a reflector that cannot see the archive, and
+evicted again loses the first folder with its ledger and evidence.</p>
+<p><strong>Fork carrier.</strong> With
+<code>AUTOHARNESS_CARRIER=fork</code> the child resumes the parent
+conversation with <code>--dangerously-skip-permissions</code> and no
+<code>--agent</code>, so it holds the parent's tools
+(<code>spawn.py:79-81</code>). The hook backstop denies four
+file-writing tools; <code>Bash</code> is not among them and appears
+nowhere under <code>src/</code>. The README says a fork carrier's
+inherited write tools are denied at the hook. The default carrier is
+<code>bundle</code>.</p>
+<p><strong>Redaction covers evidence, not the skill.</strong>
+<code>redact.redact</code> runs on the captured window, the digest and
+the evidence slice (<code>capture.py:50</code>, <code>:105</code>,
+<code>promoter.py:86</code>). The <code>SKILL.md</code> body and
+subfiles are not redacted. On the bundle carrier the reflector saw only
+redacted text; on the fork carrier and in the main session it saw the
+raw conversation.</p>
+<p><strong>Prompt injection.</strong> The transcript window includes
+tool output, so a web page the session fetched reaches the reflector.
+The six regex families catch explicit strings, as the module states
+(<code>skills_guard.py:10-11</code>). A skill that passes them is
+injected as an instruction the model must consider.</p>
+<p><strong>Concurrency.</strong> Sidecar bumps and request counters are
+read-modify-write without a lock, and ledger appends from concurrent
+drains are unordered. Each module docstring defers the lock
+(<code>sidecar.py:15-17</code>,
+<code>src/autoharness/lib/counters.py:8-9</code>). An interactive drain
+on a Stop and a child's drain can run at once in one project.</p>
+<p><strong>Uncertainty is not representable.</strong> A skill is live or
+archived.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>audit_log</code> — withheld. <code>.ledger.jsonl</code> is a
+named, append-only record of landed mutations with reason and redacted
+evidence, which is most of the mark. It misses lifecycle eviction,
+carries no time, loses the fold marker on the MCP path, and a reachable
+re-archive deletes an earlier ledger whole. A record that one path
+erases and another never writes is not the mutation log.</li>
+<li><code>tombstone</code> — withheld. A rejected intent leaves its name
+and finding families in a run account, and an archived skill stays on
+disk by name. The reflector reads neither, the promoter's create
+consults neither, and a test asserts the archive is hidden from the
+reflector.</li>
+<li><code>trust_state</code> — withheld. Probation is computed from
+counters and does not withhold a skill from the index; archival is a
+folder move; <code>verification</code> is written <code>None</code> and
+never read.</li>
+<li><code>human_review</code> — withheld. Nothing waits for a person,
+and the working model holds <code>stage_skill</code>, whose intents land
+at the end of its own turn.</li>
+<li><code>scope_enforced</code> — withheld. The layers are directories;
+no skill carries a scope key and no read applies a predicate.</li>
+<li><code>bitemporal</code> — withheld. No time field on a skill, its
+sidecar or its ledger.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the suite and ran none of it. CI runs <code>ruff check</code>
+and <code>pytest -m "not live"</code> on Python 3.11 and 3.12
+(<code>.github/workflows/ci.yml</code>). The one live-host test is
+marked <code>live</code> and its body is <code>pytest.skip</code>,
+pointing at a runbook under <code>experiments/</code>
+(<code>tests/test_e2e_live.py:9-16</code>). <code>experiments/</code>
+and <code>docs/plans/</code> are in <code>.gitignore</code> as
+dev-branch material. The calibration measurements the code comments
+cite, such as <code>E8_numerator_capture</code> for the Read path, are
+therefore not in this tree.</p>
+<p><strong>What is tested well.</strong> The promoter has zero-write
+assertions on every rejection family, symlink-escape refusals that
+assert nothing landed, idempotent evidence materialisation, and fold
+refusals for a hallucinated, hand-written or traversing umbrella
+(<code>tests/test_promoter.py</code>). The lifecycle is pinned by
+probation, graduation, capacity, tie-break and view-pardon cases
+(<code>tests/test_lifecycle.py</code>).
+<code>tests/test_lifecycle_e2e.py</code> drives birth, use, eviction and
+restore through <code>dispatch.dispatch</code> with a fake
+reflector.</p>
+<p><strong><code>negative_eval</code>, and its vacuous twin.</strong>
+<code>test_description_index_both_layers_skip_archive</code> seeds three
+skills across two layers and archives one. It asserts the other two and
+their descriptions are listed, then asserts the archived one is not
+(<code>tests/test_spawn.py:45-57</code>).
+<code>test_description_index_agent_only_filters_native</code> does the
+same for the curator's view (<code>:124-131</code>). The session-start
+index's own exclusion test asserts the whole context is
+<code>None</code> after archiving the only self-authored skill
+(<code>tests/test_on_session_start.py:121-129</code>). An index that
+listed nothing would pass it too.</p>
+<p><strong>What the suite misses</strong> is the boundary between the
+tool and the promoter. <code>test_delete_accepts_absorbed_into</code>
+asserts <code>ok</code> and not the queued intent
+(<code>tests/test_stage_skill.py:353-356</code>). No test creates over
+an existing skill, archives a name twice, or runs <code>Bash</code> in a
+fork child.</p>
+<p><strong>Paper.</strong> The project has none; the search in Recorded
+searches finds two README links and one example line in the format spec.
+The README cites <em>Holistic Agent Leaderboard</em> (<a
+href="https://arxiv.org/abs/2510.11977">arXiv:2510.11977</a>, submitted
+13 October 2025) for a CORE-Bench jump from 42% to 78% with the same
+model and a different harness. The id resolves to that paper; the figure
+is not in its abstract and I did not check the body. It motivates the
+project and is no claim about this code. <em>Self-Harness</em> (<a
+href="https://arxiv.org/abs/2606.09498">arXiv:2606.09498</a>, 8 June
+2026) appears in a comparison table. No benchmark result for autoharness
+is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give the model a staging verb and nothing else.</strong> One
+tool that appends a proposal, one deterministic writer that shapes,
+validates in memory and lands atomically, and a run account for what was
+refused. A rejection then leaves the library untouched and stays
+visible.</li>
+<li><strong>Materialise provenance yourself.</strong> Take the evidence
+as text, redact it again at the write, name it by content hash, and
+refuse any intent that tries to carry or remove such a file.</li>
+<li><strong>Measure survival against opportunity.</strong> Loads divided
+by requests since the skill landed, with a probation window and a view
+that pardons but does not count, keeps an idle week from ageing anything
+out.</li>
+<li><strong>Evict to an archive folder</strong>, so an eviction is a
+move a person can undo.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An ownership check keyed on the action list.</strong> Check
+the target, not the verb: any write that lands on an existing path must
+prove the path is yours, and a create must refuse a name that is already
+live.</li>
+<li><strong>Two representations of one intent.</strong> When the tool
+handler rebuilds the payload the writer consumes, every new field has to
+be added twice. Pass the validated parameters through, or test the
+queued intent rather than the handler's <code>ok</code>.</li>
+<li><strong>Hiding the archive from the writer that could re-create
+it.</strong> If retirement is a judgement, the next proposer needs to
+see it, or the library regenerates what it just measured as unused.</li>
+<li><strong>An archive that overwrites by name.</strong> Key archived
+copies on name plus landing, or append.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants Claude Code to accumulate its own
+procedures and accepts an automatic writer whose output the next session
+is told it must consider. It assumes the user reads diffs of
+<code>.claude/skills/</code>, since nothing else is a review. It fits
+poorly where hand-written skills share a namespace with generated ones,
+where skills are committed and shared across a team, or where a
+transcript can carry hostile tool output. Walk away if skills must be
+approved before they reach a prompt.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does Claude Code's native skill discovery ever descend into
+<code>.claude/skills/.archive/</code>? The design assumes an archived
+skill leaves host recall; that is host behaviour, not in this tree.</li>
+<li>How often does a reflector <code>create</code> reuse a live
+hand-written name in practice? A collision needs only a common class
+name such as a workflow label.</li>
+<li>Is the <code>absorbed_into</code> omission known upstream? The
+prompts, the promoter and the metrics all rely on the field.</li>
+<li>What do the excluded <code>experiments/</code> results show for the
+index's effect on load rate, the question
+<code>AUTOHARNESS_INDEX_SUSPENDED</code> exists to answer?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and layout:</strong>
+<code>src/autoharness/lib/layer.py</code>,
+<code>src/autoharness/lib/atomic.py</code>,
+<code>src/autoharness/lib/skill_store.py</code>,
+<code>src/autoharness/lib/sidecar.py</code>,
+<code>src/autoharness/lib/ledger.py</code>,
+<code>src/autoharness/lib/counters.py</code>,
+<code>src/autoharness/lib/intent_queue.py</code>.</li>
+<li><strong>Write path:</strong>
+<code>src/autoharness/stage_skill/server.py</code>,
+<code>src/autoharness/hook/promoter.py</code>,
+<code>src/autoharness/lib/validate.py</code>,
+<code>src/autoharness/lib/skills_guard.py</code>,
+<code>src/autoharness/lib/redact.py</code>,
+<code>src/autoharness/lib/redaction_rules.toml</code>,
+<code>src/autoharness/lib/format_spec.md</code>.</li>
+<li><strong>Capture and trigger:</strong>
+<code>src/autoharness/hook/capture.py</code>,
+<code>src/autoharness/hook/on_stop.py</code>,
+<code>src/autoharness/hook/on_session_end.py</code>,
+<code>src/autoharness/hook/dispatch.py</code>,
+<code>hooks/hooks.json</code>.</li>
+<li><strong>Background:</strong>
+<code>src/autoharness/hook/spawn.py</code>,
+<code>agents/reflector.md</code>, <code>agents/curator.md</code>,
+<code>skills/learn/SKILL.md</code>.</li>
+<li><strong>Retrieval and lifecycle:</strong>
+<code>src/autoharness/hook/on_session_start.py</code>,
+<code>src/autoharness/lib/lifecycle.py</code>,
+<code>src/autoharness/hook/on_skill_call.py</code>,
+<code>src/autoharness/lib/metrics.py</code>.</li>
+<li><strong>Configuration:</strong>
+<code>src/autoharness/config.py</code>, <code>.mcp.json</code>,
+<code>.claude-plugin/plugin.json</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_promoter.py</code>,
+<code>tests/test_stage_skill.py</code>,
+<code>tests/test_spawn.py</code>,
+<code>tests/test_on_session_start.py</code>,
+<code>tests/test_lifecycle.py</code>,
+<code>tests/test_lifecycle_e2e.py</code>,
+<code>tests/test_dispatch.py</code>, <code>tests/test_ledger.py</code>,
+<code>tests/test_e2e_live.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>git grep -n -E 'absorbed_into' -- src/autoharness/stage_skill/server.py</code>
+— lines 53, 83 and 84: the schema and the non-delete refusal; nothing in
+<code>_intent</code>.</li>
+<li><code>git grep -n -E 'ledger\.append' -- src</code> —
+<code>promoter.py:121</code>, <code>:127</code>, <code>:139</code>; no
+call from the lifecycle path.</li>
+<li><code>git grep -n -E 'repo_name' -- src</code> — declarations and
+pass-throughs in <code>promoter.py</code>, <code>spawn.py</code> and
+<code>validate.py</code>; no caller supplies a value.</li>
+<li><code>git grep -n -E 'restore\(' -- src</code> — the definition at
+<code>skill_store.py:70</code> only.</li>
+<li><code>git grep -n -E 'metrics' -- src</code> —
+<code>metrics.py</code> itself and a <code>sidecar.py</code> comment; no
+caller.</li>
+<li><code>git grep -n -E 'verification' -- src</code> — the sidecar's
+<code>None</code> at creation, its docstring, and an unrelated
+format-spec line.</li>
+<li><code>git grep -n -E 'is_agent_created' -- src</code> — the promoter
+call guarded by <code>_MODIFY</code>, the fold umbrella, the index, the
+lifecycle members, the use counter, the curator index and metrics; none
+on the create path.</li>
+<li><code>git grep -n -E 'approv|pending|review' -- src agents skills</code>
+— graduation review and comments only; no approval state.</li>
+<li><code>git grep -n -E 'Bash' -- src</code> — no match.</li>
+<li><code>git grep -n -E 'timestamp|time\.time|datetime|strftime' -- src</code>
+— no match.</li>
+<li><code>git grep -n -E 'archive_dir|\.archive' -- src</code> — writers
+in <code>skill_store.py</code>, readers in <code>ledger.py</code> and
+<code>metrics.py</code>, and the read-path exclusion in
+<code>on_skill_call.py</code>; nothing in the promoter's create path or
+the reflector's index.</li>
+<li><code>git grep -n -i -E 'renamed|formerly'</code> — no match.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION'</code>
+— <code>README.md:13</code>, <code>README.md:238</code> and
+<code>src/autoharness/lib/format_spec.md:43</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-29</strong> — <a
+href="https://github.com/tigerless-labs/autoharness/commit/f74a9fb4db512f641bd241e1959fade53044bd7b"><code class="commit-id" title="f74a9fb4db512f641bd241e1959fade53044bd7b">f74a9fb4…</code></a>
+— first reading, at the head of <code>main</code>, a merge dated 28
+September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: four auto-run surfaces (<code>.claude-plugin/</code>,
+<code>.mcp.json</code>, <code>hooks/</code> and
+<code>hooks/hooks.json</code>), no build-time execution, no dependency
+manifest, so nothing inside the cooldown and nothing unpinned; a depth-1
+clone dates every file to the tip, which had nothing to inflate here.
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> are gitignored and
+absent; the subagent prompts under <code>agents/</code> were read as
+data. MIT, with no rider. Read with <code>git grep</code> and
+<code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -135,6 +135,8 @@ trigger"*, because a heavily-used skill accumulates harm counts while still
 being net-positive. SESA acts on the signal mechanically; this one treats it as
 evidence for a judgement.
 
+[autoharness](../../systems/autoharness/) answers the pruning question with an opportunity-relative load rate — loads divided by requests since the skill landed, a probation window, and a view that pardons at graduation but never feeds the rate — and evicts to an `.archive/` folder rather than deleting. It then repeats [SESA](../../systems/sesa/)'s regeneration failure by construction: the reflector's index globs one directory level deep, a committed test asserts the archived skill is absent from it, and the promoter's `create` consults neither the archive nor the run account of rejected intents, so a name the lifecycle retired can be proposed again at zero use. Its write gate is lint rather than outcome: six deterministic classes over the text, with nothing executed and nothing observed about whether following the skill worked.
+
 [Neo4j Agent Memory](../../systems/neo4j-agent-memory/) supplies the half this
 pattern's gate leaves out. Its reasoning tier records traces through a context
 manager, so on a raised exception the error becomes the trace's outcome — meaning

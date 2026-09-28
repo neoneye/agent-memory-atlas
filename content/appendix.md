@@ -360,6 +360,7 @@ page_kind: comparison
 - [`memesh`](../systems/memesh/)
 - [`mama`](../systems/mama/)
 - [`mnemosyne-nabzx`](../systems/mnemosyne-nabzx/)
+- [`autoharness`](../systems/autoharness/)
 
 ## Repos Inspected
 
@@ -1024,6 +1025,7 @@ page_kind: comparison
 - [PCIRCLE-AI/memesh](https://github.com/PCIRCLE-AI/memesh) at [`dd77d78ec061be4757e43c5a244de88a88a69649`](https://github.com/PCIRCLE-AI/memesh/commit/dd77d78ec061be4757e43c5a244de88a88a69649) — read only, at the head of `main`, a commit dated 28 September 2026 (UTC). MIT. Screened before reading: 3 auto-run surfaces (`.claude-plugin/`, `hooks/`, `hooks/hooks.json`), 2 build-time execution points (npm `prepublishOnly` in the root and OpenClaw manifests), 5 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 3 floating surfaces; `AGENTS.md` and `CLAUDE.md` were treated as data. No checkout filter and no submodules. Only the memory layer was read; the agent-messaging subsystem is out of scope. Nothing was installed, built or executed.
 - [jungjaehoon-lifegamez/MAMA](https://github.com/jungjaehoon-lifegamez/MAMA) at [`6738c694144313481516333312aec7497bae7a04`](https://github.com/jungjaehoon-lifegamez/MAMA/commit/6738c694144313481516333312aec7497bae7a04) — read only, at the head of `main`, a commit dated 28 September 2026. MIT. Screened before reading: 2 auto-run surfaces (`.claude-plugin/marketplace.json` and an empty `.gitmodules`), 2 build-time execution points (a husky `prepare` and the plugin's `postinstall`), 8 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 6 floating surfaces; `AGENTS.md` and `CLAUDE.md` were treated as data. The memory tier of `mama-core`, its MAMA OS consumers and the Claude Code MCP server and hooks were read. Nothing was installed, built or executed.
 - [Nabzx/mnemosyne](https://github.com/Nabzx/mnemosyne) at [`431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6`](https://github.com/Nabzx/mnemosyne/commit/431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6) — read only, at the head of `main`, a commit dated 28 September 2026. Apache-2.0. Screened before reading: 1 auto-run surface (`.githooks/pre-commit`, inert unless `core.hooksPath` points at it), no build-time execution point, 8 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 4 Python manifests with no lockfile; `AGENTS.md` was treated as data. Nothing was installed, built or run.
+- [tigerless-labs/autoharness](https://github.com/tigerless-labs/autoharness) at [`f74a9fb4db512f641bd241e1959fade53044bd7b`](https://github.com/tigerless-labs/autoharness/commit/f74a9fb4db512f641bd241e1959fade53044bd7b) — read only; four auto-run surfaces (the plugin manifest, `.mcp.json`, `hooks/` and `hooks/hooks.json`), no build-time execution and no dependency manifest, so nothing inside the cooldown and nothing unpinned. Nothing was installed, built or run and no benchmark was reproduced. MIT
 
 ## What the licences actually say
 
