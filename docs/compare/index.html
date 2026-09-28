@@ -24330,13 +24330,14 @@ strengths, supporting episode ids, a labile flag, a generalization
 stage, first-formed and last-updated stamps, and the logic version it
 was formed under. Beside the symbolic layer,
 <code>semantic_prototypes</code> are latent cluster centroids</td>
-<td>One local SQLite database, 28 tables, with a <code>schema.sql</code>
-carrying design commentary. Latent prototypes and their edges, symbolic
-schemas with normalised evidence, relation and co-activation edge
-tables, sessions and continuities, an append-only
-<code>raw_events</code> spine, retrieval and feedback event tables,
-replay checkpoints, worker runs, graph-health snapshots, and a scope
-registry. Embeddings are computed locally through an ONNX encoder</td>
+<td>One local SQLite database, 28 tables and four FTS5 indexes, with a
+<code>schema.sql</code> carrying design commentary. Latent prototypes
+and their edges, symbolic schemas with normalised evidence, relation and
+co-activation edge tables, sessions and continuities, a
+<code>raw_events</code> spine appended per turn, retrieval and feedback
+event tables, a derived procedure-search projection, replay checkpoints,
+worker runs, graph-health snapshots, and a scope registry. Embeddings
+are computed locally through an ONNX encoder</td>
 <td>Mode-gated hybrid recall with no LLM call. Embedding search, FTS and
 prototype scoring gather candidates, all scope-filtered in SQL when a
 scope is set; a status set chosen by mode decides which lifecycle states
@@ -24345,7 +24346,9 @@ under the same status bar and the same cross-scope gate;
 <code>schema_coactivation</code> supplies usage-based associative edges
 strengthened when one schema was recalled before another in a session
 and decayed on a roughly seven-day half-life. A working-memory gate
-returns a bounded set</td>
+returns a bounded set. Advisory procedures are retrieved separately,
+filtered to the exact scope, by reciprocal-rank fusion of applicability,
+strategy and FTS ranks</td>
 <td>The agent decides what is durable and calls
 <code>slowave_remember</code>; <code>slowave_activate</code> opens a
 session, <code>slowave_recall</code> asks for context,
@@ -24360,7 +24363,9 @@ a duplicate, keyed on the primary prototype, and
 <code>dedup_exact</code> archives exact normalised duplicates into a
 canonical row. Removal is a hard delete from the dashboard: the schema
 row goes, and the recall items, feedback events and JSON references
-naming it are scrubbed in the same transaction</td>
+naming it are scrubbed in the same transaction. A procedure is deleted
+by stripping it from its <code>raw_events</code> payload; its row in the
+procedure-search projection and its FTS entry are left in place</td>
 <td><code>scope_id</code> and <code>scope_kind</code> on every schema, a
 <code>scope_registry</code>, and unconditional SQL filtering on the
 candidate paths when a scope is active. Cross-scope reach is earned
@@ -24394,15 +24399,15 @@ consolidation never infer</td>
 <td>A cross-scope gate written as one predicate because two copies
 drift, with the widening rule — same scope, unscoped, global or user, or
 a generalization stage of 2 — stated in the SQL rather than assembled by
-callers; an append-only event store with a logic-version stamp so an
-algorithm change replays instead of migrating; a retrieval-gold contract
-with required, forbidden and history-only content in the same case,
-where the negative half is load-bearing in the pass conjunction; a
-delete preview that counts the evidence links, relations and
-co-activations a removal will take with it, so the person confirming
-sees the collateral rather than the row; a schema file that argues for
-its own decisions; and a memory core with no LLM call and no API key
-anywhere in ingest, consolidation or recall</td>
+callers; an event store with a logic-version stamp so an algorithm
+change replays instead of migrating; a retrieval-gold contract with
+required, forbidden and history-only content in the same case, where the
+negative half is load-bearing in the pass conjunction; a delete preview
+that counts the evidence links, relations and co-activations a removal
+will take with it, so the person confirming sees the collateral rather
+than the row; a schema file that argues for its own decisions; and a
+memory core with no LLM call and no API key anywhere in ingest,
+consolidation or recall</td>
 <td>Removal is total and unrecorded. A schema deleted from the dashboard
 is gone from <code>schemas</code>, and the recall items, feedback events
 and JSON references that named it are scrubbed alongside it, so nothing
@@ -24418,9 +24423,11 @@ are LLM-judged evidence containment with the raw records kept out of the
 repository, and the LongMemEval run is an oracle configuration the page
 itself says is not a distractor test. It is AGPL-3.0-or-later with a
 separate commercial licence offered, which is a deliberate choice a
-reader has to plan around. And the surface is wide: 27 tables, a
-dashboard of over 4,000 lines, and a client-setup module that executes
-at install time</td>
+reader has to plan around. Deleting a procedure leaves its summary, step
+text and originating query in the procedure-search projection and its
+FTS index, and the dashboard's Home page keeps counting it as a current
+procedure. And the surface is wide: 28 tables, a dashboard of over 4,000
+lines, and a client-setup module that executes at install time</td>
 </tr>
 <tr>
 <td><a href="../systems/smythos-sre/"><code>smythos-sre</code></a></td>

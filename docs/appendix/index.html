@@ -1915,12 +1915,12 @@ is not an open-source licence</li>
 <li><a
 href="https://github.com/slowave-ai/slowave">slowave-ai/slowave</a> at
 <a
-href="https://github.com/slowave-ai/slowave/commit/8d538b370c37243a39e19e52e4a5fdb35c9527b5"><code class="commit-id" title="8d538b370c37243a39e19e52e4a5fdb35c9527b5">8d538b37…</code></a>
+href="https://github.com/slowave-ai/slowave/commit/00b5a1d7594fef3261a6bc1786e46cceebcd9d49"><code class="commit-id" title="00b5a1d7594fef3261a6bc1786e46cceebcd9d49">00b5a1d7…</code></a>
 — read only; one auto-run surface, five build-time execution points, one
-unpinned dependency surface and two dependency files inside the
-seven-day cooldown, with <code>uv.lock</code> present. Nothing was
-installed, built or run and no benchmark was reproduced.
-AGPL-3.0-or-later, with a commercial licence offered separately</li>
+unpinned dependency surface and one dependency file inside the seven-day
+cooldown, with <code>uv.lock</code> present. Nothing was installed,
+built or run and no benchmark was reproduced. AGPL-3.0-or-later, with a
+commercial licence offered separately</li>
 <li><a
 href="https://github.com/ultracontext/ultracontext">ultracontext/ultracontext</a>
 at <a
@@ -5487,6 +5487,35 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Slowave report's section 9 awarded
+<code>human_review</code> after the mark was withdrawn, its
+<code>trust_state</code> record cited a ranking test and miscounted
+<code>needs_review</code>, its census overcounted authors and tables,
+its <code>negative_eval</code> record said every must-not case was
+paired, and it called <code>raw_events</code> append-only; corrected
+2026-09-28.</strong> At <a
+href="https://github.com/slowave-ai/slowave/commit/8d538b370c37243a39e19e52e4a5fdb35c9527b5"><code class="commit-id" title="8d538b370c37243a39e19e52e4a5fdb35c9527b5">8d538b37…</code></a>
+the <a href="../systems/slowave/">Slowave</a> report's section 9 read
+<em>"Human review — awarded"</em> while its frontmatter, verdict and
+card carried three marks without it, so the body overstated the system.
+The <code>trust_state</code> record cited
+<code>tests/unit/test_retrieval_matching.py</code>, which tests rank
+fusion and names no status, and said <code>needs_review</code> appears
+eleven times outside the tests; it appears 62 times in 14 Python and SQL
+files under <code>slowave/</code>, and none of them writes the status.
+The census gave two contributors, 28 tables and a 623-line
+<code>schema.sql</code>; the history shows one author committing under
+three names, and the schema held 27 tables in 606 lines. The
+<code>negative_eval</code> record said each must-not case is paired with
+a must-return case; <code>hard_negative</code> and
+<code>known_absent</code> assert an expected-empty result, which passes
+on an empty retrieval by design. The report called
+<code>raw_events</code> append-only in its summary, diagram, matrix and
+audit reasoning; a repeated <code>commit</code> rewrites a session's
+<code>task_complete</code> event (<code>ops.py:1003</code> at that pin),
+and the procedure delete strips the procedure from it and scrubs its id
+from other raw events' metadata (<code>dashboard/app.py:1938</code>), so
+the report overstated the log.</li>
 <li><strong>The Skales report said its scanner does not deduplicate,
 that a user changes memory only on the memory page, and that the page
 can show provenance; corrected 2026-09-28.</strong> At <a

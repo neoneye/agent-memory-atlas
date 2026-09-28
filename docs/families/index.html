@@ -5518,38 +5518,41 @@ Against all of it: eleven <code>assert</code> statements in the tree,
 all in a benchmark harness, and no scope key of any kind.</p>
 <p><strong><a href="../systems/slowave/">Slowave</a> removes a memory
 completely and keeps no record that it did.</strong> AGPL-3.0-or-later
-with a commercial licence offered separately, 517 commits between 8 June
-and 14 September 2026 from two contributors, version 0.20.3, 32,690
-lines of Python against 34,527 lines of test holding 903 cases; the
-memory core makes no LLM call at all — ingest, consolidation and recall
-are geometric over a local ONNX encoder. Removal is a hard delete a
-person performs at the dashboard: the schema row goes, and the recall
+with a commercial licence offered separately, 534 commits between 8 June
+and 24 September 2026 from one author and a release bot, version 0.20.4,
+33,193 lines of Python against 34,645 lines of test holding 907 cases;
+the memory core makes no LLM call at all — ingest, consolidation and
+recall are geometric over a local ONNX encoder. Removal is a hard delete
+a person performs at the dashboard: the schema row goes, and the recall
 items, the feedback events naming it as target or replacement, and the
 JSON fields mentioning it are scrubbed in the same transaction. As
 erasure it is more thorough than most stores on this page, which leave a
-deleted memory's id scattered across tables nobody sweeps. What it
-leaves is nothing to consult: no status marks a claim as one a person
-rejected, no row says a deletion happened, and because the delete is
-keyed on the schema id rather than on the claim, the same proposition
-re-derived from the episodes that remain forms a new schema with nothing
-positioned to intercept it. The migration that introduced this states
-the trade in its own words — <em>"[f]orget/unforget was removed in
-favour of explicit hard deletion. Preserve previously suppressed schemas
-by restoring their recorded prior state before removing the obsolete
-audit table"</em> — so a store upgraded across that boundary returns to
-ordinary retrieval the memories a person had suppressed. Beside it: four
-lifecycle statuses gated per retrieval mode and applied identically on
-the direct and the graph-expansion paths, though
-<code>update_status</code> coerces an unrecognised value to
-<code>active</code> rather than refusing it; a generalization ladder
-that makes cross-scope reach something a memory earns rather than a flag
-somebody set, with the widening rule written into the SQL predicate
-itself; an append-only <code>raw_events</code> spine stamped with the
-logic version that ingested each event, so an algorithm change is a
-scoped replay rather than a migration; and a delete preview that counts
-the evidence links, relations and co-activations a removal will take
-with it, in front of a person who has five MCP verbs none of which can
-delete. <code>bitemporal</code> is withheld on an absence: every
+deleted memory's id scattered across tables nobody sweeps. Procedures
+are the exception: their delete strips the payload from its raw event
+and leaves the summary, steps and originating query in a
+procedure-search projection added on 24 September 2026, which the
+dashboard's Home page keeps counting. What it leaves is nothing to
+consult: no status marks a claim as one a person rejected, no row says a
+deletion happened, and because the delete is keyed on the schema id
+rather than on the claim, the same proposition re-derived from the
+episodes that remain forms a new schema with nothing positioned to
+intercept it. The migration that introduced this states the trade in its
+own words — <em>"[f]orget/unforget was removed in favour of explicit
+hard deletion. Preserve previously suppressed schemas by restoring their
+recorded prior state before removing the obsolete audit table"</em> — so
+a store upgraded across that boundary returns to ordinary retrieval the
+memories a person had suppressed. Beside it: four lifecycle statuses
+gated per retrieval mode and applied identically on the direct and the
+graph-expansion paths, though <code>update_status</code> coerces an
+unrecognised value to <code>active</code> rather than refusing it; a
+generalization ladder that makes cross-scope reach something a memory
+earns rather than a flag somebody set, with the widening rule written
+into the SQL predicate itself; a <code>raw_events</code> spine stamped
+with the logic version that ingested each event, so an algorithm change
+is a scoped replay rather than a migration; and a delete preview that
+counts the evidence links, relations and co-activations a removal will
+take with it, in front of a person who has five MCP verbs none of which
+can delete. <code>bitemporal</code> is withheld on an absence: every
 timestamp here is a record time. Against it: the published LoCoMo and
 LongMemEval figures are LLM-judged evidence containment whose raw
 records are not in the repository, the LongMemEval run is an oracle

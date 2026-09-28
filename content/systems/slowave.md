@@ -1,35 +1,39 @@
 ---
 title: "Slowave"
 eyebrow: "Deleting a memory takes the record of the deletion with it"
-description: "A local memory layer for coding agents whose whole core runs without an LLM call — raw events replayed into latent prototypes and symbolic schemas, a four-stage generalization ladder deciding what may cross a project boundary, and a removal path where a person deletes a schema outright, its dependent rows scrubbed with it and nothing left to say it was ever there."
+description: "A local, LLM-free memory layer for coding agents: schemas earn cross-project reach by stage, and a person's hard delete leaves no record behind."
 root: ../..
 page_kind: system
 source_name: "slowave-ai/slowave"
 source_url: https://github.com/slowave-ai/slowave
 archive_name: "slowave-ai--slowave"
-revision: 8d538b370c37243a39e19e52e4a5fdb35c9527b5
-revision_url: https://github.com/slowave-ai/slowave/commit/8d538b370c37243a39e19e52e4a5fdb35c9527b5
-analyzed_at: 2026-09-19
+revision: 00b5a1d7594fef3261a6bc1786e46cceebcd9d49
+revision_url: https://github.com/slowave-ai/slowave/commit/00b5a1d7594fef3261a6bc1786e46cceebcd9d49
+analyzed_at: 2026-09-28
+licence: "AGPL-3.0-or-later, with a separate commercial licence offered in COMMERCIAL.md and contributions under a CLA; a project header above the licence text in LICENSE leaves GitHub's detector at NOASSERTION"
+size: "33,193 lines of Python in 80 files under slowave/, against 34,645 lines of test in 136 files; 28 tables in schema.sql plus four FTS5 indexes"
+activity: "534 commits, 8 June – 24 September 2026: 456 from one author committing as mrsalty, Matteo Cunietti or Matteo, whose email addresses overlap across the three names, and 78 from a release bot; version 0.20.4"
+tests: "907 test functions in 102 files across unit, regression, acceptance and retrieval_quality; not run"
 capabilities: "trust_state, scope_enforced, negative_eval"
 capability_evidence:
-  trust_state: "a four-value status gated per retrieval mode and applied identically on the direct and expansion paths, with contradiction and supersession folded into a reason column beside it | slowave/symbolic/schema_store.py:29-34, :690-715, :1424, :1514, :1585, :1934, slowave/core/services/retrieval.py:413-419, :425-426, slowave/storage/schema.sql:167-206 | `VALID_STATUS` is `active`, `needs_review`, `stale`, `archived`. Retrieval computes the admitted set from the mode — `active` alone by default and under `strict_scope`, plus `needs_review` for a broad profile, plus `stale` only in `debug` — and `archived` is admitted by nothing. Underneath that, the store's own candidate queries append `status IN ('active', 'needs_review')` to the lexical search, the graph-expansion walk, the scope-widened path and the sweep that feeds generalization, so the bar is in the SQL rather than in a filter each caller remembers. `update_status` folds `superseded` and `contradicted` into `stale` with a `stale_reason` recording which one it was, keeping the epistemic detail without widening the status set retrieval has to reason about. Two qualifications belong with the mark. The same function ends with `status = status if status in VALID_STATUS else \"active\"`, so a status it does not recognise is silently coerced to the most-trusted value rather than refused. And `needs_review` has no writer: every one of its eleven appearances outside the tests is a read, no `update_status` call names it, and the column defaults to `active`, so the status is admitted by four read paths and entered by none — the mark rests on `stale` and `archived`, which do have producers | tests/unit/test_retrieval_matching.py exercises the candidate paths against the status filter, and tests/acceptance/test_memory_lifecycle.py drives the stale transition end to end"
-  scope_enforced: "a stored scope key filtered in SQL on every candidate path, with cross-scope admission earned through a generalization stage rather than granted by the caller | slowave/symbolic/schema_store.py:570, :1449, :1517-1518, :1580-1581, :2019-2024, slowave/core/scope.py:79-98, slowave/storage/schema.sql:549-562 | Every schema carries a `scope_id`, and the candidate queries filter on it in SQL rather than after the fact. The widening rule is written into the predicate itself — a row is admitted when its scope matches, or it is unscoped, or it sits in `('global', 'user')`, or its `generalization_stage` has reached 2 — so a memory crosses a project boundary by having earned a stage, not by a caller passing a wider argument. The same shape appears on both the direct-candidate filter and the graph-expansion walk, which is the drift this atlas most often finds between those two paths. `scope.py` holds normalisation, kind and value as one vocabulary so the key written is the key filtered on | tests/unit/test_scope_rejection_filter.py is a regression test that documents the bug it prevents, and the scope predicate is exercised on both the direct and expansion paths"
-  negative_eval: "a retrieval-gold contract where a case passes only if the required content is returned and the forbidden or history-only content is not, exercised across the acceptance suite | tests/retrieval_quality/contracts.py:20-28, :94-124, tests/acceptance/test_memory_lifecycle.py | `RetrievalGold` carries `required_contents`, `forbidden_contents`, `historical_only_contents` and `expected_empty` in the same case, and `evaluate` makes the negative half load-bearing: `passed` is a conjunction requiring `not required_missing and not forbidden_found and not historical_found` alongside the item budget and the expected-empty check, so a case that returns the right memory and one forbidden neighbour fails. The contract also measures `intrusion_chars` — how much forbidden or history-only text reached the caller — so the failure is graded rather than only flagged. `forbidden` appears in fifteen places across the lifecycle acceptance suite | the same suite pairs each must-not case with a must-return case over one store, so an empty result cannot pass by accident"
+  trust_state: "a four-value status gated per retrieval mode and applied identically on the direct and expansion paths, with contradiction and supersession folded into a reason column beside it | slowave/symbolic/schema_store.py:29-34, :690-715, :1424, :1514, :1585, :1934, slowave/core/services/retrieval.py:413-419, :425-426, slowave/storage/schema.sql:167-206 | `VALID_STATUS` is `active`, `needs_review`, `stale`, `archived`. Retrieval computes the admitted set from the mode — `active` alone by default and under `strict_scope`, plus `needs_review` for a broad profile, plus `stale` only in `debug` — and `archived` is admitted by nothing. Underneath that, the store's own candidate queries append `status IN ('active', 'needs_review')` to the lexical search, the graph-expansion walk, the scope-widened path and the sweep that feeds generalization, so the bar is in the SQL rather than in a filter each caller remembers. `update_status` folds `superseded` and `contradicted` into `stale` with a `stale_reason` recording which one it was, keeping the epistemic detail without widening the status set retrieval has to reason about. Two qualifications belong with the mark. The same function ends with `status = status if status in VALID_STATUS else \"active\"`, so a status it does not recognise is silently coerced to the most-trusted value rather than refused. And `needs_review` has no writer: `update_status` is called three times, all from feedback and all writing `stale`, neither caller of `create` passes a status, and the column defaults to `active`, so the status is admitted by the broad profile, the store's candidate queries, consolidation's merge check and pattern completion, and entered by none — the mark rests on `stale`, written by `slowave_feedback`, and `archived`, written by the `dedup-schemas` CLI command | tests/acceptance/test_memory_lifecycle.py:361 marks a memory stale through feedback and requires it to come back only as history-only content, and tests/unit/test_schema_dedup.py:86 asserts the duplicate is `archived` and dropped from FTS"
+  scope_enforced: "a stored scope key filtered in SQL on every candidate path, with cross-scope admission earned through a generalization stage rather than granted by the caller | slowave/symbolic/schema_store.py:570, :1449, :1517-1518, :1580-1581, :2019-2024, slowave/core/scope.py:79-98, slowave/storage/schema.sql:577-586 | Every schema carries a `scope_id`, and the candidate queries filter on it in SQL rather than after the fact. The widening rule is written into the predicate itself — a row is admitted when its scope matches, or it is unscoped, or it sits in `('global', 'user')`, or its `generalization_stage` has reached 2 — so a memory crosses a project boundary by having earned a stage, not by a caller passing a wider argument. The same shape appears on both the direct-candidate filter and the graph-expansion walk, which is the drift this atlas most often finds between those two paths. `scope.py` holds normalisation, kind and value as one vocabulary so the key written is the key filtered on | tests/unit/test_scope_rejection_filter.py is a regression test that documents the bug it prevents, and the scope predicate is exercised on both the direct and expansion paths"
+  negative_eval: "a retrieval-gold contract where a case passes only if the required content is returned and the forbidden or history-only content is not, exercised across the acceptance suite | tests/retrieval_quality/contracts.py:18-28, :94-122, tests/acceptance/test_memory_lifecycle.py | `RetrievalGold` carries `required_contents`, `forbidden_contents`, `historical_only_contents` and `expected_empty` in the same case, and `evaluate` makes the negative half load-bearing: `passed` is a conjunction requiring `not required_missing and not forbidden_found and not historical_found` alongside the item budget and the expected-empty check, so a case that returns the right memory and one forbidden neighbour fails. The contract also measures `intrusion_chars` — how much forbidden or history-only text reached the caller — so the failure is graded rather than only flagged. `forbidden` appears in fifteen places across the lifecycle acceptance suite | three cases put a required and a forbidden content in the same case over one populated store — the parametrised direct-fact case, `semantic_paraphrase` and `scope_twins` — so they cannot pass on an empty result; `hard_negative` and `known_absent` assert an expected-empty result and pass on one by design"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
 matrix:
   memory_unit: "Three layers over one event store. A `raw_event` is an appended session turn with its embedding and the logic version it was ingested under. An `episodic_memory` groups events with their text and provenance. A `schema` is the durable claim: content text, facets and tags, a scope id and kind, a status and stale reason, confidence and salience, an embedding with packed facet axes and strengths, supporting episode ids, a labile flag, a generalization stage, first-formed and last-updated stamps, and the logic version it was formed under. Beside the symbolic layer, `semantic_prototypes` are latent cluster centroids"
-  storage: "One local SQLite database, 28 tables, with a `schema.sql` carrying design commentary. Latent prototypes and their edges, symbolic schemas with normalised evidence, relation and co-activation edge tables, sessions and continuities, an append-only `raw_events` spine, retrieval and feedback event tables, replay checkpoints, worker runs, graph-health snapshots, and a scope registry. Embeddings are computed locally through an ONNX encoder"
-  retrieval: "Mode-gated hybrid recall with no LLM call. Embedding search, FTS and prototype scoring gather candidates, all scope-filtered in SQL when a scope is set; a status set chosen by mode decides which lifecycle states may appear; `schema_relations` expansion adds neighbours under the same status bar and the same cross-scope gate; `schema_coactivation` supplies usage-based associative edges strengthened when one schema was recalled before another in a session and decayed on a roughly seven-day half-life. A working-memory gate returns a bounded set"
+  storage: "One local SQLite database, 28 tables and four FTS5 indexes, with a `schema.sql` carrying design commentary. Latent prototypes and their edges, symbolic schemas with normalised evidence, relation and co-activation edge tables, sessions and continuities, a `raw_events` spine appended per turn, retrieval and feedback event tables, a derived procedure-search projection, replay checkpoints, worker runs, graph-health snapshots, and a scope registry. Embeddings are computed locally through an ONNX encoder"
+  retrieval: "Mode-gated hybrid recall with no LLM call. Embedding search, FTS and prototype scoring gather candidates, all scope-filtered in SQL when a scope is set; a status set chosen by mode decides which lifecycle states may appear; `schema_relations` expansion adds neighbours under the same status bar and the same cross-scope gate; `schema_coactivation` supplies usage-based associative edges strengthened when one schema was recalled before another in a session and decayed on a roughly seven-day half-life. A working-memory gate returns a bounded set. Advisory procedures are retrieved separately, filtered to the exact scope, by reciprocal-rank fusion of applicability, strategy and FTS ranks"
   write: "The agent decides what is durable and calls `slowave_remember`; `slowave_activate` opens a session, `slowave_recall` asks for context, `slowave_feedback` reports whether what came back helped, and `slowave_commit` closes the session. Everything lands first in `raw_events`, and the derived layers are built by replay and consolidation — both zero-LLM, both geometric"
-  update_delete: "Feedback drives the lifecycle: a schema can be reinforced, marked stale with a reason and a named replacement, or flagged for review. Consolidation reinforces an existing engram in place rather than writing a duplicate, keyed on the primary prototype, and `dedup_exact` archives exact normalised duplicates into a canonical row. Removal is a hard delete from the dashboard: the schema row goes, and the recall items, feedback events and JSON references naming it are scrubbed in the same transaction"
+  update_delete: "Feedback drives the lifecycle: a schema can be reinforced, marked stale with a reason and a named replacement, or flagged for review. Consolidation reinforces an existing engram in place rather than writing a duplicate, keyed on the primary prototype, and `dedup_exact` archives exact normalised duplicates into a canonical row. Removal is a hard delete from the dashboard: the schema row goes, and the recall items, feedback events and JSON references naming it are scrubbed in the same transaction. A procedure is deleted by stripping it from its `raw_events` payload; its row in the procedure-search projection and its FTS entry are left in place"
   scoping: "`scope_id` and `scope_kind` on every schema, a `scope_registry`, and unconditional SQL filtering on the candidate paths when a scope is active. Cross-scope reach is earned rather than granted: a generalization stage from 0 (scoped, hard-blocked) through 1 (portable within the same scope kind, above a score floor) and 2 (contextual, admitted with a 0.70 score multiplier and the floor re-checked) to 3 (global). One gate function serves both the direct and graph-expansion paths"
   integration: "An MCP server with five tools, published on PyPI, with a setup command that configures every detected client — Claude Code, Codex, Cursor, Cline, Windsurf and Devin Desktop, OpenCode, and Claude Desktop — plus a local web dashboard with a Cytoscape graph view. No LLM API key is required for any memory operation"
   background: "A replay engine rebuilds derived memory from `raw_events`, scoped by the `logic_version` each event was ingested under so a code change replays only what it needs, with an optimistic-lease claim so exactly one process rebuilds. Consolidation forms and reinforces schemas geometrically; salience decays; co-activation edges decay on a half-life; a generalization sweep advances or corrects stages; graph-health snapshots and worker runs are recorded"
   trust: "Four lifecycle statuses, two of which withhold a schema from every candidate path, with a stale reason drawn from contradicted, superseded, outdated, unsupported or withdrawn. Confidence and salience are separate numbers used for ranking, with a shared salience ceiling so two reinforcement paths cannot diverge. `is_labile` marks a reactivated trace as temporarily uncertain, kept explicitly distinct from `needs_review`. Contradiction and supersession are described in the source as client-owned history that the store and consolidation never infer"
-  strengths: "A cross-scope gate written as one predicate because two copies drift, with the widening rule — same scope, unscoped, global or user, or a generalization stage of 2 — stated in the SQL rather than assembled by callers; an append-only event store with a logic-version stamp so an algorithm change replays instead of migrating; a retrieval-gold contract with required, forbidden and history-only content in the same case, where the negative half is load-bearing in the pass conjunction; a delete preview that counts the evidence links, relations and co-activations a removal will take with it, so the person confirming sees the collateral rather than the row; a schema file that argues for its own decisions; and a memory core with no LLM call and no API key anywhere in ingest, consolidation or recall"
-  risks: "Removal is total and unrecorded. A schema deleted from the dashboard is gone from `schemas`, and the recall items, feedback events and JSON references that named it are scrubbed alongside it, so nothing in the store says the memory existed or that a person removed it — and because the delete is keyed on the row rather than on the claim, the same proposition can be re-derived by the next consolidation pass with nothing to intercept it. A status the store does not recognise is coerced to `active` rather than refused, so the failure direction on a bad write is toward the most-trusted value. There is no validity time — every timestamp is a record time, so nothing can be asked as of a past state of the world. The published benchmark numbers are LLM-judged evidence containment with the raw records kept out of the repository, and the LongMemEval run is an oracle configuration the page itself says is not a distractor test. It is AGPL-3.0-or-later with a separate commercial licence offered, which is a deliberate choice a reader has to plan around. And the surface is wide: 27 tables, a dashboard of over 4,000 lines, and a client-setup module that executes at install time"
+  strengths: "A cross-scope gate written as one predicate because two copies drift, with the widening rule — same scope, unscoped, global or user, or a generalization stage of 2 — stated in the SQL rather than assembled by callers; an event store with a logic-version stamp so an algorithm change replays instead of migrating; a retrieval-gold contract with required, forbidden and history-only content in the same case, where the negative half is load-bearing in the pass conjunction; a delete preview that counts the evidence links, relations and co-activations a removal will take with it, so the person confirming sees the collateral rather than the row; a schema file that argues for its own decisions; and a memory core with no LLM call and no API key anywhere in ingest, consolidation or recall"
+  risks: "Removal is total and unrecorded. A schema deleted from the dashboard is gone from `schemas`, and the recall items, feedback events and JSON references that named it are scrubbed alongside it, so nothing in the store says the memory existed or that a person removed it — and because the delete is keyed on the row rather than on the claim, the same proposition can be re-derived by the next consolidation pass with nothing to intercept it. A status the store does not recognise is coerced to `active` rather than refused, so the failure direction on a bad write is toward the most-trusted value. There is no validity time — every timestamp is a record time, so nothing can be asked as of a past state of the world. The published benchmark numbers are LLM-judged evidence containment with the raw records kept out of the repository, and the LongMemEval run is an oracle configuration the page itself says is not a distractor test. It is AGPL-3.0-or-later with a separate commercial licence offered, which is a deliberate choice a reader has to plan around. Deleting a procedure leaves its summary, step text and originating query in the procedure-search projection and its FTS index, and the dashboard's Home page keeps counting it as a current procedure. And the surface is wide: 28 tables, a dashboard of over 4,000 lines, and a client-setup module that executes at install time"
 ---
 
 ## 1. Executive Summary
@@ -41,14 +45,13 @@ clustering into latent prototypes, symbolic schemas formed over them, and
 retrieval by hybrid search with graph expansion. The agent supplies judgement;
 the store supplies memory.
 
-AGPL-3.0-or-later with a commercial licence offered separately, and a CLA. 517
-commits between 8 June and 14 September 2026 from two human contributors and a
-release bot; version 0.20.3, 32,690 lines of Python across 79 files, against
-34,527 lines of test in 136 files carrying 903 test functions. The screen found
-one auto-run surface, five build-time execution paths — an install-time
-client-setup module and three pytest `conftest.py` files — one unpinned
-dependency surface, and two manifests changed inside the seven-day cooldown, so
-nothing was installed, built or run.
+It is AGPL-3.0-or-later, with a separate commercial licence offered in
+`COMMERCIAL.md` and contributions taken under a CLA. The screen found one
+auto-run surface (`server.json`), five build-time execution paths — the
+`Makefile`, an install-time client-setup module and three pytest `conftest.py`
+files — one unpinned dependency surface, and `pyproject.toml` changed on 24
+September 2026, inside the seven-day cooldown, so nothing was installed, built
+or run.
 
 **The removal path is a hard delete, and it takes the record with it.** A person
 removes a schema from the dashboard; the row goes from `schemas`, and the recall
@@ -61,6 +64,17 @@ happened, and the key is the schema id rather than the claim, so the same
 proposition arriving from a later session is a new schema with nothing to
 intercept it. The store can forget a memory completely; it cannot remember
 having done so.
+
+**Procedures are erased less thoroughly than schemas.** Deleting a procedure
+from the dashboard strips it from the `task_complete` event that carries it and
+scrubs its recall items, feedback events and JSON references. It does not touch
+`procedure_search_documents` or `procedure_search_fts`, the derived projection
+[`04e16015d350b98a1425d7d6911d32cac3abeaaa`](https://github.com/slowave-ai/slowave/commit/04e16015d350b98a1425d7d6911d32cac3abeaaa) added on 24 September 2026, so
+the procedure's summary, step text and originating query stay in both tables
+(`dashboard/app.py:1934-1962`, `symbolic/procedure_search.py:164-214`). No read
+path serves the orphan back, because retrieval iterates procedures loaded from
+`raw_events`. The Home page counts it as a current procedure all the same, and
+the committed delete test builds the projection row and does not assert it gone.
 
 The migration that introduced this says what it replaced:
 
@@ -83,11 +97,15 @@ has reached 2. The same shape appears on the direct-candidate filter and on the
 graph-expansion walk — the drift this atlas most often finds between exactly
 those two paths.
 
-**The event store is the spine.** `raw_events` is append-only and stamped with
-the `logic_version` under which it was ingested, so when the consolidation
+**The event store is the spine.** `raw_events` is appended per turn and stamped
+with the `logic_version` under which it was ingested, so when the consolidation
 algorithm changes the fix is to replay the events processed under the old logic
 rather than to migrate derived state — with an optimistic-lease claim so the
-daemon, worker and CLI cannot all rebuild at once. It is the reason a store whose
+daemon, worker and CLI cannot all rebuild at once. It is not append-only. A
+repeated `commit` overwrites the session's `task_complete` event
+(`ops.py:1025`), and the procedure delete strips the procedure from that event
+and scrubs its id from the metadata of every raw event naming it
+(`dashboard/app.py:1735-1748`, `:1946`). The log is the reason a store whose
 derived memory carries no mutation log is still reconstructible: the evidence is
 kept even where the decisions are not.
 
@@ -108,8 +126,9 @@ than on an unwired mechanism.
 Three layers, and the arrow only points one way.
 
 At the bottom, **raw events**: what was said, appended, embedded, stamped with
-the version of the code that ingested it. Nothing is derived here and nothing is
-lost.
+the version of the code that ingested it. Nothing is derived here. Ingest only
+appends; the in-place rewrites are a repeated commit and the procedure delete,
+both about procedures.
 
 In the middle, the **latent layer**: episodes grouped from events, clustered
 into semantic prototypes that are centroids rather than sentences. This is where
@@ -138,32 +157,33 @@ afterwards knows about that decision is nothing: the row is gone, and
 consolidation's identity key is the primary prototype of whatever it is forming
 now.
 
-**That is a permission boundary, and the 2026-09-19 re-read decided it is not
-`human_review`.** The five MCP tools are activate, recall, remember, feedback and
-commit, and none of them removes anything — the boundary is real and the delete
-preview in front of it, which counts the evidence links, prototype links,
-relations, co-activations and retrieval evidence that would go with the row, is
-the kind of confirmation dialog this atlas rarely sees. What the mark asks for is
+**That is a permission boundary, and it is not `human_review`.** The five MCP
+tools are activate, recall, remember, feedback and commit, and none of them
+removes anything. The boundary is real, and the delete preview in front of it
+counts the evidence links, prototype links, relations, co-activations and
+retrieval evidence that would go with the row. What the mark asks for is
 different: a memory that waits in a state until a person resolves it. Nothing
-here waits. The one status that reads like a review queue, `needs_review`, is
-admitted by the broad retrieval profile, by the consolidation merge check, by
-pattern completion and by the store's candidate queries — and written by nothing
-in the tree. `update_status` is called three times, all from feedback, and all
-three write `stale`; the docstring in `core/feedback.py:61-62` says
-*"needs_review is set unconditionally by FeedbackConfig.apply_stale_wrong_review"*
-and that config path is one of those three. So the dashboard's review counter,
-`SELECT COUNT(*) … WHERE status = 'needs_review'` (`dashboard/app.py:1250`), is
-structurally zero, while a *different* field is surfaced under the same word one
-file over: `ops.py:801` maps the API's `needs_review` key to `s.is_labile`, which
-the schema's own comment calls *"distinct from the unrelated
-status='needs_review'"*. A queue with no writer and a display name shared with
-something else is the near-miss worth recording, not the mark.
+here waits.
+
+The one status that reads like a review queue, `needs_review`, is admitted by
+the broad retrieval profile, the consolidation merge check, pattern completion
+and the store's candidate queries, and written by nothing in the tree.
+`update_status` is called three times, all from feedback, and all three write
+`stale`. The docstring in `core/feedback.py:61-62` says *"needs_review is set
+unconditionally by FeedbackConfig.apply_stale_wrong_review"*, and that flag
+guards two of those three calls. So the dashboard's review counter,
+`SELECT COUNT(*) … WHERE status = 'needs_review'` (`dashboard/app.py:1258`), is
+structurally zero. A different field is surfaced under the same word one file
+over: `ops.py:823` maps the API's `needs_review` key to `s.is_labile`, which the
+schema's own comment calls *"distinct from the unrelated
+status='needs_review'"*. A queue with no writer, and a display name shared with
+something else, is the near-miss; it is not the mark.
 
 ```mermaid
 %% caption: session turns are appended to a raw event store stamped with the logic version that ingested them, replayed into episodes and latent prototypes, and consolidated into symbolic schemas keyed on the primary prototype; recall gathers candidates under a scope filter and a status filter applied in the store, expanding along relation edges through the same two predicates; deletion is a dashboard act that removes the schema and scrubs every row naming it, leaving no state the next consolidation pass can consult
 flowchart TB
     S["agent: activate · remember ·<br/>recall · feedback · commit<br/>— five MCP tools, none of them delete"]
-    RE[("raw_events — append-only,<br/>stamped with logic_version")]
+    RE[("raw_events — appended per turn,<br/>stamped with logic_version")]
     RP["replay engine — rebuilds only<br/>events under an old logic version,<br/>under an optimistic-lease claim"]
     EP[("episodic_memories<br/>+ episode_text provenance")]
     PR[("semantic_prototypes<br/>— latent centroids")]
@@ -197,30 +217,31 @@ flowchart TB
 
 ## 3. Architecture
 
-Five subsystems under one package. `storage` is a single `schema.sql` of 623
+Five subsystems under one package. `storage` is a single `schema.sql` of 634
 lines and a SQLite wrapper. `latent` holds the episodic and semantic stores, the
 graph manager, the replay engine, salience, temporal handling, a transition
 model and a VSA module. `symbolic` holds the encoder, the ONNX encoder, the
-2,065-line schema store, procedural memory and the raw log. `core` holds the
+2,089-line schema store, procedural memory with its derived search projection,
+and the raw log. `core` holds the
 engine, the context and working-memory gate, consolidation, feedback, scope,
 continuity, graph health, and a `services/` layer splitting ingest, retrieval,
 retrieval access, feedback, feedback events, consolidation, pattern completion
 and rebuild. Above them, an MCP server with five tools, a CLI, and a dashboard.
 
 The database is the design document. `schema.sql` carries the arguments as well
-as the DDL: why a stale reason is kept beside the status rather than inside it, why
-`schema_coactivation` is separate from `schema_relations` (usage-based versus
-content-based, with STDP-like directional plasticity so `src → dst` strengthens
-when src was recalled first), why the logic version is on the event rather than
-the schema, and why the facet blobs *"support topical relation diagnostics and
-replay inspection; they do not determine semantic truth."*
+as the DDL. It says why a stale reason is kept beside the status rather than
+inside it, and why `schema_coactivation` is separate from `schema_relations`:
+usage-based versus content-based, with STDP-like directional plasticity so
+`src → dst` strengthens when src was recalled first. It says why the logic
+version is on the event rather than the schema, and that the facet blobs
+*"support topical relation diagnostics and replay inspection; they do not
+determine semantic truth"*.
 
-The proportions are worth stating plainly. Three months of work has produced 27
-tables, a dashboard of over 4,000 lines, a CLI of over 2,000, and a client-setup
-module of similar size that runs at install time and writes configuration for
-eight agent clients. That is a lot of surface per commit-month, and the setup module is the
-part most worth a reader's attention before installing, because it edits files
-outside the project.
+The surface is wide for work dated 8 June to 24 September 2026: 28 tables, a
+dashboard of over 4,000 lines, a CLI of over 2,000, and a client-setup module of
+similar size that runs at install time and writes configuration for eight agent
+clients. Read the setup module before installing, because it edits files outside
+the project.
 
 ## 4. Essential Implementation Paths
 
@@ -243,26 +264,38 @@ outside the project.
   in `strict_scope` mode, and then by stage. Underneath it the store's own
   predicate carries the same rule, admitting a row whose `generalization_stage`
   has reached 2.
-- **Delete.** `dashboard/app.py:1750` previews what a removal will take —
+- **Delete.** `dashboard/app.py:1758` previews what a removal will take —
   evidence links, prototype links, relations, co-activations and retrieval
-  evidence, counted per kind → `:1828` deletes the recall items, the feedback
+  evidence, counted per kind → `:1836` deletes the recall items, the feedback
   events naming the schema as target or replacement, the JSON references, and
   then the row, in one transaction.
+- **Procedures.** `ops.commit` stores a procedure in the `task_complete` raw
+  event and calls `backfill_procedure_search` (`ops.py:1041`). That upserts an
+  applicability text (the activating query, goal and context) and a strategy
+  text (summary and steps) into `procedure_search_documents` and
+  `procedure_search_fts` → `activate` and `recall` load procedures for the
+  exact scope and rank them by reciprocal-rank fusion of applicability,
+  strategy and FTS ranks. A 0.60 dense floor admits them, and a specific
+  lexical match can bypass it (`symbolic/procedural_memory.py:409-471`) → the
+  dashboard delete at `dashboard/app.py:1934` strips the payload from the raw
+  event and leaves both projection rows.
 - **Rebuild.** `RebuildService.try_claim` takes an optimistic lease on a
   `logic_versions` row so exactly one of the daemon, worker or CLI replays;
   replay is scoped to events ingested under an older version.
 
 ## 5. Memory Data Model
 
-Twenty-eight tables. The ones that carry the report:
+Twenty-eight tables in `schema.sql`, three FTS5 indexes beside them, and a
+fourth FTS5 index created at startup by `sqlite_db.py`. The ones that carry the
+report:
 
 **`schemas`** — the durable claim. Content text, facets and tags as JSON, a
-scope id and kind, a status defaulting to `active`, a `stale_reason` drawn from
-contradicted / superseded / outdated / unsupported / withdrawn, a confidence and
-a salience, an embedding with optional packed facet axes and strengths, the
-supporting episode ids, an `is_labile` flag, a `generalization_stage` from 0 to
-3, first-formed and last-updated stamps, and the logic version it was formed
-under. Five indexes, including ones on status, scope, labile and stage — the
+scope id and kind, a status defaulting to `active`, and a `stale_reason` drawn
+from contradicted / superseded / outdated / unsupported / withdrawn. Beside
+them: a confidence and a salience, an embedding with optional packed facet axes
+and strengths, the supporting episode ids, an `is_labile` flag, a
+`generalization_stage` from 0 to 3, first-formed and last-updated stamps, and
+the logic version it was formed under. Five indexes, including ones on status, scope, labile and stage — the
 fields the read path actually filters on.
 
 **`schema_evidence`** — a normalised link from a schema to an episode or raw
@@ -281,11 +314,20 @@ on the event and the lease on the version.
 
 **`feedback_events`** — an unusually complete feedback record: the retrieval it
 belongs to, the target kind and id, an optional replacement target, an
-assessment, a stale reason, an effect, a contribution, a reason, a coverage of
-partial or complete, a status of accepted or rejected with a rejection reason,
-the source contract, a `refines_event_id` so a correction to a feedback event is
-itself an event, and a `mutation_mode` of shadow or active so a signal can be
-recorded without being applied.
+assessment, a stale reason, an effect, a contribution and a reason. It also
+carries a coverage of partial or complete, a status of accepted or rejected with
+a rejection reason, and the source contract. A `refines_event_id` makes a
+correction to a feedback event itself an event, and a `mutation_mode` of shadow
+or active lets a signal be recorded without being applied.
+
+**`procedure_search_documents` and `procedure_search_fts`** — a derived,
+advisory projection of each procedure: an applicability text rebuilt from the
+activation that preceded it, a strategy text from its summary and steps, the
+session's scope, outcome and verification status. The schema comment calls it
+*"an independently rebuildable projection"*. It is rebuilt on every startup and
+after each commit by an upsert over `task_complete` events that still carry a
+procedure. No code deletes from either table, so a row outlives the procedure
+it was built from (`storage/schema.sql:496-522`, `storage/sqlite_db.py:430-449`).
 
 **What is missing is validity time.** Every temporal column here is about the
 record: when it was formed, updated, touched, ingested. There is no interval
@@ -308,9 +350,8 @@ not simply rank like a settled one.
 Graph expansion follows `schema_relations`, and it is held to the same two bars.
 The status check is repeated in the neighbour loop with a comment saying the
 filter exists *"so a stale edge can't leak"*, and the cross-scope gate is the
-same function object the direct path used. Two independent filters over the same
-rule is the shape that has failed elsewhere in this corpus; one function called
-twice is the fix.
+same function object the direct path used. Two independent filters over one
+rule can drift apart; one function called twice cannot.
 
 Beside the relation graph, `schema_coactivation` records that two schemas were
 recalled in the same session, with the edge strengthening in the direction of
@@ -321,6 +362,16 @@ useful together does not become a pair the system believes is topically related.
 The whole path runs without an LLM call. The scoring is embeddings, BM25,
 salience, confidence and graph weight; the encoder is local ONNX.
 
+Procedures take a separate path on `activate` and `recall`. They are loaded for
+the exact scope, with no generalization ladder, and each is scored twice by
+cosine — against its applicability text and its strategy text. The two ranks
+and the FTS rank are fused by reciprocal rank, weighted 2:1:1. A procedure is
+admitted when either cosine reaches 0.60 or the FTS match shares two terms with
+the cue, or one term rare in that scope's procedures, and a context facet that disagrees with the
+caller's rejects it. Helped and harmed feedback adjust the fused score within
+fixed caps (`symbolic/procedural_memory.py:409-471`,
+`symbolic/procedure_search.py:242-320`).
+
 ## 7. Write Mechanics
 
 The agent writes; the store maintains. `slowave_remember` is the explicit path,
@@ -329,12 +380,13 @@ reports what helped, `commit` closes it. Everything lands in `raw_events` first,
 so the derived layers can always be discarded and rebuilt.
 
 Consolidation is the interesting write path, because it has to decide whether
-the thing it is forming already exists. Two answers, in order: the same primary
-prototype means the same engram, so reinforce in place — *"one schema per primary
-prototype"* — and the status is not consulted, so a schema in any lifecycle state
-is reactivated by a match rather than duplicated; a nearest active neighbour at
-or above 0.92 cosine is strengthened instead of copied; otherwise form a new
-schema, classify it, and relate it.
+the thing it is forming already exists. It asks two questions in order. The
+same primary prototype means the same engram, so the schema is reinforced in
+place — *"one schema per primary prototype"* — and the status is not
+consulted, so a schema in any lifecycle state is reactivated by a match rather
+than duplicated. Failing that, a nearest active neighbour at or above 0.92
+cosine is strengthened instead of copied. Otherwise a new schema is formed,
+classified and related.
 
 `dedup_exact` handles the other duplicate case: exact normalised duplicates are
 marked `archived` with their salience dropped to 0.05 and related to the
@@ -377,6 +429,19 @@ and runs the other way too: erasure this thorough is uncommon in this corpus,
 and a store that keeps no record of what it deleted is a store with nothing to
 leak.
 
+**Procedure deletion misses the projection.** The procedure delete removes the
+payload from its raw event and scrubs the references, and leaves the
+`procedure_search_documents` row and the `procedure_search_fts` entry holding
+its summary, steps and the query that preceded it. The residue is not a
+tombstone: it is keyed on `proc_<session_id>`, and no write path consults it.
+It is a copy the erasure does not reach, counted by the dashboard's Home page as
+a current procedure. `test_procedure_hard_delete_removes_embedded_definition_and_references`
+commits through `ops.commit`, whose backfill writes the projection row, as
+`test_procedure_search_backfills_from_canonical_completion_events` asserts for
+the same sequence. It then asserts on the raw event, the recall items and the
+snapshot JSON, and on neither projection table
+(`tests/unit/test_dashboard_delete.py:141-188`).
+
 **Trust state — awarded.** Four statuses, gated per mode, applied identically on
 both retrieval paths, with `is_labile` kept explicitly distinct from
 `needs_review` in the schema comment — a distinction several systems in this
@@ -389,27 +454,27 @@ the part to steal: a memory earns the right to cross a boundary by demonstrating
 it travels, rather than being marked global at write time by whoever wrote it.
 
 **Audit log — withheld.** No table records mutations to the derived memory. The
-schema holds an append-only `raw_events` store and an append-only
-`consolidation_debug` trace, and both are valuable — the first is what makes the
+schema holds a `raw_events` log and an append-only `consolidation_debug`
+trace, and both are valuable — the first is what makes the
 whole derived layer reconstructible — but they are the evidence the memory is
 built from and a diagnostic of how it was built, not a record of what was
-changed and by whom. `update_status` writes no row beside the status it
+changed and by whom. The log is itself rewritten in place when a procedure is
+deleted or a session commits twice. `update_status` writes no row beside the status it
 overwrites. `feedback_events` comes closest, carrying an assessment, a stale
 reason, a named replacement and an accepted-or-rejected status, but it is keyed
 to a retrieval and cascades away when that retrieval is deleted, so it is not a
 durable record of the mutations it caused.
 
-**Human review — awarded.** A person is the only actor who can remove a memory,
-and this is enforced by the tool list rather than by a flag: the five MCP verbs
-are activate, recall, remember, feedback and commit, and none of them deletes.
-What lifts it above a bare permission split is the preview — the dashboard walks
-the evidence links, prototype links, relations, co-activations and retrieval
-evidence pointing at the schema and counts each before the person confirms, so
-the decision is made against the collateral rather than against a row id.
+**Human review — withheld.** A person is the only actor who can remove a memory,
+and the tool list enforces it: the five MCP verbs are activate, recall,
+remember, feedback and commit, and none of them deletes. That is a permission
+over a destructive act, which the rubric excludes by name. No memory waits in a
+state for a person to resolve: `needs_review` is admitted by four read paths and
+written by none, as section 2 sets out.
 
 **Negative evaluation — awarded.** The gold contract requires the required set
-and forbids the forbidden and history-only sets in the same evaluation, so
-neither half can pass alone.
+and forbids the forbidden and history-only sets in the same evaluation. In the
+three cases that carry both, neither half can pass alone.
 
 **Bitemporal — withheld, on an absence.** No validity interval, no as-of
 parameter. For a store whose central case is *"the current refund window is 14
@@ -417,16 +482,16 @@ days, and it used to be 30"*, the lifecycle answers it through supersession
 rather than through time, which is a coherent choice and a different one.
 
 **Two things a reader should weigh.** The install path executes: a 2,124-line
-setup module writes configuration into eight clients' files, and the dependency
-manifests changed the day of this reading, which is the standard reason to wait
-out a cooldown. And the licence is AGPL-3.0-or-later with a commercial licence
+setup module writes configuration into eight clients' files, and
+`pyproject.toml` changed on 24 September 2026, a version bump inside the
+seven-day cooldown on 28 September. And the licence is AGPL-3.0-or-later with a commercial licence
 offered separately and a CLA in the tree — open for use and study, and a
 deliberate constraint on building a closed product over it.
 
 ## 10. Tests, Evals, and Benchmarks
 
-898 test functions across 134 files and 34,348 lines — more test code than source
-— split into four trees that mean different things: `unit` for the rules,
+907 test functions in 102 files, and 34,645 lines of test against 33,193 of
+source, split into four trees that mean different things: `unit` for the rules,
 `regression` for bugs that have happened, `acceptance` for end-to-end memory
 lifecycles against a harness, and `retrieval_quality` for the gold contracts.
 
@@ -440,11 +505,11 @@ system that can express *"this must come back, that must not, and the answer mus
 fit in eight items"* as data has made its retrieval requirements testable.
 
 **The regression tests document their own bugs.** `test_scope_rejection_filter`
-opens with the date and the mechanism: an exact-match check against a bare
-`"scope_mismatch"` string that the gate never actually produces, because real
-reason strings are compound diagnostics ending in that token — *"the broken check
-let every scope-rejected candidate through, which is what fed the cross-scope
-co-activation leak."* It then includes a test whose only job is to demonstrate
+opens with the date and the mechanism. An exact-match check compared against a
+bare `"scope_mismatch"` string that the gate never produces, because real reason
+strings are compound diagnostics ending in that token: *"the broken check let
+every scope-rejected candidate through, which is what fed the cross-scope
+co-activation leak"*. It then includes a test whose only job is to demonstrate
 that the old check would have missed the real string. That is the shape a
 regression test should have.
 
@@ -453,14 +518,22 @@ binary LLM-judge evidence containment — 71.84% on LoCoMo across 1,534 answerab
 questions in categories one to four, 65.20% on a LongMemEval oracle
 configuration over all 500 questions — with the judge model and temperature
 named and described as evaluation infrastructure rather than part of the system.
+
 Three disclosures matter more than the numbers. The LongMemEval run is an oracle
-setup and the page says outright *"this is not a distractor-retrieval test."* The
+setup and the page says outright *"this is not a distractor-retrieval test"*. The
 lower-scoring categories are analysed rather than buried, with the argument that
 commonsense at 35.79% *"is not a pure memory-recall task and should not be used
-alone to judge the memory layer."* And the raw evaluation records are stated to
+alone to judge the memory layer"*. And the raw evaluation records are stated to
 be absent from the public repository, with the commands to reproduce a run given
 instead — an honest limitation, and one that means the published figures cannot
 be checked from the tree.
+
+**The procedure-search tests cover the build and not the removal.**
+`test_procedural_memory_mvp.py` asserts that the projection backfills from
+completion events, that it is rebuilt after its rows are deleted and its FTS
+table dropped, and that a malformed historical payload is skipped rather than
+breaking the backfill. No test asserts that deleting a procedure removes its
+projection row.
 
 No paper: a search of the README and `docs/` for `arxiv`, `bibtex`,
 `CITATION.cff` and a DOI returns nothing.
@@ -505,6 +578,11 @@ No paper: a search of the README and `docs/` for `arxiv`, `bibtex`,
 - **Inferring supersession geometrically.** The store writes only the symmetric
   association and leaves contradiction and supersession to the client, which is
   the conservative call for a system with no LLM in the loop.
+- **A derived projection the delete path was not told about.**
+  `procedure_search_documents` arrived with its own writer, its own FTS index
+  and its own dashboard count, and the procedure delete written before it
+  scrubs every table except those two. A delete that enumerates tables by hand
+  needs a test that fails when a new table can hold the deleted text.
 - **Publishing judged numbers whose records are not in the tree.** The
   reproduction commands are given and the raw evaluation records are not, so the
   figures have to be taken on trust or re-run.
@@ -517,8 +595,9 @@ boundary that holds by default. Read it for the generalization ladder, the
 delete preview and the retrieval-gold contract whatever you end up building. Weigh three
 things before adopting: the AGPL with its commercial-licence path, an install
 that writes configuration into eight clients through a module that executes at
-install time, and three months of very fast growth across a wide surface — wait
-out the dependency cooldown, and read `slowave/cli/setup.py` before running it.
+install time, and fast growth across a wide surface between 8 June and 24
+September 2026 — wait out the dependency cooldown, and read
+`slowave/cli/setup.py` before running it.
 
 ## 12. Open Questions
 
@@ -532,6 +611,9 @@ out the dependency cooldown, and read `slowave/cli/setup.py` before running it.
   would let the store refuse a re-derivation, at the cost of retaining a trace
   of precisely the content someone asked to be rid of. The project has chosen
   the erasure side of that trade explicitly.
+- Should the procedure delete reach the projection? The startup backfill
+  rebuilds rows only for events that still carry a procedure, so it never
+  removes one, and the Home count includes every orphan.
 - How is the generalization stage advanced? The sweep exists and corrects stale
   high stages; the promotion criteria are the interesting half.
 - Will the raw evaluation records be published? The benchmark page is careful
@@ -542,32 +624,44 @@ out the dependency cooldown, and read `slowave/cli/setup.py` before running it.
 
 | Path | Lines | What it holds |
 | --- | --- | --- |
-| `slowave/storage/schema.sql` | 606 | Twenty-seven tables with their design commentary: `schemas` (167-206), `schema_evidence` (208), `schema_relations` and `schema_coactivation` (236-275), `raw_events` and `logic_versions` (115-151), `feedback_events` (464-493), `scope_registry` (549) |
+| `slowave/storage/schema.sql` | 634 | Twenty-eight tables with their design commentary: `schemas` (167-206), `schema_evidence` (208), `schema_relations` and `schema_coactivation` (236-275), `raw_events` and `logic_versions` (115-151), `feedback_events` (464-493), `procedure_search_documents` (496-522), `scope_registry` (577-586) |
 | `slowave/symbolic/schema_store.py` | 2089 | `VALID_STATUS` (29-34), `update_status` with its fold-to-stale and its coercion to `active` (690-715), the status and scope predicates on the candidate paths (1424, 1514-1518, 1580-1585, 1934, 2019-2024) |
-| `slowave/core/consolidation.py` | — | The primary-prototype lookup that reinforces without consulting status (278-293), and the near-duplicate guard over active rows (296-320) |
-| `slowave/core/services/retrieval.py` | 975 | The mode-gated status sets (413-419), the candidate filter (425-435), `_cross_scope_gate` (629) and its two call sites (430, 505) |
-| `slowave/core/services/feedback.py` | 855 | The lifecycle transitions feedback drives |
-| `slowave/dashboard/app.py` | 4436 | The local review surface, the delete preview (1750-1790) and the delete itself (1828-1848) |
-| `slowave/storage/sqlite_db.py` | — | The migration that restores every `forgotten` schema and drops the audit table (304-318) |
+| `slowave/core/consolidation.py` | 623 | The primary-prototype lookup that reinforces without consulting status (278-293), and the near-duplicate guard over active rows (296-320) |
+| `slowave/core/services/retrieval.py` | 975 | The mode-gated status sets (413-419), the candidate filter (421-433), `_cross_scope_gate` (629) and its two call sites (430, 505) |
+| `slowave/core/services/feedback.py` | 855 | The lifecycle transitions feedback drives; the three `update_status` calls, all writing `stale` (569, 594, 827) |
+| `slowave/dashboard/app.py` | 4450 | The local review surface, the `needs_review` counter (1258), the schema delete preview (1758) and delete (1836-1856), and the procedure delete that leaves the projection (1934-1962) |
+| `slowave/storage/sqlite_db.py` | 451 | The migration that restores every `forgotten` schema and drops the audit table (304-318), and the startup that creates `procedure_search_fts` and backfills the projection (430-449) |
+| `slowave/symbolic/procedure_search.py` | 366 | The procedure-search projection: backfill and upsert (63-214), scoped loads and FTS search (217-280), the specificity rule (302-320) |
+| `slowave/symbolic/procedural_memory.py` | 760 | `load_procedures` for the exact scope (276), `retrieve_procedures` with its fusion and admission floor (409-471) |
+| `slowave/ops.py` | 1147 | `activate` (244) and `recall` (649) calling procedure retrieval, `commit` (902) calling the backfill (1041), and the API's `needs_review` key mapped to `is_labile` (823) |
 | `slowave/cli/setup.py` | 2124 | Client detection and configuration; executes at install time |
 | `slowave/mcp/tools.py` | 1694 | The five tools — activate, recall, remember, feedback, commit — and no delete |
-| `tests/retrieval_quality/contracts.py` | — | `RetrievalGold` (20-28) and `evaluate` with its `passed` conjunction (94-124) |
-| `tests/acceptance/test_memory_lifecycle.py` | — | The lifecycle cases, with `forbidden` content asserted in fifteen places |
-| `tests/unit/test_dashboard_delete.py` | — | The preview-and-cascade case (68), and the migration case that pins the removal of the audit table (191) |
-| `tests/unit/test_scope_rejection_filter.py` | — | The regression test that documents the bug it prevents |
-| `docs/benchmarks.md` | — | LoCoMo and LongMemEval oracle figures with the judge named and the oracle caveat stated |
+| `tests/retrieval_quality/contracts.py` | 139 | `RetrievalGold` (18-28) and `evaluate` with its `passed` conjunction (94-122) |
+| `tests/acceptance/test_memory_lifecycle.py` | 890 | The lifecycle cases, with `forbidden` content asserted in fifteen places; `scope_twins` (322), `hard_negative` (290), the stale transition (361) |
+| `tests/unit/test_dashboard_delete.py` | 226 | The schema preview-and-cascade case (68), the procedure delete case that asserts on no projection table (141), and the migration case that pins the removal of the audit table (191) |
+| `tests/unit/test_procedural_memory_mvp.py` | 595 | Projection backfill and rebuild (216), malformed-payload tolerance (265) |
+| `tests/unit/test_scope_rejection_filter.py` | 48 | The regression test that documents the bug it prevents |
+| `docs/benchmarks.md` | 197 | LoCoMo and LongMemEval oracle figures with the judge named and the oracle caveat stated |
 
 Searches behind the absence claims above, run from the repository root:
 
 ```sh
-grep -rn 'valid_from\|valid_to\|valid_until\|effective_' slowave/storage/schema.sql slowave --include='*.py'  # no validity time; the hits are an effective_query string and a port helper
-grep -rn -i 'arxiv\|bibtex\|CITATION\.cff\|doi\.org' README.md docs   # nothing: no paper
-grep -rn "'forgotten'" slowave --include='*.py'                        # only the migration that removes the status
-grep -rn 'DELETE FROM schemas' slowave --include='*.py'                # one site: the dashboard delete
-grep -rn '_log' slowave/storage/schema.sql                             # no mutation-log table
+git grep -n -E 'valid_from|valid_to|valid_until|valid_at|as_of|asof' -- slowave/storage/schema.sql 'slowave/*.py'   # nothing: no validity time
+git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation\.cff|doi\.org' -- README.md docs   # nothing: no paper
+git grep -n -E "'forgotten'" -- 'slowave/*.py'                   # only the migration that removes the status
+git grep -n -E 'DELETE FROM schemas' -- 'slowave/*.py'           # one site: the dashboard delete
+git grep -n -i -E 'CREATE TABLE[^(]*(audit|history|mutation|_log)' -- slowave   # nothing: no mutation-log table
+git grep -n -E 'update_status\(|SET status' -- 'slowave/*.py'    # three feedback calls writing stale, the legacy migrations, dedup's archived; none writes needs_review
+git grep -n -E 'DELETE FROM procedure_search' -- slowave          # only the FTS refresh inside the upsert; nothing deletes a projection row
+git grep -n -E 'procedure_search' -- slowave/dashboard/app.py     # reads only: the pulse, the earliest timestamp, the Home count
+git grep -n -E 'UPDATE raw_events|UPDATE \{table\}|DELETE FROM (raw_events|sessions)' -- slowave   # ops.py commit rewrite, the procedure delete, and the JSON scrubber the procedure delete points at raw_events
+git grep -l -E 'procedure_search_documents' -- tests               # two files, test_dashboard_overview.py and test_procedural_memory_mvp.py; neither deletes a procedure
+git grep -n -E '@mcp\.tool\(name=' -- slowave/mcp                   # five tools: activate, recall, remember, feedback, commit
 ```
 
 ## History
+
+**2026-09-28** — [`00b5a1d7594fef3261a6bc1786e46cceebcd9d49`](https://github.com/slowave-ai/slowave/commit/00b5a1d7594fef3261a6bc1786e46cceebcd9d49), version 0.20.4, 17 commits past the previous pin; 15 are README edits. The schema store, retrieval, consolidation, feedback and MCP tools are unchanged; three marks stand. New: a procedure-search projection that the procedure delete leaves in place ([section 9](#9-reliability-safety-and-trust)). Corrected from the previous pin: section 9 still called `human_review` awarded after its withdrawal; `needs_review` has far more than eleven appearances, all reads; the trust-state test cited was a ranking test; `raw_events` is not append-only, since two procedure paths rewrite it; the census gave two contributors (one author, three names), 28 tables and 623 schema lines (27 and 606). `LICENSE`, `COMMERCIAL.md` and `CLA.md` are byte-identical to the pin. Screened first: one auto-run surface, five build-time execution points, one unpinned surface, `pyproject.toml` inside the cooldown. Nothing installed, built or run.
 
 **2026-09-19** — re-read at the same pin [`8d538b370c37243a39e19e52e4a5fdb35c9527b5`](https://github.com/slowave-ai/slowave/commit/8d538b370c37243a39e19e52e4a5fdb35c9527b5), still the tip. **`human_review` is withdrawn; three marks stand.** Nothing upstream moved, so this is a correction. The evidence the mark rested on is accurate and stays in section 4: five MCP tools, none of which removes anything, and a delete preview that names the collateral before a person confirms. That is a permission boundary over a destructive act, not a state a memory waits in. The state that would have been one is `needs_review`, and it has no writer: eleven appearances outside the tests, every one a read, `update_status` called three times and writing `stale` each time — including from the very config flag whose docstring claims it sets `needs_review`. The dashboard's review counter is therefore structurally zero, and `ops.py:801` publishes a different field, `is_labile`, under the same key, which the schema comment explicitly separates from it. Recorded as a qualification on `trust_state` too, which now rests on `stale` and `archived`. Screened again first; nothing installed or run.
 
