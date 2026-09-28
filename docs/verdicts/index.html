@@ -20396,44 +20396,43 @@ engine crate this repository points at. No marks.</li>
 href="../systems/huiran-cerebro/"><code>huiran-cerebro</code></a></h3>
 <ul>
 <li>Best idea: <strong>mark the duplicate, keep the first writer, and
-offer a dry run.</strong> Fragments whose content Jaccard crosses a
-threshold have the later one set <code>status='merged'</code> —
-不删原文, the text is not deleted — while the earlier survives as
-信息源, the information source. Every recall path selects
-<code>WHERE status='active'</code>, so a merged fragment leaves
-retrieval without leaving the store, and <code>dry_run</code> returns
-the candidate pairs with their similarity scores before anything is
-written.</li>
-<li>Biggest risk: <strong>no tests anywhere, under a pass that rewrites
-rows in place.</strong> No test directory, no test file; the two
-<code>tools/_*_smoke.py</code> scripts check without asserting. The
-dedup is also a full pairwise scan of every active fragment with a
-Python Jaccard per pair, and because it reads only active rows a merged
-fragment is never compared against again — so re-adding the same text
-creates a fresh active row the next pass must merge all over. The mark
-records a decision and nothing consults it at write time.</li>
+offer a dry run.</strong> <code>dedupe_fragments</code> sets the later
+of two fragments whose content Jaccard crosses a threshold to
+<code>status='merged'</code> — 不删原文, the text is not deleted — and
+keeps the earlier as 信息源, the information source.
+<code>dry_run</code> returns the candidate pairs with their similarity
+scores before anything is written.</li>
+<li>Biggest risk: <strong>the merge is unreachable as shipped.</strong>
+The function writes by default, and its one caller,
+<code>lifecycle --dedupe</code>, hardcodes <code>dry_run=True</code>
+while telling the user that a re-run with the same flag will mark the
+duplicates. The README documents a <code>--dry-run</code> option the
+parser does not declare. Were the mark written,
+<code>search_memory</code>, behind the MCP <code>recall</code> and
+<code>search</code> tools, applies no status predicate, and neither does
+<code>daily_context</code>, the start-of-day block. There are no
+tests.</li>
 <li>Most reusable component: <code>dedupe_fragments</code> in its
 entirety — twenty-eight lines carrying the survivor rule, the
 mark-not-delete rule and the dry run, with the reasoning in the
-docstring rather than in a commit message.</li>
-<li>Maturity impression: MIT, version 1.5.0, Python 3.10+, 4,582 lines
+docstring rather than in a commit message. Copy it with a caller that
+can write.</li>
+<li>Maturity impression: MIT, version 1.5.0, Python 3.10+, 4,865 lines
 in a handful of modules, a single SQLite file with FTS5 trigram
-tokenisation and a reserved embedding table, an MCP server with a
-written Doubao integration guide, a web console, a <code>doctor</code>
-command, and a version constant a script syncs the README badge to.
-Windows-oriented: batch launchers, and a delete that moves a directory
-to the recycle bin through <code>SHFileOperationW</code>.</li>
+tokenisation and an embeddings table, an MCP server with a written
+Doubao integration guide, a web console, a <code>doctor</code> command,
+a version constant a script syncs the README badge to, and a
+pre-publication scan for private terms. Windows-oriented: batch
+launchers, and a delete that moves a directory to the recycle bin
+through <code>SHFileOperationW</code>.</li>
 <li>Study when: you are writing a de-duplication pass and have not
-decided which side survives, or you want a small worked example of a
-status that withholds without deleting.</li>
-<li>Do not copy when: you need the predicate enforced.
-<code>status='active'</code> is repeated at six call sites and missing
-from a seventh — <code>daily_context</code>, which builds the block a
-session opens with, reads fragments three times with no status clause,
-so a merged duplicate is rendered back under iron rules, recent
-decisions and high-value knowledge. The searches filter; the summary a
-person reads first does not. <code>namespace</code> emits nothing when
-omitted. One mark: trust state.</li>
+decided which side survives.</li>
+<li>Do not copy when: you need a status to withhold anything.
+<code>status='active'</code> is applied by the listing, the
+rolling-summary pass and the vector indexer, and is absent from keyword
+search, the start-of-day block and vectors computed before a merge.
+<code>namespace</code> exists on fragments only and nothing sets it. No
+marks.</li>
 </ul>
 <h3 id="light-mem"><a
 href="../systems/light-mem/"><code>light-mem</code></a></h3>

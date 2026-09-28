@@ -6023,28 +6023,24 @@ connector sync, export and a librarian finding all report the backlog
 and none can act on it. The finding's own text says these candidates
 never enter memory at all if nobody decides.</p>
 <p><strong><a href="../systems/huiran-cerebro/">Huiran-cerebro</a>
-retires the later duplicate and keeps the earlier one, because the
-earlier one is the source.</strong> An MIT Python personal memory hub at
-version 1.5.0 — 4,582 lines over one SQLite file with FTS5 trigram
-tokenisation for Chinese, <code>bge-small-zh-v1.5</code> embeddings
-fused by reciprocal rank, an MCP server with a written Doubao guide, and
-a web console. Its deduplication makes two decisions in one docstring:
-fragments whose content Jaccard crosses a threshold have the later
-writer marked <code>status='merged'</code> — 不删原文, the text is not
-deleted — and the first creator is kept "信息源", as the information
-source, which is the opposite of the last-write-wins default and the
-right call when the later copy is a restatement rather than a
-correction. Every recall path selects
-<code>WHERE status='active'</code>, so a merged fragment leaves
-retrieval without leaving the store, and a <code>dry_run</code> flag
-returns the candidate pairs with their scores before anything changes.
-One mark. Against it: there are no tests anywhere in the repository,
-under a pass that rewrites rows in place; the scan is pairwise over
-every active fragment with a Python Jaccard per pair; and because it
-reads only active rows, re-adding the same text makes a fresh active row
-the next pass must merge again — the mark records a decision and nothing
-consults it at write time. <code>namespace</code> is an optional
-argument that emits no predicate when omitted.</p>
+decides which duplicate survives, and ships the decision behind a
+command that only previews it.</strong> An MIT Python personal memory
+hub at version 1.5.0 — 4,865 lines over one SQLite file with FTS5
+trigram tokenisation for Chinese, <code>bge-small-zh-v1.5</code>
+embeddings fused by reciprocal rank, an MCP server with a written Doubao
+guide, and a web console. Its deduplication makes two decisions in one
+docstring: fragments whose content Jaccard crosses a threshold have the
+later writer marked <code>status='merged'</code> — 不删原文, the text is
+not deleted — and the first creator is kept "信息源", as the information
+source, which is the right call when the later copy is a restatement
+rather than a correction. A <code>dry_run</code> flag returns the
+candidate pairs with their scores. The one caller,
+<code>lifecycle --dedupe</code>, hardcodes that dry run, so no shipped
+entry point writes the mark; were it written, the keyword search behind
+the MCP tools applies no status predicate. No marks. There are no tests,
+the scan is pairwise over every active fragment, and
+<code>namespace</code> exists on fragments only, with nothing to set
+it.</p>
 <p><strong><a href="../systems/light-mem/">light-mem</a> strips its own
 injected context block back out before it stores a turn.</strong> An
 Apache-2.0 TypeScript memory for Claude Code, Grok, Codex and OpenCode

@@ -10327,63 +10327,59 @@ invariant the code names but does not assert</td>
 <td>A memory fragment — type, subject, content, entities, tags, status,
 source reference, embedding state, importance and namespace — beside
 content items, knowledge-base chunks and a typed entity graph</td>
-<td>One SQLite file with FTS5 trigram tokenisation for Chinese, a
-reserved embedding table, and no service dependency</td>
+<td>One SQLite file with FTS5 trigram tokenisation for Chinese, an
+embeddings table, and no service dependency</td>
 <td>FTS5 trigram plus <code>bge-small-zh-v1.5</code> embeddings fused by
 reciprocal rank, over fragments, rolling summaries and knowledge-base
 chunks</td>
-<td>CLI subcommands, a web console, or MCP tools; content items carry a
-source type, a source tag and an authorization reference</td>
-<td>A Jaccard dedup pass marks the later of two near-identical fragments
-<code>merged</code> and keeps its text; content items carry a version
-and a parent id</td>
-<td>A <code>namespace</code> column with a <code>default</code> value,
-passed as an optional argument — omitted, no predicate is emitted</td>
-<td>An MCP server with a written guide for Doubao, a Flask-shaped web
-console, and Windows batch launchers</td>
-<td>Rolling summaries, a daily brief over unfinished work items, and the
-dedup pass when invoked</td>
-<td>A fragment status that withholds merged duplicates from the search
-paths but not from the start-of-day context block, a retrieval-audit
-table recording what was asked, and an authorization reference on
-content items</td>
-<td>The dedup decision is the right one twice over. It marks rather than
-deletes — the docstring says 不删原文, do not delete the text — so a
-merge is reversible and the merged row stays inspectable, while every
-recall path's <code>status='active'</code> predicate keeps it out of
-results. And it keeps the <em>earlier</em> fragment as the surviving
-one, on the stated ground that the first writer is the information
-source, which is the opposite of the last-write-wins default and the
-right call when the later copy is a restatement. A <code>dry_run</code>
-flag returns the candidate pairs with their similarity scores and
-changes nothing, so the threshold can be tuned against real data before
-it is applied. Around that, the engineering is proportionate to its
-scale: one 1,734-line module holding the schema and the operations, FTS5
-with trigram tokenisation because Chinese has no spaces to tokenise on,
-a version number with a single source of truth and a script that syncs
-the README badge to it, and a <code>doctor</code> command</td>
-<td>There are no tests anywhere in the repository — no test directory,
-no test file, and the two <code>tools/_*_smoke.py</code> scripts are
-smoke checks rather than assertions — for a store whose dedup pass
-rewrites rows in place. The dedup itself is a full pairwise scan of
-every active fragment with a Python Jaccard per pair, so its cost grows
-with the square of the store; and because the scan reads only
-<code>status='active'</code>, a merged fragment is never compared
-against again, so re-adding the same text creates a fresh active row
-that the next pass must merge once more — the mark records a decision,
-and nothing consults it at write time to refuse the repeat.
-<code>daily_context</code> reads fragments three times with no
-<code>status</code> predicate, so a merged duplicate is rendered into
-the start-of-day block under iron rules, recent decisions and high-value
-knowledge — the six search paths filter and the summary does not.
-<code>namespace</code> is an optional argument that emits no predicate
-when omitted, so it separates nothing by default. The delete helper is
-Windows-only, calling <code>SHFileOperationW</code> with
-<code>FOF_ALLOWUNDO</code> to move a directory to the recycle bin, which
-is a thoughtful default and unavailable everywhere else. And the README
-carries a section addressed to LLM readers alongside an
-<code>llms.txt</code>, which is worth knowing about when an agent
-summarises this project from its own documentation</td>
+<td>CLI subcommands, a web console, or MCP tools; session check-ins skip
+a same-day near-duplicate at write time; content items carry a source
+type, a source tag and an authorization reference</td>
+<td>A Jaccard dedup function that marks the later of two near-identical
+fragments <code>merged</code> and keeps its text; its one caller,
+<code>lifecycle --dedupe</code>, passes <code>dry_run=True</code>, so no
+shipped entry point writes the mark. Content items carry a version and a
+parent id</td>
+<td>A <code>namespace</code> column on fragments only, which no write
+path sets, so every fragment is <code>default</code>; the unified
+search's namespaced branch queries tables that lack the column</td>
+<td>An MCP server with a written guide for Doubao, a Flask web console,
+and Windows batch launchers</td>
+<td>Rolling summaries from event fragments, a daily brief, and lifecycle
+passes run by hand; the dedup pass runs as a preview only</td>
+<td>A fragment status that listing, rolling-summary input and vector
+indexing filter on and keyword search, the start-of-day block and
+already-computed vectors do not; no shipped entry point sets it. A
+retrieval-audit table records what was asked; content items carry an
+authorization reference nothing reads</td>
+<td>The dedup function makes the right decisions and states them. It
+marks rather than deletes — the docstring says 不删原文, do not delete
+the text — and keeps the earlier fragment on the stated ground that the
+first writer is the information source, which is the right call when the
+later copy is a restatement rather than a correction. A
+<code>dry_run</code> flag returns the candidate pairs with their scores
+and changes nothing, so a threshold can be tuned before it is applied.
+Around that, the engineering is proportionate to its scale: one module
+holding the schema and the operations, FTS5 with trigram tokenisation
+because Chinese has no spaces to split on, a read-only conflict scan
+exposed over MCP, a version constant a script syncs the README badge to,
+a <code>doctor</code> command, and a pre-publication scan for private
+terms that can read the whole git history</td>
+<td>The merge is unreachable as shipped. <code>dedupe_fragments</code>
+writes by default, and its one caller, the
+<code>lifecycle --dedupe</code> command, hardcodes
+<code>dry_run=True</code> while telling the user that re-running with
+the same flag will mark the duplicates; the README documents a
+<code>--dry-run</code> flag the parser does not declare. Were the mark
+written, it would withhold little: <code>search_memory</code>, behind
+the MCP <code>recall</code> and <code>search</code> tools and the web
+console's question box, collects FTS and LIKE hits with no status
+predicate, the start-of-day block reads fragments three times without
+one, and a vector computed before a merge stays in the index until a
+reset. There are no tests. The pairwise dedup scan grows with the square
+of the store. <code>namespace</code> exists only on fragments and
+nothing sets it. The README carries a section addressed to LLM readers
+alongside an <code>llms.txt</code></td>
 </tr>
 <tr>
 <td><code>humans</code></td>
@@ -28135,7 +28131,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>164 of 653:</em> <a
+<p><em>163 of 653:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -28193,7 +28189,6 @@ href="../systems/guild/"><code>guild</code></a>, <a
 href="../systems/headroom/"><code>headroom</code></a>, <a
 href="../systems/hexis/"><code>hexis</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
-href="../systems/huiran-cerebro/"><code>huiran-cerebro</code></a>, <a
 href="../systems/hungry-hippa/"><code>hungry-hippa</code></a>, <a
 href="../systems/huqan/"><code>huqan</code></a>, <a
 href="../systems/hypha/"><code>hypha</code></a>, <a
