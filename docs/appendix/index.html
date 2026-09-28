@@ -2335,10 +2335,9 @@ agent-memory mechanism in a tree that is otherwise a deployment system
 for a local AI stack</li>
 <li><a href="https://github.com/jbsalles/Selmem">jbsalles/Selmem</a> at
 <a
-href="https://github.com/jbsalles/Selmem/commit/a4ace34a8cc4f03d681de9f7d1b43f841e6f5a4d"><code class="commit-id" title="a4ace34a8cc4f03d681de9f7d1b43f841e6f5a4d">a4ace34a…</code></a>
-— read only; no auto-run surface and no build-time execution point, but
-both Cargo manifests changed within two days, so the tree was inside the
-cooldown and nothing was built or run</li>
+href="https://github.com/jbsalles/Selmem/commit/8da0e8d1e90b1937861d1f76af2ec543c93db03c"><code class="commit-id" title="8da0e8d1e90b1937861d1f76af2ec543c93db03c">8da0e8d1…</code></a>
+— read only; no auto-run surface, no build-time execution point and no
+manifest inside the cooldown; nothing installed, built or run</li>
 <li><a href="https://github.com/Tencent/WeKnora">Tencent/WeKnora</a> at
 <a
 href="https://github.com/Tencent/WeKnora/commit/b82fd6c0f9939e8497fa7474999dd1bde5d0d88d"><code class="commit-id" title="b82fd6c0f9939e8497fa7474999dd1bde5d0d88d">b82fd6c0…</code></a>
@@ -5300,6 +5299,23 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The SelMem report cited a latent-trace walker as a latent
+skip, called <code>core</code> frozen, described both binaries' model
+client as speak-only, and miscounted <code>MemoryTrace</code>'s fields;
+corrected 2026-09-28.</strong> At <a
+href="https://github.com/jbsalles/Selmem/commit/a4ace34a8cc4f03d681de9f7d1b43f841e6f5a4d"><code class="commit-id" title="a4ace34a8cc4f03d681de9f7d1b43f841e6f5a4d">a4ace34a…</code></a>
+the <a href="../systems/selmem/">SelMem</a> report listed
+<code>encode/identity.rs:71</code> among four read paths that skip
+<code>Latent</code>; that line is the loop in <code>paint_latent</code>
+that selects only latent traces, so the claim inverted the code. It said
+<code>core</code> is frozen at encode, while <code>merge_close</code>
+appended up to four words of an absorbed core to the survivor's. It said
+the model is reached only through a speak-only client;
+<code>selmemd</code> and <code>selmem-chat</code> attached
+<code>HttpNarrator</code>, which also reconstructs, rewrites and distils
+axioms through the model, so the report understated the model's reach.
+It counted twenty-two fields on <code>MemoryTrace</code>, which has
+twenty-four.</li>
 <li><strong>The ThoughtDAG report kept <em>"Human review — awarded"</em>
 in its section 9 and three marks in the families page after
 <code>human_review</code> was withdrawn, and undercounted its CLI tests;

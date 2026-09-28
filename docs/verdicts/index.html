@@ -17321,49 +17321,49 @@ committed retrieval evaluation.</li>
 <h3 id="selmem"><a
 href="../systems/selmem/"><code>selmem</code></a></h3>
 <ul>
-<li>Best idea: two texts per memory, one allowed to drift and one frozen
-at encode for it to drift <em>away from</em>. The narrator rebuilds a
+<li>Best idea: two texts per memory, one allowed to drift and one set at
+encode for it to drift <em>away from</em>. The narrator rebuilds a
 sentence from the current <code>gist</code>; when spoken sentences leave
-the <code>core</code> often enough, grounding pulls the trace back and
-the recall's disclaimer changes from "lived account (fidelity 0.62)" to
-"pulled back toward the core". A third text, the verbatim archive, is
-reachable by one accessor and one HTTP route and never by the
-narrator.</li>
+the <code>core</code> often enough, a rule judge pulls the trace back
+and the recall's disclaimer changes from "lived account (fidelity 0.62)"
+to "pulled back toward the core". The verbatim archive record is read by
+<code>audit</code>, two operator routes and the sitting de-duplicator,
+and never by the narrator.</li>
 <li>Second idea: <code>Latent</code> — a decayed episode whose scene is
-withdrawn from all four read paths while its affect keeps biasing what
-gets encoded next, revived only after two such paintings and restored as
-the frozen core at clamped fidelity rather than as the drifted gist. The
-corpus's other resurrections are bugs; this is the designed one.</li>
-<li>Biggest risk: <strong><code>TraceStatus::Sealed</code> has no
-writer.</strong> It is the only state that exempts a trace from recall,
-drift, merge and decay — <code>MemoryStore::active_ids()</code> filters
-on it and feeds both the recall path and the whole sleep pass — with
-five consumers and a round-trip through both persistence backends, and
-no line in <code>src/</code>, <code>tests/</code>,
-<code>examples/</code> or any fixture ever assigns it. In a design whose
-thesis is that memory must be allowed to deform, the one declared way to
-say "not this one" cannot be granted.</li>
-<li>Most reusable component: <code>DriftEvent</code> — a per-trace,
-append-only record of what each reconstruction changed and by how much
-(<code>fidelity_delta</code>, <code>valence_delta</code>,
-<code>disgust_delta</code>), persisted in both backends, never cleared,
-and never orphaned because no code path removes a trace.</li>
-<li>Maturity impression: MIT, 9,514 lines of Rust with <strong>zero
+withdrawn from recall, rewrite and the belief ladder while its affect
+keeps biasing what gets encoded next, revived only after two such
+paintings and restored as the core at clamped fidelity rather than as
+the drifted gist.</li>
+<li>Biggest risk: <strong>forgetting ends in deletion without a
+record.</strong> A trace that stays <code>Latent</code> and unused
+through a second night, cited by no living axiom, is removed by
+<code>release_trace</code> together with its <code>drifts</code>, its
+edges and, when unshared, its verbatim archive record; the night reports
+a count and the store keeps nothing. A second path,
+<code>fade_sitting</code>, releases chat hours without the anchor and
+axiom-support guards. The per-trace drift log cannot say what the store
+once held, and <code>audit_log</code> is withheld on it.</li>
+<li>Most reusable component: the admission checks on model output —
+<code>accept_core</code> lets a model shorten a core and never add a
+word the event lacked, and <code>lossless_parts</code> accepts a
+segmentation only as contiguous excerpts of the source.</li>
+<li>Maturity impression: MIT, 16,483 lines of Rust with <strong>zero
 Cargo dependencies</strong> and a hand-written FFI to the system
-<code>libsqlite3</code>, thirteen commits old at this pin. Fifty-nine
-tests, one of which is the negative assertion this atlas argues for with
-its positive control in the same test. <code>PARAMETERS.md</code> grades
-every constant by warrant — literature, contrast pair, discrete
-convenience, ad hoc — and says none is fitted;
-<code>experiments/REPORT.md</code> is one model and one seed and does
-not pretend otherwise.</li>
+<code>libsqlite3</code>, 50 commits between 6 and 28 September 2026. 133
+tests, four of them must-not-retrieve assertions with populated
+counterparts, the archive case guarded before and after grounding and
+against an empty recall. <code>PARAMETERS.md</code> grades every
+constant by warrant and says none is fitted; the P4 tables in
+<code>experiments/REPORT.md</code> recompute from committed dumps, and
+several P0, P1, v0.1 and horizon-year result files it cites were never
+committed.</li>
 <li>Study when: you are building an entity meant to be particular rather
 than accurate, or you want a worked separation between <em>can this be
 narrated</em> and <em>does this still shape me</em>.</li>
-<li>Do not copy when: you need to know what the user actually said.
-Recall not reproducing the input is the design's stated goal, and the
-exemption for operational facts is a flag on a trace rather than a store
-with its own guarantees.</li>
+<li>Do not copy when: you need to know what the user actually said, or
+to explain later what the store once held. Recall not reproducing the
+input is the stated goal, and a released episode leaves nothing
+behind.</li>
 </ul>
 <h3 id="weknora"><a
 href="../systems/weknora/"><code>weknora</code></a></h3>
