@@ -6806,18 +6806,62 @@ than given a report. <code>rush86999/atom</code> has roughly 976 lines
 of memory-named Python inside a 459 MB repository dominated by
 deployment scripts; no coherent memory design was established, and that
 is a weaker conclusion than the others here.</li>
-<li>One repository examined in the same round has no report.
-<code>rickey1990/THREADS-reasoning-engine</code>, published 6 September
-2026 under PolyForm Noncommercial and CC BY-NC, is a PDF, a 150-line
-test runner and three licence files; the runner sets
-<code>PYTHONPATH</code> to a <code>source/</code> directory and calls
-suites under <code>benchmarks/</code>, and neither directory exists in
-any of the repository's five commits
-(<code>git log --all -- source benchmarks</code> is empty), so the
-engine the paper describes — versioned events, positive and negative
-evidence kept apart, provenance, contradiction — has no inspectable code
-at a pinned commit. Nothing was run for Kwipu or craft; craft was read
-from a depth-one clone with its history from the GitHub API.</li>
+<li><strong><code>rickey1990/THREADS-reasoning-engine</code> was
+examined and has no report: its correctable event ledger lives only in
+process memory, and nothing in the tree persists it or binds it to an
+agent.</strong> The code is under PolyForm Noncommercial 1.0.0 and the
+documentation under CC BY-NC 4.0 (<code>LICENSING.md</code>,
+<code>LICENSE-CODE.txt</code>, <code>LICENSE-DOCUMENTATION.txt</code>;
+GitHub reports <code>NOASSERTION</code>), and neither restricts a
+read-only analysis. At <a
+href="https://github.com/rickey1990/THREADS-reasoning-engine/commit/439f8a91ed49c8cbdea54d727dc3849563ce25bc"><code class="commit-id" title="439f8a91ed49c8cbdea54d727dc3849563ce25bc">439f8a91…</code></a>,
+nine commits by one contributor from 6 to 12 September 2026, the
+<code>source/</code> and <code>benchmarks/</code> directories are
+present, added at <a
+href="https://github.com/rickey1990/THREADS-reasoning-engine/commit/78972439e4fce24dc5ebf1dee5b50f392ea5b6c9"><code class="commit-id" title="78972439e4fce24dc5ebf1dee5b50f392ea5b6c9">78972439…</code></a>
+on 11 September 2026: a 974-line Python package <code>srmh</code>, 517
+lines of tests and 1,369 lines of benchmarks. <code>Ledger</code>
+indexes immutable <code>Event</code>s — subject, relation, object, event
+time, context, confidence, polarity, lineage — in three dicts
+(<code>source/srmh/ledger.py:52-57</code>), refuses an id reused for
+different content (<code>:65-69</code>), and answers a point-in-time
+<code>lookup</code> with <code>ANSWER</code>, <code>NEGATED</code>,
+<code>CONTRADICTED</code>, <code>AMBIGUOUS</code> or
+<code>UNKNOWN</code> (<code>:102-116</code>). A <code>RETRACT</code>
+aimed at an event id closes that assertion (<code>:89-100</code>), and
+on a functional relation retracting the latest value leaves
+<code>UNKNOWN</code> rather than reviving the value it superseded
+(<code>:8</code>, <code>:95-97</code>). Nothing survives the process: no
+module under <code>source/srmh/</code> opens, serialises or loads
+anything, <code>srmh</code> is imported only by
+<code>source/tests/</code> and <code>benchmarks/</code>, and the only
+file writes in the tree are result JSON from the runner and benchmarks.
+The benchmarks titled <em>"Correctable AI/customer memory"</em> and
+<em>"Agent plan/state recovery"</em> build their history in a fresh
+<code>Engine</code> on each run
+(<code>benchmarks/applied10_benchmark.py:48-62</code>,
+<code>:219-237</code>), and the paper in the tree names a memory layer
+as a possible use (<code>THREADS_paper_spaced.pdf</code>, p. 9) while
+listing persistence testing among what its benchmarks do not cover (p.
+10). Two near-misses matter if the ledger is ever persisted: an
+untargeted <code>RETRACT</code> is keyed on the value but closes only
+assertions at or before its own time (<code>ledger.py:98-99</code>), so
+a later re-assertion is live again; and a negative event on a value is
+kept beside later positives and turns the answer
+<code>CONTRADICTED</code> (<code>:97</code>, <code>:104-107</code>), the
+nearer shape to a value-keyed rejection. Searches run at the tree root:
+<code>git grep -nE 'open\(|json|pickle|sqlite|shelve|write_text|dump|persist|serial' -- source/srmh</code>
+(nothing); <code>git grep -lE 'srmh' -- '*.py'</code> (the three test
+and four benchmark files);
+<code>git grep -nE 'write_text|json\.dump|open\(' -- '*.py'</code>
+(result writers in <code>THREADS_test_runner.py</code> and
+<code>benchmarks/</code> only);
+<code>git grep -nEi '\bllm\b|openai|anthropic|prompt|embedding|\bmcp\b' -- '*.py'</code>
+(nothing). The screen found 0 RUNS, 0 EXEC, 0 FRESH and 2 FLOAT
+(<code>numpy&gt;=1.24</code> in <code>requirements.txt</code>, and
+<code>source/pyproject.toml</code> with no lockfile), and nothing was
+installed, built or run. Nothing was run for Kwipu or craft; craft was
+read from a depth-one clone with its history from the GitHub API.</li>
 <li>LlamaIndex ships two APIs under the name "memory": the newer
 block-based <code>Memory</code> reviewed here, and an older
 <code>ChatMemoryBuffer</code> family that is conversation-window
