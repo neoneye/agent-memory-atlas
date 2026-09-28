@@ -10996,66 +10996,70 @@ model claims"</em>, and pre-registers what a rerun would have to record
 numbers.</li>
 <li><strong><a
 href="https://arxiv.org/abs/2609.01481"><code>arXiv:2609.01481</code></a>
-was examined and has no report: the repository it links holds a README
-and assets, and the paper says it keeps no memory module — its
-continuity is the project's own files and version history.</strong>
-<em>Harness-of-Harness: Multi-Day Autonomous Software Development with
-Continual Improvement</em> (Yan, Su, Zhang, Li, Zhang, Zhang, Chen, Bai
-and Hu; Shanghai Artificial Intelligence Laboratory; submitted 1
-September 2026, preprint) wraps an existing coding-agent harness —
-Codex, OpenCode or Pi — in an outer loop of three roles, Project
-Planner, Developer and QA Tester, each of which must return a structured
-artifact or be retried. The paper's own line on memory is <em>"HoH
-adopts progressive disclosure rather than a dedicated memory module:
-plans, reports, histories and other artifacts are persisted in the file
-system,"</em> and its appendix names exactly two state channels between
-iterations: the artifact channel carries the project workspace
-<em>A_t</em> into the next Developer, the evidence channel carries the
-QA bundle <em>E_t</em> into the next Planner, and the development
-document <em>D_t</em> is rebuilt each iteration from the specification
-and <em>E_t</em> rather than kept as a third channel; hidden tests,
-benchmark scores, rubrics and evaluator rationales <em>"are never
-returned to a subsequent iteration."</em> Headline numbers: an average
-relative gain of 52.25 % and a maximum of 82.86 % over the bare harness
-after three iterations on GameCraft-Bench, FrontierSWE and ProgramBench,
-with Codex and GPT-5.5 moving from 49.58 to 71.52 on GameCraft-Bench;
-the ablation on that pair puts freezing the plan at 8.13 points,
-dropping the execution evidence from replanning at 6.28 and rebuilding
-from an empty workspace at 7.85 with tokens rising from 8.41 M to 11.12
-M per task — which is to say the file-system carry-over is worth about
-as much as the planning it feeds. The linked repository,
-<code>Flesymeb/HarnessOfHarness</code> at <a
-href="https://github.com/Flesymeb/HarnessOfHarness/commit/f3b1ce07eeefae927586d950316e17b3e81f96a4"><code class="commit-id" title="f3b1ce07eeefae927586d950316e17b3e81f96a4">f3b1ce07…</code></a>
-(MIT, 58 commits by one author on 1 and 2 September 2026), is a 107-line
-README, a licence and fifteen image and video files; the screen found no
-execution surface, the words <em>memory</em>, <em>skill</em> and
-<em>lesson</em> occur zero times in it, and it says <em>"We will
-publicly release HoH-lite, a lightweight implementation of HoH's core
-workflow."</em> What is public is the product of the multi-day run:
-<code>Flesymeb/fusepoint</code>, a Godot first-person shooter on a
-single <code>gameloop</code> branch of 291 commits with no GitHub
-issues, whose generated 5,107-line README is a per-loop development
-record for 96 loops (the paper describes 70) carrying an issue ledger of
-104 recorded and 94 closed (the paper's count at loop 70 is 81 and 65,
-with seventeen reopened after a later change broke verified behaviour),
-a <code>.gameloop/vcs.json</code> binding the three roles to bot
-identities under the push policy
-<code>host_gate_pass_to_development_branch;qa_pass_to_main</code>, 288
-sealed-change event records each naming its loop, role and receipt with
-two SHA-256 digests, and 96 receipt directories — while the developer
-summary of every loop reads <em>"Implementation details are retained in
-the private GameLoop Runtime audit."</em> None of this is what this
-atlas reads for: the workspace, the commit history and the issue ledger
-belong to the project, are read by whoever the harness spawns next, and
-are the project's bug tracker rather than anything an agent came to
-believe; the nearest thing to a memory turning out false is a reopened
-issue, and the paper treats it as project work. With HoH-lite released,
-two things would be read first: how the evidence bundle is cut from the
-QA report — which findings survive into the next plan and which are
-dropped is the one place a prior loop's conclusion could be carried
-forward as settled — and whether the reopened-issue record is built from
-the ledger or reconstructed from the artifact, since the paper's
-argument for the ledger is precisely that it need not be.</li>
+was examined and has no report: its released code carries a tester's
+report from one iteration of a task to the next, nothing crosses tasks,
+and the only state read back across processes is the previous trial's
+game workspace.</strong> <em>Harness-of-Harness: Multi-Day Autonomous
+Software Development with Continual Improvement</em> (Yan and eight
+co-authors, Shanghai Artificial Intelligence Laboratory; preprint, 1
+September 2026) wraps Codex, OpenCode or Pi in an outer loop of Project
+Planner, Developer and QA Tester, and states that it <em>"adopts
+progressive disclosure rather than a dedicated memory module"</em>.
+<code>Flesymeb/HarnessOfHarness</code> added <code>hoh-lite/</code> in
+<a
+href="https://github.com/Flesymeb/HarnessOfHarness/commit/ec845b75713d4e1c84e0d4f934bf4d0540537c16"><code class="commit-id" title="ec845b75713d4e1c84e0d4f934bf4d0540537c16">ec845b75…</code></a>
+on 23 September 2026; at <a
+href="https://github.com/Flesymeb/HarnessOfHarness/commit/ae7cc6fbea312ab50657f6b6036b04974846e151"><code class="commit-id" title="ae7cc6fbea312ab50657f6b6036b04974846e151">ae7cc6fb…</code></a>
+(MIT, 75 commits by one contributor) it is 60 Python files and 14,453
+lines beside a vendored Godot MCP server. Each run gets a directory
+named for its task and start time
+(<code>adapters/gamecraft_bench/runner.py:2491-2495</code>), the runtime
+refuses one whose receipt exists (<code>core/runtime.py:58-62</code>),
+and <code>--resume-from</code> seeds a new run from the last valid trial
+of the same task (<code>runner.py:2451-2464</code>,
+<code>artifacts.py:437-482</code>). Within a run, the planner receives
+the latest tester report cut to eight issues, four bugs, four gaps,
+three goals and three preserve items of 240 characters each
+(<code>core/prompts.py:191-217</code>), plus the last three entries of
+an in-process history list (<code>:107</code>). Two files look like
+memory and nothing reads them: <code>loop_memory.json</code>
+(<code>core/prompts.py:506</code>), and
+<code>evidence_history.json</code>, which the prompt calls the
+<em>"complete lossless public ledger"</em> (<code>:100-104</code>) and
+which a resumed run rebuilds from the seed trial's report alone
+(<code>runner.py:2586-2599</code>). The code settles what is carried
+forward as true. The next plan is told <em>"Do not remove or
+weaken"</em> the tester's <code>preserve</code> items and any claim
+review with a pass-like status (<code>core/evidence.py:342-354</code>,
+<code>:398-417</code>); the <code>demos</code> and
+<code>asset_evidence</code> branches (<code>:356-396</code>) take
+entries with no status check, though the next-loop contract asks for
+neither key (<code>adapters/gamecraft_bench/prompts.py:101-111</code>).
+The whole set is replaced by the next report, so nothing stays settled
+for more than one loop unless the tester re-asserts it. There is no
+issue ledger to reopen from: issue ids carry the loop number
+(<code>core/evidence.py:152</code>, <code>core/stages.py:6-7</code>), so
+no issue keeps an identity between loops, and "do not reopen an older
+item" is prompt text (<code>core/prompts.py:103-104</code>). The
+<code>.gameloop/vcs.json</code> bindings and sealed-change receipts in
+the run's public product, <code>Flesymeb/fusepoint</code>, have no
+counterpart in the release. The one SQLite file is an FTS5 index over
+the official Godot documentation (<code>tools/godot_docs.py:1</code>,
+<code>:141-160</code>). The nine tests in
+<code>.github/ci/test_hoh_lite.py</code> cover receipts, resume
+selection, the dry run and planner retries, and none exercises the
+carry-over. Searches run at the tree root:
+<code>git grep -n -i -E 'memor|remember|recall|lesson|sqlite|embedding|vector|pickle' -- . ':!hoh-lite/src/gameloop/_vendor'</code>
+(hits are <code>build_loop_memory</code> and the docs index);
+<code>git grep -n -E 'loop_memory\.json|evidence_history\.json'</code>
+(writes and prompt text only);
+<code>git grep -n -i -E 'reopen|ledger|vcs\.json|sealed' -- . ':!hoh-lite/src/gameloop/_vendor'</code>
+(the prompt text only). The screen found 0 RUNS, 0 EXEC, 3 FRESH
+(<code>hoh-lite/pyproject.toml</code> and the vendored server's
+<code>package.json</code> and lockfile, all in a subtree added on 23
+September 2026) and 2 FLOAT (<code>pyproject.toml</code> with no
+lockfile; caret ranges beside the vendored lockfile), and nothing was
+installed, built or run.</li>
 <li><strong>Prove2Me, the shared theorem library behind the Fermat's
 Last Theorem formalization, was examined and has no report: the memory
 the agents used is a hosted service whose server is published nowhere,
