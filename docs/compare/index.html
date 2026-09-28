@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-650, generated from each report's frontmatter —
+652, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-650, generated from each report's frontmatter —
+652, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-650, generated from each report's frontmatter —
+652, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 650, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 652, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-650, generated from each report's frontmatter —
+652, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 650 systems by the seven mechanisms
+filters all 652 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -7251,6 +7251,51 @@ written by nothing; the human approval queue's closed action vocabulary
 contains no memory operation</td>
 </tr>
 <tr>
+<td><code>embodied-lgr</code></td>
+<td>A graph node holding a free-text object label from Florence-2, its
+MiniLM embedding, the robot's pose (x, y, yaw) when the label was seen,
+and a list of sighting timestamps; beside it a ReMEmbR row holding a
+scene caption, its embedding, the robot position, yaw and time</td>
+<td>A NetworkX graph in the memory of the graphmemory_manager process,
+never written to disk; a Milvus collection named test_collection that
+the vector builder drops each time it starts</td>
+<td>Three ROS services over the graph, each a linear scan returning the
+top 60: cosine between the query and each label, 2D distance to a
+coordinate, and nearest sighting timestamp. The vector store is reached
+through a Flask server that runs the ReMEmbR LangGraph agent over Milvus
+text, position and time search</td>
+<td>Every 7 seconds a frame goes to Florence-2 for dense region labels;
+each label within 5 metres of the robot and above 0.75 cosine to an
+existing node updates that node, surplus labels create nodes. Scene
+captions are embedded and inserted into Milvus on arrival</td>
+<td>A matched node's x and y move halfway to the robot's current
+position, its yaw is replaced and a timestamp appended. Nothing deletes
+a node; the Milvus collection is dropped whole when the builder
+restarts</td>
+<td>None. One graph per graphmemory_manager process and one Milvus
+collection name shared by the builder and the server</td>
+<td>A ROSA agent on GPT-4o with four memory tools, three graph queries
+and one call to the ReMEmbR server; the system prompt makes the graph
+primary and the vector store a fallback; a separate NaVQA evaluator node
+builds its own LangChain ReAct agent with the tool set chosen by a
+memory_mode parameter</td>
+<td>None beyond the perception timers; the memory is written as frames
+arrive</td>
+<td>None. Every label the vision model emits becomes or refreshes a
+node, and the evaluation prompt tells the model to take any positive
+vector-store answer as final</td>
+<td>A graph with three typed query services that return structured
+coordinates and times instead of prose; semantic deduplication by label
+embedding inside a spatial radius, so cup and mug seen from one place
+converge on one node; an evaluator that switches the memory backends per
+run</td>
+<td>The graph has no edges and is lost when its process exits; the
+vector builder drops the vector store at start; the paper describes
+edges, k-closest updates and preserved yaw that the code does not
+implement; node positions are where the robot stood; no memory test; the
+ReMEmbR agent evaluates model output with Python eval</td>
+</tr>
+<tr>
 <td><code>emem</code></td>
 <td>An observation: text, x y z coordinates, a caller-supplied
 timestamp, a perception layer name, a source type, a confidence float,
@@ -7942,6 +7987,52 @@ read: the session hook and the skill say lazily and only on demand,
 while the README, a comment in <code>show.go</code> and the close-out
 sweep's own prompt say the files are loaded into every session — the
 last is the premise the sweep's strict bar rests on</td>
+</tr>
+<tr>
+<td><code>farm</code></td>
+<td>An object row across parallel tensors and lists — a 3D Gaussian mean
+and packed covariance, a detection-count-weighted appearance feature, a
+sparse voxel set, an external object_id, a VLM caption with category,
+supercategory and attributes, three retrieval embeddings, per-object
+caption and embedding histories, retained viewpoint image ids, an active
+flag and a lock flag</td>
+<td>One scene_state.pt written by torch.save through a temp file and
+rename; optional scene_graph.json and versioned HDF5 snapshot
+directories; nothing else</td>
+<td>Reciprocal-rank fusion over caption-text, raw-utterance, SigLIP2 and
+Qwen3-VL embedding channels on active captioned rows, then an LLM-parsed
+query graph whose spatial predicates are scored in closed form over the
+Gaussians, with an optional VLM rerank of the top candidates</td>
+<td>Per RGB-D batch: YOLOE masks lifted to Gaussians, neighbours among
+active rows by feature similarity and Hellinger distance, union-find
+correspondence, moment fusion, new rows for unmatched detections;
+captions and embeddings arrive later from an asynchronous VLM
+worker</td>
+<td>Fusion updates rows in place; merges, keyword pruning,
+unclear-caption drops and a Viser delete all set active to False and
+keep the row; a person can edit a caption, lock or add an object in the
+Viser UI; nothing removes a row, and nothing stops the same object
+returning as a new row</td>
+<td>None on a row. One file per scene; a query that names a room narrows
+candidates to that region's objects</td>
+<td>A ROS 2 mapping node, an offline driver that runs the same node over
+recorded datasets, a Python retrieval API and CLI, and a Viser browser
+UI with a query panel and edit controls; no LLM agent writes to it</td>
+<td>An asynchronous caption and embedding worker, keyword pruning every
+100 steps, periodic region clustering, and saves every 40 m of travel,
+on timed checkpoints, on each UI edit and on request</td>
+<td>None as a state. A VLM keep or drop verdict per caption that only
+the viewer reads; an active flag that collapses merged, pruned, dropped
+and deleted into one value</td>
+<td>A compact per-object representation with a constant-cost closed-form
+update, relations recovered at query time instead of stored, a retriever
+that fails closed on the default path, and a reload that freezes the
+prior map against being merged or recaptioned</td>
+<td>A deleted or pruned object comes back as a new row the next time it
+is seen; a lock freezes a moved object at its old place; UI edits share
+no lock with the mapping batch; the store is a pickle loaded with
+weights_only=False; no test touches persistence, deletion or
+locking</td>
 </tr>
 <tr>
 <td><code>fava-trails</code></td>
@@ -27921,7 +28012,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>59 of 650:</em> <a
+<p><em>59 of 652:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -27984,7 +28075,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>164 of 650:</em> <a
+<p><em>164 of 652:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -28155,7 +28246,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>112 of 650:</em> <a
+<p><em>112 of 652:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -28275,7 +28366,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>301 of 650:</em> <a
+<p><em>301 of 652:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -28591,7 +28682,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>216 of 650:</em> <a
+<p><em>216 of 652:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -28817,7 +28908,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>88 of 650:</em> <a
+<p><em>88 of 652:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
@@ -28909,7 +29000,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>370 of 650:</em> <a
+<p><em>370 of 652:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -29311,7 +29402,7 @@ href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
 370 repositories of
-650 assert that particular material must
+652 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -29384,7 +29475,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 650 is the real figure for the second kind, and
+of 652 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

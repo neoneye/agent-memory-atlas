@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Real-time RGB-D object memory for
+robots: Gaussian objects with VLM captions and embeddings, saved as one
+pickle, locked whole on reload, queried by relational predicates.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="FARM — Agent Memory Atlas">
+    <meta property="og:description" content="Real-time RGB-D object
+memory for robots: Gaussian objects with VLM captions and embeddings,
+saved as one pickle, locked whole on reload, queried by relational
+predicates.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FARM — Agent Memory Atlas">
+    <meta name="twitter:description" content="Real-time RGB-D object
+memory for robots: Gaussian objects with VLM captions and embeddings,
+saved as one pickle, locked whole on reload, queried by relational
+predicates.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>FARM — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "FARM",
+      "description": "Real-time RGB-D object memory for robots: Gaussian objects with VLM captions and embeddings, saved as one pickle, locked whole on reload, queried by relational predicates.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A robot's object memory, locked whole on
+reload</p>
+          <h1>FARM</h1>
+          <p class="document-deck">Real-time RGB-D object memory for
+robots: Gaussian objects with VLM captions and embeddings, saved as one
+pickle, locked whole on reload, queried by relational predicates.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/GoldenGait/FARM-Project">
+              <span>Source</span>
+              <strong>GoldenGait/FARM-Project</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/GoldenGait/FARM-Project/commit/2fcaf8602e741341a70ca980133f7ff05cfc83a2" title="2fcaf8602e741341a70ca980133f7ff05cfc83a2">
+              <span>Analyzed revision</span>
+              <code>2fcaf860…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/GoldenGait--FARM-Project" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>GoldenGait--FARM-Project</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0-or-later</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>60,822
+lines of Python outside tests and the YOLOE submodule — 42,621 in src/,
+12,109 in ros/, 6,092 in scripts/; persistence and correction are about
+1,000 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1
+commit on main by 1 contributor, authored 27 July 2026 and committed 28
+July 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>8
+pytest functions in 215 lines, run by CI on push to main</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>FARM is the code for <em>FARM: Find Anything using Relational Spatial
+Memory</em> (<a
+href="https://arxiv.org/abs/2606.15476">arXiv:2606.15476</a>, submitted
+13 June 2026, v3 26 July 2026): a real-time object memory a robot builds
+from posed RGB-D streams and queries in relational language. Each object
+is one 3D Gaussian with a VLM caption and three retrieval embeddings,
+saved in a single <code>scene_state.pt</code> that the mapping node
+reloads by default and locks whole. What is notable is the discipline of
+the representation: a closed-form constant-cost update, relations
+derived at query time rather than stored, and a retriever that returns
+nothing rather than inactive rows. What is weak is correction. Every
+exit from the memory is one boolean that association skips, so a deleted
+object returns as a new row the next time the camera sees it.</p>
+<p>The licence is AGPL-3.0-or-later, inherited from the Ultralytics
+YOLOE fork the detector is built on. <code>LICENSE</code> is the
+unmodified 661-line text with no rider; pretrained models carry their
+own terms, listed in <code>THIRD_PARTY_NOTICES.md</code>.</p>
+<p>The primary user is a robotics researcher or the operator of one
+robot — a Boston Dynamics Spot in the paper's deployment — driven by a
+person or a navigation stack that asks for "the ladder near the
+shelves". No language model agent holds a write path. Models appear only
+as components: YOLOE for detection, Qwen3.5-9B for captions and query
+parsing, two embedding models and SigLIP2, all served locally.</p>
+<p>The implementation is strongest in the mapping loop and the retrieval
+evaluators, which match the paper's method section closely. It is
+weakest where the paper is silent: the Viser edit controls, the lock and
+the persistence cycle ship with no test.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>object row</strong>: a Gaussian summarising
+where something is and how big, plus what a vision-language model said
+about crops of it. Nothing in the row records when it was seen; the
+world is assumed static between sightings.</p>
+<p>A detection becomes a belief by association. The mapper lifts each
+mask to a Gaussian, looks for neighbours among rows whose
+<code>active</code> flag is true, and either fuses into the winner or
+opens a new row with a fresh <code>object_id</code>
+(<code>src/scene_graph/map_update/get_neighbors.py:318</code>,
+<code>src/scene_graph/map_update/object_update.py:1465-1513</code>). A
+new row is not yet retrievable: the retriever keeps only rows that are
+active, have a finite mean and carry a non-empty caption
+(<code>src/scene_graph/scene_graph.py:886-899</code>), and the caption
+arrives later from an asynchronous VLM worker.</p>
+<p>A row stops being a belief in four ways, and all four write the same
+value. A union-find or VLM-requested merge clears the loser's
+<code>active</code> and records <code>id_redirect[loser] = winner</code>
+(<code>object_update.py:1066-1069</code>). A caption containing a prune
+keyword is deactivated every 100 steps
+(<code>ros/mapping/mapping/nodes/streaming_mapper.py:1398-1435</code>).
+A caption the VLM calls unclear is deactivated and blanked
+(<code>src/scene_graph/captioning/services.py:321-341</code>). A person
+pressing delete in the Viser UI clears the same flag
+(<code>ros/mapping/mapping/lib/viser_edit.py:71-105</code>). The row is
+never removed, and a reader cannot tell the four apart.</p>
+<p>The fourth is the one that fails. Association excludes inactive rows,
+so when the robot next sees an object a person deleted, the detection
+has no neighbour and opens a new row, which is recaptioned and
+retrievable once the worker returns. The deletion is keyed on a record,
+not on anything the next observation carries.</p>
+<p>The lock is the one state that constrains the pipeline. A locked row
+refuses merges in either direction, drops detections matched to it, and
+ignores recaptions (<code>object_update.py:978-986</code>,
+<code>:1265-1275</code>; <code>services.py:353-358</code>). A person
+toggles it in the UI, and the node locks every row on reload while
+<code>lock_initial_scene_state</code> is true, its default
+(<code>streaming_mapper.py:627-639</code>,
+<code>ros/mapping/mapping/lib/parameters.py:74</code>). The lock
+protects a row; it filters nothing on the read path.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a detection becomes a retrievable object row, the four ways a row goes inactive, and why a manual delete does not survive the next sighting</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a detection becomes a retrievable object row, the four ways a row goes inactive, and why a manual delete does not survive the next sighting
+flowchart TD
+    D[&quot;RGB-D detection:&lt;br/&gt;YOLOE mask lifted to a 3D Gaussian&quot;] --&gt; N{&quot;neighbour among&lt;br/&gt;active rows?&quot;}
+    N -- &quot;yes, row unlocked&quot; --&gt; F[&quot;fused into the row:&lt;br/&gt;moments, feature, voxels&quot;]
+    N -- &quot;yes, row locked&quot; --&gt; X[&quot;detection dropped&quot;]
+    N -- &quot;no&quot; --&gt; NEW[&quot;new row, new object_id,&lt;br/&gt;active, no caption yet&quot;]
+    NEW --&gt; CAP[&quot;async VLM caption&lt;br/&gt;and three embeddings&quot;]
+    F --&gt; CAP
+    CAP --&gt; RET[&quot;retrievable:&lt;br/&gt;active and captioned&quot;]
+    RET -- &quot;union-find or VLM merge&quot; --&gt; IN[&quot;active = False,&lt;br/&gt;row kept, no reason stored&quot;]
+    RET -- &quot;caption hits a prune keyword&quot; --&gt; IN
+    RET -- &quot;VLM verdict unclear&quot; --&gt; IN
+    RET -- &quot;Viser delete&quot; --&gt; IN
+    IN -. &quot;same object seen again:&lt;br/&gt;inactive rows are not candidates&quot; .-&gt; NEW
+    RET --&gt; PT[(&quot;scene_state.pt&lt;br/&gt;whole state, torch.save&quot;)]
+    PT -- &quot;reload locks every row&quot; --&gt; RET</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two layers. <code>src/scene_graph/</code> is a ROS-free library
+holding the mapping algorithm, captioning workers, retrieval and
+evaluation harnesses. <code>ros/</code> is a ROS 2 Humble package whose
+<code>streaming_mapper</code> node owns the scene state and runs the
+loop. The offline driver <code>scene_graph.offline.run</code>
+instantiates the same <code>StreamingMapper</code> and feeds it frames
+from <code>.sens</code>, NPZ, rosbag or <code>frames.json</code> sources
+(<code>src/scene_graph/offline/run.py:553</code>).</p>
+<p>Persistence is a file. <code>save_scene_state</code> wraps the state
+dict with a format version, a save time and the feature dimension, and
+writes it by <code>torch.save</code> to a temp path renamed over the
+target (<code>src/scene_graph/scene_state_io.py:203-231</code>).
+Per-object RGB crops and view lists are dropped unless
+<code>scene_state_save_observations</code> is set
+(<code>scene_state_io.py:132-134</code>). The node can also write a
+<code>scene_graph.json</code> of active captioned objects and a
+versioned HDF5 snapshot directory per save.</p>
+<p>Retrieval runs in-process over the loaded dict.
+<code>SceneGraphRetriever.from_scene_state</code> reads a
+<code>.pt</code> and builds object tables
+(<code>src/scene_graph/retrieval/scene_graph_retriever.py:683-731</code>),
+and <code>execute_spatial_query</code> runs the relational pipeline on
+the same dict
+(<code>src/scene_graph/retrieval/spatial_reasoning/executor.py:1088</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>An NVIDIA GPU with CUDA 12.8, Docker with the NVIDIA runtime and
+three vLLM servers — about 50 GB of GPU memory for the full stack, by
+the README's account. There is no supported host install; everything
+runs inside <code>docker/Dockerfile</code>. Nothing is stored without
+the GPU pipeline, and nothing is retrievable without the vLLM servers
+that write captions.</p>
+<p>The store is neither readable nor repairable by hand. It is a pickle,
+and <code>load_scene_state</code> calls
+<code>torch.load(..., weights_only=False)</code>
+(<code>scene_state_io.py:254</code>), which executes whatever the file
+contains. The README warns to open only locally built or trusted files,
+and the published FARM-Scenes dataset ships prebuilt <code>.pt</code>
+graphs.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture and fusion.</strong>
+<code>StreamingMapper._process_frame_batch</code> submits each batch to
+a one-worker thread pool behind a <code>_busy_event</code>
+(<code>streaming_mapper.py:2378-2399</code>, <code>:967-969</code>). The
+batch runs segmentation, filtering, neighbour search
+(<code>get_neighbors.py:199-410</code>), union-find correspondence and
+<code>object_update</code>, which applies locks, refuses merges beyond a
+distance floor, fuses moments in fp64 and appends new rows
+(<code>object_update.py:630-636</code>, <code>:976-1069</code>,
+<code>:1465-1513</code>).</p>
+<p><strong>Enrichment.</strong> Rows whose retained views change are
+queued for the caption worker. <code>_apply_caption_result</code>
+resolves the canonical id, handles an unclear verdict, optionally
+executes a VLM-requested merge subject to cannot-link pairs, and writes
+caption, category, attributes, decision and embeddings
+(<code>services.py:319-460</code>, <code>:611-760</code>).</p>
+<p><strong>Retrieval.</strong> <code>retrieve_semantic_candidates</code>
+fuses up to four embedding channels by reciprocal rank over a candidate
+pool
+(<code>src/scene_graph/retrieval/spatial_reasoning/semantic_retrieval.py:337-420</code>),
+which is <code>active_indices</code> by default
+(<code>semantic_retrieval.py:73-81</code>).
+<code>execute_spatial_query</code> binds anchors, scores predicates and
+composes the ranking (<code>executor.py:1088-1415</code>).</p>
+<p><strong>Correction.</strong> The Viser callbacks are wired only in
+the mapper node (<code>streaming_mapper.py:830-846</code>) and
+implemented in <code>viser_edit.py</code>. <code>edit_caption</code>
+refuses a locked row, overwrites the caption, re-embeds it and appends
+to both history lists (<code>viser_edit.py:19-68</code>).
+<code>delete_object</code> clears <code>active</code>
+(<code>:71-105</code>), <code>toggle_lock</code> flips
+<code>is_locked</code> (<code>:108-130</code>), and
+<code>add_object_to_scene_state</code> appends a row with a
+person-supplied caption, position and three viewpoints
+(<code>:198-333</code>). Each handler then republishes and saves the
+state (<code>streaming_mapper.py:3284-3430</code>). The standalone
+<code>scripts/view_scene_state.py</code> viewer passes no edit
+callbacks.</p>
+<p><strong>Persistence.</strong> <code>persist_all_artifacts</code>,
+<code>maybe_persist_by_distance</code> and
+<code>maybe_persist_by_time</code>
+(<code>ros/mapping/mapping/lib/persistence.py:103-221</code>). The node
+loads <code>scene_state_load_path</code> at start, which defaults to
+<code>~/.ros/scene_graph/mapping/scene_state.pt</code>, and the save
+path defaults to the same file
+(<code>streaming_mapper.py:555-558</code>, <code>:612-622</code>;
+<code>ros/mapping/mapping/lib/paths.py:24-32</code>). The offline driver
+clears the load path unless <code>--preload-scene-state</code> is passed
+(<code>run.py:357-360</code>).</p>
+<p><strong>Tests.</strong> <code>tests/test_spatial_predicates.py</code>
+and <code>tests/test_spatial_covisibility_constraint.py</code>, run by
+<code>.github/workflows/ci.yml</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>SceneState</code> is a <code>TypedDict</code> over parallel
+structures aligned by row index
+(<code>src/scene_graph/map_update/models.py:15-100</code>). Device
+tensors hold <code>count</code>, <code>means</code>, <code>cov6</code>,
+<code>features</code>, <code>active</code>, <code>class_ids</code> and
+<code>object_id</code>. Python lists hold captions, categories,
+attributes, the caption decision, three current embeddings and three
+embedding histories, viewpoint image ids, mask observations, lock flags
+and region assignments. A sparse voxel set per object sits in CSR
+layout.</p>
+<p>Identity lives in three structures that persist with the state.
+<code>id_redirect</code> maps a merged id to its winner,
+<code>loser_object_ids</code> keeps each winner's absorbed ids, and
+<code>cannot_link_object_ids</code> records pairs seen as distinct in
+one frame, keyed on external ids, so no later merge can join them
+(<code>src/scene_graph/map_update/cannot_link.py:1-6</code>). The
+cannot-link table is the one durable negative record in the tree, and it
+is keyed on object pairs.</p>
+<p>There is no time on a row. <code>ImageRecord</code> carries an id, a
+pose, a camera id and paths (<code>scene_state_io.py:73-89</code>), and
+the file carries one <code>saved_unix_s</code>. There is no scope key.
+The per-object caption history is append-only in the code that writes it
+and records neither when nor by whom.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is application-driven: a CLI, a Python call, the Viser
+query panel or the evaluation scripts. The locked protocol behind the
+paper's headline numbers is <code>parse_query</code> then
+<code>execute_spatial_query</code> with
+<code>spatial_method=unified_soft_w50</code>,
+<code>retrieval_mode=multi</code>,
+<code>candidate_pool_mode=active</code> and no VLM rerank, per
+<code>EVALUATION.md</code>.</p>
+<p>The parser turns the utterance into a target, anchors and predicates.
+Target and anchor candidates come from reciprocal-rank fusion over
+caption-target text, the raw utterance, SigLIP2 text-to-crop and
+Qwen3-VL text-to-crop embeddings. Relations are closed-form scores over
+the Gaussians — Hellinger distance for <code>Near</code>, a virtual
+viewer for <code>LeftOf</code>, a vertical sigmoid for
+<code>Above</code> — combined per target with its best anchor binding. A
+query naming a room narrows the pool to that region's objects.</p>
+<p>The default path fails closed: on <code>multi</code>, an empty active
+pool returns an empty result
+(<code>semantic_retrieval.py:360-371</code>). The legacy caption-only
+mode does not. <code>_pre_filter</code> falls back to keyword matches
+over the unfiltered pool, then to its first five rows, when the active
+filter leaves nothing (<code>executor.py:1564-1578</code>). That mode is
+reachable only through evaluation script flags, which also expose
+<code>--candidate-pool-mode all</code>, returning inactive rows by
+design.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are continuous and automatic: every RGB-D batch fuses or
+creates rows. There is no extraction from text and no agent-generated
+fact. The VLM contributes captions, a keep-or-drop verdict and, while
+<code>caption_merge_enabled</code> is true, merge requests gated by
+Hellinger, caption-similarity and SigLIP2 thresholds and by cannot-link
+pairs (<code>parameters.py:146-151</code>).</p>
+<p>Conflict handling is geometric. Two detections in one frame become a
+cannot-link pair, and a merge chaining two objects metres apart through
+a large covariance is reverted (<code>object_update.py:988-1000</code>).
+Nothing handles an object that moves: its old row stays active at the
+old place, and the new sighting either fuses if close enough or opens a
+second row. An operator can stop new rows entirely by publishing
+<code>true</code> on <code>/spot/mapping/stop_adding_object</code>
+(<code>streaming_mapper.py:1070-1076</code>, <code>:2946</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The mapping write is synchronous inside the batch; the paper's Table
+1b puts it at 59 to 130 ms per frame. A new object is associable at once
+and retrievable only after its caption and embeddings return from the
+asynchronous worker, whose queue the paper describes as draining when
+the system is idle. No pass rewrites the store beyond the prune scan
+every 100 steps and region re-clustering.</p>
+<p>Each save serialises the whole state; there is no incremental write.
+A live node saves every 40 m of travel, on timed checkpoints, on each UI
+edit and on request, and not on shutdown unless
+<code>scene_state_save_on_shutdown</code> is set
+(<code>parameters.py:170</code>, <code>:185</code>). A crash loses
+everything since the last trigger.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no agent memory surface: no MCP server, no tool schema, no
+function-calling layer. The consumers are a navigation stack that asks
+for a target and receives an object and a saved viewpoint, and a person
+at the Viser UI. The paper's Spot deployment retraces a recorded
+trajectory as a navigation graph and plans to the retrieved object's
+viewpoint.</p>
+<p>Adapting it to another robot means supplying posed RGB-D frames in
+one of the documented formats. Adapting it to a text agent would mean a
+tool around <code>execute_spatial_query</code>; the store has no notion
+of a caller.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Deletion does not stick.</strong> A Viser delete clears
+<code>active</code> and writes nothing a later observation can match.
+Neighbour search masks inactive rows out
+(<code>get_neighbors.py:318</code>), so the next sighting of the deleted
+object creates a new row that the caption worker describes and the
+retriever returns. The one value-keyed exclusion in the tree is the
+prune keyword list,
+<code>"corn stalk, corn plant, leaf, grass, foliage"</code> by default
+(<code>parameters.py:171-173</code>), a configuration parameter no
+correction writes to.</p>
+<p><strong>The lock is a freeze, not a verification.</strong> Locking
+every row on reload protects a curated map from being merged or
+recaptioned. It also means no reloaded object's geometry is refined
+again, and a moved object stays locked at its old position while its new
+position becomes a second row.</p>
+<p><strong>UI edits and mapping batches are not ordered.</strong> The
+four edit handlers take <code>_viser_edit_lock</code>, nothing else
+takes it, and none checks <code>_busy_event</code>.
+<code>add_object_to_scene_state</code> replaces the state's tensors by
+<code>torch.cat</code> while a batch in <code>object_update</code> may
+be doing the same (<code>viser_edit.py:237-243</code>,
+<code>object_update.py:1498-1504</code>). The save after an edit waits
+up to 2 s for the batch; the edit itself does not wait. Whether rows
+misalign in practice was not tested here.</p>
+<p><strong>Provenance is thin.</strong> Merges leave
+<code>id_redirect</code> and <code>loser_object_ids</code>, and the
+caption history keeps prior captions. The only append-only file is the
+VLM merge log, written when <code>caption_merge_log_path</code> is set;
+it defaults to empty (<code>parameters.py:145</code>,
+<code>services.py:296-317</code>). Manual edits, deletions, locks and
+prune deactivations go to the ROS logger only.</p>
+<p><strong>Withheld marks.</strong> <code>tombstone</code>: no record
+keyed on a rejected value; the delete is keyed on the row.
+<code>trust_state</code>: <code>object_caption_decision</code> holds
+<code>keep</code> or <code>drop</code>, and its only reader beyond load
+and initialisation is the viewer
+(<code>src/scene_graph/visualization/viser_visualizer.py:2533-2536</code>);
+with <code>caption_deactivate_unclear_enabled</code> false, a dropped
+row stays retrievable. <code>active</code> is a lifecycle bit, not an
+epistemic state. <code>bitemporal</code>: no time on a row.
+<code>scope_enforced</code>: no scope key; the region filter narrows by
+content. <code>audit_log</code>: the merge log covers one mutation kind
+and is off by default. <code>human_review</code>: the Viser controls
+edit after the write lands, and nothing waits for a person.
+<code>negative_eval</code>: see section 10.</p>
+<p><strong>Other surfaces.</strong> The Viser server binds 127.0.0.1 by
+default (<code>parameters.py:157</code>), but the edit routes carry no
+authentication and the compose file uses host networking. The ROS
+services <code>~/save_scene_state</code> and
+<code>~/save_and_shutdown</code> answer any node on the DDS domain.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Eight pytest functions. Six check predicate evaluators on synthetic
+scene states — vertical-axis selection, horizontal alignment for
+<code>Above</code> and <code>Below</code>, a shared image plane for
+<code>LeftOf</code>, camera depth for <code>InFrontOf</code> — and two
+check the covisibility constraint and its method profile. CI installs
+CPU PyTorch, byte-compiles <code>src</code> and <code>scripts</code>,
+and runs them. No test loads or saves a scene state, deletes or locks an
+object, or asserts anything about <code>active</code>.</p>
+<p>The nearest case to <code>negative_eval</code> is
+<code>test_covisibility_constraint_uses_k_hop_shared_image_graph</code>.
+It asserts that at one hop
+<code>filter_anchors(0, [1, 2, 3]) == [1]</code> and at three hops all
+three pass
+(<code>tests/test_spatial_covisibility_constraint.py:5-26</code>), an
+exact-list exclusion with a positive control. The mark is withheld
+because the case constrains which rows may bind an anchor under the
+opt-in <code>unified_soft_w50_covis3</code> profile, over a four-row
+literal. It does not assert that stored material stays out of what a
+query returns, which is where <a href="../tempomem/">Chronotope</a>'s
+radius-query case earned it.</p>
+<p>The evaluation harness is substantial: loaders and scorers for
+ReferIt3D, IRef-VLA and FARM-Scenes, curated uid lists, and
+<code>EVALUATION.md</code> with parity tables between this code and the
+authors' internal research code on five-scene slices. No prediction or
+score file is committed. ScanNet and HM3D are licence-gated, and
+FARM-Scenes ground truth is hosted on Hugging Face. I ran none of
+it.</p>
+<p>The replication guide differs from the paper in two places. The
+locked protocol has no VLM rerank, so it corresponds to the paper's
+FARM◦ rows rather than FARM. And the paper states that FARM-Scenes
+quality numbers use visible-mask IoU at 0.1, while
+<code>EVALUATION.md</code> scores FARM-Scenes by 3D-AABB IoU, so its
+FARM-Scenes table is not the paper's.</p>
+<p>The paper's method section matches the code: the seven-step
+synchronous loop, Hellinger association, union-find, moment fusion,
+asynchronous captioning and three embeddings. It describes none of the
+Viser controls, the lock or the reload cycle; the Viser interface it
+names is its annotation tool.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Derive relations at query time.</strong> Store enough per
+object — a Gaussian, a caption, embeddings, viewpoints — to compute any
+relation a query names, instead of materialising a relation set that
+grows combinatorially.</li>
+<li><strong>A bounded, unitless association metric.</strong> Hellinger
+distance between Gaussians carries one threshold from a room to a
+construction site.</li>
+<li><strong>Cannot-link pairs keyed on external ids.</strong> Two things
+seen apart in one frame stay distinct across re-indexing and
+redirects.</li>
+<li><strong>Fail closed when the eligible pool is empty.</strong> The
+multi-channel path returns nothing rather than inactive rows.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A delete that only flips a bit the matcher skips.</strong>
+If association ignores deleted rows, the next observation recreates
+them. Key the rejection on something the next observation carries — a
+region and a category — and consult it before creating a row.</li>
+<li><strong>One flag for four reasons.</strong> Merged, pruned, judged
+unclear and deleted by a person are different claims; one boolean loses
+which of them a reviewer should undo.</li>
+<li><strong>Pickle as the durable store.</strong> A memory file that
+executes on load cannot be shared, inspected or repaired safely.</li>
+<li><strong>A UI write path outside the pipeline's lock.</strong> Any
+second writer to a live structure needs the lock the first writer
+holds.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>FARM suits a research group or a single-robot deployment that maps a
+site, curates the result once and queries it many times against a mostly
+static world, with a large GPU budget. It does not suit anything
+long-lived in a changing space: nothing records when an object was last
+seen, nothing retires a stale row, and a correction does not survive the
+robot driving past the object again. Take the retrieval stack and the
+mapping loop; build the correction layer yourself.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether an add or delete in the Viser UI during a live batch
+misaligns the parallel lists in practice; running the node would show
+it.</li>
+<li>Whether the paper's FARM-Scenes numbers recompute from the released
+ground truth under visible-mask IoU at 0.1 with this code.</li>
+<li>Whether the <code>dev/FHunist/depth-adapter</code> branch changes
+any persistence or correction path.</li>
+<li>How the published FARM-Scenes <code>.pt</code> files were produced:
+with locks, deletions or added objects, or straight from the
+mapper.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>src/scene_graph/scene_state_io.py</code>,
+<code>src/scene_graph/map_update/models.py</code>,
+<code>src/scene_graph/map_update/cannot_link.py</code>,
+<code>ros/mapping/mapping/lib/persistence.py</code>,
+<code>ros/mapping/mapping/lib/scene_graph_io.py</code>,
+<code>ros/mapping/mapping/lib/paths.py</code></li>
+<li>Write path:
+<code>ros/mapping/mapping/nodes/streaming_mapper.py</code>,
+<code>src/scene_graph/map_update/get_neighbors.py</code>,
+<code>src/scene_graph/map_update/object_update.py</code>,
+<code>src/scene_graph/map_update/pruning.py</code>,
+<code>src/scene_graph/captioning/services.py</code></li>
+<li>Correction: <code>ros/mapping/mapping/lib/viser_edit.py</code>,
+<code>src/scene_graph/visualization/viser_visualizer.py</code></li>
+<li>Retrieval: <code>src/scene_graph/scene_graph.py</code>,
+<code>src/scene_graph/retrieval/scene_graph_retriever.py</code>,
+<code>src/scene_graph/retrieval/spatial_reasoning/executor.py</code>,
+<code>src/scene_graph/retrieval/spatial_reasoning/semantic_retrieval.py</code>,
+<code>src/scene_graph/retrieval/spatial_reasoning/methods.py</code></li>
+<li>Configuration:
+<code>ros/mapping/mapping/lib/parameters.py</code></li>
+<li>Tests and evaluation: <code>tests/</code>,
+<code>.github/workflows/ci.yml</code>, <code>EVALUATION.md</code>,
+<code>scripts/eval_*.py</code>, <code>src/scene_graph/eval/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run once from the checkout root at the pinned revision.</p>
+<ul>
+<li><code>git grep -nE '_viser_edit_lock' -- ros src</code> — the
+declaration and the four edit handlers in
+<code>streaming_mapper.py</code>; nothing in the mapping batch.</li>
+<li><code>git grep -nE 'db_active' -- src/scene_graph/map_update/get_neighbors.py</code>
+— both neighbour-search variants mask inactive rows out
+(<code>:318</code>, <code>:463</code>).</li>
+<li><code>git grep -nE 'caption_decision' -- src ros scripts</code> —
+writers in <code>services.py</code>, initialisation, fill-on-load, the
+recording field list and the viewer; no retrieval reader.</li>
+<li><code>git grep -nE 'merge_log_path' -- src ros</code> — defaults to
+an empty string; the one writer is in <code>services.py</code>.</li>
+<li><code>git grep -nE 'on_edit_caption=|on_delete_object=' -- src ros scripts</code>
+— handlers passed only by <code>streaming_mapper.py</code>; the
+visualiser defaults them to <code>None</code>.</li>
+<li><code>git grep -niE 'tombstone|reject(ed)?_(value|caption|object)|deny.?list|blocklist' -- src ros scripts</code>
+— no match.</li>
+<li><code>git grep -nE 'valid_from|valid_to|valid_at|observed_at|first_seen|last_seen_(s|t|time)|\bt_first\b|\bt_last\b' -- src ros</code>
+— no match.</li>
+<li><code>git grep -nE 'user_id|tenant|agent_id|session_id' -- src ros</code>
+— no match.</li>
+<li><code>git grep -nE 'scene_state_io|delete_object|toggle_lock|is_locked|"active"' -- tests</code>
+— no match.</li>
+<li><code>git grep -nE 'open\("a"|\.open\("a"' -- src ros</code> — the
+merge log in <code>services.py</code> and an evaluation debug
+manifest.</li>
+<li><code>git grep -nE 'candidate.pool.mode' -- scripts src/scene_graph/visualization</code>
+— the viewer and <code>query_scene_graph.py</code> pass
+<code>active</code>; the three evaluation scripts expose
+<code>all</code> as a flag.</li>
+<li><code>git grep -niE 'arxiv|bibtex|@misc|doi\.org' -- README.md CITATION.cff</code>
+— the paper, <a
+href="https://arxiv.org/abs/2606.15476">arXiv:2606.15476</a>, and the
+GrandTour dataset citation.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/GoldenGait/FARM-Project/commit/2fcaf8602e741341a70ca980133f7ff05cfc83a2"><code class="commit-id" title="2fcaf8602e741341a70ca980133f7ff05cfc83a2">2fcaf860…</code></a>
+— first reading, at the head of <code>main</code>, the repository's only
+commit. No capability mark. Screened before reading: 1 auto-run surface
+(<code>.gitmodules</code>, the YOLOE fork, left uninitialised), 1
+build-time execution point (<code>ros/mapping/setup.py</code>), 1
+unpinned surface (<code>pyproject.toml</code> with no lockfile) and
+nothing inside the cooldown; <code>CLAUDE.md</code> was treated as data.
+<code>LICENSE</code> is the AGPL-3.0 text with no rider. The paper was
+read at v3. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

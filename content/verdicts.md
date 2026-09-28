@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 650 reports.**
+**This page covers all 652 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5829,3 +5829,21 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no licence file, 7 commits by 1 contributor between 18 June and 10 August 2026, 25,962 lines of Python of which the two memory modules are 1,571 and 1,085, no tests, and no run output or memory directory committed. No capability mark: `category` is a benchmark subset filter that widens when empty, and nothing carries a status, validity time, audit record or review state.
 - Study when: you are distilling a large model's tool-use procedures into a small agent over a fixed tool set and want a worked three-tier split to reimplement.
 - Do not copy when: the store must change after deployment, take corrections, or hold anything user-specific — or when you need the evaluation harness, which lacks the AppWorld method, the non-AppWorld baselines and the CLI wiring.
+
+### [`farm`](../systems/farm/)
+- Best idea: **derive relations at query time from a compact per-object record.** Each object keeps a Gaussian, a caption, three embeddings and its viewpoints; `Near`, `LeftOf`, `Above` and the rest are closed-form scores computed when a query names them, so the store never materialises a relation set that grows combinatorially, and one unitless Hellinger threshold associates detections from a room to a construction site.
+- Biggest risk: **a delete that the next sighting undoes.** A Viser delete, a merge, a keyword prune and an unclear-caption drop all clear the same `active` bit, and neighbour search masks inactive rows out, so the robot's next view of a deleted object opens a new row that is recaptioned and retrieved again.
+- Most reusable component: the cannot-link table — pairs of objects seen as distinct in one frame, keyed on external ids so they survive re-indexing and merge redirects, consulted before every VLM-requested merge.
+- Second risk: **the store is a pickle and the edits race the mapper.** `load_scene_state` calls `torch.load` with `weights_only=False` on a file the published dataset also ships, and the four UI edit handlers take a lock the mapping batch never takes while both replace the same tensors by `torch.cat`.
+- Maturity impression: the paper's code, one commit authored 27 July 2026 by one contributor, 60,822 lines of Python outside tests, an evaluation harness with parity tables against the authors' internal code, and 8 pytest functions that check predicate evaluators and nothing about persistence. No capability mark.
+- Study when: you are building object-level spatial memory for a robot and want a worked retrieval stack — multi-channel embedding fusion, a parsed query graph, predicate evaluators — over a representation with a constant-cost update.
+- Do not copy when: corrections must survive re-observation, objects move, or the memory file will be shared or loaded from anywhere you do not control.
+
+### [`embodied-lgr`](../systems/embodied-lgr/)
+- Best idea: **deduplicate labels by place before similarity.** A new label is compared only with nodes within 5 metres of the robot, then by MiniLM cosine above 0.75, so a *cup* and a *mug* seen from one spot converge on one node while two cups in two rooms stay two.
+- Biggest risk: **the memory does not survive its processes.** The graph is an in-process NetworkX object never written anywhere, and `memory_builder_node` drops the Milvus collection in its constructor, so a reboot forgets both stores and a builder restart forgets the scene captions.
+- Most reusable component: the three typed graph services — semantic, positional and temporal — each returning node id, label, score and pose as structured results the agent can navigate to.
+- Second risk: **the paper describes a different graph.** It says nodes are linked by proximity and embedding distance, that the k closest nodes are updated and that the original yaw is kept; the code adds no edge, updates matches in node-id order and overwrites the yaw.
+- Maturity impression: the paper's research code, 59 commits by two GitHub identities between 19 November 2025 and 10 April 2026, 2,744 lines of Python beside a vendored ReMEmbR tree under NVIDIA's non-commercial licence, and 125 test functions that all belong to a vendored ROSA and none of which touch memory. No capability mark.
+- Study when: you are pairing a cheap structured object memory with a caption vector store on a robot and want a NaVQA harness that switches the backends per run.
+- Do not copy when: you need memory that survives a restart, relations between objects, removal of what moved, tests, or a commercial licence for the vector half.

@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="EmbodiedLGR's ROS 2 code: an
+edgeless in-process graph of object labels at robot poses, with a
+ReMEmbR Milvus caption store as fallback.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="EmbodiedLGR — Agent Memory Atlas">
+    <meta property="og:description" content="EmbodiedLGR's ROS 2 code:
+an edgeless in-process graph of object labels at robot poses, with a
+ReMEmbR Milvus caption store as fallback.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EmbodiedLGR — Agent Memory Atlas">
+    <meta name="twitter:description" content="EmbodiedLGR's ROS 2 code:
+an edgeless in-process graph of object labels at robot poses, with a
+ReMEmbR Milvus caption store as fallback.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>EmbodiedLGR — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "EmbodiedLGR",
+      "description": "EmbodiedLGR's ROS 2 code: an edgeless in-process graph of object labels at robot poses, with a ReMEmbR Milvus caption store as fallback.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An object graph that lives inside one ROS
+node</p>
+          <h1>EmbodiedLGR</h1>
+          <p class="document-deck">EmbodiedLGR's ROS 2 code: an edgeless
+in-process graph of object labels at robot poses, with a ReMEmbR Milvus
+caption store as fallback.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/paolorv/lgr-agent">
+              <span>Source</span>
+              <strong>paolorv/lgr-agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/paolorv/lgr-agent/commit/3593e6a459e5099704b4e5577e4d4339dd2bf8dc" title="3593e6a459e5099704b4e5577e4d4339dd2bf8dc">
+              <span>Analyzed revision</span>
+              <code>3593e6a4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/paolorv--lgr-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>paolorv--lgr-agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0;
+the vendored remembr/ tree carries NVIDIA's non-commercial
+licence</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>2,744
+lines of Python in the waffle_agent package and the two servers; the
+graph memory is 551 of them, beside a vendored 5,051-line ReMEmbR
+tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>59
+commits on main by two GitHub identities, 19 November 2025 – 10 April
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>125
+test functions, all in the vendored ROSA suite; none touch
+memory</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>EmbodiedLGR is the <strong>code for a robotics paper</strong>:
+<em>EmbodiedLGR: Integrating Lightweight Graph Representation and
+Retrieval for Semantic-Spatial Memory in Robotic Agents</em> by Paolo
+Riva, Leonardo Gargani, Matteo Frosi and Matteo Matteucci (<a
+href="https://arxiv.org/abs/2604.18271">arXiv:2604.18271</a>, submitted
+20 April 2026, v2 4 September 2026). A ROS 2 robot keeps two memories. A
+graph of object labels, each at the pose the robot held when it saw
+them, answers <em>where</em>, <em>when</em> and <em>what like this</em>
+through three services. A <a
+href="https://arxiv.org/abs/2409.13682">ReMEmbR</a> caption store in
+Milvus answers richer scene questions as a fallback. A GPT-4o agent
+built on JPL's ROSA picks between them.</p>
+<p>What is notable is the graph's write rule: a label is matched to
+existing nodes by embedding similarity only within a 5-metre radius, so
+synonyms seen from one place converge. What is weak is everything around
+it: the graph is an in-process NetworkX object with no edges, the vector
+store is dropped at every builder start, and no test touches either.</p>
+<p><strong>The repository is the paper's code, and the paper does not
+say so.</strong> The README's title is the paper's title, the repository
+description repeats the paper's subtitle and names AirLAB at Politecnico
+di Milano, and the commits are by the paper's first author. Neither the
+arXiv abstract page nor the v2 full text links the repository. It was
+created on 19 November 2025; the pinned commit, dated 10 April 2026,
+predates the paper's first version.</p>
+<p><strong>Three things the paper describes are not what the code
+does.</strong> The paper says nodes are <em>"inserted and linked
+directly by spatial proximity and embedding space distance"</em>; the
+code adds nodes to an <code>nx.Graph</code> and never adds an edge. It
+says that when fewer objects are seen than are known, <em>"we update the
+k-closest nodes with respect to the current position"</em>; the code
+updates the first matches in node-id order. It says <em>"the pose's
+original yaw is preserved"</em>; the code overwrites the yaw with the
+current one. Section 4 has the anchors.</p>
+<p><strong>The licence is split.</strong> The repository is Apache-2.0,
+and <code>remembr/</code> is NVIDIA's ReMEmbR under the NVIDIA License,
+whose section 3.3 limits the work and its derivatives to non-commercial
+research or evaluation use. The memory builder and the ReMEmbR server
+import from that tree, so a deployment of the vector half inherits the
+restriction.</p>
+<p>No capability mark. Section 9 names the seven withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are two memories and neither holds a belief in any stronger
+sense than <em>the vision model said so</em>.</p>
+<p><strong>A graph node is a label at a place, refreshed by
+re-sighting.</strong> Every seven seconds a camera frame goes to
+Florence-2 with the <code>&lt;DENSE_REGION_CAPTION&gt;</code> task, and
+the labels it returns arrive on <code>/labels</code> as a JSON list of
+free-text strings. For each distinct label the manager collects the
+existing nodes that lie within 5 metres of the robot and sit above 0.75
+cosine similarity to the label's embedding. If the frame shows more
+instances than are known, every known one is refreshed and the surplus
+become new nodes. Otherwise the first <em>n</em> matches are refreshed.
+A refresh moves the node's x and y halfway to the robot's current
+position, replaces its yaw and appends the timestamp. The node keeps its
+original label: a later <em>mug</em> that matches a <em>cup</em> node
+refreshes the <em>cup</em>.</p>
+<p><strong>Nothing leaves the graph.</strong> No path removes a node,
+lowers a score or marks one stale. An object carried away keeps its node
+at the last place it was seen, and its timestamp list stops growing. The
+graph dies whole when the <code>graphmemory_manager</code> process
+exits, because it is never written anywhere.</p>
+<p><strong>The node's position is the robot's.</strong> The pose stored
+is the odometry pose at the sighting, not an estimate of the object's
+location, and the paper says the same. A <em>where is</em> answer is
+therefore where the robot stood, averaged over sightings. The NaVQA
+scoring counts a position within 25 metres as correct, which is loose
+enough for that to pass.</p>
+<p><strong>A caption row is appended and never revised.</strong> The
+ReMEmbR half stores one row per caption with the robot's position, yaw
+and time, and never updates one. It stops existing only when
+<code>memory_builder_node</code> starts, which drops the whole
+collection.</p>
+<p><strong>Retrieval is ordered by prompt, not by code.</strong> The
+deployed agent's prompt calls the graph <em>PRIMARY</em> and the vector
+store a fallback for richer visual detail. The evaluator's prompt goes
+further: <em>"Always trust any POSITIVE answer returned by the
+query_long_term_memory tool."</em> Neither memory carries a state that
+could withhold a row from the model.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Florence-2 label becomes, refreshes or is lost as a graph node, and how the caption store is dropped</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Florence-2 label becomes, refreshes or is lost as a graph node, and how the caption store is dropped
+flowchart TD
+    F[&quot;camera frame every 7 s&quot;] --&gt; VLM[&quot;Florence-2&lt;br/&gt;DENSE_REGION_CAPTION&quot;]
+    VLM --&gt; L[&quot;/labels: JSON list of strings&quot;]
+    L --&gt; P{&quot;odometry received?&quot;}
+    P -- &quot;no pose_msg attribute yet&quot; --&gt; ERR[&quot;AttributeError in callback&quot;]
+    P -- &quot;yes&quot; --&gt; NEAR[&quot;nearby = nodes whose stored&lt;br/&gt;x,y is under 5 m from robot&quot;]
+    NEAR --&gt; EACH[&quot;per distinct label:&lt;br/&gt;embed with MiniLM&quot;]
+    EACH --&gt; M[&quot;matches = nearby nodes&lt;br/&gt;with cosine over 0.75&quot;]
+    M --&gt; C{&quot;seen count over&lt;br/&gt;match count?&quot;}
+    C -- &quot;yes&quot; --&gt; UPALL[&quot;refresh every match,&lt;br/&gt;create seen minus known nodes&quot;]
+    C -- &quot;no&quot; --&gt; UPN[&quot;refresh first n matches&lt;br/&gt;in node-id order&quot;]
+    UPALL --&gt; R[&quot;refresh: x,y halfway to robot,&lt;br/&gt;yaw replaced, timestamp appended,&lt;br/&gt;label unchanged&quot;]
+    UPN --&gt; R
+    R --&gt; G[&quot;nx.Graph in process memory,&lt;br/&gt;no edges, no delete&quot;]
+    G --&gt; EXIT[&quot;process exits:&lt;br/&gt;graph gone&quot;]
+    CAP[&quot;/captions: scene caption&quot;] --&gt; MB[&quot;memory_builder_node:&lt;br/&gt;insert caption, pose, time&quot;]
+    MB --&gt; MV[&quot;Milvus test_collection&quot;]
+    START[&quot;memory_builder_node starts&quot;] --&gt; DROP[&quot;reset: drop_collection=True&quot;]
+    DROP --&gt; MV</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The main container runs ROS 2 Jazzy with the
+<code>waffle_agent</code> package. <code>objectdetection_node</code> and
+<code>captioner_node</code> post frames to a Florence-2 Flask server on
+port 8001 in its own container (<code>captionerserver/</code>).
+<code>graphmemory_manager</code> holds the graph and serves
+<code>search_by_label</code>, <code>search_by_position</code> and
+<code>search_by_time</code>. <code>memory_builder_node</code> writes
+captions into Milvus, which runs in a third container
+(<code>milvusserver/</code>). <code>remembr_server.py</code> wraps the
+ReMEmbR agent in Flask on <code>0.0.0.0:8000</code> with one
+<code>/query</code> route and no authentication.</p>
+<p>The graph is a <code>networkx.Graph</code> with a
+sentence-transformer (<code>all-MiniLM-L6-v2</code>) for label
+embeddings; every read is a Python loop over every node
+(<code>graphmemory_manager.py:41-42</code>, <code>:319-467</code>). The
+vector store is ReMEmbR's <code>MilvusMemory</code>: a 1,024-dimension
+<code>mxbai-embed-large-v1</code> text embedding, a three-dimension
+position vector and a two-dimension time vector, each with an IVF_FLAT
+index, in one collection
+(<code>remembr/remembr/memory/milvus_memory.py:37-69</code>).</p>
+<p>The <code>remembr/</code> tree is NVIDIA's upstream: 67 of its 68
+files are byte-identical to NVIDIA-AI-IOT/remembr <code>main</code>,
+compared by blob hash. The one that differs,
+<code>agents/remembr_agent.py</code>, adds an OpenAI branch to
+<code>llm_selector</code> and logging around the three retrieval tools.
+<code>src/rosa/</code> and <code>tests/rosa/</code> are a copy of JPL's
+ROSA under its Apache-2.0 headers. The Dockerfile installs
+<code>jpl-rosa</code> from PyPI without a version into the system Python
+(<code>Dockerfile:152</code>, <code>:180</code>); the in-tree copy is
+installed only when <code>DEVELOPMENT=true</code>, into a separate venv
+(<code>:143-150</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Adopting this is standing up a robot stack: ROS 2 Jazzy, Gazebo
+Harmonic or a real robot with odometry and a camera, a GPU for
+Florence-2, a Milvus container, and an OpenAI key for the agent and for
+ReMEmbR. Nothing runs offline, because both agents call GPT-4o. The
+install is a Docker build plus a colcon build, then six terminals in the
+order the README gives. Neither store is readable by hand: the graph
+exists only as Python objects, and the Milvus rows are reached through
+its client.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Graph write.</strong>
+<code>objectdetection_node.timer_callback</code> encodes the latest
+frame and posts it with <code>task=&lt;DENSE_REGION_CAPTION&gt;</code>,
+then publishes the returned <code>labels</code> list as JSON on
+<code>/labels</code> (<code>objectdetection_node.py:34</code>,
+<code>:96-130</code>). <code>BatchSemanticGraph.labels_callback</code>
+decodes it and calls <code>process_batch</code> when a pose has arrived
+(<code>graphmemory_manager.py:102-126</code>).
+<code>process_batch</code> gathers nodes within
+<code>SPATIAL_THRESH = 5.0</code> of the robot (<code>:146-162</code>),
+then per label embeds it and collects matches above
+<code>SEMANTIC_THRESH = 0.75</code> (<code>:168-185</code>), and
+reconciles (<code>:211-222</code>). <code>create_node</code> stores
+label, embedding, pose and a one-element timestamp list
+(<code>:273-283</code>); <code>update_node</code> averages x and y with
+<code>alpha = 0.5</code>, writes the current yaw and appends the time
+(<code>:285-296</code>).</p>
+<p><strong>Where the paper and the code part.</strong> The only
+<code>add_edge</code> calls in the tree are the LangGraph workflow
+inside ReMEmbR and a commented line under <code>unused/</code>. The
+k-closest rule is <code>existing_matches[i]</code> for
+<code>i in range(count_seen)</code>, with <code>existing_matches</code>
+built in graph iteration order and never sorted by distance
+(<code>:178-185</code>, <code>:220-222</code>). The yaw is
+<code>current_robot_pose[2]</code> (<code>:293</code>). The paper's
+position update is on <em>{x, y, z}</em>; the node's <code>pos</code>
+tuple is (x, y, yaw) and holds no z (<code>:274</code>).
+<code>ANGLE_THRESH</code> is declared and marked <em>UNUSED</em>, its
+check commented out (<code>:37</code>, <code>:155-159</code>).</p>
+<p><strong>Graph read.</strong> Three service callbacks.
+<code>labelsearch_callback</code> embeds the query, scores every node by
+cosine and returns the top <code>top_k_return</code>, default 60, with
+no floor (<code>:33</code>, <code>:319-343</code>).
+<code>positionsearch_callback</code> ranks by 2D distance and returns
+the full (x, y, yaw) (<code>:358-392</code>).
+<code>timesearch_callback</code> takes each node's closest sighting to
+the query time and ranks by the absolute difference
+(<code>:432-467</code>).</p>
+<p><strong>Vector write.</strong> <code>MemoryBuilderNode</code>
+subscribes to <code>/odometry</code> and <code>/captions</code>,
+constructs <code>MilvusMemory</code>, and calls
+<code>self.memory.reset()</code> in its constructor, whose default is
+<code>drop_collection=True</code>
+(<code>memory_builder_node.py:37-47</code>;
+<code>milvus_memory.py:139-144</code>). Each caption becomes a
+<code>MemoryItem</code> with the pose's header time and is inserted with
+a fresh embedding under <code>id = str(time.time())</code>
+(<code>memory_builder_node.py:71-93</code>;
+<code>milvus_memory.py:122-134</code>).</p>
+<p><strong>Vector read.</strong> <code>remembr_server.py</code>
+constructs <code>MilvusMemory("test_collection")</code>, whose own
+constructor resets with <code>drop_collection=False</code>, and serves
+<code>ReMEmbRAgent(llm_type="gpt-4").query</code> at <code>/query</code>
+(<code>remembr_server.py:11</code>, <code>:40-58</code>;
+<code>milvus_memory.py:119</code>). The agent's three tools are text
+search through a LangChain retriever with <code>k=5</code>, and position
+and time search through a nearest-vector call with <code>k=4</code> and
+no filter expression (<code>milvus_memory.py:153</code>,
+<code>:173-227</code>, <code>:254-312</code>).</p>
+<p><strong>Agent tools.</strong> <code>tools/waffle.py</code> wraps the
+three services and the Flask call as LangChain tools —
+<code>query_graph_memory_semantical</code>,
+<code>query_graph_memory_positional</code>,
+<code>query_graph_memory_by_time</code> and
+<code>query_long_term_memory</code> — beside <code>get_robot_pose</code>
+and <code>navigate_to_position</code>
+(<code>tools/waffle.py:69-409</code>). <code>TurtleAgent</code> hands
+the module to ROSA as a tool package beside ROSA's own ROS 2 tools
+(<code>waffle_agent.py:56-66</code>).</p>
+<p><strong>Offline evaluation.</strong>
+<code>json_memory_populator</code> replays a preprocessed CODa caption
+file, publishing odometry, captions and dense labels for each frame
+(<code>json_memory_populator.py:21-24</code>, <code>:39-72</code>).
+<code>evaluator_node</code> selects the graph tools, the ReMEmbR tool or
+both from <code>memory_mode</code> (<code>evaluator_node.py:58</code>,
+<code>:74-78</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A graph node is a NetworkX node keyed by an incrementing integer with
+four attributes: <code>label</code> (string), <code>embedding</code>
+(numpy vector), <code>pos</code> (x, y, yaw) and <code>timestamps</code>
+(a list of floats) (<code>graphmemory_manager.py:276-282</code>). The
+service response type <code>GraphResult</code> carries
+<code>node_id</code>, <code>label</code>, a float <code>score</code>
+whose meaning differs per service — similarity, distance or seconds —
+and <code>position</code>
+(<code>src/waffle_agent_msgs/msg/GraphResult.msg</code>).</p>
+<p>A ReMEmbR row has <code>id</code>, <code>text_embedding</code>,
+<code>position</code>, <code>theta</code>, <code>time</code> as a
+two-element vector with a fixed offset of 1,721,761,000 subtracted, and
+<code>caption</code> (<code>milvus_memory.py:17</code>,
+<code>:37-45</code>, <code>:130</code>).</p>
+<p>There is no scope key, no author or source, no status and no
+confidence on either. The timestamp list is the one temporal field on a
+node and records sightings; nothing records when the node was written or
+changed. There are no edges, so there are no relations between
+objects.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated: the model decides which service to call
+and with what. Each graph service is exhaustive and unthresholded, so a
+semantic query for an object never seen still returns 60 nodes with
+their similarity, and the model must judge from the numbers that none
+matches. The prompt's <em>"If an object is not in your memory, state
+that clearly"</em> is the only defence (<code>prompts.py:33</code>).</p>
+<p>Label search compares the query against the label text Florence-2
+produced, which is often a phrase. Position search ignores yaw in the
+distance and returns it. Time search returns every node with any
+sighting, ranked by the nearest one, so a node seen once at the query
+time and a node seen constantly tie at zero.</p>
+<p>The ReMEmbR agent is its own LLM loop over Milvus, reached as one
+tool call with a natural-language question. The evaluation prompt tells
+the outer model to pass the user's full question through verbatim, with
+its position and the current time
+(<code>evaluator_node.py:202-205</code>). Neither path budgets tokens: a
+graph call returns 60 JSON objects and a ReMEmbR call returns whatever
+its agent generates.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are automatic, driven by perception timers, with no model in
+the graph path beyond Florence-2 and the sentence embedder.
+Deduplication is the radius-plus-similarity match. Two labels in one
+frame that both clear 0.75 against the same node each refresh it, so the
+node moves twice and gains two timestamps for one frame
+(<code>graphmemory_manager.py:174-222</code>).</p>
+<p>The match radius is measured from the robot's current position to the
+node's stored position, which is itself an average of robot positions.
+An object seen from two places more than 5 metres apart becomes two
+nodes.</p>
+<p>Nothing filters input. A label is whatever the vision model returned,
+and any process on the ROS domain can publish to <code>/labels</code> or
+<code>/captions</code>.</p>
+<p><code>labels_callback</code> reads <code>self.pose_msg</code>, which
+the constructor never assigns; only <code>pose_callback</code> does
+(<code>:97-98</code>, <code>:120</code>). A label message arriving
+before the first odometry raises <code>AttributeError</code> inside the
+callback rather than reaching the <em>"No odometry received"</em>
+branch. <code>update_plot</code> guards the same attribute with
+<code>hasattr</code> (<code>:472</code>); the callback does not.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent does not block on writes; they happen in separate nodes as
+frames arrive. A label is retrievable once Florence-2 returns and the
+manager's loop finishes, bounded below by the 7-second timer. Each label
+is embedded and compared against every nearby node, so a write is linear
+in the graph. No background pass rewrites either store. On the read path
+a graph call returns up to 60 nodes and is unbounded in characters, and
+ROSA accumulates chat history across turns
+(<code>waffle_agent.py:64</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The deployed agent is ROSA on GPT-4o with the four memory tools and
+navigation. The prompt fixes the routing: graph first for objects,
+positions, counts and times; the vector store only for richer visual
+context or when the graph fails (<code>prompts.py:27-36</code>). The
+model cannot write memory through these tools; all six waffle tools read
+or move the robot.</p>
+<p>ROSA's own ROS 2 tools sit in the same registry, with
+<code>master</code> and <code>docker</code> blacklisted
+(<code>waffle_agent.py:41</code>, <code>:56-66</code>). In the in-tree
+ROSA copy those tools build a command string and run it with
+<code>shell=True</code> after checking only the first two tokens, and
+<code>ros2_service_call</code> places the model's <code>request</code>
+argument inside double quotes
+(<code>src/rosa/tools/ros2.py:25-48</code>, <code>:329-342</code>).
+Whether the PyPI release the image installs behaves the same was not
+checked.</p>
+<p>The evaluator is a second integration: a LangChain
+<code>CHAT_ZERO_SHOT_REACT</code> agent with at most eight iterations,
+then a second GPT-4o call that turns the answer into JSON before scoring
+(<code>evaluator_node.py:351-362</code>, <code>:405-418</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Durability is the first gap.</strong> The graph is lost on
+any restart of its node. The vector store survives restarts of the
+ReMEmbR server and the agent, and is dropped by the next start of
+<code>memory_builder_node</code>. A robot that reboots forgets
+everything; a robot that restarts only its builder forgets its scene
+descriptions and keeps its object graph, until that node restarts
+too.</p>
+<p><strong>The collection name is composed twice.</strong> The builder
+reads a <code>db_collection</code> parameter defaulting to
+<code>test_collection</code>; the server hardcodes
+<code>"test_collection"</code> (<code>memory_builder_node.py:18</code>;
+<code>remembr_server.py:11</code>). Setting the parameter makes the
+builder write where the server never reads.</p>
+<p><strong>Model output reaches <code>eval</code>.</strong> The vendored
+ReMEmbR agent parses its LLM's answer with Python <code>eval</code>
+whenever the answer lacks a JSON fence
+(<code>remembr/remembr/agents/remembr_agent.py:458-461</code>,
+<code>:545-547</code>). That answer is generated over retrieved
+captions, which are vision-model text about whatever the camera saw. It
+runs in a Flask process listening on all interfaces without
+authentication. Both lines are unchanged from NVIDIA's upstream.</p>
+<p><strong>Provenance and correction.</strong> A node records no source
+frame and no confidence, so a wrong label cannot be traced to an image
+or told apart from a right one. A wrong node can only be overwritten by
+re-sighting, which moves it and never relabels it.</p>
+<p><strong>Marks withheld, all seven.</strong> <code>tombstone</code>:
+nothing records a rejected value, and nothing rejects.
+<code>trust_state</code>: no status field on either store.
+<code>bitemporal</code>: the timestamps are sighting times only, with no
+record time beside them, and the Milvus <code>time</code> is the same
+capture time. <code>scope_enforced</code>: no scope key on a node or a
+row and no <code>expr</code> on any Milvus search; one graph per process
+is a physical partition. <code>audit_log</code>: <code>logs/</code>
+holds interaction logs of queries and answers, not mutations, and
+nothing logs a node update. <code>human_review</code>: no surface where
+a person inspects or admits a node. <code>negative_eval</code>: the only
+tests are ROSA's, and none reads either store.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The 125 test functions in <code>tests/rosa/</code> are ROSA's unit
+tests for its calculation, log, ROS 1, ROS 2 and system tools. None
+imports <code>waffle_agent</code>, <code>remembr</code> or the graph
+manager. The graph write rule, the three services and the Milvus path
+have no test.</p>
+<p>The evaluation is a NaVQA harness. <code>coda_player</code> extracts
+captions, labels and dense labels from CODa sequences,
+<code>form_question_jsons.py</code> builds questions,
+<code>json_memory_populator</code> replays a sequence into both stores
+and <code>evaluator_node</code> scores answers. A position counts as
+correct within 25 metres and a time within 180 seconds, matching the
+paper's stated thresholds (<code>evaluator_node.py:438</code>,
+<code>:453</code>). Preprocessed Florence-2 captions for six sequences
+are committed under <code>utility/navqa-captions-processed/</code>; no
+result file is. The README's evaluation command runs
+<code>rosa_navqa_evaluator</code>, which is the node's name; the
+console-script entry point is <code>evaluator_node</code>
+(<code>src/waffle_agent/setup.py:36</code>).</p>
+<p>The paper reports on 120 NaVQA questions. With Florence-2-large,
+graph memory alone averages 14.29% accuracy at 9.97 s per answer,
+ReMEmbR alone 29.11% at 19.79 s, and the two together 33.90% at 23.73 s,
+falling back to the vector store on 80.83% of questions (its Tables I
+and II). The graph alone underperforms the baseline it is paired with,
+and the combined system answers most questions through that baseline.
+These are the paper's numbers; nothing was run for this report and no
+committed artifact recomputes them.</p>
+<p>Before trusting the graph I would want a replayed sequence asserting
+node count and positions after known sightings, a test that an unseen
+object's label search is distinguishable from a seen one, and a restart
+test for both stores.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Gate label deduplication by place before
+similarity.</strong> Matching a new label only against nodes within a
+radius, then by embedding similarity, merges synonyms seen from one spot
+without merging two cups in two rooms. It is cheap and needs no model
+call.</li>
+<li><strong>Give the model typed query services, one per axis.</strong>
+Separate semantic, positional and temporal lookups that return
+structured JSON let the model compose <em>near me</em> and <em>when</em>
+questions with coordinates it can navigate to, instead of parsing
+prose.</li>
+<li><strong>Make the backend set a run parameter.</strong> One evaluator
+that loads graph tools, vector tools or both from a flag is the cheapest
+honest ablation of a hybrid memory.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A memory that lives only in a service process.</strong> An
+in-process graph with no snapshot turns every crash, redeploy and reboot
+into total amnesia, and a robot is the platform where those happen
+most.</li>
+<li><strong>A reset in the writer's constructor.</strong> Dropping the
+store whenever the ingest node starts makes a routine restart a
+deletion, and puts the destructive call where nobody reads it.</li>
+<li><strong>An unthresholded top-k as the only negative.</strong>
+Returning 60 nodes for a query that matches none hands the <em>not in
+memory</em> decision to the model's reading of cosine scores.</li>
+<li><strong>Storing the observer's pose as the object's.</strong> It is
+cheap and passes a loose metric, and it caps position accuracy at the
+camera's range.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is research code for one paper's experiment, and it reads that
+way: a working pipeline for a NaVQA run, with commented-out earlier
+versions of most functions left in place, an <code>unused/</code>
+directory and no tests. A robotics group reproducing the paper, or
+comparing a place-gated object graph against ReMEmbR on NaVQA, has what
+it needs here. Anyone wanting a robot memory to keep will need
+persistence, edges, removal and a licence decision about the vector half
+first, which is most of the work. For a durable object graph with an
+arbiter and tests, <a href="../tempomem/">Chronotope</a> is the closer
+starting point; for local repair after the world changes, <a
+href="../dovsg/">DovSG</a>.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does an exception in <code>labels_callback</code> stop
+<code>rclpy.spin</code> for the manager, or is it logged and the node
+keeps serving? That decides whether the missing <code>pose_msg</code>
+initialisation is cosmetic or fatal.</li>
+<li>Which ROSA runs in the image as built at the pin date — the unpinned
+PyPI <code>jpl-rosa</code> at which version — and does its
+<code>ros2_service_call</code> quote arguments the same way?</li>
+<li>Was the real-robot deployment the paper describes run from this
+tree, or from a branch not pushed? The launch scripts in the tree target
+Gazebo and a Scout base.</li>
+<li>Were the paper's k-closest and preserved-yaw rules in the code that
+produced Tables I and II, at a commit not on <code>main</code>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Graph memory:</strong>
+<code>src/waffle_agent/waffle_agent/graphmemory_manager.py</code>,
+<code>src/waffle_agent_msgs/msg/GraphResult.msg</code>,
+<code>src/waffle_agent_msgs/srv/SearchByLabel.srv</code>,
+<code>SearchByPosition.srv</code>, <code>SearchByTime.srv</code>.</li>
+<li><strong>Perception writers:</strong>
+<code>src/waffle_agent/waffle_agent/objectdetection_node.py</code>,
+<code>captioner_node.py</code>,
+<code>captionerserver/captioner_server.py</code>.</li>
+<li><strong>Vector memory:</strong>
+<code>src/waffle_agent/waffle_agent/memory_builder_node.py</code>,
+<code>remembr_server.py</code>,
+<code>remembr/remembr/memory/milvus_memory.py</code>,
+<code>remembr/remembr/memory/memory.py</code>,
+<code>remembr/remembr/agents/remembr_agent.py</code>.</li>
+<li><strong>Agent:</strong>
+<code>src/waffle_agent/waffle_agent/waffle_agent.py</code>,
+<code>tools/waffle.py</code>, <code>prompts.py</code>,
+<code>src/rosa/tools/ros2.py</code>.</li>
+<li><strong>Evaluation:</strong>
+<code>src/waffle_agent/waffle_agent/evaluator_node.py</code>,
+<code>json_memory_populator.py</code>, <code>coda_player.py</code>,
+<code>utility/evaluation_scripts_patch/</code>,
+<code>utility/navqa-captions-processed/</code>.</li>
+<li><strong>Build:</strong> <code>Dockerfile</code>,
+<code>src/waffle_agent/setup.py</code>, <code>LICENSE</code>,
+<code>remembr/LICENSE.md</code>.</li>
+<li><strong>Tests:</strong> <code>tests/rosa/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><code>git grep -n -E 'add_edge|add_edges_from|\.edges\('</code> —
+<code>remembr/remembr/agents/remembr_agent.py:526</code>,
+<code>:528</code> (LangGraph workflow) and a commented line in
+<code>unused/graph_test/graphtest.py:29</code>; no edge on the memory
+graph.</li>
+<li><code>git grep -n -E 'pickle|gpickle|write_gml|node_link_data|nx\.write|open\(' -- src/waffle_agent/waffle_agent/graphmemory_manager.py</code>
+— no match; the graph is never written out.</li>
+<li><code>git grep -n -E 'remove_node|remove_nodes_from'</code> — no
+match.</li>
+<li><code>git grep -n -E 'self\.graph\.(add_node|nodes\[)' -- src/waffle_agent</code>
+— live writers at <code>graphmemory_manager.py:276</code>,
+<code>:286</code>, <code>:293</code>, <code>:296</code>; the rest are
+commented.</li>
+<li><code>git grep -n -E 'create_service' -- src ':!src/rosa'</code> —
+the three search services at <code>graphmemory_manager.py:66</code>,
+<code>:72</code>, <code>:78</code>; no write or delete service.</li>
+<li><code>git grep -n -E 'pose_msg' -- src/waffle_agent/waffle_agent/graphmemory_manager.py</code>
+— assigned only at <code>:98</code>, inside
+<code>pose_callback</code>.</li>
+<li><code>git grep -n -E 'reset\(' -- src/waffle_agent remembr_server.py</code>
+— <code>memory_builder_node.py:46</code> live;
+<code>remembr_server.py:12</code> commented.</li>
+<li><code>git grep -n -E 'expr' -- remembr/remembr/memory</code> — a
+commented <code>expr</code> at <code>milvus_memory.py:96</code> and the
+unused default parameter at <code>:259</code>, <code>:299</code>; no
+filter on any search.</li>
+<li><code>git grep -n -i -E 'user_id|session_id|tenant|agent_id|namespace' -- src/waffle_agent remembr/remembr/memory remembr_server.py</code>
+— a commented Azure <code>tenant_id</code> in <code>llm.py:34</code> and
+a committed colcon build log; no scope key.</li>
+<li><code>git grep -n -i -E 'status|verified|confidence|trust' -- src/waffle_agent/waffle_agent/graphmemory_manager.py src/waffle_agent/waffle_agent/tools remembr/remembr/memory</code>
+— only HTTP and Nav2 status codes in <code>tools/waffle.py</code>; no
+memory status.</li>
+<li><code>git grep -n -i -E 'graph|milvus|remembr|memory' -- tests</code>
+— ROS 1 <code>rosgraph</code> tests only.</li>
+<li><code>git grep -n -E 'rosa_navqa_evaluator'</code> —
+<code>README.md:124</code> and the node name at
+<code>evaluator_node.py:54</code>; not an entry point.</li>
+<li><code>git ls-files | grep -E 'eval_results|evaluation_results|\.csv$'</code>
+— only <code>remembr/remembr/data/navqa/data.csv</code>, ReMEmbR's
+input; no result file.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- ':!remembr'</code>
+— no match; the only citation in the tree is in ReMEmbR's own
+README.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/paolorv/lgr-agent/commit/3593e6a459e5099704b4e5577e4d4339dd2bf8dc"><code class="commit-id" title="3593e6a459e5099704b4e5577e4d4339dd2bf8dc">3593e6a4…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 10
+April 2026. No mark. Confirmed as the code for <a
+href="https://arxiv.org/abs/2604.18271">arXiv:2604.18271</a> by title,
+first author and method. Screened before reading: no auto-run surface,
+five build-time execution points (<code>setup.py</code> files, two under
+<code>unused/</code> and <code>utility/old_src/</code>), five unpinned
+dependency surfaces, nothing inside the cooldown; no
+<code>AGENTS.md</code> or <code>CLAUDE.md</code>. The vendored
+<code>remembr/</code> was compared with NVIDIA-AI-IOT/remembr by blob
+hash. Read with <code>git grep</code> and <code>sed</code>; nothing
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

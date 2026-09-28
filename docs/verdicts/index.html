@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 650 reports.</strong></p>
+<p><strong>This page covers all 652 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26856,6 +26856,77 @@ split to reimplement.</li>
 corrections, or hold anything user-specific — or when you need the
 evaluation harness, which lacks the AppWorld method, the non-AppWorld
 baselines and the CLI wiring.</li>
+</ul>
+<h3 id="farm"><a href="../systems/farm/"><code>farm</code></a></h3>
+<ul>
+<li>Best idea: <strong>derive relations at query time from a compact
+per-object record.</strong> Each object keeps a Gaussian, a caption,
+three embeddings and its viewpoints; <code>Near</code>,
+<code>LeftOf</code>, <code>Above</code> and the rest are closed-form
+scores computed when a query names them, so the store never materialises
+a relation set that grows combinatorially, and one unitless Hellinger
+threshold associates detections from a room to a construction site.</li>
+<li>Biggest risk: <strong>a delete that the next sighting
+undoes.</strong> A Viser delete, a merge, a keyword prune and an
+unclear-caption drop all clear the same <code>active</code> bit, and
+neighbour search masks inactive rows out, so the robot's next view of a
+deleted object opens a new row that is recaptioned and retrieved
+again.</li>
+<li>Most reusable component: the cannot-link table — pairs of objects
+seen as distinct in one frame, keyed on external ids so they survive
+re-indexing and merge redirects, consulted before every VLM-requested
+merge.</li>
+<li>Second risk: <strong>the store is a pickle and the edits race the
+mapper.</strong> <code>load_scene_state</code> calls
+<code>torch.load</code> with <code>weights_only=False</code> on a file
+the published dataset also ships, and the four UI edit handlers take a
+lock the mapping batch never takes while both replace the same tensors
+by <code>torch.cat</code>.</li>
+<li>Maturity impression: the paper's code, one commit authored 27 July
+2026 by one contributor, 60,822 lines of Python outside tests, an
+evaluation harness with parity tables against the authors' internal
+code, and 8 pytest functions that check predicate evaluators and nothing
+about persistence. No capability mark.</li>
+<li>Study when: you are building object-level spatial memory for a robot
+and want a worked retrieval stack — multi-channel embedding fusion, a
+parsed query graph, predicate evaluators — over a representation with a
+constant-cost update.</li>
+<li>Do not copy when: corrections must survive re-observation, objects
+move, or the memory file will be shared or loaded from anywhere you do
+not control.</li>
+</ul>
+<h3 id="embodied-lgr"><a
+href="../systems/embodied-lgr/"><code>embodied-lgr</code></a></h3>
+<ul>
+<li>Best idea: <strong>deduplicate labels by place before
+similarity.</strong> A new label is compared only with nodes within 5
+metres of the robot, then by MiniLM cosine above 0.75, so a <em>cup</em>
+and a <em>mug</em> seen from one spot converge on one node while two
+cups in two rooms stay two.</li>
+<li>Biggest risk: <strong>the memory does not survive its
+processes.</strong> The graph is an in-process NetworkX object never
+written anywhere, and <code>memory_builder_node</code> drops the Milvus
+collection in its constructor, so a reboot forgets both stores and a
+builder restart forgets the scene captions.</li>
+<li>Most reusable component: the three typed graph services — semantic,
+positional and temporal — each returning node id, label, score and pose
+as structured results the agent can navigate to.</li>
+<li>Second risk: <strong>the paper describes a different graph.</strong>
+It says nodes are linked by proximity and embedding distance, that the k
+closest nodes are updated and that the original yaw is kept; the code
+adds no edge, updates matches in node-id order and overwrites the
+yaw.</li>
+<li>Maturity impression: the paper's research code, 59 commits by two
+GitHub identities between 19 November 2025 and 10 April 2026, 2,744
+lines of Python beside a vendored ReMEmbR tree under NVIDIA's
+non-commercial licence, and 125 test functions that all belong to a
+vendored ROSA and none of which touch memory. No capability mark.</li>
+<li>Study when: you are pairing a cheap structured object memory with a
+caption vector store on a robot and want a NaVQA harness that switches
+the backends per run.</li>
+<li>Do not copy when: you need memory that survives a restart, relations
+between objects, removal of what moved, tests, or a commercial licence
+for the vector half.</li>
 </ul>
         </article>
       </div>
