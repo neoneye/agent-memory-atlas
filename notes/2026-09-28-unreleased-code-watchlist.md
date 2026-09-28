@@ -18,6 +18,8 @@ the entry says so.
 
 ## Code now available
 
+All nine were examined on 2026-09-28, the day this list was compiled: eMEM, EmbodiedLGR, FARM and Agent Memory Distillation have reports, and each has a Known Limitations correction for the earlier no-code statement; THREADS and Harness-of-Harness stay excluded on their released code, with revised bullets; VISTA's report dates from 2026-09-18 and its two stale bullets were corrected; OmniIntelligence was re-read and its "private framework" claim withdrawn; CSM's living-mind service is confirmed and has its own report, Living Mind Cortex. The entries below record what was found public on that date.
+
 **VISTA** — a visual harness for ARC-AGI-3 from MIT with a lossless frame
 store and two model-authored notes files.
 - Examined 2026-08-06; `content/appendix.md`, bullet opening
