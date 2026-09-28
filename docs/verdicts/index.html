@@ -11479,49 +11479,52 @@ one fingerprint lookup from being closed.</li>
 href="../systems/reasonix/"><code>reasonix</code></a></h3>
 <ul>
 <li>Best idea: <code>SubjectKey</code> — name the <em>question</em> a
-fact answers (<code>project.package_manager</code>) and enforce one
-active value per scope and subject. That converts supersession from a
-similarity judgement into a lookup, and it gives an evaluation something
-exact to assert on. Beside it, <code>benchmarks/memorybench</code>:
-fifteen committed tasks whose classes are this atlas's own failure
-register — contradiction, stale, distractor, paraphrase, pin, plus three
-<code>v1miss</code> regressions preserved from a retrieval bug that
-shipped — where each <code>verify.sh</code> pairs a required string with
-a forbidden one
-(<code>grep -q "pnpm install" &amp;&amp; ! grep -q "npm install"</code>).
+fact answers (<code>project.package_manager</code>) and refuse a second
+active fact for the same scope and subject, with an error naming the
+holder so the new answer becomes its next revision. That turns a
+contradiction into a lookup, and it gives an evaluation something exact
+to assert on. Beside it, <code>benchmarks/memorybench</code>: fifteen
+committed tasks — contradiction, stale, conflict, update, distractor,
+paraphrase, pin, plus three <code>v1miss</code> regressions preserved
+from a retrieval bug that shipped — where five <code>verify.sh</code>
+files pair a required string with a forbidden one
+(<code>grep -q "release/1.21" &amp;&amp; ! grep -q "release/0.9"</code>).
 The forbidden half is an end-to-end negative retrieval assertion on
 agent behaviour rather than on a store method. The harness also runs a
 <strong>memory-off arm</strong> and reports paired pass counts, a
 <code>helpful</code> list, a <strong><code>harmful</code></strong> list
-and <code>overheadChars</code>. A benchmark with a column for the tasks
-memory made worse, beside its token cost, is what this atlas keeps
-asking for.</li>
-<li>Biggest risk: retraction is a newer snapshot rather than a removal.
-The index and pinned bodies ride a session-context snapshot beside the
-cached system prompt; <code>forget</code> archives the file and the next
-user turn appends a replacement snapshot that <em>"supersedes every
-earlier session-context snapshot"</em>, while the earlier one, fact
-included, stays in the conversation. What binds the correction is the
-model honouring that precedence. Underneath it, supersession and
-deletion both key on the record, so the same wrong value saved again
-under a new name is a fresh fact.</li>
+and the characters recall injected.</li>
+<li>Biggest risk: a retraction leaves the text in place. The cached
+system prompt carries a fixed memory protocol and the pinned bodies,
+composed once at boot; <code>forget</code> archives the file, and a
+forgotten pinned body stays in that prompt until the next session, as a
+recalled fact stays in its turn. The model's own <code>forget</code>
+relies on its tool result saying the fact <em>"no longer applies"</em>.
+Beside it, <code>mb-contradiction</code> forbids
+<code>npm install</code> while requiring <code>pnpm install</code>,
+which contains it, so the task cannot pass in either arm. Underneath
+both, the subject key keys on the question, so an update of the holder
+can restore a value an earlier revision replaced.</li>
 <li>Most reusable component: <code>benchmarks/memorybench</code> itself.
 MIT, portable, and each task is a workspace plus a seeded memory
 directory plus a prompt plus a shell verification — no harness required
-to borrow the idea.</li>
-<li>Maturity impression: MIT, a Go coding agent reachable four ways
-(terminal, desktop, browser, ACP), 156 test functions in
-<code>internal/memory</code>. Two marks: <code>human_review</code>
-(mined drafts that only save through an accept action, and ask rules on
-<code>remember</code> and <code>forget</code>) and
-<code>negative_eval</code>. Near-misses stated in the report: freshness
-classifies age rather than belief, revision snapshots and the recall
-audit sit either side of a mutation log without being one, supersession
-keys on the record, and the project boundary is a directory with no
-principal behind it. No paper, and no benchmark results committed — the
-instrument exists, the measurement does not.</li>
-<li>Study when: your provider caches the prefix and you need memory that
-changes mid-session without breaking it, or you are building any memory
+to borrow the idea. Fix <code>mb-contradiction</code>'s pattern with
+<code>grep -w</code> first.</li>
+<li>Maturity impression: MIT, a Go coding agent reachable from a
+terminal, the Reasonix Studio desktop app, a browser and editors over
+ACP, read on its 2.x <code>studio</code> line; 174 test functions in
+<code>internal/state/memory</code>. Two marks: <code>human_review</code>
+(an approval on <code>remember</code> and <code>forget</code> that no
+approval mode, session grant or allowlist answers; bounded new project
+facts skip it) and <code>negative_eval</code>. Near-misses stated in the
+report: freshness classifies age rather than belief, revision snapshots
+and the recall audit sit either side of a mutation log without being
+one, the subject key refuses a second answer without remembering a
+rejected one, and the project boundary is a directory with no principal
+behind it. No paper, and no benchmark results committed — the instrument
+exists, the measurement does not.</li>
+<li>Study when: your provider caches the prefix and you want memory that
+costs a fixed block per session, or you are building any memory
 evaluation at all and want a task set and a verification style to start
 from.</li>
 <li>Do not copy when: you need multi-user boundaries, an audit of what

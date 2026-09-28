@@ -182,11 +182,12 @@ on how to write one.
   removes changes the files at once and the frozen prompt only at compaction or
   the next explicit write.
 - **[Reasonix](../../systems/reasonix/)** — split by position, with the cache as
-  the stated design constraint. The cached system prompt carries only a short
-  memory policy and the standing instruction documents; the memory index and
-  pinned fact bodies ride a host-generated `<session-context>` snapshot, a write
-  appends one complete replacement snapshot on the next user turn, and an
-  unchanged snapshot is deduplicated by digest.
+  the stated design constraint. The cached system prompt carries a memory
+  protocol that is byte-identical across projects plus the pinned fact bodies,
+  and a test fails if the saved-fact index reaches it; relevant facts arrive in a
+  recall block after the user's text, and standing instructions ride the turn.
+  The cost is on correction: a pinned fact forgotten mid-session stays in the
+  prompt until the next session.
 - **[Hipocampus](../../systems/hipocampus/)** — size caps on the always-loaded
   files justified in the spec as a caching decision: *"stable content maximizes
   prompt cache hit rate"*, with about 3K tokens of `ROOT.md` per session chosen

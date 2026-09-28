@@ -22069,45 +22069,43 @@ monotonic <code>Revision</code>, a four-value <code>Type</code>, a
 <code>ExpiresAt</code> and <code>LastVerifiedAt</code> — beside a
 <code>MEMORY.md</code> index</td>
 <td>Plain files, no database: a per-project directory and a global one,
-each with its own index, plus an archive directory for forgotten
-facts</td>
-<td>The index and pinned bodies ride a host-generated
-<code>&lt;session-context&gt;</code> snapshot, re-published on the next
-user turn when they change, so the model always knows what exists; other
-bodies are pulled on demand by a <code>memory</code> tool, with keyword
-aliases used for recall and never rendered into the index, and expired
-facts excluded from automatic recall</td>
-<td>The model calls <code>remember</code>; a <code>#</code> quick-add
-appends to an instruction doc; the desktop page mines recent history
-into drafts a person accepts. One active value per scope and subject, so
-a new fact about the same question displaces the old</td>
-<td><code>forget</code> archives by name rather than deleting, and the
-next user turn carries a replacement session-context without the fact;
-each save keeps the prior revision as an immutable snapshot under
-<code>.revisions/&lt;id&gt;/</code>, restorable as a new revision</td>
+each with its own index, plus an archive directory for forgotten facts
+and a revisions directory per fact</td>
+<td>The cached system prompt carries a fixed memory protocol and the
+bodies of pinned facts, and no index. Each user turn appends a BM25
+recall block after the user's text, with expired facts left out and
+stale ones ranked down; the memory tool searches, lists and reads the
+rest</td>
+<td>The model calls remember, behind a person's approval unless the
+write is a bounded new project fact; a # quick-add appends to an
+instruction doc; the Memory panel edits a fact in place. A second fact
+claiming a held SubjectKey is refused with the holder's id, so a new
+answer becomes a revision</td>
+<td>forget archives by name rather than deleting; every overwritten
+revision is kept as an immutable snapshot under .revisions/ID/,
+restorable as a new revision. A pinned body stays in the cached prompt
+until the next session</td>
 <td>A per-project directory root plus a global tier that loads in every
-project; precedence is annotated in the index. One machine, one user —
-there is no tenant or principal boundary</td>
-<td>A single Go binary reachable four ways — terminal, desktop app,
-browser, and editors over ACP — with the memory exposed as
-<code>remember</code>, <code>forget</code> and <code>memory</code>
-tools</td>
+project; project facts shadow global ones on recall. One machine, one
+user — there is no tenant or principal boundary</td>
+<td>A Go kernel reachable five ways — terminal CLI and TUI, the Reasonix
+Studio desktop app, a browser over its own HTTP server, and editors over
+ACP — with memory exposed as remember, forget and memory tools</td>
 <td>None on the memory path. Freshness is computed on read from
 volatility and the verification clock rather than swept by a job</td>
-<td>No epistemic status. Freshness classifies a fact
-fresh/current/stale/expired from its age and
-<code>LastVerifiedAt</code>, and only <code>expired</code> withholds — a
-statement about age rather than about belief</td>
-<td>A committed memory benchmark whose tasks are the atlas`s own failure
-modes and whose verifications forbid the superseded answer; a paired
-memory-off arm that reports which tasks memory <em>hurt</em> and what
-recall cost in characters; a subject key that keeps one active value per
-question</td>
-<td>A forgotten fact's earlier snapshot stays in the transcript beneath
-the replacement that supersedes it; scope is a directory partition with
-no principal boundary; deletion and supersession are both keyed on the
-record, so nothing prevents the same wrong value being saved again under
-a new name; and there is no mutation audit</td>
+<td>No epistemic status. Freshness classifies a fact fresh, current,
+stale or expired from its age and LastVerifiedAt; stale lowers a recall
+score and only expired withholds — a statement about age rather than
+belief</td>
+<td>A committed memory benchmark whose tasks are the failure modes a
+memory store should be asked about, with a paired memory-off arm that
+reports which tasks memory hurt and what recall cost in characters; a
+subject key that refuses a second answer to one question; a memory
+approval that no posture switch answers</td>
+<td>A forgotten fact stays in whichever text already carried it — the
+cached prompt for a pinned fact, an earlier turn for a recalled one; the
+contradiction task cannot pass; scope is a directory partition with no
+principal; and there is no mutation audit</td>
 </tr>
 <tr>
 <td><code>recall-substrate</code></td>
