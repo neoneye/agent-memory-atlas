@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local work agent and Claude Code
+memory on one SQLite engine, where every memory change is an appended
+judgment with a scoped event row.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MAMA — Agent Memory Atlas">
+    <meta property="og:description" content="A local work agent and
+Claude Code memory on one SQLite engine, where every memory change is an
+appended judgment with a scoped event row.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MAMA — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local work agent and
+Claude Code memory on one SQLite engine, where every memory change is an
+appended judgment with a scoped event row.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MAMA — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MAMA",
+      "description": "A local work agent and Claude Code memory on one SQLite engine, where every memory change is an appended judgment with a scoped event row.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Append-only judgment records under a local
+owner agent</p>
+          <h1>MAMA</h1>
+          <p class="document-deck">A local work agent and Claude Code
+memory on one SQLite engine, where every memory change is an appended
+judgment with a scoped event row.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jungjaehoon-lifegamez/MAMA">
+              <span>Source</span>
+              <strong>jungjaehoon-lifegamez/MAMA</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jungjaehoon-lifegamez/MAMA/commit/6738c694144313481516333312aec7497bae7a04" title="6738c694144313481516333312aec7497bae7a04">
+              <span>Analyzed revision</span>
+              <code>6738c694…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jungjaehoon-lifegamez--MAMA" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jungjaehoon-lifegamez--MAMA</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>88,749
+lines of TypeScript and JavaScript outside tests and the viewer UI; the
+shared engine, mama-core, is 49,468 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,168
+commits on main by 8 contributors, 21 November 2025 – 28 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>about
+2,100 Vitest cases in 280 files (65,308 lines)</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MAMA is two products on one engine. <strong>MAMA OS</strong> is a
+local daemon that runs one Claude or Codex CLI session for an owner, fed
+by Telegram and by connectors such as Slack, Gmail and Trello. It keeps
+originals, work items and the owner's corrections in SQLite. A
+<strong>Claude Code plugin</strong> with an MCP server gives coding
+sessions a decision memory. Both write through
+<strong>mama-core</strong>, whose memory unit is a <em>judgment</em>: a
+row the agent authors, never edited in place, only superseded or retired
+by a later appended record.</p>
+<p>What is notable is the write discipline. Every memory mutation
+outside migrations runs through one function,
+<code>appendJudgmentOnAdapter</code>. It binds scopes, writes an event
+row and stores an idempotent receipt in one transaction
+(<code>packages/mama-core/src/knowledge/judgments.ts:550-930</code>).
+Reads through the action catalog are bounded by the caller's grant and
+fail closed on an empty one.</p>
+<p>What is weak is where the filters stop. Recall excludes superseded
+rows, then appends each superseded predecessor's summary to its
+successor as <code>[Prior context]</code>, unfiltered and untested. The
+agent can save and retire the owner's standing corrections from any
+turn, including turns driven by source content. The Claude Code surface
+is unscoped unless the model passes a scope.</p>
+<p>This report covers the memory tier: the <code>decisions</code> table,
+its scope bindings, events and amendments, and the two products' read
+paths into it. The work ledger (commitments), raw observations and the
+wiki are read only where they touch memory.</p>
+<p>Five marks: <code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>. Section 9 names the two withheld and the
+tier each awarded mark rests on.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a judgment the agent writes. It becomes a belief the
+moment <code>memory.save</code> commits: the row lands
+<code>active</code> unless the caller names another status, and no
+candidate state or extraction step sits between the call and the belief.
+Raw conversations and connector messages are not memories. They are
+immutable observations, and <code>ingestConversation</code> refuses its
+old <code>extract</code> option rather than inferring judgments from
+them (<code>packages/mama-core/src/memory/api.ts:1990-1998</code>).</p>
+<p><strong>A judgment stops being believed in three ways, and none
+deletes it.</strong> A later save naming it in <code>replaces</code>
+sets its <code>status</code> to <code>superseded</code> and its
+<code>superseded_by</code> to the new id
+(<code>judgments.ts:685-707</code>). <code>memory.retire</code> appends
+an amendment record carrying a required reason and moves the target to
+<code>stale</code> or <code>superseded</code>
+(<code>api.ts:1125-1176</code>). A caller may also save a row directly
+as <code>stale</code> or <code>contradicted</code>, because
+<code>status</code> is a field of <code>memory.save</code>'s input
+schema (<code>packages/mama-core/src/api/catalog.ts:674-678</code>).
+Nothing in the tree writes <code>contradicted</code> any other way.</p>
+<p><strong>The amendment is itself a judgment.</strong> Retiring
+<code>X</code> inserts a new row of kind <code>fact</code>, status
+<code>active</code>, topic <code>judgment/X</code>, summary <em>"Status
+'stale' applied to X: reason"</em>, linked to <code>X</code> by an
+<code>amends</code> edge (<code>api.ts:1158-1173</code>). The retirement
+record lives in the same table as beliefs, indexed by the same FTS
+triggers.</p>
+<p><strong>Correction of the owner's guidance is prompted, not
+structural.</strong> The owner system prompt tells the agent to compare
+a new correction with those shown and either revise one through
+<code>replaces</code> or save a new one, and to retire withdrawn
+guidance with a reason
+(<code>packages/standalone/src/runtime/owner-system-prompt.ts:133-137</code>).
+The code enforces the shape of guidance: an <code>appliesWhen</code>
+line, and ordered steps for a workflow (<code>api.ts:627-663</code>).
+Whether the text is right is the agent's call.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a MAMA judgment becomes a belief, the ways it stops being one, and the read path that brings withdrawn text back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a MAMA judgment becomes a belief, the ways it stops being one, and the read path that brings withdrawn text back
+flowchart TD
+    S[&quot;memory.save&lt;br/&gt;(agent tool, status defaults to active)&quot;] --&gt; TX[&quot;one transaction: decisions row,&lt;br/&gt;scope bindings, memory_events row,&lt;br/&gt;judgment_commands receipt&quot;]
+    TX --&gt; ACT[&quot;active judgment&quot;]
+    RP[&quot;memory.save with replaces&quot;] --&gt; SUP[&quot;target status superseded,&lt;br/&gt;superseded_by set&quot;]
+    RT[&quot;memory.retire&lt;br/&gt;(agent tool, stale or superseded + reason)&quot;] --&gt; AM[&quot;amendment judgment&lt;br/&gt;kind fact, status active,&lt;br/&gt;topic judgment/id&quot;]
+    AM --&gt; STL[&quot;target status stale&lt;br/&gt;or superseded&quot;]
+    ACT --&gt; Q1{&quot;memory.search:&lt;br/&gt;scope bound,&lt;br/&gt;EXCLUDED_STATUSES dropped&quot;}
+    ACT --&gt; Q2[&quot;session start:&lt;br/&gt;owner-corrections block,&lt;br/&gt;status active only&quot;]
+    SUP -. &quot;summary appended to successor&lt;br/&gt;as [Prior context]&quot; .-&gt; Q1
+    AM -. &quot;FTS-indexed like any fact&quot; .-&gt; Q1
+    STL -. &quot;kept, readable by id&quot; .-&gt; RD[&quot;memory.read:record&quot;]
+    SUP -. &quot;kept, readable by id&quot; .-&gt; RD</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four packages in a pnpm workspace. <code>mama-core</code> holds
+storage, migrations, records, recall, embeddings, the action catalog and
+dispatch. <code>standalone</code> (MAMA OS) is the daemon: connectors,
+messenger gateways, the owner runtime, a wiki writer and a viewer on
+<code>127.0.0.1:3847</code>. <code>mcp-server</code> exposes development
+memory over stdio. <code>claude-code-plugin</code> ships hooks and slash
+commands and starts that MCP server with
+<code>npx -y @jungjaehoon/mama-server</code>. The two products do not
+share a daemon or a default database
+(<code>docs/explanation/architecture.md</code>).</p>
+<p><strong>Persistence is one SQLite file per product</strong>, opened
+through <code>node:sqlite</code>, with numbered migrations up to
+<code>098-workflow-memory-kind.sql</code>. The development database
+defaults to <code>~/.claude/mama-memory.db</code>
+(<code>packages/mcp-server/src/server.js:43-51</code>). Judgments live
+in <code>decisions</code>, beside <code>memory_scopes</code>,
+<code>memory_scope_bindings</code>, <code>memory_events</code>,
+<code>command_bindings</code>, <code>judgment_commands</code> and
+<code>decision_edges</code>. An FTS5 table is kept in sync by four
+triggers (<code>098-workflow-memory-kind.sql</code>). Embeddings are
+1024-dimension <code>Xenova/multilingual-e5-large</code> vectors
+computed in process and searched by brute-force cosine over an in-memory
+cache
+(<code>packages/mama-core/src/db-adapter/node-sqlite-adapter.ts:383-410</code>,
+<code>:613-700</code>).</p>
+<p><strong>The owner agent is a CLI subprocess.</strong> MAMA OS keeps
+one persistent Claude or Codex session. Owner messages, connector
+deltas, scheduled reports and native events reach it through a durable
+mailbox, and it acts only through registered actions dispatched back to
+the daemon. Nothing runs in the background over memory: no
+consolidation, decay or re-extraction.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>MAMA OS needs Node.js 22.13+, pnpm, a logged-in <code>claude</code>
+or <code>codex</code> CLI and a Telegram bot. At this commit it is an
+unreleased rebuild built from the checkout (<code>README.md</code>). The
+first embedding downloads the e5-large model, about 560 MB by the
+changelog's figure. No API key is needed to store anything; the agent's
+model calls go through the owner's CLI login. The store is SQLite and
+readable by hand, and the viewer serves read-only pages. A wrong memory
+is fixed by a superseding save or a retirement, never an edit, so a hand
+repair is an appended record like any other.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>memory.save</code>
+(<code>catalog.ts:964-1019</code>) → <code>saveJudgmentRecord</code>
+(<code>api.ts:819-853</code>), which strips any caller
+<code>provenance</code> field and composes it from host-attested session
+facts → <code>saveMemoryInternal</code> (<code>api.ts:665-800</code>) →
+<code>appendJudgment</code> (<code>judgments.ts:949-963</code>). The
+dispatcher first scans the input of every <code>recallableWrite</code>
+action for secret-shaped material and refuses a match
+(<code>packages/mama-core/src/api/dispatch.ts:153-172</code>). The MCP
+<code>save</code> tool calls the older facade <code>mama.save</code> →
+<code>saveInternal</code>
+(<code>packages/mama-core/src/mama-api.ts:333-540</code>) →
+<code>saveLegacyMemoryInAdapter</code>, the same append.</p>
+<p><strong>The append.</strong> <code>appendJudgmentOnAdapter</code>
+(<code>judgments.ts:550-930</code>) validates links, amendment targets
+and scopes against the caller's admitted scopes and embeds
+<code>topic + summary</code> before opening the transaction. Then, in
+one <code>transactionImmediate</code>, it inserts the
+<code>command_bindings</code> row (a replayed command id returns its
+stored receipt), the <code>decisions</code> row, one
+<code>memory_scope_bindings</code> row per scope, links,
+<code>replaces</code> supersessions, amendments, projections, commitment
+rows, the <code>memory_events</code> row and the
+<code>judgment_commands</code> receipt.</p>
+<p><strong>Recall.</strong> <code>memory.search</code>
+(<code>catalog.ts:1161-1236</code>) → <code>boundReadScopesFor</code> →
+<code>suggestInAdapter</code> (<code>api.ts:2483</code>) →
+<code>recallMemory</code> (<code>api.ts:1193-1884</code>). A scope, kind
+or quality option routes the call to the fused path. Without one, the
+older vector-then-keyword path at <code>api.ts:2815-3110</code> runs,
+which is what the MCP <code>search</code> tool reaches when the model
+passes no scope.</p>
+<p><strong>Session-start injection.</strong> The owner runtime's
+<code>guidanceResolver</code> reads lessons, preferences, constraints
+and workflows through <code>readMemoryRecordsInScopes</code>
+(<code>packages/standalone/src/runtime/owner-runtime.ts:322-327</code>).
+<code>renderGuidanceIndex</code> emits the active ones oldest first on a
+new session, and <code>renderGuidanceDelta</code> emits added, revised
+and retired entries on later turns
+(<code>stimulus-delivery.ts:565-625</code>, <code>:721-745</code>).</p>
+<p><strong>Retire.</strong> <code>memory.retire</code>
+(<code>catalog.ts:1628-1701</code>) strips read-only grants, bounds
+scopes, and calls <code>retireMemoryRecord</code>
+(<code>api.ts:1125-1176</code>), which appends a judgment whose
+<code>amends</code> entry moves the target's status in the same
+transaction.</p>
+<p><strong>Dead path.</strong> <code>promoteMemoryStatus</code>
+(<code>api.ts:906-1120</code>) runs topic and vector matching through
+<code>resolveMemoryEvolution</code> to supersede a same-topic
+predecessor automatically. It is exported and has no caller outside
+tests.</p>
+<p><strong>Claude Code hooks.</strong> The PreToolUse hook on
+<code>Read</code> embeds the file's name, calls
+<code>vectorSearch</code> with no status exclusion and no scope, and
+prints up to three decisions above 0.6 similarity on the first read of
+each file per session
+(<code>packages/claude-code-plugin/scripts/pretooluse-hook.js:140-180</code>).
+On the dev-memory database nothing moves a status, so the missing
+exclusion has no effect there at this commit.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>decisions</code></td>
+<td>every judgment and amendment</td>
+<td><code>status</code> CHECK active, superseded, contradicted, stale;
+<code>kind</code> eight values; <code>record_kind</code> legacy,
+judgment, commitment; <code>event_date</code>,
+<code>event_datetime</code>, <code>created_at</code>,
+<code>updated_at</code>; provenance columns <code>agent_id</code>,
+<code>model_run_id</code>, <code>envelope_hash</code>,
+<code>gateway_call_id</code>, <code>source_refs_json</code>,
+<code>provenance_json</code>; <code>payload_json</code> for
+guidance</td>
+</tr>
+<tr>
+<td><code>memory_scopes</code>, <code>memory_scope_bindings</code></td>
+<td>scope identity and row binding</td>
+<td>kinds global, user, channel, project; one binding marked
+primary</td>
+</tr>
+<tr>
+<td><code>memory_events</code></td>
+<td>one row per append</td>
+<td><code>event_type</code>, <code>actor</code>, <code>memory_id</code>,
+<code>topic</code>, <code>scope_refs</code>, <code>evidence_refs</code>,
+<code>reason</code>, <code>created_at</code></td>
+</tr>
+<tr>
+<td><code>command_bindings</code>, <code>judgment_commands</code></td>
+<td>idempotency and receipts</td>
+<td>principal, payload hash, receipt JSON</td>
+</tr>
+<tr>
+<td><code>decision_edges</code></td>
+<td>supersedes, builds_on, refines, contradicts and more</td>
+<td><code>created_by</code>, <code>approved_by_user</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scope is a binding, not a column.</strong> A judgment carries
+its scopes as rows in <code>memory_scope_bindings</code>, written in the
+append transaction (<code>judgments.ts:673-681</code>). The owner
+runtime admits <code>global:system</code>, the owner's <code>user</code>
+scope, and a <code>channel</code> and <code>project</code> scope per
+connector
+(<code>packages/standalone/src/runtime/action-surface.ts:109-121</code>).
+An owner save with no scope request binds to all of them, so in the
+shipped product every owner memory carries every owner scope.</p>
+<p><strong>Time has two axes.</strong> <code>created_at</code> is the
+record time and <code>event_datetime</code> the time the caller says the
+thing happened. The graph read derives an interval from them, described
+in section 6.</p>
+<p><strong>Provenance is attested, not accepted.</strong>
+<code>stripCallerProvenance</code> removes any <code>provenance</code>
+field from the input
+(<code>packages/mama-core/src/memory/provenance.ts:34-45</code>), and
+the catalog path fills actor, model run, gateway call and source message
+from <code>ActionSessionFacts</code> (<code>api.ts:835-846</code>). On
+the MCP path, <code>handleSave</code> always passes
+<code>type: 'user_decision'</code> (<code>server.js:386-387</code>),
+which <code>saveInternal</code> maps to
+<code>user_involvement = 'approved'</code>
+(<code>mama-api.ts:407-411</code>). <code>formatList</code> then labels
+every such row <em>"👤 User"</em>
+(<code>packages/mama-core/src/decision-formatter.ts:993</code>).</p>
+<p><strong>Declared and unfilled.</strong> <code>memory_truth</code>
+(migration 021) has no writer outside migrations.
+<code>quarantined</code> sits in <code>EXCLUDED_STATUSES</code> and in
+<code>MEMORY_TRUTH_STATUSES</code>, and the <code>decisions</code> CHECK
+does not admit it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>recallMemory</code> runs two channels and fuses them by
+reciprocal rank. The vector channel embeds the query, and each sub-query
+when the question has <em>and</em>/<em>or</em> structure, then asks the
+adapter for the top 20 (50 for aggregation questions) with the excluded
+statuses pre-filtered (<code>api.ts:1257-1320</code>). The lexical
+channel runs FTS5 BM25 over an OR of stemmed non-stopword tokens and
+rescores by topic affinity before fusion. An in-memory substring scan is
+the fallback when FTS returns nothing (<code>api.ts:1339-1500</code>).
+Fusion weights the lexical rank and discounts vector-only hits
+(<code>api.ts:1515-1560</code>).</p>
+<p><strong>Every arm re-applies status and scope.</strong> A vector hit
+whose status is in <code>EXCLUDED_STATUSES</code> is skipped, and when
+scopes are requested a hit with no binding or no matching binding is
+dropped (<code>api.ts:1280-1298</code>). The FTS arm re-reads each row
+and applies both checks (<code>api.ts:1419-1444</code>), fusion repeats
+the status check (<code>:1535</code>), and graph expansion re-filters
+both (<code>api.ts:1750-1776</code>). The scope filter runs after the
+vector top-K, so a caller whose rows rank below foreign ones gets fewer
+results, not foreign ones.</p>
+<p><strong>Then the superseded text comes back.</strong> After fusion,
+every returned record is looked up by
+<code>superseded_by = record.id</code>, and each predecessor's summary
+is appended to the record's details as <code>[Prior context] …</code>
+(<code>api.ts:1702-1727</code>). The query has no status filter and no
+scope predicate. Its comment justifies it by an extraction step the same
+file has removed. A revised owner correction therefore returns from
+<code>memory.search</code> with the text it replaced.</p>
+<p><strong>The graph read carries both time axes.</strong>
+<code>graph.query</code> windows a memory's timeline event on
+<code>event_datetime</code>, falling back to <code>created_at</code>,
+against <code>from_ms</code>, <code>to_ms</code> and
+<code>as_of_ms</code>
+(<code>packages/mama-core/src/knowledge/graph-query.ts:741-762</code>,
+<code>:765-803</code>). A memory node reports <code>recordedAt</code>,
+<code>appliesFrom</code> and an <code>appliesUntil</code> taken from its
+successor's <code>created_at</code>, and says
+<code>not_yet_effective</code> when <code>appliesFrom</code> is after
+the as-of time (<code>:1413-1456</code>).</p>
+<p><strong>Injection is bounded by kind, not size.</strong> The owner
+block lists every active guidance record in full at session start,
+oldest first, and afterwards only the changes. Nothing caps its
+length.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls and block the agent for one embedding
+and one SQLite transaction. There is no model extraction on any write
+path, no deduplication beyond command-id replay, and no automatic
+supersession: the comment at <code>api.ts:691-693</code> says a matching
+topic or vector is evidence for retrieval, not identity, and
+<code>replaces</code> must name ids. A saved judgment is retrievable on
+the next call.</p>
+<p><strong>Updates append.</strong> An outcome change
+(<code>memory.update</code>, or the MCP <code>update</code> tool)
+appends an amendment judgment that sets <code>outcome</code> on the
+target (<code>api.ts:3283-3316</code>). A revision appends a new
+judgment that supersedes the old. A retirement appends an amendment. The
+target row's projection columns move in the same transaction, and the
+old row stays.</p>
+<p><strong>Nothing deletes.</strong> No statement outside migrations and
+test fixtures deletes from <code>decisions</code>,
+<code>memory_events</code>, <code>memory_scope_bindings</code> or
+<code>judgment_commands</code> (Recorded searches). A memory the owner
+wants gone can be retired, and its text stays in the database, in the
+FTS index and in any amendment's reason.</p>
+<p><strong>Agent-generated content is the only content.</strong> In MAMA
+OS the agent writes guidance on the owner's behalf; the host adds
+attested provenance and refuses secret-shaped strings. Source content
+reaches the agent wrapped as untrusted evidence, and the tool surface is
+the same on a source-change turn as on an owner turn.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, one local embedding (skipped by
+<code>memory.retire</code>, which passes no embedder) and one
+transaction; no LLM call.</li>
+<li>Background: none over memory.</li>
+<li>Read: one query embedding per sub-query, a brute-force cosine scan
+of the cached vectors, one FTS query and per-row status and scope
+lookups. The owner guidance block is re-read on every turn and re-sent
+in full only on a new session, which keeps the session prefix stable
+between guidance changes.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>MAMA OS.</strong> The owner agent's registry names 27
+actions, six of them memory: <code>memory.save</code>,
+<code>memory.search</code>, <code>memory.read:provenance</code>,
+<code>memory.read:record</code>, <code>memory.retire</code> and
+<code>memory.checkpoint.list</code>
+(<code>action-surface.ts:40-68</code>, <code>:122-136</code>). Guidance
+reaches the model without a call, at session start and as deltas. The
+prompt says corrections <em>"take precedence over the responding and
+source-change sections above"</em>
+(<code>owner-system-prompt.ts:133</code>).</p>
+<p><strong>Claude Code.</strong> The MCP server registers
+<code>save</code>, <code>search</code>, <code>update</code>,
+<code>search_decisions_and_contracts</code> and
+<code>case_timeline_range</code> (<code>server.js:80-307</code>). Its
+descriptions tell the model to save on <em>"remember"</em> or
+<em>"decided"</em> and that scopes may be omitted <em>"for global
+search"</em>. The plugin's SessionStart hook warms the store and the
+PreToolUse hook shows related decisions on a file's first read. The
+PreCompact hook asks the model to save decisions detected in the
+transcript before compaction.</p>
+<p><strong>Reuse.</strong> mama-core exports <code>createCatalog</code>,
+<code>createDispatcher</code>, <code>appendJudgment</code> and
+<code>recallMemory</code> for other consumers with their own database
+and principals (<code>packages/mama-core/README.md</code>).
+<code>INTENT.md</code> sets a packed second consumer as the acceptance
+check, and the rebuild plan tracks it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The write boundary is the strongest part.</strong> One
+function writes judgments, under an admitted scope set it checks before
+any write, with a payload-hashed idempotency key and a receipt. A
+retried command replays; a conflicting one fails. Provenance fields come
+from the host.</p>
+<p><strong>The owner-turn gate covers settings and not
+guidance.</strong> <code>owner.timezone.set</code> and
+<code>owner.report_phrases.set</code> refuse unless the call's
+<code>sourceMessageRef</code> is an owner message turn
+(<code>packages/standalone/src/api/owner-timezone-actions.ts:65</code>;
+<code>owner-report-phrase-actions.ts:53</code>).
+<code>memory.save</code> and <code>memory.retire</code> carry no such
+check. A standing correction that outranks the runtime's own
+source-change rules can therefore be written or retired in a turn whose
+input is a connector message. The wrapping of that message as untrusted
+evidence is the only barrier.</p>
+<p><strong>Withdrawn text leaks back through recall.</strong> The
+<code>[Prior context]</code> enrichment (section 6) returns the replaced
+summary beside its replacement, with no status or scope check.</p>
+<p><strong>The dev-memory surface is looser.</strong> Scopes are
+optional there. Saves without one are unbound, and the older search path
+those calls take reads the whole table (<code>mama-api.ts:433</code>,
+<code>:466</code>). Every MCP save is labelled user-approved (section
+5). Checkpoints carry no scope on either surface
+(<code>catalog.ts:1249-1267</code>).</p>
+<p><strong>Privacy.</strong> Nothing deletes a judgment, so a memory
+recorded in error stays in the file, the FTS index and every backup.
+That is the stated first principle (<em>"Never lose the record"</em>,
+<code>README.md</code>), and it is the tradeoff a user asking to forget
+something inherits.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded on <code>decisions.status</code>;
+evidence in the record above. It rests on the catalog tier: the
+dev-memory surface has no verb that moves a status.</li>
+<li><code>bitemporal</code> — awarded on <code>event_datetime</code>
+beside <code>created_at</code> with a windowed graph read; the limits
+are in the record.</li>
+<li><code>scope_enforced</code> — awarded on the action-catalog tier,
+where the bound is not optional. The MCP tier's scope is an optional
+model argument and would not carry the mark alone.</li>
+<li><code>audit_log</code> — awarded on <code>memory_events</code>.
+<code>link_audit_log</code> records edge rejections and deprecations
+beside it.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — withheld. <code>memory.retire</code> is
+keyed on a record id, and nothing consults retired text before a later
+save, so re-saving a withdrawn preference succeeds. The nearest
+structure, <code>case_links_revoked_wiki_tombstones</code> in migration
+030, is keyed on a case link's source fingerprint, not a memory value,
+and has no writer outside tests.</li>
+<li><code>human_review</code> — withheld. A memory lands
+<code>active</code> from the agent's own <code>memory.save</code>, and
+<code>memory.retire</code> is on the same tool surface. The viewer is
+read-only. The owner's words prompt a correction, and the agent authors
+it. <code>user_involvement = 'approved'</code> is a constant the MCP
+handler passes.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin.</p>
+<p><strong>The negative cases.</strong>
+<code>vector-search-status-filter.test.ts</code> seeds an active, a
+superseded and a stale row with embeddings, asserts the unfiltered
+search returns three, and asserts the filtered search is exactly the
+active row
+(<code>packages/mama-core/tests/unit/vector-search-status-filter.test.ts:64-85</code>).
+Two further cases pin the status cache after a change in each direction
+(<code>:87-122</code>). <code>scope-read-filter.test.ts</code> saves one
+memory in each of two projects and asserts a project-A read contains A
+and not B
+(<code>packages/mama-core/tests/memory/scope-read-filter.test.ts:93-108</code>).</p>
+<p><strong>Negatives that can pass empty.</strong> The recall-level
+scope cases in <code>tests/api/memory-actions.test.ts:395-414</code> and
+<code>:544-570</code> assert that the other scope's summary is absent
+without asserting that the in-scope one is present. The retirement case
+asserts the retired id is absent from the active listing without a
+positive control in that listing
+(<code>tests/api/memory-guidance.test.ts:169-190</code>).</p>
+<p><strong>CI switches the model off.</strong> Every package's test job
+sets <code>MAMA_FORCE_TIER_3=true</code>
+(<code>.github/workflows/ci.yml:89-92</code>), which makes embedding
+throw before the model loads. Recall tests in CI therefore exercise the
+lexical arm; the vector arm is covered by tests that insert vectors
+directly.</p>
+<p><strong>Not covered.</strong> No test asserts the
+<code>[Prior context]</code> enrichment, and none covers the PreToolUse
+hook's search. No test asserts that <code>memory.save</code> is refused
+outside an owner turn, because it is not.</p>
+<p><strong>Benchmarks.</strong> <code>CHANGELOG.md</code> records
+LongMemEval scores up to 93% on 100 questions for version 0.16.0, 6
+April 2026, from a <code>packages/memorybench/</code> harness using
+conversation extraction. Neither the harness nor any result is in the
+tree at this commit, and the extraction it used has been removed. No
+paper or citation block is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One append function for every mutation, with the event row
+inside its transaction.</strong> When saves, revisions, retirements and
+outcome changes share one writer, "does every change leave a record" is
+a question about one function.</li>
+<li><strong>An idempotency key that hashes the payload.</strong> A retry
+with the same command id replays the stored receipt; the same id with a
+different payload fails.</li>
+<li><strong>Make the read bound fail closed.</strong> An empty grant
+returns an empty page, and an explicit scope outside the grant is an
+error, not a silent narrowing.</li>
+<li><strong>Strip caller provenance and stamp it from the host.</strong>
+A model that can name its own source can launder it.</li>
+<li><strong>Declare a recallable write in the contract.</strong> The
+secret scan keys on the contract flag, so a new write action cannot skip
+it without saying so.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Re-attaching superseded text at read time.</strong> If
+history must accompany a result, label it as replaced and apply the same
+scope predicate the result passed.</li>
+<li><strong>Gating settings more tightly than beliefs.</strong> A
+durable correction that outranks the runtime's rules needs at least the
+check a timezone change gets.</li>
+<li><strong>Storing an amendment as an active belief.</strong> An audit
+record that recall can return as a fact is a second copy of the reason
+text in the searchable corpus.</li>
+<li><strong>A provenance label set by a constant.</strong>
+<code>approved</code> on every agent save makes the field unusable for
+the one question it exists to answer.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>MAMA OS suits one person on one machine who wants a work agent that
+remembers standing instructions and never loses history. It assumes a
+Node toolchain, a logged-in agent CLI, a messenger bot and an operator
+who can read SQLite. It is an unreleased rebuild, and multi-member use
+is a roadmap stage. The engine suits anyone designing an append-only
+memory with receipts who wants a working reference. Anyone who needs a
+user to be able to make the system forget should walk away, because the
+design refuses that by principle.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any path let a person, rather than the agent, retire or approve
+guidance? None was found in the viewer or the CLI at this pin.</li>
+<li>Is the owner-turn gate absent from <code>memory.save</code> by
+design, given the prompt's instruction to save corrections from owner
+messages?</li>
+<li>How do the vector top-K and the post-filter scope interact once team
+members share one database?</li>
+<li>What did the removed memorybench harness measure against the recall
+path at this commit?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong>
+<code>packages/mama-core/db/migrations/001</code>,
+<code>016</code>–<code>021</code>, <code>025</code>, <code>030</code>,
+<code>032</code>, <code>075</code>, <code>098</code>.</li>
+<li><strong>Write path:</strong>
+<code>packages/mama-core/src/knowledge/judgments.ts</code>,
+<code>packages/mama-core/src/memory/api.ts:665-1176</code>,
+<code>packages/mama-core/src/memory/provenance.ts</code>,
+<code>packages/mama-core/src/memory/event-store.ts</code>,
+<code>packages/mama-core/src/mama-api.ts:333-540</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>packages/mama-core/src/memory/api.ts:183-341</code>,
+<code>:1193-1884</code>, <code>:2483-3110</code>;
+<code>packages/mama-core/src/knowledge/search.ts</code>;
+<code>packages/mama-core/src/knowledge/graph-query.ts</code>;
+<code>packages/mama-core/src/db-adapter/node-sqlite-adapter.ts</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>packages/standalone/src/runtime/owner-runtime.ts</code>,
+<code>packages/standalone/src/runtime/stimulus-delivery.ts</code>,
+<code>packages/standalone/src/runtime/owner-system-prompt.ts</code>.</li>
+<li><strong>API and tools:</strong>
+<code>packages/mama-core/src/api/catalog.ts</code>,
+<code>packages/mama-core/src/api/dispatch.ts</code>,
+<code>packages/standalone/src/runtime/action-surface.ts</code>,
+<code>packages/standalone/src/api/owner-timezone-actions.ts</code>,
+<code>packages/mcp-server/src/server.js</code>,
+<code>packages/claude-code-plugin/scripts/pretooluse-hook.js</code>.</li>
+<li><strong>Tests:</strong>
+<code>packages/mama-core/tests/unit/vector-search-status-filter.test.ts</code>,
+<code>packages/mama-core/tests/memory/scope-read-filter.test.ts</code>,
+<code>packages/mama-core/tests/api/memory-actions.test.ts</code>,
+<code>packages/mama-core/tests/api/memory-guidance.test.ts</code>,
+<code>.github/workflows/ci.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the
+repository root.</p>
+<ul>
+<li><code>git grep -nE 'DELETE FROM (decisions|memory_events|memory_scope_bindings|judgment_commands)\b' -- packages ':!**/tests/**'</code>
+— no match.</li>
+<li><code>git grep -nE 'UPDATE decisions' -- packages ':!**/tests/**' ':!**/migrations/**'</code>
+— four in <code>judgments.ts</code> and one in
+<code>registry/record-identity.ts</code>, which
+<code>applyProjections</code> calls inside the append.</li>
+<li><code>git grep -nE 'promoteMemoryStatus' -- packages ':!**/tests/**'</code>
+— the definition, the root export and an adapter comment; no
+caller.</li>
+<li><code>git grep -nE 'revoked_wiki_tombstones' -- packages ':!**/migrations/**'</code>
+— two test files only.</li>
+<li><code>git grep -nE 'memory_truth' -- packages ':!**/tests/**' ':!**/migrations/**'</code>
+— no match.</li>
+<li><code>git grep -nE 'isOwnerMessageTurn\(' -- packages/standalone/src</code>
+— the timezone and report-phrase actions only.</li>
+<li><code>git grep -nE 'vectorSearch\(' -- packages/claude-code-plugin</code>
+— the PreToolUse and PreCompact hooks, neither passing an exclusion
+list.</li>
+<li><code>git grep -nE 'Prior context' -- packages</code> —
+<code>memory/api.ts:1723-1724</code> only; no test.</li>
+<li><code>git grep -nE "status: 'contradicted'|= 'contradicted'|'contradicted' as" -- packages ':!**/tests/**'</code>
+— no match.</li>
+<li><code>git grep -nE -i '\b(purge|forget|erase)\b' -- packages ':!**/tests/**' ':!*.md'</code>
+— test seams, a fire-and-forget comment and a wiki comment; no memory
+deletion verb.</li>
+<li><code>git grep -nE 'entity_resolution_candidates|entity_merge_actions' -- packages ':!**/tests/**' ':!**/migrations/**'</code>
+— no match.</li>
+<li><code>git grep -lE -i 'memorybench|longmemeval'</code> —
+<code>.gitignore</code>, <code>CHANGELOG.md</code>,
+<code>bun.lock</code> and two test comments; no harness.</li>
+<li><code>git grep -nE -i 'arxiv|bibtex|@article|@misc|doi\.org'</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/jungjaehoon-lifegamez/MAMA/commit/6738c694144313481516333312aec7497bae7a04"><code class="commit-id" title="6738c694144313481516333312aec7497bae7a04">6738c694…</code></a>
+— first reading, at the head of <code>main</code>, a commit from the
+same day. Five marks: <code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>. Screened before reading: two auto-run
+surfaces (<code>.claude-plugin/marketplace.json</code> and an empty
+<code>.gitmodules</code>), two build-time execution points (a husky
+<code>prepare</code> and the plugin's <code>postinstall</code>), eight
+dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip — six floating surfaces, and <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> recorded as data. Read with <code>git grep</code>
+and <code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

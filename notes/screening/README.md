@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 655 of 655 screened at the report's current pin.**
+**Progress: 658 of 658 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 299 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 350 |
-| Repositories with build-time execution (`EXEC`) | 480 |
+| Repositories with an auto-run surface (`RUNS`) | 301 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 353 |
+| Repositories with build-time execution (`EXEC`) | 483 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -170,6 +170,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`lossless-context-mcp`](../../content/systems/lossless-context-mcp.md) | `hooks/`, `server.json` |
 | [`m3-memory`](../../content/systems/m3-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitattributes`, `.githooks/`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |
+| [`mama`](../../content/systems/mama.md) | `.claude-plugin/`, `.gitmodules` |
 | [`marsnme`](../../content/systems/marsnme.md) | `server.json` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
 | [`matrix-os`](../../content/systems/matrix-os.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json` |
@@ -179,6 +180,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
 | [`memcontinuum`](../../content/systems/memcontinuum.md) | `hooks/` |
 | [`memcp`](../../content/systems/memcp.md) | `hooks/` |
+| [`memesh`](../../content/systems/memesh.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`memex-zero-rag`](../../content/systems/memex-zero-rag.md) | `.mcp.json` |
 | [`memex-zettel`](../../content/systems/memex-zettel.md) | `.claude-plugin/`, `.cursorrules`, `hooks/`, `hooks/hooks.json`, `server.json`, `smithery.yaml` |
 | [`memini`](../../content/systems/memini.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json` |

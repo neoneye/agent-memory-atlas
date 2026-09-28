@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A repo-scoped Postgres memory for
+coding agents: a background agent turns synced transcripts into
+evidence-cited cases and concept claims, recalled through a
+model-written brief.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ShellBrain — Agent Memory Atlas">
+    <meta property="og:description" content="A repo-scoped Postgres
+memory for coding agents: a background agent turns synced transcripts
+into evidence-cited cases and concept claims, recalled through a
+model-written brief.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ShellBrain — Agent Memory Atlas">
+    <meta name="twitter:description" content="A repo-scoped Postgres
+memory for coding agents: a background agent turns synced transcripts
+into evidence-cited cases and concept claims, recalled through a
+model-written brief.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ShellBrain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ShellBrain",
+      "description": "A repo-scoped Postgres memory for coding agents: a background agent turns synced transcripts into evidence-cited cases and concept claims, recalled through a model-written brief.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Transcript-fed case memory with a
+background librarian</p>
+          <h1>ShellBrain</h1>
+          <p class="document-deck">A repo-scoped Postgres memory for
+coding agents: a background agent turns synced transcripts into
+evidence-cited cases and concept claims, recalled through a
+model-written brief.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/cucupac/shellbrain">
+              <span>Source</span>
+              <strong>cucupac/shellbrain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/cucupac/shellbrain/commit/aacf66b297568378f430654f0215b9a2dfb86739" title="aacf66b297568378f430654f0215b9a2dfb86739">
+              <span>Analyzed revision</span>
+              <code>aacf66b2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/cucupac--shellbrain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>cucupac--shellbrain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>None
+stated: no LICENSE file and no licence field in
+pyproject.toml</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>33,992
+lines of Python under app/, plus 41 Alembic migration
+files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>254
+commits on main by 2 contributors, 15 February 2026 – 24 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>634
+pytest functions in 31,973 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ShellBrain is long-term memory for coding agents in Claude Code,
+Codex and Cursor: a Python CLI over a local Postgres with pgvector,
+keyed on the repository. A background poller copies host transcripts
+into episodes. Once a session goes quiet, a Codex or Claude
+<em>knowledge-builder</em> agent turns them into typed cases and a
+concept graph, writing through the same CLI and citing episode events.
+The working agent only calls <code>shellbrain recall</code>, which
+assembles a deterministic evidence pack and has a second model write a
+short brief. The lifecycle is the strong part: six statuses, three of
+them withheld by one predicate every read shares, each transition logged
+with its reason. The weak part is authority: the actor on a transition
+is a string the builder supplies, and both inner agents run Codex with
+the sandbox off.</p>
+<p>What is notable is how much of the write discipline is enforced in
+code rather than in the prompt. <code>memory add</code> refuses a memory
+whose <code>evidence_refs</code> do not resolve to episode events
+visible to the same <code>repo_id</code>, so every memory points at the
+transcript event it came from
+(<code>app/core/use_cases/memories/reference_checks.py:66-103</code>).
+Every lifecycle change needs a rationale and at least one evidence item.
+The recall synthesiser's code references are rejected unless each
+appears verbatim in the evidence it was given
+(<code>app/core/use_cases/retrieval/build_context/execute.py:163-181</code>).</p>
+<p>What is weak sits around the librarian. The route allowlist that
+confines it is <code>SHELLBRAIN_INNER_AGENT_MODE</code>, an environment
+variable its own shell inherits. Its write budgets are prompt text
+nothing counts. The duplicate check it is told to run goes through the
+same read that hides <code>wrong</code> memories, so a rejected memory
+is invisible at the moment the builder decides whether to write it
+again. The brief the working agent reads is model prose with no memory
+ids, so the agent cannot name the record it thinks is wrong.</p>
+<p>No licence file is in the tree and <code>pyproject.toml</code>
+declares none, so the code is all rights reserved by default: it can be
+read and cited, not reused.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an immutable typed sentence: <code>problem</code>,
+<code>solution</code>, <code>failed_tactic</code>, <code>fact</code>,
+<code>preference</code> or <code>change</code>
+(<code>app/core/entities/memories.py:11-35</code>). A
+<code>solution</code> or <code>failed_tactic</code> must name its
+<code>problem</code>, and the link becomes a
+<code>structural_memory_relations</code> row (<code>solved_by</code>,
+<code>failed_with</code>). Beside the cases sits a concept graph:
+concepts with claims, relations, code <em>groundings</em> to anchors,
+and links to memories. Claims, relations, groundings and links carry the
+same six-value lifecycle as memories.</p>
+<p>Memory is background-managed. The working agent is told never to
+write
+(<code>onboarding_assets/claude/skills/shellbrain/SKILL.md</code>). The
+writer is the knowledge builder, an inner Codex or Claude run launched
+against one episode's unprocessed event window. It reads the events,
+checks for duplicates with <code>read</code>, and writes with
+<code>memory add</code>, <code>memory update</code>,
+<code>concept add</code>, <code>concept update</code> and
+<code>scenario record</code>.</p>
+<p>A memory is born <code>active</code> and treated as ground truth.
+Nothing ever deletes it. It stops being believed only when the builder
+issues <code>update_lifecycle</code> to <code>superseded</code>,
+<code>wrong</code> or <code>archived</code>, which removes it from every
+read. <code>maybe_stale</code> and <code>stale</code> stay retrievable
+at 0.65 and 0.25 of their score
+(<code>app/core/entities/memories.py:59-76</code>). Any status may move
+to any other. The only transition rule is that <code>superseded</code>
+names a replacement of the same kind in the same repository
+(<code>app/core/use_cases/memories/reference_checks.py:324-348</code>).</p>
+<p>Supersession has two forms that do not meet.
+<code>fact_update_link</code> writes <code>superseded_by</code> and
+<code>explained_by_change</code> relations and leaves the old fact
+<code>active</code>
+(<code>app/core/use_cases/memories/update/execute.py:140-190</code>). A
+reader sees the old fact with its replacement attached as context, and
+only a separate <code>update_lifecycle</code> hides it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a transcript event becomes a ShellBrain memory, what the librarian can do to it, and which statuses every read withholds</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a transcript event becomes a ShellBrain memory, what the librarian can do to it, and which statuses every read withholds
+flowchart TD
+    T[&quot;host transcript JSONL&lt;br/&gt;(Claude Code, Codex, Cursor)&quot;] --&gt; P[&quot;poller, every 5 s:&lt;br/&gt;episode_events rows&quot;]
+    P --&gt; I{&quot;episode idle&lt;br/&gt;15 minutes?&quot;}
+    I -- &quot;yes&quot; --&gt; KB[&quot;build_knowledge:&lt;br/&gt;Codex or Claude inner agent,&lt;br/&gt;SHELLBRAIN_INNER_AGENT_MODE=build_knowledge&quot;]
+    KB --&gt; RD[&quot;shellbrain read&lt;br/&gt;(dedup check)&quot;]
+    RD --&gt; KB
+    KB --&gt; ADD{&quot;memory add:&lt;br/&gt;evidence_refs resolve to&lt;br/&gt;this repo&#39;s episode events?&quot;}
+    ADD -- &quot;no&quot; --&gt; REJ[&quot;refused&quot;]
+    ADD -- &quot;yes&quot; --&gt; ACT[&quot;memory: active&quot;]
+    KB --&gt; LC[&quot;memory update:&lt;br/&gt;update_lifecycle,&lt;br/&gt;actor supplied by caller&quot;]
+    LC --&gt; EV[&quot;memory_lifecycle_events&lt;br/&gt;row appended&quot;]
+    LC --&gt; VIS[&quot;active, maybe_stale, stale:&lt;br/&gt;retrievable, scaled 1.0, 0.65, 0.25&quot;]
+    LC --&gt; HID[&quot;superseded, wrong, archived:&lt;br/&gt;withheld from every read&quot;]
+    ACT --&gt; VIS
+    HID -. &quot;also hidden from&quot; .-&gt; RD
+    KB --&gt; CL{&quot;concept add_claim:&lt;br/&gt;same concept, type,&lt;br/&gt;normalized text exists?&quot;}
+    CL -- &quot;yes, any status&quot; --&gt; OLD[&quot;existing claim returned,&lt;br/&gt;stays wrong if wrong&quot;]
+    CL -- &quot;no&quot; --&gt; NEW[&quot;new claim&quot;]
+    VIS --&gt; RC[&quot;shellbrain recall:&lt;br/&gt;pack of 24 memories, 6 concepts&quot;]
+    RC --&gt; SY[&quot;synthesis model:&lt;br/&gt;brief of memories and code refs&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>ShellBrain is one Python package with two console scripts,
+<code>shellbrain</code> and the installer entry point
+<code>_shellbrain-bootstrap</code> (<code>pyproject.toml</code>). Ports
+and use cases live under <code>app/core</code>, adapters under
+<code>app/infrastructure</code>, and wiring under
+<code>app/startup</code>. Storage is SQLAlchemy Core over Postgres 16
+with the <code>pgvector</code> extension, migrated by Alembic across 41
+migration files. The runtime database is a managed Docker container
+running <code>pgvector/pgvector:pg16</code> bound to
+<code>127.0.0.1</code>
+(<code>app/infrastructure/db/admin/provisioning/managed_local.py:44</code>),
+or an external DSN. Provisioning creates a separate app role and revokes
+<code>CREATE</code> on the public schema from it
+(<code>app/infrastructure/db/admin/privileges.py:22-37</code>).</p>
+<p>Embeddings are local:
+<code>sentence-transformers/all-MiniLM-L6-v2</code> as ONNX at a pinned
+Hugging Face revision, 384 dimensions
+(<code>app/infrastructure/embeddings/local_provider.py:7-9</code>). The
+inner agents are external CLIs, <code>codex</code> or
+<code>claude</code> on <code>PATH</code>, or the Inception HTTP API for
+recall synthesis.</p>
+<p>Three kinds of process run. The CLI invocation performs the operation
+and may start a per-repository poller
+(<code>app/infrastructure/process/episode_sync/</code>). The poller
+holds a lock file, syncs transcripts every 5 seconds and exits after 15
+idle minutes
+(<code>app/infrastructure/process/episode_sync/poller.py:48-49</code>).
+The inner agents are subprocesses spawned by the poller or by
+<code>recall</code>. Separately, <code>shellbrain snapshot</code> copies
+the working tree into <code>.shellbrain/shadow.git</code>, and
+<code>scenario record</code> attaches a solution delta from those
+snapshots to a problem run.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Docker, Python 3.11 and a working <code>codex</code> or
+<code>claude</code> login are required. Storing anything needs Postgres.
+Storing anything <em>automatically</em> needs a model subscription,
+because the only intended writer is an inner agent. Recall returns an
+error envelope, not raw hits, when the synthesis provider fails
+(<code>app/entrypoints/cli/handlers/working_agent/recall.py:79-88</code>).
+Install is <code>curl -L shellbrain.ai/install | bash</code>, a hosted
+script not in the tree. The store is repairable by hand only through
+SQL. <code>admin backup create</code>, <code>verify</code> and
+<code>restore</code> produce logical backups and restore only into a
+fresh scratch database.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>run_episode_poller</code> discovers
+host sessions for the repository and calls
+<code>sync_episode_from_host</code> for any whose transcript changed. It
+writes <code>episode_events</code> unique on
+<code>(episode_id, seq)</code> and
+<code>(episode_id, host_event_key)</code>
+(<code>app/infrastructure/process/episode_sync/poller.py:86-258</code>;
+<code>app/infrastructure/db/runtime/models/episodes.py:36-56</code>).
+Content is the JSON-serialised transcript event with no redaction
+pass.</p>
+<p><strong>Extraction.</strong>
+<code>_run_stable_builds_best_effort</code> plans builds for episodes
+whose watermark is stable and calls
+<code>execute_build_knowledge</code>. That takes an episode lock, skips
+when no events are past the last successful watermark, records a
+<code>running</code> row in <code>knowledge_build_runs</code>, and runs
+the provider
+(<code>app/core/use_cases/knowledge_builder/build_knowledge/execute.py:33-160</code>).
+The prompt is <code>_BUILD_KNOWLEDGE_PROMPT_TEMPLATE</code> plus a
+payload with the exact first command, a command lexicon and an output
+contract
+(<code>app/infrastructure/host_apps/inner_agents/prompt.py:65-200</code>,
+<code>254-381</code>).</p>
+<p><strong>Write.</strong> <code>execute_create_memory</code> validates,
+inserts the memory, upserts its embedding, attaches episode evidence and
+creates the structural problem link
+(<code>app/core/use_cases/memories/add/execute.py:23-121</code>).
+<code>execute_update_memory</code> dispatches to utility vote,
+association link, fact update link or lifecycle
+(<code>app/core/use_cases/memories/update/execute.py:46-101</code>).</p>
+<p><strong>Retrieval.</strong> <code>recall</code> and <code>read</code>
+both call <code>build_deterministic_graph_pack</code>
+(<code>app/core/use_cases/retrieval/deterministic_graph_recall.py:70-212</code>).
+It builds up to three query lanes, runs <code>retrieve_seeds</code> per
+lane and fuses with RRF. It then expands structural relations, discovers
+concepts by memory link and by concept FTS and vectors, traverses active
+high-signal links and relations, and selects the final memories under
+reserved-group budgets.</p>
+<p><strong>Context assembly.</strong> <code>execute_build_context</code>
+turns the pack into a synthesis pack, fits it to
+<code>max_input_tokens</code> (default 8,000, estimated at three bytes
+per token), and runs the synthesis model with
+<code>max_brief_tokens=500</code>
+(<code>app/core/use_cases/retrieval/build_context/execute.py:40-118</code>;
+<code>app/infrastructure/host_apps/inner_agents/prompt.py:203-226</code>).</p>
+<p><strong>Correction.</strong> <code>_write_lifecycle</code> loads the
+memory and replaces status, <code>updated_by</code>,
+<code>validated_at</code>, <code>invalidated_at</code> and
+<code>superseded_by_id</code>. It updates the row, appends a
+<code>memory_lifecycle_events</code> row and attaches the evidence
+(<code>app/core/use_cases/memories/update/execute.py:193-258</code>).
+The concept equivalent writes <code>concept_lifecycle_events</code>
+(<code>app/infrastructure/db/runtime/repos/relational/concepts_repo.py:384-432</code>).</p>
+<p><strong>Route gate.</strong> <code>_enforce_inner_agent_mode</code>
+rejects any command outside the allowlist for the mode named in
+<code>SHELLBRAIN_INNER_AGENT_MODE</code>. With the variable unset or
+empty, every route is open
+(<code>app/entrypoints/cli/runner.py:18-33</code>,
+<code>172-196</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> holds <code>id</code>, <code>repo_id</code>,
+<code>scope</code> (<code>repo</code> or <code>global</code>),
+<code>kind</code>, <code>text</code>, <code>created_at</code>,
+<code>status</code>, <code>validated_at</code>,
+<code>invalidated_at</code>, <code>superseded_by_id</code> and
+<code>updated_by</code>, with CHECK constraints on status and actor
+(<code>app/infrastructure/db/runtime/models/memories.py:16-38</code>).
+The covering index <code>idx_memories_read_visibility</code> is
+<code>(repo_id, status, scope, kind, id)</code>.
+<code>memory_lifecycle_events</code> carries <code>from_status</code>,
+<code>to_status</code>, a non-empty <code>rationale</code>,
+<code>actor</code> and <code>superseded_by_id</code>
+(<code>:40-73</code>). Embeddings sit in <code>memory_embeddings</code>
+with <code>model</code> and <code>dim</code>, and a query refuses to
+compare across a model or dimension mismatch
+(<code>app/infrastructure/db/runtime/repos/semantic/semantic_retrieval_repo.py:84-160</code>).</p>
+<p>Provenance is a separate table pair. <code>evidence_refs</code> holds
+a source (<code>episode_event</code>, <code>anchor</code>,
+<code>memory</code>, <code>commit</code>, <code>transcript</code>,
+<code>test</code>, <code>manual</code>) deduplicated by a canonical hash
+per repository. <code>evidence_links</code> binds it to a target with a
+role such as <code>supports</code>, <code>contradicts</code> or
+<code>invalidated_by</code>
+(<code>app/infrastructure/db/runtime/models/evidence.py:18-103</code>).
+Relations between memories are <code>structural_memory_relations</code>,
+with their own status, and <code>association_edges</code>, with strength
+and observation counts over an append-only
+<code>association_observations</code>.</p>
+<p>The temporal fields are record-time stamps.
+<code>invalidated_at</code> is set to the clock on a move to
+<code>stale</code>, <code>superseded</code> or <code>wrong</code>.
+<code>validated_at</code> is set to the clock on a move to
+<code>active</code> unless the caller supplies one
+(<code>app/core/use_cases/memories/update/execute.py:211-226</code>).
+Claims add <code>observed_at</code>, which the builder is told to set
+only when known. None of these is a validity interval.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Each lane runs two arms. The keyword arm asks Postgres for FTS
+candidates with <code>websearch_to_tsquery</code> over an OR of
+normalised terms, capped at <code>max(limit * 25, 200)</code>, and
+reranks them with a Python BM25 over the visible rows
+(<code>app/infrastructure/db/runtime/repos/semantic/keyword_retrieval_repo.py:52-96</code>;
+<code>app/core/use_cases/retrieval/seed_retrieval.py:54-103</code>).
+When FTS matches nothing, the fallback loads the repository's entire
+visible corpus into Python. The semantic arm is pgvector cosine distance
+multiplied in SQL by the lifecycle weight, thresholded at 0.25
+(<code>app/infrastructure/db/runtime/repos/semantic/semantic_retrieval_repo.py:52-82</code>;
+<code>app/core/entities/settings.py:20-23</code>).</p>
+<p>Both arms carry <code>visible_memory_filters</code>:
+<code>repo_id</code> equality,
+<code>status IN (active, maybe_stale, stale)</code>,
+<code>scope IN (repo[, global])</code> and optional kinds
+(<code>app/infrastructure/db/runtime/repos/memory_visibility.py:11-27</code>).
+The same predicate gates structural-relation expansion
+(<code>app/infrastructure/db/runtime/repos/relational/read_policy_repo.py:100-123</code>).
+Graph-linked memories are hydrated by id and filtered in Python by
+<code>has_positive_retrieval_signal()</code> and
+<code>is_visible_in(repo_id)</code>
+(<code>app/core/use_cases/retrieval/deterministic_graph_recall.py:780-791</code>).</p>
+<p>Those two definitions of <code>global</code> differ. The SQL
+predicate keeps <code>repo_id == repo_id</code>, so a global memory is
+only ever found by search from the repository that wrote it.
+<code>Memory.is_visible_in</code> returns true for any global memory
+from any repository
+(<code>app/core/entities/memories.py:177-180</code>), so one reached
+through a concept link crosses repositories.
+<code>test_learning_filters_apply_to_graph_linked_memories</code>
+asserts that crossing on a fake unit of work
+(<code>tests/operations/recall/execution/test_deterministic_graph_recall.py:883-904</code>).
+The builder's command lexicon never sets <code>scope</code>, so in
+intended use global memories are rare.</p>
+<p>Concept claims are not filtered by status.
+<code>_claim_payloads</code> sorts active claims first and passes up to
+six per concept with their status. <code>_conflicts_from_concepts</code>
+lists stale, superseded and wrong claims as conflicts for the
+synthesiser
+(<code>app/core/use_cases/retrieval/deterministic_graph_recall.py:846-875</code>,
+<code>1036-1094</code>). A wrong claim reaches the model as a labelled
+wrong claim.</p>
+<p>The working agent receives only the brief: <code>memories</code> as
+plain strings and up to three <code>code</code> locations
+(<code>app/infrastructure/host_apps/inner_agents/prompt.py:51-61</code>).
+Code locations are checked against the evidence text; memory strings are
+not.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen off the working agent's turn. The poller's idle
+threshold is <code>idle_stable_seconds</code>, default 900
+(<code>app/core/entities/inner_agents.py:53</code>). A lesson from a
+session is therefore retrievable about fifteen minutes after the session
+goes quiet, plus the builder's run time, capped at 600 seconds by
+default (<code>app/startup/internal_agent_config.py:74-79</code>).
+Nothing re-reads the whole store; each build reads one episode window
+and issues targeted <code>read</code> calls.</p>
+<p>The builder is an LLM with a prompt: one lesson per record, sentences
+of at most 20 words, proposals kept apart from completed and verified
+work, no guessed paths
+(<code>app/infrastructure/host_apps/inner_agents/prompt.py:65-110</code>).
+Code enforces the evidence requirement, the problem link on solutions
+and failed tactics, repo visibility of every referenced memory and
+event, and the same-kind rule for supersession. The prompt budgets,
+<code>max_shellbrain_reads</code> 8 and <code>max_write_commands</code>
+20, are rendered into the payload and counted by nothing.</p>
+<p>Deduplication of memories is the builder's judgement.
+<code>memory add</code> has no text or embedding check. Its duplicate
+search is <code>read</code>, which hides <code>superseded</code>,
+<code>wrong</code> and <code>archived</code> memories, so a lesson
+rejected once looks new when the next episode repeats it.</p>
+<p>Concept claims behave differently by accident of their key.
+<code>add_claim</code> looks up
+<code>(repo_id, concept_id, claim_type, normalized_text)</code> with no
+status predicate and returns the existing row, and a total unique
+constraint on the same columns backs it
+(<code>app/infrastructure/db/runtime/repos/relational/concepts_repo.py:224-255</code>;
+<code>app/infrastructure/db/runtime/models/concepts.py:260-266</code>).
+A claim marked <code>wrong</code> stays <code>wrong</code> when
+re-added. The caller receives its id with no status, and the new
+evidence is attached as <code>supports</code>
+(<code>app/core/use_cases/concepts/update/execute.py:245-273</code>,
+<code>537-553</code>). Relations, groundings and memory links use
+partial unique indexes on <code>status = 'active'</code> instead, so
+those can be re-created after a rejection.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Recall is synchronous and makes one model call per query. The default
+is Codex <code>gpt-5.6-luna</code> at low reasoning with a 90-second
+timeout, over a pack fitted to about 8,000 input tokens, returning at
+most 500 (<code>app/startup/internal_agent_config.py:64-72</code>). The
+brief is tool output, placed wherever the agent calls it, and does not
+sit in a cached prefix. Each <code>build_knowledge</code> run is a
+default <code>gpt-6-luna</code> at <code>xhigh</code> reasoning per
+quiet episode.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Integration is a CLI and packaged instructions. The installer entry
+point adds a Claude Code <code>SessionStart</code> hook that exports
+caller-identity variables through <code>CLAUDE_ENV_FILE</code>, plus
+skill or rules files for Claude Code, Codex and Cursor
+(<code>app/infrastructure/host_apps/identity/claude_hook_install.py:100-111</code>;
+<code>onboarding_assets/</code>). The skill tells the working agent to
+emit an <code>SB:</code> line when its goal, surface, obstacle or
+hypothesis changes. It asks for <code>recall</code> with one
+self-contained question, <code>snapshot</code> after changing files, and
+never <code>read</code>, <code>events</code>, <code>memory</code>,
+<code>concept</code> or <code>scenario</code>.</p>
+<p>That instruction is the only barrier for the working agent. With
+<code>SHELLBRAIN_INNER_AGENT_MODE</code> unset, every route including
+<code>memory update</code> is open to any shell. The inner agents get
+the variable from <code>_inner_agent_env</code>
+(<code>app/infrastructure/host_apps/inner_agents/codex_cli.py:405-416</code>).
+Claude is confined further by
+<code>--allowedTools "Bash(shellbrain *)"</code>
+(<code>app/infrastructure/host_apps/inner_agents/claude_cli.py:292-303</code>).
+Codex is launched with <code>--ask-for-approval never</code> and
+<code>--sandbox danger-full-access</code>, because its sandboxes block
+the TCP connection to Postgres (<code>codex_cli.py:29-31</code>,
+<code>243-266</code>). That applies to recall synthesis too, where the
+model is handed memory text derived from transcripts and told only to
+treat it as data.</p>
+<p>Adapting it to another agent means a transcript parser under
+<code>app/infrastructure/host_apps/transcripts/</code> and an identity
+adapter; the memory core is host-neutral.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is enforced at the write.</strong> Each memory's
+<code>evidence_refs</code> must name episode events that exist and
+belong to the same repository
+(<code>app/core/use_cases/memories/reference_checks.py:66-103</code>).
+This ties a memory to what was said or run in a session. It does not
+establish that what was said was true; the builder is the only reader
+deciding that.</p>
+<p><strong>The actor field records a claim, not an identity.</strong>
+<code>actor</code> on a lifecycle update is an enum of
+<code>worker</code>, <code>librarian</code>, <code>manual</code> and
+<code>import</code>, taken from the payload
+(<code>app/core/use_cases/memories/update/request.py:125-134</code>).
+The builder is told to write <code>librarian</code>. The CLI help it is
+pointed at shows <code>"actor":"manual"</code> with the note
+<em>"Verified during review"</em>
+(<code>app/entrypoints/cli/parser/builder.py:150</code>). Nothing
+distinguishes a person's correction from the builder's.</p>
+<p><strong>Prompt injection reaches a shell.</strong> Transcripts are
+stored unredacted, the builder reads them, and recall passes memory text
+to Codex running with full access and no approval. The route allowlist
+is an environment variable in that shell, and an empty value disables it
+(<code>app/entrypoints/cli/runner.py:190-196</code>).</p>
+<p><strong>Scope is inferred, not authenticated.</strong> The repo id
+comes from registration or the git remote, and <code>--repo-id</code>
+overrides it on every command. On one machine that is a convenience; it
+is not a tenant boundary.</p>
+<p><strong>Concurrency</strong> is handled per episode:
+<code>acquire_episode_lock</code> and a stale-run check keep two builds
+of one episode apart
+(<code>app/core/use_cases/knowledge_builder/build_knowledge/execute.py:45-96</code>).
+Two episodes of one repository can build in parallel and write
+overlapping lessons.</p>
+<p><strong>Deletion does not exist.</strong> No application path deletes
+a memory, a claim or an event. A secret captured in a transcript stays
+in <code>episode_events</code>, and in any memory derived from it, until
+someone edits the database.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded: <code>superseded</code>,
+<code>wrong</code> and <code>archived</code> are withheld by every read
+path. No <code>candidate</code> state exists, and claims carry statuses
+as labels only.</li>
+<li><code>scope_enforced</code> — awarded: <code>repo_id</code> is on
+the row and in the SQL of both arms. The flag override and the
+concept-link path for <code>global</code> memories are the limits.</li>
+<li><code>audit_log</code> — awarded:
+<code>memory_lifecycle_events</code> gets one row per transition with
+rationale and evidence. It is append-only by convention; the app role
+holds <code>DELETE</code> and no trigger guards the table.</li>
+<li><code>tombstone</code> — awarded in its collided form, on concept
+claims only. The near miss is on memories: no value key exists, and the
+read the builder dedups with cannot see <code>wrong</code> rows.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>human_review</code> — withheld. No surface holds a memory
+until a person acts: memories are born <code>active</code>, the
+<code>admin</code> command covers backups and the recall provider, and
+the <code>manual</code> actor is a value the producing agent may
+supply.</li>
+<li><code>bitemporal</code> — withheld. <code>validated_at</code> and
+<code>invalidated_at</code> are transition stamps from the clock, and
+<code>observed_at</code> on claims is an observation time, not a
+validity interval.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin.</p>
+<p><strong>The negative cases.</strong>
+<code>test_keyword_lane_applies_visibility_scope_kind_and_status_filters_before_scoring</code>
+seeds five memories with the same text across two repositories, two
+scopes, two kinds and two statuses. It asserts the production keyword
+repository returns exactly <code>["repo-a-fact"]</code> with globals off
+and exactly <code>["repo-a-fact", "repo-a-global-fact"]</code> with them
+on
+(<code>tests/operations/read/execution/keyword/test_read_execution_keyword.py:149-192</code>).
+Exact-list equality makes the positive control part of the same
+assertion.</p>
+<p><code>test_read_excludes_non_positive_lifecycle_memories_from_direct_retrieval_and_all_expansion_paths</code>
+seeds archived, wrong and superseded memories on the direct, structural,
+fact-update, association and semantic paths. It asserts seven visible
+controls present and each excluded one absent
+(<code>tests/operations/read/execution/semantic/test_read_execution_semantic.py:204-403</code>).
+Its semantic lane runs through
+<code>DeterministicSemanticRetrievalRepo</code>, a test double that
+re-implements the status and scope predicate
+(<code>tests/operations/read/execution/conftest.py:328-400</code>). The
+direct-hit exclusions still hold on production code, because the
+excluded rows share the query's words and the keyword arm is not
+replaced.</p>
+<p><strong>What runs.</strong> The Postgres suites skip without
+<code>SHELLBRAIN_DB_DSN_TEST</code>
+(<code>tests/operations/_shared/integration_db_fixtures.py:68-75</code>).
+<code>scripts/run_tests</code> starts a Docker Postgres and exports the
+variable when it is unset, and CI runs that script, so the skip path is
+not the CI path.</p>
+<p><strong>Other pinned behaviour.</strong> The recall tests pin that
+archived links cannot discover a concept, that retired groundings cannot
+hide a current anchor, and that learning and recall select the same
+evidence
+(<code>tests/operations/recall/execution/test_deterministic_graph_recall.py:826-880</code>).
+The concept suite pins natural-key idempotency for an active re-apply
+(<code>tests/operations/concepts/execution/test_concept_update_use_case.py:111-137</code>).</p>
+<p><strong>Missing.</strong> No test re-adds a claim after marking it
+<code>wrong</code>, so the collided tombstone holds by a missing
+predicate that nothing pins. No test covers the environment-variable
+gate being emptied, or a working agent calling
+<code>memory update</code>. No benchmark, retrieval-quality eval or
+paper is committed; the searches are in the appendix.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make provenance a precondition of the write.</strong> Refuse
+a memory whose evidence ids do not resolve to stored, same-scope source
+events. It costs one query and turns every memory into a pointer back to
+its origin.</li>
+<li><strong>Share one visibility predicate across every read.</strong>
+One function building the SQL filter, used by the lexical arm, the
+vector arm, the fallback scan and the expansion step, removes the usual
+bug where one path forgets the status filter.</li>
+<li><strong>Check model-produced references against the input.</strong>
+A substring check that each returned location appears in the evidence
+handed to the model is cheap and catches invented paths.</li>
+<li><strong>Separate the reader from the writer by role.</strong> A
+working agent that only reads and a librarian that writes after the
+session is a clean split, as long as something other than prose enforces
+it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A dedup read that shares the retrieval filter.</strong> The
+builder needs to see rejected records when deciding whether to write;
+the working agent needs not to. One predicate for both makes rejection
+forgettable.</li>
+<li><strong>An allowlist the confined process can unset.</strong> A
+route gate read from an environment variable in the agent's own shell,
+where an empty value means unrestricted, is advisory.</li>
+<li><strong>A caller-supplied actor on a correction.</strong> If
+<code>manual</code> can be typed by the agent, the audit trail cannot
+answer who corrected a memory.</li>
+<li><strong>Two definitions of the same scope.</strong> Write the scope
+predicate once, in the store, and hydrate by id through it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>ShellBrain suits a single developer who already runs Claude Code or
+Codex daily, has Docker, and wants memory to accrue without asking the
+agent to save anything. It assumes a paid model subscription for both
+writing and reading, and a machine the operator controls, since the
+inner agents run with full filesystem access. It is not a team store:
+scope is a per-machine repository id with no authentication. Anyone
+whose threat model includes hostile text in transcripts should walk away
+until the synthesis step runs without a shell. The absent licence rules
+out adopting the code.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does a Codex inner agent, given hostile memory text, act on it under
+<code>danger-full-access</code>? That needs a run.</li>
+<li>How often does the builder re-extract a lesson that was marked
+<code>wrong</code>? That needs a populated store and several
+sessions.</li>
+<li>Is the collided behaviour of <code>add_claim</code> on
+<code>wrong</code> claims intended? Nothing in the tree says so.</li>
+<li>What does the hosted installer at <code>shellbrain.ai/install</code>
+run? It is not in the repository.</li>
+<li>How is <code>provider: auto</code> resolved when both
+<code>codex</code> and <code>claude</code> are installed? The resolver
+in <code>app/startup/internal_agents.py</code> was not traced in
+full.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage/schema:</strong>
+<code>app/infrastructure/db/runtime/models/memories.py</code>,
+<code>concepts.py</code>, <code>evidence.py</code>,
+<code>experiences.py</code>, <code>episodes.py</code>,
+<code>knowledge_builder.py</code>;
+<code>migrations/versions/</code></li>
+<li><strong>Write path:</strong>
+<code>app/core/use_cases/memories/add/execute.py</code>,
+<code>update/execute.py</code>, <code>reference_checks.py</code>;
+<code>app/core/use_cases/concepts/update/execute.py</code>;
+<code>app/infrastructure/db/runtime/repos/relational/memories_repo.py</code>,
+<code>concepts_repo.py</code></li>
+<li><strong>Retrieval path:</strong>
+<code>app/core/use_cases/retrieval/deterministic_graph_recall.py</code>,
+<code>seed_retrieval.py</code>;
+<code>app/infrastructure/db/runtime/repos/memory_visibility.py</code>;
+<code>app/infrastructure/db/runtime/repos/semantic/</code>;
+<code>app/infrastructure/db/runtime/repos/relational/read_policy_repo.py</code></li>
+<li><strong>Context assembly:</strong>
+<code>app/core/use_cases/retrieval/build_context/execute.py</code>;
+<code>app/infrastructure/host_apps/inner_agents/prompt.py</code></li>
+<li><strong>Background workers:</strong>
+<code>app/infrastructure/process/episode_sync/poller.py</code>;
+<code>app/core/use_cases/knowledge_builder/build_knowledge/execute.py</code>;
+<code>app/infrastructure/host_apps/inner_agents/codex_cli.py</code>,
+<code>claude_cli.py</code></li>
+<li><strong>CLI and integration:</strong>
+<code>app/entrypoints/cli/runner.py</code>,
+<code>parser/builder.py</code>;
+<code>app/entrypoints/bootstrap.py</code>;
+<code>app/infrastructure/host_apps/identity/claude_hook_install.py</code>;
+<code>onboarding_assets/</code></li>
+<li><strong>Tests/evals:</strong>
+<code>tests/operations/read/execution/keyword/test_read_execution_keyword.py</code>;
+<code>tests/operations/read/execution/semantic/test_read_execution_semantic.py</code>;
+<code>tests/operations/recall/execution/test_deterministic_graph_recall.py</code>;
+<code>tests/operations/concepts/execution/test_concept_update_use_case.py</code>;
+<code>scripts/run_tests</code>;
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, each run once
+from the tree root.</p>
+<ul>
+<li><code>git grep -nE 'delete\(|DELETE FROM' -- app</code> — telemetry
+cleanup and the session-state file store only; no path deletes a memory,
+claim or lifecycle event.</li>
+<li><code>git grep -nE 'update\(memories\)|memory_lifecycle_events\.insert' -- app</code>
+— one UPDATE on <code>memories</code>
+(<code>memories_repo.py:105</code>) and one event insert
+(<code>:123</code>).</li>
+<li><code>git grep -nE 'concept_claims\.insert' -- app</code> — one
+writer, <code>concepts_repo.py:243</code>.</li>
+<li><code>git grep -nE 'normalized_text|\.text ==' -- app/core/use_cases/memories</code>
+— no match; memory add has no text dedup.</li>
+<li><code>git grep -nE 'GRANT|REVOKE|CREATE TRIGGER' -- app migrations</code>
+— the app role is granted <code>SELECT, INSERT, UPDATE, DELETE</code>;
+no trigger.</li>
+<li><code>git grep -nE 'max_write_commands|max_shellbrain_reads' -- app</code>
+— settings, request plumbing and the prompt payload; nothing counts
+invocations.</li>
+<li><code>git grep -nE 'utility' -- app/core/use_cases/retrieval app/core/policies/retrieval app/infrastructure/db/runtime/repos/semantic</code>
+— no match; utility votes do not reach ranking.</li>
+<li><code>git grep -niE 'redact|secret|api[_-]?key|scrub' -- app/infrastructure/host_apps/transcripts app/core/use_cases/episodes</code>
+— no match; transcripts are stored as parsed.</li>
+<li><code>git grep -niE 'approve|pending|review' -- app/entrypoints app/core/entities/memories.py</code>
+— pending utility guidance and two CLI help examples; no review state or
+approve route.</li>
+<li><code>git grep -nE 'semantic_retrieval_override_factory\(' -- tests/operations/read/execution/semantic/test_read_execution_semantic.py</code>
+— the semantic read tests replace the production repository at line
+417.</li>
+<li><code>git ls-files | grep -iE '(^|/)(licen[cs]e|copying|\.gitmodules)'</code>
+— no match; no licence file anywhere in the tree and no submodules.</li>
+<li><code>git grep -niE 'licen[cs]e' -- pyproject.toml</code> — no
+match; the package metadata declares no licence.</li>
+<li><code>git grep -liE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION'</code>
+— no match; no paper or citation file.</li>
+<li><code>git grep -niE 'renamed|formerly' -- README.md docs</code> — no
+match; no earlier name.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/cucupac/shellbrain/commit/aacf66b297568378f430654f0215b9a2dfb86739"><code class="commit-id" title="aacf66b297568378f430654f0215b9a2dfb86739">aacf66b2…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 24
+September 2026 and 27 commits after the one triage scored. Five marks:
+<code>tombstone</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>. Screened before reading: no auto-run
+surface, 14 build-time execution points (<code>conftest.py</code>
+files), 2 dependency files inside the cooldown, every file in the
+depth-1 clone dating to the tip, and 2 unpinned surfaces. No LICENSE
+file. No agent-instruction file sits at the root; the
+<code>onboarding_assets/</code> skill and rules files were read as data.
+Read with <code>git grep</code> and <code>sed</code>; nothing installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 655 reports.</strong></p>
+<p><strong>This page covers all 658 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -27068,6 +27068,148 @@ shared fact store to strangers without closing it to contribution.</li>
 <li>Do not copy when: memory must be private, erasable or scoped per
 user on read. Notes are a world-readable commons by design, and the fact
 scope is a view the reader can omit.</li>
+</ul>
+<h3 id="shellbrain"><a
+href="../systems/shellbrain/"><code>shellbrain</code></a></h3>
+<ul>
+<li>Best idea: <strong>make provenance a precondition of the
+write.</strong> <code>memory add</code> refuses a memory unless every
+<code>evidence_refs</code> id resolves to an episode event already
+synced for the same <code>repo_id</code>, and every lifecycle change
+needs a rationale and at least one evidence item. The recall synthesiser
+gets the same treatment on its output: a returned code location is
+rejected unless it appears verbatim in the evidence the model was
+handed.</li>
+<li>Biggest risk: <strong>the librarian's confinement is
+advisory.</strong> Routes are allowlisted by
+<code>SHELLBRAIN_INNER_AGENT_MODE</code>, an environment variable in the
+inner agent's own shell, where an empty value opens every route. Codex
+runs with <code>--sandbox danger-full-access</code> and
+<code>--ask-for-approval never</code> for both knowledge building and
+recall synthesis, over text copied unredacted from transcripts.</li>
+<li>Most reusable component:
+<code>app/infrastructure/db/runtime/repos/memory_visibility.py</code> —
+one function building the repo, status, scope and kind predicate, used
+by the FTS query, the full-corpus fallback, the pgvector query and
+structural-relation expansion.</li>
+<li>Second risk: <strong>rejection is invisible to the writer.</strong>
+The builder's duplicate search is the same read that hides
+<code>wrong</code>, <code>superseded</code> and <code>archived</code>
+memories, and <code>memory add</code> has no text key, so a lesson
+rejected once looks new when the next session repeats it. Concept claims
+escape this only because <code>add_claim</code> looks up its natural key
+without a status predicate, which nothing claims or tests.</li>
+<li>Maturity impression: no licence file; 33,992 lines of Python under
+<code>app/</code> and 254 commits on main from 2 contributors since
+February 2026, with 634 pytest functions. Five marks —
+<code>tombstone</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code> — the tombstone in its collided form on
+concept claims only, and the audit log append-only by convention. The
+must-not-retrieve cases use exact-list equality on the production
+keyword arm; the semantic-lane cases run through a test double.</li>
+<li>Study when: you want a writer that is not the working agent, a
+lifecycle every read respects, and write-time evidence checks enforced
+in code rather than in the prompt.</li>
+<li>Do not copy when: the transcripts may carry hostile text, a
+correction must be attributable to a person, or you need to reuse the
+code — there is no licence.</li>
+</ul>
+<h3 id="memesh"><a
+href="../systems/memesh/"><code>memesh</code></a></h3>
+<ul>
+<li>Best idea: <strong>one owner for "may this reach the model
+unasked".</strong> <code>isAutoInjectable</code> in
+<code>src/core/work-topology.ts</code> refuses an untrusted marker or an
+import source, fails closed on unparseable metadata, and is imported by
+the session-start hook, the pre-edit hook and the MCP
+<code>briefing</code> tool through a generated copy, so the three
+automatic paths cannot drift. Explicit recall stays ungated on purpose,
+and a committed case asserts both halves.</li>
+<li>Biggest risk: <strong>the ordinary write path promotes.</strong>
+<code>buildLocalMetadata</code> stamps <code>trust: 'trusted'</code> and
+<code>source: 'local'</code> on every <code>remember</code>, and no
+transport exposes an override, so appending one observation to an
+imported memory's name makes the imported text injectable. The importer
+guards the same transition on its own append path and tests it;
+<code>remember</code> does not.</li>
+<li>Most reusable component: the forgotten-observation hash in
+<code>src/knowledge-graph.ts:1219-1230</code> and
+<code>scripts/hooks/_shared.js:1947-1953</code> — a SHA-256 of the
+removed line, written in the forget's transaction and consulted by the
+hook that restates the snapshot every turn, cleared only by a trusted
+explicit write.</li>
+<li>Second risk: <strong>declared and unwired proposals.</strong> Guard
+and relation proposals have appliers, a review UI and a PreToolUse
+evaluator, and none of the three
+<code>INSERT INTO dream_proposals</code> statements writes either kind.
+Separately, note-file ingestion sets the untrusted marker through the
+same argument meant to stop a confidence bump, so Claude Code's own
+notes are recallable and never auto-injected.</li>
+<li>Maturity impression: MIT, 42,987 lines of TypeScript in
+<code>src/</code> plus hooks and dashboard, 2,917 commits on main from
+five contributor identities since December 2025, 281 test files. Five
+marks — <code>tombstone</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>human_review</code>,
+<code>negative_eval</code> — each narrower than its name, and each limit
+stated in the report. The committed LongMemEval-S session-retrieval
+results recompute to R@5 95.60%.</li>
+<li>Study when: you are building local memory for a coding agent and
+want a worked separation between what is recallable and what is
+injected, or a hook-driven capture loop that respects a person's
+deletions.</li>
+<li>Do not copy when: memories must stay per user or per tenant, recall
+must be scoped by default, or corrections need an event history;
+explicit recall spans every project in the file and no mutation is
+logged.</li>
+</ul>
+<h3 id="mama"><a href="../systems/mama/"><code>mama</code></a></h3>
+<ul>
+<li>Best idea: <strong>one append path for every memory mutation, with
+its event and receipt in the same transaction.</strong>
+<code>appendJudgmentOnAdapter</code> binds scopes, applies
+<code>replaces</code> and status amendments, writes the
+<code>memory_events</code> row and stores a payload-hashed receipt under
+<code>transactionImmediate</code>; a retried command replays its receipt
+and a conflicting one fails. No path in the tree deletes a judgment or
+an event.</li>
+<li>Biggest risk: <strong>recall brings superseded text back.</strong>
+After fusion, <code>recallMemory</code> looks up every row whose
+<code>superseded_by</code> is a returned record and appends its summary
+as <code>[Prior context]</code>, with no status or scope check
+(<code>packages/mama-core/src/memory/api.ts:1702-1727</code>). A revised
+owner correction is returned beside the wording it replaced, and no test
+covers the step.</li>
+<li>Most reusable component:
+<code>packages/mama-core/src/knowledge/judgments.ts</code> — the append
+function, <code>boundScopeIdsFor</code> and
+<code>admittedScopeIds</code>, with <code>boundReadScopesFor</code> in
+<code>memory/api.ts</code> as its read-side twin: one admitted scope set
+bounds what a command may write, reference and read.</li>
+<li>Second risk: <strong>guidance is gated more loosely than
+settings.</strong> <code>owner.timezone.set</code> and
+<code>owner.report_phrases.set</code> refuse outside an owner message
+turn; <code>memory.save</code> and <code>memory.retire</code> do not,
+although the prompt ranks saved corrections above the runtime's
+source-change rules. The Claude Code MCP surface is unscoped unless the
+model passes a scope, and labels every agent save
+<code>user_involvement = 'approved'</code>.</li>
+<li>Maturity impression: MIT, 88,749 lines of TypeScript and JavaScript
+outside tests and the viewer UI, 1,168 commits on main from 8
+contributors since 21 November 2025, and an unreleased rebuild at this
+pin. Five marks: <code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code> (on the action-catalog tier),
+<code>audit_log</code> and <code>negative_eval</code>, the last on an
+exact-list vector search with superseded and stale rows present and a
+two-project read with a positive control. CI runs every suite with the
+embedding model switched off.</li>
+<li>Study when: you are building an append-only memory where every
+change must leave a receipt and an event, and want a working reference
+for idempotent commands, host-stamped provenance and a fail-closed read
+bound.</li>
+<li>Do not copy when: a user must be able to make the system forget, or
+a person must approve what the agent stores. Nothing deletes, and the
+agent both writes and retires the owner's guidance.</li>
 </ul>
         </article>
       </div>

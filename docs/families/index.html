@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="The 655
+    <meta name="description" content="The 658
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -13,7 +13,7 @@ here.">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="System
 Families — Agent Memory Atlas">
-    <meta property="og:description" content="The 655
+    <meta property="og:description" content="The 658
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -22,7 +22,7 @@ here.">
     <meta name="twitter:title" content="System
 Families — Agent Memory Atlas">
     <meta name="twitter:description" content="The
-655 systems grouped by eight architectural
+658 systems grouped by eight architectural
 commitments, the categories almost nothing models, and the boundaries of
 what counts as memory here.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
@@ -46,7 +46,7 @@ what counts as memory here.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "System Families",
-      "description": "The 655 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
+      "description": "The 658 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -103,7 +103,7 @@ what counts as memory here.">
         <div class="document-hero-inner">
           <p class="eyebrow">Taxonomy</p>
           <h1>System Families</h1>
-          <p class="document-deck">The 655 systems
+          <p class="document-deck">The 658 systems
 grouped by eight architectural commitments, the categories almost
 nothing models, and the boundaries of what counts as memory here.</p>
                                                 </div>
@@ -120,7 +120,7 @@ nothing models, and the boundaries of what counts as memory here.</p>
           </div>
         </aside>
         <article class="prose" id="article">
-<p>655 systems do not fall into 182 categories. They
+<p>658 systems do not fall into 182 categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -1403,7 +1403,8 @@ href="../systems/elizaos/"><code>elizaos</code></a>, <a
 href="../systems/ogad/"><code>ogad</code></a>, <a
 href="../systems/context-engineering/"><code>context-engineering</code></a>,
 <a
-href="../systems/living-mind-cortex/"><code>living-mind-cortex</code></a></p>
+href="../systems/living-mind-cortex/"><code>living-mind-cortex</code></a>,
+<a href="../systems/mama/"><code>mama</code></a></p>
 <p><strong>ShisaD makes trust a lookup rather than an assertion, which
 is the cleanest answer in this family to <em>who said
 this</em>.</strong> Apache-2.0, 2,114 commits from five authors since
@@ -2659,6 +2660,19 @@ decaying confidence 5 percent per hit, and the phase-vector arm skips
 the caller's filters. Eight of fifteen tables have no writer, and no
 test touches memory. No mark; <a href="../systems/csm/">CSM</a> polls
 its state route.</p>
+<p><strong><a href="../systems/mama/">MAMA</a> routes every memory
+change through one append, and lets the agent decide which appends are
+corrections.</strong> MIT, a local owner agent (MAMA OS) and a Claude
+Code plugin on a shared SQLite engine. A memory is a judgment row the
+agent writes through <code>memory.save</code>. It is never edited: a
+successor supersedes it, or <code>memory.retire</code> appends a stale
+or superseded amendment with a reason. Each append binds scopes, writes
+a <code>memory_events</code> row and an idempotent receipt in one
+transaction, and catalog reads fail closed on an empty grant. What is
+weak is where the filters stop. Recall re-attaches every superseded
+predecessor's summary as <code>[Prior context]</code>. Standing
+corrections can be saved from turns driven by connector content, while
+timezone changes cannot.</p>
 <h2 id="host-runtimes-with-pluggable-memory">Host runtimes with
 pluggable memory</h2>
 <p>Hosts: <a
@@ -3663,7 +3677,9 @@ href="../systems/ruvector/"><code>ruvector</code></a>, <a
 href="../systems/graft/"><code>graft</code></a>, <a
 href="../systems/memex-zettel/"><code>memex-zettel</code></a>, <a
 href="../systems/paperclip/"><code>paperclip</code></a>, <a
-href="../systems/open-bridge/"><code>open-bridge</code></a></p>
+href="../systems/open-bridge/"><code>open-bridge</code></a>, <a
+href="../systems/shellbrain/"><code>shellbrain</code></a>, <a
+href="../systems/memesh/"><code>memesh</code></a></p>
 <p><strong><a href="../systems/dsh-mneme/">dsh-mneme</a> makes
 background consolidation accountable rather than trusted.</strong> A
 DeepSeek Harness plugin on SQLite with Markdown mirrors, it writes a
@@ -7102,6 +7118,28 @@ prose the agent executes: approval is a CLI with no actor check,
 <code>migrate</code> re-copies deleted facts from the legacy directory,
 and the exporter reads a different directory from every other reader. No
 mark.</p>
+<p><strong><a href="../systems/shellbrain/">ShellBrain</a> hands every
+write to a background librarian and checks its evidence, not its
+authority.</strong> A Postgres and pgvector store for Claude Code, Codex
+and Cursor, it syncs transcripts and, after fifteen idle minutes, runs a
+Codex or Claude agent that files typed cases and concept claims, each
+citing a stored episode event. Six lifecycle statuses gate every read
+through one shared predicate, and each transition is logged with a
+rationale. The librarian's route allowlist is an environment variable,
+Codex runs with its sandbox off, the actor on a correction is a string
+it supplies, and its duplicate check cannot see memories already marked
+wrong.</p>
+<p><strong><a href="../systems/memesh/">MeMesh</a> keeps what reaches a
+model unasked behind one trust gate, and leaves the gate's inputs
+soft.</strong> A Claude Code and Codex plugin over one SQLite file, it
+captures session snapshots and commits by rule, recalls by FTS5, and
+injects a project-scoped block at session start. One predicate decides
+every unasked injection, so imports stay recallable and never injected.
+A forgotten snapshot line is kept as a hash the Stop hook refuses to
+restore, and agent-prepared digests wait for a person. The weak side:
+any plain <code>remember</code> on an imported memory stamps it trusted,
+ingested note files are stamped untrusted and never reach the briefing,
+and guard proposals have an applier and no producer.</p>
 <h2 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
 symbolic memory</h2>
 <p><a href="../systems/holomem/"><code>holomem</code></a>, <a

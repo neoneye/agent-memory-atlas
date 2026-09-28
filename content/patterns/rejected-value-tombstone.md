@@ -511,6 +511,8 @@ first row's reason and time.
 
 [PMB](../../systems/pmb/) shows why a closure reason has to be read by every path that can promote. A user negation archives the current keyed value and writes `closed_reason`, which nothing in the tree reads. The plain fact that first stated the value stays active, and `pmb repair-keyed --apply` promotes it back into a keyed value and archives the negation as obsolete. The record exists; it is keyed on the row rather than the value, and the repair pass walks past it.
 
+[MeMesh](../../systems/memesh/) carries the narrowest instance in the corpus that still fits the definition, and its scope is exactly where its rejections arise. The Stop hook restates three per-session snapshot entities from the transcript on every turn, which is a re-extraction from a retained source by construction; removing one observation from such a snapshot writes the SHA-256 of its exact text into `metadata.forgotten_observation_hashes` in the same transaction, and `captureEntity` drops any restated line whose hash is listed. Untrusted writes filter it as well, and only a trusted explicit write clears it. There is no normalisation, the list lives on one session's entity, and entity-level `forget` is ordinary archival that a plain `remember` reverses.
+
 ### Sorted by what actually stops the value
 
 The mark covers four different mechanisms. The table sorts the holders this page
@@ -522,7 +524,7 @@ completes?* The method is set out in
 | Kind | Systems | What happens on re-assertion |
 | --- | --- | --- |
 | **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/), [OpenMake LLM](../../systems/openmake-llm/), [Argos](../../systems/argos/), [no_human](../../systems/no-human/), [SAGE](../../systems/sage-memory/), [Memora](../../systems/memora/), [Scope Recall](../../systems/scope-recall-hermes/) | The write is refused. No row, or no activation |
-| **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Wenlan](../../systems/wenlan/), [memoir-cli](../../systems/memoir-cli/) | The write lands *on* the rejected row, which stays rejected. Accidental in Mnemosyne, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
+| **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Wenlan](../../systems/wenlan/), [memoir-cli](../../systems/memoir-cli/), [ShellBrain](../../systems/shellbrain/) | The write lands *on* the rejected row, which stays rejected. Accidental in Mnemosyne, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
 | **Suppressed** — the read path hides it | [Provem](../../systems/provem/), [OmniMem](../../systems/omnimem/) | A copy enters the store and is stopped on the way out — in OmniMem by a suppression set matched as a substring of content, written by hand or by an effort-4 abandonment |
 | **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
 
@@ -751,6 +753,8 @@ bounded by the tombstone's ninety-day TTL. That is a defensible trade for a
 privacy revocation whose source data expires anyway, and it means the guarantee
 is *not again for ninety days* rather than *never again* — a distinction worth
 making explicitly wherever this shape is copied.
+
+**[ShellBrain](../../systems/shellbrain/) has the collided form on one record type and not on the one that matters most.** `add_claim` looks up a concept claim by `(repo_id, concept_id, claim_type, normalized_text)` with no status predicate and returns the existing row, backed by a total unique constraint, so a claim its librarian marked `wrong` stays `wrong` when re-added — and the new evidence is attached to it as `supports`; no comment claims this and no test pins it. Relations, groundings and memory links use partial unique indexes on `active` instead, and memories have no value key at all. Worse for memories, the librarian's duplicate search is the same read that hides `wrong` rows, so the rejection is invisible at the moment it would be consulted.
 
 ### The tombstone that must not retain what it protects
 

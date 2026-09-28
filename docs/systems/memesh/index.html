@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local SQLite memory for Claude
+Code and Codex: rule-based hook capture, FTS5 recall, a trust-gated
+session-start briefing, and a human-reviewed proposal queue.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MeMesh — Agent Memory Atlas">
+    <meta property="og:description" content="A local SQLite memory for
+Claude Code and Codex: rule-based hook capture, FTS5 recall, a
+trust-gated session-start briefing, and a human-reviewed proposal
+queue.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MeMesh — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local SQLite memory for
+Claude Code and Codex: rule-based hook capture, FTS5 recall, a
+trust-gated session-start briefing, and a human-reviewed proposal
+queue.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MeMesh — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MeMesh",
+      "description": "A local SQLite memory for Claude Code and Codex: rule-based hook capture, FTS5 recall, a trust-gated session-start briefing, and a human-reviewed proposal queue.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Local SQLite memory with a trust-gated
+briefing for coding agents</p>
+          <h1>MeMesh</h1>
+          <p class="document-deck">A local SQLite memory for Claude Code
+and Codex: rule-based hook capture, FTS5 recall, a trust-gated
+session-start briefing, and a human-reviewed proposal queue.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/PCIRCLE-AI/memesh">
+              <span>Source</span>
+              <strong>PCIRCLE-AI/memesh</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/PCIRCLE-AI/memesh/commit/dd77d78ec061be4757e43c5a244de88a88a69649" title="dd77d78ec061be4757e43c5a244de88a88a69649">
+              <span>Analyzed revision</span>
+              <code>dd77d78e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/PCIRCLE-AI--memesh" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>PCIRCLE-AI--memesh</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>42,987
+lines of TypeScript in src/, 8,233 lines of hook scripts and 16,588 of
+dashboard; the memory core is about 4,000 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>2,917
+commits on main by five contributor identities, one of them dependabot,
+24 December 2025 – 28 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>281
+Vitest files with about 3,900 cases in 86,058 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MeMesh is a local memory and messaging layer for coding agents,
+shipped as a Claude Code plugin, a Codex plugin, an MCP server, a CLI
+and a loopback HTTP API over one SQLite file. Memories are named
+entities with observations, tags and relations. They come from explicit
+<code>remember</code> and <code>learn</code> calls, from deterministic
+hooks that capture session snapshots and commits, and from imports. A
+SessionStart hook injects a project-scoped block of them into every
+session.</p>
+<p>What is notable is the discipline around what reaches a model
+unasked. One predicate, <code>isAutoInjectable</code>, decides it for
+every automatic path: the session-start hook, the pre-edit hook and the
+MCP <code>briefing</code> tool. Imported memories are recallable and
+never injected. A forgotten observation in a session snapshot is kept as
+a hash that the Stop hook's next restatement refuses. Agent-prepared
+consolidations wait in a proposal queue with no accept verb on the
+agent's tool surface.</p>
+<p>What is weak sits at the edges of those same mechanisms. A plain
+<code>remember</code> on an imported memory's name stamps it trusted and
+local, so one appended observation promotes it. Ingested Claude Code
+note files are stamped untrusted and so never reach the briefing their
+ingester says they reach. Two proposal kinds, guard and relation, have
+appliers and no writer at this pin.</p>
+<p>The codebase is heavily commented with the defects each line fixed,
+often with the measurement that found them. The messaging subsystem —
+durable exact-recipient agent messages, native Codex delivery, a local
+router — is as large as the memory layer and is not covered here,
+because a message is not a claim that can be corrected.</p>
+<p>Five marks: <code>tombstone</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>human_review</code> and
+<code>negative_eval</code>. Section 9 names the two withheld and
+qualifies each award.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>entity</strong>: a unique name, a type such as
+<code>decision</code>, <code>lesson_learned</code> or
+<code>session-insight</code>, an optional title, and a list of
+observation strings. Tags carry the project (<code>project:</code> plus
+a derived identity) and file references (<code>file:</code>). Relations
+are free-form labels, two of which act: <code>supersedes</code> archives
+its target, and <code>contradicts</code> annotates both ends as a
+conflict whenever they are recalled together
+(<code>src/core/operations.ts:362-373</code>;
+<code>src/storage/conflicts.ts</code>).</p>
+<p><strong>A memory holds two independent states.</strong>
+<code>entities.status</code> is <code>active</code> or
+<code>archived</code>, and every read filters archived rows unless asked
+not to. <code>metadata.trust</code> is <code>trusted</code> or
+<code>untrusted</code>, and an untrusted row, or one whose
+<code>provenance.source</code> is <code>import</code>, is withheld from
+every path that injects without being asked
+(<code>src/core/work-topology.ts:122-128</code>). It stays reachable by
+explicit recall. The first state answers whether a memory is current;
+the second, whether anything has vouched for it.</p>
+<p><strong>Becoming a belief is the write path's choice of
+marker.</strong> An explicit <code>remember</code> through MCP, HTTP or
+the CLI stamps <code>trusted</code> and
+<code>provenance.source: 'local'</code>
+(<code>src/core/operations.ts:37-51</code>). Hook captures carry no
+marker, which the gate reads as allowed. A JSON import stamps
+<code>untrusted</code> unless the operator confirms <code>--trust</code>
+(<code>src/core/serializer.ts:538-545</code>). Note files ingested from
+Claude Code's own memory directory arrive through <code>remember</code>
+with <code>trustOverride: 'untrusted'</code>, which the same function
+writes as the read-side marker
+(<code>src/core/note-ingest.ts:602-620</code>).</p>
+<p><strong>Promotion is implicit.</strong>
+<code>buildLocalMetadata</code> sets <code>trust</code> to the caller's
+override or <code>'trusted'</code>, and no transport exposes the
+override. Any later <code>remember</code> on an untrusted memory's name
+therefore makes it trusted and local. The JSON importer is careful not
+to do this on append
+(<code>tests/core/import-trust.test.ts:109-124</code>); the ordinary
+write path does it by default.</p>
+<p><strong>Agent-prepared memories take a third route.</strong>
+<code>work_package</code> hands the agent a bounded, redacted package of
+recent transcript turns or a week's cluster of memories, and its
+<code>submit</code> action inserts a <code>pending</code> row in
+<code>dream_proposals</code> (<code>src/core/dreamer.ts:225-386</code>).
+A pending proposal is not an entity, and no read path consults it.
+<code>memesh dream accept</code> or the dashboard's accept route turns
+it into one, and for a calendar digest archives the sources it
+summarises.</p>
+<p><strong>A memory stops being one in four ways.</strong>
+<code>forget</code> archives the entity and removes it from the FTS
+index; a <code>supersedes</code> relation archives the target; an
+accepted digest archives its sources; <code>replace: true</code>
+rewrites the observations and files the old ones under
+<code>metadata.replaced_history</code>, at most 20 versions and 64 KB
+(<code>src/core/operations.ts:89-116</code>). A plain
+<code>remember</code> of an archived name reactivates it. Entity rows
+are hard-deleted only by the demo reset; observation rows are deleted by
+observation-level forget, by <code>replace</code> after the copy, by
+<code>import --merge overwrite</code> with no copy, and by the Stop
+hook's wholesale restatement of a snapshot.</p>
+<p><strong>Observation-level forget leaves a hash behind on one class of
+entity.</strong> The Stop hook restates three per-session snapshot
+entities from the transcript on every turn. Removing one observation
+from such a snapshot writes the SHA-256 of its text into
+<code>metadata.forgotten_observation_hashes</code>, and the next
+restatement drops any observation whose hash is listed
+(<code>src/knowledge-graph.ts:1219-1230</code>;
+<code>scripts/hooks/_shared.js:1947-1953</code>).</p>
+<p>Confidence is a float from 0.01 to 1.0. It rises by 0.05 when a
+trusted write adds a new observation to an existing active memory,
+decays by 0.9 for rows unaccessed for 30 days, and ranks. It filters
+nothing.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a MeMesh entity becomes trusted, reaches a session unasked, and stops being current</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a MeMesh entity becomes trusted, reaches a session unasked, and stops being current
+flowchart TD
+    RM[&quot;remember via MCP, HTTP or CLI&quot;] --&gt; TR[&quot;active, trust: trusted,&lt;br/&gt;source: local&quot;]
+    HK[&quot;Stop, PreCompact, PostToolUse&lt;br/&gt;hook capture&quot;] --&gt; NM[&quot;active, no trust marker&quot;]
+    IM[&quot;import without --trust,&lt;br/&gt;Claude Code note file&quot;] --&gt; UT[&quot;active, trust: untrusted&quot;]
+    UT -- &quot;any later remember&lt;br/&gt;on the same name&quot; --&gt; TR
+    WP[&quot;work_package submit&quot;] --&gt; PP[&quot;dream_proposals row,&lt;br/&gt;status pending&quot;]
+    PP -- &quot;memesh dream accept&lt;br/&gt;or dashboard accept&quot; --&gt; NM
+    PP -- &quot;dream reject&quot; --&gt; RJ[&quot;status rejected,&lt;br/&gt;no entity&quot;]
+    TR --&gt; G{&quot;isAutoInjectable and&lt;br/&gt;project tag matches?&quot;}
+    NM --&gt; G
+    UT --&gt; G
+    G -- &quot;yes&quot; --&gt; INJ[&quot;SessionStart block,&lt;br/&gt;pre-edit recall, briefing&quot;]
+    G -- &quot;no&quot; --&gt; RC[&quot;explicit recall only&quot;]
+    TR -- &quot;forget, supersedes,&lt;br/&gt;accepted digest&quot; --&gt; AR[&quot;archived: hidden,&lt;br/&gt;removed from FTS&quot;]
+    AR -- &quot;remember again&quot; --&gt; TR
+    NM -- &quot;forget one observation&lt;br/&gt;of a session snapshot&quot; --&gt; FH[&quot;SHA-256 kept in&lt;br/&gt;forgotten_observation_hashes&quot;]
+    FH -- &quot;next Stop restatement&quot; --&gt; DROP[&quot;that text is dropped&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs locally on Node 22.13 or later. The store is one
+SQLite file, <code>~/.memesh/knowledge-graph.db</code>, opened by the
+MCP stdio server (<code>src/mcp/server.ts</code> →
+<code>src/transports/mcp/handlers.ts</code>), the CLI
+(<code>src/transports/cli/cli.ts</code>), the Express HTTP server behind
+the dashboard (<code>src/transports/http/server.ts</code>) and the ten
+hook commands <code>hooks/hooks.json</code> registers. All four share
+<code>src/core/operations.ts</code> for memory CRUD.</p>
+<p>The schema lives in one module, <code>src/storage/schema.ts</code>,
+which a build step copies into <code>scripts/hooks/_generated/</code> so
+the hooks and the core open the same bytes; a CI
+<code>git diff --exit-code</code> guards the copy. Memory tables are
+<code>entities</code>, <code>observations</code>, <code>relations</code>
+and <code>tags</code>, with <code>status</code>,
+<code>confidence</code>, <code>namespace</code>, <code>title</code>,
+access counters and recall-hit counters added by per-column migrations
+(<code>src/storage/schema.ts:20-66</code>, <code>:408-442</code>).
+Proposals live in <code>dream_proposals</code>
+(<code>src/db.ts:290-306</code>). The messaging tables beside them are
+out of scope here.</p>
+<p>The keyword index is a <strong>contentless FTS5 table</strong>,
+<code>entities_fts</code>, over name, title and observations with
+<code>unicode61 remove_diacritics 1</code> and CJK bigram
+pre-segmentation (<code>src/storage/schema.ts:349-359</code>;
+<code>src/storage/fts-index.ts</code>). Contentless means a delete must
+repeat the exact text that was indexed, so every mutation that changes
+indexed text reads the old text and rewrites the row inside one
+immediate transaction. Several comments record what went wrong when it
+did not, including 213 archived entities still present in the index on
+the maintainer's graph
+(<code>src/knowledge-graph.ts:453-470</code>).</p>
+<p>Nothing runs in the background as a process. Opening the database
+runs the migrations and a confidence decay throttled to once a day
+(<code>src/db.ts:150-156</code>;
+<code>src/core/lifecycle.ts:17-55</code>). The hooks are short-lived
+processes with 3- to 10-second timeouts.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li>Running: nothing beyond the SQLite file. <code>memesh serve</code>
+starts the dashboard and HTTP API on 127.0.0.1:3737 when wanted.</li>
+<li>Offline: fully. The README states this version calls no LLM,
+embedding or vector provider, and the retrieval code has no such
+call.</li>
+<li>API key: none. A bearer token is created only when the HTTP server
+binds a non-loopback address
+(<code>src/transports/http/server.ts:144-160</code>).</li>
+<li>Install: <code>/plugin install memesh@pcircle-memesh</code> in
+Claude Code, or <code>npm install -g @pcircle/memesh</code>. The plugin
+does not install the CLI.</li>
+<li>Repair: the store is SQLite, <code>memesh export</code> writes JSON,
+and <code>memesh doctor</code> probes hooks, capture liveness and index
+health.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Explicit write.</strong> MCP <code>remember</code> validates
+with Zod and calls <code>remember({ ...args, sourceHost })</code>
+(<code>src/transports/mcp/handlers.ts:646</code>). <code>remember</code>
+runs <code>rememberInTransaction</code> inside
+<code>db.transaction(...).immediate()</code>
+(<code>src/core/operations.ts:77-87</code>). It refuses
+<code>replace</code> on an archived memory (<code>:222-227</code>),
+captures the old version and clears it for <code>replace</code>
+(<code>:262-289</code>), calls <code>kg.createEntity</code>
+(<code>:305-311</code>), stamps metadata through
+<code>buildLocalMetadata</code> (<code>:322-338</code>), creates
+relations, and archives every <code>supersedes</code> target
+(<code>:362-373</code>). <code>createEntity</code> is
+<code>INSERT OR IGNORE</code> on the name, reactivates an archived row
+(<code>src/knowledge-graph.ts:445-451</code>), bumps confidence under
+the trust rule (<code>:504-527</code>), dedups observations by content
+except for the lesson family (<code>:581-621</code>), and rebuilds the
+FTS row (<code>:624</code>).</p>
+<p><strong>Hook capture.</strong> <code>session-summary.js</code> (Stop)
+derives up to three snapshot entities per session from the transcript by
+rule — <code>session-ID-files</code>, <code>-fixes</code>,
+<code>-summary</code> — and writes each with
+<code>captureEntity(..., replace: true)</code>
+(<code>scripts/hooks/session-summary.js:434</code>,
+<code>:468-510</code>). <code>captureEntity</code> refuses to touch an
+archived row (<code>scripts/hooks/_shared.js:1822-1823</code>), clears
+the old observations, filters forgotten hashes and exact repeats
+(<code>:1947-1953</code>), and reindexes. <code>pre-compact.js</code>
+and <code>post-commit.js</code> append per-session and per-commit
+entities through the same function.</p>
+<p><strong>Search.</strong> <code>recall</code> →
+<code>recallForAgent</code> → <code>recallWithConflicts</code> →
+<code>recallEnhanced</code> → <code>searchAndScore</code> →
+<code>KnowledgeGraph.search</code>
+(<code>src/core/operations.ts:447-514</code>). <code>search</code> runs
+a strict all-terms FTS5 match ordered by BM25 <code>rank</code> with an
+id tiebreak, falls back to OR when the strict pass is empty, and filters
+<code>status = 'active'</code> plus an optional tag and namespace
+(<code>src/knowledge-graph.ts:860-930</code>). <code>rankEntities</code>
+then reorders by the five-factor score
+(<code>src/core/scoring.ts:74-109</code>). The agent view caps each
+entity at 8 KB and the response at 32 KB
+(<code>src/core/recall-agent-view.ts</code>).</p>
+<p><strong>Context assembly.</strong> The SessionStart hook assembles
+the block in SQL
+(<code>scripts/hooks/session-start.js:1250-1420</code>): project
+candidates joined on the project tag, the newest decisions first, up to
+five lessons, a separately budgeted global section at level
+<code>full</code>, five foreign rows at <code>full</code>, and the
+project's session handoff. Every candidate passes
+<code>isTrustedForAutoContext</code>. The MCP <code>briefing</code> tool
+reaches the same selection through
+<code>src/core/briefing.ts:403-432</code>.
+<code>pre-edit-recall.js</code> injects memories tagged with the edited
+file's name and project, then confirmed FTS hits
+(<code>scripts/hooks/pre-edit-recall.js:288-440</code>).</p>
+<p><strong>Correction and forgetting.</strong> <code>forget</code> with
+an <code>observation</code> calls <code>removeObservation</code>, which
+deletes the earliest matching row, records the hash for a session
+snapshot and rewrites the FTS row
+(<code>src/knowledge-graph.ts:1179-1246</code>). Without one it calls
+<code>archiveEntity</code> (<code>:1150-1177</code>).
+<code>replace</code> keeps the prior version. <code>import</code> with
+<code>overwrite</code> deletes the prior observations and tags without
+archiving.</p>
+<p><strong>Proposals.</strong> <code>executeWorkPackage</code> prepares
+a package, stages a submission and returns
+<code>review_authority: 'human'</code>
+(<code>src/core/dreamer.ts:225-386</code>). <code>applyProposal</code>
+dispatches by kind to relation, guard, product-improvement, transcript
+or calendar-digest appliers (<code>:646-960</code>);
+<code>rejectProposal</code> sets <code>rejected</code> with a reason
+(<code>:975-980</code>). Their callers are
+<code>memesh dream accept</code> and <code>reject</code>
+(<code>src/transports/cli/cli.ts:2563-2612</code>) and
+<code>POST /v1/dream/proposals/:id/accept</code> and
+<code>/reject</code>
+(<code>src/transports/http/server.ts:1058-1110</code>).</p>
+<p><strong>Integration.</strong> <code>hooks/hooks.json</code> registers
+the ten hook commands; <code>.claude-plugin/mcp.json</code> starts
+<code>dist/mcp/server.js</code>. <code>extensions/hermes-memesh</code>
+and <code>extensions/memory-memesh</code> adapt the store to Hermes and
+OpenClaw.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td><code>entities.name</code></td>
+<td>unique; the idempotency key, derived from the text for the
+<code>note</code> form</td>
+</tr>
+<tr>
+<td>type, title</td>
+<td><code>entities</code></td>
+<td>free-form type up to 100 characters; <code>lesson</code>,
+<code>mistake</code> fold into <code>lesson_learned</code></td>
+</tr>
+<tr>
+<td>status</td>
+<td><code>entities.status</code></td>
+<td><code>active</code> or <code>archived</code>; filtered on every read
+by default</td>
+</tr>
+<tr>
+<td>confidence</td>
+<td><code>entities.confidence</code></td>
+<td>0.01–1.0; bumped by trusted new observations, decayed daily,
+ranked</td>
+</tr>
+<tr>
+<td>namespace</td>
+<td><code>entities.namespace</code></td>
+<td><code>personal</code>, <code>team</code> or <code>global</code>;
+<code>global</code> rows get their own section at level
+<code>full</code></td>
+</tr>
+<tr>
+<td>access and recall counters</td>
+<td><code>entities</code></td>
+<td><code>access_count</code>, <code>last_accessed_at</code>,
+<code>recall_hits</code>, <code>recall_misses</code></td>
+</tr>
+<tr>
+<td>valid_from, valid_until</td>
+<td><code>entities</code></td>
+<td>declared, never written</td>
+</tr>
+<tr>
+<td>observations</td>
+<td><code>observations</code></td>
+<td>one row per string, <code>created_at</code> each</td>
+</tr>
+<tr>
+<td>tags</td>
+<td><code>tags</code></td>
+<td><code>project:</code>, <code>file:</code>, <code>source:</code> and
+free tags; unique per entity</td>
+</tr>
+<tr>
+<td>relations</td>
+<td><code>relations</code></td>
+<td>typed edges; <code>supersedes</code> and <code>contradicts</code>
+act</td>
+</tr>
+<tr>
+<td>metadata</td>
+<td><code>entities.metadata</code> JSON</td>
+<td><code>trust</code>, <code>provenance</code>,
+<code>replaced_history</code>,
+<code>forgotten_observation_hashes</code>, <code>pin</code>,
+<code>signal_score</code>, <code>previous_namespace</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scope is a tag, not a column.</strong> The project identity
+comes from <code>getProjectName</code>: the canonical git remote, else
+the repo root, else the cwd, each rendered as a readable label plus a
+128-bit hash prefix (<code>src/core/paths.ts:121-151</code>). Hook
+captures stamp it. The MCP <code>remember</code> tool leaves it to the
+caller, whose description tells it to copy the <code>project</code>
+field from <code>briefing</code>. A memory with no project tag and no
+<code>global</code> namespace is reached by explicit recall and, at
+level <code>full</code>, the foreign section.</p>
+<p><strong>Provenance is metadata.</strong> <code>source_host</code> is
+stamped on first insert only, so a second host's re-remember cannot
+rewrite it (<code>src/core/operations.ts:326-336</code>). Note files
+record a relative path and content hash. Imported bundles are filtered
+through a deny-list of bookkeeping keys, and a bundle cannot set
+<code>forgotten_observation_hashes</code> on an entity that already
+exists (<code>src/core/serializer.ts:239-275</code>).</p>
+<p><strong>There is no temporal validity.</strong>
+<code>valid_from</code> and <code>valid_until</code> were added by a
+migration and are written by nothing;
+<code>src/core/scoring.ts:9-13</code> says so and records that the
+factor built on them was removed because it scored a constant.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Explicit recall is FTS5 only. A query of one or two terms is
+OR-matched; three or more try all terms first and fall back to OR. Terms
+present in most of the corpus are dropped through an
+<code>fts5vocab</code> view, and at most 32 terms survive. The window is
+ordered by BM25 before the <code>LIMIT</code>, then
+<code>rankEntities</code> scores relevance by BM25 position (0.30),
+recency (0.25), frequency (0.18), confidence (0.17) and a
+Laplace-smoothed recall-impact ratio (0.10).</p>
+<p>The session-start block has no query. It ranks the project's
+candidates in SQL on recency, frequency and confidence with the same
+proportions, over-fetches a wide window because the trust filter runs in
+JavaScript afterwards, and gives decisions and lessons their own slots.
+The handoff, task state, ranked memories, global memories and an index
+of durable memories share a 4,000-character budget. The block sits in
+<code>additionalContext</code> at session start, and after compaction,
+when SessionStart fires again.</p>
+<p><strong>Recall impact is measured, not assumed.</strong> Injected
+lines carry <code>[mem:ID]</code> handles, and the Stop hook matches
+injected names against the transcript to increment
+<code>recall_hits</code> or <code>recall_misses</code>, the one writer
+of both (<code>src/storage/conflicts.ts</code> comment on
+<code>trackAccess</code>). A memory the agent keeps ignoring sinks.</p>
+<p>The failure modes are the ones keyword search has. A paraphrase with
+no shared term misses. <code>cross_project</code> reads as a scoping
+switch and is not one: its description states that <code>false</code>
+keeps a caller-supplied tag and "does not implicitly limit results to
+the current project"
+(<code>src/transports/mcp/handlers.ts:194-197</code>). Recall without a
+tag spans every project in the file.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Explicit writes are synchronous: one immediate SQLite transaction, no
+model call, retrievable by the next query. Hook captures run at Stop,
+PreCompact and PostToolUse with 5- to 10-second timeouts and are
+retrievable by the next session start. Work-package proposals wait for a
+person indefinitely.</p>
+<p><strong>Dedup is by name and by exact observation text.</strong>
+Re-remembering a name appends only observations not already stored,
+except for the lesson family, whose ordered
+<code>Error:</code>/<code>Fix:</code> blocks may repeat
+(<code>src/knowledge-graph.ts:553-580</code>). The <code>note</code>
+form derives the name from the text, so the same note twice is one
+memory.</p>
+<p><strong>Conflicts are declared, never inferred.</strong>
+<code>contradicts</code> must be written by a caller; nothing compares
+content. The tool description says so, and says the same about causal
+relations.</p>
+<p><strong>Filtering is for credentials and control characters.</strong>
+The <code>note</code> form strips control characters and
+credential-shaped strings before storing. Nothing screens a claim for
+truth or for injected instructions on the MCP path; the OpenClaw adapter
+carries its own prompt-injection refusal
+(<code>extensions/memory-memesh/index.ts:391</code>). Injected blocks
+are fenced as untrusted background data.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous and local; no extraction step exists.</li>
+<li>Background: a daily confidence decay on open. No pass rewrites the
+store. Accepting a calendar digest archives its sources, once per
+accept.</li>
+<li>Read: bounded. The session-start block is capped at 4,000 characters
+for memories plus a 40-line, 3,072-byte index; recall is capped at 32
+KB. The block is injected at session start, so it sits ahead of the
+conversation and changes only between sessions.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Claude Code gets the most: the plugin registers nine hook commands in
+<code>hooks/hooks.json</code>, the MCP server and a <code>/memesh</code>
+skill. SessionStart injects the block; PreToolUse on Edit and Write
+injects file-relevant memories and evaluates lesson guards; PreToolUse
+on Bash evaluates guards; Stop captures snapshots and blocks once per
+waiting agent message; PreCompact saves; PostToolUse records commits and
+nudges a <code>remember</code> after a plan or a question;
+UserPromptSubmit detects "remember this" in five languages and nudges.
+The tenth command registers Codex sessions for messaging. The README
+states which of the other hooks fire under Codex is unverified.</p>
+<p>The MCP surface has twelve tools: <code>work_package</code>,
+<code>remember</code>, <code>recall</code>, <code>forget</code>,
+<code>export</code>, <code>import</code>, <code>learn</code>,
+<code>task_state</code>, <code>briefing</code>,
+<code>user_patterns</code>, <code>improvement</code> and
+<code>message</code>
+(<code>src/transports/mcp/handlers.ts:62-400</code>). The agent is
+expected to call <code>remember</code> for decisions and
+<code>learn</code> for lessons; the hooks do the rest.
+<code>task_state</code>'s description instructs the model to record only
+what the user stated and never to infer a goal from edits.</p>
+<p>Adapting it to another agent means calling <code>briefing</code> at
+session start and <code>remember</code>/<code>recall</code> explicitly,
+which the README describes for MCP-only clients.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The auto-injection gate has one owner.</strong>
+<code>isAutoInjectable</code> is a leaf module the hooks import through
+a generated copy, so the session-start hook and the MCP briefing cannot
+diverge on what reaches a model unasked. It fails closed on unparseable
+metadata, which a committed case pins
+(<code>tests/core/briefing.test.ts:716-730</code>).</p>
+<p><strong>Implicit promotion undercuts it.</strong>
+<code>buildLocalMetadata</code> writes
+<code>trust: overrides?.trust ?? 'trusted'</code> and
+<code>source: 'local'</code> on every <code>remember</code>
+(<code>src/core/operations.ts:37-51</code>). No MCP, HTTP or CLI schema
+exposes the override. An agent that appends one observation to an
+imported memory's name therefore makes the whole memory, including the
+imported text, eligible for injection. The importer guards the same
+transition on its own append path and tests it. This was read, not
+reproduced.</p>
+<p><strong>Ingested note files never reach the briefing.</strong>
+<code>note-ingest.ts</code> says a note written in Claude Code's memory
+directory becomes "eligible for the briefing without a second write". It
+writes through <code>remember</code> with
+<code>trustOverride: 'untrusted'</code>
+(<code>src/core/note-ingest.ts:602-620</code>), which
+<code>buildLocalMetadata</code> stores as <code>metadata.trust</code>,
+which <code>isAutoInjectable</code> refuses. The dreamer's transcript
+applier separates the two markers on purpose and says why
+(<code>src/core/dreamer.ts:614-626</code>); <code>remember</code> still
+sets both from one argument. Read, not reproduced.</p>
+<p><strong>Declared and unwired, twice.</strong>
+<code>applyGuardProposal</code> writes <code>metadata.guard</code> on a
+lesson, which <code>guard-check.js</code> and
+<code>pre-edit-recall.js</code> evaluate before a command or edit.
+<code>applyRelationProposal</code> creates relations. The three
+<code>INSERT INTO dream_proposals</code> statements write digest and
+product-improvement kinds only, so at this pin guards and relation
+proposals exist only in databases that held them before the proposer was
+retired. <code>valid_from</code> and <code>valid_until</code> are the
+third unwired declaration.</p>
+<p><strong>Concurrency is taken seriously.</strong> Ten hook processes,
+the MCP server, the HTTP server and the CLI share the file. Migrations
+run inside immediate transactions with a 24-hour backoff, read-only
+opens stay readers, and <code>safeAlter</code> tolerates the one
+expected race (<code>src/storage/schema.ts:361-378</code>,
+<code>:631-706</code>).</p>
+<p><strong>Entity deletion is soft; observation deletion is
+not.</strong> <code>forget</code> on a name archives, and the text stays
+in the row and in exports. <code>forget</code> with an
+<code>observation</code> deletes that row outright, keeping only a hash
+and only for a session snapshot. <code>import --merge overwrite</code>
+deletes observations and tags with no copy, which its tool description
+states.</p>
+<p><strong>The loopback API has no authentication</strong>, by stated
+design: process-owner semantics are the boundary, and a same-site check
+blocks browser pages
+(<code>src/transports/http/server.ts:144-160</code>,
+<code>:216-260</code>). Any local process, including an agent's shell,
+can call every route.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — awarded, narrowly. The key is the SHA-256
+of the removed observation, stored on the snapshot entity, consulted by
+the Stop hook's restatement and by untrusted writes, and cleared only by
+a trusted explicit write. It covers the three per-session snapshot
+entities and exact text. An entity-level forget is archival keyed on the
+record, and a plain <code>remember</code> reactivates it.</li>
+<li><code>trust_state</code> — awarded. Two values plus an import
+source, filtering every unasked read. The limits are the ungated
+explicit recall and the implicit promotion above.</li>
+<li><code>scope_enforced</code> — awarded on the automatic read paths,
+each of which joins the project tag as a predicate. Explicit recall
+carries no project predicate unless the caller passes a tag, and the MCP
+<code>remember</code> tool does not stamp one.</li>
+<li><code>human_review</code> — awarded on the <code>work_package</code>
+queue: the producing agent holds <code>prepare</code>,
+<code>submit</code> and <code>defer</code>, and the accept and reject
+verbs are on the CLI and the dashboard's HTTP routes only. Neither
+checks the actor, so an agent with a shell can reach them. The
+<code>improvement</code> tool's receipt names the accept command to the
+agent that staged the proposal, so that channel fails the test on its
+own. <code>remember</code> bypasses the queue entirely.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>bitemporal</code> — withheld. The columns exist and nothing
+writes them.</li>
+<li><code>audit_log</code> — withheld. Memory mutations leave no event
+record. <code>replaced_history</code> keeps up to 20 prior versions on
+the row and drops the oldest; <code>dream_proposals</code> keeps
+reviewed proposals with <code>reviewed_at</code> and a reason;
+<code>hook-outcomes.jsonl</code> records hook runs, not memory
+changes.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests and committed result files at the pin.</p>
+<p><strong>The negative cases.</strong>
+<code>closes the block with the durable-memory index</code>
+(<code>tests/core/briefing.test.ts:633-688</code>) seeds three project
+memories, one for another project, one global, one archived and one
+commit, asserts the three are in the index section, then asserts the
+other four are not, at level <code>full</code> so the foreign and global
+pools are ranked.
+<code>excludes what the auto-injection gate blocks</code>
+(<code>:732-749</code>) asserts an imported memory is absent from the
+assembled briefing while a seeded decision is present, and that MCP
+<code>recall</code> returns it. Both put the positive assertion on the
+same output, so an empty block fails.
+<code>tests/cli/remember-relations.test.ts:99-110</code> asserts a
+superseded memory drops out of <code>recall</code> and returns under
+<code>--include-archived</code>.</p>
+<p><strong>The tombstone.</strong>
+<code>observation forget survives Stop for the %s snapshot</code>
+(<code>tests/hooks/session-summary.test.ts:1012-1056</code>) spawns the
+real Stop hook three times across a forget, asserts the text stays out
+of the observations and the FTS index, that a later edit still lands,
+and that an explicit re-remember clears the hash and lets the next Stop
+restore it.</p>
+<p><strong>Harnesses around the suite.</strong>
+<code>scripts/audit/memory-invariants.mjs</code> runs read-only SQL
+invariants against a real graph, written after three defects passed
+seven diff reviews. A monthly workflow runs sampled mutation testing.
+<code>vitest.config.ts</code> sets coverage floors and explains why its
+include globs widen the denominator. About 70 cases skip on Windows
+only, most in the host runtime and messaging suites.</p>
+<p><strong>LongMemEval.</strong> <code>benchmarks/longmemeval/</code>
+commits the runner, methodology and nine per-question result files. The
+newest mode A file,
+<code>results/mode-A-2026-07-31T04-52-22.json</code>, recomputes to R@5
+95.60%, R@10 97.80% and MRR 0.8929 over 500 questions, matching
+<code>RESULTS.md</code>. The task is session retrieval from a haystack
+of about 50 sessions on a fresh database, so only relevance does any
+work. <code>RESULTS.md</code> states that until July 2026 the runner
+carried its own schema and ranking, and that the shipped path, measured
+then, scored 5.20% R@5 before the fix. Its baseline table attributes Zep
+and Mem0 figures to the LongMemEval paper (<a
+href="https://arxiv.org/abs/2410.10813">arXiv:2410.10813</a>); this
+reading did not check that paper for them.</p>
+<p><strong>Not covered.</strong> No test asserts that a
+<code>remember</code> on an imported memory leaves it untrusted, or that
+an ingested note reaches the briefing. No committed case asserts
+explicit recall keeps another project's memory out. No paper describes
+the system.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One predicate for "may this be injected unasked", owned once
+and imported by every automatic path</strong>, failing closed on
+metadata it cannot parse. Explicit recall is a different question and
+can stay open.</li>
+<li><strong>Keep a hash of what a person removed from anything a hook
+restates.</strong> A snapshot rebuilt from a retained transcript will
+reassert the removed line on the next turn otherwise.</li>
+<li><strong>Separate the write-side trust policy from the read-side
+marker.</strong> The transcript applier here keeps a dreamed memory from
+lifting confidence without also hiding it from the briefing.</li>
+<li><strong>Stage agent consolidations as proposals the agent cannot
+apply</strong>, with the sources retained beside the digest for the
+reviewer.</li>
+<li><strong>Measure whether injected memories are used.</strong>
+Citation handles in the injected block and a Stop-time match against the
+transcript turn ranking into feedback.</li>
+<li><strong>Record a stamp for a hook that ran and found
+nothing.</strong> <code>hook_runs</code> exists because a quiet day and
+a dead capture loop were identical in the database.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A default that promotes.</strong> A write path whose trust
+argument defaults to trusted turns every append into a vouching,
+including on content that entered as untrusted.</li>
+<li><strong>One argument setting two policies.</strong> The note
+ingester wanted "do not lift confidence" and also got "never
+inject".</li>
+<li><strong>Appliers with no producer.</strong> Guard and relation
+proposals keep a review UI, an accept path and a PreToolUse evaluator
+alive for rows nothing creates.</li>
+<li><strong>A review receipt that tells the producer how to
+approve.</strong> Put the accept command in the reviewer's surface, not
+in the agent's tool result.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer running Claude Code or Codex on one machine
+who wants decisions and lessons carried between sessions and tools with
+no service to run and no model bill. The single-file store, the
+deterministic hooks and the FTS-only recall make its behaviour
+predictable and auditable by hand. The maintenance budget is the other
+side: a 43,000-line TypeScript core plus hooks, a dashboard and a
+messaging router is a lot of surface for what the memory itself is.
+Teams needing per-user isolation, semantic recall or an event history of
+memory changes will not find them here.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the promotion of an imported memory by a plain
+<code>remember</code> intended as "an explicit write vouches", or an
+oversight beside the importer's guard?</li>
+<li>Is the untrusted stamp on ingested note files intended, given the
+ingester's header?</li>
+<li>Do databases in the field still hold guard proposals or active
+guards from the retired proposer, and does anything plan to produce them
+again?</li>
+<li>Which hooks fire under Codex; the README says it is not
+verified.</li>
+<li>Do the Zep and Mem0 figures in <code>RESULTS.md</code> measure the
+same session-retrieval R@5 as MeMesh's own row?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and storage:</strong>
+<code>src/storage/schema.ts</code>, <code>src/db.ts</code>,
+<code>src/storage/fts-index.ts</code>,
+<code>src/storage/conflicts.ts</code>,
+<code>src/storage/graph-repairs.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/core/operations.ts</code>,
+<code>src/knowledge-graph.ts</code>,
+<code>src/core/note-ingest.ts</code>,
+<code>src/core/serializer.ts</code>,
+<code>src/core/lesson-engine.ts</code>,
+<code>src/core/delegation.ts</code>.</li>
+<li><strong>Hooks:</strong> <code>hooks/hooks.json</code>,
+<code>scripts/hooks/_shared.js</code>,
+<code>scripts/hooks/session-start.js</code>,
+<code>scripts/hooks/session-summary.js</code>,
+<code>scripts/hooks/pre-edit-recall.js</code>,
+<code>scripts/hooks/guard-check.js</code>.</li>
+<li><strong>Retrieval and assembly:</strong>
+<code>src/core/scoring.ts</code>, <code>src/core/briefing.ts</code>,
+<code>src/core/briefing-index.ts</code>,
+<code>src/core/work-topology.ts</code>,
+<code>src/core/recall-agent-view.ts</code>.</li>
+<li><strong>Review:</strong> <code>src/core/dreamer.ts</code>,
+<code>src/core/product-improvements.ts</code>,
+<code>src/core/guards.ts</code>.</li>
+<li><strong>Background:</strong>
+<code>src/core/lifecycle.ts</code>.</li>
+<li><strong>Transports:</strong>
+<code>src/transports/mcp/handlers.ts</code>,
+<code>src/transports/cli/cli.ts</code>,
+<code>src/transports/http/server.ts</code>.</li>
+<li><strong>Tests and evals:</strong>
+<code>tests/core/briefing.test.ts</code>,
+<code>tests/hooks/session-summary.test.ts</code>,
+<code>tests/core/import-trust.test.ts</code>,
+<code>tests/cli/remember-relations.test.ts</code>,
+<code>scripts/audit/memory-invariants.mjs</code>,
+<code>benchmarks/longmemeval/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>git grep -n -E 'valid_from|valid_until' -- src scripts/hooks ':!scripts/hooks/_generated'</code>
+— the two <code>addColumn</code> lines in <code>schema.ts</code> and
+three comments; no writer or reader.</li>
+<li><code>git grep -n -E 'INSERT INTO dream_proposals' -- src scripts ':!scripts/hooks/_generated'</code>
+— <code>dreamer.ts:187</code> (calendar digest),
+<code>dreamer.ts:331</code> (transcript digest),
+<code>product-improvements.ts:270</code>; no guard or relation
+kind.</li>
+<li><code>git grep -n -E 'applyProposal\(|rejectProposal\(' -- src scripts extensions ':!scripts/hooks/_generated'</code>
+— <code>cli.ts:2582</code>, <code>:2609</code>,
+<code>server.ts:1069</code>, <code>:1101</code>, plus the definitions
+and one internal reject in <code>dreamer.ts</code>.</li>
+<li><code>git grep -n -E "^    name: '[a-z_]+'" -- src/transports/mcp/handlers.ts</code>
+— twelve tools; none accepts or rejects a proposal.</li>
+<li><code>git grep -n -E "trust: 'untrusted'|trustOverride: 'untrusted'" -- src</code>
+— importer, note ingest, dreamer and lifecycle; no match under
+<code>src/transports/</code>, whose <code>remember</code> schemas carry
+no trust field.</li>
+<li><code>git grep -n -E 'isAutoInjectable|isTrustedForAutoContext' -- src scripts/hooks ':!scripts/hooks/_generated'</code>
+— the leaf, the hook wrapper, <code>briefing.ts</code>,
+<code>briefing-index.ts</code>, <code>session-start.js</code>,
+<code>pre-edit-recall.js</code>, and comments in <code>db.ts</code> and
+<code>lesson-engine.ts</code>; not <code>operations.ts</code> or
+<code>knowledge-graph.ts</code>, so explicit recall is ungated.</li>
+<li><code>git grep -n -E 'forgotten_observation_hashes' -- src scripts/hooks ':!scripts/hooks/_generated'</code>
+— writer <code>knowledge-graph.ts:1225-1228</code>; readers
+<code>knowledge-graph.ts:587-594</code> and
+<code>_shared.js:1948</code>; import validation in
+<code>serializer.ts</code>.</li>
+<li><code>git grep -n -E 'CREATE TABLE IF NOT EXISTS' -- src</code> —
+<code>dream_proposals</code>, the four memory tables,
+<code>memesh_metadata</code>, fifteen messaging tables and
+<code>hook_runs</code>; no memory event or audit table.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- . ':!dist' ':!*package-lock.json'</code>
+— one hit, the baseline table in
+<code>benchmarks/longmemeval/RESULTS.md</code>; no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/PCIRCLE-AI/memesh/commit/dd77d78ec061be4757e43c5a244de88a88a69649"><code class="commit-id" title="dd77d78ec061be4757e43c5a244de88a88a69649">dd77d78e…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 28
+September 2026 (UTC). Five marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>human_review</code>, <code>negative_eval</code>. Screened before
+reading: 3 auto-run surfaces (<code>.claude-plugin/</code>,
+<code>hooks/</code>, <code>hooks/hooks.json</code>), 2 build-time
+execution points (npm <code>prepublishOnly</code> in two manifests), 5
+dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip — and 3 floating surfaces; <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> were read as data. No <code>filter=</code> in
+<code>.gitattributes</code>, no submodules. Read with
+<code>git grep</code> and <code>sed</code>; nothing installed, built or
+run. The agent-messaging subsystem is out of scope and only the memory
+layer is covered.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

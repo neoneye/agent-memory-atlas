@@ -271,6 +271,17 @@ the store when you turned the guard on. They are not substitutes, and a system
 with a governed write gateway of its own has the better version of the first
 half — because it knows which writes are writes.
 
+[MAMA](../../systems/mama/) has the gate and shows where its policy stops.
+Every `decisions` mutation outside migrations runs inside
+`appendJudgmentOnAdapter`, which checks scopes and amendment targets against the
+caller's admitted set, strips caller provenance in favour of host-attested
+session facts, and writes the row, scope bindings, a `memory_events` row and a
+payload-hashed receipt in one transaction; the dispatcher refuses secret-shaped
+input on every action declared a recallable write. What the gate does not check
+is the turn. Timezone and report-phrase settings refuse outside an owner message
+turn, and `memory.save`, which writes corrections the prompt ranks above the
+runtime's own rules, does not.
+
 ## Tests to require
 
 - Exercise every adapter against the same invariant suite.

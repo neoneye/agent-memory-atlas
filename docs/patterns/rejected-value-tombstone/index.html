@@ -126,8 +126,8 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 59 systems of
-655 carry the mark, and <a
+recurs across the corpus. 61 systems of
+658 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -291,8 +291,8 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>59 systems of
-655 in the atlas carry the mark.</strong> The
+<p><strong>61 systems of
+658 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -728,6 +728,18 @@ active, and <code>pmb repair-keyed --apply</code> promotes it back into
 a keyed value and archives the negation as obsolete. The record exists;
 it is keyed on the row rather than the value, and the repair pass walks
 past it.</p>
+<p><a href="../../systems/memesh/">MeMesh</a> carries the narrowest
+instance in the corpus that still fits the definition, and its scope is
+exactly where its rejections arise. The Stop hook restates three
+per-session snapshot entities from the transcript on every turn, which
+is a re-extraction from a retained source by construction; removing one
+observation from such a snapshot writes the SHA-256 of its exact text
+into <code>metadata.forgotten_observation_hashes</code> in the same
+transaction, and <code>captureEntity</code> drops any restated line
+whose hash is listed. Untrusted writes filter it as well, and only a
+trusted explicit write clears it. There is no normalisation, the list
+lives on one session's entity, and entity-level <code>forget</code> is
+ordinary archival that a plain <code>remember</code> reverses.</p>
 <h3 id="sorted-by-what-actually-stops-the-value">Sorted by what actually
 stops the value</h3>
 <p>The mark covers four different mechanisms. The table sorts the
@@ -781,7 +793,8 @@ href="../../systems/scope-recall-hermes/">Scope Recall</a></td>
 <td><strong>Collided</strong> — the key stays occupied</td>
 <td><a href="../../systems/mnemosyne/">Mnemosyne</a>, <a
 href="../../systems/wenlan/">Wenlan</a>, <a
-href="../../systems/memoir-cli/">memoir-cli</a></td>
+href="../../systems/memoir-cli/">memoir-cli</a>, <a
+href="../../systems/shellbrain/">ShellBrain</a></td>
 <td>The write lands <em>on</em> the rejected row, which stays rejected.
 Accidental in Mnemosyne, held in place by a missing filter and pinned by
 no test; deliberate in Wenlan, where the unique key is the value and the
@@ -1077,6 +1090,19 @@ defensible trade for a privacy revocation whose source data expires
 anyway, and it means the guarantee is <em>not again for ninety days</em>
 rather than <em>never again</em> — a distinction worth making explicitly
 wherever this shape is copied.</p>
+<p><strong><a href="../../systems/shellbrain/">ShellBrain</a> has the
+collided form on one record type and not on the one that matters
+most.</strong> <code>add_claim</code> looks up a concept claim by
+<code>(repo_id, concept_id, claim_type, normalized_text)</code> with no
+status predicate and returns the existing row, backed by a total unique
+constraint, so a claim its librarian marked <code>wrong</code> stays
+<code>wrong</code> when re-added — and the new evidence is attached to
+it as <code>supports</code>; no comment claims this and no test pins it.
+Relations, groundings and memory links use partial unique indexes on
+<code>active</code> instead, and memories have no value key at all.
+Worse for memories, the librarian's duplicate search is the same read
+that hides <code>wrong</code> rows, so the rejection is invisible at the
+moment it would be consulted.</p>
 <h3 id="the-tombstone-that-must-not-retain-what-it-protects">The
 tombstone that must not retain what it protects</h3>
 <p>A tombstone that stores the value in order to key on it is fine for a
