@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 649 reports.</strong></p>
+<p><strong>This page covers all 650 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26816,6 +26816,46 @@ behind LLM tools, in one process with no services.</li>
 shared by robots or users, or losing the vector index to a crash must be
 noticed — HNSW is written only on <code>save()</code> and
 <code>close()</code>.</li>
+</ul>
+<h3 id="agent-memory-distillation"><a
+href="../systems/agent-memory-distillation/"><code>agent-memory-distillation</code></a></h3>
+<ul>
+<li>Best idea: <strong>fetch the calling convention on failure, not up
+front.</strong> Function memory is looked up by the failing tool's exact
+name and appended to the error message, so a successful call pays
+nothing and the hint arrives when the model is reading the error.
+Workflow and subtask memory, the tiers a student needs before it starts,
+are the only ones injected proactively.</li>
+<li>Biggest risk: <strong>the committed evaluation retrieves each task's
+own memory.</strong> Teacher and student scripts both default to BFCL's
+<code>multi_turn_base</code>; the workflow record is embedded on the
+task's first message and retrieved with the same message, and no path
+excludes the current task id. The paper's appendix reports a
+self-excluded run at 31.00 against 38.50 in its main table for Qwen3-4B,
+and no code for that protocol is in the tree.</li>
+<li>Most reusable component: the BFCL store's load-time check that an
+embedding matrix has one row per record, with the subtask store
+re-embedding when it does not
+(<code>bfcl/common/memory/store.py:57-63</code>,
+<code>:133-144</code>).</li>
+<li>Second risk: the ToolSandbox builder saves only the new rows when an
+embedding call falls back to its 256-wide local vector, detaching the
+matrix from a documents file that keeps growing — and that fallback
+hashes with Python's per-process salted <code>hash()</code> under a
+docstring calling it deterministic.</li>
+<li>Maturity impression: no licence file, 7 commits by 1 contributor
+between 18 June and 10 August 2026, 25,962 lines of Python of which the
+two memory modules are 1,571 and 1,085, no tests, and no run output or
+memory directory committed. No capability mark: <code>category</code> is
+a benchmark subset filter that widens when empty, and nothing carries a
+status, validity time, audit record or review state.</li>
+<li>Study when: you are distilling a large model's tool-use procedures
+into a small agent over a fixed tool set and want a worked three-tier
+split to reimplement.</li>
+<li>Do not copy when: the store must change after deployment, take
+corrections, or hold anything user-specific — or when you need the
+evaluation harness, which lacks the AppWorld method, the non-AppWorld
+baselines and the CLI wiring.</li>
 </ul>
         </article>
       </div>

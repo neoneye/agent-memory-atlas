@@ -178,6 +178,8 @@ Two failures sit beside it. The new version is published to the whole organisati
 
 It also ships the test this page asks for. `test_an_unrelated_query_gets_nothing_from_the_local_source` builds twelve file-handling skills, asserts the weather query returns an empty block, and asserts in the next line that the same directory still answers `"fill an acroform"` — the third bullet below, with the control that stops it passing vacuously. What it has none of is a verification gate or a usage signal: no skill is executed, nothing observes whether following one worked, and the record type it was adapted from had counters and lineage fields that were deliberately dropped.
 
+[Agent Memory Distillation](../../systems/agent-memory-distillation/) stores procedure at three granularities and retrieves each at a different moment: a workflow insight and subtask examples before the first turn, and a per-function example only when that function's call returns an error (`bfcl/common/memory/injection.py:338-400`). It is also the counterexample on the success gate this pattern depends on. On BFCL the gate is a `--score-file` argument whose default is empty, so every teacher trajectory that did not force-quit becomes memory (`bfcl/common/scripts/teacher_build_memory_multi_turn.sh:21`), while its ToolSandbox builder keeps only scenarios at full milestone similarity.
+
 ## Tests to require
 
 - Store a skill, then execute the retrieved copy in a fresh context and assert it still succeeds — generality, not just recorded success.

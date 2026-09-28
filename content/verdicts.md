@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 649 reports.**
+**This page covers all 650 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5820,3 +5820,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 4,453 lines of Python in the package and 11,362 in the benchmark harness, 92 commits by 2 contributors between 7 March and 22 May 2026, 469 pytest functions run on Python 3.8 to 3.12. One mark, `negative_eval`, on two CI-run cases that keep an archived observation out of a radius query and out of the BM25 arm after a positive control; three nearby cases assert less than their comments say.
 - Study when: you are building memory for an embodied agent and want a working composition of dense, lexical, spatial and temporal retrieval behind LLM tools, in one process with no services.
 - Do not copy when: a wrong perception must be corrected, the store is shared by robots or users, or losing the vector index to a crash must be noticed — HNSW is written only on `save()` and `close()`.
+
+### [`agent-memory-distillation`](../systems/agent-memory-distillation/)
+- Best idea: **fetch the calling convention on failure, not up front.** Function memory is looked up by the failing tool's exact name and appended to the error message, so a successful call pays nothing and the hint arrives when the model is reading the error. Workflow and subtask memory, the tiers a student needs before it starts, are the only ones injected proactively.
+- Biggest risk: **the committed evaluation retrieves each task's own memory.** Teacher and student scripts both default to BFCL's `multi_turn_base`; the workflow record is embedded on the task's first message and retrieved with the same message, and no path excludes the current task id. The paper's appendix reports a self-excluded run at 31.00 against 38.50 in its main table for Qwen3-4B, and no code for that protocol is in the tree.
+- Most reusable component: the BFCL store's load-time check that an embedding matrix has one row per record, with the subtask store re-embedding when it does not (`bfcl/common/memory/store.py:57-63`, `:133-144`).
+- Second risk: the ToolSandbox builder saves only the new rows when an embedding call falls back to its 256-wide local vector, detaching the matrix from a documents file that keeps growing — and that fallback hashes with Python's per-process salted `hash()` under a docstring calling it deterministic.
+- Maturity impression: no licence file, 7 commits by 1 contributor between 18 June and 10 August 2026, 25,962 lines of Python of which the two memory modules are 1,571 and 1,085, no tests, and no run output or memory directory committed. No capability mark: `category` is a benchmark subset filter that widens when empty, and nothing carries a status, validity time, audit record or review state.
+- Study when: you are distilling a large model's tool-use procedures into a small agent over a fixed tool set and want a worked three-tier split to reimplement.
+- Do not copy when: the store must change after deployment, take corrections, or hold anything user-specific — or when you need the evaluation harness, which lacks the AppWorld method, the non-AppWorld baselines and the CLI wiring.

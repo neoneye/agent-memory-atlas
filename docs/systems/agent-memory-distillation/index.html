@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Paper code that distils a teacher
+agent's trajectories into workflow, subtask and function memory files a
+smaller student agent reads, frozen, at inference.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agent Memory
+Distillation — Agent Memory Atlas">
+    <meta property="og:description" content="Paper code that distils a
+teacher agent's trajectories into workflow, subtask and function memory
+files a smaller student agent reads, frozen, at inference.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agent Memory
+Distillation — Agent Memory Atlas">
+    <meta name="twitter:description" content="Paper code that distils a
+teacher agent's trajectories into workflow, subtask and function memory
+files a smaller student agent reads, frozen, at inference.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agent Memory Distillation — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Agent Memory Distillation",
+      "description": "Paper code that distils a teacher agent's trajectories into workflow, subtask and function memory files a smaller student agent reads, frozen, at inference.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Teacher-distilled procedural memory for
+small agents</p>
+          <h1>Agent Memory Distillation</h1>
+          <p class="document-deck">Paper code that distils a teacher
+agent's trajectories into workflow, subtask and function memory files a
+smaller student agent reads, frozen, at inference.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/taeilkim2465/agentic_memory_distillation">
+              <span>Source</span>
+              <strong>taeilkim2465/agentic_memory_distillation</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/taeilkim2465/agentic_memory_distillation/commit/2895d10c07105432325b088f4803dc94a10003c9" title="2895d10c07105432325b088f4803dc94a10003c9">
+              <span>Analyzed revision</span>
+              <code>2895d10c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/taeilkim2465--agentic_memory_distillation" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>taeilkim2465--agentic_memory_distillation</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>No
+licence file at this commit, so all rights reserved by default; the
+ToolSandbox overlay files carry Apple's header pointing at a LICENSE
+file the tree does not ship</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>25,962
+lines of Python in 182 files; 20,318 of them are three copies of an
+AppWorld experiment tree, and the two memory modules the paper describes
+are 1,571 (BFCL) and 1,085 (ToolSandbox)</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>7
+commits on main by 1 contributor, 18 June – 10 August 2026; no file
+outside README.md changed after 18 June</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>None
+committed</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This is the code release for <em>Agent Memory Distillation</em> (<a
+href="https://arxiv.org/abs/2608.07169">arXiv:2608.07169</a>, Kim, Kim
+and Hwang, 7 August 2026). A large teacher agent runs a tool-use
+benchmark, and an offline builder turns its trajectories into three
+files of memory: a workflow insight per task, subtask segments with
+example calls, and per-function call records. A 4–8B student agent reads
+them at inference. Workflow and subtask memory are prepended to the
+system prompt once per task, and a function record is appended to a tool
+error when one occurs. The retrieve-on-failure tier is the idea that
+travels. What is weak is the evaluation loop the code wires: memory is
+built from the benchmark tasks the student is then scored on, and
+nothing stops a task retrieving its own record.</p>
+<p>The tree is an overlay, not a package. The README tells the reader to
+clone AppWorld, the Berkeley Function-Calling Leaderboard (BFCL) and
+Apple's ToolSandbox, then copy directories from this repository over
+them. The paper's three-tier method is present for BFCL
+(<code>bfcl/common/memory/</code>) and for ToolSandbox
+(<code>toolsandbox/common/memory/</code>). For AppWorld, where the paper
+reports its largest gain, the tree holds only the three baselines —
+ReasoningBank, MemP and SASM, each as a copy of an ACE-derived
+experiment tree. Six AppWorld configs name
+<code>running_memory_react</code>, an agent type no Python file
+registers.</p>
+<p><strong>The store is frozen by design, and the paper says so in its
+limitations.</strong> Nothing in the student path writes. That places
+this at the edge of what the atlas compares: memory that survives across
+tasks, is retrieved by similarity, and can be corrected only by editing
+JSON by hand or rebuilding the directory.</p>
+<p>There is no licence file. The atlas reads such repositories read-only
+and says so; nothing here grants a reader the right to reuse the code.
+The ToolSandbox overlay files keep Apple's copyright header, which
+points at a <code>LICENSE</code> this tree does not contain.</p>
+<p>Three findings shape the rest of this report.</p>
+<ul>
+<li><strong>Self-retrieval is the default.</strong> BFCL embeds each
+workflow record on the task's first user message and retrieves with the
+same message, filtered to the same category
+(<code>bfcl/common/memory/builder.py:705</code>,
+<code>bfcl/common/memory/injection.py:177-186</code>). ToolSandbox does
+the same with the scenario brief
+(<code>toolsandbox/common/memory/builder.py:325</code>). The paper's
+appendix B.3 reports a self-excluded protocol: BFCL falls from 38.50 to
+31.00 for Qwen3-4B. No code in the tree implements that protocol.</li>
+<li><strong>The success filter the paper describes is optional on
+BFCL.</strong> The teacher script's <code>SCORE_FILE</code> defaults to
+empty, and with no score file every trajectory that did not force-quit
+becomes memory
+(<code>bfcl/common/scripts/teacher_build_memory_multi_turn.sh:21</code>,
+<code>bfcl/common/scripts/build_memory_from_results.py:124-153</code>).</li>
+<li><strong>The ToolSandbox builder can orphan its own index.</strong>
+One embedding call that falls back to the local 256-dimension hash makes
+the builder save only the new row, discarding the stored matrix, while
+the documents file keeps growing
+(<code>toolsandbox/common/memory/builder.py:335-339</code>).</li>
+</ul>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a claim a teacher LLM wrote about a trajectory, or an
+excerpt copied from one. It has three granularities, and the paper's
+argument is that each is needed at a different moment.</p>
+<ul>
+<li><strong>Workflow memory</strong> is a two-to-four-sentence strategy,
+written by the builder LLM from the whole trajectory under a prompt
+demanding one validation cue and one failure pattern
+(<code>bfcl/common/memory/builder.py:34-55</code>). It is keyed on the
+task's first user message.</li>
+<li><strong>Subtask memory</strong> is a labelled segment of the
+trajectory — the builder LLM names the boundaries, and the code attaches
+the calls in that range with argument values masked
+(<code>bfcl/common/memory/builder.py:388-479</code>). It is keyed on
+label plus description.</li>
+<li><strong>Function memory</strong> is one successful call — tool name,
+masked arguments, a truncated result, the turn's instruction — with no
+LLM involved on BFCL
+(<code>bfcl/common/memory/builder.py:498-547</code>). It is keyed on the
+exact tool name.</li>
+</ul>
+<p>There is no state machine. A record is born when a build runs and
+lives until the directory is deleted. The student treats every retrieved
+record as reference material under the instruction <em>"Adapt it to the
+current context rather than copying values literally"</em>
+(<code>bfcl/common/memory/injection.py:214-218</code>). Nothing records
+whether a retrieved memory helped, and nothing demotes one that misled.
+The paper's limitations section states the boundary: memory <em>"remains
+frozen at inference time"</em> and cannot absorb the student's own
+outcomes.</p>
+<p>What decides whether a trajectory becomes memory is the only
+epistemic gate, and it differs by benchmark. ToolSandbox builds only
+from scenarios whose milestone similarity reaches the threshold, default
+1.0
+(<code>toolsandbox/common/utils/rebuild_memory_from_trajectories.py:52</code>).
+BFCL builds from every non-force-quit result unless a score file is
+supplied, and function records skip only calls whose result reads as an
+error (<code>bfcl/common/memory/builder.py:524-525</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a teacher's trajectories become workflow, subtask and function memory files; the student reads workflow and subtask memory before acting, fetches a function record only when a tool call fails, and by default retrieves the record built from its own task</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a teacher&#39;s trajectories become workflow, subtask and function memory files; the student reads workflow and subtask memory before acting, fetches a function record only when a tool call fails, and by default retrieves the record built from its own task
+flowchart TD
+  T[&quot;Teacher model runs benchmark tasks&quot;] --&gt; R[&quot;Result files per task&quot;]
+  R --&gt; G{&quot;Success filter?&quot;}
+  G --&gt;|&quot;BFCL: only with --score-file&quot;| B[&quot;Builder LLM&quot;]
+  G --&gt;|&quot;ToolSandbox: similarity &gt;= 1.0&quot;| B
+  B --&gt; WF[&quot;workflow/documents.json + embeddings.npy (key: first user message)&quot;]
+  B --&gt; ST[&quot;subtask/segments.jsonl + embeddings (key: label + description)&quot;]
+  R --&gt; FN[&quot;function/records.jsonl (key: tool name)&quot;]
+  S[&quot;Student runs the SAME tasks&quot;] --&gt; Q[&quot;Query: task&#39;s first message&quot;]
+  Q --&gt; WF
+  WF --&gt;|&quot;top-1: the task&#39;s own record, cosine ~1.0&quot;| P[&quot;Prepended to system prompt&quot;]
+  S --&gt; TI[&quot;Turn instructions&quot;] --&gt; ST
+  ST --&gt;|&quot;best match &gt;= 0.45&quot;| P
+  S --&gt; E{&quot;Tool call returns an error?&quot;}
+  E --&gt;|yes| FN
+  FN --&gt;|&quot;top example by similarity&quot;| H[&quot;Hint appended to the error message&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything is files and in-process NumPy. A build directory holds
+<code>workflow/documents.json</code> and
+<code>workflow/embeddings.npy</code>,
+<code>subtask/segments.jsonl</code> with its embedding file, and
+<code>function/records.jsonl</code> (BFCL also saves
+<code>records_embeddings.npy</code>). The student loads all three stores
+into a process-level cache keyed on the directory path
+(<code>bfcl/common/memory/injection.py:52-65</code>,
+<code>toolsandbox/common/memory/injection.py:34-41</code>) and scores by
+brute-force cosine. There is no server, database or background
+process.</p>
+<p>The runtime is three third-party harnesses with files copied in. On
+BFCL the overlay is <code>bfcl/common/memory/</code> plus a replaced
+<code>base_handler.py</code> whose constructor pops
+<code>memory_dir</code>, <code>memory_types</code>,
+<code>memory_retrieval</code>, <code>decomposer_llm</code> and
+<code>subtask_source</code> from its keyword arguments
+(<code>bfcl/common/model_handler/base_handler.py:87-106</code>). The
+command-line flags that would carry them — <code>--memory-dir</code>,
+<code>--memory-types</code> in
+<code>bfcl/common/scripts/exp_4_workflow_func_subtask.sh:62-71</code> —
+are parsed by BFCL code this tree does not ship. On ToolSandbox the
+agent names the scripts pass, such as
+<code>MemoryQwen3_4B_WF_FN_ST</code>, are likewise registered outside
+the tree.</p>
+<p>Embeddings come from OpenAI <code>text-embedding-3-small</code> at
+build and query time. Student models are served by vLLM. The builder LLM
+defaults to <code>gpt-5-mini</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to be running:</strong> a checkout of each
+benchmark, a vLLM server for the student, and OpenAI API access for
+embeddings at both build and query time.</li>
+<li><strong>Offline:</strong> not as shipped. ToolSandbox falls back to
+a local hash embedding when the API call fails, and that fallback is not
+stable across processes (section 9).</li>
+<li><strong>API key to store anything:</strong> yes; the builder calls
+an LLM per trajectory.</li>
+<li><strong>Install path:</strong> clone three upstream benchmarks, copy
+overlay directories in, and supply the CLI wiring and the baseline
+packages the tree omits (<code>rb-memories/</code>,
+<code>memp-memories/</code>, <code>sasm-memories/</code> are in
+<code>.gitignore</code>).</li>
+<li><strong>Hand repair:</strong> the JSON is readable and editable.
+BFCL embeds the workflow <em>query</em>, not the insight, so editing an
+insight's text takes effect without re-embedding; editing a subtask
+label or description leaves its stored vector describing the old
+text.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture (BFCL).</strong>
+<code>teacher_build_memory_multi_turn.sh</code> runs
+<code>bfcl_eval generate</code> with the teacher on
+<code>multi_turn_base</code>, then calls
+<code>build_memory_from_results.py</code>
+(<code>bfcl/common/scripts/teacher_build_memory_multi_turn.sh:60-102</code>).
+That script loads test entries, optionally subtracts failed ids read
+from a score file, and calls
+<code>BFCLMemoryBuilder.build_from_result_file</code>
+(<code>bfcl/common/scripts/build_memory_from_results.py:112-172</code>).</p>
+<p><strong>Extraction.</strong> <code>build_from_result_file</code>
+formats each trajectory, derives <code>category</code> as the task id
+minus its numeric suffix, and calls <code>build_workflow_memory</code>,
+<code>build_subtask_segments</code> and
+<code>build_function_records</code>
+(<code>bfcl/common/memory/builder.py:609-673</code>). Argument values
+are replaced by typed placeholders by key name, falling back to the
+upper-cased key itself
+(<code>bfcl/common/memory/builder.py:282-318</code>).</p>
+<p><strong>Persistence.</strong> <code>_save_workflow</code> merges with
+the file on disk, keeping any existing record for the same task id, and
+re-embeds every document's query
+(<code>bfcl/common/memory/builder.py:684-707</code>).
+<code>_save_subtask</code> dedupes on <code>(task_id, label)</code>
+(<code>:709-739</code>). <code>_save_function</code> appends and
+re-embeds all records with no deduplication (<code>:741-769</code>).</p>
+<p><strong>Retrieval and injection.</strong>
+<code>inject_static_memory</code> retrieves the top workflow record for
+the first user message, filtered by category and retried unfiltered if
+empty, then one subtask segment per turn instruction; it truncates the
+block at 6,000 characters and prepends it to the system message
+(<code>bfcl/common/memory/injection.py:153-235</code>). The handler
+calls it before turn 1
+(<code>bfcl/common/model_handler/base_handler.py:192-196</code>).</p>
+<p><strong>Reactive path.</strong> After each executed step the FC
+handler passes results to <code>augment_with_function_hints</code>,
+which, for results starting <code>Error during execution:</code>, looks
+up records for the failing function name and appends the schema and one
+example (<code>bfcl/common/model_handler/base_handler.py:427-430</code>,
+<code>bfcl/common/memory/injection.py:338-400</code>).</p>
+<p><strong>ToolSandbox.</strong>
+<code>MemoryAugmentedAgent.model_inference</code> builds the static
+block once per scenario and re-applies it to every call, then appends a
+hint to the most recent tool message matching
+<code>Error|Exception|Traceback|failed</code>
+(<code>toolsandbox/common/roles/memory_augmented_agent.py:96-184</code>).</p>
+<p><strong>Update, delete, forget.</strong> No path.
+<code>rebuild_memory_from_trajectories.py --clear</code> deletes the
+whole directory before a rebuild
+(<code>toolsandbox/common/utils/rebuild_memory_from_trajectories.py:55-57</code>).</p>
+<p><strong>Tests.</strong> None.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The BFCL dataclasses are <code>WorkflowMemDoc</code> (task id,
+category, query, insight, involved classes,
+<code>source="teacher"</code>, metadata), <code>SubtaskSegment</code>
+(label, description, masked calls, sanitised observations, required
+tools, excerpt, <code>generated_at</code>) and
+<code>FunctionStepRecord</code> (tool name, category, task id, step,
+masked arguments, result truncated to 500 characters, task query, turn
+instruction, <code>think</code>)
+(<code>bfcl/common/memory/data_model.py:12-81</code>). ToolSandbox's
+versions carry <code>scenario_name</code> in place of task id and
+category, and a <code>created_at</code> float
+(<code>toolsandbox/common/memory/data_model.py:13-79</code>).</p>
+<p>The embeddings live in a separate <code>.npy</code> whose row
+<em>i</em> is assumed to be record <em>i</em>. BFCL guards the
+assumption: a matrix whose row count differs is ignored, and the subtask
+store re-embeds everything in that case
+(<code>bfcl/common/memory/store.py:57-63</code>, <code>:133-144</code>).
+ToolSandbox checks only that the array is two-dimensional
+(<code>toolsandbox/common/memory/store.py:82-85</code>).</p>
+<p>Scope is the build directory. Each script picks a dated path such as
+<code>data/memory/0516</code>, and two builds never share a file. BFCL's
+<code>category</code> field is a benchmark subset name —
+<code>multi_turn_base</code> — stored on every record and used as a
+retrieval filter with a widening fallback (section 6).</p>
+<p>There are no status, validity or supersession fields.
+<code>generated_at</code> and <code>created_at</code> are write times
+only. Provenance is the task id or scenario name and the constant
+<code>source: "teacher"</code>; which teacher model or build run
+produced a record is not stored on the record.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Workflow.</strong> BFCL's
+<code>WorkflowMemoryStore.retrieve</code> embeds the query and returns
+the top <code>k</code> by cosine, default 1 at the call site, with no
+similarity floor (<code>bfcl/common/memory/store.py:65-94</code>). The
+paper says entries below a minimum similarity are discarded; ToolSandbox
+applies 0.5 (<code>toolsandbox/common/memory/injection.py:85</code>),
+BFCL does not. When the embedding file is missing, BFCL returns the
+first <code>k</code> documents in insertion order
+(<code>bfcl/common/memory/store.py:94</code>).</p>
+<p><strong>Category filter and fallback.</strong> BFCL filters workflow
+and subtask candidates to the task's category, and when that returns
+nothing it calls the same retriever again with no category
+(<code>bfcl/common/memory/injection.py:184-186</code>,
+<code>:199-202</code>). This is a relevance pre-filter, not a
+boundary.</p>
+<p><strong>Subtask.</strong> The paper has the student decompose the
+task into up to six subtask labels. BFCL's default
+<code>subtask_source</code> is <code>"turns"</code>, which uses each
+turn's user instruction as a query with no decomposition
+(<code>bfcl/common/memory/injection.py:194-198</code>), and the
+experiment scripts keep that default
+(<code>bfcl/common/scripts/exp_4_workflow_func_subtask.sh:7</code>).
+ToolSandbox decomposes with the student model
+(<code>toolsandbox/common/memory/injection.py:90-98</code>). Both keep
+the best segment per query above 0.45 and drop repeated labels.</p>
+<p><strong>Function.</strong> BFCL selects records whose
+<code>tool_name</code> equals the failing function, ranks them by cosine
+between the current turn's instruction and each record's stored turn
+instruction, and returns one
+(<code>bfcl/common/memory/store.py:253-280</code>). The paper ranks
+against the stored reasoning. ToolSandbox ranks by a character-n-gram
+hash of the call context against the record's <code>think</code>, falls
+back to task query, and returns two
+(<code>toolsandbox/common/memory/store.py:184-216</code>).</p>
+<p><strong>Budget.</strong> BFCL caps the static block at 6,000
+characters and per-turn subtask text at 2,000
+(<code>bfcl/common/memory/injection.py:160</code>, <code>:242</code>).
+ToolSandbox has no cap.</p>
+<p><strong>Failure mode that matters.</strong> When the store was built
+from the evaluation tasks, the workflow query is the stored key
+verbatim. The top-1 is then the task's own teacher insight, which names
+the tools and order that solved this exact task.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are an offline batch after a teacher run. Per trajectory the
+BFCL builder makes one LLM call for the workflow insight and one for
+segmentation; function records need none
+(<code>bfcl/common/memory/builder.py:639-673</code>). ToolSandbox adds
+one <code>think</code> call per successful step when a think model is
+set, and the rebuild script sets it
+(<code>toolsandbox/common/utils/rebuild_memory_from_trajectories.py:61-65</code>).</p>
+<p>Deduplication is by identity, not content. BFCL keeps the existing
+workflow record for a task id, so rebuilding into the same directory
+with a better prompt does not replace it
+(<code>bfcl/common/memory/builder.py:696-698</code>). Function records
+are never deduplicated, so a second build pass over the same results
+doubles them (<code>:757</code>). ToolSandbox appends to every file on
+every call.</p>
+<p>Sanitisation runs before storage: typed placeholders for argument
+values, and regexes for e-mail, phone, amounts and long numbers in
+observations (<code>bfcl/common/memory/data_model.py:83-91</code>). The
+workflow insight is not passed through the sanitiser; placeholder use
+there is a request in the prompt
+(<code>bfcl/common/memory/builder.py:46</code>).</p>
+<p>Concurrency is handled on ToolSandbox by an <code>fcntl</code> lock
+around each read-modify-write
+(<code>toolsandbox/common/memory/builder.py:308-317</code>). BFCL's
+builder runs single-process.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Synchronous?</strong> The student never waits on a write.
+Building is a separate job whose cost scales with the number of teacher
+trajectories.</li>
+<li><strong>Lag before retrievable:</strong> until the build finishes
+and the student process starts; the store cache never reloads within a
+process.</li>
+<li><strong>Whole-store passes:</strong> every BFCL save re-embeds every
+record in that file, not only the new ones
+(<code>bfcl/common/memory/builder.py:703-706</code>,
+<code>:763-767</code>).</li>
+<li><strong>Read path:</strong> one embedding call for the workflow
+query, one per subtask query, and on BFCL one per failing call. The
+block sits at the head of the system prompt and differs per task, so no
+provider prefix cache survives across tasks.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The student has no memory tools. All retrieval is harness-driven:
+before the first turn for workflow and subtask, and on a tool error for
+function memory. BFCL offers two per-turn variants, <code>dynamic</code>
+(subtask memory prepended to each user turn) and
+<code>system_replace</code> (the subtask section of the system prompt
+swapped per turn)
+(<code>bfcl/common/model_handler/base_handler.py:1032-1127</code>).</p>
+<p>On ToolSandbox the retrieval query is taken from the SYSTEM-to-USER
+message — the scenario brief ToolSandbox addresses to its simulated user
+— and only falls back to the first USER-to-AGENT message
+(<code>toolsandbox/common/roles/memory_augmented_agent.py:59-78</code>).
+The student's own visible conversation is the fallback. The builder keys
+workflow records on the same brief
+(<code>toolsandbox/common/memory/trajectory.py:80-83</code>,
+<code>:118</code>), so the key and the query are identical text drawn
+from a message the agent is not the recipient of.</p>
+<p>The ToolSandbox hint is appended to a copy of the message list on
+every model call, to the most recent error, so it persists in the prompt
+until a newer error supersedes it
+(<code>toolsandbox/common/roles/memory_augmented_agent.py:137-184</code>).</p>
+<p>Adapting this to another agent means lifting <code>store.py</code>
+and the two injection functions; they have no dependency on the
+benchmark beyond the record fields.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Evaluation leakage by construction.</strong> Teacher and
+student scripts both default to BFCL's <code>multi_turn_base</code>
+(<code>bfcl/common/scripts/teacher_build_memory_multi_turn.sh:18</code>,
+<code>bfcl/common/scripts/exp_4_workflow_func_subtask.sh:8</code>). No
+retrieval path excludes the current task id. The paper's appendix B.3
+describes cross-split and self-excluded protocols and reports, for
+Qwen3-4B with all three tiers, BFCL at 30.65 and 31.00 against 38.50 in
+its main table. That gap is about a third of the reported +23.00 BFCL
+gain. No code in the tree splits the tasks or excludes self (Recorded
+searches).</p>
+<p><strong>The ToolSandbox index can detach from its records.</strong>
+<code>_persist_workflow</code> and <code>_persist_subtasks</code> stack
+new embeddings onto the stored matrix only when the widths match;
+otherwise they save the new rows alone
+(<code>toolsandbox/common/memory/builder.py:335-339</code>,
+<code>:358-362</code>). A width mismatch happens whenever
+<code>_embed</code> catches an API exception and returns the 256-wide
+local vector (<code>:378-385</code>). The documents file keeps every
+record, and the store does not compare lengths, so retrieval returns
+documents by row positions that describe other records.</p>
+<p><strong>The local fallback is not deterministic.</strong>
+<code>_local_embed</code>'s docstring says <em>"Deterministic character
+n-gram embedding"</em>, and it indexes with Python's <code>hash()</code>
+(<code>toolsandbox/common/memory/builder.py:427-435</code>,
+<code>toolsandbox/common/memory/store.py:50-57</code>). String hashing
+is salted per process unless <code>PYTHONHASHSEED</code> is set, and
+nothing in the tree sets it. A 256-wide matrix written by the builder is
+not comparable with a query hashed in the student process. Function
+ranking is unaffected: both sides are hashed in one process.</p>
+<p><strong>Prompt-injected memories.</strong> Teacher trajectories
+include tool observations, and subtask records store sanitised
+observations verbatim into later prompts. Nothing filters
+instruction-like text.</p>
+<p><strong>Marks.</strong> None awarded.</p>
+<ul>
+<li><code>tombstone</code> — no record of a rejected value; no deletion
+below the directory.</li>
+<li><code>trust_state</code> — no status field; <code>source</code> is
+the constant <code>"teacher"</code> and no read filters on it.</li>
+<li><code>bitemporal</code> —
+<code>generated_at</code>/<code>created_at</code> are write times
+only.</li>
+<li><code>scope_enforced</code> — withheld. BFCL's <code>category</code>
+is stored on the row and applied as a predicate
+(<code>bfcl/common/memory/store.py:74-77</code>), but it names a
+benchmark subset rather than a principal, and every call site retries
+without it when it matches nothing
+(<code>bfcl/common/memory/injection.py:184-186</code>). The real
+boundary is the build directory, a physical partition.</li>
+<li><code>audit_log</code> — no mutation record; builds overwrite
+files.</li>
+<li><code>human_review</code> — no queue or approval state.</li>
+<li><code>negative_eval</code> — no committed test of any kind.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>No test file is committed.
+<code>toolsandbox/common/utils/eval_from_conversations.py</code> and
+<code>summarize_results.py</code> compute benchmark scores from run
+output; they assert nothing about memory.</p>
+<p>The paper (<a
+href="https://arxiv.org/abs/2608.07169">arXiv:2608.07169</a>, v1
+submitted 7 August 2026) reports average gains of 27.2, 11.2 and 3.4
+points on AppWorld, BFCL V3 and ToolSandbox over four students with
+GPT-5-mini as teacher. For Qwen3-4B the AMD row reads 49.40, 38.50 and
+20.16. No run output, memory directory or result file is committed;
+<code>.gitignore</code> excludes <code>result/</code>,
+<code>memories/</code>, <code>*.jsonl</code> and <code>*.npy</code>.
+None of the figures can be recomputed from the tree.</p>
+<p>Paper and code diverge in six places.</p>
+<ul>
+<li>AppWorld's AMD agent is absent; the configs name an unregistered
+<code>running_memory_react</code>.</li>
+<li>The paper builds from successful trajectories; BFCL does so only
+when a score file is passed.</li>
+<li>The paper discards retrievals below a similarity floor; BFCL
+workflow retrieval has none.</li>
+<li>The paper decomposes tasks into subtask labels; BFCL's default and
+scripts use turn instructions.</li>
+<li>The paper retrieves one function example; ToolSandbox returns
+two.</li>
+<li>The disjoint protocols of appendix B.3 have no code.</li>
+</ul>
+<p>The baselines the paper compares against are present for AppWorld
+only. The BFCL and ToolSandbox baseline scripts call
+<code>rb-memories/run_eval.sh</code>,
+<code>memp-memories/run_student.sh</code> and
+<code>tool_sandbox.rb_memories.rb_builder</code>, all under paths
+<code>.gitignore</code> excludes.</p>
+<p>Tests to want before trusting a number: a retrieval test that a
+task's own id never appears in its injected block, with a positive
+control from another task; a builder test that one fallback embedding
+does not change the stored matrix's row count.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Retrieve convention on failure, not up front.</strong>
+Function memory is looked up by the failing tool's exact name and
+appended to the error. It costs nothing on a successful call and arrives
+when the model is most likely to read it.</li>
+<li><strong>Key the strategy record on the task, and key examples on
+what they do.</strong> Workflow records embed the task statement;
+subtask records embed a label and description. Two indexes over one
+trajectory answer two different queries.</li>
+<li><strong>Refuse an index that does not match its records.</strong>
+BFCL's row-count check on load is one line and prevents silent
+misalignment.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Building memory from the evaluation set without excluding
+self.</strong> If the key is the task text, the top hit is the task's
+own answer sketch.</li>
+<li><strong>Saving a partial index on a dimension mismatch.</strong>
+Refuse the write, or re-embed everything, rather than replacing a matrix
+with one row.</li>
+<li><strong>Calling <code>hash()</code> a deterministic
+embedding.</strong> Use a stable hash. BFCL's
+<code>local_embedding</code>, imported by the builder and never called,
+already uses <code>zlib.crc32</code>
+(<code>bfcl/common/memory/data_model.py:94-104</code>).</li>
+<li><strong>A filter that silently widens.</strong> A category that
+falls back to all categories is a ranking hint, and should be named as
+one.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is paper code for three benchmarks, not a memory layer. It
+assumes a researcher who will supply the missing CLI wiring, rebuild the
+store per experiment, and discard it after. The idea it carries — three
+tiers split by when the student needs them — fits a team distilling a
+large model's procedures into a small deployed agent over a fixed tool
+set, and it is cheap to reimplement from sections 4 and 6. Anyone who
+needs the store to change after deployment, to take corrections, or to
+hold user-specific material should take the tiering and nothing
+else.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Which build directories produced the published numbers, and were
+they built with a score file on BFCL?</li>
+<li>Where is the AppWorld three-tier agent
+(<code>running_memory_react</code>), and does it retrieve with
+self-exclusion?</li>
+<li>How were the appendix B.3 protocols implemented, given no split or
+exclusion code in this tree?</li>
+<li>Did any ToolSandbox build hit the local embedding fallback, and if
+so, was its matrix detached from its documents?</li>
+<li>Why is the ToolSandbox retrieval key the simulated user's scenario
+brief rather than the agent's first visible message?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>bfcl/common/memory/data_model.py</code>,
+<code>bfcl/common/memory/store.py</code>,
+<code>toolsandbox/common/memory/data_model.py</code>,
+<code>toolsandbox/common/memory/store.py</code>.</li>
+<li>Write path: <code>bfcl/common/memory/builder.py</code>,
+<code>bfcl/common/scripts/build_memory_from_results.py</code>,
+<code>bfcl/common/scripts/teacher_build_memory_multi_turn.sh</code>,
+<code>toolsandbox/common/memory/builder.py</code>,
+<code>toolsandbox/common/memory/sanitize.py</code>,
+<code>toolsandbox/common/memory/trajectory.py</code>,
+<code>toolsandbox/common/utils/rebuild_memory_from_trajectories.py</code>.</li>
+<li>Retrieval and context assembly:
+<code>bfcl/common/memory/injection.py</code>,
+<code>toolsandbox/common/memory/injection.py</code>.</li>
+<li>Agent integration:
+<code>bfcl/common/model_handler/base_handler.py</code>,
+<code>toolsandbox/common/roles/memory_augmented_agent.py</code>,
+<code>bfcl/common/scripts/exp_2_workflow.sh</code>,
+<code>exp_3_workflow_func.sh</code>,
+<code>exp_4_workflow_func_subtask.sh</code>.</li>
+<li>Baselines (AppWorld only):
+<code>appworld/rb/experiments/code/ace/reasoning_bank.py</code>,
+<code>appworld/memp/experiments/code/ace/memp/</code>,
+<code>appworld/sasm/experiments/code/ace/sasm_memory.py</code>,
+<code>appworld/sasm/experiments/configs/0519/</code>.</li>
+<li>Tests and evals: none;
+<code>toolsandbox/common/utils/eval_from_conversations.py</code> scores
+runs.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run once each at the tree root of the pinned checkout.</p>
+<ul>
+<li><code>git ls-files | grep -iE 'test|spec|eval_'</code> — only
+<code>toolsandbox/common/utils/eval_from_conversations.py</code>, a
+scorer.</li>
+<li><code>git ls-files | grep -iE 'licen[cs]e|copying|notice'</code> —
+no match.</li>
+<li><code>git grep -nE 'exclude_(self|own|task)|self_exclu|cross.?split|held.?out|task_id ?!=' -- '*.py'</code>
+— no match.</li>
+<li><code>git grep -nE 'running_memory_react' -- '*.py'</code> — no
+match; the name appears only in six <code>.jsonnet</code> configs.</li>
+<li><code>git grep -nE 'rb_memories|memp_memories|sasm_memories|rb-memories/|memp-memories/|sasm-memories/' -- '*.py' '*.sh' .gitignore</code>
+— imports and script calls into those paths, and the three
+<code>.gitignore</code> lines excluding them; no file under them is
+tracked.</li>
+<li><code>git grep -nE 'add_argument\("--memory-(dir|types|retrieval)"' -- '*.py'</code>
+— no match.</li>
+<li><code>git grep -nE 'MemoryQwen3_4B|MemoryAugmentedAgent\(' -- '*.py'</code>
+— only the class definition.</li>
+<li><code>git grep -nE 'PYTHONHASHSEED' .</code> — no match.</li>
+<li><code>git grep -n 'local_embedding'</code> — the definition and one
+import in <code>bfcl/common/memory/builder.py:26</code>; no call.</li>
+<li><code>git grep -nE 'status|verified|rejected|tombstone|deleted_at|valid_from|valid_to' -- bfcl/common/memory toolsandbox/common/memory</code>
+— only <code>only_ok_status</code> and a prompt example.</li>
+<li><code>git grep -nE 'min_sim|min_similarity|threshold' -- bfcl/common/memory/store.py bfcl/common/memory/injection.py</code>
+— only the subtask floor at <code>store.py:152</code>.</li>
+<li><code>git grep -nE 'unlink|rmtree|os\.remove|\.pop\(' -- bfcl/common toolsandbox/common</code>
+— one <code>shutil.rmtree</code> of the whole directory,
+<code>rebuild_memory_from_trajectories.py:56</code>.</li>
+<li><code>git grep -niE 'anthropic|machine learning|not (be )?used (for|to)|prohibit' -- README.md '*.py'</code>
+— no match; no term restricts analysis.</li>
+<li><code>pdftotext</code> of the paper, then
+<code>grep -n 'github.com'</code> — no match; the paper prints only the
+project page, which links the repository.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/taeilkim2465/agentic_memory_distillation/commit/2895d10c07105432325b088f4803dc94a10003c9"><code class="commit-id" title="2895d10c07105432325b088f4803dc94a10003c9">2895d10c…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 10
+August 2026 that changed only the README. No mark awarded; section 9
+names each. The paper was read from the arXiv v1 PDF. Screened before
+reading: no auto-run surface, three build-time execution points (the
+<code>setup.py</code> in each AppWorld tree), nothing inside the
+cooldown, six unpinned surfaces, and no agent instruction files in the
+tree. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
