@@ -107,14 +107,14 @@ topic dossiers into an ask.</p>
               <strong>chenxiachan/thoughtdag</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/chenxiachan/thoughtdag/commit/6e98abf7b0745ece9ab9a06d530456ad4efcbeae" title="6e98abf7b0745ece9ab9a06d530456ad4efcbeae">
+            <a class="meta-pill revision-pill" href="https://github.com/chenxiachan/thoughtdag/commit/af1f82a60811907feb8b5d32fd1ccbe59cf9a980" title="af1f82a60811907feb8b5d32fd1ccbe59cf9a980">
               <span>Analyzed revision</span>
-              <code>6e98abf7…</code>
+              <code>af1f82a6…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-26</strong>
+              <strong>2026-09-28</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/chenxiachan--thoughtdag" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -124,14 +124,14 @@ topic dossiers into an ask.</p>
                       </div>
                               <div class="document-meta document-facts">
             <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
-            <div class="meta-pill fact-pill"><span>Size</span><strong>36,275
-lines of TypeScript in 169 files under src/, a 1,853-line why-layer CLI,
+            <div class="meta-pill fact-pill"><span>Size</span><strong>37,291
+lines of TypeScript in 178 files under src/, a 1,853-line why-layer CLI,
 1,546 lines of plain Node under runtime/, a 2,145-file benchmark
-directory; desktop app and harness plugin 0.5.1, CLI
-0.2.1</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>717
-commits on main by 8 author names, one a bot, 698 of them by one author,
-3 July – 26 September 2026</strong></div>
+directory; desktop app and harness plugin 0.5.3, CLI
+0.2.2</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>731
+commits on main by 9 author names, one a bot, 711 of them by one author,
+3 July – 27 September 2026</strong></div>
             <div class="meta-pill fact-pill"><span>Tests</span><strong>78
 node:test cases in ten CLI files, nine of them skipped below Node 22.15;
 a Playwright persistence smoke and layout test; a live-model
@@ -157,9 +157,10 @@ memory-judge golden set; none run for this reading</strong></div>
 infinite canvas where each node is a question and its answer versions,
 each wire is context, and <em>"what the model sees is exactly what wires
 into the node."</em> What it records is what a model was shown, hashed
-at dispatch. Its weakness is that the stale mark is a label, and a
-decision model that dismisses the mark removes it from the <em>will
-send</em> preview while the request carries it.</p>
+at dispatch. Its weakness is at the canvas's edges: recall reads every
+project on the machine and can bring back a node archived on another
+canvas, and a model rewrites the profile without the rules that admitted
+its facts.</p>
 <p>Six things here are memory in the atlas's sense, and they are wired
 together. The canvas persists — one IndexedDB key per canvas with a
 debounced folder backup as a real <code>.thoughtdag.json</code> file —
@@ -170,7 +171,7 @@ archived nodes skipped at every layer. Each generation records the
 fingerprint of everything upstream of the node with the node's own
 content blanked (<code>upstreamFingerprint</code>,
 <code>:111-130</code>), and <code>recomputeStaleness</code>
-(<code>slices/nodes.ts:268-284</code>) marks a node
+(<code>slices/nodes.ts:271-287</code>) marks a node
 <strong>stale</strong> when the live fingerprint drifts from the
 recorded one. A stale answer enters downstream context prefixed
 <em>"[Stale: this answer was written against an earlier version of its
@@ -221,7 +222,7 @@ downstream context carries one line naming the files the turn touched
 concluded.</strong> At dispatch the streaming slice writes a
 <code>commit</code> event carrying the SHA-256 of the canonical request
 — messages, image digests, model, tool flags — its message count and
-lane (<code>store/streaming.ts:324-332</code>). The hash covers the
+lane (<code>store/streaming.ts:348-356</code>). The hash covers the
 <code>[Memory]</code> block and any recall block, because both are
 inserted before dispatch. The canvas event log
 (<code>slices/events.ts</code>) is append-only, metadata-only, survives
@@ -232,17 +233,24 @@ adapter projects its commits into canonical
 endpoints, 1,215 captured conditions, conditions defined as graph
 operations, traces immutable, and a <code>STATUS.md</code> that records
 its own corrections.</p>
-<p><strong>The stale judge breaks the preview-equals-request
-property.</strong> With a decision model configured,
-<code>judgeStaleness</code> (<code>lib/stale-judge.ts:36-69</code>) asks
-whether an upstream change bears on each newly stale answer, and a
-verdict under 0.5 hides the amber badge and drops the mark from the
-panel's preview (<code>focus-panel/FollowUpInput.tsx:69-74</code>).
-Every request path passes the unfiltered <code>staleIds</code> to
-<code>buildContext</code>
-(<code>slices/llm.ts:124,258,330,391,448,528</code>), so the model
-receives a mark the person was shown as absent. The file's own header
-says the mark <em>"stays out of the context"</em>.</p>
+<p><strong>A decision model decides whether the model is told an answer
+is stale.</strong> With a judge configured, <code>judgeStaleness</code>
+(<code>lib/stale-judge.ts:36-69</code>) asks whether an upstream change
+bears on each newly stale answer, and a verdict under 0.5 dismisses the
+mark: <code>shownStaleIds</code> (<code>:23</code>) subtracts it, and
+the badge, the panel's preview
+(<code>focus-panel/FollowUpInput.tsx:69-74</code>) and every request
+path (<code>slices/llm.ts:126,260,332,393,450,530</code>,
+<code>slices/evaluator.ts:78</code>,
+<code>lib/experiment-loop.ts:77</code>) compile from that one set. The
+dismissed answer stays in context, unlabelled; the dismissal writes no
+canvas event.</p>
+<p>Replay is the one generation path outside that set. Its button and
+confirm dialog count and price the shown set
+(<code>App.tsx:688,1630-1645</code>), and <code>replayStale</code>
+(<code>slices/evaluator.ts:110</code>) snapshots the unfiltered
+<code>staleIds</code>, so a dismissed answer is regenerated under a
+count that left it out.</p>
 <p>Two marks: <code>audit_log</code> for the event log and
 <code>negative_eval</code> for the why layer's hidden-reads case and the
 benchmark's compiler equivalence. <code>human_review</code>,
@@ -265,8 +273,8 @@ receiving it.</p>
 <p>An answer is believed exactly as written until its upstream changes,
 at which point it is stale — present, labelled as written against an
 older input — until a person replays it. A decision model can rule that
-the change does not bear on the answer. That ruling hides the label from
-the person; the request keeps it.</p>
+the change does not bear on the answer. That ruling removes the label
+from what the person sees and from what the model is sent alike.</p>
 <p>It stops being used by exclusion, not erasure. Delete the wire and
 the node stays on the canvas, reconnectable; archive the node and it is
 dimmed and skipped by every walk on its canvas; delete it and it is
@@ -290,7 +298,7 @@ here. A stale answer is shown, with a mark. An archived node is not
 shown, and nothing in the context says so. An agent turn's tool output
 is not shown, and the context says which files the turn touched and that
 their contents were left out.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — a person's wires are the retrieval; the same compiler feeds the preview and the request, but the preview drops a stale mark a judge dismissed and the request keeps it; recall and the profile join the request before dispatch and the commit hash covers them; archive excludes on the canvas and not in the index recall reads</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a person&#39;s wires are the retrieval; the same compiler feeds the preview and the request, but the preview drops a stale mark a judge dismissed and the request keeps it; recall and the profile join the request before dispatch and the commit hash covers them; archive excludes on the canvas and not in the index recall reads
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a person's wires are the retrieval; the same compiler, given one stale set with the judge's dismissals removed, feeds the preview and the request; recall and the profile join the request before dispatch and the commit hash covers them; archive excludes on the canvas and not in the index recall reads</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a person&#39;s wires are the retrieval; the same compiler, given one stale set with the judge&#39;s dismissals removed, feeds the preview and the request; recall and the profile join the request before dispatch and the commit hash covers them; archive excludes on the canvas and not in the index recall reads
 flowchart TB
     P[&quot;person: ask · wire · archive · edit · strike a recalled item&quot;] --&gt; G[(&quot;canvas graph&lt;br/&gt;IndexedDB per canvas · folder backup&quot;)]
     A[&quot;Session Atlas: Claude Code · Codex · DSH · Pi&lt;br/&gt;read-only session files&quot;] --&gt; G
@@ -298,9 +306,9 @@ flowchart TB
     A --&gt; X
     G --&gt;|&quot;upstream fingerprint drifted&quot;| S[&quot;stale set&quot;]
     S --&gt; SJ{&quot;stale judge&lt;br/&gt;p below 0.5?&quot;}
-    SJ --&gt;|&quot;dismissed&quot;| PV[&quot;will-send preview&lt;br/&gt;no mark&quot;]
-    S --&gt;|&quot;unfiltered staleIds&quot;| C[&quot;buildContext&lt;br/&gt;materials → references → chain → question&lt;br/&gt;archived skipped · stale marked&quot;]
-    C --&gt; PV
+    SJ --&gt;|&quot;shownStaleIds: dismissals removed&quot;| C[&quot;buildContext&lt;br/&gt;materials → references → chain → question&lt;br/&gt;archived skipped · stale marked&quot;]
+    S --&gt;|&quot;unfiltered staleIds&quot;| RP[&quot;Replay&lt;br/&gt;regenerates dismissed answers too&quot;]
+    C --&gt; PV[&quot;will-send preview&quot;]
     X --&gt;|&quot;recall: two dossiers + excerpts&lt;br/&gt;active canvas left out&quot;| R[&quot;recall block&quot;]
     PR[(&quot;profile: preferences · identity&quot;)] --&gt;|&quot;[Memory] block&quot;| Q[&quot;request&quot;]
     C --&gt; Q
@@ -314,7 +322,7 @@ flowchart TB
     D --&gt; X</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/</code> is a React 19 and Vite application:
-<code>App.tsx</code> (2,112 lines), the canvas components over
+<code>App.tsx</code> (2,118 lines), the canvas components over
 <code>@xyflow/react</code>, a zustand store split into slices
 (<code>nodes</code>, <code>llm</code>, <code>attachments</code>,
 <code>highlights</code>, <code>history</code>, <code>events</code>,
@@ -358,7 +366,7 @@ suites, tools, compiled artifacts, runs and canvases.</p>
 <p>Persistence is object storage into IndexedDB with a one-second
 debounce and a flush on page hide (<code>lib/persistence.ts</code>). The
 profile documents, the memory inbox and the switches live in
-<code>localStorage</code> (<code>lib/ui-store.ts:267-290</code>). The
+<code>localStorage</code> (<code>lib/ui-store.ts:279-302</code>). The
 why layer keeps <code>fact-index.json</code>,
 <code>interpretation-cache.json</code>, <code>text-index.jsonl</code>,
 <code>topics.json</code> and <code>dossiers.json</code> under
@@ -397,15 +405,15 @@ chain response in the <code>staleIds</code> it is given
 (<code>:137-154</code>) records a hash and a 240-character opening per
 upstream node.</li>
 <li><strong>Dispatch and record.</strong>
-<code>streaming.ts:234-245</code> inserts the <code>[Memory]</code>
-block after the last answer; <code>:252-268</code> fetches recall items
+<code>streaming.ts:258-269</code> inserts the <code>[Memory]</code>
+block after the last answer; <code>:276-292</code> fetches recall items
 on a fresh ask, stores them on the node and inserts the recall block at
-the same seat. <code>:324-332</code> computes the SHA-256 of the
+the same seat. <code>:348-356</code> computes the SHA-256 of the
 canonical request and logs <code>commit</code>. On completion
-<code>writeFinal</code> (<code>:190-224</code>) appends the response as
+<code>writeFinal</code> (<code>:214-248</code>) appends the response as
 a version with <code>lastContextHash</code> and
 <code>lastContextParts</code>, <code>recomputeStaleness</code> runs, and
-<code>:495-502</code> fires <code>judgeMemory</code> with the active
+<code>:522-529</code> fires <code>judgeMemory</code> with the active
 canvas.</li>
 <li><strong>Stale judge.</strong> <code>recomputeStaleness</code>
 records the drifted fingerprint per node and imports
@@ -414,10 +422,19 @@ records the drifted fingerprint per node and imports
 cases to <code>decideStaleness</code> (<code>judge.ts:136-149</code>),
 and stores a verdict keyed on that fingerprint.
 <code>shownStaleIds</code> (<code>stale-judge.ts:23</code>) subtracts
-dismissals; the badge, the preview, the context chain and the replay
-dialog's count read it, and <code>replayStale</code>
-(<code>slices/evaluator.ts:109</code>) and every request read
-<code>staleIds</code>.</li>
+dismissals; the badge, the preview, the context chain, the replay
+dialog's count and every request read it, and <code>replayStale</code>
+(<code>slices/evaluator.ts:110</code>) reads <code>staleIds</code>.</li>
+<li><strong>Plaque summaries.</strong> <code>generateSummary</code>
+(<code>streaming.ts:33-86</code>) asks the answering model, or the
+background model for an agent's answer, for one JSON ladder
+(<code>lib/ladder.ts</code>): a topic copied from inside the takeaway,
+the takeaway, a reason, and three or four sentence numbers whose
+verbatim text becomes the abstract. The thread it is shown is the
+ancestors' own plaques inside 1,400 tokens
+(<code>lib/ladder-context.ts:29-43</code>), a walk that does not skip
+archived nodes. Summaries are display-only and never enter context or
+fingerprints (<code>src/types.ts:290-291</code>).</li>
 <li><strong>Judge and admit.</strong> <code>judgeMemory</code>
 (<code>memory.ts:177-220</code>) takes the typed path when a judge
 answers — <code>decideMemory</code> returns durable, category, stated
@@ -487,10 +504,10 @@ solid, dashed, orange or red.</p>
 <p>A node that ran an agent turn also carries <code>agentSession</code>,
 <code>pendingApprovals</code> and <code>approvals[]</code>, one record
 per decided question with the tool, the question as shown, the outcome,
-the time and any value (<code>src/types.ts:187-207</code>). A project's
+the time and any value (<code>src/types.ts:211-231</code>). A project's
 metadata holds <code>agentCwd</code> and <code>agentGuard</code>
 (<code>store/projects.ts:46-50</code>).</p>
-<p>A <code>RecallItem</code> (<code>src/types.ts:82-107</code>) names
+<p>A <code>RecallItem</code> (<code>src/types.ts:106-131</code>) names
 its kind (turn or memory), runner, session, turn, title, working
 directory, file, the words that found it, the text, its price, an
 <code>excluded</code> flag, the judge's relevance, a cached card and the
@@ -508,9 +525,9 @@ project entries into the inbox, and the original list is copied to
 <code>pending</code> inbox, a changelog and <code>builtAt</code>.
 <code>topics.json</code> holds the topic table and, per turn key, one
 probability per topic.</p>
-<p>The canvas event (<code>src/types.ts:390-397</code>) is a timestamp,
+<p>The canvas event (<code>src/types.ts:418-425</code>) is a timestamp,
 an op, an optional object id and light metadata, <em>"NEVER text
-content"</em>; <code>CanvasOp</code> (<code>:379-388</code>) has no
+content"</em>; <code>CanvasOp</code> (<code>:407-416</code>) has no
 member for a profile write, a dossier write, a recall or an approval.
 The why layer's <code>CanonicalEvent</code> carries <code>basis</code> —
 observed, reconstructed, inferred — and <code>completeness</code> on
@@ -520,8 +537,8 @@ every event.</p>
 nodes reachable by incoming wires, in an order the compiler fixes so
 that <em>"the same graph always produces the same prompt,"</em> trimmed
 by what a person did to the nodes and never by score. The preview calls
-the function the dispatch calls, with one input that differs when a
-judge has dismissed a stale mark (section 1).</p>
+the function the dispatch calls, with the same stale set (section
+1).</p>
 <p>Beside it, recall is a search, off until a person switches it on. A
 question's terms are its Latin words of three or more characters and its
 CJK runs split on function words, at most four; a term the index barely
@@ -608,7 +625,7 @@ the oldest thousand; profile rewrites, dossier writes, topic labels and
 stale-judge verdicts write no event; an agent turn's approvals are
 recorded on the node; and an agent-lane <code>commit</code> hashes the
 compiled messages under lane <code>proxy</code>
-(<code>lib/api.ts:246</code>) when the runtime received a flattened
+(<code>lib/api.ts:247</code>) when the runtime received a flattened
 block. The profile's and the dossiers' changelogs are capped at forty
 notes, and an Undo restores the prior changelog with the prior
 document.</p>
@@ -627,8 +644,8 @@ inbox for a dossier's pending list, which merges on its own at six. A
 preference or identity fact is written before the person is told, with
 an Undo. The tool-approval cards gate tool calls, not memory.</p>
 <p><strong>Trust state — withheld.</strong> Stale is a mark prepended to
-text that flows. The stale judge's verdict is a probability that hides
-the mark from the person and not from the model. <code>basis</code> and
+text that flows. The stale judge's verdict is a probability that removes
+the mark and keeps the answer in context. <code>basis</code> and
 <code>completeness</code> on every why event are displayed and never
 filtered; conclusiveness levels on takeaways are display only.</p>
 <p><strong>Tombstone — withheld.</strong> Archive excludes a node from
@@ -666,7 +683,7 @@ into live harness sessions, fenced to the local host. The proxy's
 <code>/api/judge</code> sit behind a CORS rule admitting any localhost
 origin on any port and a bind to <code>127.0.0.1</code> unless
 <code>HOST</code> says otherwise
-(<code>server.mjs:529-533,:1188-1189</code>); <code>/api/judge</code>
+(<code>server.mjs:529-533,:1194-1195</code>); <code>/api/judge</code>
 forwards to any http or https target, the loopback included.</p>
 <p><strong>A correction culture.</strong>
 <code>benchmark/STATUS.md</code> records that the wave-2 reasoning
@@ -740,10 +757,10 @@ traces.</strong></li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Filtering the preview and the request from two different
-sets.</strong> A judge's dismissal that reaches the display and not the
-dispatch makes the preview a claim about a request that was never
-sent.</li>
+<li><strong>A count from one set and an action on another.</strong>
+Replay confirms and prices the judge-filtered stale set and regenerates
+the unfiltered one, so the number a person approved is not the number of
+calls made.</li>
 <li><strong>Rules on the fact and a free rewrite of the
 document.</strong> Admission checks that the rewrite step does not
 re-apply can be undone by it.</li>
@@ -773,10 +790,10 @@ condition contains it. The missing condition is one graph operation
 away: correct the polluted source, leave B and C marked, and score
 <code>adopted_stale_answer</code> beside <code>source_prune</code> and
 <code>recompute_descendants</code>.</li>
-<li>Is the stale judge meant to reach the request? Its header says the
-mark stays out of the context; <code>llm.ts</code> passes
-<code>staleIds</code>. Replay's dialog counts the judge-filtered set and
-<code>replayStale</code> replays the unfiltered one.</li>
+<li>Is Replay meant to regenerate what the judge dismissed? Its dialog
+counts the judge-filtered set, and <code>replayStale</code>, whose
+comment says the snapshot keeps that count honest, replays the
+unfiltered one.</li>
 <li>Is recall meant to cross projects? <code>findJson</code> has the
 working-directory filter and the canvas knows its <code>agentCwd</code>;
 nothing joins them.</li>
@@ -806,14 +823,14 @@ mark, the footprint pointer</td>
 </tr>
 <tr>
 <td><code>src/store/streaming.ts</code></td>
-<td>629</td>
+<td>656</td>
 <td>Dispatch, the memory and recall blocks, the <code>commit</code>
 hash, version append, the memory judge call</td>
 </tr>
 <tr>
 <td><code>src/store/slices/nodes.ts</code>, <code>llm.ts</code>,
 <code>events.ts</code>, <code>evaluator.ts</code></td>
-<td>580, 688, 26, 158</td>
+<td>583, 690, 26, 159</td>
 <td>Mutations and their events, <code>recomputeStaleness</code>, the
 request paths, <code>replayStale</code></td>
 </tr>
@@ -860,7 +877,7 @@ auto-merge</td>
 </tr>
 <tr>
 <td><code>src/types.ts</code></td>
-<td>397</td>
+<td>425</td>
 <td><code>ThoughtData</code>, <code>RecallItem</code>,
 <code>CanvasOp</code>, <code>CanvasEvent</code></td>
 </tr>
@@ -913,7 +930,7 @@ the agent runtimes</td>
 root:</p>
 <pre class="sh"><code>rg -n &#39;logEvent\(&#39; src/lib/memory.ts src/lib/profile.ts src/lib/dossier.ts src/lib/recall.ts src/lib/stale-judge.ts   # none: no memory, dossier, recall or verdict event
 rg -n -A12 &#39;export type CanvasOp&#39; src/types.ts | rg -i &#39;approval|recall|memory&#39;   # none: no op for them
-rg -n &#39;staleVerdicts|shownStaleIds&#39; src/store/slices/llm.ts src/store/streaming.ts src/store/slices/evaluator.ts src/lib/context-bundle.ts   # none: requests and replay read staleIds
+rg -n &#39;get\(\)\.staleIds&#39; src/store/slices   # nodes.ts:282 (the previous set) and evaluator.ts:110 (replay): no request reads the unfiltered set
 rg -n &#39;find\([^)]*\{[^}]*cwd&#39; src dsh desktop cli/src                # one hit, the type declaration: no caller passes cwd
 rg -n &#39;findJson&#39; cli/test                                           # none: the filter has no test
 rg -n &#39;archived&#39; src/lib/adapters/thoughtdag-canvas.ts src/lib/canvas-record.ts   # none: the index keeps archived nodes
@@ -927,6 +944,22 @@ rg -n -i &#39;arxiv|doi&#39; CITATION.cff README.md | rg -v &#39;find &quot;arxi
 rg --files src | rg -i &#39;test|spec&#39;                                 # none: no unit suite for the store
 rg -c &#39;^\s*(test|it)\(&#39; cli/test/*.mjs; rg -c &#39;^\s*t\(&#39; cli/test/dsh.test.mjs   # 69, plus 9 under the alias</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/chenxiachan/thoughtdag/commit/af1f82a60811907feb8b5d32fd1ccbe59cf9a980"><code class="commit-id" title="af1f82a60811907feb8b5d32fd1ccbe59cf9a980">af1f82a6…</code></a>
+— 14 commits on, releases 0.5.2 and 0.5.3. Every request path compiles
+from the stale set the preview shows, the judge's dismissals removed (<a
+href="https://github.com/chenxiachan/thoughtdag/commit/d345f05037e6a4bf460e7d94e5451c2825ba06c7"><code class="commit-id" title="d345f05037e6a4bf460e7d94e5451c2825ba06c7">d345f050…</code></a>),
+which closes the finding that a dismissed mark reached the preview and
+not the request (<a href="#1-executive-summary">section 1</a>); Replay
+still counts the shown set and regenerates the whole one (<a
+href="#3-architecture">section 3</a>). Added: summary ladders written
+with the thread's plaques in view, and the why layer's MCP server in the
+MCP Registry. The profile rewrite, archived nodes in the recall index,
+the benchmark's missing stale condition and the uncalled
+working-directory filter are unchanged; no mark moved. Screened from a
+full clone: no auto-run surface, four manifests inside the seven-day
+cooldown, <code>AGENTS.md</code> treated as data; nothing installed,
+built or run.</p>
 <p><strong>2026-09-26</strong> — <a
 href="https://github.com/chenxiachan/thoughtdag/commit/6e98abf7b0745ece9ab9a06d530456ad4efcbeae"><code class="commit-id" title="6e98abf7b0745ece9ab9a06d530456ad4efcbeae">6e98abf7…</code></a>
 — 33 commits on, releases 0.4.17 to 0.5.1. Memory became documents: the
