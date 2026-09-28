@@ -16196,26 +16196,28 @@ a three-assertion isolation test.</strong> Session A's entry, session
 B's and a user-scope entry share one vector; a query as A must return
 A's and the shared one and must not return B's. Two marks,
 <code>scope_enforced</code> and <code>negative_eval</code>.</li>
-<li>Biggest risk: <strong>there is no retrieval yet.</strong> The only
-embedder is a non-semantic FNV hash spread over 768 unnormalised
-dimensions, and the store keeps neighbours within an L2 distance of 1.0:
-computed with the same hash, identical text is at 0.00 and one changed
-capital at 22.54. A memory is found only by its exact text — and writing
-a real vector, the README's workaround, makes it unreachable, because
-<code>memory_query</code> accepts no vector and always hash-embeds.</li>
+<li>Biggest risk: <strong>there is no retrieval by meaning, and the
+session boundary opens for a caller that sends no session.</strong> The
+only embedder is a non-semantic FNV hash over 768 unnormalised
+dimensions, and the store keeps neighbours within an L2 distance of 1.0,
+so text search finds a memory only by its exact text. The session
+predicate is added only for a non-empty id and no handler rejects an
+empty one, so <code>session_id: ""</code> reads every session.</li>
 <li>Most reusable component:
 <code>TestMemoryQuery_SessionIsolation</code> — pinning identical
 vectors so the scope filter is the only thing deciding inclusion.</li>
-<li>Maturity impression: forty-four commits by one author over two days
-in September 2026, 865 lines of Go with 450 of tests, no CI and no
-licence; an honest limitations list. The user scope is read on every
-query and written by nothing, and the one end-to-end test queries
+<li>Maturity impression: 45 commits by one author between 5 and 24
+September 2026, in a history rewritten before the last of them; 2,450
+lines of Go with 1,732 of tests, a four-platform CI matrix, and no
+licence. The shared scope is written by the CLI's GitHub Actions log
+cache and by any caller that asks, and the one end-to-end test queries
 through the real embedder, gets nothing back by construction, and
 asserts only that the call succeeded.</li>
 <li>Study when: you are designing scoped memory for several harnesses on
-one machine and want the isolation test to copy.</li>
+one machine and want the isolation test to copy, or a cache whose
+entries are deleted with the file they summarise.</li>
 <li>Do not copy when: you need to find anything by meaning, or a
-boundary that holds against a client that lies about its session
+boundary that holds against a client that sends a wrong or empty session
 id.</li>
 </ul>
 <h3 id="nuum"><a href="../systems/nuum/"><code>nuum</code></a></h3>

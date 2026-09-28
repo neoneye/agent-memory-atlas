@@ -3218,13 +3218,13 @@ built or run</li>
 <li><a
 href="https://github.com/causewayai/hivemind">causewayai/hivemind</a> at
 <a
-href="https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec"><code class="commit-id" title="1c93254066af4df39a7f12c2787f1de401137cec">1c932540…</code></a>
-— read only; no auto-run surface, a <code>Makefile</code>, two manifests
-inside the seven-day cooldown and no unpinned surface; nothing built or
+href="https://github.com/causewayai/hivemind/commit/666bfa105a2f70ce53b2704fe896cd14138716f0"><code class="commit-id" title="666bfa105a2f70ce53b2704fe896cd14138716f0">666bfa10…</code></a>
+— read only; the previous pin was fetched from the archive fork after a
+history rewrite and the two trees compared; no auto-run surface, one
+build-time execution point (a <code>Makefile</code>), nothing inside the
+seven-day cooldown and no unpinned surface; nothing installed, built or
 run, and the embedding distances were computed by reimplementing the
-hash offline. Audited on 2026-09-20 at the same pin, which is still the
-tip, after the report stated there is no CI configuration in the tree; a
-four-platform matrix runs the suite on every pull request</li>
+hash offline</li>
 <li><a href="https://github.com/stevefunng/Nuum">stevefunng/Nuum</a> at
 <a
 href="https://github.com/stevefunng/Nuum/commit/51c9ec346b03e9c7885e4a81784bca14afae3c80"><code class="commit-id" title="51c9ec346b03e9c7885e4a81784bca14afae3c80">51c9ec34…</code></a>
@@ -5393,6 +5393,22 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Hivemind report overstated its session boundary, and its
+verdict kept a CI claim the report had dropped; corrected
+2026-09-28.</strong> At <a
+href="https://github.com/agent-memory-atlas-archive/causewayai--hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec"><code class="commit-id" title="1c93254066af4df39a7f12c2787f1de401137cec">1c932540…</code></a>
+the <a href="../systems/hivemind/">Hivemind</a> report said
+<code>memory_query</code> reads the caller's session with
+<code>scope = ? AND session_id = ?</code>, so a client could read any
+session it could name. <code>Store.Query</code> and
+<code>ListMemories</code> add the session predicate only for a non-empty
+id (<code>internal/store/memory.go:255-258</code> and
+<code>:149-152</code> at that pin) and no handler rejects an empty one,
+so a client naming no session read every session's entries. The
+direction is an overstated boundary. Separately, the verdict's maturity
+line said the project had no CI from the first reading on, while the
+report's 2026-09-20 audit had found a four-platform matrix running the
+suite on every pull request.</li>
 <li><strong>The CSM report said search returns superseded and archived
 memories, counted 26 AgentBook event types and seven of nine
 self-referential Recent Work entries, and called

@@ -10120,33 +10120,39 @@ extension's own capture writer inserts turns with no secret masking</td>
 <tr>
 <td><code>hivemind</code></td>
 <td>An entry: content, a scope of <code>session</code> or
-<code>user</code>, a session id, a source and source type, tags,
-timestamps, and a vector in sqlite-vec</td>
-<td>One SQLite file with a <code>vec0</code> virtual table for vectors
-and a tag table</td>
-<td>L2 nearest neighbours over five times the requested count, a fixed
-distance cutoff of 1.0, then scope, session, source and tag filters;
-own-session results first, then user scope</td>
-<td>A <code>memory_write</code> MCP tool that always writes session
-scope, embedding the content unless the caller supplies a vector</td>
-<td>None exposed; the store has no update or delete tool</td>
-<td>Session scope enforced on read by a caller-supplied session id; a
-user scope that <code>list_scopes</code> advertises and every query
-reads, and that no write path can reach — <code>memory_write</code>
-hardcodes <code>Scope: "session"</code> under a comment saying there is
-no field to override it, so the shared tier is readable and unwritable
-by construction rather than by omission</td>
-<td>A local daemon speaking MCP over HTTP, installed by Homebrew or
-Scoop</td>
-<td>None</td>
+<code>user</code>, a session id, a source and source type, an optional
+external id, tags, timestamps, and a vector in sqlite-vec</td>
+<td>One SQLite file with a <code>vec0</code> virtual table for vectors,
+a tag table, and a partial unique index on source, external id and
+scope; raw CI logs cached as files beside it</td>
+<td>With query text: L2 nearest neighbours over five times the requested
+count, a fixed distance cutoff of 1.0, then scope, session, source and
+tag filters. Without it: exact tag, source and external-id filters,
+newest first. Own-session results first, then user scope</td>
+<td>A <code>memory_write</code> MCP tool taking an optional scope,
+source type and external id; with an external id the write is an insert
+that keeps the first row and ignores later ones</td>
+<td>No update or delete tool. The daemon's hourly CI-log retention sweep
+deletes entries tagged with the path of a log file it expires; nothing
+else deletes</td>
+<td>Session scope enforced on read by a caller-supplied session id, and
+dropped when that id is empty; a user scope every query reads and any
+caller may write by passing <code>scope: user</code></td>
+<td>A local daemon speaking MCP over HTTP, a <code>hivemind</code> CLI
+that autostarts it and caches GitHub Actions logs, and a Claude Code
+PreToolUse hook that rewrites <code>gh run view --log</code> into the
+CLI; installed by Homebrew or Scoop</td>
+<td>An hourly retention sweep over the CI-log cache, by age and total
+size, deleting the matching memory entries</td>
 <td>None; <code>source</code> and <code>source_type</code> record where
 an entry came from</td>
-<td>A small, honest MVP with a real scope predicate on the read path and
-a test that proves another session's entry stays out</td>
-<td>The only embedder is a non-semantic hash, so a query matches only
-byte-identical text; the documented workaround — writing your own
-vectors — makes entries unreachable, because queries are always
-hash-embedded</td>
+<td>A small MVP with a real scope predicate on both read arms, a test
+that proves another session's entry stays out, and a design document
+that names the write-scope tradeoff it made</td>
+<td>The only embedder is a non-semantic hash, so text search matches
+only byte-identical content and a caller-supplied vector is unreachable
+by text; an empty session id reads every session; a cached CI run is
+never refreshed while its log file lives</td>
 </tr>
 <tr>
 <td><code>holo-invariant</code></td>
