@@ -736,6 +736,28 @@ if [[ -n "$card_order" ]]; then
   exit 1
 fi
 
+# A card summary is written by hand or scripted from a draft; on 2026-09-28 a
+# parser captured the field's label instead of its value and three cards shipped
+# with the literal text "<p>". Require prose: no escaped markup, 30 characters.
+card_summaries="$(python3 - "$project_dir/site/index.html" <<'PY'
+import re, sys
+html = open(sys.argv[1], encoding="utf-8").read()
+bad = []
+for art in re.findall(r'<article class="system-card.*?</article>', html, re.S):
+    slug = re.search(r'href="\./systems/([^/]+)/"', art)
+    p = re.search(r"<p>(.*?)</p>", art, re.S)
+    text = p.group(1).strip() if p else ""
+    if "&lt;" in text or len(text) < 30:
+        bad.append(f"{slug.group(1) if slug else '?'}: {text[:40]!r}")
+if bad:
+    print("homepage cards with no real summary: " + "; ".join(bad))
+PY
+)"
+if [[ -n "$card_summaries" ]]; then
+  echo "$card_summaries" >&2
+  exit 1
+fi
+
 # The candidate-triage CLI lives in this repository, so its suite runs with the
 # site's. It is hermetic — a fake GitHub and temporary state directories, no
 # network and nothing written outside a temp dir — and takes about two seconds.
