@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 653 of 653 screened at the report's current pin.**
+**Progress: 654 of 654 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 297 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 348 |
-| Repositories with build-time execution (`EXEC`) | 478 |
+| Repositories with an auto-run surface (`RUNS`) | 298 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 349 |
+| Repositories with build-time execution (`EXEC`) | 479 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -235,6 +235,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`omega-memory`](../../content/systems/omega-memory.md) | `.mcp.json`, `hooks/`, `server.json`, `smithery.yaml` |
 | [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.githooks/` |
 | [`omniclaude`](../../content/systems/omniclaude.md) | `.claude-plugin/` |
+| [`open-bridge`](../../content/systems/open-bridge.md) | `.claude/hooks/`, `.claude/settings.json`, `.github/copilot-instructions.md` |
 | [`open-second-brain`](../../content/systems/open-second-brain.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`openakashic`](../../content/systems/openakashic.md) | `server.json`, `smithery.yaml` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |

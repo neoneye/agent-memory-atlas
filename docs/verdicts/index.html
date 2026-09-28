@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 653 reports.</strong></p>
+<p><strong>This page covers all 654 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -26977,6 +26977,54 @@ nobody writes.</li>
 authenticated — there is no update or delete route, no scope predicate
 on an agent-facing read, and no auth on a <code>0.0.0.0</code>
 bind.</li>
+</ul>
+<h3 id="open-bridge"><a
+href="../systems/open-bridge/"><code>open-bridge</code></a></h3>
+<ul>
+<li>Best idea: <strong>measure the harness instead of assuming
+it.</strong> <code>memory-location.py</code> keeps two resolvers on
+purpose — <code>resolve_memory_dir</code> for where Claude Code's auto
+memory writes, <code>resolve_read_dir</code> for where any reader should
+look — and its <code>check</code> flags an index past the 200-line or 25
+KB point where the harness stops loading, so a fact that exists on disk
+and never reaches a session becomes a finding. <code>links</code> counts
+facts whose session transcript has aged out of retention rather than
+implying provenance is permanent.</li>
+<li>Biggest risk: <strong>the gate is a paragraph the gated agent
+reads.</strong> <code>rules/learning-autonomy.md</code> says no
+automated process writes memory, and the review surface is
+<code>/bridge-learn</code>, a skill the agent runs through
+<code>git mv</code> and <code>learning-ledger.py record</code>, which
+has no actor check. The in-session route and Claude Code's auto memory,
+which <code>enable</code> points at <code>work/memory/</code>, write
+with no queue at all.</li>
+<li>Most reusable component: <code>scripts/learning-ledger.py</code> —
+one writer for a proposal queue's audit trail that takes the timestamp
+from the clock and the commit from <code>git</code>, refuses a row whose
+folder and status disagree or whose HEAD does not touch the target, and
+a <code>check</code> that reports drift between folder, frontmatter and
+last row without fixing it.</li>
+<li>Second risk: <strong>a copy step that treats absence as
+newness.</strong> <code>_migrate_plan</code> copies every legacy file
+missing from <code>work/memory/</code> and never deletes from legacy,
+and the documented migration runs it twice across a restart. A wrong
+fact deleted in between, or before any later run, returns.
+<code>stub-legacy</code> replaces only the legacy index, so the fact
+files stay available to that copy.</li>
+<li>Maturity impression: MIT, 61,589 lines of Python, shell and
+JavaScript outside tests and 46,208 lines of Markdown, 494 commits
+reachable from the pin by 9 contributors between 20 June and 27
+September 2026. The memory tooling is 1,546 lines in two scripts,
+covered by 68 and 51 test functions that CI runs. No marks: no fact
+carries a status, scope or time, and no test writes a fact, because no
+code does.</li>
+<li>Study when: you want a file-based memory for several coding
+harnesses and need the unglamorous parts — where the harness actually
+writes, when its index is truncated, how long provenance lasts, and how
+to keep private facts off a public remote.</li>
+<li>Do not copy when: memory must be gated against the agent that writes
+it, scoped inside one instance, or recalled from more facts than a
+200-line index holds.</li>
 </ul>
         </article>
       </div>

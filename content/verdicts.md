@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 653 reports.**
+**This page covers all 654 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5857,3 +5857,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: archived by its author on 5 August 2026; 39 commits, all but the archive commit on 6–8 April 2026; 26 pytest functions, none on memory; no licence file; the app imports a module from a sibling repository and `asyncpg` is missing from `requirements.txt`. No capability mark.
 - Study when: you want a worked heat-equation salience model to reason about, or a clear case of how an organism metaphor turns into schema nobody writes.
 - Do not copy when: anything must stay correctable, scoped or authenticated — there is no update or delete route, no scope predicate on an agent-facing read, and no auth on a `0.0.0.0` bind.
+
+### [`open-bridge`](../systems/open-bridge/)
+
+- Best idea: **measure the harness instead of assuming it.** `memory-location.py` keeps two resolvers on purpose — `resolve_memory_dir` for where Claude Code's auto memory writes, `resolve_read_dir` for where any reader should look — and its `check` flags an index past the 200-line or 25 KB point where the harness stops loading, so a fact that exists on disk and never reaches a session becomes a finding. `links` counts facts whose session transcript has aged out of retention rather than implying provenance is permanent.
+- Biggest risk: **the gate is a paragraph the gated agent reads.** `rules/learning-autonomy.md` says no automated process writes memory, and the review surface is `/bridge-learn`, a skill the agent runs through `git mv` and `learning-ledger.py record`, which has no actor check. The in-session route and Claude Code's auto memory, which `enable` points at `work/memory/`, write with no queue at all.
+- Most reusable component: `scripts/learning-ledger.py` — one writer for a proposal queue's audit trail that takes the timestamp from the clock and the commit from `git`, refuses a row whose folder and status disagree or whose HEAD does not touch the target, and a `check` that reports drift between folder, frontmatter and last row without fixing it.
+- Second risk: **a copy step that treats absence as newness.** `_migrate_plan` copies every legacy file missing from `work/memory/` and never deletes from legacy, and the documented migration runs it twice across a restart. A wrong fact deleted in between, or before any later run, returns. `stub-legacy` replaces only the legacy index, so the fact files stay available to that copy.
+- Maturity impression: MIT, 61,589 lines of Python, shell and JavaScript outside tests and 46,208 lines of Markdown, 494 commits reachable from the pin by 9 contributors between 20 June and 27 September 2026. The memory tooling is 1,546 lines in two scripts, covered by 68 and 51 test functions that CI runs. No marks: no fact carries a status, scope or time, and no test writes a fact, because no code does.
+- Study when: you want a file-based memory for several coding harnesses and need the unglamorous parts — where the harness actually writes, when its index is truncated, how long provenance lasts, and how to keep private facts off a public remote.
+- Do not copy when: memory must be gated against the agent that writes it, scoped inside one instance, or recalled from more facts than a 200-line index holds.
