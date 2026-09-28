@@ -6157,93 +6157,74 @@ accept a hand-rolled cipher on the dependency-free path.</li>
 </ul>
 <h3 id="aimee"><a href="../systems/aimee/"><code>aimee</code></a></h3>
 <ul>
-<li>Best idea: <strong>the declared authority caps the actor; it is not
-a fallback for it.</strong> The code used to resolve the actor from the
-request context first and fall back to the passed authority — but the
-request resolver returns user authority for any authenticated principal,
-so a model-composed query inside an authenticated human's session
-inherited that human's rank. The measured result is in the comment: a
-Class A row at authority rank 30 went from <code>persistent</code> to
-<code>invalidated</code> on the agent's own <em>"please forget my
-email."</em> Any system that resolves identity from ambient context with
-a structural label as fallback has this bug available to it.</li>
-<li>Second idea: <strong>every typed-fact recall query excludes
-retracted rows unconditionally.</strong>
-<code>AND superseded_at = '' AND invalidated_at = '' AND suppressed = 0 AND lifecycle_state IN ('persistent','promoted')</code>
-— four ways to be excluded, read together, behind no flag. Retraction
-keys on the <code>(source, relation, target)</code> triple rather than a
-row id, and the row survives for audit. Beside it a four-class ladder —
-user-stated Class A at 1.0 down to novel Class C at 0.4, which is also
-the floor — where the provenance-to-authority map fails closed on wrong
-case, empty and null, all ten asserted.</li>
+<li>Best idea: <strong>authority comes from the verified caller, and the
+declared authority caps the actor rather than falling back for
+it.</strong> <code>InsertEpistemic</code> derives authority from the
+authenticated caller and never from the text, and per-turn retraction
+invalidates at model rank because <em>"the query is model-composed,
+including when a verified user's session transports it"</em>, touching
+only rows ranked at or below it. Any system that resolves identity from
+ambient context with a structural label as fallback has the opposite bug
+available to it.</li>
+<li>Second idea: <strong>a model-authored fact is a candidate until an
+operator approves it, and the approve verb is not on the agent's
+surface.</strong> Below system rank a fact lands <code>candidate</code>
+and no read serves it; <code>fact-review</code> approves, rejects or
+undoes at operator rank and refuses any invocation with a nonzero
+principal reference; the KB console's typed-facts page posts to it; and
+the MCP <code>mutate</code> tool maps six verbs, none of which approves,
+restores or reviews.</li>
 <li>Third idea: <strong>the audit store names which half of its
 tamper-resistance an attacker can remove.</strong> An HMAC-SHA256 hash
-chain over a length-prefixed injective encoding, a single-writer mutex
-keeping <code>seq</code> gap-free,
+chain over a length-prefixed encoding, a single-writer mutex keeping
+<code>seq</code> gap-free,
 <code>BEFORE UPDATE</code>/<code>BEFORE DELETE</code> triggers, and a
-Postgres twin that is an outbox queue carrying its own
-<code>BEFORE UPDATE</code>/<code>DELETE</code>/<code>TRUNCATE</code>
-WORM triggers, where the runtime role holds <code>SELECT</code> on the
-queue plus <code>EXECUTE</code> on the submit definer and never on the
-appender. The comment: the triggers <em>"are NOT the adversarial
-guarantee (a process with file write access can drop them) — that is the
-hash-chain…"</em> Most audit implementations in this corpus assert their
-own integrity; this one states its threat model.</li>
+Postgres outbox with its own
+<code>UPDATE</code>/<code>DELETE</code>/<code>TRUNCATE</code> WORM
+triggers, fed by a trigger on <code>memories</code> in the same
+transaction as the change. The comment: the triggers <em>"are NOT the
+adversarial guarantee (a process with file write access can drop them) —
+that is the hash-chain…"</em></li>
 <li>Fourth idea: <strong>the project ran this atlas's producer check on
 itself and published the negative result.</strong>
-<code>docs/validation/flag-rollout-readiness.md</code> grepped every
-default-off flag for production readers excluding config and tests, and
-sorted them into <strong>WIRED</strong> — real behaviour, blocked on
-measurement not code — and <strong>INERT TOGGLE</strong>, where <em>"the
-<code>*_enabled</code> field is never read in production."</em> Five
-inert toggles, no fully-dead features, both counted in the open. The
-gate for flipping a flag on requires an A/B isolating that flag on a
-real labelled corpus with numeric criteria pinned before the run.</li>
-<li>Fifth idea: <strong>a refusal the runtime is forbidden to
-erase.</strong> <code>memory_rejection_tombstones</code> keys one active
-row per refused value — the triple for a fact,
-<code>(memory_key, memory_content, scope_type, scope_value)</code> for
-an episodic row — consulted by <code>fm_tombstone_blocks</code> before
-the mutation seam admits anything, and reversible by an authenticated
-actor recorded in <code>restored_by</code>. A shipped Postgres check
-refuses to start when the runtime role holds <code>DELETE</code> or
-<code>TRUNCATE</code> on it, or lacks the privileges to read it for
-review: <em>"memory tombstone runtime privileges permit erasure or
-prevent review."</em> Most tombstones in this corpus are append-only by
-convention; this one asserts the grant.</li>
-<li>Biggest risk: <strong>scale against traced fraction.</strong> This
-is the largest checkout in the corpus and the reading covers the
-typed-fact layer, the episodic recall path, the rejection tombstone, the
-audit stores and the scope plumbing — not the Go control plane, the
-Python tooling, the ingest workers, or most of the 244 tables. Section
-12 says so rather than implying coverage. Beside it: the refusal is
-keyed on the raw triple while <code>entity_edges</code> carries a
-normalized <code>identity_key</code>, so a re-extraction in a different
-surface form walks past both the C consult and the trigger
-backstop.</li>
-<li>Maturity impression: AGPL-3.0, ~819,000 lines of C plus 149,000 of
-Go and 113,000 of Python, two services and 244 tables in one schema,
-read on <code>testing</code> — the repository's default branch, with
-<code>main</code> three commits behind it after merging
-<code>testing</code> on 31 August 2026. All seven marks.
-<code>human_review</code> is the one that took three readings to settle,
-and it is not the Memory Center: a model-authored typed fact lands
-<code>candidate</code> and no recall returns it,
-<code>FACT_ACTOR_MODEL</code> at 10 sits below the
-<code>FACT_ACTOR_SYSTEM</code> promotion floor at 20, and model-composed
-text keeps MODEL authority whoever is authenticated during the turn — so
-the producer cannot clear its own queue, and the review screen corrects
-rows that are already live.</li>
-<li>Study when: you want the best-constructed negative retrieval test in
-this corpus — every exclusion asserted beside a positive over the same
-buffer, and a confidence case built specifically to fail a whole-block
-implementation that would satisfy all the earlier assertions.</li>
+<code>docs/validation/flag-rollout-readiness.md</code> sorted every
+default-off flag into <strong>WIRED</strong> and <strong>INERT
+TOGGLE</strong> by grepping for production readers, and counted five
+inert toggles in the open. The document is dated 26 August 2026 and
+names a reader file for the lifecycle flag pair that is absent from the
+tree, so the audit itself needs the re-run it recommends.</li>
+<li>Fifth idea: <strong>a refused value is a keyed row every writer
+consults.</strong> <code>memory_rejection_tombstones</code> keys one
+active row per value; the Go episodic insert, the correction apply, the
+fact assert and the review approve all consult it, the fact consult on
+an NFKC-folded identity so a full-width re-extraction is refused, and
+two triggers repeat the test on the raw columns for writers that bypass
+the owner.</li>
+<li>Biggest risk: <strong>the refusal table's protection is tested on
+the wrong role.</strong> A CI gate asserts <code>aimee_kb_runtime</code>
+cannot <code>DELETE</code> or <code>TRUNCATE</code> refusals, while the
+schema grants <code>DELETE</code> on the same table to
+<code>aimee_store_runtime</code>, the role compose hands the Go memory
+owner. Beside it: the trigger backstop compares raw columns, the session
+recall bundle's graph lane leaves scope to row-level security alone, and
+at over a million lines the traced fraction is small.</li>
+<li>Maturity impression: AGPL-3.0, about 757,000 lines of C plus 245,000
+of Go and 114,000 of Python, read on <code>testing</code>, the default
+branch. The native C memory layer was retired in stages ending on 27
+September 2026, and one Go module of 87,788 lines makes every memory
+decision in both placements. All seven marks. <code>human_review</code>
+rests on the candidate queue and its operator verb, not on the Memory
+Center, which corrects rows that are live.</li>
+<li>Study when: you want an authority model in which the producing agent
+cannot clear its own queue, with a test that drives the candidate, a
+refused remote review, a refused unauthenticated review and the
+operator's approve in one case.</li>
 <li>Do not copy when: you need row-level scope you cannot bypass —
-<code>p_memories_row_scope</code> governs the memory rows themselves,
-but it is <code>ENABLE</code> without <code>FORCE</code> and
-<code>aimee.memory_scope_all</code> is a session GUC the runtime can set
-— or you cannot afford to read a million-line tree to check what you are
-adopting.</li>
+<code>p_memories_row_scope</code> governs the memory rows, but it is
+<code>ENABLE</code> without <code>FORCE</code> and
+<code>aimee.memory_scope_all</code> is written per transaction from the
+request — or you cannot afford to read a million-line tree to check what
+you are adopting.</li>
 </ul>
 <h3 id="wenlan"><a
 href="../systems/wenlan/"><code>wenlan</code></a></h3>

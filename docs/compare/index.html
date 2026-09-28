@@ -1673,59 +1673,52 @@ has no test of its own</td>
 <tr>
 <td><code>aimee</code></td>
 <td>Two: a typed fact — a (source, relation, target) edge in
-<code>entity_edges</code> with a confidence class, an authority rank and
-lifecycle stamps — and an episodic <code>memories</code> row with a
-tier, a key, content, validity bounds and a lifecycle state</td>
-<td>Postgres with pgvector for both services, plus a SQLite audit store
-the WORM worker owns; 244 CREATE TABLE statements in one schema
-file</td>
-<td>Dense vector recall over memory rows, an indexed full-text lexical
-lane with an unindexed substring scan behind it, and relation-token
-matching over the fact graph, with sub-query fragments merged
-interleaved rather than pooled; typed facts are assembled into a
-separate recall block gated on confidence and sensitivity</td>
-<td>Turn-time retraction is synchronous and LLM-free; fact extraction is
-offline only, on a <code>memory_facts</code> drain running pattern
-matching and an LLM</td>
-<td><code>facts.retract</code> keyed on the triple rather than a row id,
-capped by the caller's authenticated authority; retraction stamps
-<code>invalidated_at</code> and retains the row; entity merges return an
-id that makes the merge reversible</td>
-<td>A scope predicate and a scope rank applied together in the same
-queries — the filter in the <code>WHERE</code>, the rank in the
-<code>ORDER BY</code> — on both the lexical and dense paths, plus a
-candidate-array filter before rerank, a row-level-security policy on
-<code>memories</code> itself whose predicate governs writes as well as
-reads, and RLS forced on the membership and grant tables</td>
-<td>An MCP server, a CLI, a Go control plane, and a two-service split —
-<code>aimee-server</code> for one human, <code>aimee-kb</code> for a
-team corpus</td>
-<td>A pending-TTL sweep into archived, a facts drain, ingest workers,
-and a contradiction detector that files rows into
-<code>memory_conflicts</code></td>
-<td>A four-class fact ladder — user-stated Class A down to novel Class C
-— with a confidence floor at 0.4, an authority that caps rather than
-falls back, and immutable relations only a user authority may
-retract</td>
-<td>A refused value gets its own keyed row, consulted at the head of the
-mutation seam and repeated as a database trigger for writers that never
-reach it; every typed-fact recall query excludes retracted and
-suppressed rows unconditionally; the audit store enforces append-only
-twice by independent means, says which layer is the adversarial one, and
-takes memory mutations from a trigger in the same transaction as the row
-change; and the project has run this atlas's own producer audit on
-itself and published the count of inert toggles</td>
-<td>The refusal record is keyed one level less canonically than the row
-it refuses — <code>entity_edges</code> carries a normalized
-<code>identity_key</code>, <code>memory_rejection_tombstones</code> does
-not, so both the C consult and the database trigger compare the raw
-triple and a re-extraction with a different surface form walks past
-them; the candidate-array scope filter is a no-op when the caller passes
-no scope, and the SQL predicate short-circuits on an inactive context or
-<code>include_all</code>; row-level security on the memory tables is
-<code>ENABLE</code> without <code>FORCE</code>, so the table owner is
-not bound by it; and at over a million lines the traced fraction is
-small</td>
+<code>entity_edges</code> with a confidence class, an authority rank, a
+lifecycle and belief and validity intervals — and an episodic
+<code>memories</code> row with a tier, a key, content, an epistemic
+kind, a provenance category, validity bounds and a lifecycle state</td>
+<td>Postgres with pgvector, owned by one Go memory module in both
+placements, plus a SQLite audit chain a separately credentialed worker
+appends; 263 CREATE TABLE statements in the KB schema file</td>
+<td>Lexical ILIKE and full-text reads, dense recall over versioned
+embeddings, graph fusion and assertion search, all behind one shared
+current-eligibility predicate; typed facts are assembled into a separate
+block gated on confidence and PII sensitivity</td>
+<td>Stores are synchronous transactions with the audit intent in the
+same transaction; fact extraction is an asynchronous
+<code>memory_facts</code> job; per-turn retraction runs at model
+authority before context is assembled</td>
+<td>Every correction writes a successor and retires the old row as
+superseded; a model edit to user-stated content becomes a pending
+correction proposal; <code>facts.retract</code> and per-turn retraction
+invalidate by triple, capped by the actor's rank, and write a
+refusal</td>
+<td>A scope disjunction in the per-turn context read, the dense lane and
+graph fusion, with row-level security on <code>memories</code> reading
+transaction-local GUCs underneath; an MCP call without scope queries an
+impossible tenant</td>
+<td>An MCP server, a CLI, a KB operator console, and a two-placement
+split — <code>aimee-server</code> for one human, <code>aimee-kb</code>
+for a team corpus — with every memory decision in the Go module</td>
+<td>The <code>memory_facts</code> extraction drain, re-embedding and
+index maintenance, the decision revisit sweep, and hygiene previews that
+queue proposals rather than mutate</td>
+<td>Authority ranks model 10, system 20, user 30, operator 40, derived
+from the verified caller and never from text; a model-authored fact is a
+candidate until an operator approves it or a higher rank re-asserts it;
+a confidence floor of 0.4 and a PII gate on the fact block</td>
+<td>A refused value is a keyed row every Go writer consults, with a
+normalized comparison on the fact path and a trigger under both; an
+approve verb exists and the agent's tool surface does not carry it;
+memory mutations reach an append-only hash chain from a trigger in the
+same transaction</td>
+<td>The Go store's runtime role holds DELETE on the refusal table, and
+the privilege check that forbids it tests a different role; the trigger
+backstop compares the raw triple while the Go consult compares a folded
+identity; the session recall bundle's graph lane drops the application
+scope predicate and relies on row-level security, which is ENABLE
+without FORCE on <code>memories</code>; at over a million lines the
+traced fraction is small</td>
 </tr>
 <tr>
 <td><code>aipass</code></td>
