@@ -15899,21 +15899,15 @@ recall items, the feedback events naming the schema as target
 scrubbed in the same transaction as the row. Most stores in this corpus
 leave a deleted memory's id behind in tables nobody thought to
 sweep.</li>
-<li>Biggest risk: <strong>the removal takes the record of the removal
-with it.</strong> Nothing marks a claim as one a person rejected, no
-table records that a deletion happened, and the delete is keyed on the
-schema id rather than on the content — so the episodes and
-<code>raw_events</code> the claim was derived from remain, and the next
-consolidation pass over them can form it again with nothing positioned
-to intercept it. The store can forget a memory completely; it cannot
-remember having done so. Procedures are forgotten less completely: their
-delete leaves the summary, steps and originating query in the
-procedure-search projection, where no read serves them and the Home page
-counts them. A second seam sits on the write side:
-<code>update_status</code> ends with
-<code>status = status if status in VALID_STATUS else "active"</code>, so
-a status it does not recognise becomes the most-trusted value rather
-than an error.</li>
+<li>Biggest risk: <strong>a rebuild restores what a person
+deleted.</strong> Removal is a person's act at the local dashboard —
+none of the agent's five MCP tools reaches it — and it removes the
+schema and every row naming it but leaves the <code>raw_events</code>
+the claim was consolidated from and records nothing. The rebuild that
+runs unprompted after an upgrade changes
+<code>current_logic_version</code> deletes <code>schemas</code> and
+re-consolidates from those events, so a memory removed to keep it out of
+the context can re-form, as it can from a later session.</li>
 <li>Most reusable component: the cross-scope rule, written once as a
 predicate rather than assembled by callers. A row is admitted when its
 scope matches, when it is unscoped, when it sits in

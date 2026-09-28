@@ -1,7 +1,7 @@
 ---
 title: "Slowave"
-eyebrow: "Deleting a memory takes the record of the deletion with it"
-description: "A local, LLM-free memory layer for coding agents: schemas earn cross-project reach by stage, and a person's hard delete leaves no record behind."
+eyebrow: "An LLM-free memory core rebuilt from its own event log"
+description: "A local, LLM-free memory layer for coding agents whose schemas earn cross-project reach and are rebuilt from an event log a dashboard delete leaves intact."
 root: ../..
 page_kind: system
 source_name: "slowave-ai/slowave"
@@ -9,7 +9,7 @@ source_url: https://github.com/slowave-ai/slowave
 archive_name: "slowave-ai--slowave"
 revision: 00b5a1d7594fef3261a6bc1786e46cceebcd9d49
 revision_url: https://github.com/slowave-ai/slowave/commit/00b5a1d7594fef3261a6bc1786e46cceebcd9d49
-analyzed_at: 2026-09-28
+analyzed_at: 2026-09-29
 licence: "AGPL-3.0-or-later, with a separate commercial licence offered in COMMERCIAL.md and contributions under a CLA; a project header above the licence text in LICENSE leaves GitHub's detector at NOASSERTION"
 size: "33,193 lines of Python in 80 files under slowave/, against 34,645 lines of test in 136 files; 28 tables in schema.sql plus four FTS5 indexes"
 activity: "534 commits, 8 June – 24 September 2026: 456 from one author committing as mrsalty, Matteo Cunietti or Matteo, whose email addresses overlap across the three names, and 78 from a release bot; version 0.20.4"
@@ -33,7 +33,7 @@ matrix:
   background: "A replay engine rebuilds derived memory from `raw_events`, scoped by the `logic_version` each event was ingested under so a code change replays only what it needs, with an optimistic-lease claim so exactly one process rebuilds. Consolidation forms and reinforces schemas geometrically; salience decays; co-activation edges decay on a half-life; a generalization sweep advances or corrects stages; graph-health snapshots and worker runs are recorded"
   trust: "Four lifecycle statuses, two of which withhold a schema from every candidate path, with a stale reason drawn from contradicted, superseded, outdated, unsupported or withdrawn. Confidence and salience are separate numbers used for ranking, with a shared salience ceiling so two reinforcement paths cannot diverge. `is_labile` marks a reactivated trace as temporarily uncertain, kept explicitly distinct from `needs_review`. Contradiction and supersession are described in the source as client-owned history that the store and consolidation never infer"
   strengths: "A cross-scope gate written as one predicate because two copies drift, with the widening rule — same scope, unscoped, global or user, or a generalization stage of 2 — stated in the SQL rather than assembled by callers; an event store with a logic-version stamp so an algorithm change replays instead of migrating; a retrieval-gold contract with required, forbidden and history-only content in the same case, where the negative half is load-bearing in the pass conjunction; a delete preview that counts the evidence links, relations and co-activations a removal will take with it, so the person confirming sees the collateral rather than the row; a schema file that argues for its own decisions; and a memory core with no LLM call and no API key anywhere in ingest, consolidation or recall"
-  risks: "Removal is total and unrecorded. A schema deleted from the dashboard is gone from `schemas`, and the recall items, feedback events and JSON references that named it are scrubbed alongside it, so nothing in the store says the memory existed or that a person removed it — and because the delete is keyed on the row rather than on the claim, the same proposition can be re-derived by the next consolidation pass with nothing to intercept it. A status the store does not recognise is coerced to `active` rather than refused, so the failure direction on a bad write is toward the most-trusted value. There is no validity time — every timestamp is a record time, so nothing can be asked as of a past state of the world. The published benchmark numbers are LLM-judged evidence containment with the raw records kept out of the repository, and the LongMemEval run is an oracle configuration the page itself says is not a distractor test. It is AGPL-3.0-or-later with a separate commercial licence offered, which is a deliberate choice a reader has to plan around. Deleting a procedure leaves its summary, step text and originating query in the procedure-search projection and its FTS index, and the dashboard's Home page keeps counting it as a current procedure. And the surface is wide: 28 tables, a dashboard of over 4,000 lines, and a client-setup module that executes at install time"
+  risks: "A dashboard delete — the only removal, a person's act that none of the agent's five MCP tools can reach — takes the schema and every row naming it but not the raw events it was consolidated from, and records nothing; the automatic rebuild that runs when an upgrade changes the logic version wipes `schemas` and re-consolidates from those events with no record of the deletion to consult, so a removed memory can return after an upgrade, as it can from a later session re-deriving the same claim. A status the store does not recognise is coerced to `active` rather than refused, so the failure direction on a bad write is toward the most-trusted value. There is no validity time — every timestamp is a record time, so nothing can be asked as of a past state of the world. The published benchmark numbers are LLM-judged evidence containment with the raw records kept out of the repository, and the LongMemEval run is an oracle configuration the page itself says is not a distractor test. It is AGPL-3.0-or-later with a separate commercial licence offered, which is a deliberate choice a reader has to plan around. Deleting a procedure leaves its summary, step text and originating query in the procedure-search projection and its FTS index, and the dashboard's Home page keeps counting it as a current procedure. And the surface is wide: 28 tables, a dashboard of over 4,000 lines, and a client-setup module that executes at install time"
 ---
 
 ## 1. Executive Summary
@@ -53,17 +53,57 @@ files — one unpinned dependency surface, and `pyproject.toml` changed on 24
 September 2026, inside the seven-day cooldown, so nothing was installed, built
 or run.
 
-**The removal path is a hard delete, and it takes the record with it.** A person
-removes a schema from the dashboard; the row goes from `schemas`, and the recall
-items, the feedback events naming it as a target or a replacement, and the JSON
-references that mention it are scrubbed in the same transaction. As erasure this
-is thorough — better than most of this corpus, which leaves a memory's id
-scattered across tables that outlive it. As memory it leaves nothing behind. No
-status marks the claim as one a person rejected, no row records that a deletion
-happened, and the key is the schema id rather than the claim, so the same
-proposition arriving from a later session is a new schema with nothing to
-intercept it. The store can forget a memory completely; it cannot remember
-having done so.
+**Cross-scope reach is earned, not granted.** Every schema carries a scope, the
+candidate paths filter on it in SQL, and the widening rule lives in the predicate
+rather than in the callers: a row is admitted when its scope matches, when it is
+unscoped, when it sits in `('global', 'user')`, or when its `generalization_stage`
+has reached 2. The same shape appears on the direct-candidate filter and on the
+graph-expansion walk — the drift this atlas most often finds between exactly
+those two paths.
+
+**The event store is the spine.** `raw_events` is appended per turn and stamped
+with the `logic_version` under which it was ingested, so when the consolidation
+algorithm changes the fix is to replay the events processed under the old logic
+rather than to migrate derived state — with an optimistic-lease claim so the
+daemon, worker and CLI cannot all rebuild at once. On startup the engine
+compares the configured `current_logic_version` with the store's checkpoint and,
+when they differ, deletes every derived table, `schemas` among them, and replays
+and re-consolidates from `raw_events` with no action from the user
+(`core/engine.py:197-202`, `core/services/rebuild.py:67-80`, `:222-223`,
+`:291-292`). It is not append-only. A
+repeated `commit` overwrites the session's `task_complete` event
+(`ops.py:1025`), and the procedure delete strips the procedure from that event
+and scrubs its id from the metadata of every raw event naming it
+(`dashboard/app.py:1735-1748`, `:1946`). The log is the reason a store whose
+derived memory carries no mutation log is still reconstructible: the evidence is
+kept even where the decisions are not.
+
+**Removal is a person's act, at the local dashboard.** The five MCP tools are
+activate, recall, remember, feedback and commit — an agent can write a memory
+and send feedback about one, and no verb reaches a delete. A person removes a
+schema from the dashboard, after a preview: `_schema_delete_preview_conn` walks
+the evidence links, prototype links, relations, co-activations and retrieval
+evidence that point at the schema and returns a count for each, so the
+confirmation names what else is about to go. The delete then removes the row
+from `schemas` and scrubs the recall items, the feedback events naming it as a
+target or a replacement, and the JSON references that mention it in the same
+transaction — more thorough than most of this corpus, which leaves a memory's id
+scattered across tables that outlive it. It keeps no record of having happened:
+no status marks the claim as one a person rejected, and the key is the schema
+id rather than the claim.
+
+**A rebuild restores what a person deleted.** The schema delete leaves the
+`raw_events` and episodes the schema was consolidated from
+(`dashboard/app.py:1836-1856` touches neither), and the rebuild above treats
+`raw_events` as the source of truth and `schemas` as derived. Neither the
+rebuild nor consolidation consults any record of a deletion, because none
+exists. A schema a person removed to keep it out of the memory context can
+therefore re-form on the next rebuild, which runs unprompted after any upgrade
+that changes `current_logic_version` (`core/config.py:78`, `"3"` at this pin)
+and on the support-only `slowave rebuild --force` — as the same proposition can
+from a later session. Procedures differ: their delete also strips the procedure
+from the `task_complete` event that carries it, so a replay does not bring one
+back.
 
 **Procedures are erased less thoroughly than schemas.** Deleting a procedure
 from the dashboard strips it from the `task_complete` event that carries it and
@@ -88,33 +128,6 @@ drops the log table. A store upgraded across this boundary returns to ordinary
 retrieval the memories a person had previously suppressed, which is the honest
 reading of "preserve" here: the schemas are preserved, and the decisions about
 them are not.
-
-**Cross-scope reach is earned, not granted.** Every schema carries a scope, the
-candidate paths filter on it in SQL, and the widening rule lives in the predicate
-rather than in the callers: a row is admitted when its scope matches, when it is
-unscoped, when it sits in `('global', 'user')`, or when its `generalization_stage`
-has reached 2. The same shape appears on the direct-candidate filter and on the
-graph-expansion walk — the drift this atlas most often finds between exactly
-those two paths.
-
-**The event store is the spine.** `raw_events` is appended per turn and stamped
-with the `logic_version` under which it was ingested, so when the consolidation
-algorithm changes the fix is to replay the events processed under the old logic
-rather than to migrate derived state — with an optimistic-lease claim so the
-daemon, worker and CLI cannot all rebuild at once. It is not append-only. A
-repeated `commit` overwrites the session's `task_complete` event
-(`ops.py:1025`), and the procedure delete strips the procedure from that event
-and scrubs its id from the metadata of every raw event naming it
-(`dashboard/app.py:1735-1748`, `:1946`). The log is the reason a store whose
-derived memory carries no mutation log is still reconstructible: the evidence is
-kept even where the decisions are not.
-
-**Removal is a person's act by construction.** The five MCP tools are activate,
-recall, remember, feedback and commit — an agent can write a memory and send
-feedback about one, and no verb reaches the delete. What a person gets instead
-is a preview: `_schema_delete_preview_conn` walks the evidence links, prototype
-links, relations, co-activations and retrieval evidence that point at the schema
-and returns a count for each, so the confirmation names what else is about to go.
 
 **What it does not have is validity time.** Every timestamp here is a record
 time — first formed, last updated, last touched. There is no world-state
@@ -180,7 +193,7 @@ status='needs_review'"*. A queue with no writer, and a display name shared with
 something else, is the near-miss; it is not the mark.
 
 ```mermaid
-%% caption: session turns are appended to a raw event store stamped with the logic version that ingested them, replayed into episodes and latent prototypes, and consolidated into symbolic schemas keyed on the primary prototype; recall gathers candidates under a scope filter and a status filter applied in the store, expanding along relation edges through the same two predicates; deletion is a dashboard act that removes the schema and scrubs every row naming it, leaving no state the next consolidation pass can consult
+%% caption: session turns are appended to a raw event store stamped with the logic version that ingested them, replayed into episodes and latent prototypes, and consolidated into symbolic schemas keyed on the primary prototype; recall gathers candidates under a scope filter and a status filter applied in the store, expanding along relation edges through the same two predicates; deletion is a person's dashboard act that removes the schema and scrubs every row naming it but not the raw events, leaving no state that a later consolidation pass or the automatic logic-version rebuild can consult
 flowchart TB
     S["agent: activate · remember ·<br/>recall · feedback · commit<br/>— five MCP tools, none of them delete"]
     RE[("raw_events — appended per turn,<br/>stamped with logic_version")]
@@ -213,6 +226,7 @@ flowchart TB
     SCH --> CAND
     SCH --> DEL --> PREV -->|"a person confirms,<br/>having been shown the collateral"| SCRUB --> GONE
     GONE -.->|"the delete is keyed on the ROW, not the claim,<br/>so the same proposition re-derived later<br/>is a new schema with nothing to intercept it"| C
+    GONE -.->|"raw_events are kept; a logic_version rebuild<br/>wipes schemas and replays them"| RP
 ```
 
 ## 3. Architecture
@@ -423,8 +437,9 @@ delete keyed on the schema id. Nothing survives it to be consulted on a later
 write: the row is gone, the rows naming it are scrubbed, and the identity key
 consolidation uses is the primary prototype of whatever it is forming now. A
 person who removes a claim has removed a row, not registered a judgement about
-the claim, so the same proposition re-derived from a later session forms a new
-schema with nothing in the store positioned to intercept it. The trade is real
+the claim, so the same proposition re-derived from a later session — or re-formed from
+the retained `raw_events` by the rebuild that follows a logic-version change —
+is a new schema with nothing in the store positioned to intercept it. The trade is real
 and runs the other way too: erasure this thorough is uncommon in this corpus,
 and a store that keeps no record of what it deleted is a store with nothing to
 leak.
@@ -660,6 +675,8 @@ git grep -n -E '@mcp\.tool\(name=' -- slowave/mcp                   # five tools
 ```
 
 ## History
+
+**2026-09-29** — [`00b5a1d7594fef3261a6bc1786e46cceebcd9d49`](https://github.com/slowave-ai/slowave/commit/00b5a1d7594fef3261a6bc1786e46cceebcd9d49), same pin. The report led with deletion as if it were an agent-facing risk; it is a person's act at the local dashboard that none of the five MCP tools reaches, and [section 1](#1-executive-summary) opens with the memory core, the scope rule and the event log. Added: the automatic rebuild on a logic-version change deletes `schemas` and re-consolidates from the `raw_events` a schema delete leaves in place, with no record of the deletion to consult, so a removed memory can return after an upgrade. No mark moved.
 
 **2026-09-28** — [`00b5a1d7594fef3261a6bc1786e46cceebcd9d49`](https://github.com/slowave-ai/slowave/commit/00b5a1d7594fef3261a6bc1786e46cceebcd9d49), version 0.20.4, 17 commits past the previous pin; 15 are README edits. The schema store, retrieval, consolidation, feedback and MCP tools are unchanged; three marks stand. New: a procedure-search projection that the procedure delete leaves in place ([section 9](#9-reliability-safety-and-trust)). Corrected from the previous pin: section 9 still called `human_review` awarded after its withdrawal; `needs_review` has far more than eleven appearances, all reads; the trust-state test cited was a ranking test; `raw_events` is not append-only, since two procedure paths rewrite it; the census gave two contributors (one author, three names), 28 tables and 623 schema lines (27 and 606). `LICENSE`, `COMMERCIAL.md` and `CLA.md` are byte-identical to the pin. Screened first: one auto-run surface, five build-time execution points, one unpinned surface, `pyproject.toml` inside the cooldown. Nothing installed, built or run.
 
