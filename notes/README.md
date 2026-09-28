@@ -8,6 +8,12 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-28-unreleased-code-watchlist.md](2026-09-28-unreleased-code-watchlist.md) —
+  items examined while their code, their memory component or their paper was
+  not public, with the places to watch for a release and the commands to
+  re-check them. 62 items; nine have code public on 2026-09-28 and are queued
+  for re-examination, four of which were public before the atlas examined
+  them (eMEM, EmbodiedLGR, FARM, Agent Memory Distillation).
 - [2026-09-25-are-the-patterns-patterns.md](2026-09-25-are-the-patterns-patterns.md) —
   all twenty-one pattern pages audited against the corpus and, for the
   load-bearing claims, the pinned code. Eighteen are real patterns; explicit
