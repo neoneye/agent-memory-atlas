@@ -408,6 +408,18 @@ and the HTTP search return it. It misses requirements 1, 2 and 4 by
 construction, and shows a failure the list does not name: a disposition
 stored as a per-query predicate holds only on the queries that remember
 to apply it.</p>
+<p><a href="../../systems/kagura-memory-cloud/">Kagura Memory Cloud</a>
+gives a detected supersession a disposition and keeps the queue from
+refilling. At embedding time the nearest same-context memory at cosine
+0.85 or more is stored in a server-only <code>supersede_candidate</code>
+column and surfaced on every recall until the agent accepts it with a
+<code>supersedes</code> edge or rejects it with
+<code>update_memory(dismiss_supersede_candidate=true)</code>. The
+rejection records the similarity it was made at, and the detector
+re-proposes the pair only when a recomputed score moves by 0.02, so a
+mechanical reindex stays suppressed while a content edit earns a new
+judgement. The actor on both sides is the agent, and the disposition set
+is binary: nothing records a reason.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

@@ -1,0 +1,961 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Postgres context engine whose
+memory is declared in versioned YAML: immutable records, bounded cited
+derivations, reviewed promotion and budgeted context artifacts.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memseek — Agent Memory Atlas">
+    <meta property="og:description" content="A Postgres context engine
+whose memory is declared in versioned YAML: immutable records, bounded
+cited derivations, reviewed promotion and budgeted context artifacts.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memseek — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Postgres context engine
+whose memory is declared in versioned YAML: immutable records, bounded
+cited derivations, reviewed promotion and budgeted context artifacts.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memseek — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memseek",
+      "description": "A Postgres context engine whose memory is declared in versioned YAML: immutable records, bounded cited derivations, reviewed promotion and budgeted context artifacts.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Memory declared in YAML, compiled onto one
+Postgres table</p>
+          <h1>Memseek</h1>
+          <p class="document-deck">A Postgres context engine whose
+memory is declared in versioned YAML: immutable records, bounded cited
+derivations, reviewed promotion and budgeted context artifacts.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/memseekai/memseek">
+              <span>Source</span>
+              <strong>memseekai/memseek</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/memseekai/memseek/commit/c2ec72abb0ca6743472687ad20dc1e33a14a217a" title="c2ec72abb0ca6743472687ad20dc1e33a14a217a">
+              <span>Analyzed revision</span>
+              <code>c2ec72ab…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/memseekai--memseek" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>memseekai--memseek</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>45,509
+lines of Python under src/memseek; the Claude Code plugin adds
+1,147</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>61
+commits on main by 1 contributor, 19 July 2026 – 28 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>612
+Python test functions in 25,315 lines under tests/, plus 21 in the
+Claude Code plugin</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memseek is a self-hosted context engine for agents. An operator
+writes a catalog of YAML declarations — collections, derivations, views,
+artifacts and an MCP tool allowlist — and publishes it to a workspace.
+Memseek then stores immutable records in Postgres, runs bounded LLM
+derivations over them in a worker, and renders cited, token-budgeted
+context.</p>
+<p>What is notable is how much the runtime refuses. A derived record may
+cite only ids its run was shown. A run commits only if its captured
+heads still hold. A review-required emission stays draft until an
+explicit promotion that is not on the agent's tool surface.</p>
+<p>What is weak sits at two seams. One workspace key authorises every
+route, and the MCP ingest bridge forwards fields its own tool schema
+omits. The flagship agent-memory catalog records supersession of atomic
+memories as a content array that no read filters on.</p>
+<p><strong>The design is a compiler, and the memory is whatever the
+catalog says.</strong> The engine knows records, keys, statuses,
+provenance edges and runs; it does not know facts, preferences or
+beliefs. <code>examples/agent_memory_catalog/</code> is the four-layer
+agent memory the README and the Claude Code plugin point at: messages,
+atomic memories, scene blocks and persona, plus a reviewed procedure
+pipeline. It ports the <a href="../tencentdb-agent-memory/">TencentDB
+Agent Memory</a> L0–L3 design
+(<code>docs/agent-memory-l0-l3-plan.md</code>). This report reads the
+engine and that catalog, because the engine's guarantees reach an agent
+only through a catalog.</p>
+<p><strong>Relation to <a href="../membukkit/">MemBukkit</a>.</strong>
+Both are published by <code>memseekai</code>. Memseek shares no code
+with MemBukkit and does not depend on it: <code>pyproject.toml</code>
+and <code>uv.lock</code> do not name it, and nothing under
+<code>src/</code>, <code>tests/</code> or <code>conf/</code> mentions
+it. The relation is a plan and a website.
+<code>docs/membukkit-integration-plan.md</code> proposes a
+<code>membukkit@1</code> search method and calls itself <em>"an
+implementation plan, not a claim that the method already ships"</em>.
+<code>SearchProfileDefinition</code> accepts only a <code>pg</code> or
+<code>turbopuffer</code> backend, with no method field
+(<code>src/memseek/definitions/models.py:433-445</code>). The benchmark
+figures in <code>marketing/src/lib/benchmark-data.ts</code> are
+MemBukkit's LongMemEval-S runs, not measurements of Memseek.</p>
+<p>Five marks: <code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>human_review</code> and
+<code>negative_eval</code>. Section 9 names the two withheld and the
+limits on each award.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A record becomes retrievable in three steps, and a belief only in the
+sense a catalog gives it. Ingest writes an immutable row. The row stays
+<code>ready: false</code> until the collection's required processors,
+usually an embedding, have run, and until then no search and no trigger
+sees it (<code>src/memseek/records.py:891</code>). Once ready, it is
+visible to every view whose scope matches, and write triggers may
+enqueue derivations that read it.</p>
+<p><strong>A derived record is a claim with a receipt.</strong> A
+derivation captures an Evaluation Basis before any task runs: the
+driving source's checkpoint and ids, guarded current reads, and the
+active keyed heads at its destination. Its LLM tasks see rendered rows
+whose ids are the only ones they may cite
+(<code>src/memseek/derive/candidates.py:120-149</code>). At commit the
+runtime re-verifies the basis, writes a <code>_system</code> run record,
+and writes each output with
+<code>derived_from = (run_id, *citations)</code>
+(<code>src/memseek/derive/runner.py:1343-1472</code>). A run that
+overspends, cites an id it was not shown, or finds its heads moved
+commits nothing.</p>
+<p><strong>Status separates what is on record from what is in
+force.</strong> <code>status</code> is <code>active</code> or
+<code>draft</code> (<code>migrations/001_init.sql:21-22</code>). A
+derivation declaring <code>review: required</code> writes drafts. Every
+default read predicate asks for <code>active</code>, so a draft is
+stored, inspectable through <code>GET /runs/{id}</code> and the document
+route with <code>status=draft</code>, and absent from search and
+rendered context. <code>POST /promote</code> copies a complete draft
+Candidate Set into new active successors and never mutates the drafts
+(<code>src/memseek/promote.py:1-7</code>).</p>
+<p><strong>How a record stops being current depends on the collection's
+mode.</strong> In a keyed collection the newest row per entity,
+collection, key and status is current. A successor hides its predecessor
+under <code>versions: current</code>, the default
+(<code>src/memseek/search/scope.py:80-91</code>). A retraction is a
+keyed row with <code>content.tombstone = true</code>, excluded by every
+read. In an event collection nothing supersedes anything at the engine
+level. The agent-memory catalog's L1 <code>memories</code> collection is
+an event collection. Its merge decision writes the replaced ids into
+<code>content.supersedes</code>, and no view hides a memory named there
+(section 6).</p>
+<p><strong>Erasure is the only death.</strong> <code>POST /erase</code>
+deletes a record's full descendant closure and leaves a hash-only audit
+row. Nothing decays or expires except retention purges of tombstoned
+keyed slots, which the catalog declares.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Memseek record becomes retrievable, how a reviewed candidate becomes active, and the ways a record stops being current, including the event-collection gap</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Memseek record becomes retrievable, how a reviewed candidate becomes active, and the ways a record stops being current, including the event-collection gap
+flowchart TD
+    I[&quot;POST /records or MCP ingest&quot;] --&gt; U[&quot;row stored,&lt;br/&gt;ready: false&quot;]
+    U -- &quot;required processors done&quot; --&gt; R[&quot;ready, status active&quot;]
+    R -- &quot;write trigger&quot; --&gt; D{&quot;derivation run:&lt;br/&gt;budget, schema,&lt;br/&gt;citations in visible set,&lt;br/&gt;captured heads unchanged?&quot;}
+    D -- &quot;any guard fails&quot; --&gt; X[&quot;nothing committed;&lt;br/&gt;failed run recorded&quot;]
+    D -- &quot;passes, review: required&quot; --&gt; DR[&quot;drafts plus run record;&lt;br/&gt;withheld from default reads&quot;]
+    D -- &quot;passes, immediate&quot; --&gt; R
+    DR -- &quot;POST /promote,&lt;br/&gt;heads still as captured&quot; --&gt; CP[&quot;active copies plus&lt;br/&gt;promote run record&quot;]
+    DR -- &quot;heads moved&quot; --&gt; ST[&quot;promotion_stale,&lt;br/&gt;drafts stay draft&quot;]
+    CP --&gt; R
+    R -- &quot;keyed: newer row, same key&quot; --&gt; HID[&quot;hidden under&lt;br/&gt;versions: current&quot;]
+    R -- &quot;keyed: retract&quot; --&gt; TB[&quot;tombstone row,&lt;br/&gt;excluded everywhere&quot;]
+    R -- &quot;event: a later memory lists it&lt;br/&gt;in content.supersedes&quot; --&gt; STILL[&quot;still returned by recall&lt;br/&gt;and standing rules&quot;]
+    R -- &quot;POST /erase&quot; --&gt; ER[&quot;descendant closure deleted;&lt;br/&gt;hash-only audit row&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A FastAPI service (<code>src/memseek/api.py</code>) and a worker
+(<code>src/memseek/worker.py</code>) share one Postgres with pgvector.
+The schema is one <code>record</code> table carrying every record, run
+and erasure receipt, plus <code>job</code>, <code>cursor</code>,
+<code>workspace_catalog</code>, <code>artifact_use</code>,
+<code>backfill</code>, <code>record_embedding</code> and the Computer
+tables (<code>migrations/001_init.sql</code>;
+<code>alembic/versions/0002</code>–<code>0010</code>). A workspace is a
+row holding a SHA-256 of its API key, and every route resolves the
+workspace from the bearer and the catalog published to it
+(<code>src/memseek/api.py:193-215</code>).</p>
+<p><strong>The catalog is the program.</strong>
+<code>src/memseek/definitions/loader.py</code> (4,461 lines) compiles a
+directory of YAML into hashed definitions. A collection's record
+contract is hashed separately, so a changed schema cannot silently
+reinterpret stored rows
+(<code>src/memseek/definitions/hashing.py:86-99</code>). Tasks are
+Python adapters the deployment installs through
+<code>TASK_MODULES</code>; workspace YAML selects them and cannot upload
+code or SQL (<code>CONTEXT.md</code>).</p>
+<p><strong>The worker is a lease-based job queue in the same
+database.</strong> Job kinds are <code>derive</code>,
+<code>cron_scan</code>, <code>retention_purge</code>,
+<code>annotation_backfill</code>, <code>invocation</code>,
+<code>index_upsert</code> and <code>index_delete</code>
+(<code>alembic/versions/0010_computer_invocations.py</code>). A partial
+unique index allows one active derive job per derivation and entity
+(<code>migrations/001_init.sql:121-123</code>). Leases default to 300
+seconds and the poll to 500 ms
+(<code>src/memseek/config.py:157-160</code>).</p>
+<p><strong>Search indexes are projections.</strong> The Postgres backend
+queries the canonical table directly. The Turbopuffer backend returns
+candidate ids, which are reloaded from Postgres under the same scope
+predicate before ranking
+(<code>src/memseek/search/engine.py:892-940</code>). Index upserts and
+deletes are jobs enqueued in the writing transaction, so an index can
+lag the canonical rows but not lead them.</p>
+<p><strong>Computers and invocations</strong>
+(<code>src/memseek/computers.py</code>,
+<code>src/memseek/invocations.py</code>) are a durable-agent substrate
+beside the memory: a sandboxed filesystem session, an append-only
+<code>invocation_event</code> log and working briefs per invocation.
+Their results reach canonical memory only through a derivation's
+writeback outbox, validated like any other emission
+(<code>src/memseek/harnesses/writeback.py:1-15</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>make up</code> starts Postgres with pgvector, the API and the
+worker under Docker Compose, creates a workspace and publishes
+<code>agent_memory@0.3.0</code>. The shipped catalog needs an
+OpenAI-compatible key for embeddings and derivations. Storing a record
+needs no model, but the record stays unready and unsearchable until its
+embedding exists. Python 3.14 is required. The store is SQL-readable and
+every derived row names its run and parents, so a bad memory is
+traceable by hand. Correcting one means a new keyed successor, a
+retraction or an erasure, not an edit.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Ingest.</strong> <code>POST /records</code> →
+<code>insert_public_records</code> → <code>insert_records_tx</code>
+(<code>src/memseek/records.py:1035-1140</code>).
+<code>_prepare_record</code> resolves the collection, enforces event
+versus keyed mode, refuses reserved collections and the types
+<code>run</code> and <code>erasure</code>, validates the JSON schema,
+and shapes a tombstone: key required, at least one parent, empty text,
+no other content (<code>:377-491</code>). Parents must exist in the
+workspace and precede the child in sequence (<code>:494-595</code>).
+Readiness is decided in <code>_insert_one</code>
+(<code>:877-992</code>).</p>
+<p><strong>Enrichment.</strong> The worker runs declared processors and
+writes annotations, scores and the embedding with one UPDATE that sets
+<code>enriched_at</code> once
+(<code>src/memseek/enrichment.py:1303-1325</code>), which releases the
+row to search and triggers.</p>
+<p><strong>Derivation.</strong> <code>process_derivation_job</code>
+(<code>src/memseek/derive/runner.py:1602</code>) builds the basis
+(<code>src/memseek/derive/basis.py</code>), executes tasks in order
+(<code>_execute_tasks</code>, <code>:1029</code>), compiles the emission
+with <code>compile_candidate_set</code>
+(<code>src/memseek/derive/candidates.py:257-354</code>), and commits in
+<code>_commit_execution</code> (<code>runner.py:1343-1495</code>). The
+commit re-verifies the basis under the workspace and entity locks,
+checks every source id still exists, writes the run record, then each
+output.</p>
+<p><strong>Promotion.</strong> <code>POST /promote</code> →
+<code>promote_run</code> (<code>src/memseek/promote.py:108-406</code>).
+The source run must be a derive, materialize or promote run for the same
+entity. For a derive run every source row must be a ready keyed draft
+and the manifest complete (<code>:195-230</code>). An artifact promotion
+must match its declared candidate processor and keys
+(<code>:232-258</code>), and captured heads must equal the current ones
+(<code>:298-313</code>). It then writes a promote run and one active
+copy per draft (<code>:327-384</code>).</p>
+<p><strong>Retrieval.</strong> <code>execute_search</code>
+(<code>src/memseek/search/engine.py:1196</code>) resolves each source,
+fetches candidates through a backend, and reloads them from Postgres
+with <code>scope_conditions</code> (<code>:529-571</code>). It then
+filters, ranks with the declared rank expression or sorts structurally,
+optionally reranks with an LLM, fuses sources, and touches
+<code>last_accessed</code> on the returned rows
+(<code>:1078-1095</code>). Named views
+(<code>src/memseek/search/named_views.py</code>) bind parameters into a
+fixed query.</p>
+<p><strong>Context assembly.</strong> <code>render_artifact</code>
+(<code>src/memseek/artifacts.py</code>) fills each block from a view or
+a keyed document read, cuts it to the block's <code>max_tokens</code>,
+and renders the template deterministically.
+<code>POST /artifacts/{name}/uses</code> also registers an Artifact Use
+handle for later feedback.</p>
+<p><strong>Erasure.</strong> <code>POST /erase</code> →
+<code>erase</code> → <code>_erase_tx</code>
+(<code>src/memseek/erase.py:180-338</code>): seed rows, a recursive
+closure over <code>derived_from</code> capped at 10,000 rows, fencing of
+active derive jobs, an <code>index_delete</code> job, the DELETE, a
+refresh of keyed current state, the <code>_system/erasure</code> row,
+and a trigger re-evaluation.</p>
+<p><strong>MCP.</strong> <code>GET /tools</code> publishes the catalog's
+allowlist (<code>src/memseek/tools.py</code>).
+<code>MemseekMcpBridge._invoke</code> maps each kind to one route
+(<code>src/memseek/mcp_server.py:150-222</code>), and
+<code>make_http_mcp_server</code> serves it at <code>/mcp</code> with
+the caller's bearer (<code>:309-335</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>workspace</code></td>
+<td>tenant; from the bearer key</td>
+</tr>
+<tr>
+<td><code>entity</code></td>
+<td>the memory a record belongs to, such as <code>project:apollo</code>
+or <code>skill:billing</code>; caller-chosen</td>
+</tr>
+<tr>
+<td><code>collection</code>, <code>collection_version</code>,
+<code>collection_hash</code></td>
+<td>the contract the row was written under</td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td>present in keyed collections; the version identity</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>caller-chosen within the collection; <code>run</code> and
+<code>erasure</code> reserved</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>active</code> or <code>draft</code></td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>JSON object with a required <code>text</code>;
+<code>tombstone: true</code> is engine-owned</td>
+</tr>
+<tr>
+<td><code>derived_from</code></td>
+<td>up to 256 parent ids; the provenance graph erasure walks</td>
+</tr>
+<tr>
+<td><code>run_id</code>, <code>depth</code></td>
+<td>producing run, and abstraction depth capped at 16</td>
+</tr>
+<tr>
+<td><code>scores</code>, <code>annotations</code></td>
+<td>processor or caller outputs</td>
+</tr>
+<tr>
+<td><code>occurred_at</code>, <code>created_at</code>,
+<code>seq</code></td>
+<td>event time (caller-settable), insert time, total order</td>
+</tr>
+</tbody>
+</table></div>
+<p>(<code>migrations/001_init.sql:11-47</code>.)</p>
+<p><strong>Episodic, semantic and profile memory are collections, not
+types.</strong> In the agent-memory catalog <code>messages</code> (L0)
+and <code>memories</code> (L1) are event collections;
+<code>scenes</code> (L2), <code>persona</code> (L3),
+<code>procedures</code> and <code>context_snapshots</code> are keyed.
+The L1 schema carries <code>memory_kind</code> (persona, episodic,
+instruction), <code>priority</code>, <code>scene_name</code>,
+<code>decision</code> (store or merge) and <code>supersedes</code>
+(<code>examples/agent_memory_catalog/collections/memories.yaml:11-43</code>).</p>
+<p><strong>Provenance is mandatory for derived rows and optional for
+ingested ones.</strong> A derived output always carries its run and at
+least one citation. A public record may declare parents; a tombstone
+must.</p>
+<p><strong>Time.</strong> <code>occurred_at</code> is when something
+happened, and <code>created_at</code> and <code>seq</code> are when it
+was stored. Currency is decided by <code>seq</code>, never by
+<code>occurred_at</code>, and no field states when a keyed value stopped
+being true beyond its successor's arrival.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Every search path composes its WHERE clause through
+<code>scope_conditions</code>
+(<code>src/memseek/search/scope.py:33-91</code>). It always adds the
+workspace, <code>enriched_at is not null</code> and the tombstone
+exclusion, and it excludes <code>_system</code> unless collections are
+named. It applies entities, types, status (default active), keyed, time
+bounds, depth and <code>versions: current</code> when declared. The
+Postgres backend's four candidate queries and the canonical reload all
+call it (<code>src/memseek/search/pg.py:68-139</code>;
+<code>engine.py:541</code>).</p>
+<p>Modes are <code>text</code> (<code>ts_rank_cd</code> over an English
+<code>tsvector</code>), <code>vector</code> (pgvector cosine in the
+catalog's embedding space), <code>hybrid</code>, <code>recent</code> and
+<code>structured</code>, which forbids a rank expression and sorts on
+declared fields. A view may fuse several sources by reciprocal rank with
+per-source weights, apply a graph boost from connected edges, and rerank
+a bounded prefix with an LLM judge (<code>engine.py:844-1075</code>).
+Graph views traverse an edge collection recursively, excluding
+tombstoned edges (<code>src/memseek/graph.py:179-325</code>).</p>
+<p>Budgets are per block. The agent-memory <code>agent_context</code>
+artifact gives persona 1,200 tokens, scenes 2,500, standing rules 1,500
+and relevance recall 2,500, so a long scene cannot crowd out a rule
+(<code>examples/agent_memory_catalog/artifacts/agent_context.yaml</code>).
+The plugin injects the rendered artifact on every
+<code>UserPromptSubmit</code> inside a
+<code>&lt;memseek-context&gt;</code> envelope that calls it untrusted
+(<code>integrations/claude-code/scripts/memseek_hook.py:104-132</code>).</p>
+<p><strong>Superseded L1 memories stay in recall.</strong> The L1 merge
+rule tells the model to emit one record that <em>"lists every replaced
+memory id in supersedes"</em> and to <em>"never leave the old and the
+new claim both standing"</em>
+(<code>examples/agent_memory_catalog/derivations/l1_extract.yaml:237-241</code>).
+The old memory is an event row, so <code>versions: current</code> does
+not apply to it, and neither <code>memory_recall</code> nor
+<code>standing_instructions</code> has a predicate on being superseded
+(<code>examples/agent_memory_catalog/views/recall.yaml:6-69</code>). The
+view language filters a row on its own fields, and being named in
+another row's <code>supersedes</code> is not one of them.</p>
+<p>A changed standing rule is therefore rendered beside its replacement
+in the standing-rules block. The catalog's comment on
+<code>memory_audit</code> calls that view the only place a reader can
+see a superseded claim still exists (<code>:71-74</code>); the other
+views show it too. The keyed layers, scenes and persona, supersede
+correctly.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit ingest plus declared derivation. Nothing extracts
+on the request path: <code>POST /records</code> validates and commits
+without a provider call (<code>src/memseek/records.py:1-7</code>), so
+the agent never blocks on a model. The Claude Code plugin spools each
+user prompt and assistant reply to disk and flushes it asynchronously,
+with a dedupe key per session ordinal
+(<code>integrations/claude-code/scripts/memseek_hook.py:135-178</code>).</p>
+<p><strong>Derivation is where memory is made.</strong> In the
+agent-memory catalog, a ready message triggers <code>l1_extract</code>
+after a two-second debounce. Pass one extracts up to ten claims citing
+message ids. Pass two searches existing memories per topic. Pass three
+decides store or merge and may only copy, except in a merge. L1 writes
+trigger <code>scene_synthesis</code>, whose keyed writes trigger
+<code>persona</code> after a 30-second cooldown. A trace ingested under
+a skill entity triggers <code>skill_extract</code>, whose four-section
+procedure is <code>complete: true</code> and
+<code>review: required</code>.</p>
+<p><strong>Deduplication is a model judgment</strong> over a bounded
+hybrid search of existing L1 memories, not a key. A skipped claim is
+never written, so the only record of the skip is the run's task
+trace.</p>
+<p><strong>Correction</strong> is a keyed successor, a keyed retraction,
+or, in event collections, a later record that says it supersedes an
+earlier one. Only the first two change what reads return (section
+6).</p>
+<p><strong>Agent-generated content</strong> reaches memory only as
+source messages through the one ingest tool, then through the same
+derivation as a user's words. Prompts fence every rendered row as
+<code>&lt;records untrusted="true"&gt;</code> and tell the model to
+treat it as evidence, never as instruction.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Write:</strong> a synchronous insert with no model call. A
+new message is searchable after its embedding job: the 500 ms worker
+poll plus one provider call. Derived L1 memories follow after the
+debounce and up to four model calls, from seconds to about a
+minute.</li>
+<li><strong>Background:</strong> incremental. <code>changes</code>
+sources consume the suffix after a cursor, and <code>snapshot</code>
+sources re-read a bounded scope. Nothing rewrites the whole store on a
+schedule, and per-run limits in the catalog cap records, tokens, model
+calls and wall time.</li>
+<li><strong>Read:</strong> one artifact render per prompt, bounded by
+the per-block token caps. The block sits in the user turn, so a
+provider's cached system prefix survives.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP surface is whatever the catalog's <code>mcp/*.yaml</code>
+declares, and only six kinds exist: <code>view</code>,
+<code>artifact</code>, <code>answer</code>, <code>record</code>,
+<code>ingest</code> and <code>invocation</code>
+(<code>src/memseek/definitions/models.py:1191-1210</code>). The
+agent-memory interface declares <code>context</code>,
+<code>recall</code>, <code>standing_rules</code>,
+<code>replay_session</code>, <code>remember</code> (ingest into
+<code>messages@1</code>), <code>record</code> and <code>answer</code>
+(<code>examples/agent_memory_catalog/mcp/agent_memory.yaml</code>). The
+bridge forces <code>save = False</code> on answer
+(<code>src/memseek/mcp_server.py:165-170</code>) and drops any
+caller-supplied collection on ingest (<code>:176-183</code>). The agent
+cannot run a derivation, promote, erase or publish a catalog through
+MCP.</p>
+<p><strong>The ingest bridge forwards more than its schema
+allows.</strong> <code>_ingest_input_schema</code> omits
+<code>derived_from</code>, <code>scores</code>,
+<code>annotations</code>, <code>status</code> and
+<code>tombstone</code>. Its docstring says an agent may <em>"never forge
+provenance, pre-score its own writes, publish drafts, or retract
+anything"</em> (<code>src/memseek/tools.py:80-127</code>). The bridge
+builds the record by spreading the arguments and removes only the
+collection fields (<code>mcp_server.py:181-183</code>), and
+<code>PublicRecordInput</code> accepts all five fields
+(<code>src/memseek/records.py:45-69</code>). The <code>mcp</code>
+release pinned in <code>uv.lock</code>, 2.0.0, validates
+<code>CallToolRequestParams</code> and does not check arguments against
+a tool's <code>inputSchema</code> (its <code>server/runner.py</code> and
+<code>server/lowlevel/server.py</code> at tag v2.0.0).</p>
+<p>So a client that sends those keys gets them stored. The results are
+provenance edges to any record id the agent has seen, self-assigned
+scores, and drafts in <code>messages</code>. A tombstone fails there,
+because <code>messages</code> forbids keys. This was read, not
+reproduced.</p>
+<p><strong>The Claude Code plugin</strong> registers five hooks
+(<code>integrations/claude-code/hooks/hooks.json</code>). SessionStart
+states the entity and write policy. UserPromptSubmit binds and injects
+the context artifact and, asynchronously, captures the prompt. Stop
+captures the reply, PreCompact prints a compaction anchor re-rendered
+for the last task, and SessionEnd detaches a final spool flush.
+<code>MEMSEEK_CAPTURE_MODE</code> selects <code>conversation</code>,
+<code>explicit</code> or <code>off</code>, and the entity derives from
+the project root unless overridden
+(<code>integrations/claude-code/scripts/memseek_client.py:137-195</code>).
+Hooks fail open: an unreachable service injects nothing and blocks
+nothing.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is enforced where it is produced.</strong> A
+derived output may cite only ids present in its run's visible set,
+checked at compile time
+(<code>src/memseek/derive/candidates.py:137-145</code>), and every
+model-visible source is re-read under lock at commit
+(<code>runner.py:1370-1386</code>). Invented UUIDs in a prompt never
+become citation-visible
+(<code>tests/test_derive_provenance.py:112-130</code>).</p>
+<p><strong>One key, every power.</strong> A workspace has one API key,
+and <code>auth.py</code> has no role or scope concept. The key that
+authenticates the plugin's MCP connection also authorises
+<code>/promote</code>, <code>/erase</code>, <code>POST /catalog</code>,
+<code>/reindex</code> and unrestricted <code>POST /records</code>. The
+MCP allowlist narrows the agent's declared tools, not its
+credential.</p>
+<p><strong>Erasure cascades further than a record's own
+descendants.</strong> <code>_seed_rows</code> adds the producing run of
+every seeded record (<code>src/memseek/erase.py:134-135</code>), so
+erasing one derived memory erases every sibling its run emitted. Each
+<code>changes</code>-driven run also lists the previous run of the same
+pipeline and entity among its parents (<code>runner.py:1389-1396</code>;
+<code>basis.py:169-195</code>). Erasing any record a run consumed
+therefore reaches that run, every later run, and everything they
+emitted.</p>
+<p>The closure is capped at 10,000 rows, and an over-cap erasure is
+refused entirely (<code>erase.py:160-166</code>). A long-lived entity
+may reach a size where erasing an early message, or the entity itself,
+fails with <code>erasure_too_large</code>. After an erasure, the
+pipeline's watermark falls back to the newest surviving run and
+re-derives (<code>basis.py:169-195</code>). Neither the cascade nor the
+cap is covered by a test. This was read, not reproduced.</p>
+<p><strong>Erasing a keyed successor revives its predecessor.</strong>
+Currency is the newest surviving row, and erasure enqueues a refresh of
+the prior version (<code>src/memseek/projections.py:309-345</code>).
+That is correct for "forget this correction", and surprising for "forget
+this person" when the predecessor was ingested without a parent
+link.</p>
+<p><strong>Concurrency</strong> is handled by advisory workspace and
+entity locks, a unique active derive job per derivation and entity, and
+head preconditions at commit and at promotion. <strong>Prompt
+injection</strong> is addressed by fencing, by citation validation, and
+by the MCP allowlist.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded: <code>draft</code> is stored and
+withheld from every default read. There is no <code>rejected</code>
+state, and a caller can write <code>status</code> directly on
+<code>POST /records</code>.</li>
+<li><code>scope_enforced</code> — awarded on the workspace, taken from
+the key and applied by the one shared predicate. The entity is a caller
+argument, and <code>/answer</code> without entities spans the
+workspace.</li>
+<li><code>audit_log</code> — awarded on the <code>_system</code> run and
+erasure records over an append-only record table. No actor is
+recorded.</li>
+<li><code>human_review</code> — awarded: a reviewed draft waits for
+<code>/promote</code>, which is not an MCP kind, and promotion refuses
+stale candidates. Any key holder resolves it, nothing records who, and
+an agent whose shell can read the key can reach the route.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld. A retraction is keyed on the
+record's key, not on the rejected value, and the L1 layer, where
+extraction happens, has no keys. Nothing stops the next extraction
+re-asserting a retracted value in a new row.</li>
+<li><code>bitemporal</code> — withheld. <code>occurred_at</code> is
+event time settable by the caller, currency is by <code>seq</code>, and
+no row carries a validity interval.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests at the pin and ran none of them. <code>tests/</code>
+holds 612 test functions in 71 test modules, and CI runs the whole suite
+against a <code>pgvector/pgvector:0.8.2-pg16</code> service
+(<code>.github/workflows/ci.yml:42-73</code>).
+<code>tests/conftest.py:37-42</code> fails on a non-test database with
+<code>pytest.fail</code> rather than skipping. <code>skipif</code>
+markers appear only in <code>test_harness_writeback.py</code> and
+<code>test_local_computer.py</code>, conditioned on an external runtime;
+neither file tests retrieval.</p>
+<p><strong>Negative retrieval cases.</strong>
+<code>test_current_versions_hide_prior_ready_key_when_newer_unready_exists</code>
+(<code>tests/test_search.py:255-327</code>) writes role
+<em>Engineer</em>, then <em>Manager</em> under the same key. It asserts
+a current-versions search for "engineer" returns nothing (line 309) and
+the same search over all versions returns one hit (line 327), so the
+empty result cannot come from an empty store.</p>
+<p><code>test_answer_entities_scope_excludes_another_entitys_memory</code>
+(<code>tests/test_answer.py:446-494</code>) stores an Alice and a Bob
+observation and scopes an answer to Alice. The fake model cites Bob, and
+the test asserts the citation is refused, Bob's id is absent from the
+prompt, and Alice's is present.</p>
+<p><strong>Promotion.</strong>
+<code>test_corpus_rebuild_divergence_promotion_and_stale_guard</code>
+(<code>tests/test_rebuild_promotion.py:132-358</code>) asserts that
+drafts land with no active rows and that a wrong-processor promotion is
+refused. It asserts a promotion copies all five keys and leaves the
+drafts, a repeat is a no-op, and a promotion after a head changed
+returns <code>promotion_stale</code> and writes nothing.</p>
+<p><strong>MCP.</strong>
+<code>test_ingest_writes_only_to_the_declared_collection</code>
+(<code>tests/test_mcp_server.py:109-147</code>) proves a caller-supplied
+collection is dropped. No test sends <code>status</code>,
+<code>derived_from</code> or <code>scores</code> through the bridge.</p>
+<p><strong>Not covered.</strong> Erasure has two tests, each over
+ingested rows only (<code>tests/test_erase.py</code>). None erases a
+derived record, a run's siblings, a successor run chain or an over-cap
+closure. <code>tests/test_agent_memory_catalog.py</code> has one test
+and none on L1 merge or supersession. No test asserts a draft is absent
+from search.</p>
+<p><strong>Evaluation and papers.</strong>
+<code>src/memseek/evals/skill_learning.py</code> and
+<code>evals/scrape_suite.yaml</code> score the skill-maintenance loop on
+a scraping task, not retrieval. No retrieval benchmark result for
+Memseek is committed, and the LongMemEval-S numbers on the marketing
+site are MemBukkit's. No paper or citation file is in the tree; the
+arXiv links in two marketing blog posts cite other people's work.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Capture a read receipt before the model runs and recheck it
+at commit.</strong> Record what the run saw and the heads it expected,
+and refuse the commit if either moved. A race becomes a refused write
+instead of a lost update.</li>
+<li><strong>Validate citations against the visible set, not against
+existence.</strong> A derived claim may cite only what its producing
+task was shown.</li>
+<li><strong>Promote by copying, never by flipping.</strong> The draft
+stays, the active copy derives from it, and a stale candidate is
+refused.</li>
+<li><strong>Make readiness a gate.</strong> A row that has not finished
+enrichment is stored and invisible, so no agent acts on half-processed
+memory.</li>
+<li><strong>Declare the MCP surface in data and bind the write
+destination there,</strong> so a tool call cannot choose where it
+writes.</li>
+<li><strong>Budget context per block,</strong> so one long section
+cannot evict a critical rule.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A tool schema that is only advice.</strong> If the server
+does not validate arguments against the published schema, strip
+everything the schema omits in the handler.</li>
+<li><strong>Supersession recorded on the newer row only.</strong> A read
+that must hide the older row needs a field on the older row or a keyed
+identity; an array on the successor is audit, not a filter.</li>
+<li><strong>Control dependencies in the provenance graph.</strong> An
+edge added for scheduling, such as the previous run, becomes a deletion
+edge once erasure walks the graph.</li>
+<li><strong>One credential for the agent and the operator.</strong> A
+tool allowlist narrows what the agent is offered, not what its key can
+do.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Memseek suits a team that wants memory to be a governed data product:
+Postgres it already runs, schemas and derivations reviewed as code, and
+every derived claim traceable to evidence. It asks for real investment:
+a catalog language with its own compiler, a worker, embeddings and
+Python 3.14. The agent-memory catalog is a starting point whose L1
+supersession needs a fix before it is trusted. A single developer who
+wants a coding agent to remember a few rules will find this far heavier
+than the problem. A multi-tenant product must add its own per-user
+credential layer, because one workspace key is all-powerful.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any MCP client used with the plugin validate tool arguments
+against the published <code>inputSchema</code> before sending them,
+closing the ingest gap in practice?</li>
+<li>How large does an active entity's erasure closure grow under the
+agent-memory catalog, and when does <code>erasure_too_large</code> start
+refusing?</li>
+<li>Does the <code>memory_audit</code> comment describe an intended
+filter on superseded L1 memories that was never built?</li>
+<li>Who is expected to call <code>/promote</code> in production: an
+operator, an application rule, or a person through a surface outside
+this repository?</li>
+<li>Does the Turbopuffer projection honour erasure within a bounded
+delay, and is that measured anywhere?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong> <code>migrations/001_init.sql</code>,
+<code>alembic/versions/0002_workspace_catalog.py</code> to
+<code>0010_computer_invocations.py</code>,
+<code>src/memseek/canonical_records.py</code>.</li>
+<li><strong>Ingest:</strong> <code>src/memseek/records.py</code>,
+<code>src/memseek/enrichment.py</code>.</li>
+<li><strong>Derivation:</strong>
+<code>src/memseek/derive/runner.py</code>, <code>derive/basis.py</code>,
+<code>derive/candidates.py</code>, <code>derive/emission.py</code>,
+<code>derive/provenance.py</code>, <code>src/memseek/triggers.py</code>,
+<code>src/memseek/worker.py</code>.</li>
+<li><strong>Promotion and erasure:</strong>
+<code>src/memseek/promote.py</code>, <code>src/memseek/erase.py</code>,
+<code>src/memseek/projections.py</code>.</li>
+<li><strong>Retrieval and context:</strong>
+<code>src/memseek/search/{engine,scope,spec,pg,turbopuffer,named_views}.py</code>,
+<code>src/memseek/graph.py</code>,
+<code>src/memseek/artifacts.py</code>,
+<code>src/memseek/views/*.py</code>,
+<code>src/memseek/answer.py</code>.</li>
+<li><strong>Catalog:</strong>
+<code>src/memseek/definitions/loader.py</code>,
+<code>definitions/models.py</code>, <code>definitions/hashing.py</code>,
+<code>src/memseek/workspace_catalog.py</code>,
+<code>examples/agent_memory_catalog/</code>.</li>
+<li><strong>API, MCP, auth:</strong> <code>src/memseek/api.py</code>,
+<code>src/memseek/tools.py</code>,
+<code>src/memseek/mcp_server.py</code>,
+<code>src/memseek/auth.py</code>, <code>src/memseek/sdk.py</code>.</li>
+<li><strong>Plugin:</strong>
+<code>integrations/claude-code/hooks/hooks.json</code>,
+<code>integrations/claude-code/scripts/*.py</code>,
+<code>integrations/claude-code/skills/</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_search.py</code>,
+<code>tests/test_answer.py</code>,
+<code>tests/test_rebuild_promotion.py</code>,
+<code>tests/test_erase.py</code>, <code>tests/test_mcp_server.py</code>,
+<code>tests/test_derive_provenance.py</code>,
+<code>tests/test_agent_memory_catalog.py</code>,
+<code>tests/conftest.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rn -i 'membukkit' src tests conf schemas pyproject.toml uv.lock</code>
+— no match. <code>grep -rln -i membukkit . --exclude-dir=.git</code> —
+<code>mkdocs.yml</code>, <code>docs/membukkit-integration-plan.md</code>
+and files under <code>marketing/</code> only.</li>
+<li><code>grep -rn -i -E 'renamed|formerly' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— code comments and one changelog line about a test parameter; no
+project rename.</li>
+<li><code>grep -rn -i -E 'update record|delete from record' src</code> —
+UPDATEs in <code>enrichment.py</code>,
+<code>workspace_catalog.py</code>, <code>evolution.py</code>,
+<code>promote.py</code> (embedding copy), <code>reembed.py</code> and
+three <code>last_accessed</code> touches; one DELETE,
+<code>erase.py:262</code>.</li>
+<li><code>grep -rn 'supersedes' --include='*.py' --include='*.yaml' src examples/agent_memory_catalog</code>
+— the <code>src/</code> hits are the processor-chain feature; the
+catalog hits write or project <code>content.supersedes</code>, and no
+view filters on it.</li>
+<li><code>grep -rn -E 'promote_run|/promote|"promote"' src integrations harnesses skillpacks cloudflare examples</code>
+— <code>api.py</code>, <code>sdk.py</code>, <code>views/runs.py</code>
+and three example scripts; no MCP kind and no plugin script.</li>
+<li><code>grep -rn -i -E 'def .*(reject|decline|discard)|"/(reject|decline|discard)' src</code>
+— no reject verb for drafts.</li>
+<li><code>grep -rn -E 'actor|reviewer|approved_by|promoted_by' src/memseek/promote.py src/memseek/api.py</code>
+— no match.</li>
+<li><code>grep -n -i -E 'role|scope|permission|read_only|readonly' src/memseek/auth.py</code>
+— no match.</li>
+<li><code>grep -rn -E 'valid_from|valid_to|valid_at|as_of|at_seq|asof' src</code>
+— no match.</li>
+<li><code>grep -rn -E 'status|tombstone|derived_from|scores' src/memseek/mcp_server.py</code>
+— one unrelated <code>status_code</code>; the bridge strips none of
+them.</li>
+<li><code>grep -n -E 'arguments|schema|validate' src/mcp/server/runner.py</code>
+in <code>modelcontextprotocol/python-sdk</code> at tag v2.0.0 —
+params-model validation only.</li>
+<li><code>grep -n -E 'tombstone|derived_from|"status"|scores' tests/test_mcp_server.py tests/test_mcp_http.py</code>
+— no match.</li>
+<li><code>grep -rn -E 'erasure_too_large|_MAX_ERASURE_ROWS|predecessor' tests/test_erase.py</code>
+— no match.</li>
+<li><code>grep -n -i -E 'supersed|merge' tests/test_agent_memory_catalog.py</code>
+— no match.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— two marketing blog posts citing third-party papers; no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/memseekai/memseek/commit/c2ec72abb0ca6743472687ad20dc1e33a14a217a"><code class="commit-id" title="c2ec72abb0ca6743472687ad20dc1e33a14a217a">c2ec72ab…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 28
+September 2026 and one commit past the triage pin. Five marks awarded;
+section 9 names the two withheld. Screened before reading: two auto-run
+surfaces (<code>.claude-plugin/marketplace.json</code>, and
+<code>.vscode/tasks.json</code> with no <code>runOn</code>), three
+build-time execution points (<code>Makefile</code> and two
+<code>conftest.py</code>), three unpinned surfaces, and seven files
+inside the cooldown. Every file in a depth-1 clone dates to the tip; by
+history the newest manifest change is dated 16 September 2026. No
+agent-instruction file is in the tree. Read with <code>grep</code> and
+<code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

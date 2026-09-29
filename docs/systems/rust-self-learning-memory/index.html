@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust episodic memory for coding
+agents that scores completed task episodes, extracts tool-sequence
+patterns without a model, and serves them over MCP and CLI.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Rust Self-Learning
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust episodic memory for
+coding agents that scores completed task episodes, extracts
+tool-sequence patterns without a model, and serves them over MCP and
+CLI.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Rust Self-Learning
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust episodic memory for
+coding agents that scores completed task episodes, extracts
+tool-sequence patterns without a model, and serves them over MCP and
+CLI.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Rust Self-Learning Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Rust Self-Learning Memory",
+      "description": "A Rust episodic memory for coding agents that scores completed task episodes, extracts tool-sequence patterns without a model, and serves them over MCP and CLI.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Episodic task memory with rule-based
+pattern extraction</p>
+          <h1>Rust Self-Learning Memory</h1>
+          <p class="document-deck">A Rust episodic memory for coding
+agents that scores completed task episodes, extracts tool-sequence
+patterns without a model, and serves them over MCP and CLI.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/d-o-hub/rust-self-learning-memory">
+              <span>Source</span>
+              <strong>d-o-hub/rust-self-learning-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/d-o-hub/rust-self-learning-memory/commit/67edf6ce27e7bb75052171790296b4be065a238a" title="67edf6ce27e7bb75052171790296b4be065a238a">
+              <span>Analyzed revision</span>
+              <code>67edf6ce…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/d-o-hub--rust-self-learning-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>d-o-hub--rust-self-learning-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>164,662
+lines of Rust in the five product crates outside test files;
+do-memory-core is 74,035 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,804
+commits on main by 9 contributors counting bot and anonymous authors, 5
+November 2025 – 29 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>4,656
+Rust test functions, 173 of them marked ignore</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Rust Self-Learning Memory is a Rust workspace — a core library, two
+storage crates, an MCP server and a CLI — that records a coding agent's
+work as <em>episodes</em>. An episode is a task, its context, the tool
+steps taken and an outcome. Completing one scores it, writes a
+rule-based reflection, and extracts reusable <em>patterns</em>: tool
+sequences, decision points, error recoveries and context rules. Later
+tasks retrieve similar episodes, patterns and generated playbooks.</p>
+<p>What is notable is that no step calls a language model. Reward,
+reflection, salient-feature extraction, summaries, patterns and
+playbooks are all deterministic, so capture cannot fail on a provider
+outage. Around that core sits careful plumbing: the episode store
+hard-errors instead of warning, and cache keys and the ANN index carry
+the embedding provider's identity.</p>
+<p>What is weak is the lifecycle at its two ends. The shipped MCP server
+runs with a quality threshold its own gate cannot be passed at, because
+two of the five scored features are computed after the gate. Explicit
+deletion removes the episode row and leaves its embeddings, derived
+patterns and cached results.</p>
+<p>The pin is <a
+href="https://github.com/d-o-hub/rust-self-learning-memory/commit/67edf6ce27e7bb75052171790296b4be065a238a"><code class="commit-id" title="67edf6ce27e7bb75052171790296b4be065a238a">67edf6ce…</code></a>,
+a merge dated 29 September 2026. Triage recorded <a
+href="https://github.com/d-o-hub/rust-self-learning-memory/commit/9f50c607a9758e39ab0889e94ced4d2b74ef50c2"><code class="commit-id" title="9f50c607a9758e39ab0889e94ced4d2b74ef50c2">9f50c607…</code></a>
+from 28 September; the head had moved by the time of cloning.</p>
+<p>The <code>LICENSE</code> file is the MIT text with the copyright line
+<em>"Copyright (c) 2019 Zachary Rice"</em>, while
+<code>Cargo.toml</code> declares <code>license = "MIT"</code> for
+<em>"Self-Learning Memory Contributors"</em>. The grant is MIT either
+way; the named holder does not match the project.</p>
+<p>The README's headline retrieval feature, a four-tier <em>"CSM
+Cascading Retrieval"</em> over BM25, hyperdimensional vectors, a concept
+graph and API embeddings, is a library type
+(<code>memory-core/src/retrieval/cascade/</code>) that the retrieval
+benchmark and the CLI's <code>eval benchmark</code> construct. The
+retrieval an agent receives through MCP or the library is a different
+function (section 6).</p>
+<p>One mark, <code>negative_eval</code>, on a test asserting that a
+capacity-evicted episode is not returned while the survivor is. Section
+9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an episode, and it becomes retrievable only by
+completing. Nothing is extracted from conversation: the agent, or code
+driving it, calls <code>start_episode</code>, logs steps, and calls
+<code>complete_episode</code> with a verdict. The derived records —
+patterns, heuristics, summaries, playbooks — are computed from completed
+episodes and stand for <em>"this worked before"</em>.</p>
+<p><strong>States.</strong> <code>start_episode</code> writes an
+in-progress episode to both backends and the in-process map
+(<code>memory-core/src/memory/episode.rs:94-108</code>). Retrieval takes
+only <code>is_complete()</code> episodes
+(<code>memory/retrieval/context.rs:213-218</code>). So an episode has
+two states, in progress and complete, and the first is withheld from
+every retrieval tier. That is a lifecycle filter rather than a belief
+status: an in-progress episode is unfinished, not doubted.</p>
+<p><strong>The gate between them.</strong> <code>complete_episode</code>
+computes a quality score before anything else and refuses to store the
+episode below <code>quality_threshold</code>
+(<code>completion.rs:141-166</code>). A refused episode keeps its
+in-progress row in storage and in the map, since the completed copy was
+a local clone that is dropped. The score is a weighted sum of five
+features, and two of them read fields the same function fills only
+afterwards (section 7).</p>
+<p><strong>Outcome is not truth.</strong> A <code>Failure</code> outcome
+is stored and retrieved like a success; reward and success rate rank it
+lower. Patterns carry <code>success_rate</code> and an
+<code>effectiveness</code> score that move with use and feedback, and
+both are ranking inputs (<code>patterns/types.rs:155-197</code>).
+Nothing marks a pattern as wrong, and nothing stops one being
+re-extracted.</p>
+<p><strong>How a memory stops being one.</strong> Delete removes the
+episode row. Capacity eviction removes the row and its embeddings.
+Archive sets a metadata key that only the list filter reads. Nothing
+decays out of the store: <code>pattern decay</code> prints a removal it
+does not make (section 7).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an episode becomes retrievable in rust-self-learning-memory, where the shipped MCP configuration stops it, and the two ways it leaves</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an episode becomes retrievable in rust-self-learning-memory, where the shipped MCP configuration stops it, and the two ways it leaves
+flowchart TD
+    S[&quot;start_episode:&lt;br/&gt;in-progress row in redb, Turso&lt;br/&gt;and the in-process map&quot;] --&gt; L[&quot;log_step:&lt;br/&gt;buffered, flushed in batches&quot;]
+    L --&gt; C[&quot;complete_episode&quot;]
+    C --&gt; Q{&quot;quality score &gt;= threshold?&lt;br/&gt;scored before reflection&lt;br/&gt;and patterns exist&quot;}
+    Q -- &quot;no: MCP default 0.7,&lt;br/&gt;fresh-episode maximum 0.64&quot; --&gt; R[&quot;ValidationFailed;&lt;br/&gt;row stays in_progress,&lt;br/&gt;never retrieved&quot;]
+    Q -- &quot;yes: CLI sets 0.0&quot; --&gt; W[&quot;reward, reflection, summary;&lt;br/&gt;store to redb and Turso,&lt;br/&gt;hard error on failure&quot;]
+    W --&gt; E[&quot;embed if a provider is live;&lt;br/&gt;patterns and heuristics extracted,&lt;br/&gt;store failures only warn&quot;]
+    E --&gt; RET[&quot;retrieve_relevant_context:&lt;br/&gt;completed episodes only&quot;]
+    RET --&gt; MCPQ[&quot;MCP query_memory keeps only&lt;br/&gt;episodes containing the&lt;br/&gt;literal query string&quot;]
+    E --&gt; EV{&quot;capacity reached?&quot;}
+    EV -- &quot;yes&quot; --&gt; EVD[&quot;evict: rows and embeddings&lt;br/&gt;deleted, outcome journalled&lt;br/&gt;in process&quot;]
+    RET --&gt; DEL[&quot;delete_episode:&lt;br/&gt;rows deleted; embeddings,&lt;br/&gt;patterns and cached results stay&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nine workspace members (<code>Cargo.toml</code>). The memory is in
+<code>do-memory-core</code> (<code>memory-core/</code>);
+<code>do-memory-storage-turso</code> wraps libSQL;
+<code>do-memory-storage-redb</code> is an embedded key-value cache;
+<code>do-memory-mcp</code> is the JSON-RPC server;
+<code>do-memory-cli</code> is the command line.
+<code>SelfLearningMemory</code> holds an in-process
+<code>episodes_fallback</code> map, an optional cache backend and an
+optional durable backend, and every read goes through the map first
+(<code>memory/episode.rs:404-423</code>).</p>
+<p><strong>Storage selection in the MCP server</strong> tries, in order,
+a named mode, a local Turso file, remote Turso plus redb, redb alone,
+and finally in-memory storage, with only a <code>warn!</code> for the
+last (<code>memory-mcp/src/bin/server_impl/storage.rs:25-94</code>). A
+server whose database path is unwritable therefore serves a memory that
+vanishes at exit. Every path builds <code>MemoryConfig::default()</code>
+(<code>storage.rs:49</code>, <code>:130</code>, <code>:188</code>,
+<code>:266</code>).</p>
+<p><strong>Durable writes</strong> are synchronous by default.
+<code>MemoryConfig::durable_write_queue</code> moves the Turso write
+behind a bounded queue, and backpressure is an error
+(<code>completion.rs:14-27</code>). Pattern extraction is synchronous
+unless <code>enable_async_extraction</code> starts a worker pool
+(<code>completion.rs:451-466</code>).</p>
+<p><strong>Schema.</strong> Turso tables <code>episodes</code>,
+<code>patterns</code>, <code>heuristics</code>, per-dimension
+<code>embeddings_*</code>, <code>episode_summaries</code>,
+<code>episode_tags</code>, <code>episode_relationships</code>,
+<code>episode_pattern_relationships</code>,
+<code>procedural_memory</code> and two recommendation tables
+(<code>memory-storage-turso/src/schema/mod.rs</code>). Several declare
+<code>ON DELETE CASCADE</code>, and nothing in the tree issues
+<code>PRAGMA foreign_keys</code>, which SQLite leaves off by default.
+Whether libSQL enforces those clauses on a connection that never enables
+them was not checked.</p>
+<p><strong>Embeddings</strong> are off by default
+(<code>enable_embeddings: false</code>,
+<code>types/config.rs:229</code>). Providers are OpenAI, Mistral and
+local ONNX, each behind a Cargo feature.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One binary for the MCP server and one for the CLI, from release
+archives or a <code>cargo build</code>; the default store is a local
+libSQL file and needs no account or key. Remote Turso needs
+<code>TURSO_DATABASE_URL</code> and <code>TURSO_AUTH_TOKEN</code>.
+Episodes are JSON columns in SQLite, readable and repairable with any
+SQLite client. redb is binary postcard and is not.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Start and log.</strong> <code>start_episode</code>
+(<code>memory/episode.rs:63</code>) validates, stores to cache and Turso
+with warnings on failure, and inserts into the map
+(<code>:94-108</code>). <code>log_step</code> buffers into
+<code>step_buffers</code>, flushed at 50 steps or 5,000 ms by default
+(<code>memory/step_buffer/config.rs:46-54</code>).</p>
+<p><strong>Complete.</strong> <code>complete_episode</code>
+(<code>memory/completion.rs:107-491</code>): flush steps, clone the
+episode, <code>complete()</code> it, run the quality gate
+(<code>:141-166</code>), extract salient features, compute reward and
+reflection (<code>:186-200</code>), summarise (<code>:213-233</code>),
+evict for capacity (<code>:240-317</code>), store to both backends with
+a hard error on either failure (<code>:328-357</code>), index
+spatiotemporally, embed and upsert the ANN index
+(<code>:403-426</code>), invalidate the whole query cache
+(<code>:431-440</code>), then extract patterns
+(<code>:451-466</code>).</p>
+<p><strong>Extract.</strong> <code>extract_patterns_sync</code>
+(<code>memory/learning.rs:13-110</code>) runs the rule extractors,
+stores each pattern and heuristic to both backends with warnings on
+failure, and re-persists the episode with the new ids.</p>
+<p><strong>Retrieve episodes.</strong>
+<code>retrieve_relevant_context</code>
+(<code>memory/retrieval/context.rs:92</code>) checks the query cache
+(<code>:104-145</code>), backfills the map from redb and Turso when
+fewer than <code>limit</code> completed episodes are in memory
+(<code>:149-203</code>), then tries four tiers in order: hybrid ANN
+(<code>:231-244</code>), semantic (<code>:246-261</code>), hierarchical
+(<code>:267-319</code>), legacy keyword (<code>:321-378</code>). MMR
+diversity follows on the hierarchical tier (<code>:383</code>).</p>
+<p><strong>Retrieve patterns.</strong>
+<code>retrieve_relevant_patterns</code>
+(<code>memory/retrieval/patterns.rs:26-73</code>) loads every pattern
+from storage, ranks, deduplicates and truncates, and records the
+retrieval on the in-memory copy.</p>
+<p><strong>MCP query.</strong> <code>query_memory_with_options</code>
+(<code>memory-mcp/src/server/tools/core.rs:125</code>) builds a
+<code>TaskContext</code> from <code>domain</code> and
+<code>task_type</code>, calls <code>retrieve_relevant_context</code>,
+then filters the result to episodes whose description, step action,
+parameters or result contain the lowercased query string
+(<code>:188-223</code>).</p>
+<p><strong>Delete.</strong> <code>delete_episode</code>
+(<code>memory/management.rs:61-107</code>) removes the episode from the
+map, the step buffer, redb and Turso. The MCP tool requires
+<code>confirm: true</code> in its arguments
+(<code>memory-mcp/src/server/tools/episode_get.rs:98-108</code>).</p>
+<p><strong>Evict.</strong> <code>delete_evicted_from_backends</code>
+(<code>memory/eviction.rs:72</code>) deletes the episode and its
+embedding from each backend (<code>:84-109</code>) and returns
+per-backend failures that <code>completion.rs:280-298</code> records in
+<code>OperationJournal</code>.</p>
+<p><strong>Tools.</strong> The dispatcher at
+<code>memory-mcp/src/bin/server_impl/handlers/call_tool.rs:69-170</code>
+names 48 tools; <code>batch_execute.rs</code> repeats the table for
+batched calls.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Fields that matter</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Episode</td>
+<td><code>episode_id</code>, <code>task_type</code>,
+<code>task_description</code>, <code>context</code> (domain, language,
+framework, complexity, tags), <code>start_time</code>,
+<code>end_time</code>, <code>steps</code>, <code>outcome</code>,
+<code>reward</code>, <code>reflection</code>, <code>patterns</code>,
+<code>heuristics</code>, <code>applied_patterns</code>,
+<code>salient_features</code>, <code>metadata</code>, <code>tags</code>,
+<code>checkpoints</code></td>
+<td><code>episode/structs/mod.rs:130-168</code></td>
+</tr>
+<tr>
+<td>episodes row</td>
+<td>the above as JSON columns plus <code>domain</code>,
+<code>language</code>, <code>created_at</code>,
+<code>archived_at</code></td>
+<td><code>schema/mod.rs:5-24</code></td>
+</tr>
+<tr>
+<td>Pattern</td>
+<td><code>ToolSequence</code>, <code>DecisionPoint</code>,
+<code>ErrorRecovery</code>, <code>ContextPattern</code>, each with
+<code>context</code>, a success rate or outcome stats, and
+<code>effectiveness</code></td>
+<td><code>patterns/types.rs:155-197</code></td>
+</tr>
+<tr>
+<td>patterns row</td>
+<td><code>pattern_data</code> JSON, <code>success_rate</code>,
+<code>context_domain</code>, <code>occurrence_count</code>,
+<code>created_at</code>, <code>updated_at</code></td>
+<td><code>schema/mod.rs:33-45</code></td>
+</tr>
+<tr>
+<td>heuristics row</td>
+<td><code>condition_text</code>, <code>action_text</code>,
+<code>confidence</code>, <code>evidence</code></td>
+<td><code>schema/mod.rs:49-58</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Provenance</strong> is the link from pattern to episode:
+<code>ContextPattern.evidence</code> holds episode ids, and
+<code>episode_pattern_relationships</code> is a join table. No record
+names who wrote it; the MCP audit takes a <code>client_id</code> from
+the tool arguments, defaulting to <code>"anonymous"</code>
+(<code>memory-mcp/src/bin/server_impl/tools/mod.rs:58-63</code>).</p>
+<p><strong>Time.</strong> <code>start_time</code> and
+<code>end_time</code> are when the task ran; <code>created_at</code> is
+when the row was written. There is no validity interval on any derived
+record, and <code>archived_at</code> is set only by
+<code>archive_episode</code>, which neither the MCP server nor the CLI
+calls.</p>
+<p><strong>Scope.</strong> No user, agent, project or tenant key exists
+on any record. <code>domain</code> is a free-text topic the caller
+supplies at <code>start_episode</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Which tier answers depends on configuration, and each filters
+differently.</strong> The shipped defaults are
+<code>retrieval_mode: Keyword</code>, embeddings off and spatiotemporal
+indexing on (<code>types/config.rs:226-261</code>), so the hybrid and
+semantic tiers return <code>None</code> and the hierarchical tier
+answers. <code>filter_by_domain</code> keeps only episodes whose
+<code>domain</code> equals the query's
+(<code>spatiotemporal/retriever/scoring.rs:18-31</code>). The legacy
+tier, reached when the hierarchical one fails, treats a domain match as
+one of five OR conditions beside language, framework, tags and a
+four-letter word in the description
+(<code>memory/retrieval/scoring.rs:12-45</code>). The semantic tier has
+no domain predicate at all
+(<code>embeddings/storage.rs:31-36</code>).</p>
+<p><strong>What the MCP tool returns is narrower again.</strong> After
+ranking, <code>query_memory</code> keeps an episode only if the whole
+query string, lowercased, is a substring of its description or a step
+(<code>tools/core.rs:188-223</code>). A natural-language query such as
+<em>"handle API rate limiting with retries"</em> returns an episode only
+if those exact words appear together in it, whatever the ranker
+scored.</p>
+<p><strong>Backfill bounds the candidate set.</strong> When the map
+holds fewer completed episodes than <code>limit</code>, retrieval loads
+up to <code>MAX_QUERY_LIMIT</code> (1,000) from each backend
+(<code>context.rs:163-203</code>). Turso returns the newest by
+<code>start_time</code>
+(<code>storage/episodes/query.rs:100-110</code>), and redb returns the
+first 1,000 in key order
+(<code>memory-storage-redb/src/episodes_queries.rs:44-53</code>).
+In-progress rows count toward both caps and are then discarded, so a
+store full of refused episodes displaces completed ones.</p>
+<p><strong>Caching.</strong> Results are cached for 60 seconds
+(<code>retrieval/cache/types.rs:14</code>), keyed on the query, the
+context, the retrieval mode, the provider identity, a ranking version
+and an index generation (<code>context.rs:104-110</code>). Completion
+invalidates everything; delete invalidates nothing.</p>
+<p><strong>Patterns</strong> are not filtered: every stored pattern is
+ranked on context match, sample size, success rate and effectiveness
+(<code>extraction/utils.rs:31</code>), then deduplicated.</p>
+<p><strong>The cascade and its evidence stage</strong> — BM25, HDC,
+concept graph and API tiers, plus a keep/flag/demote/drop classifier —
+are constructed only by the retrieval eval runner
+(<code>retrieval/eval/runner.rs:119</code>) and the CLI's
+<code>eval benchmark</code>. Their prompt-injection <em>Flag</em> and
+default no-drop policy (<code>retrieval/evidence.rs:33-44</code>)
+therefore protect a benchmark rather than the agent's read path.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Every write is explicit</strong> and no model is called on
+any of them. Rule-based reflection, salient features, summaries
+(<code>semantic/summary/summarizer.rs:145-157</code>) and template
+playbooks (<em>"NO LLM on the hot path"</em>,
+<code>memory/playbook/generator.rs:16</code>) make capture
+deterministic.</p>
+<p><strong>The quality gate cannot be passed at the MCP server's
+default.</strong> <code>assess_episode</code> weights task complexity
+0.25, step diversity 0.20, error rate 0.20, reflection depth 0.20 and
+pattern novelty 0.15 (<code>pre_storage/quality/types.rs:50-56</code>;
+<code>assessor.rs:85-98</code>). At the gate,
+<code>episode.reflection</code> is <code>None</code> and scores 0.0, and
+<code>episode.patterns</code> is empty and scores 0.2
+(<code>assessor.rs:205-232</code>), because both are filled later in the
+same function (<code>completion.rs:199-200</code>,
+<code>:451-466</code>). The ceiling is therefore 0.25 + 0.16 + 0.20 + 0
++ 0.03 = 0.64. The MCP server uses <code>MemoryConfig::default()</code>
+with <code>quality_threshold: 0.7</code>
+(<code>types/config.rs:231</code>), so by this arithmetic every
+<code>complete_episode</code> it receives returns
+<code>ValidationFailed</code>. This was read, not reproduced.</p>
+<p>The code around it is consistent with that reading. The CLI sets
+<code>quality_threshold: 0.0</code> <em>"to complete minimal
+episodes"</em> (<code>memory-cli/src/config/storage/mod.rs:314</code>).
+Every MCP test that builds a memory sets 0.0, and the core test named
+<code>test_high_quality_episode_accepted</code> lowers it to 0.5
+(<code>memory-core/tests/premem_integration_test.rs:134</code>).</p>
+<p><strong>Update</strong> rewrites the description and merges metadata
+keys (<code>memory/management.rs:239-280</code>). The metadata map is
+open, so a caller can set <code>archived_at</code> directly.</p>
+<p><strong>Delete reaches less than eviction does.</strong>
+<code>delete_episode</code> removes the episode row from redb and Turso
+(<code>management.rs:89-103</code>; Turso's body is one
+<code>DELETE FROM episodes</code>,
+<code>storage/episodes/crud.rs:111-129</code>). It does not delete the
+embedding, which eviction does (<code>eviction.rs:92</code>,
+<code>:109</code>). Patterns and heuristics extracted from the episode
+stay, and so does its vector in the ANN index, whose <code>remove</code>
+is called only in tests. The query cache is not invalidated, so a cached
+result containing the episode is served for up to 60 seconds. The ANN
+tier resolves hits against the live map
+(<code>retrieval/semantic_retriever.rs:101</code>), so that tier drops
+the vector at read time.</p>
+<p><strong>Pattern decay is a report.</strong>
+<code>do-memory-cli pattern decay --force</code> lists patterns below
+0.3 effectiveness, warns <em>"This will permanently remove ineffective
+patterns"</em> and prints <em>"Successfully decayed N"</em>
+(<code>memory-cli/src/commands/pattern/core/decay.rs:164-167</code>,
+<code>:199-202</code>). The comment between them reads <em>"in real
+implementation, this would remove from storage"</em>
+(<code>:186</code>), and nothing is removed.</p>
+<p><strong>Agent-written content is trusted as given.</strong> The
+verdict, the steps and the outcome come from the caller; nothing checks
+that a claimed success happened.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, with no model call. Completion blocks on both
+storage writes unless the durable queue is on, and on pattern extraction
+unless async workers are on. An embedding call is added when a provider
+is live.</li>
+<li>Lag: none beyond the call; the cache is invalidated on
+completion.</li>
+<li>Background: optional extraction workers and the write queue; no pass
+rewrites the store.</li>
+<li>Read: bounded by <code>limit</code>. Nothing is injected into a
+prompt by the system, so prefix-cache placement is the caller's
+decision.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent drives the lifecycle through MCP tools:
+<code>create_episode</code>, <code>add_episode_step</code>,
+<code>complete_episode</code>, <code>update_episode</code>,
+<code>delete_episode</code>, <code>query_memory</code>,
+<code>search_patterns</code>, <code>recommend_patterns</code>,
+<code>recommend_playbook</code>, checkpoint and handoff tools, and tag
+and relationship tools. Tool loading is lazy (ADR-024).
+<code>execute_agent_code</code> is present and fails closed.</p>
+<p>Nothing is automatic. There is no SessionStart hook or context
+injection shipped for users; the <code>.claude/settings.json</code> in
+the tree is the project's own development configuration. The agent must
+remember to open an episode, log steps and close it, and must know to
+query.</p>
+<p><strong>The MCP audit writes to the protocol stream.</strong>
+<code>AuditConfig::default()</code> is enabled with
+<code>AuditDestination::Stdout</code>
+(<code>memory-mcp/src/server/audit/types.rs:64-84</code>), and
+<code>log_event</code> emits each entry with <code>println!</code>
+(<code>audit/core.rs:122-133</code>). The server speaks JSON-RPC on
+stdout (<code>server_impl/jsonrpc.rs:217-264</code>) and routes
+<code>tracing</code> to stderr precisely to keep it clean
+(<code>src/bin/memory-mcp-server.rs:39</code>).
+<code>create_episode</code>, <code>complete_episode</code> and
+<code>delete_episode</code> each call the audit
+(<code>tools/episode_handlers.rs:134</code>, <code>:202</code>,
+<code>:238</code>). Unless <code>AUDIT_LOG_DESTINATION=file</code> is
+set, audit JSON lines interleave with protocol responses. Read, not
+reproduced.</p>
+<p>The library is easy to adapt: <code>SelfLearningMemory</code> is one
+struct with a <code>StorageBackend</code> trait, and the CLI and MCP
+server are thin over it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Store failures are handled unevenly, and the asymmetry is
+deliberate for episodes only.</strong> A completed episode that fails to
+store in either backend aborts completion with an error (ADR-075,
+<code>completion.rs:328-357</code>). A pattern or heuristic that fails
+to store is a <code>warn!</code> (<code>learning.rs:42-52</code>,
+<code>:76-86</code>), and so is an in-progress episode at start.</p>
+<p><strong>Eviction is reconcilable.</strong> Each backend's delete is
+attempted, failures are kept in <code>pending_eviction_failures</code>
+and journalled, and a reconcile path retries them
+(<code>eviction.rs:72-133</code>; tested in
+<code>s14b_partial_eviction_failure_is_reconcilable</code>). The journal
+is a bounded <code>VecDeque</code> in process
+(<code>op_journal.rs:58-63</code>), so the debt it records does not
+survive a restart.</p>
+<p><strong>Provider identity is carried into caches and the vector
+index.</strong> Switching the embedding provider drops incomparable
+vectors and bumps the cache generation
+(<code>memory/embedding_activation.rs:158</code>), so a query is never
+scored against vectors from another model.</p>
+<p><strong>No protection against injected content on the served
+path.</strong> The instruction-like flag lives in the cascade's evidence
+stage, which the agent's read path does not run (section 6).</p>
+<p><strong>Uncertainty is numeric only.</strong> Reward, quality,
+success rate and effectiveness are floats used for ranking.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — delete is a hard delete of one row, and the
+quality gate's refusal is not recorded. Nothing keyed on a rejected
+value exists; <code>tombstone</code> appears nowhere in the tree.</li>
+<li><code>trust_state</code> — no status field on any record. In
+progress versus complete is a lifecycle filter, and the cascade's
+<code>EvidenceDisposition</code> is computed per query in a benchmark
+path and never stored.</li>
+<li><code>bitemporal</code> —
+<code>start_time</code>/<code>end_time</code> date the task and
+<code>created_at</code> the row; no derived record carries a validity
+interval.</li>
+<li><code>scope_enforced</code> — no principal key on any record.
+<code>domain</code> is a caller-chosen topic, hard-filtered on one of
+four tiers.</li>
+<li><code>audit_log</code> — two audit loggers and an operation journal,
+none in the memory store. The core logger is disabled by default
+(<code>security/audit/types.rs:195-207</code>). The MCP logger writes
+stdout by default and, with <code>file</code>, a rotated file capped at
+ten files of 100 MB that drops lines when its queue is full
+(<code>audit/types.rs:77-79</code>; <code>audit/core.rs:14-17</code>).
+Its actor is a caller-supplied string. The journal is in process and
+records evictions, never an explicit delete.</li>
+<li><code>human_review</code> — no review state. The MCP delete's
+<code>confirm: true</code> is a flag the caller sets, and the CLI decay
+prompt guards an operation that does nothing.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tree at the pin.</p>
+<p><strong>The negative case that earns the mark.</strong>
+<code>s14_capacity_eviction_deletes_from_backends</code>
+(<code>memory-core/tests/s13_s14_lock_free_durable_eviction.rs:89-146</code>)
+completes two episodes under <code>max_episodes: Some(1)</code> and
+asserts the first was deleted from both backends, is not returned by
+<code>get_episode</code>, and that the second is
+(<code>:132-142</code>). Two unit tests assert exclusions on retrieval
+tiers. <code>test_reconcile_drops_vectors_for_new_provider</code>
+retrieves an episode, switches provider, and asserts <em>"stale vectors
+from the previous provider must not be returned"</em>
+(<code>retrieval/semantic_retriever_identity.rs:318-350</code>).
+<code>test_domain_filtering</code> asserts a <code>backend</code>
+episode is excluded while two <code>web-api</code> episodes are kept
+(<code>spatiotemporal/retriever/tests.rs:47-68</code>).</p>
+<p><strong>Two e2e targets compile and run nothing.</strong>
+<code>tests/e2e/mcp_tag_chain.rs</code> and
+<code>tests/e2e/mcp_episode_chain.rs</code> are written as
+<code>harness = false</code> binaries — plain <code>async fn</code>
+cases called from a <code>fn main</code>
+(<code>mcp_tag_chain.rs:522-540</code>) — and registered with
+<code>harness = true</code> (<code>tests/Cargo.toml:148-151</code>).
+With the libtest harness, a user <code>main</code> is not the entry
+point and neither file has a <code>#[test]</code>, so both report zero
+tests. The best negative case in the tree is inside one:
+<code>test_mcp_tag_based_episode_filtering</code> seeds four tagged
+episodes and asserts a tag search includes two and excludes two
+(<code>mcp_tag_chain.rs:412-467</code>). Read, not reproduced.</p>
+<p><strong>Tests configure around the gate.</strong> 122 occurrences
+across 51 files set <code>quality_threshold</code> below 0.7, and the
+MCP tests that build a memory all use 0.0, so no test exercises the
+server's own configuration. The <code>complete_episode</code> doctest
+(<code>completion.rs:69-104</code>) declares
+<code>async fn example()</code> and never calls it, so it compiles and
+asserts nothing. The relationship suite's
+<code>complete_test_episode</code> helper, which would complete under
+the default, is <code>#[allow(dead_code)]</code>
+(<code>memory-core/tests/relationship_integration.rs:28-39</code>).</p>
+<p><strong>Retrieval benchmark.</strong>
+<code>benches/fixtures/retrieval_benchmark_corpus.json</code> holds 15
+documents and 15 queries, and <code>retrieval_baseline.json</code>
+records recall@1 of 1.0 for every strategy, all answered by the BM25
+tier, at round latencies (p50 50 µs, p95 200 µs). It measures the
+cascade, not <code>retrieve_relevant_context</code>. The README's
+<em>"50-70% reduction in external API embedding calls"</em> has no
+artifact behind it in the tree; the baseline records zero embedding
+calls.</p>
+<p><strong>Other suites.</strong> 173 tests are <code>#[ignore]</code>
+and run nightly with <code>--run-ignored only</code>
+(<code>.github/workflows/nightly-tests.yml:149</code>). Property tests,
+snapshot tests, a soak suite and cargo-mutants runs are committed. Not
+covered: explicit delete followed by retrieval, the MCP server's default
+configuration, and the stdout audit.</p>
+<p><strong>Papers.</strong> The plans under <code>plans/</code> cite
+third-party papers the features are named for — PREMem and GENESIS among
+them — and arXiv ids in research notes. None is the project's own, the
+README has no citation block, and there is no <code>CITATION.cff</code>.
+Whether the five-feature gate matches PREMem's method was not
+assessed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep the write path free of model calls</strong> and derive
+reflection, features and procedures by rule, so capture never depends on
+a provider.</li>
+<li><strong>Put the embedding provider's identity in every cache key and
+on the vector index</strong>, and drop incomparable vectors on a switch
+rather than scoring across models.</li>
+<li><strong>Fail completion when the durable store fails</strong>, and
+say in the error which backend did.</li>
+<li><strong>Record per-backend outcomes of a multi-store delete</strong>
+and keep a reconcile path for the ones that failed — then persist that
+record.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Scoring a record on fields the same call fills
+later.</strong> A gate placed before the enrichment it measures cannot
+pass, and test configurations that lower the threshold hide it.</li>
+<li><strong>Two delete paths with different reach.</strong> Route
+explicit deletion through the same function eviction uses, and
+invalidate caches on both.</li>
+<li><strong>A command that reports work it did not do.</strong> A no-op
+should say it is one.</li>
+<li><strong>An audit logger whose default sink is the protocol's own
+stream.</strong></li>
+<li><strong>Test binaries whose harness setting contradicts their
+shape.</strong> A target that reports zero tests should fail the
+build.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants coding-agent runs recorded as structured
+episodes and mined deterministically for tool sequences, and that will
+drive the lifecycle from its own harness through the library or the CLI.
+It does not suit anyone expecting an agent to learn through the shipped
+MCP server without first setting the quality threshold, or anyone who
+needs deletion to reach derived records. The workspace is large for what
+reaches the agent, so a reader should budget for working out which of
+its subsystems are on the served path.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the MCP server reject every fresh episode in practice? The
+arithmetic says so; running one
+<code>create_episode</code>/<code>complete_episode</code> pair would
+settle it.</li>
+<li>Do MCP clients tolerate the audit JSON lines on stdout, or drop the
+session?</li>
+<li>Does libSQL enforce the <code>ON DELETE CASCADE</code> clauses
+without <code>PRAGMA foreign_keys</code>, locally and on Turso's hosted
+service?</li>
+<li>Do orphaned embedding rows surface through Turso's similarity search
+after an explicit delete? <code>storage/search/episodes.rs</code> was
+not traced.</li>
+<li>Were <code>mcp_tag_chain</code> and <code>mcp_episode_chain</code>
+ever run under <code>harness = false</code>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Lifecycle:</strong>
+<code>memory-core/src/memory/episode.rs</code>,
+<code>completion.rs</code>, <code>learning.rs</code>,
+<code>management.rs</code>, <code>eviction.rs</code>,
+<code>op_journal.rs</code>, <code>step_buffer/config.rs</code>.</li>
+<li><strong>Scoring:</strong>
+<code>memory-core/src/pre_storage/quality/assessor.rs</code>,
+<code>types.rs</code>;
+<code>memory-core/src/types/config.rs</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>memory-core/src/memory/retrieval/context.rs</code>,
+<code>context_branches.rs</code>, <code>scoring.rs</code>,
+<code>patterns.rs</code>;
+<code>memory-core/src/spatiotemporal/retriever/scoring.rs</code>;
+<code>memory-core/src/retrieval/semantic_retriever.rs</code>,
+<code>semantic_retriever_identity.rs</code>, <code>cache/</code>,
+<code>cascade/</code>, <code>evidence.rs</code>,
+<code>eval/runner.rs</code>.</li>
+<li><strong>Storage:</strong>
+<code>memory-storage-turso/src/schema/mod.rs</code>,
+<code>storage/episodes/crud.rs</code>,
+<code>storage/episodes/query.rs</code>;
+<code>memory-storage-redb/src/episodes_queries.rs</code>.</li>
+<li><strong>MCP:</strong>
+<code>memory-mcp/src/bin/memory-mcp-server.rs</code>,
+<code>bin/server_impl/storage.rs</code>, <code>jsonrpc.rs</code>,
+<code>handlers/call_tool.rs</code>,
+<code>tools/episode_handlers.rs</code>, <code>tools/mod.rs</code>;
+<code>memory-mcp/src/server/tools/core.rs</code>,
+<code>episode_get.rs</code>, <code>audit/</code>.</li>
+<li><strong>CLI:</strong>
+<code>memory-cli/src/config/storage/mod.rs</code>,
+<code>commands/pattern/core/decay.rs</code>,
+<code>commands/eval/mod.rs</code>.</li>
+<li><strong>Tests:</strong>
+<code>memory-core/tests/s13_s14_lock_free_durable_eviction.rs</code>,
+<code>premem_integration_test.rs</code>,
+<code>relationship_integration.rs</code>; <code>tests/Cargo.toml</code>,
+<code>tests/e2e/mcp_tag_chain.rs</code>,
+<code>mcp_episode_chain.rs</code>; <code>benches/fixtures/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n -i 'tombstone' . -g '!.git'</code> — no match.</li>
+<li><code>rg -c 'valid_from|valid_to|valid_at|invalid_at|bitemporal' --type rust .</code>
+— OAuth and config-validation files only.</li>
+<li><code>rg -c 'tenant_id|tenant|namespace|agent_id|project_id|user_id' --type rust .</code>
+— four files: two sandbox modules, one snapshot test, one e2e test; none
+on a memory record or read.</li>
+<li><code>rg -n 'approve|Approve|pending_review|human_review|HumanReview' --type rust .</code>
+— one match, a comment about snapshot review in
+<code>tests/behaviour_harness.rs</code>.</li>
+<li><code>rg -n 'CascadeRetriever::' --type rust .</code> —
+<code>retrieval/eval/runner.rs:119</code> and one test; no caller in
+<code>memory/</code>, <code>memory-mcp</code> or <code>memory-cli</code>
+outside the eval command.</li>
+<li><code>rg -n 'retriever\.remove\(' --type rust memory-core/src</code>
+— only inside <code>#[cfg(test)]</code> modules.</li>
+<li><code>rg -n -i 'foreign_keys' . -g '!target'</code> — one match,
+<code>docs/LOCAL_DATABASE_SETUP.md:429</code>.</li>
+<li><code>rg -n 'EpisodeDelete\b' --type rust .</code> — the enum, a
+journal test, a CLI label and a Turso metric; no writer on the delete
+path.</li>
+<li><code>rg -n 'store_episode_with_capacity' --type rust .</code> —
+definitions and tests only.</li>
+<li><code>rg -n 'archive_episode|restore_episode' --type rust memory-mcp/src memory-cli/src</code>
+— no match.</li>
+<li><code>rg -n 'quality_threshold' memory-mcp/tests/*.rs</code> — every
+<code>MemoryConfig</code> construction uses 0.0; the 0.7 values in
+<code>quality_metrics_integration_test.rs</code> are tool inputs.</li>
+<li><code>rg -n 'AUDIT_LOG_DESTINATION|AUDIT_LOG_ENABLED' . -g '!target'</code>
+— docs and <code>memory-mcp/tests/audit_tests.rs</code>; no launcher
+sets it.</li>
+<li>A script over <code>tests/Cargo.toml</code> counting
+<code>#[test]</code>/<code>#[tokio::test]</code> per
+<code>[[test]]</code> target — <code>mcp_episode_chain</code> and
+<code>mcp_tag_chain</code> have <code>harness = true</code>, zero test
+attributes and a <code>fn main</code>.</li>
+<li><code>rg -n -- '--doc' scripts/ .github/</code> —
+<code>scripts/check-doctests.sh</code> and
+<code>scripts/release-manager.sh</code>; no workflow runs doctests.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— <code>CHANGELOG.md</code>, ADRs and archived plans citing third-party
+papers; no <code>CITATION.cff</code>.</li>
+<li><code>grep -rniE 'renamed|formerly|previously known' README.md CHANGELOG.md</code>
+— no match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/d-o-hub/rust-self-learning-memory/commit/67edf6ce27e7bb75052171790296b4be065a238a"><code class="commit-id" title="67edf6ce27e7bb75052171790296b4be065a238a">67edf6ce…</code></a>
+— first reading, at the head of <code>main</code>, a merge dated 29
+September 2026; triage had recorded <code>9f50c607</code>, dated 28
+September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: five auto-run surfaces (<code>.claude/settings.json</code>,
+whose hooks run <code>cargo check</code>, <code>cargo build</code> and
+<code>cargo test</code> on edits and at session stop;
+<code>.claude/hooks/</code>; <code>.githooks/</code>;
+<code>.opencode/</code>; <code>.vscode/settings.json</code>), no
+build-time execution point, no unpinned surface, and sixteen dependency
+files inside the cooldown, every file in the depth-1 clone dating to the
+tip. <code>AGENTS.md</code>, <code>CLAUDE.md</code> and
+<code>GEMINI.md</code> were read as data. Read with <code>grep</code>,
+<code>sed</code> and <code>rg</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

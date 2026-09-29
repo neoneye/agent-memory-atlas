@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 661 reports.</strong></p>
+<p><strong>This page covers all 666 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -27340,6 +27340,250 @@ that diverged on git branches.</li>
 attributed, scoped inside one store, or reviewed by a person — none of
 those is in the schema, and the web explorer binds every interface with
 <code>Access-Control-Allow-Origin: *</code>.</li>
+</ul>
+<h3 id="kagura-memory-cloud"><a
+href="../systems/kagura-memory-cloud/"><code>kagura-memory-cloud</code></a></h3>
+<ul>
+<li>Best idea: <strong>propose supersession, let the writer decide, and
+make the rejection stick until the evidence changes.</strong> At
+embedding time the nearest same-context memory at cosine 0.85 or more is
+stored in a server-only column and surfaced on recall;
+<code>create_edge(edge_type='supersedes')</code> accepts,
+<code>update_memory(dismiss_supersede_candidate=true)</code> rejects.
+The rejection records the similarity it was made at, and the pair is
+re-proposed only if a recomputed score moves by 0.02, so a nightly
+reindex cannot resurrect it and a real edit can.</li>
+<li>Biggest risk: <strong>the path that runs when a flag is unset is the
+harshest one.</strong> Without <code>SLEEP_ENABLED=true</code>, which
+<code>.env.example</code> does not set, <code>consolidation_task</code>
+hard-deletes any working memory 30 days old with
+<code>access_count == 0</code>, from Qdrant and Postgres, with no soft
+delete and no audit row. It reads each user's working memories through a
+list call with the default limit of 100, newest first, so for a busy
+user the oldest rows are never considered at all.</li>
+<li>Most reusable component: <code>backend/src/models/memory.py</code>
+<code>pinned_predicate()</code> and <code>not_pinned_predicate()</code>
+with their <code>tool_triggered</code> twins — each lane defined once in
+SQL, selected with by its reader and excluded with by every automated
+deleter, so "maintenance never removes a pin" is one line rather than
+one per phase.</li>
+<li>Second risk: <strong>supersession does not reach the lane loaded
+every turn, and it crosses authors.</strong> <code>list_pinned</code>
+has no edge join, so a superseded pinned memory is still injected by
+<code>load_pinned</code> and the bootstrap call. The shadowing join is
+deliberately not user-scoped, and <code>create_edge</code> checks only
+that the caller is not a viewer, so any member of a shared context can
+hide another member's memory from default recall.</li>
+<li>Maturity impression: Apache-2.0 (the plugin manifest says MIT),
+148,593 lines of Python in <code>backend/src</code> and 999 commits on
+main from 4 contributors between 28 March and 28 September 2026, with
+8,725 Python test functions. Three marks: <code>scope_enforced</code>;
+<code>audit_log</code> on a trigger-enforced append-only table that
+records only agent-bound credentials; <code>negative_eval</code> on a
+CI-run integration case excluding external-tier memories beside a
+trusted one. The scope-boundary tests skip in CI.</li>
+<li>Study when: you are building team memory over MCP and want to see
+isolation keys made mandatory at the filter builder, non-destructive
+supersession with a suggestion lifecycle, and an eval program with
+placebo arms and CI contracts.</li>
+<li>Do not copy when: you need a memory to be verified before an agent
+acts on it, or an audit trail for every writer. Trust is a fixed class
+on the context, no memory waits for a person, and user-key writes leave
+no audit row.</li>
+</ul>
+<h3 id="prismer-cloud"><a
+href="../systems/prismer-cloud/"><code>prismer-cloud</code></a></h3>
+<ul>
+<li>Best idea: <strong>the acting identity comes from a token the daemon
+minted, and one visibility function serves every read.</strong> A
+per-boot HMAC key signs a cap naming one agent and one workspace;
+<code>handleWrite</code> overwrites any body actor with
+<code>cap.sub</code>, and <code>canReaderReadVisibility</code> —
+workspace, agent, private, role, council, task — is called from search,
+list, load, browse, the 422 placement hint and the automatic
+<code>pre_llm_call</code> recall. Recall also closes when the cloud
+authority lease behind the replica expires.</li>
+<li>Biggest risk: <strong>the hook route is a second door with its own
+identity rule.</strong> <code>/v1/hooks/*</code> reads no capability,
+and when no <code>profile</code> is given <code>resolveContext</code>
+takes <code>agent_im_user_id</code> and <code>workspace_id</code> from
+the body — the shape the Hermes plugin sends. Any process that reaches
+the port gets another agent's private recall and can post a turn that
+extraction writes under that agent's name; <code>cap.ts</code> names
+that threat as the reason the capability exists.</li>
+<li>Most reusable component: <code>acl-predicate.ts</code> — a single
+per-visibility matrix that fails closed on role, council and task
+membership, applies a replica's exact actor set before coarse
+visibility, and is shared by the capability path and the trusted
+dispatch path, so the two cannot drift.</li>
+<li>Second risk: <strong>the digest forgets the predicate its neighbour
+applies.</strong> <code>assemblePlaceContext</code> filters hubs through
+<code>canSee</code>; <code>buildMemoryDigest</code>, injected into every
+system prompt, lists up to 1,000 hubs and skips only encrypted ones.
+Beside it, <code>/local/memory/mirror</code> writes each Hermes
+<code>MEMORY.md</code> edit into <code>_shared.db</code>, which no
+recall path opens.</li>
+<li>Maturity impression: MIT for the SDK, with the server closed;
+227,801 lines outside tests, of which the daemon memory module is
+20,513, and 1,414 commits on main from 4 contributors between March and
+September 2026. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>, the second from a three-page recall test
+with member controls. No public workflow runs the suite; the closed
+repository does.</li>
+<li>Study when: you are putting several agents on one local memory
+process and need per-agent capabilities, a shared visibility matrix, and
+a replica that stops answering when its authority is stale.</li>
+<li>Do not copy when: you need to inspect or change how memory is
+corrected. Supersede, merge, rewire, delete and consolidation are
+forwards to a server that is not published, and locally supersession
+only re-ranks.</li>
+</ul>
+<h3 id="memseek"><a
+href="../systems/memseek/"><code>memseek</code></a></h3>
+<ul>
+<li>Best idea: <strong>a derived claim may cite only what its run was
+shown, and commits only if the world it read is still there.</strong> A
+derivation captures an Evaluation Basis — driving checkpoint, guarded
+reads, the active keyed heads at its destination — before any task runs;
+<code>compile_candidate_set</code> rejects any citation outside the
+run's visible set, and <code>_commit_execution</code> re-verifies the
+basis and re-reads every model-visible source under lock. Promotion
+applies the same precondition a second time and returns
+<code>promotion_stale</code> rather than overwrite a head that
+moved.</li>
+<li>Biggest risk: <strong>one workspace key authorises everything, and
+the MCP bridge trusts a schema nothing enforces.</strong> The key the
+Claude Code plugin's MCP connection presents also opens
+<code>/promote</code>, <code>/erase</code>, <code>POST /catalog</code>
+and unrestricted <code>POST /records</code>. The ingest tool's schema
+omits <code>derived_from</code>, <code>scores</code>,
+<code>status</code> and <code>tombstone</code>, but the bridge spreads
+the caller's arguments into the record and the pinned <code>mcp</code>
+2.0.0 does not validate arguments against <code>inputSchema</code>, so a
+client that sends them has them stored. Read, not reproduced.</li>
+<li>Most reusable component: <code>src/memseek/search/scope.py</code> —
+<code>scope_conditions</code>, one function that every Postgres
+candidate query and the canonical recheck behind the hosted index build
+their WHERE clause from, so workspace, readiness, tombstone, status and
+current-version filters cannot drift apart between read paths.</li>
+<li>Second risk: <strong>supersession in the flagship catalog is an
+array on the newer row.</strong> The L1 <code>memories</code> collection
+is event-mode, the merge pass writes replaced ids into
+<code>content.supersedes</code>, and neither <code>memory_recall</code>
+nor <code>standing_instructions</code> can hide a row named in another
+row's field, so a changed standing rule renders beside its replacement.
+Separately, each <code>changes</code>-driven run lists its predecessor
+run as a parent, so erasure of one consumed message reaches every later
+run of that pipeline, under a 10,000-row cap that refuses the whole
+erasure when exceeded.</li>
+<li>Maturity impression: Apache-2.0, 45,509 lines of Python under
+<code>src/memseek</code> and 61 commits by one contributor from 19 July
+to 28 September 2026, with 612 test functions run in CI against a
+pgvector service. Five marks — <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code> — the last on a
+superseded-key case and an entity-scope case, each with a positive
+control. Erasure has two single-row tests.</li>
+<li>Study when: you are building governed memory over a database you
+already run and want the read-receipt, cited-emission and
+copy-on-promote mechanics worked out in code, with a catalog compiler
+that hashes record contracts.</li>
+<li>Do not copy when: you need per-user or per-agent credentials,
+value-level tombstones, or supersession in an append-only layer; or a
+single developer wants a coding agent to keep a few rules — the catalog
+language, worker and embedding dependency are far heavier than that
+problem.</li>
+</ul>
+<h3 id="exomem"><a
+href="../systems/exomem/"><code>exomem</code></a></h3>
+<ul>
+<li>Best idea: <strong>decide disclosure after the shared cache, per
+request, from the transport.</strong> <code>op_find</code> caches
+principal-free candidates and then runs
+<code>egress.annotate_hits</code> before anything is packed; scope
+membership reads each page's <code>projects</code>, <code>tags</code>
+and <code>types</code>, and an unbound principal resolves to the most
+restrictive audience rather than the owner. The same gate sits on
+<code>activate_context</code>, and a committed test asserts a withheld
+page leaves a guest's packet byte-identical to its absence.</li>
+<li>Biggest risk: <strong>a superseded conclusion is demoted, not
+withheld.</strong> <code>find</code> multiplies its score by 0.5 and
+documents that it is never excluded, so a query in the old wording can
+still rank it first. The retrieve hook's working-set inject mode renders
+units without the <code>lifecycle</code> field the packet carries, so a
+replaced claim can reach the prompt reading as current.</li>
+<li>Most reusable component:
+<code>src/exomem/governance/egress.py</code> with
+<code>membership.py</code> and <code>principal.py</code> — a release
+plane with three states (empty policy open, blocked policy or unresolved
+principal withholds everything, otherwise decide per item), run once
+after retrieval and before serialization on every read surface.</li>
+<li>Second risk: <strong>no review surface the agent cannot
+reach.</strong> The Studio calls <code>triage_memory</code>,
+<code>connect_memory</code>, <code>remember</code> and
+<code>replace_memory</code>; governance commits are owner-only and local
+stdio is the owner; the vocabulary authority built to refuse agent
+approvals has no owner-decision callback in production, so it refuses
+everyone. <code>log.md</code> records op, path and reason with no before
+value and no actor.</li>
+<li>Maturity impression: AGPL-3.0, 383,668 lines of Python under
+<code>src/exomem</code>, 1,470 commits on main by 3 contributors (one a
+release bot) between 27 June and 30 September 2026, 18,844 test
+functions. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>. A golden retrieval
+eval over 26 queries with CI floors, and an activation benchmark whose
+negative controls are asserted to be load-bearing. Not run for this
+reading.</li>
+<li>Study when: you are building owned-vault memory that must serve
+remote readers under a disclosure policy, or want a batch-atomic
+write-plus-log discipline and a bounded context packet that
+abstains.</li>
+<li>Do not copy when: memories need a candidate stage, a person's
+approval, or a real forget; or when the host is macOS; or when a single
+maintainer's 380,000-line surface is more than the problem needs.</li>
+</ul>
+<h3 id="rust-self-learning-memory"><a
+href="../systems/rust-self-learning-memory/"><code>rust-self-learning-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>a write path with no model on it.</strong>
+Reward, reflection, salient features, summaries, patterns and playbooks
+are all computed by rule from the logged steps, so an episode is
+captured with every provider down. Beside it, the embedding provider's
+identity is part of the query-cache key and is recorded on the ANN
+index, so a provider switch drops incomparable vectors instead of
+scoring across models.</li>
+<li>Biggest risk: <strong>the shipped MCP server cannot complete an
+episode at its default.</strong> <code>complete_episode</code> scores
+quality before it generates the reflection and extracts the patterns
+that two of the five weighted features read, so the ceiling is 0.64, and
+<code>MemoryConfig::default()</code> sets 0.7. The CLI sets 0.0 and
+every MCP test builds its memory at 0.0, so nothing in the suite runs
+the server's own configuration. Read, not reproduced.</li>
+<li>Most reusable component:
+<code>memory-core/src/memory/eviction.rs</code> — a multi-backend delete
+that removes an episode and its embedding from each store, returns
+per-backend failures, and feeds a reconcile path, pinned by
+<code>s14b_partial_eviction_failure_is_reconcilable</code>.</li>
+<li>Second risk: <strong>explicit delete reaches less than eviction
+does.</strong> <code>delete_episode</code> removes the episode rows and
+leaves the embedding, the derived patterns and heuristics, and a query
+cache it does not invalidate. <code>pattern decay --force</code> prints
+<em>"Successfully decayed N"</em> and removes nothing, and MCP audit
+lines default to stdout, the server's JSON-RPC stream.</li>
+<li>Maturity impression: MIT, 164,662 lines of Rust in the product
+crates outside test files, 1,804 commits from 9 contributors counting
+bot and anonymous authors since 5 November 2025, and 4,656 test
+functions of which 173 are ignored. One mark,
+<code>negative_eval</code>, on a test asserting a capacity-evicted
+episode is not returned beside the survivor. Two e2e targets wrap
+hand-written <code>main</code> functions in the libtest harness and run
+zero tests.</li>
+<li>Study when: you want coding-agent runs mined deterministically for
+tool sequences and error recoveries, or want to see an embedding
+provider's identity carried through every cache and index.</li>
+<li>Do not copy when: the agent must learn through the MCP server as
+shipped, deletion must reach derived records, or several users or
+projects share one store — no record carries a principal key.</li>
 </ul>
         </article>
       </div>

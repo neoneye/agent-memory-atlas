@@ -253,6 +253,8 @@ new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 
 [Emulo](../../systems/emulo/) retains evidence more strictly than most, and shows the same gap. Every rule reaches verbatim quotes bound to the dated message they came from, and the profile is rebuilt from cached, content-addressed worker reports. There is no correction in the retained layer: a hand edit to the active profile fails its hash, and re-mining over unchanged reports reactivates the same version. The rebuild also consumes the host's log retention, so evidence that rolls off disk takes its rules with it at the next update — deletion upstream acts as a forgetting policy nobody chose.
 
+[Memseek](../../systems/memseek/) enforces the pattern at the write boundary. `compile_candidate_set` rejects any citation outside the rows a derivation was shown, and the commit refuses the write if a shown source has gone. Every derived row carries `derived_from = (run_id, *citations)`, the graph erasure walks. The limit: its agent-memory catalog records supersession only as an id array on the newer row, so the stale belief stays in recall.
+
 ### Related: admission gates rather than evidence
 
 These decide what may become a belief — a shared derivation, a confirmation turn,

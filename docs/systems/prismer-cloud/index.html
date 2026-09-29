@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An SDK-only mirror of a closed
+agent platform whose daemon keeps a local FTS5 replica of the workspace
+wiki, filtered per reader by visibility.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Prismer
+Cloud — Agent Memory Atlas">
+    <meta property="og:description" content="An SDK-only mirror of a
+closed agent platform whose daemon keeps a local FTS5 replica of the
+workspace wiki, filtered per reader by visibility.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Prismer
+Cloud — Agent Memory Atlas">
+    <meta name="twitter:description" content="An SDK-only mirror of a
+closed agent platform whose daemon keeps a local FTS5 replica of the
+workspace wiki, filtered per reader by visibility.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Prismer Cloud — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Prismer Cloud",
+      "description": "An SDK-only mirror of a closed agent platform whose daemon keeps a local FTS5 replica of the workspace wiki, filtered per reader by visibility.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Local SQLite replica of a closed hosted
+memory service</p>
+          <h1>Prismer Cloud</h1>
+          <p class="document-deck">An SDK-only mirror of a closed agent
+platform whose daemon keeps a local FTS5 replica of the workspace wiki,
+filtered per reader by visibility.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Prismer-AI/PrismerCloud">
+              <span>Source</span>
+              <strong>Prismer-AI/PrismerCloud</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Prismer-AI/PrismerCloud/commit/5337ca14c0e03e99446aff43bcbf1a2ad18f7205" title="5337ca14c0e03e99446aff43bcbf1a2ad18f7205">
+              <span>Analyzed revision</span>
+              <code>5337ca14…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Prismer-AI--PrismerCloud" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Prismer-AI--PrismerCloud</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+for the SDK; the server backend is closed-source and not in the
+tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>227,801
+lines of TypeScript, Python, Go and Rust outside tests; the daemon
+memory module is 20,513 lines of TypeScript</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,414
+commits on main by 4 contributors, 24 March 2026 – 29 September 2026;
+sdk/ is an rsync mirror of a closed repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>467
+test files in 122,984 lines; 78 of them cover the daemon memory
+module</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Prismer Cloud is a hosted agent platform — evolution, messaging,
+tasks and memory — and this repository holds only its SDKs and plugins.
+The server is closed-source and absent from the tree, and
+<code>sdk/</code> is rsync-mirrored from a closed repository
+(<code>CONTRIBUTING.md:15-19</code>). What is inspectable is the
+<code>@prismer/runtime</code> daemon under <code>sdk/prismer</code>. It
+keeps a per-workspace SQLite replica of the platform's memory wiki,
+answers every agent recall from that replica with FTS5 and a link-graph
+band, runs post-turn LLM extraction inside the agent's own pod, and
+filters every hit through one visibility matrix.</p>
+<p>The notable part is the access boundary. A daemon-minted, HMAC-signed
+capability binds each agent to one workspace; the acting identity on a
+write is the capability's subject and never a body field. A single
+predicate, <code>canReaderReadVisibility</code>, gates search, list,
+load, browse and automatic recall, and a committed test proves the
+recall filter both excludes and admits.</p>
+<p>The weak part is that the predicate does not reach two paths. The
+hook intake at <code>/v1/hooks/*</code> carries no capability and, on
+the branch the Hermes plugin uses, takes the agent and workspace from
+the request body. The turn-start digest lists every hub page with no
+visibility check at all.</p>
+<p>Three more findings shape the rest of this report.</p>
+<ul>
+<li><strong>Correction lives in code this report cannot read.</strong>
+Supersede, merge, rewire, delete, health scans and consolidation all
+forward to cloud endpoints (<code>rpc.ts:2330-2532</code>). Locally,
+supersession is a −0.8 ranking term and <code>stale</code> is a flag
+only the cloud down-sync sets.</li>
+<li><strong>A write path lands in a database no read path
+opens.</strong> <code>POST /local/memory/mirror</code>, which the Hermes
+plugin calls on every built-in <code>MEMORY.md</code> edit, writes to
+<code>_shared.db</code>; recall reads <code>memory.db</code> and the
+per-agent bucket.</li>
+<li><strong>The README's memory claims describe the server.</strong>
+"4-type classification, LLM recall, Dream consolidation" have no
+counterpart in the daemon, whose recall is lexical and graph only and
+whose Dream timer is set to <code>null</code>
+(<code>runner-wiring.ts:152-159</code>).</li>
+</ul>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a page: an HTML document in Prismer's PKF format,
+addressed by a workspace path and a <code>prismer://workspace/</code>
+URI, typed <code>hub</code>, <code>leaf</code>, <code>decision</code>,
+<code>glossary</code> or <code>archive</code>, and hung under an
+<code>INDEX</code> → hub → leaf tree by <code>child-of</code> links. The
+wiki is the belief store, and a page is treated as true once it exists;
+nothing on the row says otherwise.</p>
+<p>A page enters by one of three doors:</p>
+<ol type="1">
+<li><strong>An agent writes it</strong> with <code>memory_write</code>.
+The daemon admits it only if it is placed in the tree, carries a
+frontmatter description when new, and validates as PKF
+(<code>rpc.ts:1396-1563</code>).</li>
+<li><strong>The daemon extracts it</strong> after a turn. A heuristic
+filter drops short and greeting turns, then an LLM call through the
+platform gateway returns up to six pages with a placement of
+<code>extend</code>, <code>attach</code>, <code>hub</code> or
+<code>new</code> (<code>extract.ts:1-30, 82</code>).</li>
+<li><strong>The cloud sends it</strong> in a replica reconcile, with a
+version, a visibility, an exact actor set and a <code>stale</code> flag
+(<code>cloud-sync.ts:910-940</code>).</li>
+</ol>
+<p>It stops counting in one of four ways. A later write to the same path
+replaces it and appends a version. A cloud <code>stale</code> flag
+removes it from local recall. A cloud supersede or contradicts edge
+sinks it by 0.8 in ranking without removing it. A cloud delete, a
+tombstone in the reconcile, or an invalidation deletes the row, and its
+version history goes with it. Only the first happens without the
+cloud.</p>
+<p>The agent decides what is written; the cloud decides what is
+corrected; the daemon decides who sees what. The diagram follows a page
+from each door to the three places it can be read, and marks where the
+visibility check is missing.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — pages enter the daemon's replica by gated RPC writes, hook-driven extraction and cloud reconcile; search and injected recall filter each hit by visibility, while the turn-start digest reaches the prompt with no visibility check and the shared mirror is never read</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: pages enter the daemon&#39;s replica by gated RPC writes, hook-driven extraction and cloud reconcile; search and injected recall filter each hit by visibility, while the turn-start digest reaches the prompt with no visibility check and the shared mirror is never read
+flowchart TD
+  W1[&quot;memory_write RPC (cap: sub, ws)&quot;] --&gt; G{&quot;placement, description, PKF, deliverable gates&quot;}
+  G --&gt;|422| R1[rejected, agent retries]
+  G --&gt;|admit| S[(&quot;memory.db: memory_pages + versions + FTS5&quot;)]
+  X1[&quot;post_llm_call hook (no cap)&quot;] --&gt; X2[&quot;in-daemon LLM extraction, up to 6 pages&quot;]
+  X2 --&gt; S
+  C1[&quot;closed cloud: manifest, stale, tombstones, links&quot;] --&gt;|replica reconcile| S
+  S --&gt;|outbox memory.page.upsert| C1
+  M1[&quot;Hermes MEMORY.md edit&quot;] --&gt;|/local/memory/mirror| SH[(&quot;_shared.db&quot;)]
+  SH -.-&gt;|no reader| N0[never recalled]
+  S --&gt; Q1[&quot;RPC memory_search (cap)&quot;]
+  S --&gt; Q2[&quot;pre_llm_call recall (identity from registry or body)&quot;]
+  S --&gt; Q3[&quot;turn-start digest: INDEX + every hub&quot;]
+  Q1 --&gt; F{&quot;canCapReadPage per hit&quot;}
+  Q2 --&gt; F2{&quot;canReaderReadVisibility per hit&quot;}
+  F --&gt; O1[tool result]
+  F2 --&gt; O2[&quot;[Relevant memory] block&quot;]
+  Q3 --&gt;|no visibility check| O3[system prompt tail]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The daemon is a Node process (<code>sdk/prismer/src/daemon/</code>)
+that hosts agent adapters — Hermes, Claude Code, Codex, OpenClaw — and
+serves one HTTP server on <code>127.0.0.1</code>, or on
+<code>0.0.0.0</code> when <code>PRISMER_DAEMON_BIND</code> says so for
+Kubernetes pods (<code>local-server.ts:468-477</code>). Handlers are
+chained by prefix: <code>/v1/hooks/*</code> for agent lifecycle hooks,
+<code>/local/memory/*</code> for the memory RPC, and others for the IM
+gateway, assets and PKF (<code>local-server.ts:518-556</code>).</p>
+<p>Memory state is SQLite through <code>better-sqlite3</code>.
+<code>MemoryRuntime</code> opens one <code>memory.db</code> per
+workspace under <code>~/.prismer/memory/SLUG/</code>
+(<code>runtime.ts:75-82</code>), created <code>0600</code> in a
+<code>0700</code> directory (<code>store.ts:14-17</code>).
+<code>ScopedMemoryStore</code> adds sibling files under the same root —
+<code>_shared.db</code>, <code>agents/ID.db</code>,
+<code>scratch/KEY.db</code> (<code>scoped-store.ts:6-16</code>). The
+schema is at version 6: pages, immutable versions, content, links, FTS5
+over path, title, description, content and a CJK bigram column, an
+outbox with a dead-letter table, replica state, and a raw-asset chunk
+mirror with its own FTS5 index (<code>store.ts:150-341</code>).</p>
+<p>The cloud is the authority and the local file is a replica. The
+comment on the V4 migration calls <code>local.db</code> "a rebuildable
+cache" (<code>store.ts:56-58</code>). A reconcile pins an access version
+and subject hash, pulls a manifest of heads and content through a
+snapshot token, and commits them in one transaction that also deletes
+rows the manifest no longer covers (<code>store.ts:1814-1944</code>).
+Recall is refused whenever the replica is not <code>ready</code>, the
+cloud authority snapshot drifted, or its lease expired
+(<code>store.ts:2014-2046</code>).</p>
+<p>Two background loops matter. The outbox worker pushes
+<code>memory.page.upsert</code>, <code>memory.link.upsert</code> and
+observability events and marks them <code>acked</code>
+(<code>outbox-worker.ts:7, 473</code>). A WebSocket from the cloud
+invalidates pages and triggers a re-pull. Extraction and compaction run
+per turn from the post-turn worker. The Dream timer exists as code and
+is wired to <code>null</code>, because the cloud dispatches
+consolidation to the workspace orchestrator agent instead
+(<code>runner-wiring.ts:152-159</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Storing anything through the supported path needs a Prismer account
+and API key: the README's quick start signs in through a browser and
+writes <code>~/.prismer/config.toml</code>, and extraction calls the
+platform's LLM gateway with that key (<code>extract.ts:1-9</code>). The
+local store survives offline — a write never blocks on the cloud
+(<code>rpc.ts:1371-1394</code>) — but for a replicated workspace recall
+closes once the authority lease expires. The SQLite file is readable and
+repairable with ordinary tools, though a reconcile will overwrite or
+delete local edits the cloud does not hold. The Claude Code plugin the
+README recommends installs <code>@prismer/claude-code-plugin</code> from
+npm, and its source is not in this tree
+(<code>.claude-plugin/marketplace.json</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Explicit write.</strong> <code>memory_write</code> in
+<code>adapters/memory-tools.ts</code> and the Hermes plugin posts to
+<code>POST /local/memory/write</code>. <code>attachMemoryRpc</code>
+verifies the <code>x-prismer-memory-cap</code> header
+(<code>rpc.ts:185-236</code>), then <code>handleWrite</code> pins the
+actor to <code>cap.sub</code> (<code>rpc.ts:1279-1280</code>). It
+authorizes the requested visibility (<code>rpc.ts:1297-1308</code>) and
+pulls the cloud head for an unseen path (<code>rpc.ts:1379-1394</code>).
+It runs the placement, deliverable, description and PKF gates, then
+writes page and outbox event in one transaction
+(<code>rpc.ts:1632-1737</code>).</li>
+<li><strong>Store write.</strong> <code>MemoryStore.write</code> rejects
+another workspace's id, upserts <code>memory_pages</code> on
+<code>(workspaceId, path)</code>, appends
+<code>memory_page_versions</code> with actor, kind and device, inserts
+content and replaces the FTS row, all in one transaction
+(<code>store.ts:842-998</code>).</li>
+<li><strong>Automatic extraction.</strong>
+<code>handlePostLlmCall</code> persists a terminal snapshot and returns
+204 (<code>hook-server.ts:714-746</code>). The post-turn worker calls
+<code>extractFromTurn</code>, which builds a recall context through
+<code>assemblePlaceContext</code> with the reader
+(<code>hook-server.ts:900</code>) and prompts for PKF pages.
+<code>enforceExtractedPlacement</code> turns an <code>extend</code> of a
+path the model was not shown into a new hub
+(<code>extract.ts:785-800</code>).
+<code>ExtractedPageApplicator.apply</code> writes each page idempotently
+by turn key (<code>extracted-page-applicator.ts:64-120</code>).</li>
+<li><strong>Search.</strong> <code>GET /local/memory/search</code> →
+<code>handleSearch</code> (<code>rpc.ts:468-588</code>) →
+<code>runWorkspaceSearch</code>, which calls
+<code>MemorySearch.hybridWithNavigation</code> and filters each hit
+through <code>canCapReadPage</code> or <code>canCapReadAsset</code>
+(<code>rpc.ts:711-755</code>). The SQL is at
+<code>search.ts:172-191</code>; re-scoring at
+<code>search.ts:293-312</code>; graph expansion at
+<code>search.ts:318-322</code>.</li>
+<li><strong>Automatic recall.</strong>
+<code>POST /v1/hooks/pre_llm_call</code> → <code>resolveContext</code>
+(<code>hook-server.ts:1821-1925</code>) → <code>handlePreLlmCall</code>,
+which runs the workspace search, filters it with
+<code>filterRecallHits</code>, adds the agent-private bucket and returns
+five hits in a <code>[Relevant memory from prior sessions]</code> block
+(<code>hook-server.ts:515-646</code>).</li>
+<li><strong>Turn-start digest.</strong> The Hermes adapter appends
+<code>renderMemoryDigestBlock(workspaceId)</code> to the system prompt
+(<code>adapters/persistence/hermes/index.ts:1149</code>), backed by
+<code>buildMemoryDigest</code> over the INDEX page and every hub
+(<code>digest.ts:163-230</code>).</li>
+<li><strong>Correction and deletion.</strong>
+<code>POST /local/memory/curate</code> forwards
+<code>promote_to_hub</code>, <code>supersede</code>,
+<code>rebuild_index</code>, <code>section_merge</code>,
+<code>section_supersede</code> and <code>rewire</code> to cloud routes
+with the acting agent in <code>X-Prismer-Memory-Actor</code>
+(<code>rpc.ts:2374-2532</code>). <code>POST /local/memory/delete</code>
+forwards to the cloud page delete and then invalidates the local row
+(<code>rpc.ts:2330-2372</code>).</li>
+<li><strong>Replica.</strong> <code>cloud-sync.ts</code> reconciles the
+manifest into <code>applyReplicaCommit</code>, and the link down-sync
+fills <code>memory_links</code>
+(<code>cloud-sync.ts:470-505</code>).</li>
+<li><strong>Tests.</strong>
+<code>sdk/prismer/test/memory-*.test.ts</code> and
+<code>hook-server-recall-acl.test.ts</code>, run by
+<code>vitest run</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_pages</code> is the current state: <code>id</code>,
+<code>workspaceId</code>, <code>path</code> unique per workspace,
+<code>title</code>, <code>description</code>, <code>contentHash</code>,
+<code>version</code>, <code>pageType</code>,
+<code>visibilityKind</code>, <code>visibilityImUserId</code>,
+<code>encrypted</code>, <code>stale</code>, <code>archivedAt</code>,
+<code>sourceAssetId</code>, <code>sourceRefsJson</code>,
+<code>syncStatus</code>, timestamps, and since V3
+<code>sourceKind</code> and <code>replicaActorIdsJson</code>
+(<code>store.ts:156-176, 289-290</code>).
+<code>visibilityImUserId</code> holds the subject for every
+non-workspace kind — an agent or member id, a role slug, a council id or
+a task id (<code>store.ts:856-868</code>).</p>
+<p>History is <code>memory_page_versions</code> plus
+<code>memory_page_content</code>, keyed <code>(pageId, version)</code>,
+one row per write with <code>actorImUserId</code>,
+<code>actorKind</code> and <code>deviceId</code>
+(<code>store.ts:179-197</code>). Both carry
+<code>ON DELETE CASCADE</code> to the page, so the history exists only
+while the page does. <code>syncStatus</code> moves
+<code>local-only</code> → <code>acked</code>, or to
+<code>remote-conflict</code> when the cloud reports that this device
+lost a last-writer-wins race; <code>GET /local/memory/conflicts</code>
+lists those rows and resolves nothing
+(<code>store.ts:1000-1041</code>).</p>
+<p><code>memory_links</code> is URI-keyed with a relation and weight
+(<code>store.ts:198-208</code>). Its only writer outside the replica
+commit is the cloud link down-sync (<code>cloud-sync.ts:495</code>), so
+<code>supersedes</code>, <code>superseded-by</code> and
+<code>contradicts</code> edges exist locally only after the cloud has
+produced them.</p>
+<p>Two columns are consumed and never produced in this tree.
+<code>archivedAt</code> is inserted as <code>NULL</code> on both writers
+(<code>store.ts:921, 1824</code>), so the search predicate
+<code>p.archivedAt IS NULL</code> never excludes anything.
+<code>stale</code> is set from <code>head.stale</code> in the reconcile
+(<code>cloud-sync.ts:932, 1007</code>) and from a caller flag no agent
+path passes. The cloud's <code>validFrom</code> and
+<code>validUntil</code> columns are named in a comment as absent from
+the local schema (<code>search.ts:286-292</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is lexical first. <code>tokenizeFtsTerms</code> and
+<code>buildFtsMatchQuery</code> turn the query into an AND expression
+with CJK bigram alternatives; if that returns nothing and the query has
+two or more terms, an OR pass runs (<code>search.ts:214-233</code>). The
+SQL joins FTS to pages and filters <code>workspaceId</code>,
+<code>stale = 0</code> and <code>archivedAt IS NULL</code>, pulling
+twice <code>topK</code> (<code>search.ts:172-191</code>). BM25 is
+normalised to 0-1, a threshold floor applies, and three terms re-rank:
+recency at weight 0.2, the inert stale penalty, and −0.8 for the older
+side of a supersede or contradicts edge
+(<code>search.ts:85-87, 293-312</code>).</p>
+<p>Graph hits come second and are banded below the weakest text hit: one
+hop by default, a hard cap of five, fan-out eight by edge weight
+(<code>search.ts:57-64, 318-322</code>). A raw-asset chunk lane runs on
+every query against its own FTS index. When the text leg misses, the
+answer is a navigation payload of INDEX and hub entry points with
+walking instructions, not a ranked list
+(<code>search.ts:246-265</code>). A token budget caps aggregate snippet
+bytes at 8 KiB by default (<code>search.ts:54</code>).</p>
+<p>Visibility is applied after all of this, per hit
+(<code>rpc.ts:727-739</code>). A reader who cannot see some of the top
+hits therefore receives fewer than <code>topK</code>, and a private
+page's snippet still spends the shared byte budget before it is dropped.
+The agent never sees it; the cost is under-recall.</p>
+<p>Automatic recall uses the first 240 characters of the user message as
+the query, keeps five hits over a 0.2 threshold within 3 KiB, and
+renders them as path, title and snippet lines
+(<code>hook-server.ts:295-297, 533, 637-644</code>). The digest injects
+the INDEX table of contents and one line per hub, unbounded below a
+32K-token extreme guard, deterministic so it keeps the provider prefix
+cache warm (<code>digest.ts:1-24, 163-205</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The explicit surface has four admission gates, each a 422 the agent
+can act on. <code>placement_required</code> refuses a new leaf with no
+hub, no <code>child-of</code> link and no existing edge, and it is on by
+default through <code>PRISMER_MEMORY_PLACEMENT_ENFORCE=enforce</code>
+(<code>rpc.ts:1183-1188, 1396-1450</code>).
+<code>checkDeliverableGate</code> requires a pointer back to a declared
+source asset and refuses a body over 64K characters. A provenance token
+deduplicates a repeat distillation of the same asset hash
+(<code>rpc.ts:1452-1510</code>). <code>description_required</code> and
+<code>pkf_invalid</code> complete the four
+(<code>write-gate.ts:1-22</code>).</p>
+<p>The automatic path skips the description and PKF gates on purpose,
+because a background writer cannot repair a 422 and would lose the
+memory (<code>write-gate.ts:17-22</code>). It runs the deliverable gate
+through <code>filterGatedExtractedPages</code>
+(<code>extract.ts:1146</code>). <code>enforceExtractedPlacement</code>
+confines <code>extend</code> to paths in the recall context the model
+was shown, which that context's reader filter has already scoped
+(<code>hook-server.ts:1556-1600</code>).</p>
+<p>Neither writer compares the visibility of the row it replaces. The
+upsert rewrites <code>visibilityKind</code> and
+<code>visibilityImUserId</code> on conflict
+(<code>store.ts:922-934</code>); <code>handleWrite</code> authorizes
+only the visibility the caller requests (<code>rpc.ts:1297</code>). An
+agent that names an existing path it cannot read, with the default
+<code>workspace</code> visibility, replaces that page locally and makes
+the new body workspace-visible. Whether the cloud accepts the up-sync is
+decided in code not in the tree.</p>
+<p>Deduplication is by path and by deliverable token; there is no
+similarity merge in the daemon. Conflict is last-writer-wins,
+adjudicated by the cloud. Model output passes the extraction prompt's
+rules and the sanitiser. Nothing screens turn content for injected
+instructions before extraction.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>An explicit write is synchronous SQLite plus, for a new path, one
+cloud round-trip to fetch the head; the outbox flush is asynchronous.
+The post-turn hook returns 204 at once, and extraction is one gateway
+call with a 120-second timeout and one retry
+(<code>extract.ts:66-87</code>), so a new memory is retrievable on a
+turn after that call finishes. No background pass rewrites the whole
+store locally; the cloud's consolidation is invisible here. Per turn the
+digest can reach tens of thousands of tokens by design, placed at the
+system-prompt tail to keep the earlier prefix cached, and recall adds up
+to 3 KiB.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds five memory tools with one schema file generated for
+every adapter: <code>memory_search</code>, <code>memory_load</code>,
+<code>memory_browse</code>, <code>memory_write</code> and
+<code>memory_curate</code>
+(<code>plugins/memory/prismer/__init__.py:288-293</code>). The daemon
+mints a capability at agent spawn and injects it as
+<code>PRISMER_MEMORY_CAP</code>; the tool client carries it on every
+call, renewing a v2 cap in place (<code>cap.ts:1-29</code>,
+<code>rpc.ts:193-211</code>). Search can reach another workspace only
+through a cloud-side memory grant (<code>rpc.ts:489-502</code>).</p>
+<p>Memory also arrives unasked, twice per turn. The digest sits at the
+end of the system prompt, and <code>pre_llm_call</code> recall is
+prepended to the turn. The Hermes memory provider triggers post-turn
+extraction from <code>sync_turn</code> and mirrors built-in
+<code>MEMORY.md</code> edits to the daemon
+(<code>plugins/memory/prismer/__init__.py:1085-1197</code>). <a
+href="../hermes-agent/">Hermes Agent</a> is the host runtime this plugin
+targets.</p>
+<p><code>memory_curate</code> puts every correction verb on the agent's
+surface. The daemon forwards the acting agent's identity and leaves the
+decision to the cloud, which documents an <code>orchestrator_only</code>
+gate — consolidation is an agent role, not a human one
+(<code>rpc.ts:2498-2516</code>). Porting the daemon's store and search
+to another runtime would be straightforward; porting correction would
+mean writing the server.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The capability boundary is carefully built on the
+RPC.</strong> A per-boot 32-byte key signs caps with HMAC-SHA256, is
+held only in memory and never reaches an agent; an agent cap names
+exactly one workspace and the wildcard is reserved for the system
+subject (<code>cap.ts:15-29, 330-343</code>). Body actor fields are
+ignored (<code>rpc.ts:1275-1280</code>), and
+<code>PRISMER_MEMORY_CAP_ENFORCE=false</code> no longer reopens a bypass
+(<code>rpc.ts:214-236</code>). <code>memory-cap-rpc.test.ts</code>
+asserts each of these.</p>
+<p><strong>The hook route is outside that boundary.</strong>
+<code>/v1/hooks/*</code> is documented as "127.0.0.1 trust boundary, no
+Bearer auth" (<code>hook-server.ts:3</code>), and
+<code>hook-server.ts</code> reads no capability header. When no
+<code>profile</code> is given, <code>resolveContext</code> takes
+<code>agent_im_user_id</code> and <code>workspace_id</code> from the
+body and returns a context even when no active run matches
+(<code>hook-server.ts:1835-1874</code>). That is the shape the Hermes
+plugin sends
+(<code>plugins/memory/prismer/__init__.py:1092-1107</code>).</p>
+<p>So any process that can reach the port can ask
+<code>pre_llm_call</code> for another agent's recall. It receives that
+agent's <code>agent</code> and <code>private</code> pages and its
+per-agent bucket, and can post a turn that extraction writes under that
+agent's name. <code>cap.ts:3-6</code> names this exact threat — agent
+against agent inside a shared pod, choosing an arbitrary workspace — as
+the reason the capability exists. In pod mode the bind is
+<code>0.0.0.0</code> (<code>local-server.ts:468-477</code>).</p>
+<p><strong>The digest forgets the predicate its neighbour
+applies.</strong> <code>assemblePlaceContext</code> filters hubs through
+<code>canSee</code> before they reach browse, extraction or a 422 hint
+(<code>hook-server.ts:1561-1590</code>). <code>buildMemoryDigest</code>
+lists hubs with
+<code>store.list({ pageType: 'hub', limit: 1000 })</code> and skips only
+encrypted ones (<code>digest.ts:188-203</code>). A role-, council- or
+agent-scoped hub contributes its path and one-line summary to every
+agent's system prompt in the workspace.</p>
+<p><strong>Withheld marks.</strong></p>
+<ul>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>stale</code> does withhold a page from recall, but it is a boolean
+the cloud sets, not a status this tree produces, and there is no
+candidate or verified state (<code>cloud-sync.ts:932</code>).
+Supersession is a ranking term (<code>search.ts:87</code>).</li>
+<li><strong><code>tombstone</code> — withheld.</strong> The reconcile's
+<code>tombstonePageIds</code> delete pages by id
+(<code>store.ts:425-426, 1928-1944</code>); nothing records a rejected
+value, and an extraction that restates it writes a new page.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Validity
+columns are cloud-only by the code's own comment
+(<code>search.ts:286-292</code>).</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>memory_page_versions</code> appends per write with actor and
+device, but a delete cascades it away and leaves no row, and the outbox
+is a delivery queue whose rows change status and leave on dead-letter
+(<code>store.ts:188, 1066</code>;
+<code>outbox-worker.ts:388, 473</code>). The cloud is described as
+"authoritative + auditable" (<code>acl-predicate.ts:10-11</code>) in
+code not present.</li>
+<li><strong><code>human_review</code> — withheld.</strong> The agent
+holds <code>memory_curate</code>, the conflict route only lists, and the
+admission gates are checks the writing agent retries against; no memory
+waits for a person.</li>
+</ul>
+<p>Privacy follows the same split. At-rest encryption marks cloud-bound
+payloads behind <code>FF_MEMORY_ENCRYPTION_ENABLED</code> and keeps the
+local row plaintext (<code>store.ts:894-914</code>). Every
+<code>memory_search</code> enqueues a <code>recall_pull</code> event
+carrying the query text to the cloud (<code>rpc.ts:2572-2600</code>),
+while the read trace beside it records counts only.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The daemon's memory module has 78 test files in 19,982 lines under
+<code>sdk/prismer/test/</code>. They cover the store, the V3 replica
+migration and reconcile, the capability, each write gate, search
+payloads, graph and CJK recall, extraction parsing and salvage, and the
+outbox. I read them; I ran nothing.</p>
+<p><code>hook-server-recall-acl.test.ts</code> earns
+<code>negative_eval</code>. Three pages share one token so ranking
+cannot explain an absence. The roleA agent's injected recall omits the
+role and council pages while containing the shared one, and two more
+cases show each scoped page recalled by its member
+(<code>lines 101-221</code>). What it does not cover is the
+body-identity branch of <code>resolveContext</code>: every case
+registers a run and posts a <code>profile</code>. No test posts a hub
+with a non-workspace visibility and reads the digest; the one digest
+test file checks receipts and byte stability
+(<code>memory-digest-verified.test.ts</code>).
+<code>digest.ts:25-28</code> names a <code>memory-digest.test.ts</code>
+as the negative control for determinism, and no file of that name is in
+the tree.</p>
+<p>No public workflow runs this suite. <code>ci.yml</code> builds
+<code>server/</code> and <code>sdk-test.yml</code> targets
+<code>sdk/prismer-cloud/*</code>; neither directory exists at this
+commit, and the closed repository runs the tests
+(<code>CLAUDE.md:22-23</code>). No retrieval benchmark, LoCoMo or
+LongMemEval harness is committed, and no paper describes the memory
+system; the two arXiv links in <code>docs/HYPERGRAPH-THEORY.md</code>
+are third-party background for the evolution engine.</p>
+<p>Before trusting it I would want four cases: a
+<code>pre_llm_call</code> with a forged <code>agent_im_user_id</code>
+refused; a role-scoped hub absent from another agent's digest; a write
+to another agent's private path refused or kept private; and a mirror
+write read back by some recall path.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Take the acting identity from a token the runtime minted,
+not from the request.</strong> A per-boot key, one workspace per agent
+cap, and a handler that overwrites any body actor field make
+impersonation a forgery problem rather than a typo.</li>
+<li><strong>One visibility function, called from every read
+surface.</strong> Search, list, load, browse, recall and the 422 hint
+share <code>canReaderReadVisibility</code>, which keeps the matrix from
+drifting. See <a href="../../patterns/scope-as-a-first-class-key/">scope
+as a first-class key</a>.</li>
+<li><strong>Close recall when the authority behind the replica goes
+stale.</strong> A lease and a pinned subject hash turn "offline for a
+day" into "no recall" instead of recall under an access list the server
+has since changed.</li>
+<li><strong>Answer a lexical miss with a map.</strong> Returning INDEX
+and hub entry points instead of low-confidence hits tells the agent
+where to look without pretending to have found it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A second door with its own identity rule.</strong> A
+capability on the RPC and a body field on the hook route is one boundary
+with a hole; every route that reads or writes memory needs the same
+credential.</li>
+<li><strong>A context builder outside the predicate.</strong> The digest
+is the one assembler that skips <code>canSee</code>; when a filter
+exists as a shared function, grep for every <code>store.list</code>
+feeding a prompt.</li>
+<li><strong>An upsert that authorizes the new row and not the old
+one.</strong> Replacing a page by path should check who may write the
+page that is already there.</li>
+<li><strong>A write-only bucket.</strong> Mirroring into a store no read
+path opens produces the appearance of capture and no recall.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a reader choosing a memory layer, this is not one: the store that
+decides what is true, the correction verbs and the full ACL are a hosted
+service whose code is not published. What transfers is the daemon's
+local half — a capability-gated, visibility-filtered SQLite replica with
+deterministic digest injection — and it suits a team already running
+agents on Prismer, who want to know what the local process does with
+their memory. Anyone needing correctable memory they can inspect end to
+end should read this for its boundary design and take the correction
+path from a system that publishes one.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the cloud re-authorize an up-synced page that replaced another
+agent's private row, or accept it because the envelope is well-formed?
+The server is not in the tree.</li>
+<li>What sets <code>stale</code> cloud-side, and does anything ever
+un-stale a page?</li>
+<li>Does the orchestrator gate on <code>memory_curate</code> hold when
+the orchestrator is itself an extraction-driven agent? The gate is
+documented at <code>rpc.ts:2498-2516</code> and implemented in the
+closed server.</li>
+<li>Is <code>/v1/hooks/*</code> reachable from other pods when
+<code>PRISMER_DAEMON_BIND=0.0.0.0</code>, or does pod networking confine
+it? The entrypoint script is not in the tree.</li>
+<li>Does the closed repository hold <code>memory-digest.test.ts</code>,
+and does its CI run the suite this repository mirrors?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p>All paths are under <code>sdk/prismer/</code> unless stated.</p>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>src/daemon/memory/store.ts</code>, <code>types.ts</code>,
+<code>runtime.ts</code>, <code>scoped-store.ts</code>,
+<code>crypto.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/daemon/memory/rpc.ts</code>
+(<code>handleWrite</code>, <code>handleSectionWrite</code>,
+<code>handleMirror</code>), <code>write-gate.ts</code>,
+<code>deliverable-gate.ts</code>, <code>outbox.ts</code>,
+<code>outbox-worker.ts</code>.</li>
+<li><strong>Extraction and compaction:</strong>
+<code>src/daemon/memory/extract.ts</code>,
+<code>extracted-page-applicator.ts</code>, <code>compaction.ts</code>,
+<code>hook-server.ts</code> (<code>handlePostLlmCall</code>,
+<code>writeExtractedPage</code>).</li>
+<li><strong>Retrieval:</strong>
+<code>src/daemon/memory/search.ts</code>, <code>rpc.ts</code>
+(<code>handleSearch</code>, <code>runWorkspaceSearch</code>,
+<code>handleLoad</code>), <code>section.ts</code>.</li>
+<li><strong>Access control:</strong>
+<code>src/daemon/memory/acl-predicate.ts</code>, <code>cap.ts</code>,
+<code>hook-server.ts</code> (<code>resolveContext</code>,
+<code>filterRecallHits</code>, <code>assemblePlaceContext</code>),
+<code>src/daemon/local-server.ts</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>src/daemon/memory/digest.ts</code>, <code>index-toc.ts</code>,
+<code>index-toc-inject.ts</code>,
+<code>src/adapters/persistence/hermes/index.ts:1149</code>.</li>
+<li><strong>Replica and correction:</strong>
+<code>src/daemon/memory/cloud-sync.ts</code>,
+<code>ws-invalidate.ts</code>, <code>rpc.ts</code>
+(<code>handleCurate</code>, <code>handleDelete</code>,
+<code>handleConflicts</code>), <code>runner-wiring.ts</code>,
+<code>dream/</code>.</li>
+<li><strong>Agent integration:</strong>
+<code>src/adapters/memory-tools.ts</code>,
+<code>plugins/memory/prismer/__init__.py</code>,
+<code>plugins/tools/prismer-recall/__init__.py</code>; repository root
+<code>.claude-plugin/marketplace.json</code>.</li>
+<li><strong>Tests:</strong>
+<code>test/hook-server-recall-acl.test.ts</code>,
+<code>test/memory-cap-rpc.test.ts</code>,
+<code>test/memory-visibility-scope.test.ts</code>,
+<code>test/memory-digest-verified.test.ts</code>,
+<code>test/memory-store.test.ts</code>, <code>vitest.config.ts</code>;
+repository root <code>.github/workflows/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run at the repository root of the pinned checkout unless a directory
+is named.</p>
+<ul>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— <code>docs/HYPERGRAPH-THEORY.md</code> and its translations (two
+third-party arXiv links), SDK example URLs, one test fixture; no
+<code>CITATION.cff</code>.</li>
+<li><code>grep -rliE 'locomo|longmemeval' . --exclude-dir=.git</code> —
+no match.</li>
+<li><code>grep -nE 'x-prismer-memory-cap|verifyCap|readHeader|authorization' sdk/prismer/src/daemon/memory/hook-server.ts</code>
+— no match; <code>rpc.ts:226</code> reads the header for the RPC.</li>
+<li><code>grep -nE 'visib|canReader|canSee' sdk/prismer/src/daemon/memory/digest.ts</code>
+— no match.</li>
+<li><code>grep -rnE 'searchForAgent|\.shared\(\)|_shared\.db' sdk/prismer/src sdk/prismer/plugins | grep -v scoped-store.ts</code>
+— one comment at <code>hook-server.ts:1960</code>; no reader of
+<code>_shared.db</code> outside <code>scoped-store.ts</code>.</li>
+<li><code>grep -rn 'upsertLink(' sdk/prismer/src | grep -v 'store.ts:'</code>
+— <code>cloud-sync.ts:495</code> only.</li>
+<li><code>grep -rn 'archivedAt' sdk/prismer/src --include='*.ts'</code>
+— both inserts write <code>NULL</code> (<code>store.ts:921</code>,
+<code>store.ts:1824</code>); the rest are reads.</li>
+<li><code>grep -rnE 'stale:\s*(true|[a-zA-Z!])' sdk/prismer/src --include='*.ts' | grep -v test</code>
+— <code>cloud-sync.ts:932</code>, <code>cloud-sync.ts:1007</code> from
+the cloud head; <code>scoped-store.ts:418</code> passes a caller value
+through.</li>
+<li><code>grep -rnE 'DELETE FROM memory_page_versions|UPDATE memory_page_versions' sdk/prismer/src</code>
+— no match; versions leave only by <code>ON DELETE CASCADE</code>
+(<code>store.ts:188</code>).</li>
+<li><code>grep -rn 'new DreamScheduler' sdk/prismer/src</code> — no
+match; <code>runner-wiring.ts:159</code> assigns <code>null</code>.</li>
+<li><code>grep -rnoiE 'tombstone' sdk/prismer/src/daemon/memory</code> —
+replica page-id deletions only (<code>store.ts</code>,
+<code>cloud-sync.ts</code>).</li>
+<li><code>git ls-files | grep -iE 'claude-code-plugin|opencode-plugin'</code>
+— no match; the marketplace entry sources the plugin from npm.</li>
+<li><code>ls sdk/prismer-cloud server</code> — neither exists;
+<code>.github/workflows/ci.yml:25</code> and
+<code>sdk-test.yml:26-70</code> name them as working directories.</li>
+<li><code>git ls-files | grep -i digest</code> — <code>digest.ts</code>
+and <code>test/memory-digest-verified.test.ts</code>; no
+<code>memory-digest.test.ts</code>.</li>
+<li><code>grep -rniE 'renamed|formerly' README.md CHANGELOG.md</code> —
+no match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/Prismer-AI/PrismerCloud/commit/5337ca14c0e03e99446aff43bcbf1a2ad18f7205"><code class="commit-id" title="5337ca14c0e03e99446aff43bcbf1a2ad18f7205">5337ca14…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 29
+September 2026. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>; section 9 names each withheld mark. Only the
+daemon under <code>sdk/prismer</code> is covered; the server is
+closed-source and absent. Screened before reading: one auto-run surface
+(<code>.claude-plugin/marketplace.json</code>, which installs a plugin
+from npm and is inert unless added as a marketplace), four build-time
+execution points, eleven unpinned surfaces, fifteen dependency files
+inside the cooldown — every file in a depth-1 clone dates to the tip —
+and <code>CLAUDE.md</code> recorded as data. Read with <code>grep</code>
+and <code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

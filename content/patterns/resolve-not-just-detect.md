@@ -257,6 +257,8 @@ non-blocked same-key answer rather than needing a human to remember it exists.
 
 [Resonant Mind](../../systems/resonant-mind/) resolves at write time with one fixed disposition. Each `mind_write` observation looks up same-entity neighbours, discards candidates between 0.80 and 0.85 cosine unreported, and retires anything at 0.85 or more as keep-new by setting `valid_until` and `superseded_by`, with no type, no actor, no reason, and a reply that names neither row. The disposition then reaches two of seven read paths: `mind_search` and `graph_look` hide the retired row, while the dream pools, the wake ritual's orphan pick and the HTTP search return it. It misses requirements 1, 2 and 4 by construction, and shows a failure the list does not name: a disposition stored as a per-query predicate holds only on the queries that remember to apply it.
 
+[Kagura Memory Cloud](../../systems/kagura-memory-cloud/) gives a detected supersession a disposition and keeps the queue from refilling. At embedding time the nearest same-context memory at cosine 0.85 or more is stored in a server-only `supersede_candidate` column and surfaced on every recall until the agent accepts it with a `supersedes` edge or rejects it with `update_memory(dismiss_supersede_candidate=true)`. The rejection records the similarity it was made at, and the detector re-proposes the pair only when a recomputed score moves by 0.02, so a mechanical reindex stays suppressed while a content edit earns a new judgement. The actor on both sides is the agent, and the disposition set is binary: nothing records a reason.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

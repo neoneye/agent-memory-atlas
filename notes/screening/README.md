@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 661 of 661 screened at the report's current pin.**
+**Progress: 666 of 666 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 303 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 354 |
-| Repositories with build-time execution (`EXEC`) | 484 |
+| Repositories with an auto-run surface (`RUNS`) | 308 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 359 |
+| Repositories with build-time execution (`EXEC`) | 488 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -120,6 +120,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`engraphis`](../../content/systems/engraphis.md) | `.claude-plugin/`, `.githooks/` |
 | [`enquire-mcp`](../../content/systems/enquire-mcp.md) | `scripts/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
+| [`exomem`](../../content/systems/exomem.md) | `.claude-plugin/`, `server.json` |
 | [`farm`](../../content/systems/farm.md) | `.gitmodules` |
 | [`fava-trails`](../../content/systems/fava-trails.md) | `.vscode/settings.json` |
 | [`fidelis`](../../content/systems/fidelis.md) | `server.json` |
@@ -152,6 +153,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
 | [`kaeru`](../../content/systems/kaeru.md) | `.gitmodules` |
 | [`kage`](../../content/systems/kage.md) | `.claude-plugin/`, `server.json`, `smithery.yaml` |
+| [`kagura-memory-cloud`](../../content/systems/kagura-memory-cloud.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md`, `server.json` |
 | [`kannaka-memory`](../../content/systems/kannaka-memory.md) | `.claude-plugin/` |
 | [`khoj`](../../content/systems/khoj.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`kipi-system`](../../content/systems/kipi-system.md) | `.claude-plugin/`, `.claude/settings.json`, `.githooks/`, `.mcp.json` |
@@ -199,6 +201,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/`, `mcp.json` |
 | [`mempalace-code`](../../content/systems/mempalace-code.md) | `.claude/settings.json`, `hooks/` |
 | [`memsearch`](../../content/systems/memsearch.md) | `.claude-plugin/` |
+| [`memseek`](../../content/systems/memseek.md) | `.claude-plugin/`, `.vscode/tasks.json` |
 | [`memspec`](../../content/systems/memspec.md) | `hooks/` |
 | [`memtomem`](../../content/systems/memtomem.md) | `.claude-plugin/` |
 | [`memv`](../../content/systems/memv.md) | `.claude/settings.json`, `.claude/settings.local.json` |
@@ -265,6 +268,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`pmb`](../../content/systems/pmb.md) | `server.json` |
 | [`pond`](../../content/systems/pond.md) | `.envrc`, `server.json` |
 | [`prism-coder`](../../content/systems/prism-coder.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitmodules`, `server.json`, `smithery.yaml` |
+| [`prismer-cloud`](../../content/systems/prismer-cloud.md) | `.claude-plugin/` |
 | [`pro-workflow`](../../content/systems/pro-workflow.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
@@ -284,6 +288,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`ripwire`](../../content/systems/ripwire.md) | `.mcp.json`, `hooks/` |
 | [`ruflo`](../../content/systems/ruflo.md) | `.claude-plugin/`, `.claude/settings.json`, `.githooks/` |
 | [`rushdb`](../../content/systems/rushdb.md) | `.claude/settings.json` |
+| [`rust-self-learning-memory`](../../content/systems/rust-self-learning-memory.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `.opencode/`, `.vscode/settings.json` |
 | [`ruvector`](../../content/systems/ruvector.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `.gitmodules` |
 | [`sage-memory`](../../content/systems/sage-memory.md) | `.claude/settings.json`, `server.json` |
 | [`second-brain-cloudflare`](../../content/systems/second-brain-cloudflare.md) | `.cursor/rules/` |

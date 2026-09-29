@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP memory server over an owned
+Obsidian vault: agent-authored typed notes, supersession by pointer, a
+per-principal release plane, and an append-only write log.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Exomem — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP memory server over
+an owned Obsidian vault: agent-authored typed notes, supersession by
+pointer, a per-principal release plane, and an append-only write log.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Exomem — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP memory server over
+an owned Obsidian vault: agent-authored typed notes, supersession by
+pointer, a per-principal release plane, and an append-only write log.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Exomem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Exomem",
+      "description": "An MCP memory server over an owned Obsidian vault: agent-authored typed notes, supersession by pointer, a per-principal release plane, and an append-only write log.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Governed memory over a Markdown vault the
+user owns</p>
+          <h1>Exomem</h1>
+          <p class="document-deck">An MCP memory server over an owned
+Obsidian vault: agent-authored typed notes, supersession by pointer, a
+per-principal release plane, and an append-only write log.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Artexis10/exomem">
+              <span>Source</span>
+              <strong>Artexis10/exomem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Artexis10/exomem/commit/c44eaa0bfce8432ecceeb0701c7c45e25cb939ed" title="c44eaa0bfce8432ecceeb0701c7c45e25cb939ed">
+              <span>Analyzed revision</span>
+              <code>c44eaa0b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Artexis10--exomem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Artexis10--exomem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>383,668
+lines of hand-written Python in 387 files under src/exomem, roughly
+290,000 without blank lines, comments and docstrings; the count includes
+7,164 lines of hook scripts duplicated byte for byte from
+plugins/claude-code/hooks, and excludes an 8,407-line JSON schema, the
+Studio JavaScript, the sample vault, and 114,381 lines of Python under
+infra/ and sidecar/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,470
+commits on main by 3 contributors, one of them a release bot, 27 June –
+30 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>18,844
+pytest functions in 1,044 test files, 594,403 lines under
+tests/</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Exomem is an MCP memory server over a Markdown or Obsidian vault the
+user already owns. The agent writes typed pages — sources, evidence,
+compiled notes, entities, records, plans — and the server indexes them
+for hybrid search and a bounded working-memory packet. Notable is its
+governance: a per-principal release plane decides every hit before it
+leaves, every write commits with its log entry in one atomic batch, and
+supersession keeps both pages. Weak is epistemics: a superseded
+conclusion is only halved in score, nothing marks a memory as
+unconfirmed, and the agent holds every review verb.</p>
+<p>The project was published as <code>kb_mcp</code> and renamed to
+exomem in release 0.2.0 on 1 July 2026 (<code>CHANGELOG.md</code>).
+<code>kb_mcp</code> imports and <code>KB_MCP_*</code> environment
+variables remain supported aliases, and the CLI is still
+<code>kb</code>. The licence is AGPL-3.0: running a modified copy as a
+network service obliges the operator to publish the source.</p>
+<p>The server calls no language model to write memory. Its own phrase is
+<em>"Measures, never judges"</em> (<code>README.md</code>): search,
+extraction, embeddings, file writes and graph checks are deterministic,
+and every conclusion is authored by the client model through a typed
+tool. The vault stays readable and editable by hand, with the SQLite
+sidecars treated as rebuildable projections of it.</p>
+<p>The engineering is heavy, and most of it defends the boundary between
+the vault and whoever reads it. 54,905 lines under
+<code>src/exomem/governance/</code> hold the policy compiler, audience
+resolution, disclosure receipts and projection stores for hosted cells.
+The memory model beside it is simpler: a page, its frontmatter status,
+and a <code>supersedes</code>/<code>superseded_by</code> pair.</p>
+<p>Three marks: <code>scope_enforced</code> on the release plane,
+<code>audit_log</code> on <code>Knowledge Base/log.md</code>, and
+<code>negative_eval</code> on two read-path cases with positive
+controls. Section 9 names the four withheld and the near-miss behind
+each.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a Markdown page with YAML frontmatter under
+<code>Knowledge Base/</code>. Its folder is derived from its type, and
+Sources are further placed by an open <code>source_kind</code> and
+<code>domain</code> vocabulary. A page becomes memory when a governed
+write commits it. There is no candidate stage: the agent drafts, the
+server validates shape, links and provenance, and the page is live and
+searchable once the batch lands.</p>
+<p><strong>Two layers are append-only.</strong> Sources and Evidence are
+raw input and proof. <code>delete</code> refuses them with
+<em>"Deletions are forbidden — supersede instead"</em>
+(<code>src/exomem/delete_file.py:154-160</code>), and
+<code>replace</code> refuses them too
+(<code>src/exomem/replace.py:9-10</code>). A captured Source therefore
+has no exit through the product. The <code>delete</code> docstring
+points permanent removal of trashed files to <code>rm</code> on disk,
+and an append-only Source is never trashed in the first place.</p>
+<p><strong>A compiled conclusion stops being current by
+supersession.</strong> <code>replace_memory</code> sets the old page's
+<code>status: superseded</code> and <code>superseded_by</code>, and
+writes the new page with <code>supersedes</code>
+(<code>replace.py:1-17</code>). Inbound links keep pointing at the old
+page. <code>edit</code> then refuses the superseded page — <em>"Don't
+edit history"</em> (<code>src/exomem/edit.py:624-632</code>). The agent
+can also set <code>status</code> to any string through
+<code>edit_memory</code>'s frontmatter-field path, so
+<code>archived</code> and <code>dropped</code> are reachable by
+hand.</p>
+<p><strong>Superseded is a ranking signal on search and a filter on
+activation.</strong> <code>find</code> multiplies a superseded page's
+score by 0.5 and states that the page <em>"stays findable (never
+excluded)"</em> (<code>src/exomem/find.py:1147-1152</code>;
+<code>src/exomem/find_policy.py:171-177</code>).
+<code>activate_context</code> removes superseded, archived and dropped
+pages from its retrieval carry
+(<code>src/exomem/working_set.py:1177-1223</code>). It serves a
+superseded semantic unit labelled as superseded unless its successor is
+already in the packet (<code>working_set.py:19-21</code>,
+<code>:630-634</code>).</p>
+<p><strong>Claims carry authored verdicts, not trust states.</strong> A
+semantic unit may carry
+<code>verdict: confirmed|refuted|qualified|inconclusive|abandoned</code>,
+and the comment beside the enum decides it is lifecycle: <em>"a refuted
+claim keeps active standing and full rank"</em>
+(<code>src/exomem/semantic_units.py:48-61</code>). The NLI stance
+verifier labels contradiction pairs for the audit queue only, behind
+<code>EXOMEM_CLAIM_LEVEL=1</code>
+(<code>src/exomem/claims.py:1-40</code>).</p>
+<p><strong>Review decisions act on signals.</strong> Dismiss, snooze and
+"competing" record a person's or agent's decision about a lint signal in
+<code>.review-state.json</code>, keyed on
+<code>review_id:fingerprint</code>. A changed page changes the
+fingerprint, and the signal reopens
+(<code>src/exomem/contradiction_stance.py:20-24</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an exomem page becomes memory, how it stops being current, and what each read path does with it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an exomem page becomes memory, how it stops being current, and what each read path does with it
+flowchart TD
+    A[&quot;agent drafts via remember,&lt;br/&gt;capture_source, record_memory&quot;] --&gt; V{&quot;validate type, links,&lt;br/&gt;provenance, vocabulary&quot;}
+    V -- &quot;refused&quot; --&gt; R[&quot;error to agent,&lt;br/&gt;nothing written&quot;]
+    V -- &quot;ok&quot; --&gt; B[&quot;one atomic batch:&lt;br/&gt;page + indexes + log.md entry&quot;]
+    B --&gt; L[&quot;live page,&lt;br/&gt;status active or draft&quot;]
+    L -- &quot;replace_memory&quot; --&gt; S[&quot;old page: status superseded,&lt;br/&gt;superseded_by new page&quot;]
+    L -- &quot;delete, compiled only&quot; --&gt; T[&quot;moved to _trash&lt;br/&gt;with meta sidecar&quot;]
+    SRC[&quot;Sources, Evidence&quot;] -- &quot;delete or replace&quot; --&gt; X[&quot;refused:&lt;br/&gt;append-only&quot;]
+    L --&gt; F{&quot;find / ask_memory&quot;}
+    S --&gt; F
+    F -- &quot;superseded&quot; --&gt; H[&quot;score x 0.5,&lt;br/&gt;still returned&quot;]
+    F --&gt; G{&quot;release plane:&lt;br/&gt;caller audience vs&lt;br/&gt;scope ceiling&quot;}
+    G -- &quot;owner or ungoverned&quot; --&gt; OUT[&quot;hits returned&quot;]
+    G -- &quot;above ceiling&quot; --&gt; W[&quot;withheld,&lt;br/&gt;as if absent&quot;]
+    S --&gt; AC{&quot;activate_context carry&quot;}
+    AC -- &quot;superseded, archived, dropped&quot; --&gt; DROP[&quot;excluded from carry&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/exomem/server.py</code> is a FastMCP composition root
+serving stdio or HTTP. One command registry in
+<code>src/exomem/commands.py</code> declares every operation once and
+binds it to MCP, a CLI and a REST facade; <code>_PRODUCT_SPEC</code>
+holds the public surface (<code>commands.py:12716-13097</code>), and the
+packaged contract pins 32 MCP tools
+(<code>src/exomem/tool_surface_contract.json</code>). Tier-2 file tools
+— <code>create_file</code>, <code>move_file</code>, <code>delete</code>,
+<code>append_to_file</code>, trash — and <code>govern_memory</code> are
+on unless <code>EXOMEM_DISABLE_TIER2=1</code>.</p>
+<p>The vault is the durable store. Per-machine SQLite sidecars sit
+beside it: <code>.lexical.sqlite</code> with FTS5 and trigram indexes
+(<code>src/exomem/lexstore.py</code>), <code>.embeddings.sqlite</code>
+and <code>.clip.sqlite</code> with vector blobs scanned by numpy unless
+<code>EXOMEM_VEC_BACKEND=sqlite-vec</code>
+(<code>src/exomem/vecstore.py:1-30</code>), <code>.graph.sqlite</code>
+for the wikilink and typed-relation graph, and
+<code>.claims.sqlite</code> when claim-level checks are on.
+<code>.review-state.json</code> holds review decisions and is the one
+sidecar documented as portable (<code>docs/ARCHITECTURE.md</code>).</p>
+<p>Background work runs in the service process or its children. A file
+watcher keeps the freshness registry and indexes current. A media worker
+child runs OCR, faster-whisper ASR and CLIP, and exits after five idle
+minutes. The default-off dreamer proposes upkeep on idle and, with
+sensing on, supervises a sensor child that runs an NLI model
+(<code>src/exomem/dreamer.py:1-20</code>). None of them writes the
+vault.</p>
+<p>Hosted deployment is one process and one vault per cell
+(<code>src/exomem/hosted_runtime.py:1-4</code>), with GitHub OAuth
+sessions, Cloudflare Access, and a projection store for governed
+retrieval in a cell
+(<code>src/exomem/governance/projection_runtime.py</code>).
+<code>infra/</code> carries a provisioner, a cell controller and an
+Ansible layer.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>uvx exomem demo</code> runs against a bundled sample vault, and
+<code>uv tool install exomem</code> plus <code>exomem setup</code>
+registers the server and hooks with Claude Code and Codex. The lean
+install is keyword-only; the standard profile downloads
+<code>BAAI/bge-m3</code>, a reranker, OCR, ASR and CLIP models in the
+background. No API key is needed to store anything. A wrong memory is
+repairable by opening the Markdown file. <strong>The server refuses to
+run on macOS</strong>: the held-filesystem layer every governed write
+goes through has Linux and Windows backends only, and
+<code>platform_support()</code> says so
+(<code>src/exomem/held_fs.py:261-277</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write, compiled note.</strong> <code>op_remember</code>
+(<code>commands.py:7211</code>) → <code>note.note()</code>
+(<code>src/exomem/note.py:1576</code>) validates per type, resolves the
+path, renders frontmatter, appends the new link to each cited Source's
+<code>ingested_into</code>, prepends the <code>log.md</code> entry and
+refreshes <code>index.md</code>, then writes everything in one
+<code>batch_atomic_write</code> (<code>note.py:14-22</code>).</p>
+<p><strong>Write, raw source and episode.</strong>
+<code>op_capture_source</code> (<code>commands.py:7772</code>) writes an
+append-only Source. <code>op_episode_memory</code>
+(<code>commands.py:7960</code>) records an agent-authored session recap
+as an <code>episode</code> Source and retires the episode's earlier live
+revision in the same batch
+(<code>src/exomem/episode_memory.py:1-12</code>).</p>
+<p><strong>Supersede.</strong> <code>op_replace_memory</code>
+(<code>commands.py:7641</code>) → <code>replace.replace()</code> marks
+the old page and builds the successor through <code>note()</code>,
+logging <em>"Supersedes … via exomem."</em> with the caller's reason
+(<code>replace.py:697-720</code>).</p>
+<p><strong>Retrieve.</strong> <code>op_find</code> and
+<code>op_ask_memory</code> (<code>commands.py:2315</code>,
+<code>:5989</code>; <code>ask_memory</code> calls <code>op_find</code>
+at <code>:6084</code>) → <code>find.find()</code>
+(<code>find.py:1023</code>). Lexical lanes come from FTS5, the vector
+lane from the embedding sidecar, and a graph lane from one-hop outbound
+wikilinks, fused by weighted RRF (<code>src/exomem/fusion.py</code>).
+Type, status, temporal and optional usage multipliers follow, then an
+optional cross-encoder prefix rerank. Structured filters on frontmatter,
+projects, tags, relations and dates narrow the candidates first.</p>
+<p><strong>Release.</strong> After <code>find()</code> returns,
+<code>egress.annotate_hits</code> decides each hit for the bound
+principal and drops withheld ones (<code>commands.py:2701-2752</code>).
+The comment there says nothing principal-dependent may run earlier, or
+one principal's decisions would be cached for the next. The MCP wrapper
+binds the principal for the whole call and runs
+<code>egress.postfilter</code> on every result
+(<code>src/exomem/command_surface.py:447-460</code>,
+<code>:506-509</code>).</p>
+<p><strong>Context assembly.</strong> <code>op_activate_context</code>
+(<code>commands.py:6204</code>) resolves the turn's anchors, runs
+bounded role lanes, applies the same release gate
+(<code>:6824-6827</code>), and returns a packet capped at 4,000
+characters by default and 8,000 at most
+(<code>src/exomem/working_set.py:46-48</code>).
+<code>ask_memory(deep=true)</code> goes through
+<code>memory_context.assemble_context</code>, which filters seeds and
+neighbours for a non-owner before packing
+(<code>src/exomem/memory_context.py:44-48</code>).</p>
+<p><strong>Review.</strong> <code>review_memory</code> reads the Inbox,
+activation and relation queues; <code>triage_memory</code>
+(<code>commands.py:9379</code>) records dismiss, snooze, reopen or
+competing; <code>connect_memory(operation="accept-relation")</code>
+authors one <code>## Relations</code> bullet after checking the
+candidate fingerprint (<code>commands.py:9676-9681</code>,
+<code>:9833</code>).</p>
+<p><strong>Delete.</strong> <code>delete</code> moves a compiled page to
+<code>_trash/&lt;date&gt;/</code> with a <code>.meta.json</code> sidecar
+and logs it (<code>src/exomem/delete_file.py:1-18</code>,
+<code>:373-390</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>frontmatter</td>
+<td>source, evidence, entity, research-note, insight, failure, pattern,
+experiment, production-log, record, plan types</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>frontmatter</td>
+<td><code>active</code>/<code>draft</code> at creation for basic notes;
+experiment and production values; <code>superseded</code> from replace;
+any string through edit</td>
+</tr>
+<tr>
+<td><code>supersedes</code>, <code>superseded_by</code></td>
+<td>frontmatter</td>
+<td>wikilinks; the pair is the whole correction chain</td>
+</tr>
+<tr>
+<td><code>sources</code>, <code>evidence</code>,
+<code>ingested_into</code></td>
+<td>frontmatter</td>
+<td>provenance links, maintained on both sides by the writers</td>
+</tr>
+<tr>
+<td><code>projects</code>, <code>tags</code>, <code>classes</code></td>
+<td>frontmatter</td>
+<td>keys the governance scopes select on</td>
+</tr>
+<tr>
+<td><code>created</code>, <code>updated</code></td>
+<td>frontmatter</td>
+<td>date or UTC second stamp; precision is kept, never back-filled
+(<code>src/exomem/temporal.py:1-38</code>)</td>
+</tr>
+<tr>
+<td>semantic blocks</td>
+<td>body</td>
+<td><code>## Claim</code>, <code>## Finding</code>,
+<code>## Decision</code> … with <code>id</code>, <code>category</code>,
+<code>relations</code>, optional <code>verdict</code></td>
+</tr>
+<tr>
+<td><code>## Relations</code></td>
+<td>body</td>
+<td>typed note-level edges such as <code>refines</code>,
+<code>evidenced_by</code>, <code>contradicts</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Records and Planning items are structured collections with
+author-declared columns; the current-state resolver reads the newest
+Record item first and names its source
+(<code>src/exomem/working_set_state.py:1-13</code>). There is no
+per-agent or per-session key on a page. Episodes carry a session binding
+in the caller's episode ledger, not in the page.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>find</code> is hybrid by default. An intent classifier labels a
+query exact, temporal, relationship or conceptual and weights the lanes.
+The graph lane adds one-hop neighbours of strong candidates.
+<code>prefer_compiled</code> boosts compiled notes over raw Sources, and
+<code>prefer_active</code> applies the superseded penalty. Both are on
+by default and are multipliers, so a strongly matching superseded
+conclusion can still outrank its successor on a query phrased in its
+words.</p>
+<p>The hit carries <code>status</code> and <code>superseded_by</code>,
+so a reader of the full result can tell. The UserPromptSubmit hook's
+opt-in inject mode renders stubs as path, type and date only. In
+<code>working_set</code> mode it renders each packet unit as text and
+ref, dropping the <code>lifecycle</code> field the packet carries
+(<code>plugins/claude-code/hooks/exomem_retrieve_nudge.py:1686-1705</code>,
+<code>:1426-1436</code>;
+<code>src/exomem/working_set.py:476-484</code>). A superseded unit
+injected that way reads as current.</p>
+<p><code>activate_context</code> returns units first, then pages, under
+per-role caps of three items and a global character budget. Text that
+does not fit becomes a pointer rather than a truncated claim. When
+anchors tie or nothing resolves it abstains and says why. The retrieval
+carry excludes retired pages at the index query
+(<code>src/exomem/working_set_runtime.py:1180-1210</code>).</p>
+<p><code>_access.yaml</code> can exclude whole folders from every walk
+and index, and the hot result cache invalidates when it changes
+(<code>tests/test_access.py:111-127</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every memory write is an explicit tool call by the agent or a person.
+The Stop hook reminds the agent to save at natural stopping points; the
+PreCompact and SessionEnd hooks store a structural checkpoint of hashes
+and counts, <em>"never conversation, tool, summary, or artifact
+content"</em> (<code>README.md</code>). Nothing extracts facts from a
+transcript.</p>
+<p>Validation is extensive and deterministic: note types have required
+fields, wikilinks must resolve, relation labels resolve through a
+registry, and <code>corpus_aware</code> warns about near-duplicates at
+write time. Deduplication is left to the agent's judgement after those
+warnings. Contradiction is surfaced as a review signal, never resolved
+by the server.</p>
+<p><strong>Supersession is the update path for conclusions.</strong>
+Edits to an active page are allowed and logged with the <code>why</code>
+and the changed fields. Once a page is superseded it is frozen against
+<code>edit</code>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous; the batch writes the page, the index files, the
+log entry and derived sidecar rows before returning. No model call.</li>
+<li>Lag: lexical search sees the page at commit; vector search sees it
+after the embedding upsert, which the quiet resource mode can defer
+until <code>exomem index</code> runs.</li>
+<li>Background: no pass rewrites the store. The dreamer reads a delta,
+and its NLI sensing is opt-in.</li>
+<li>Read: <code>find</code> returns 15 hits by default; the activation
+packet is bounded to 4,000 characters by default and injected only when
+the hook's opt-in is set.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>exomem setup</code> registers the server, ten skills and the
+hooks with Claude Code and Codex. Clients without skills are told to
+call <code>bootstrap()</code>, which returns the operating contract over
+MCP. The UserPromptSubmit hook injects a one-line reminder to run
+<code>ask_memory</code> by default, skips control prompts such as
+<em>continue</em>, and can be switched to inject retrieved stubs or an
+activation packet under a data header. SessionStart on
+<code>compact|resume</code> re-injects the continuation checkpoint.</p>
+<p>The agent holds nearly every verb: save, edit, supersede, delete to
+trash, accept relations, triage review signals, and record and plan
+items. Governance policy authoring is owner-only, and local stdio is the
+owner. Auth-session administration is CLI-only: <em>"session
+administration is never an MCP tool"</em> (<code>README.md</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The release plane is the strongest mechanism in the
+tree.</strong> Scope membership is evaluated per page from its
+frontmatter, per request, memoized on the policy fingerprint and the
+page's mtime and size (<code>governance/membership.py:1-10</code>). The
+default is open unless a scope sets <code>default_deny</code>
+(<code>governance/decisions.py:10-15</code>). A blocked policy compile
+or an unresolved principal withholds everything rather than opening
+(<code>governance/egress.py:1-24</code>), and an unbound principal
+resolves to the most restrictive audience
+(<code>governance/principal.py:448-469</code>). The package's own
+docstring still reads <em>"inspection-only, zero enforcement"</em>
+(<code>governance/__init__.py:1-4</code>); the egress module beside it
+enforces.</p>
+<p><strong>It protects remote readers, not the owner from the owner's
+agent.</strong> Local stdio, the CLI and the shared REST key all resolve
+to the owner, and a remote OAuth subject becomes the owner when it
+matches <code>EXOMEM_OWNER_OAUTH_SUBJECT</code>
+(<code>governance/principal.py:366-411</code>). Other remote subjects
+and Cloudflare Access identities are audiences of their own. Tenants are
+separated physically, one vault per hosted cell.</p>
+<p><strong>Atomic writes.</strong> A page, its indexes and its log entry
+commit together or not at all, which keeps <code>log.md</code>
+consistent with the pages it describes. A second, hash-chained record
+exists under <code>_Governance/events/</code>
+(<code>governance/receipts.py:1-4</code>, <code>:241-250</code>), and it
+covers disclosure, token, deletion and governance events only
+(<code>:58-75</code>).</p>
+<p><strong>Provenance is structural.</strong> Compiled notes cite
+Sources, Sources record which notes ingested them, adoption copies carry
+the original path and SHA-256, and
+<code>review_memory(mode="provenance")</code> walks it. None of this
+attests a claim.</p>
+<p><strong>Prompt-injected memory is not filtered.</strong> A Source is
+stored verbatim, and a compiled note says what the agent wrote. The
+credential scrubber on the shared dispatcher removes secret-shaped
+strings from responses; it does not judge content.</p>
+<p><strong>Deletion is partial by design.</strong> Trash is recoverable
+and Sources are permanent, so "forget this" has no product path for raw
+material, and a trashed compiled page stays on disk until someone
+removes it by hand.</p>
+<p><strong>Capability marks:</strong></p>
+<ul>
+<li><code>scope_enforced</code> — awarded; the key is the page's
+<code>projects</code>, <code>tags</code>, <code>types</code> or
+<code>classes</code>, the predicate is the release gate after
+<code>find()</code> and on <code>activate_context</code>, and the
+audience comes from the transport rather than the call.</li>
+<li><code>audit_log</code> — awarded, on <code>log.md</code>; limits in
+the frontmatter record.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld. A dismissed relation candidate is
+keyed on <code>from|to|relation_type|method</code>
+(<code>src/exomem/relation_queue.py:78-83</code>), but its fingerprint
+folds in the source page's signal version, so any edit to that page
+resurfaces it (<code>:132-157</code>). It records a rejected suggestion
+that was never memory, and raw <code>suggest_relations</code> does not
+consult it. Nothing keyed on a rejected value stops the agent writing it
+again.</li>
+<li><code>trust_state</code> — withheld. <code>status</code> is a
+lifecycle word; the one read path that filters on it is the activation
+carry, and <code>find</code> only demotes. Unit verdicts are authored
+and never filter. No state withholds a claim as unconfirmed.</li>
+<li><code>bitemporal</code> — withheld. <code>created</code> and
+<code>updated</code> are record time. Records collections may declare
+date columns with range queries
+(<code>src/exomem/record_formats.py</code>), which is event-date
+filtering on one collection, not validity tracked beside record time. No
+as-of read exists.</li>
+<li><code>human_review</code> — withheld. The Review Studio's accept,
+dismiss, snooze and supersede buttons call <code>triage_memory</code>,
+<code>connect_memory</code>, <code>remember</code> and
+<code>replace_memory</code>, the tools the agent holds
+(<code>docs/review-studio.md:47-74</code>). Governance proposals wait as
+<code>pending</code> until <code>commit</code>, which is owner-only
+(<code>governance/tool.py:154-157</code>, <code>:4900-4906</code>), and
+the stdio agent is the owner.</li>
+<li>The nearest <code>human_review</code> mechanism is the vocabulary
+authority, whose docstring says an agent-held credential cannot
+construct an approval
+(<code>src/exomem/vocabulary_authority.py:1-7</code>). Its
+owner-decision callback defaults to <code>None</code> and raises
+<code>VocabularyAuthorityUnavailable</code>
+(<code>src/exomem/vocabulary_control.py:190-196</code>).
+<code>server.py:562-570</code> calls <code>register_hosted_routes</code>
+without one, and only tests construct a
+<code>TrustedOwnerDecision</code>. Declared and unwired.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests at the pin; nothing was built or run.</p>
+<p><strong>Negative retrieval cases.</strong>
+<code>test_find_hides_excluded_tree</code>
+(<code>tests/test_access.py:97-108</code>) asserts a page with the
+marker <code>zzqqxx</code> is found, excludes its folder, and asserts it
+is gone; its sibling at <code>:111-127</code> repeats it through the hot
+cache.
+<code>test_a_withheld_page_in_a_guests_thread_answers_as_an_absent_one</code>
+(<code>tests/test_working_set_keyless_continuity.py:389-417</code>)
+asserts a guest's packets are identical with and without heat on a
+withheld page, and that the permitted anchor still resolves. Both
+modules are in the core CI tier and neither skips.
+<code>test_annotate_hits_withholds_below_excerpt_and_keeps_permitted</code>
+(<code>tests/test_governance_egress.py:560-568</code>) pairs a withheld
+and a permitted hit on synthetic objects.</p>
+<p><strong>Weaker cases beside them.</strong>
+<code>test_op_find_annotates_and_filters</code>
+(<code>test_governance_egress.py:644-656</code>) asserts only that the
+restricted path is absent, so an empty result passes, and its pack check
+is inside <code>if pack is not None</code>. No test excludes a
+superseded page from <code>find</code>, because none is excluded;
+<code>tests/test_find_structured_filters.py:447-500</code> asserts the
+superseded page is returned second with <code>prefer_active</code> and
+first without it.</p>
+<p><strong>Golden retrieval.</strong>
+<code>scripts/eval_retrieval.py</code> scores 26 queries in
+<code>tests/golden/queries.yaml</code> for NDCG, MRR and recall.
+<code>docs/benchmarks.md</code> reports hybrid NDCG@10 0.9270, MRR
+0.9154 and recall@10 0.9615, measured on 3 July 2026. The CI floors are
+0.85, 0.80 and 0.88 (<code>tests/test_retrieval_golden.py:95-98</code>),
+and the suite runs only in the <code>embeddings</code>-marked job. No
+golden query asserts that anything is absent.</p>
+<p><strong>Activation benchmark with load-bearing negative
+controls.</strong> The context activation harness defines negative twins
+and poison facts, and
+<code>test_the_negative_controls_are_load_bearing_on_corpus_v4</code>
+(<code>tests/test_context_activation_real_compiler.py:690-704</code>)
+asserts that each of four controls fails once the naming gate is removed
+and passes under the kill switch. It also asserts that only three of the
+four pass today. <code>docs/benchmarks/context-activation.md</code>
+reports the run at 9 of 18 cases before amendments. These tests are in
+the harness CI tier.</p>
+<p><strong>Scale.</strong> 18,844 test functions, with skips
+concentrated on missing models (<code>importorskip</code> on torch or
+sentence-transformers) and platform capabilities; an autouse fixture
+sets <code>EXOMEM_DISABLE_EMBEDDINGS=1</code> for every test.</p>
+<p><strong>No paper.</strong> The tree has no <code>CITATION.cff</code>,
+BibTeX or DOI for exomem; the arXiv references in
+<code>benchmarks/suites/*/LOCKFILE.json</code> cite other projects'
+benchmarks.</p>
+<p><strong>Wanted before trusting it:</strong> a test that a superseded
+conclusion does not outrank its successor on a query phrased in the old
+wording, and a test that the inject hook marks a superseded unit.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Decide disclosure after the shared cache, per request, from
+the transport.</strong> Cache principal-free candidates, then run one
+release gate before anything is packed or serialized, and treat an
+unbound principal as the most restrictive audience rather than the
+owner.</li>
+<li><strong>Commit the log entry in the same batch as the
+write.</strong> A mutation record that can diverge from the store is a
+second source of truth.</li>
+<li><strong>Freeze superseded pages against edit.</strong> Correction
+goes forward through a new page; history stays as it was written.</li>
+<li><strong>Make append-only layers a path property.</strong> Raw input
+and proof are refused by <code>delete</code> and <code>replace</code> by
+folder, not by a flag the caller sets.</li>
+<li><strong>Assert that negative controls are load-bearing.</strong>
+Removing the mechanism must fail the control, and disabling everything
+must pass it.</li>
+<li><strong>Bound the context packet in characters and turn overflow
+into pointers.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Demoting a superseded conclusion instead of filtering it on
+the default path.</strong> A multiplier cannot guarantee the replaced
+claim loses, and a renderer that drops the label turns it into a current
+claim.</li>
+<li><strong>Review surfaces that call the same verbs the agent
+holds.</strong> A browser queue in front of agent-reachable tools is a
+convenience, not a gate.</li>
+<li><strong>A review gate whose production callback is never
+passed.</strong> The vocabulary authority is complete and refuses every
+approval in a running service.</li>
+<li><strong>An audit log stored as an editable file with no before value
+and no actor.</strong> It records that a write happened and why, not
+what it replaced or who asked.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who keeps a long-lived Obsidian vault on Linux
+or Windows, wants several agents to share it, and may later expose it
+remotely to other identities under a disclosure policy. It is the most
+operationally serious owned-vault design a reader is likely to find, and
+it assumes an owner who will run a service, read review queues and learn
+a large tool surface. A team that needs memories vetted by a person
+before they are served should not adopt it, and it will not start on
+macOS. Anyone after a small memory layer should borrow its release gate
+and its batch-plus-log write, not the system.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any shipped deployment pass a vocabulary owner-decision
+callback from outside this repository, for example from the hosted
+control plane?</li>
+<li>How often does a superseded page outrank its successor on real
+vaults?</li>
+<li>Is <code>log.md</code> protected from the tier-2 file tools by a
+guard this reading missed?</li>
+<li>What do non-owner audiences look like in practice: shared readers of
+one personal vault, or only hosted-cell operators?</li>
+<li>How large does <code>.review-state.json</code> grow, given that
+standing dismissals are never compacted
+(<code>src/exomem/review_state.py:49-56</code>)?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>src/exomem/vault.py</code>, <code>src/exomem/note.py</code>,
+<code>src/exomem/semantic_units.py</code>,
+<code>src/exomem/temporal.py</code>,
+<code>src/exomem/lexstore.py</code>,
+<code>src/exomem/vecstore.py</code>,
+<code>src/exomem/embedding_index.py</code>,
+<code>src/exomem/graph_sync.py</code>.</li>
+<li><strong>Write path:</strong> <code>src/exomem/note.py</code>,
+<code>src/exomem/add.py</code>, <code>src/exomem/replace.py</code>,
+<code>src/exomem/edit.py</code>, <code>src/exomem/delete_file.py</code>,
+<code>src/exomem/episode_memory.py</code>,
+<code>src/exomem/record_memory.py</code>,
+<code>src/exomem/mutation_journal.py</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/exomem/find.py</code>,
+<code>src/exomem/find_policy.py</code>,
+<code>src/exomem/fusion.py</code>,
+<code>src/exomem/ranking_config.py</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>src/exomem/working_set.py</code>,
+<code>src/exomem/working_set_runtime.py</code>,
+<code>src/exomem/memory_context.py</code>,
+<code>src/exomem/context_pack.py</code>,
+<code>plugins/claude-code/hooks/exomem_retrieve_nudge.py</code>.</li>
+<li><strong>Governance:</strong>
+<code>src/exomem/governance/egress.py</code>,
+<code>src/exomem/governance/policy.py</code>,
+<code>src/exomem/governance/membership.py</code>,
+<code>src/exomem/governance/decisions.py</code>,
+<code>src/exomem/governance/principal.py</code>,
+<code>src/exomem/governance/tool.py</code>,
+<code>src/exomem/governance/receipts.py</code>,
+<code>src/exomem/command_surface.py</code>.</li>
+<li><strong>Review:</strong> <code>src/exomem/review_state.py</code>,
+<code>src/exomem/relation_queue.py</code>,
+<code>src/exomem/contradiction_stance.py</code>,
+<code>src/exomem/claims.py</code>,
+<code>src/exomem/vocabulary_authority.py</code>,
+<code>src/exomem/vocabulary_control.py</code>,
+<code>docs/review-studio.md</code>.</li>
+<li><strong>Background:</strong> <code>src/exomem/dreamer.py</code>,
+<code>src/exomem/sensed_model.py</code>,
+<code>src/exomem/media_worker.py</code>,
+<code>src/exomem/file_watcher.py</code>.</li>
+<li><strong>MCP, CLI and REST:</strong>
+<code>src/exomem/commands.py</code>, <code>src/exomem/server.py</code>,
+<code>src/exomem/server_rest.py</code>,
+<code>src/exomem/server_hosted.py</code>,
+<code>src/exomem/hosted_runtime.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_access.py</code>,
+<code>tests/test_working_set_keyless_continuity.py</code>,
+<code>tests/test_governance_egress.py</code>,
+<code>tests/test_find_structured_filters.py</code>,
+<code>tests/test_retrieval_golden.py</code>,
+<code>tests/test_context_activation_real_compiler.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rnE 'import (anthropic|openai|litellm)|from (anthropic|openai|litellm) ' src infra sidecar</code>
+— no match; no LLM client on any write path.</li>
+<li><code>grep -rnwE 'valid_from|valid_to|valid_until' src</code> — only
+<code>hosted_security.py</code> credential-proof fields; no validity
+time on a page.</li>
+<li><code>grep -rnE 'include_superseded|exclude_superseded' src tests</code>
+— no match; <code>find</code> has no switch that drops superseded
+pages.</li>
+<li><code>grep -rn '_trusted_owner_decision_for_adapter' --include='*.py' .</code>
+— the definition and 13 test call sites; no caller in <code>src/</code>
+or <code>infra/</code>.</li>
+<li><code>grep -rn 'vocabulary_owner_decision_callback=' src infra</code>
+— no match; <code>register_hosted_routes</code> is called once, at
+<code>server.py:562</code>, without it.</li>
+<li><code>grep -rn 'log\.md' src/exomem/reserved_paths.py src/exomem/append_to_file.py src/exomem/delete_file.py src/exomem/create_file.py</code>
+— no match; no guard names <code>log.md</code> in the tier-2 leaves or
+the reserved-path registry.</li>
+<li><code>grep -rE '^\s*(async )?def test_' tests --include='*.py' | wc -l</code>
+— 18,844; <code>find tests -name 'test_*.py' | wc -l</code> —
+1,044.</li>
+<li><code>git ls-files -z 'src/*.py' | xargs -0 grep -l -iE 'do not edit|auto-?generated|@generated|generated by'</code>
+— four files, each matching on a comment, none a generated module;
+<code>cmp</code> of <code>src/exomem/_hooks/*.py</code> against
+<code>plugins/claude-code/hooks/</code> — all three identical.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article\{|@misc\{|doi\.org|CITATION\.cff' . --exclude-dir=.git</code>
+— only <code>benchmarks/suites/*/LOCKFILE.json</code>, strategy notes
+and test URLs; nothing cites a paper about exomem.</li>
+<li><code>grep -n -E 'test_access\.py|keyless_continuity' tests/harness_modules.txt</code>
+— no match; both negative cases run in the core tier.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/Artexis10/exomem/commit/c44eaa0bfce8432ecceeb0701c7c45e25cb939ed"><code class="commit-id" title="c44eaa0bfce8432ecceeb0701c7c45e25cb939ed">c44eaa0b…</code></a>
+— first reading, at the head of <code>main</code>, a commit from 30
+September 2026. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>. Screened before
+reading, and the screen found two auto-run surfaces: the
+<code>.claude-plugin</code> marketplace entry pointing at the plugin
+hooks, and the <code>server.json</code> MCP manifest. It also found four
+build-time execution points (a <code>setup.py</code> under
+<code>benchmarks/</code> and three <code>conftest.py</code>), twelve
+dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip — and one caret range with a lockfile.
+<code>AGENTS.md</code>, a symlink to <code>CLAUDE.md</code>, was
+recorded as data. Read with <code>grep</code> and <code>sed</code>;
+nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
