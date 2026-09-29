@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 675 reports.**
+**This page covers all 676 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6075,3 +6075,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 39,159 lines of TypeScript and JavaScript outside tests and 173 Vitest cases, 70 of them on the memory library's mechanics; no test reaches the knowledge routes, the feedback path or the fix pass, and the LongMemEval figures were tuned on the same 500 questions and report an NDCG above 1.
 - Study when: you want agents to consult shared memory before they edit, or you want a validity-start field and an `asOf` query on documents a team writes.
 - Do not copy when: usage signals will drive ranking or automatic rewrites; attribute outcomes to what a session actually retrieved before letting a counter decide anything.
+
+### [`mindmemos`](../systems/mindmemos/)
+
+- Best idea: **resolve the tenant from the credential, then check it again at the store.** `project_id` is taken from the API key file or a signed gateway token, `search_filter_to_qdrant` puts it first in every filter, `project_filter` re-inserts it at the store boundary, and `_retrieve_scoped` drops any point read by id whose payload names another project, so update and delete by id cannot reach across.
+- Biggest risk: **dreaming consolidates across users.** Seeds are the requesting user's recent writes, but the Neo4j neighbour query matches every active memory in the project that mentions the same entity, Memory nodes carry no user field, and the exact-duplicate pass archives by a hash of the text alone. A merged memory takes the majority `user_id` of its sources. Read, not reproduced.
+- Most reusable component: `AddSafetyGate` in `components/extractor/vanilla/_safety_gate.py` — a deterministic check between the extractor's proposed action and the write, downgrading a low-confidence update or merge, or an update without a target, to a plain add.
+- Second risk: **correction has three semantics.** A feedback update or a dreaming merge versions the memory behind a `DERIVED_FROM` edge; an API update or a vanilla `UPDATE` overwrites the text in place. Delete archives, the original messages stay in the add record, and nothing keyed on the deleted value stops the next extraction from writing it again.
+- Maturity impression: MIT by README with no `LICENSE` file, 185 commits by 11 contributors from 30 June to 29 August 2026, 51,442 lines of Python in the server, and 1,242 test functions of which CI runs only the SDK's. Two marks — `scope_enforced` on the project key and `negative_eval` on a store-level cross-project read with a positive control. Benchmark figures match the paper and are not recomputable from the tree; the eval runs use presets named for LoCoMo and PersonaMem.
+- Study when: you are building a multi-tenant memory service and want a worked mutation-plan boundary, a gate between model-proposed actions and writes, and entity property timelines fed by extraction.
+- Do not copy when: end users within one tenant must not see or merge each other's memories, when a deleted fact must stay deleted, or when one developer wants local memory for a coding agent — the stack is three services and an LLM call per stored turn.

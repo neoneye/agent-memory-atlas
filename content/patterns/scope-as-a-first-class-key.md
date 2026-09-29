@@ -873,6 +873,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[RecallNest](../../systems/recallnest/) enforces the key in the store and loses it twice above the store.** Every LanceDB read compiles the scope into SQL before the limit and re-checks each row, and a real-store test asserts a foreign scope stays out of a vector search. The MCP search tool then retries with `allScopes: true` whenever a scoped search returns nothing, under a single warning line — the fallback [Daimon](../../systems/daimon/)'s MCP surface refuses outright. On the write side, the canonical-key match that decides dedupe and in-place replacement lists every scope, so a write to one project can rewrite another project's belief; the project's own test file records that defect as open.
 
+**[MindMemOS](../../systems/mindmemos/) is the consolidation case this page's forces paragraph warns about.** Its project key is exemplary — taken from the credential, forced first into every Qdrant filter, and re-checked on reads by id — and its user key is a request field. The dreaming pass seeds from one user's recent writes, then expands through Neo4j to every active memory in the project that mentions the same entity, on nodes that carry no user field, and archives exact-text duplicates across the result. **A scope that is not on the graph node cannot be applied by a background job that walks the graph.**
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 675 reports.</strong></p>
+<p><strong>This page covers all 676 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -27933,6 +27933,50 @@ on documents a team writes.</li>
 <li>Do not copy when: usage signals will drive ranking or automatic
 rewrites; attribute outcomes to what a session actually retrieved before
 letting a counter decide anything.</li>
+</ul>
+<h3 id="mindmemos"><a
+href="../systems/mindmemos/"><code>mindmemos</code></a></h3>
+<ul>
+<li>Best idea: <strong>resolve the tenant from the credential, then
+check it again at the store.</strong> <code>project_id</code> is taken
+from the API key file or a signed gateway token,
+<code>search_filter_to_qdrant</code> puts it first in every filter,
+<code>project_filter</code> re-inserts it at the store boundary, and
+<code>_retrieve_scoped</code> drops any point read by id whose payload
+names another project, so update and delete by id cannot reach
+across.</li>
+<li>Biggest risk: <strong>dreaming consolidates across users.</strong>
+Seeds are the requesting user's recent writes, but the Neo4j neighbour
+query matches every active memory in the project that mentions the same
+entity, Memory nodes carry no user field, and the exact-duplicate pass
+archives by a hash of the text alone. A merged memory takes the majority
+<code>user_id</code> of its sources. Read, not reproduced.</li>
+<li>Most reusable component: <code>AddSafetyGate</code> in
+<code>components/extractor/vanilla/_safety_gate.py</code> — a
+deterministic check between the extractor's proposed action and the
+write, downgrading a low-confidence update or merge, or an update
+without a target, to a plain add.</li>
+<li>Second risk: <strong>correction has three semantics.</strong> A
+feedback update or a dreaming merge versions the memory behind a
+<code>DERIVED_FROM</code> edge; an API update or a vanilla
+<code>UPDATE</code> overwrites the text in place. Delete archives, the
+original messages stay in the add record, and nothing keyed on the
+deleted value stops the next extraction from writing it again.</li>
+<li>Maturity impression: MIT by README with no <code>LICENSE</code>
+file, 185 commits by 11 contributors from 30 June to 29 August 2026,
+51,442 lines of Python in the server, and 1,242 test functions of which
+CI runs only the SDK's. Two marks — <code>scope_enforced</code> on the
+project key and <code>negative_eval</code> on a store-level
+cross-project read with a positive control. Benchmark figures match the
+paper and are not recomputable from the tree; the eval runs use presets
+named for LoCoMo and PersonaMem.</li>
+<li>Study when: you are building a multi-tenant memory service and want
+a worked mutation-plan boundary, a gate between model-proposed actions
+and writes, and entity property timelines fed by extraction.</li>
+<li>Do not copy when: end users within one tenant must not see or merge
+each other's memories, when a deleted fact must stay deleted, or when
+one developer wants local memory for a coding agent — the stack is three
+services and an LLM call per stored turn.</li>
 </ul>
         </article>
       </div>
