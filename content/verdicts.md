@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 670 reports.**
+**This page covers all 671 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6025,3 +6025,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 32,665 lines of Python under `src/octop_memory`, and 1,030 lines of Python and 2,581 of TypeScript in the two host plugins, released as 1.0.0 in a four-commit history of 24 September 2026. Five marks, `trust_state`, `scope_enforced` on the PostgreSQL tier, `audit_log`, `human_review` and `negative_eval`, the last on exact-list exclusion tests with positive controls. 1,261 pytest functions; the PostgreSQL cases skip in CI.
 - Study when: you want an extraction pipeline whose write path distrusts the model — evidence ids checked before promotion, a literal status, one transaction per promotion — and a staging layer a person can resolve.
 - Do not copy when: contradictions arrive as paraphrases, since the conflict rule reads negation words; or when you need one approve semantics across surfaces, which this tree has three of.
+
+### [`recallnest`](../systems/recallnest/)
+
+- Best idea: **a layer that says what kind of claim a row is.** Transcript and unstructured ingest are `evidence`, structured writes are `durable`, dream syntheses are evidence by design, and the stable section of `resume_context` refuses evidence outright; promotion writes a durable copy that records `promotedFrom`, so the source chunk stays inspectable.
+- Biggest risk: the canonical-key match on write lists the newest 1,000 rows of every scope. A write to one project whose key and category match another project's active row either returns that row as `deduped` or rewrites it in place, and stores nothing in the caller's scope; the project's own test file names the defect as open.
+- Most reusable component: `archiveBeliefVersion` — before a latest-wins rewrite, the old text is copied under a derived id as `superseded` with its interval closed and its original timestamp kept, so history rows neither vanish nor crowd the scan window.
+- Second risk: MCP `search_memory` retries with `allScopes: true` whenever a scoped search returns nothing, and marks it with one warning line under the foreign results; the HTTP recall route does not.
+- Maturity impression: 52,191 lines of TypeScript and 2,578 Bun test cases in 184 files, all run in CI, including a real-LanceDB scope exclusion test written because a mock had ignored the scope argument; the retrieval evals target the operator's own store and cannot be reproduced from the tree.
+- Study when: you ingest agent transcripts and need them searchable without letting them pose as settled preferences, or you want forget to survive a re-import.
+- Do not copy when: scope must be a boundary between projects or people; here it is a caller argument that the write path and the search fallback both cross.

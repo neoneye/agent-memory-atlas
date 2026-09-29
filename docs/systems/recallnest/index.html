@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A LanceDB memory layer shared by
+coding agents, keeping transcript evidence apart from durable memory;
+its search drops the scope filter on empty results.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="RecallNest — Agent Memory Atlas">
+    <meta property="og:description" content="A LanceDB memory layer
+shared by coding agents, keeping transcript evidence apart from durable
+memory; its search drops the scope filter on empty results.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RecallNest — Agent Memory Atlas">
+    <meta name="twitter:description" content="A LanceDB memory layer
+shared by coding agents, keeping transcript evidence apart from durable
+memory; its search drops the scope filter on empty results.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>RecallNest — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "RecallNest",
+      "description": "A LanceDB memory layer shared by coding agents, keeping transcript evidence apart from durable memory; its search drops the scope filter on empty results.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One LanceDB memory shared by several coding
+agents</p>
+          <h1>RecallNest</h1>
+          <p class="document-deck">A LanceDB memory layer shared by
+coding agents, keeping transcript evidence apart from durable memory;
+its search drops the scope filter on empty results.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AliceLJY/recallnest">
+              <span>Source</span>
+              <strong>AliceLJY/recallnest</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AliceLJY/recallnest/commit/d1f4915a4604185369e3fbc20e4e13951cde78a3" title="d1f4915a4604185369e3fbc20e4e13951cde78a3">
+              <span>Analyzed revision</span>
+              <code>d1f4915a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/AliceLJY--recallnest" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>AliceLJY--recallnest</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>52,191
+lines of TypeScript in 155 files under src/, outside
+tests</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>511
+commits on main by 2 contributor identities, 3 March 2026 – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,578
+Bun test cases in 184 files, 50,105 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>RecallNest is a local memory layer that several coding agents share:
+Claude Code, Codex, Kimi, Antigravity and a phone agent read and write
+one LanceDB store over MCP, an HTTP API or a read-only gateway. Its
+central distinction is between evidence and durable memory. Transcript
+chunks are stored as evidence, structured writes as durable, and a
+promotion step copies evidence into durable memory with its
+provenance.</p>
+<p>The engineering around corrections is careful. A replaced belief
+leaves a history row, and a forget leaves a fingerprint that memory-file
+reconciliation refuses to re-insert. The weak spot is scope: the store
+filters it in SQL, but the write path's canonical-key match reads every
+scope, and the MCP search tool retries across all scopes when a scoped
+search finds nothing.</p>
+<p>The project started as a fork of <a
+href="../memory-lancedb-pro/">memory-lancedb-pro</a>, an OpenClaw
+plugin, and credits it for hybrid retrieval and decay. It has since
+grown into a separate system of the same shape and a larger surface: 44
+MCP tools in three tiers, a dream pipeline, a knowledge graph, skills,
+reminders and session checkpoints. The code comments are mostly Chinese
+and dated. Many name the cross-review round that found the defect they
+fix.</p>
+<p>Three marks: <code>tombstone</code>, on a text fingerprint that one
+re-derivation path honours; <code>audit_log</code>, on
+<code>audit.jsonl</code>; and <code>negative_eval</code>, on a
+real-store scope exclusion test. Section 9 names the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row with a text, a category from six durable ones
+(<code>profile</code>, <code>preferences</code>, <code>entities</code>,
+<code>events</code>, <code>cases</code>, <code>patterns</code>) and a
+scope. What kind of claim it is lives in <code>metadata.boundary</code>:
+a <code>layer</code> of <code>durable</code> or <code>evidence</code>,
+an <code>authority</code> naming where it came from, and a conflict
+policy (<code>src/memory-boundaries.ts:4-37</code>).</p>
+<p><strong>The layer is decided by the source and never changes on a
+row.</strong> <code>resolveIngestBoundary</code> puts every transcript
+chunk on the evidence layer and demotes a transcript-derived
+<code>profile</code> or <code>preferences</code> to <code>events</code>,
+noting <em>"Transcript-derived stable facts stay as evidence until
+explicitly promoted"</em> (<code>memory-boundaries.ts:181-238</code>).
+Structured writes through <code>store_memory</code> are durable. Dream
+syntheses are evidence by design, because <em>"a model re-reading its
+own memories is a lead to its sources, not authority over them"</em>
+(<code>src/memory-promotion.ts:252-262</code>). Promotion writes a new
+durable row that records <code>promotedFrom</code>; the evidence row
+stays as it was (<code>src/capture-engine.ts:1456-1480</code>).</p>
+<p><strong>A durable belief has an identity: its canonical key.</strong>
+The key is the caller's, or a slot inferred for preferences, or the
+category plus the normalised text
+(<code>memory-boundaries.ts:146-171</code>). A write that meets an
+active durable row with the same key and category either deduplicates
+(same text) or, for latest-wins categories, archives the old version as
+a <code>superseded</code> history row and rewrites the live row in place
+at <code>version + 1</code> (<code>capture-engine.ts:520-556</code>;
+<code>src/belief-history.ts:72-160</code>). A collision across
+categories opens a conflict candidate and stores nothing.</p>
+<p><strong>A memory stops being current in five ways.</strong>
+Supersession by key; an LLM <code>MERGE</code> verdict marking a similar
+same-scope row <code>superseded</code>
+(<code>capture-engine.ts:1126-1160</code>); consolidation during dream;
+archival by the GC's age and retention rules; and <code>forget</code>,
+which deletes the row. Only <code>active</code> and
+<code>pending_review</code> rows are searched
+(<code>src/memory-evolution.ts:139-143</code>).
+<code>pending_review</code> is set when the LLM rates a
+default-importance write below 0.3, or on the weakest of five
+near-duplicates (<code>capture-engine.ts:986</code>,
+<code>:1172-1180</code>), and is searched like <code>active</code>.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a RecallNest memory is admitted, identified, replaced and forgotten, and where the scope boundary leaks</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a RecallNest memory is admitted, identified, replaced and forgotten, and where the scope boundary leaks
+flowchart TD
+    T[&quot;transcript ingest&lt;br/&gt;cc, codex, kimi, gemini&quot;] --&gt; EV[&quot;evidence layer row&quot;]
+    S[&quot;store_memory / HTTP store&lt;br/&gt;scope required&quot;] --&gt; AD{&quot;admission control:&lt;br/&gt;noise, length, rate,&lt;br/&gt;importance&quot;}
+    AD -- &quot;rejected&quot; --&gt; RJ[&quot;audit: reject + text&quot;]
+    AD -- &quot;admitted&quot; --&gt; CK{&quot;canonical key match&lt;br/&gt;over the newest 1,000 rows&lt;br/&gt;of every scope&quot;}
+    EV -- &quot;promote_memory&quot; --&gt; CK
+    CK -- &quot;same text&quot; --&gt; DD[&quot;deduped:&lt;br/&gt;returns the matched row,&lt;br/&gt;possibly another scope&#39;s&quot;]
+    CK -- &quot;same key, latest-wins&quot; --&gt; RP[&quot;old version archived as&lt;br/&gt;superseded history row;&lt;br/&gt;live row rewritten in place&quot;]
+    CK -- &quot;same key, other category&quot; --&gt; CF[&quot;conflict candidate file;&lt;br/&gt;nothing stored&quot;]
+    CK -- &quot;no match&quot; --&gt; NEW[&quot;durable row stored&quot;]
+    F[&quot;forget_memory&quot;] --&gt; DEL[&quot;row and graph triples deleted;&lt;br/&gt;audit: forget norm=fingerprint&quot;]
+    DEL --&gt; RC{&quot;memory-file reconcile:&lt;br/&gt;chunk fingerprint forgotten?&quot;}
+    RC -- &quot;yes&quot; --&gt; SKIP[&quot;not re-inserted&quot;]
+    Q[&quot;search_memory scope=B&quot;] --&gt; SQ[&quot;SQL scope predicate&quot;]
+    SQ -- &quot;hits&quot; --&gt; OUT[&quot;results from B&quot;]
+    SQ -- &quot;zero hits&quot; --&gt; ALL[&quot;retry with allScopes,&lt;br/&gt;one warning line&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs locally on Bun or Node 22 with <code>tsx</code>. The
+store is one LanceDB database with three tables: <code>memories</code>,
+<code>memory_triggers</code> (one embedding per write-time trigger
+phrase) and <code>kg_triples</code> (<code>src/store.ts:224</code>;
+<code>src/trigger-store.ts:25</code>; <code>src/kg-store.ts:57</code>).
+Beside it sit JSON files: conflict candidates, session checkpoints,
+workflow observations, frequency statistics, and the append-only
+<code>audit.jsonl</code>.</p>
+<p>Three processes read the same store. <code>src/mcp-server.ts</code>
+serves 44 tools over stdio, gated by <code>RECALLNEST_MCP_TIER</code>;
+the default <code>advanced</code> tier omits the governance tools, and
+the Claude Code plugin manifest sets <code>full</code>
+(<code>mcp-server.ts:46-108</code>;
+<code>.claude-plugin/marketplace.json</code>).
+<code>src/api-server.ts</code> binds to loopback, rejects non-local Host
+headers, and exposes 21 routes including writes.
+<code>src/gateway-server.ts</code> forwards four read routes behind a
+bearer token for a phone. LanceDB's read consistency interval defaults
+to 0, so a write from the CLI is visible to a resident server on its
+next read (<code>store.ts:63-67</code>).</p>
+<p>Background work is not in any server. Cron scripts under
+<code>scripts/</code> run incremental ingest, <code>dream</code>
+(consolidation, synthesis, GC) and weekly distillation through the CLI.
+<code>auto-consolidation.ts</code> has no production importer; a comment
+in <code>src/version-manager.ts:110-113</code> says so and forbids
+wiring it back without fixing a loop first.</p>
+<p>Embeddings default to Jina v5 at 1,024 dimensions over an
+OpenAI-compatible client. An LLM is optional and, when configured, rates
+importance, arbitrates near-duplicates, summarises oversized text and
+runs dream synthesis.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The plugin install is one command in Claude Code and asks for a Jina
+API key; without an embedding endpoint nothing can be stored, because
+every admitted write embeds before it persists. The database is LanceDB
+columnar files, not hand-editable, but <code>memory_drill_down</code>,
+the web UI on port 4317, JSON exports and the conflict files make it
+inspectable.</p>
+<p>Three path roots are resolved independently. The database follows
+<code>config.dbPath</code>; conflict, checkpoint and workflow files live
+in <code>../data/</code> relative to the source directory
+(<code>src/conflict-store.ts:28</code>;
+<code>src/session-store.ts:69</code>;
+<code>src/workflow-observation-store.ts:30</code>); and the audit log
+defaults to <code>$RECALLNEST_DATA_DIR</code> or <code>data/</code>
+under the working directory (<code>src/env-config.ts:158</code>;
+<code>src/mcp-server.ts:200</code>), while the retrieval audit uses the
+database's parent directory
+(<code>src/runtime-config.ts:201-217</code>). Run from the repository
+root they coincide. In the plugin layout the database sits in
+<code>$CLAUDE_PLUGIN_DATA</code> and the source in the plugin cache, and
+the launcher sets neither <code>RECALLNEST_DATA_DIR</code> nor a fixed
+working directory (<code>scripts/start-server.sh</code>). The reconcile
+command guards its own side and refuses to run when the two directories
+differ (<code>src/cli.ts:284-297</code>). This was read, not
+reproduced.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Structured write.</strong> <code>store_memory</code>
+(<code>src/mcp-tools-core.ts:85-160</code>) calls
+<code>persistMemory</code> (<code>capture-engine.ts:935-1364</code>).
+Before storage it parses with scope required, scans for PII and redacts
+secrets, summarises or truncates oversized text, asks the LLM for
+importance when the caller left the default 0.7, and runs
+<code>checkAdmission</code>, whose rejections are audited with the text.
+It then embeds, matches preferences in scope, asks the LLM
+<code>dedupDecision</code> about the top three same-scope rows at 0.85
+for other categories, and runs the five-neighbour interference check.
+After <code>writeDurableEntry</code> come trigger embeddings,
+asynchronous graph extraction, the <code>store</code> audit event,
+asynchronous read-back verification and an implicit preference
+dual-write.</p>
+<p><strong>Identity and replacement.</strong>
+<code>writeDurableEntry</code> (<code>capture-engine.ts:558-748</code>)
+takes candidates from <code>findCanonicalMatches</code>, which lists the
+newest 1,000 rows with <code>store.list(undefined, …)</code> — no scope
+— and keeps active durable rows with the same key
+(<code>:465-481</code>). The branches, in order, are cross-category
+conflict (<code>:595-636</code>), exact-text dedupe
+(<code>:638-646</code>), latest-wins replacement through
+<code>replaceBeliefInPlace</code> (<code>:648-703</code>), and a lookup
+by deterministic id for a row outside the scan window
+(<code>:705-748</code>).</p>
+<p><strong>Transcript ingest.</strong> <code>ingestCCTranscripts</code>,
+<code>ingestCodexSessions</code>, <code>ingestKimiSessions</code> and
+<code>ingestGeminiSessions</code> in <code>src/ingest.ts</code> chunk
+turns, run an optional LLM extraction to L0, L1 and category, and build
+rows with <code>buildIngestedEntry</code> on the evidence layer at tier
+<code>peripheral</code> (<code>ingest.ts:717-787</code>).</p>
+<p><strong>Promotion.</strong> <code>promote_memory</code> →
+<code>promoteMemory</code> refuses a source that is not evidence and
+writes through <code>writeDurableEntry</code> with
+<code>promotedFrom</code> (<code>capture-engine.ts:1456-1523</code>).
+<code>promote_scan</code> promotes recurring transcript facts;
+<code>promote_synthesis</code> promotes dream conclusions whose
+validated evidence set supports them
+(<code>src/memory-promotion.ts:114</code>, <code>:382</code>).</p>
+<p><strong>Search.</strong> <code>search_memory</code>
+(<code>mcp-tools-core.ts:384-625</code>) builds a context through
+<code>buildRetrievalContext</code>, runs
+<code>MemoryRetriever.retrieve</code>, and on zero results retries with
+<code>allScopes: true</code> (<code>:442-458</code>). The retriever runs
+vector search, BM25 in hybrid mode, trigger recall and PPR over
+<code>kg_triples</code> when <code>RECALLNEST_KG_MODE=true</code>,
+fuses, rescores by decay and tier, then drops inactive rows
+(<code>src/retriever.ts:1554-1556</code>) and, when enabled, evidence
+rows (<code>:2083-2107</code>). Each retrieval is audited with the
+revision served (<code>:975-1000</code>).</p>
+<p><strong>Resume.</strong> <code>resume_context</code> composes stable
+context, task results, pins and the latest checkpoint
+(<code>src/context-composer.ts</code>). The stable section refuses
+evidence-layer and transcript-scope rows through
+<code>shouldUseStableMemoryResult</code>
+(<code>memory-boundaries.ts:362-377</code>).</p>
+<p><strong>Forget.</strong> <code>forget_memory</code> →
+<code>forgetMemory</code> (<code>src/forget-engine.ts:81-201</code>):
+fetch with the optional scope, require <code>confirm</code> for
+durable-tier rows, snapshot, delete graph triples, demote similar rows,
+mark archived, delete, then log <code>forget</code> with
+<code>norm=</code> and the fingerprint.</p>
+<p><strong>Reconcile.</strong> <code>reconcileMemoryDocuments</code>
+(<code>src/memory-reconcile.ts</code>) plans a full comparison of the
+memory directory's Markdown chunks against scope <code>memory</code>,
+consults the forget set before every insert or reactivation, journals
+each batch before and after, and supports <code>--undo</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>column</td>
+<td>sha-256 of scope and canonical key, or of scope and text, formatted
+as a UUID (<code>store.ts:101-108</code>)</td>
+</tr>
+<tr>
+<td><code>text</code>, <code>vector</code></td>
+<td>columns</td>
+<td>text capped at 4,000 characters by the schema</td>
+</tr>
+<tr>
+<td><code>category</code>, <code>scope</code>, <code>importance</code>,
+<code>timestamp</code></td>
+<td>columns</td>
+<td>scope is a free string such as <code>project:x</code>,
+<code>cc:SESSION</code>, <code>memory</code></td>
+</tr>
+<tr>
+<td><code>boundary</code></td>
+<td>metadata</td>
+<td><code>layer</code>, <code>authority</code>,
+<code>conflictPolicy</code>, <code>originalCategory</code>,
+<code>downgradedFrom</code></td>
+</tr>
+<tr>
+<td><code>canonicalKey</code>, <code>promotedFrom</code>,
+<code>provenanceHistory</code></td>
+<td>metadata</td>
+<td>identity and promotion lineage, history capped at 20</td>
+</tr>
+<tr>
+<td><code>evolution</code></td>
+<td>metadata</td>
+<td><code>status</code>, <code>version</code>, <code>supersedes</code>,
+<code>supersededBy</code>, <code>validFrom</code>,
+<code>validUntil</code>, <code>eventTime</code>, access counts
+(<code>memory-evolution.ts:22-41</code>)</td>
+</tr>
+<tr>
+<td><code>confidence</code></td>
+<td>metadata</td>
+<td>a score with optional <code>verifiedBy</code> and
+<code>verifiedAt</code>, assigned by source</td>
+</tr>
+<tr>
+<td><code>privacyTier</code></td>
+<td>metadata</td>
+<td><code>ephemeral</code>, <code>private</code>, <code>durable</code>,
+<code>shared</code>; the first two skip graph extraction</td>
+</tr>
+<tr>
+<td><code>l0_abstract</code>, <code>l1_overview</code>,
+<code>l2_content</code>, <code>triggers</code>, <code>anchor</code>,
+<code>emotion</code>, <code>narrative</code></td>
+<td>metadata</td>
+<td>retrieval aids</td>
+</tr>
+</tbody>
+</table></div>
+<p>Everything beyond the six columns is one JSON string, so nothing but
+<code>scope</code> and <code>category</code> can be filtered in SQL.
+Status, layer and validity are parsed and filtered in the application
+after the candidate pool is fetched.</p>
+<p><strong>Time.</strong> <code>validFrom</code> is set to the write
+instant by every writer (<code>memory-evolution.ts:61</code>;
+<code>belief-history.ts:157</code>); <code>validUntil</code> is either
+caller-declared or the moment of supersession. <code>eventTime</code> is
+accepted by <code>store_memory</code> as <em>"when the event actually
+happened"</em> and stored, and no production code reads it.</p>
+<p><strong>Scope</strong> is the <code>scope</code> column. The
+canonical key does not contain it, while the deterministic id does,
+which is why two scopes can hold rows with one key.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The default <code>retrieval.mode</code> is <code>vector</code>;
+<code>hybrid</code> adds BM25 through LanceDB FTS on a pre-tokenised
+<code>fts_text</code> and fuses by weight. Trigger phrases stored at
+write time are embedded separately and pull their host memory into the
+candidate pool without ever being shown
+(<code>src/trigger-store.ts</code>). PPR graph traversal runs only with
+<code>graph: true</code> and <code>RECALLNEST_KG_MODE=true</code>.</p>
+<p>Scoring then applies Weibull decay modulated by importance and
+emotional salience, a tier floor so core memories do not drop out, a
+bounded popularity term, boundary weights of 1.03 for structured durable
+rows and 0.97 for transcript evidence, and length normalisation
+(<code>retriever.ts:2109-2130</code>). The boundary weight is
+deliberately small; a test forbids it from letting source outrank
+relevance (<code>retriever-boundary-weight.test.ts</code>).</p>
+<p>Layer admission — answer from durable rows and fall back to
+everything when fewer than three survive — exists and is off unless
+<code>RECALLNEST_LAYER_ADMISSION=on</code>
+(<code>retriever.ts:2083-2107</code>;
+<code>env-config.ts:115-124</code>). By default, evidence reaches search
+results as evidence, labelled
+<code>prov: evidence/transcript-ingest</code>.</p>
+<p><strong>The scope boundary holds in the store and loosens above
+it.</strong> Every store read compiles the filter into SQL before the
+limit and re-checks each row in the same mode
+(<code>store.ts:235-245</code>, <code>:665-683</code>). A scope without
+a colon is a prefix, so <code>cc</code> also reads
+<code>cc:SESSION</code> and <code>ccx</code>; <code>exact</code> mode
+exists and dream uses it. The MCP tool then turns an empty scoped result
+into a cross-scope retry, and appends <em>"scope … 命中 0
+条,以上结果来自自动跨 scope 重试"</em> below the results
+(<code>mcp-tools-core.ts:442-458</code>, <code>:603-610</code>). The
+HTTP <code>/v1/recall</code> route has no such retry
+(<code>src/api-server.ts:158-169</code>).</p>
+<p><code>detail_level: adaptive</code> returns L0, L1 or L2 text per hit
+within an 8,000-token budget. <code>validAt</code> returns rows whose
+<code>validFrom</code>–<code>validUntil</code> interval covers a date
+(<code>retriever.ts:350-384</code>); because <code>validFrom</code> is
+the write time, that answers what was recorded and not yet replaced
+then.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool or HTTP calls, transcript ingest, or dream
+output. <code>auto_capture</code> extracts candidates heuristically with
+no model call.</p>
+<p><strong>Deduplication is by canonical key, and the key is
+global.</strong> <code>findCanonicalMatches</code> reads the newest
+1,000 rows of every scope (<code>capture-engine.ts:465-481</code>). A
+write to scope B whose key and category match an active durable row in
+scope A therefore returns A's row as <code>deduped</code> when the text
+is the same. When the text differs in a latest-wins category, it
+rewrites A's row in place and stores nothing in B. The returned
+<code>resolvedScope</code> is A's, the only visible sign. Default keys
+derive from category and text, so identical text in two projects is
+enough.</p>
+<p>The project records this defect in its own test file. Case T9 seeds
+its two-scope state directly, and its comment says that writing the same
+key through <code>persistMemory</code> in the other scope would land on
+the first scope's row because the write path's same-key match ignores
+scope — an existing defect left open
+(<code>src/__tests__/preference-same-key-revision.test.ts:395-417</code>).
+<a href="../memory-lancedb-pro/">memory-lancedb-pro</a>'s fact-key
+supersede scan re-checks scope itself. This was read, not
+reproduced.</p>
+<p><strong>Replacement keeps history.</strong>
+<code>archiveBeliefVersion</code> copies the old row under a derived id
+as <code>superseded</code> with the interval closed, keeping its
+original timestamp so history rows do not crowd the scan window
+(<code>belief-history.ts:72-135</code>). A revert to an earlier wording
+is a new version, not a duplicate, because history rows are excluded
+from matching.</p>
+<p><strong>Rejection is logged, not remembered.</strong> Admission
+rejections are audited with the first 100 characters. Nothing consults
+them later.</p>
+<p><strong>Forget</strong> deletes the row and its graph triples and
+demotes similar rows. It asks for <code>confirm</code> on durable-tier
+rows, which the calling agent supplies.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous in the tool call — one embedding request, up to
+two LLM calls (importance and duplicate arbitration) when an LLM is
+configured, three vector searches and a 1,000-row listing. Graph
+extraction and read-back verification run after the reply.</li>
+<li>Lag: a stored memory is searchable on the next read in any
+process.</li>
+<li>Background: dream processes up to 500 entries per run and GC scans
+the table in pages, both from cron through the CLI.</li>
+<li>Read: <code>search_memory</code> returns at most 20 hits;
+<code>resume_context</code> is bounded per section and injected when the
+agent calls it, not by a hook.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server is the main surface. <code>setup.sh</code> scripts for
+Claude Code, Codex and Antigravity register it and install a managed
+rule block in the agent's <code>CLAUDE.md</code> or equivalent. That
+block tells the agent to call <code>resume_context</code> before any
+repository exploration on phrases like <em>continue</em>, to reuse the
+returned scope, and to call <code>checkpoint_session</code> before
+leaving (<code>integrations/claude-code/claude-md-snippet.md</code>).
+Nothing is injected by a hook; recall happens because the rules say
+so.</p>
+<p>The agent's authority over memory depends on the tier. Under
+<code>advanced</code> it can store, batch-store, promote evidence, run
+dream and forget any row by id, optionally scoped. Under the plugin's
+<code>full</code> tier it also resolves conflicts, runs promotion scans
+and consolidates.</p>
+<p>Checkpoints are kept out of durable memory: they are JSON files under
+<code>data/session-checkpoints</code>, garbage-collected per scope, and
+the rule block forbids persisting repository state the window did not
+verify.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is on every row.</strong> Layer, authority,
+<code>promotedFrom</code>, source and session image counts are visible
+in search output, and the retrieval audit records which revision and
+layer each served hit had. A promoted fact can be traced to the
+transcript chunk it came from.</p>
+<p><strong>Evidence is kept out of the one place that matters
+most.</strong> The stable section of <code>resume_context</code> —
+profile, preferences, entities — refuses evidence rows. Ordinary search
+does not, by default.</p>
+<p><strong>Scope is a relevance partition, not an authorisation
+boundary.</strong> The caller names any scope or <code>allScopes</code>,
+<code>forget_memory</code> accepts any id, and the HTTP API has no
+caller identity. For one person's agents that is coherent. The two leaks
+in sections 6 and 7 are the risk even so. The search fallback puts
+another project's memory into an agent's context under one Chinese
+warning line. The canonical-key match can overwrite another project's
+belief.</p>
+<p><strong>Failures are quiet where they are cheapest to make
+loud.</strong> The audit writer swallows every error by design, so a
+missing <code>forget</code> event also loses the fingerprint
+reconciliation depends on. The three independently resolved path roots
+in section 3 can split the log from the store.</p>
+<p><strong>Prompt-injected memory</strong> meets admission control, a
+noise filter and PII redaction, then lands as evidence if it arrived by
+transcript. Written through <code>store_memory</code> by an agent, it is
+durable at once.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — awarded, narrowly. The forget event's
+<code>norm=</code> fingerprint is keyed on the words, and memory-file
+reconciliation refuses to re-insert or reactivate them
+(<code>memory-reconcile.ts:509-537</code>). It covers scope
+<code>memory</code> and that one path; <code>store_memory</code>,
+transcript ingest and dream never consult it.</li>
+<li><code>scope_enforced</code> — withheld. The store compiles a scope
+predicate into every LanceDB read (<code>src/store.ts:235-245</code>,
+<code>:665-683</code>; <code>src/scope-policy.ts:57-65</code>), but the
+agent's <code>search_memory</code> tool reruns a scoped search with
+<code>allScopes: true</code> whenever it returns nothing
+(<code>src/mcp-tools-core.ts:442-458</code>), so the supplied key is
+dropped exactly when the asked-for scope holds nothing. The write path's
+canonical-key match lists every scope
+(<code>src/capture-engine.ts:465-481</code>), so a write can dedupe
+against or rewrite another scope's row.</li>
+<li><code>audit_log</code> — awarded on <code>audit.jsonl</code>.
+Ingest, dream, conflict resolution and LLM supersession write no event,
+and <code>supersede</code> and <code>consolidate</code> are declared
+with no producer.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>trust_state</code> — withheld. The layer is fixed by the
+writer and never transitions on a row, so it is a write-time genre;
+promotion makes a copy. <code>pending_review</code> is searched like
+<code>active</code>, and confidence is a score.</li>
+<li><code>bitemporal</code> — withheld. <code>validFrom</code> is always
+the write time, so the interval is version history;
+<code>eventTime</code> is stored and read by nothing.</li>
+<li><code>human_review</code> — withheld. A conflict candidate waits for
+<code>keep</code>, <code>accept</code> or <code>merge</code>, and
+<code>resolve_conflict</code> is off the default tier. The plugin
+manifest sets <code>RECALLNEST_MCP_TIER=full</code>, which registers it
+on the agent's own surface, and the HTTP resolve route takes no
+identity.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything here
+is from reading the tests at the pin. CI runs <code>bun test</code> over
+the whole suite, a CI-mode <code>doctor</code>, a credential scan, a
+package-contents check and a build.</p>
+<p><strong>The negative case.</strong>
+<code>dream-scope-isolation.test.ts</code> seeds a real LanceDB store
+with rows in <code>memory</code>, <code>memory:pivot</code> and
+<code>project:other</code>, then asserts a vector search scoped to
+<code>memory</code> returns exactly the first two and an exact-mode
+search exactly the first (<code>:59-93</code>).
+<code>project:other</code> scores 0.5 against a 0.1 threshold, so only
+the predicate excludes it. The file's header explains why it exists: the
+older dream tests used a mock that ignored the scope argument, so they
+passed whether or not the mode was threaded through.</p>
+<p><strong>Forget and reconcile.</strong>
+<code>memory-reconcile.test.ts:826-847</code> forgets the kept copy of a
+duplicated chunk through <code>forgetMemory</code>, asserts the log
+carries its fingerprint, and asserts the next reconcile run inserts
+nothing and leaves the archived sibling archived. Neighbouring cases
+cover a forget that arrives between planning and insert
+(<code>:573-585</code>, <code>:780-798</code>).</p>
+<p><strong>Belief history, conflicts and promotion</strong> have their
+own suites: <code>belief-history.test.ts</code>,
+<code>preference-same-key-revision.test.ts</code>,
+<code>conflict-*.test.ts</code>, <code>capture-engine.test.ts</code> and
+<code>promotion-distinct-sources.test.ts</code>.</p>
+<p><strong>A case that asserts less than its title.</strong>
+<code>belief-history.test.ts:142-151</code>, <em>"keeps archived
+versions out of default retrieval"</em>, filters the stored array with
+<code>isActiveMemory</code> and never calls a retriever.</p>
+<p><strong>Evals.</strong> <code>src/eval.ts</code> runs
+<code>eval/cases.json</code>, a canary set and a scope-robustness set
+against the operator's own store by target id, so they are not
+reproducible from the tree. The continuity set is seeded from committed
+JSON and carries <code>forbid</code> terms that the seeds contain. No
+result file is committed. The tree cites outside papers as influences
+and carries no paper or citation block of its own.</p>
+<p><strong>Not covered.</strong> No test writes the same canonical key
+into two scopes through <code>persistMemory</code>; no test covers the
+MCP zero-hit fallback.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put transcript material on a separate layer and keep it out
+of the stable profile.</strong> Promote by copying with a
+<code>promotedFrom</code> link, so the source stays inspectable.</li>
+<li><strong>Archive the old version before rewriting a belief in
+place.</strong> Keep the canonical id live and write the replaced text
+as its own row with the interval closed; then "what did we believe
+before" has an answer.</li>
+<li><strong>Record a forget by the words as well as the id.</strong> A
+text fingerprint in the forget event is what lets a later re-import
+recognise the same sentence under a new row.</li>
+<li><strong>Audit the revision a retrieval served,</strong> not only the
+query, so a past answer can be reconstructed after the memory
+changed.</li>
+<li><strong>Log rejected writes with their text.</strong> A refused
+write that leaves no trace cannot be reviewed.</li>
+<li><strong>Test scope against a real store.</strong> A mock that
+ignores the scope argument passes every isolation test.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A global identity key under a scoped read path.</strong> If
+the key does not include the scope, the write path crosses the boundary
+the read path enforces.</li>
+<li><strong>Widening scope on an empty result.</strong> Return nothing
+and say so; a warning line under another project's memory reads as
+memory.</li>
+<li><strong>Resolving the log, the side files and the store from three
+roots.</strong> Derive every path from the one the store uses, or refuse
+to start.</li>
+<li><strong>A review verb that a config tier moves onto the agent's
+surface.</strong> The install path most users take decides who the
+reviewer is.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer running several agents on one or two
+machines who wants their history searchable everywhere and will run cron
+jobs and read Chinese comments. It assumes an embedding API, an operator
+who tunes flags, and tolerance for a large surface; many features are
+opt-in environment switches. A team or a multi-tenant deployment should
+not adopt it as is: scope is advisory, the HTTP API has no identity, and
+the write path can cross projects.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>In the plugin layout, which working directory does Claude Code give
+the MCP server, and where do <code>audit.jsonl</code>, conflicts and
+checkpoints end up?</li>
+<li>How often does the canonical-key collision across scopes occur in a
+real store, given that default keys derive from text?</li>
+<li>Is <code>RECALLNEST_LAYER_ADMISSION=on</code> used in the author's
+deployment, and what did the shadow reports under
+<code>eval/la1-shadow/</code> show?</li>
+<li>Does anything drain <code>pending_review</code> other than
+distillation prioritising it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong> <code>src/store.ts</code>,
+<code>src/memory-schema.ts</code>,
+<code>src/memory-boundaries.ts</code>,
+<code>src/memory-evolution.ts</code>,
+<code>src/belief-history.ts</code>, <code>src/trigger-store.ts</code>,
+<code>src/kg-store.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/capture-engine.ts</code>,
+<code>src/admission-control.ts</code>,
+<code>src/preference-matcher.ts</code>, <code>src/ingest.ts</code>,
+<code>src/memory-promotion.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/retriever.ts</code>,
+<code>src/scope-policy.ts</code>,
+<code>src/retrieval-profiles.ts</code>,
+<code>src/ppr-traversal.ts</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>src/context-composer*.ts</code>,
+<code>src/session-store.ts</code>.</li>
+<li><strong>Correction and deletion:</strong>
+<code>src/forget-engine.ts</code>, <code>src/cascade-forget.ts</code>,
+<code>src/memory-reconcile.ts</code>,
+<code>src/conflict-store.ts</code>,
+<code>src/conflict-lifecycle.ts</code>.</li>
+<li><strong>Background:</strong> <code>src/dream-pipeline.ts</code>,
+<code>src/consolidation-engine.ts</code>, <code>src/auto-gc.ts</code>,
+<code>scripts/*.sh</code>.</li>
+<li><strong>Audit:</strong> <code>src/audit-log.ts</code>,
+<code>src/runtime-config.ts:201-217</code>.</li>
+<li><strong>MCP, HTTP and integration:</strong>
+<code>src/mcp-server.ts</code>, <code>src/mcp-tools-core.ts</code>,
+<code>src/mcp-tools-advanced.ts</code>,
+<code>src/mcp-tools-governance.ts</code>,
+<code>src/api-server.ts</code>, <code>src/gateway-server.ts</code>,
+<code>.claude-plugin/marketplace.json</code>,
+<code>scripts/start-server.sh</code>, <code>integrations/</code>.</li>
+<li><strong>Tests and evals:</strong>
+<code>src/__tests__/dream-scope-isolation.test.ts</code>,
+<code>src/__tests__/memory-reconcile.test.ts</code>,
+<code>src/__tests__/preference-same-key-revision.test.ts</code>,
+<code>src/__tests__/belief-history.test.ts</code>,
+<code>src/__tests__/capture-engine.test.ts</code>,
+<code>src/eval.ts</code>, <code>eval/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'store.list(undefined' src/capture-engine.ts</code> —
+line 470, inside <code>findCanonicalMatches</code>; the canonical scan
+passes no scope.</li>
+<li><code>grep -rn 'allScopes: true' src | grep -v __tests__</code> —
+<code>mcp-tools-core.ts:450</code> (the zero-hit retry) and
+<code>scope-policy.ts:86</code>; no retry in
+<code>api-server.ts</code>.</li>
+<li><code>grep -rnE 'operation: *"(supersede|consolidate)"' src</code> —
+no match; both are declared in <code>AuditOperation</code> only.</li>
+<li><code>grep -c 'audit' src/ingest.ts src/dream-pipeline.ts src/conflict-lifecycle.ts src/llm-consolidation.ts</code>
+— 0 in each.</li>
+<li><code>grep -rn 'loadForgetSet\|ForgetWatcher\|isTextForgotten' src | grep -v __tests__</code>
+— only <code>memory-reconcile.ts</code>; no other path reads the forget
+fingerprints.</li>
+<li><code>grep -rln 'eventTime' . --exclude-dir=.git</code> —
+<code>memory-evolution.ts</code>, <code>capture-engine.ts</code>,
+<code>mcp-tools-core.ts</code>, two tests, <code>CHANGELOG.md</code>,
+<code>ROADMAP.md</code>; no reader in retrieval or output.</li>
+<li><code>grep -rn 'validFrom:' src | grep -v __tests__</code> — every
+writer sets <code>Date.now()</code> or copies the prior value.</li>
+<li><code>grep -rn 'pending_review' src | grep -v __tests__</code> —
+<code>isActiveMemory</code> treats it as active; no read excludes
+it.</li>
+<li><code>grep -rn 'auto-consolidation' . --exclude-dir=.git | grep -v __tests__</code>
+— one comment in <code>version-manager.ts</code>; no importer.</li>
+<li><code>grep -rn 'RECALLNEST_DATA_DIR\|chdir' src scripts integrations .claude-plugin bin</code>
+— read in <code>env-config.ts</code> and named in <code>cli.ts</code>;
+set by no launcher.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git</code>
+— outside papers cited as influences in docs and comments; no citation
+block and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/AliceLJY/recallnest/commit/d1f4915a4604185369e3fbc20e4e13951cde78a3"><code class="commit-id" title="d1f4915a4604185369e3fbc20e4e13951cde78a3">d1f4915a…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 25
+September 2026. Three marks: <code>tombstone</code>,
+<code>audit_log</code>, <code>negative_eval</code>;
+<code>scope_enforced</code> is withheld because MCP search widens an
+empty scoped search to every scope. Screened before reading: 2 auto-run
+surfaces (the <code>.claude-plugin/</code> marketplace entry launching
+<code>scripts/start-server.sh</code>, and <code>.mcp.json</code> with an
+empty server list), 1 build-time execution point (npm
+<code>prepublishOnly</code>), and 2 dependency files inside the
+cooldown, every file in the depth-1 clone dating to the tip. One
+floating surface of seven caret ranges is resolved by a committed
+lockfile; <code>CLAUDE.md</code> was treated as data. No checkout filter
+and no submodules. Read with <code>grep</code> and <code>sed</code>;
+nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

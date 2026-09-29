@@ -1199,6 +1199,18 @@ by keyword and by record id, each beside a read in the same test that
 must return rows. The one deliberate exception is the L3 knowledge
 graph, held in a reserved file-wide domain that every agent's session
 may import into, overwrite or delete.</p>
+<p><strong><a href="../../systems/recallnest/">RecallNest</a> enforces
+the key in the store and loses it twice above the store.</strong> Every
+LanceDB read compiles the scope into SQL before the limit and re-checks
+each row, and a real-store test asserts a foreign scope stays out of a
+vector search. The MCP search tool then retries with
+<code>allScopes: true</code> whenever a scoped search returns nothing,
+under a single warning line — the fallback <a
+href="../../systems/daimon/">Daimon</a>'s MCP surface refuses outright.
+On the write side, the canonical-key match that decides dedupe and
+in-place replacement lists every scope, so a write to one project can
+rewrite another project's belief; the project's own test file records
+that defect as open.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

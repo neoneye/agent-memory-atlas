@@ -871,6 +871,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 [MemHop](../../systems/memhop/) puts the key below the query layer entirely. Each record frame in its single `.meh` log carries an 8-byte agent id beside the record's id hash, and both engine indexes are keyed by agent first, so every read — a record fetch, a type scan, the archive search — takes the domain as an argument and has no spelling that crosses it. Its interface suite tests the boundary by keyword and by record id, each beside a read in the same test that must return rows. The one deliberate exception is the L3 knowledge graph, held in a reserved file-wide domain that every agent's session may import into, overwrite or delete.
 
+**[RecallNest](../../systems/recallnest/) enforces the key in the store and loses it twice above the store.** Every LanceDB read compiles the scope into SQL before the limit and re-checks each row, and a real-store test asserts a foreign scope stays out of a vector search. The MCP search tool then retries with `allScopes: true` whenever a scoped search returns nothing, under a single warning line — the fallback [Daimon](../../systems/daimon/)'s MCP surface refuses outright. On the write side, the canonical-key match that decides dedupe and in-place replacement lists every scope, so a write to one project can rewrite another project's belief; the project's own test file records that defect as open.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
