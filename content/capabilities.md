@@ -237,12 +237,12 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 
 | Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
 | --- | ---: | ---: | --- | --- | ---: | ---: |
-| SQLite | 314 | 256 | | Lexical | 462 | 397 |
-| Files on disk | 313 | 260 | | Vector | 417 | 343 |
-| Postgres | 122 | 97 | | Graph | 198 | 168 |
-| Delegated to the adopter | 52 | 36 | | No arm named in the review | 87 | 54 |
+| SQLite | 314 | 257 | | Lexical | 463 | 398 |
+| Files on disk | 314 | 261 | | Vector | 417 | 343 |
+| Postgres | 122 | 98 | | Graph | 198 | 168 |
+| Delegated to the adopter | 52 | 36 | | No arm named in the review | 86 | 54 |
 | Graph database | 41 | 34 | |  |  |  |
-| In-process only | 33 | 25 | |  |  |  |
+| In-process only | 33 | 26 | |  |  |  |
 | Chroma | 28 | 23 | |  |  |  |
 | Qdrant | 21 | 13 | |  |  |  |
 | LanceDB | 20 | 15 | |  |  |  |
@@ -258,6 +258,6 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 | Weaviate | 1 | 1 | |  |  |  |
 | TepinDB | 1 | 1 | |  |  |  |
 
-Counted across 661 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 531 of 661 reports have been read that way, and the other 130 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
+Counted across 661 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 532 of 661 reports have been read that way, and the other 129 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
 
 <!-- END GENERATED STACK -->

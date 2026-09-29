@@ -22153,9 +22153,10 @@ href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a></td>
 <td>A Markdown file. <code>MEMORY.md</code> is the notebook; other files
 hold focused notes, each versioned with a generation counter and a
 fingerprint</td>
-<td>A <code>MemoryStore</code> Protocol with three implementations —
-in-memory, a directory of files with a SQLite sidecar, and Postgres —
-plus an optional <code>SearchableMemoryStore</code> extension</td>
+<td>A <code>MemoryStore</code> Protocol with four implementations —
+in-memory, a directory of Markdown files with a SQLite sidecar journal,
+a SQLite table, and Postgres — plus an optional
+<code>SearchableMemoryStore</code> extension all four implement</td>
 <td>A bounded excerpt of the notebook plus a file listing injected per
 request under a token budget; <code>read_memory</code> for a prefix and
 <code>search_memory</code> for bounded text search</td>
@@ -22166,22 +22167,22 @@ call</td>
 <code>delete_memory</code> removes a file and the main notebook is
 protected. No record of what a delete removed</td>
 <td><code>{namespace}/{agent_name}</code> composed by application code,
-absent from every tool signature and from the prompt, with three call
-sites raising if the backend returns a path outside it</td>
+absent from every tool signature and from the prompt, filtered in SQL by
+both database stores and re-checked by the toolset on return</td>
 <td>A Pydantic AI capability —
 <code>Agent(..., capabilities=[Memory(FileStore(...))])</code> —
 contributing four tools and a user-role context part</td>
 <td>None. Writes are synchronous tool calls; snapshot loading is a
-journaled durable operation; crash recovery replays an incomplete
-operation from its receipt</td>
+journaled durable operation; the file store rolls an interrupted
+operation forward from its journal row</td>
 <td>None. A memory is a line in a Markdown file; there is no status,
 confidence, provenance or source on any of it</td>
 <td>Scope the model can neither name nor see, re-checked on return;
 idempotent writes under optimistic concurrency; 2,650 lines of tests to
 2,483 of code, asserting what must not reach the prompt</td>
 <td>Delete is content-free by design, so nothing records that a value
-was rejected; the operations table clears its own payload on success, so
-it audits nothing</td>
+was rejected; the file store's operations table clears its payload on
+success; the Postgres scope predicate is untested</td>
 </tr>
 <tr>
 <td><a href="../systems/qwen-code/"><code>qwen-code</code></a></td>
