@@ -1189,6 +1189,16 @@ unbound principal resolves to the most restrictive audience rather than
 the owner. The limit is who it binds: local stdio, the CLI and the
 shared REST key are all the owner, so the predicate separates remote
 audiences and never the owner's own agent.</p>
+<p><a href="../../systems/memhop/">MemHop</a> puts the key below the
+query layer entirely. Each record frame in its single <code>.meh</code>
+log carries an 8-byte agent id beside the record's id hash, and both
+engine indexes are keyed by agent first, so every read — a record fetch,
+a type scan, the archive search — takes the domain as an argument and
+has no spelling that crosses it. Its interface suite tests the boundary
+by keyword and by record id, each beside a read in the same test that
+must return rows. The one deliberate exception is the L3 knowledge
+graph, held in a reserved file-wide domain that every agent's session
+may import into, overwrite or delete.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

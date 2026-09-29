@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Markdown knowledge base and
+local MCP server whose notes are the only authority, recovered by exact
+search, optional local vectors, or the code path.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Wordcell — Agent Memory Atlas">
+    <meta property="og:description" content="A Markdown knowledge base
+and local MCP server whose notes are the only authority, recovered by
+exact search, optional local vectors, or the code path.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Wordcell — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Markdown knowledge base
+and local MCP server whose notes are the only authority, recovered by
+exact search, optional local vectors, or the code path.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Wordcell — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Wordcell",
+      "description": "A Markdown knowledge base and local MCP server whose notes are the only authority, recovered by exact search, optional local vectors, or the code path.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A Markdown vault as coding-agent memory,
+routed by code path</p>
+          <h1>Wordcell</h1>
+          <p class="document-deck">A Markdown knowledge base and local
+MCP server whose notes are the only authority, recovered by exact
+search, optional local vectors, or the code path.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/hraness/wordcell">
+              <span>Source</span>
+              <strong>hraness/wordcell</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/hraness/wordcell/commit/818e6abc7ac2415b7b3f670ae28b67114d03e046" title="818e6abc7ac2415b7b3f670ae28b67114d03e046">
+              <span>Analyzed revision</span>
+              <code>818e6abc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/hraness--wordcell" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>hraness--wordcell</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>86,502
+lines of TypeScript under src/ outside tests; the note store, authoring,
+search, context and MCP files read here are 10,194 of
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>238
+commits on main by five contributor identities, one a CI bot, 22 July –
+29 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,680
+bun test cases in 125 files under src/, 56,122 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Wordcell is a Markdown knowledge base used as durable memory for
+coding agents. Notes, plans, captured sources and session notes are
+ordinary Markdown files with YAML frontmatter, usually committed beside
+the code. A CLI, a TypeScript SDK and a local stdio MCP server search
+them, follow their links, and return the notes whose declared
+<code>repository_scopes</code> cover the file an agent is about to
+change.</p>
+<p>What is notable is how firmly the files stay the only authority. The
+QMD search index, the Oh graph projection and the catalog are derived,
+and a semantic hit whose note has left the live scan is dropped before
+ranking. Writes are atomic, revision-checked and locked per note.</p>
+<p>What is weak is correction. There is no delete verb, a re-import
+resurrects a deleted imported note, and nothing on the read path
+withholds a superseded or terminal-status record.</p>
+<p>The system writes nothing on its own. The README says so in as many
+words — <em>"Wordcell extracts no facts and writes no note on its
+own"</em> — and the code agrees: every writer sits behind a CLI command,
+an MCP tool or the Supermemory importer (section 7). Session memory is a
+convention the bundled Agent Skill teaches the agent to follow, not a
+mechanism.</p>
+<p>The product was named KB until release 0.20.0
+(<code>docs/publishing.md:14</code>), and the vault format still uses
+<code>kb</code> names.</p>
+<p>One mark: <code>negative_eval</code>, on two filter cases in which a
+populated result set loses particular notes after a positive control.
+Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a Markdown file. It becomes one when a person or an agent
+writes the file: through <code>wordcell note create</code>, the MCP
+<code>create_note</code> tool, the importer, or an editor. There is no
+candidate state, no extraction and no model call. It stops being current
+in one of three ways, and only the first removes it from retrieval.</p>
+<p><strong>Deleting the file.</strong> The next vault scan does not see
+it, and every derived view follows. A QMD row for a deleted path is
+discarded at query time because <code>notesByPath</code> no longer holds
+it (<code>src/sdk.ts:852-856</code>). Git retains the text.</p>
+<p><strong>Rewriting the body.</strong> <code>update_note_body</code>
+replaces everything after the frontmatter at an exact revision. The old
+text survives only in Git.</p>
+<p><strong>Marking it historical.</strong> A <code>type: plan</code>
+note carries one of seven statuses. <code>proposed</code>,
+<code>accepted</code>, <code>in-progress</code> and <code>blocked</code>
+put it in <em>Active plans</em>; <code>completed</code>,
+<code>superseded</code> and <code>cancelled</code> put it in
+<em>Historical plans</em> (<code>src/repository-memory.ts:23-39</code>,
+<code>:512-526</code>). Both groups are returned by path context, and
+search ignores status unless the caller filters on it. A
+<code>supersedes</code> relation between two notes is data a person can
+query; no reader uses it to hide the older note.</p>
+<p>The type field routes more than it classifies. <code>note</code> and
+<code>concept</code> are <em>Maintained knowledge</em>,
+<code>market-research</code> with <code>status: snapshot</code> and an
+<code>as_of</code> date is <em>Dated research</em>, and
+<code>report</code> needs a <code>generated</code> date.
+<code>session</code> and <code>profile</code> notes are ignored by path
+context and found by listing
+(<code>src/repository-memory.ts:512-564</code>).</p>
+<p><strong>Rules and explanations are separated on purpose.</strong>
+Inherited <code>AGENTS.md</code> files hold rules that govern an edit,
+and the vault holds the rationale. The scanner skips every
+<code>AGENTS.md</code> when it collects notes
+(<code>src/vault.ts:111</code>), and <code>wordcell context</code>
+returns the guides and the notes side by side.
+<code>docs/agent-memory.md</code> states the precedence: if a note and a
+guide disagree, the guide controls the edit and the note needs
+repair.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Wordcell note enters the vault, how it is recovered, and the three ways it stops being current</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Wordcell note enters the vault, how it is recovered, and the three ways it stops being current
+flowchart TD
+    W1[&quot;wordcell note create&quot;] --&gt; LOCK[&quot;per-note lock, temp file,&lt;br/&gt;revision check, atomic install&quot;]
+    W2[&quot;MCP create_note /&lt;br/&gt;update_note_body /&lt;br/&gt;add_relation&quot;] --&gt; LOCK
+    W3[&quot;import supermemory&quot;] --&gt; DIG{&quot;import_digest matches&lt;br/&gt;the file on disk?&quot;}
+    DIG -- &quot;no&quot; --&gt; CONF[&quot;conflict, note left unchanged&quot;]
+    DIG -- &quot;yes, or no note&lt;br/&gt;with that external_id&quot; --&gt; LOCK
+    W4[&quot;editor or agent&lt;br/&gt;edits the file&quot;] --&gt; MD
+    LOCK --&gt; MD[&quot;Markdown file:&lt;br/&gt;the only authority&quot;]
+    MD --&gt; SCAN[&quot;fresh vault scan&lt;br/&gt;(AGENTS.md excluded)&quot;]
+    SCAN --&gt; EX[&quot;exact lane&quot;]
+    SCAN --&gt; Q[&quot;QMD keyword and vector lanes&quot;]
+    Q --&gt; REC{&quot;note still in scan&lt;br/&gt;and passes filters?&quot;}
+    REC -- &quot;no&quot; --&gt; DROP[&quot;discarded, lane marked&lt;br/&gt;degraded if underfilled&quot;]
+    REC -- &quot;yes&quot; --&gt; FUSE
+    EX --&gt; FUSE[&quot;rank fusion,&lt;br/&gt;exact identity first&quot;]
+    SCAN --&gt; CTX[&quot;path context:&lt;br/&gt;repository_scopes match&quot;]
+    CTX --&gt; GRP{&quot;type and status&quot;}
+    GRP -- &quot;note, concept,&lt;br/&gt;active plan&quot; --&gt; CUR[&quot;current groups&quot;]
+    GRP -- &quot;completed, superseded,&lt;br/&gt;cancelled plan&quot; --&gt; HIST[&quot;historical group,&lt;br/&gt;still returned&quot;]
+    MD -- &quot;file deleted&quot; --&gt; GONE[&quot;absent from every read;&lt;br/&gt;Git keeps the text&quot;]
+    GONE -- &quot;next import names&lt;br/&gt;the same external_id&quot; --&gt; W3</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Wordcell is a Bun and TypeScript package with one CLI,
+<code>wordcell</code>, an SDK entry point, and an MCP server started as
+<code>wordcell mcp --root kb</code> that speaks JSON-RPC over stdio
+(<code>src/mcp-server.ts</code>). The vault is a directory of Markdown;
+<code>index.md</code> is an optional front door and is not listed as a
+note.</p>
+<p>Every read starts from a scan. <code>markdownFiles</code> walks the
+vault in sorted order, skipping dot-directories,
+<code>node_modules</code>, <code>dist</code> and similar, and every
+<code>AGENTS.md</code> (<code>src/vault.ts:56-64</code>,
+<code>:97-115</code>). A scan is capped at 10,000 notes, 16 MiB per note
+and 256 MiB per vault, and exceeding a cap is an error rather than a
+truncation (<code>src/vault.ts:30-32</code>, <code>:307-312</code>). The
+MCP server caches one scan and reopens it when a fingerprint over every
+file's inode, size and nanosecond times changes
+(<code>src/mcp-tools.ts:413-475</code>).</p>
+<p>Three derived stores sit outside the Markdown. QMD, a local search
+engine pinned to a Hraness fork commit through a Git URL in
+<code>package.json</code>, keeps its SQLite index at
+<code>~/.cache/hraness-kb/indexes/&lt;sha256 of root&gt;.sqlite</code>
+(<code>src/semantic.ts:618-621</code>). Per-note lock files sit under
+<code>~/.cache/hraness-kb/note-locks/</code>
+(<code>src/note-lock.ts:165-185</code>). Oh, the embedded memory
+framework the same author publishes as a pinned release tarball, backs
+<code>wordcell graph query</code>; only
+<code>wordcell graph rebuild</code> persists its state, to
+<code>.wordcell/oh.sqlite</code> inside the vault, which Wordcell writes
+as ignored and rebuildable (<code>src/graph-authority.ts:28</code>).
+Oh's own source was not read for this report, because no note is stored
+in it.</p>
+<p>Nothing runs in the background. Opening a semantic session runs QMD's
+update over the vault, and embeds changed notes lazily on the first
+query that needs vectors (<code>src/semantic.ts:2310-2400</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Bun 1.3.14 and Git are required; the README's install path is a
+pinned GitHub release tarball with <code>--ignore-scripts</code>. Exact
+search, listing, links and path context need no model, no network and no
+API key. Hybrid and semantic modes download a pinned EmbeddingGemma
+model on first use and then run locally. The optional TypeSafe reranker
+sends query and snippets to a paid hosted provider. The store is a
+folder of Markdown that opens in any editor or in Obsidian, and a broken
+derived index is repaired by deleting it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Create.</strong> <code>createNoteProgram</code>
+(<code>src/authoring-program.ts:218-248</code>) takes the per-note lock,
+recovers any interrupted earlier write, and returns an existing
+compatible note unchanged; otherwise it renders frontmatter with a fresh
+<code>document_id</code> and installs the file. The MCP
+<code>create_note</code> tool refuses an existing ID outright and does
+not create directories (<code>src/mcp-tools.ts:903-962</code>).</p>
+<p><strong>Update.</strong> <code>updateNoteBodyProgram</code>
+(<code>src/authoring-program.ts:291-325</code>) requires
+<code>expectedRevision</code>, a <code>sha256:</code> over the file's
+bytes, and fails on a stale one even when the requested body already
+matches. Frontmatter bytes, identity and relations are kept. Only the
+MCP tool and the SDK expose it; <code>wordcell note</code> accepts
+<code>create</code> alone
+(<code>src/cli-program.ts:1909-1912</code>).</p>
+<p><strong>Install.</strong> <code>installBody</code>
+(<code>src/authoring-program.ts:40-179</code>) writes and fsyncs a
+private temporary file, re-reads the target and fails with
+<code>NoteRevisionConflictError</code> if it moved, renames the old file
+into a recovery directory, re-checks the quarantined bytes, installs the
+new file without clobbering, and removes the quarantine.
+<code>recoverInstall</code> restores the old file if the install fails
+between those steps.</p>
+<p><strong>Relations.</strong> <code>editNoteRelationProgram</code>
+(<code>src/authoring-program.ts:250-284</code>) adds or removes one
+typed outbound relation in the source note's frontmatter, idempotently,
+and checks that a local target exists before adding.</p>
+<p><strong>Search.</strong> <code>KnowledgeBaseSession.search</code> in
+<code>src/sdk.ts</code> computes the allowed set once through
+<code>queryVault</code> (<code>:803-807</code>), runs
+<code>searchExactVault</code> (<code>src/search.ts:411-434</code>), runs
+QMD, discards each QMD hit whose path is not in the scan or whose note
+is outside the allowed set (<code>src/sdk.ts:852-860</code>), and fuses
+the lanes by weighted reciprocal rank with <code>k = 60</code>
+(<code>src/search.ts:437-492</code>). Exact identity matches are then
+sorted ahead of everything else (<code>src/sdk.ts:910-915</code>).</p>
+<p><strong>Path context.</strong>
+<code>buildRepositoryMemoryContext</code>
+(<code>src/repository-memory.ts:825-951</code>) matches each record's
+deepest declared scope against the target, inspects each matched scope
+on disk, drops a record matched as an ancestor through a scope that is a
+file, reports invalid scopes and records with missing required fields,
+and returns up to ten records per group. A current record whose scope no
+longer exists raises an advisory; a terminal plan does not.</p>
+<p><strong>Import.</strong> <code>importSupermemory</code> in
+<code>src/import-supermemory.ts</code> finds existing imported notes by
+<code>imported_from: supermemory</code> and <code>external_id</code>
+(<code>:1087-1095</code>), creates a note when none matches
+(<code>:1134-1157</code>), and compares a stored
+<code>import_digest</code> with the file before updating
+(<code>:1165-1176</code>).</p>
+<p><strong>MCP.</strong> <code>createToolCatalog</code>
+(<code>src/mcp-tools.ts:1102-1124</code>) registers <code>search</code>,
+<code>list_notes</code>, <code>get_note</code>, <code>backlinks</code>
+and <code>links</code>, adds <code>context</code> when the server was
+started with <code>--repo</code>, and adds <code>create_note</code>,
+<code>update_note_body</code> and <code>add_relation</code> unless
+<code>--read-only</code> removed them (<code>:1093-1100</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Written by</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>document_id</code></td>
+<td><code>createNote</code>, a generated stable identity</td>
+<td>graph facts, portfolio identity</td>
+</tr>
+<tr>
+<td><code>title</code>, <code>type</code>, <code>tags</code></td>
+<td><code>createNote</code>; hand edits</td>
+<td>search scoring, filters, path-context grouping</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>hand edits; the importer copies a Supermemory document's status</td>
+<td>path-context grouping for plans; caller filters</td>
+</tr>
+<tr>
+<td><code>repository_scopes</code></td>
+<td>hand edits only</td>
+<td>path context; the <code>scope</code> filter on search and list</td>
+</tr>
+<tr>
+<td><code>as_of</code>, <code>generated</code>, <code>date</code></td>
+<td>hand edits</td>
+<td>dated-research and report validation; sort</td>
+</tr>
+<tr>
+<td>relations in frontmatter</td>
+<td><code>add_relation</code>, <code>relation add</code>, the
+importer</td>
+<td>backlinks, links, graph queries</td>
+</tr>
+<tr>
+<td><code>imported_from</code>, <code>external_id</code>,
+<code>import_digest</code></td>
+<td>the importer</td>
+<td>the importer's next run</td>
+</tr>
+</tbody>
+</table></div>
+<p>Frontmatter is open: any key is queryable through <code>where</code>
+and <code>has</code>, and no schema is enforced beyond what path context
+needs. No CLI command or MCP tool sets <code>repository_scopes</code> or
+<code>status</code>; the session-memory reference tells the agent to
+edit the frontmatter by hand after <code>note create</code>
+(<code>skills/wordcell/references/session-memory.md</code>).</p>
+<p><strong>Scope is the vault.</strong> A vault is one directory and
+every tool reads all of it. <code>repository_scopes</code> names code
+paths, and a caller may pass them as an exact filter to
+<code>search</code> and <code>list_notes</code>
+(<code>src/query.ts:600-609</code>) or let <code>wordcell context</code>
+match ancestors. Portfolio federation opens several vaults from a
+registry, each with its own index and history, and a command sees only
+the vaults its selection names (<code>docs/portfolio.md</code>;
+<code>src/portfolio-registry.ts</code>).</p>
+<p><strong>Time</strong> is whatever the frontmatter says plus Git
+history. <code>wordcell history</code> reads commits touching a note on
+request; nothing stores a validity interval.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Exact search is substring scoring over normalised text. A title,
+alias, path or ID equal to the whole query is an identity match scoring
+900 to 1,000 points; phrase matches add 100 to 400 by field and term
+matches 5 to 40. A note that matches neither identity nor phrase needs
+at least half the terms, capped at three
+(<code>src/search.ts:319-409</code>). Results are sorted identity first,
+then score.</p>
+<p>Hybrid mode adds QMD's BM25 and vector lanes at equal weight. Each
+QMD candidate is reconciled against the live scan and the metadata
+filters. When discards leave fewer eligible results than requested, the
+lane is marked <code>degraded</code> and the whole result
+<code>partial</code>, with a message naming the window size
+(<code>src/sdk.ts:862-891</code>). That turns an underfilled filtered
+search into a visible state rather than a short list. Results are capped
+at 100 and each QMD lane requests at most 500 candidates
+(<code>src/sdk.ts:102-104</code>).</p>
+<p><strong>Path context is the retrieval route the design argues
+for.</strong>
+<code>wordcell context packages/parser/src/index.ts --root kb --repo .</code>
+returns inherited <code>AGENTS.md</code> guides, the
+<code>scopes/</code> hub notes for that path, and scoped records grouped
+as maintained knowledge, active plans, dated research, reports and
+historical plans. Ordering within a group is deepest scope, newest date,
+then plan-status order (<code>src/repository-memory.ts:675-683</code>).
+It needs no index and no model.</p>
+<p>Over-recall is the likely failure. Terminal plans and every imported
+version of a Supermemory memory are ordinary notes to search, and the
+design relies on a reader seeing <code>status</code> or a
+<code>supersedes</code> edge in the result. A note that exceeds the 64
+KiB tool-result budget is omitted from an MCP result and counted in
+<code>omitted</code> (<code>src/mcp-tools.ts:48</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is explicit and synchronous. No model is called and
+nothing is extracted, merged or summarised. A created or updated note is
+visible to the next read at once: the MCP server invalidates its cached
+session after every write (<code>src/mcp-tools.ts:895-901</code>), and
+other processes see the new fingerprint. The QMD index catches up when
+the next semantic session opens.</p>
+<p><strong>Concurrency is handled more carefully than anywhere else in
+the tree.</strong> A lock per note in the user cache, with a heartbeat
+and a five-minute stale reclaim (<code>src/note-lock.ts:15-21</code>),
+serialises writers on one machine. The revision check catches a writer
+that bypassed the lock, such as an editor, and the quarantine step means
+an interrupted replace either completes or restores the prior bytes. A
+hand edit, which the skill asks the agent to make for frontmatter, takes
+no lock and is caught only by the next revision check.</p>
+<p><strong>Delete is outside the tool surface.</strong> No command or
+tool deletes a note or sets a deleted state; the migration guide maps
+Supermemory's forget to <em>"Delete the note (Git keeps its history) or
+mark it superseded"</em>
+(<code>docs/migration-from-supermemory.md:53</code>).</p>
+<p><strong>The importer protects edits and not deletions.</strong> A
+note whose body or owned fields changed since the last import is a
+<code>conflict</code> and left alone. A note that was deleted is not in
+the existing set, so the next import of the same export re-creates it as
+<code>created</code> (<code>src/import-supermemory.ts:1134-1157</code>).
+Forgotten Supermemory entries are skipped at every import
+(<code>:1081-1082</code>), which is a record keyed on Supermemory's
+flag, not on anything the vault holds. This was read, not
+reproduced.</p>
+<p>A removed <code>supersedes</code> relation stays removed on rerun for
+a narrower reason: the importer plans a relation only when this run
+creates or updates one of its notes
+(<code>src/import-supermemory.ts:1197-1201</code>). The committed case
+covers exactly that
+(<code>src/import-supermemory.test.ts:1201-1227</code>). If the source
+memory changes upstream, the relation is planned again.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, one file install with two to four directory
+fsyncs, no model call.</li>
+<li>Background: none. QMD's update and lazy embedding run when a
+semantic session opens, over changed notes.</li>
+<li>Read: each MCP call walks and stats every Markdown file to compute
+the fingerprint, and rescans in full when anything changed. Results are
+bounded by count and by a 64 KiB envelope. Path context is bounded at
+ten records per group by default.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server is the agent's direct surface. Read tools carry
+closed-world read-only annotations; the three write tools are listed
+unless <code>--read-only</code> is passed. The server instructions tell
+the model to search before <code>create_note</code> and to pass
+<code>get_note</code>'s revision to <code>update_note_body</code>
+(<code>src/mcp-tools.ts:1131-1141</code>).</p>
+<p>The Agent Skill under <code>skills/wordcell/</code> is the rest of
+the integration. It is instructions, not a service: it routes query,
+plan, save-URL, save-PDF, percolate and session-memory requests to CLI
+commands. The session-memory reference has the agent write one dated
+<code>type: session</code> note per working session, link it to the
+notes it changed, and maintain one <code>type: profile</code> note with
+Stable and Recent sections. Recall requests read the profile and the
+five latest session notes first.</p>
+<p>There is no automatic injection and no hook. An agent recovers
+context by calling <code>context</code> or <code>search</code>, or
+because an <code>AGENTS.md</code> tells it to. Adapting the MCP server
+to another host needs only a stdio MCP client.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is the file and Git.</strong> A note records no
+author or writer channel; <code>wordcell history</code> reports the
+commits behind it when the vault is committed. Captured sources keep a
+<code>capture.json</code> receipt, which is provenance for the source,
+not for the note that cites it.</p>
+<p><strong>The agent's writes are unreviewed.</strong> An agent holding
+the MCP server can create any note under any existing directory with any
+<code>type</code>, and add any typed relation. It cannot set
+<code>status</code> or <code>repository_scopes</code> through a tool,
+but the skill has it edit frontmatter directly.</p>
+<p><strong>Untrusted-content framing is applied on one path.</strong>
+<code>packUntrustedSearchContext</code> wraps SDK search output in an
+envelope that tells the model not to follow instructions inside it
+(<code>src/untrusted-content.ts:3-8</code>;
+<code>src/sdk.ts:1752</code>). The MCP tools return note text as plain
+structured content through <code>toolSuccess</code>
+(<code>src/mcp-tools.ts:87-89</code>), and a captured web page is a note
+like any other.</p>
+<p><strong>Data loss is well guarded on the write path.</strong> The
+revision check, the lock and the quarantine-and-restore install make a
+lost update or a half-written note unlikely. Deletion is by
+<code>rm</code>, reversible through Git when the vault is committed and
+not otherwise.</p>
+<p><strong>Uncertainty is representable only as prose or an unread
+field.</strong></p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — deletion is <code>rm</code>, and a
+re-import re-creates a deleted imported note. The importer's
+forgotten-entry skip is keyed on the export's <code>isForgotten</code>
+flag, and its kept-removed relation holds only while neither note
+changes.</li>
+<li><code>trust_state</code> — plan status is a discrete field with
+terminal values, and it groups path context without excluding anything:
+<em>Historical plans</em> are returned beside current ones. Search reads
+status only when the caller filters on it.</li>
+<li><code>bitemporal</code> — <code>as_of</code> and
+<code>generated</code> date a snapshot or report; no field separates
+when a claim held from when it was recorded.</li>
+<li><code>scope_enforced</code> — the boundary is the vault directory, a
+physical partition. <code>repository_scopes</code> is a code-path
+association the caller may filter on, and omitting it returns every
+note.</li>
+<li><code>audit_log</code> — no mutation record exists in the store; Git
+history is the only log, and only when the vault is committed.</li>
+<li><code>human_review</code> — <code>percolate</code> proposes links
+and writes nothing, and the agent holds <code>add_relation</code>
+itself. No write waits on anyone.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests and committed artifacts at the pin. CI runs
+<code>bun test ./src ./scripts</code> through <code>check:fast</code> on
+pull requests and pushes to <code>main</code>
+(<code>.github/workflows/ci.yml:54</code>;
+<code>package.json:487</code>, <code>:492</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>overfetches selective QMD searches and exposes an exhausted candidate window</code>
+(<code>src/sdk.test.ts:1182-1366</code>) writes 101 notes, 100 of them
+<code>status: archived</code>, behind a fake QMD session that ranks
+every archived note above the active one. With
+<code>status=active</code> the result is exactly
+<code>notes/filter-100</code> (<code>:1268-1277</code>). The same test's
+<code>exhausted</code> and <code>staleRawWindow</code> cases assert
+empty results with <code>partial: true</code>; on their own they would
+pass against a retriever returning nothing, and the
+<code>recovered</code> case is what makes them informative.
+<code>filters repository scopes exactly and case-sensitively</code>
+(<code>src/query.test.ts:169-179</code>) returns
+<code>notes/alpha.md</code> for <code>packages/kb</code> and an empty
+list for <code>packages/kb/src</code>.</p>
+<p><strong>Writes.</strong> <code>src/authoring-body.test.ts</code>
+asserts that a stale revision conflicts even when the requested body
+matches (<code>:86</code>). <code>src/note-lock.test.ts</code> covers a
+live owner, stale reclaim and release.
+<code>src/mcp-tools.test.ts:507</code> asserts that
+<code>add_relation</code> with a stale revision leaves the source
+unchanged.</p>
+<p><strong>Import.</strong> Sixty-eight cases in
+<code>src/import-supermemory.test.ts</code> cover digests, conflicts,
+races, symlinked parents and relation cycles. None deletes an imported
+note and imports again.</p>
+<p><strong>Retrieval quality.</strong>
+<code>docs/evaluations/wordcell-passages-20260927/</code> commits
+sixteen sealed cases, twelve positive and four
+<code>near-miss-negative</code> questions with no answer in the vault,
+with the local results. The README reports 6 of 8 held-out answers
+contained in a selected passage against 1 of 8 for plain snippets.
+<code>docs/agent-memory.md</code> reports an 18-question pilot on 2
+August 2026 in which hybrid and exact search tied on
+<code>Recall@10</code> at 0.833333; both retrievers answered the
+no-answer question rather than abstaining. The LongMemEval figures on
+the README measure Oh's own retrieval, and the README says so.</p>
+<p><strong>Not covered.</strong> No case asserts that a deleted,
+superseded or terminal-status note stays out of a default search or
+context result. No paper exists; the arXiv links in the tree are
+citations inside Oh's LongMemEval artifact.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep one authority and reconcile every derived hit against
+it.</strong> Dropping a vector hit whose file is gone, rather than
+trusting the index, makes a stale index a performance problem instead of
+a correctness one.</li>
+<li><strong>Report an underfilled filtered window as partial.</strong> A
+filter applied after a bounded candidate window can silently return too
+little; say so in the result.</li>
+<li><strong>Route memory from the path being edited.</strong> A record
+that declares the code paths it explains can be found without an
+embedding, and its group says whether it is current.</li>
+<li><strong>Make writes revision-checked and quarantine the old
+bytes.</strong> An interrupted replace that restores itself is cheap in
+a file store and rare in the corpus.</li>
+<li><strong>Separate rules from rationale.</strong> Mandatory rules in
+scoped <code>AGENTS.md</code>, explanations in notes, and a stated
+precedence when they disagree.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An importer that protects edits and not deletions.</strong>
+A digest per imported note catches a local edit; a deleted note needs a
+record of the external ID it came from, or the next import undoes the
+user's decision.</li>
+<li><strong>A lifecycle field that only groups.</strong> Returning
+terminal plans in their own group is honest; returning superseded
+imported versions to search at full rank is how a corrected fact comes
+back.</li>
+<li><strong>Framing untrusted content on one surface.</strong> If the
+SDK needs an envelope for captured web text, so does the MCP result the
+agent actually reads.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer or a small team who already treat decisions
+and plans as documents in the repository and want an agent to find them
+by path or by words without running a service. The maintenance cost is
+the discipline of writing and pruning notes by hand, because nothing
+curates them. Anyone who wants memory captured from conversations,
+corrected by the system, or kept apart by user or tenant should not
+adopt it; Wordcell treats all three as out of scope and says so.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does Oh's graph query path read anything the Markdown does not hold,
+such as a stale <code>.wordcell/oh.sqlite</code> after a note is
+deleted? Oh was not read.</li>
+<li>How does QMD's lazy embedding behave on a large vault on first use?
+The 2 August 2026 pilot records a 41-second semantic p95 that includes
+the first model load, over nine queries.</li>
+<li>Is a deletion-aware import planned, for example keyed on
+<code>external_id</code> in a vault-level ignore list?</li>
+<li>How often do agents following the skill actually set
+<code>repository_scopes</code> and <code>status</code> by hand, given
+that no tool writes them?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and scan:</strong> <code>src/vault.ts</code>,
+<code>src/note-lock.ts</code>, <code>src/authoring-model.ts</code>,
+<code>src/authoring-platform.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/authoring.ts</code>,
+<code>src/authoring-program.ts</code>,
+<code>src/authoring-import.ts</code>,
+<code>src/import-supermemory.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/search.ts</code>,
+<code>src/query.ts</code>, <code>src/sdk.ts</code>,
+<code>src/semantic.ts</code>, <code>src/semantic-runtime.ts</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>src/repository-memory.ts</code>,
+<code>src/agent-context.ts</code>,
+<code>src/cli-program.ts:3960-4040</code>.</li>
+<li><strong>Graph projection:</strong>
+<code>src/graph-authority.ts</code>, <code>src/oh/</code>.</li>
+<li><strong>MCP and CLI:</strong> <code>src/mcp-tools.ts</code>,
+<code>src/mcp-server.ts</code>, <code>src/cli-program.ts</code>,
+<code>skills/wordcell/</code>.</li>
+<li><strong>Safety:</strong> <code>src/untrusted-content.ts</code>.</li>
+<li><strong>Tests and evals:</strong> <code>src/sdk.test.ts</code>,
+<code>src/query.test.ts</code>, <code>src/mcp-tools.test.ts</code>,
+<code>src/authoring-body.test.ts</code>,
+<code>src/import-supermemory.test.ts</code>,
+<code>src/repository-memory.test.ts</code>,
+<code>docs/evaluations/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n '"delete"|"remove"|"rm"|deleteNote|removeNote\b' src -g '!*.test.ts'</code>
+— only relation removal and a SQLite journal mode; no note-delete
+verb.</li>
+<li><code>rg -n 'createNote\(|addNoteRelation\(|updateNoteBody\(|removeNoteRelation\(|updateNoteBodyProgram\(|createNoteProgram\(' src -g '!*.test.ts'</code>
+— callers in <code>mcp-tools.ts</code>, <code>cli-program.ts</code>,
+<code>import-supermemory.ts</code> and the authoring wrappers; no
+background writer.</li>
+<li><code>rg -n 'writeFile|rename\(|createNote|addNoteRelation|installNote|unlink|mkdir' src/percolate.ts src/graph-percolation.ts src/search.ts src/query.ts src/repository-memory.ts src/agent-context.ts</code>
+— no write in any read or suggestion path.</li>
+<li><code>rg -n 'supersede|superseded|is_latest|isLatest' src -g '!*.test.ts'</code>
+— help text, the plan-status list and the importer; no read path filters
+on it.</li>
+<li><code>rg -n -i 'supersed' src/search.ts src/query.ts src/sdk.ts src/mcp-tools.ts</code>
+— no match.</li>
+<li><code>rg -n 'historicalPlans|terminalRecords|isTerminalPlanStatus' src -g '!*.test.ts'</code>
+— grouping and counts in <code>repository-memory.ts</code> and a label
+in <code>cli-program.ts</code>; no exclusion.</li>
+<li><code>rg -n 'createUntrustedToolResult|UNTRUSTED_CONTENT_NOTICE|untrusted' src -g '!*.test.ts' -g '!untrusted-content.ts'</code>
+— <code>sdk.ts</code> and evaluation code only; not
+<code>mcp-tools.ts</code>.</li>
+<li><code>rg -n 'appendFile|createWriteStream' src -g '!*.test.ts' -g '!src/clip/**'</code>
+— no match.</li>
+<li><code>rg -n '\brm\(|unlink\(|rmSync|unlinkSync' src/import-supermemory.test.ts</code>
+— temporary-directory cleanup and one symlink swap; no deleted-note
+re-import case.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— <code>STYLE.md</code>, Oh's LongMemEval artifact, a site claims file
+and metadata-tool tests; no paper of this project's own, and no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/hraness/wordcell/commit/818e6abc7ac2415b7b3f670ae28b67114d03e046"><code class="commit-id" title="818e6abc7ac2415b7b3f670ae28b67114d03e046">818e6abc…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 29
+September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: no auto-run surfaces and no build-time execution points; five
+dependency files inside the cooldown, every file in a depth-1 clone
+dating to the tip; four unpinned surfaces, of which the root
+<code>package.json</code> is listed as having no lockfile although
+<code>bun.lock</code> is committed beside it; <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> recorded as data. Read with <code>rg</code> and
+<code>sed</code>; nothing installed, built or run. Oh and QMD, the
+pinned engines behind the graph and semantic lanes, were not read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

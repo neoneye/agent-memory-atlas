@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code plugin that records
+every session into a git-backed Markdown vault, distills notes with user
+confirmation, and searches them by BM25-plus-vector fusion.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cortexes — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code plugin that
+records every session into a git-backed Markdown vault, distills notes
+with user confirmation, and searches them by BM25-plus-vector fusion.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cortexes — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code plugin that
+records every session into a git-backed Markdown vault, distills notes
+with user confirmation, and searches them by BM25-plus-vector fusion.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cortexes — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cortexes",
+      "description": "A Claude Code plugin that records every session into a git-backed Markdown vault, distills notes with user confirmation, and searches them by BM25-plus-vector fusion.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A git-backed Markdown vault distilled from
+Claude Code sessions</p>
+          <h1>Cortexes</h1>
+          <p class="document-deck">A Claude Code plugin that records
+every session into a git-backed Markdown vault, distills notes with user
+confirmation, and searches them by BM25-plus-vector fusion.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/XBlueSky/cortexes">
+              <span>Source</span>
+              <strong>XBlueSky/cortexes</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/XBlueSky/cortexes/commit/ff2eaeb522f21bb1022ff25b090aad0072d2aca1" title="ff2eaeb522f21bb1022ff25b090aad0072d2aca1">
+              <span>Analyzed revision</span>
+              <code>ff2eaeb5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/XBlueSky--cortexes" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>XBlueSky--cortexes</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>3,773
+lines of Python in the cortex-vec engine, 4,536 lines of hook scripts,
+and 1,746 lines of skill and command Markdown</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>300
+commits on plugin by 4 contributors, 10 April 2026 – 22 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>538
+pytest functions in 7,913 lines (220 for cortex-vec, 318 for the hooks),
+plus 35 Node tests for the docs site</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cortexes is a Claude Code plugin that turns every session into a
+Markdown file in a git-backed Obsidian vault, and turns those files into
+notes through a distill step a person confirms. A SessionEnd hook
+records and redacts the transcript into <code>Raw/</code>. The
+<code>cortex-vec</code> CLI indexes <code>Notes/</code> and
+<code>Projects/</code> for hybrid BM25-plus-vector search. A
+SessionStart hook offers a menu rather than injecting memory.</p>
+<p>What is notable is the discipline around the parts that fail
+silently. All three retrieval streams evaluate one filter language, and
+a lockstep test fails if the producer emits a field the evaluator cannot
+compare. A Raw cannot be declared insight-free until every semantic span
+has been paged. The Raw writer is atomic and logs its own failures.</p>
+<p>What is weak is the derived index. Without an OpenAI key,
+<code>cortex-vec upsert</code> exits before it touches BM25, so the
+keyless mode the README promises cannot add a note. A page deleted by
+hand stays retrievable, because no skill runs <code>delete</code> or
+<code>rebuild</code>. Every human confirmation is an instruction in
+skill prose, not a gate.</p>
+<p>The tree is a port. The CHANGELOG's 2.1.0 entry states it was ported
+from an upstream <code>cortex</code> line, 1.4.0 to 1.8.1, <em>"minus
+everything coupled to internal-only tooling"</em>. Two files the code
+cites, <code>scripts/backfill-failed-raws.py</code> and
+<code>docs/specs/2026-05-27-distill-dedup-repo-filter-blindspot.md</code>,
+are absent here.</p>
+<p>Two marks: <code>scope_enforced</code>, on the <code>--repo</code>
+predicate that all three streams apply to <code>Projects/</code> pages,
+and <code>negative_eval</code>, on committed cases asserting an
+out-of-repo page stays out beside an in-repo control. Section 9 names
+the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are two kinds of stored thing, and only one is retrieved. A
+<strong>Raw</strong> is a filtered transcript of one session, written
+automatically. A <strong>page</strong> is a Markdown note in
+<code>Notes/&lt;category&gt;/</code> or
+<code>Projects/&lt;repo&gt;/</code>, written by the model through a
+skill. Only pages are indexed; Raws are reached by date or by grep.</p>
+<p><strong>A Raw becomes a page through distill.</strong> The model
+walks the Raw through bounded pages, applies a
+<code>has_insight()</code> rule, and proposes a verdict. The skill tells
+it to present that verdict to the user with <code>AskUserQuestion</code>
+and treat the answer as binding
+(<code>skills/cortex-distill/SKILL.md:215-241</code>). A yes runs a
+dedup search. A top-1 cosine under 0.45 suggests <code>new</code>, and
+0.60 or above suggests <code>pending-merge</code>
+(<code>:268-320</code>); the user picks again.</p>
+<p><strong>The Raw's state is a marker, not a field.</strong> Distill
+appends one <code>&lt;!-- distilled: DATE → OUTCOME --&gt;</code> line,
+and broadcast later appends a <code>| broadcast:</code> or
+<code>| merged:</code> segment. <code>classify</code> reads it only
+before the first turn or as the last non-empty line, because a
+maintenance session's own body quotes the marker
+(<code>cortex-vec/src/cortex_vec/distill_queue.py:45-108</code>). These
+states schedule work; nothing reads them at retrieval.</p>
+<p><strong>A page is settled once written.</strong> It carries
+<code>title</code>, <code>tags</code>, <code>created</code> and
+optionally <code>repos</code>, and is injected as whatever the model
+reads. Broadcast revises pages change by change. When a Raw contradicts
+a page, the model proposes an inline <code>⚠️ Contradicts</code> line
+or, if the user says the new claim is right, rewrites the old one
+(<code>skills/cortex-broadcast/SKILL.md:230-244</code>). The flag is
+prose in the page. Nothing retires a page: no skill deletes one, and the
+index keeps a hand-deleted page until someone runs a command the skills
+never name.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Cortexes session becomes a searchable page, where the user is asked, and where a page never leaves the index</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Cortexes session becomes a searchable page, where the user is asked, and where a page never leaves the index
+flowchart TD
+    SE[&quot;SessionEnd hook, detached&quot;] --&gt; FL[&quot;filter-transcript.py:&lt;br/&gt;TOML filters, claude -p classifier,&lt;br/&gt;redact_secrets&quot;]
+    FL --&gt; RAW[&quot;Raw/YYYY/MM/DD file&lt;br/&gt;state: undistilled&quot;]
+    RAW --&gt; RC{&quot;strict prefix of the new Raw&lt;br/&gt;and same repo label?&quot;}
+    RC -- &quot;yes&quot; --&gt; GRM[&quot;git rm by reclaim-superseded&quot;]
+    RC -- &quot;different repo&quot; --&gt; KEEP[&quot;kept, refusal logged&quot;]
+    RAW --&gt; DP[&quot;distill plan: map, spans,&lt;br/&gt;has_insight candidate&quot;]
+    DP --&gt; ASK{&quot;skill prose: ask the user&quot;}
+    ASK -- &quot;no-insight&quot; --&gt; GATE{&quot;every semantic and ambiguous&lt;br/&gt;span reviewed?&quot;}
+    GATE -- &quot;no&quot; --&gt; REF[&quot;seal refused&quot;]
+    GATE -- &quot;yes&quot; --&gt; MNI[&quot;marker: no insight&quot;]
+    ASK -- &quot;skip-routine,&lt;br/&gt;no coverage check&quot; --&gt; MSR[&quot;marker: skip routine&quot;]
+    ASK -- &quot;yes&quot; --&gt; DD{&quot;cortex-vec search top-1 cosine&quot;}
+    DD -- &quot;under 0.45: new&quot; --&gt; PAGE[&quot;Notes or Projects page&lt;br/&gt;written by the model&quot;]
+    DD -- &quot;0.60 and over: pending-merge&quot; --&gt; PM[&quot;marker names the existing page&quot;]
+    PAGE --&gt; UP[&quot;cortex-vec upsert:&lt;br/&gt;body vector, summary vector, BM25&quot;]
+    PM --&gt; BC[&quot;broadcast: y/n per change,&lt;br/&gt;contradiction flagged or rewritten&quot;]
+    PAGE --&gt; BC
+    BC --&gt; UP
+    UP --&gt; SRCH[&quot;cortex-vec search --repo:&lt;br/&gt;RRF over BM25 and vector&quot;]
+    HAND[&quot;page deleted or renamed by hand&quot;] --&gt; STALE[&quot;old entries stay retrievable:&lt;br/&gt;no skill runs delete or rebuild&quot;]
+    STALE --&gt; SRCH</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The plugin is three layers. <strong>Hooks</strong>
+(<code>hooks/hooks.json</code>) register a SessionEnd recorder and a
+SessionStart menu, both Bash with Python helpers. <strong>Skills and
+commands</strong> (<code>skills/</code>, <code>commands/</code>) are
+Markdown procedures the model follows for evolve, distill, broadcast,
+query and takeoff. <strong><code>cortex-vec</code></strong> is a Python
+CLI published to PyPI; the pinned tree is version 0.9.0, and the PyPI
+0.9.0 upload is dated 22 September 2026 04:00 UTC, six minutes after the
+pinned merge. The wheel was not compared with the tree.</p>
+<p>Persistence is four places. The vault is a git repo of Markdown,
+configured in <code>~/.cortex/config.json</code>. The Chroma collection
+<code>cortex</code> lives at <code>~/.cortex/vectorstore</code> with
+cosine space. The BM25 index is a pickle at
+<code>~/.cortex/bm25/index.pkl</code>. Distill plans are JSON under
+<code>$XDG_CACHE_HOME/cortex/distill-plans/</code>
+(<code>cortex-vec/src/cortex_vec/config.py:7-11</code>,
+<code>distill_plan.py:23-26</code>). Hand-off batons sit in the vault
+under a git-ignored <code>.takeoff/</code>.</p>
+<p>Model calls come from three places. Indexing calls OpenAI twice per
+page: <code>text-embedding-3-small</code> for two vectors and
+<code>gpt-5.4-mini</code> for a Traditional Chinese bilingual summary
+(<code>store.py:23-68</code>). The SessionEnd filter calls
+<code>claude -p --model sonnet</code> to classify oversized blocks, at
+most five per session
+(<code>hooks/scripts/filter-transcript.py:92-95</code>,
+<code>:202-241</code>). The optional reranker calls OpenAI again.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Installing is a marketplace add, a plugin install,
+<code>uv tool install cortex-vec</code> and
+<code>/cortexes:genesis</code>. Nothing runs as a service. The hooks
+need <code>bash</code>, <code>jq</code>, <code>git</code> and
+<code>python3</code>. The store is plain Markdown in git, readable and
+repairable by hand, and the indexes are derived. An OpenAI key is
+optional for search and, at this pin, required to add anything to either
+index (section 9). Recording works fully offline except for the
+classifier, which <code>CORTEX_NO_CLASSIFIER=1</code> turns off.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>session-end-record.sh</code> exits
+early on <code>CORTEX_SKIP_RECORD</code>, on a headless
+<code>sdk-cli</code> transcript unless <code>CORTEX_FORCE_RECORD</code>
+is set, and on transcripts under 4,096 bytes
+(<code>hooks/scripts/session-end-record.sh:18-55</code>). It then
+detaches a <code>nohup bash -c</code> body (<code>:85-345</code>). The
+body writes frontmatter and the filter output to a sibling temp file and
+renames it into place (<code>:121-199</code>). On a filter failure it
+writes a <code>(filter failed)</code> stub and logs redacted stderr to
+<code>~/.cortex/filter-failures.log</code> (<code>:192-259</code>).</p>
+<p><strong>Filter.</strong> <code>filter-transcript.py</code> renders
+the transcript, applies per-command TOML filters, sends blocks over 12
+KB to the classifier, then scrubs surrogates, normalizes line breaks and
+runs <code>redact_secrets</code>. An audit comment with counts,
+including <code>redactions=N</code>, heads the Raw
+(<code>filter-transcript.py:850-935</code>).</p>
+<p><strong>Post-capture.</strong> A maintenance session (distill,
+broadcast, genesis) gets a <code>(skip: meta-session)</code> marker so
+it never enters its own queue
+(<code>session-end-record.sh:269-271</code>;
+<code>hooks/scripts/meta_session.py:26-40</code>). Then
+<code>cortex-vec reclaim-superseded --keep &lt;new Raw&gt; --apply</code>
+removes queued Raws that are strict prefixes of the new one
+(<code>:283-316</code>). With <code>auto_commit</code>, the Raw and the
+staged deletions are committed and optionally pushed
+(<code>:318-343</code>).</p>
+<p><strong>Distill navigation.</strong> <code>distill-plan start</code>
+hashes the Raw, parses it into a gap-free span partition, and records
+which ranges are semantic or ambiguous
+(<code>cortex-vec/src/cortex_vec/distill_plan.py:129-183</code>).
+<code>raw-map</code> and <code>raw-span</code> charge a per-session
+character budget and mark what they return as reviewed
+(<code>raw_map.py:141-182</code>, <code>raw_span.py:92-93</code>).
+<code>seal</code> refuses <code>no-insight</code> unless the map is
+complete and no semantic or ambiguous range is unreviewed
+(<code>distill_plan.py:263-320</code>). <code>complete</code> refuses if
+the Raw changed beyond the marker (<code>:387-410</code>).</p>
+<p><strong>Index.</strong> <code>cmd_upsert</code> deletes every Chroma
+entry whose id is the path or starts with <code>path::</code>, then
+writes a body entry and a summary entry per repo the page belongs to,
+then upserts the BM25 record (<code>store.py:272-337</code>).
+<code>cmd_rebuild</code> drops the collection and re-indexes
+<code>Notes/</code> and <code>Projects/</code>, skipping
+<code>_archive</code> (<code>:191-269</code>).</p>
+<p><strong>Search.</strong> <code>cmd_search</code> builds the clause
+and calls <code>fusion.search</code> (<code>store.py:492-513</code>).
+The vector stream is skipped without a key; the BM25 stream loads the
+pickle and filters with <code>_matches</code>; either failing yields an
+empty stream (<code>fusion.py:29-49</code>). <code>rrf_fuse</code>
+normalizes weights over the streams that returned anything
+(<code>:8-26</code>). Hits that did not come through the vector window
+get a cosine backfilled by <code>cosine_for</code>, and
+<code>score</code> reports that cosine, not the fused rank
+(<code>:171-189</code>; <code>store.py:362-406</code>).</p>
+<p><strong>Inject.</strong> <code>session-start-inject.sh</code> derives
+the repo slug, lists top-level topic names under <code>Notes/</code> and
+<code>Projects/</code>, lists pending batons for the repo, and emits a
+four-option menu as <code>additionalContext</code>
+(<code>hooks/scripts/session-start-inject.sh:24-136</code>). No page
+body is injected.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Record</th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Raw file</td>
+<td>one session</td>
+<td>frontmatter <code>date</code>, <code>time</code>,
+<code>type: session</code>, <code>repo</code>, <code>transcript</code>,
+<code>tags</code>; audit comment; turns; outcome marker</td>
+</tr>
+<tr>
+<td>Page</td>
+<td>one note</td>
+<td>frontmatter <code>title</code>, <code>tags</code>,
+<code>created</code>, <code>source</code>, optional <code>repos</code>,
+optional <code>status</code>; Markdown body with wikilinks</td>
+</tr>
+<tr>
+<td>Chroma entry</td>
+<td>page × repo × {body, summary}</td>
+<td>id <code>path</code>, <code>path::repo</code> or
+<code>…::summary</code>; metadata <code>type</code>,
+<code>category</code>, <code>title</code>, <code>tags</code>,
+<code>source_path</code>, <code>repo</code>, <code>repos</code>,
+<code>status</code>, <code>entry_type</code></td>
+</tr>
+<tr>
+<td>BM25 record</td>
+<td>one page</td>
+<td><code>id</code>, <code>title</code>, <code>summary</code>,
+<code>tags</code>, <code>repos</code> list, <code>type</code>,
+<code>category</code>, <code>tokens</code></td>
+</tr>
+<tr>
+<td>Plan state</td>
+<td>one Raw in distill</td>
+<td>identity hashes, coverage intervals, evidence ranges, budget ledger,
+<code>status</code>, <code>expected_outcome</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>type</code> and <code>category</code> come from the path:
+<code>Notes/&lt;category&gt;/…</code> is a note,
+<code>Projects/&lt;repo&gt;/…</code> is a project whose category is the
+repo, and <code>Projects/_archive/…</code> classifies as
+<code>archive</code>
+(<code>cortex-vec/src/cortex_vec/parser.py:48-63</code>). A project
+page's repos are its directory plus any <code>repos:</code> frontmatter,
+so a page can belong to several repos (<code>store.py:86-96</code>).</p>
+<p><strong><code>status</code> is carried and never read.</strong> It is
+copied from frontmatter into Chroma metadata
+(<code>store.py:99-114</code>), and no retrieval path consults it; the
+BM25 matcher raises on it as an unmodelled field
+(<code>bm25.py:66-72</code>).</p>
+<p>Time is <code>created</code> on a page and
+<code>date</code>/<code>time</code> on a Raw. There is no validity
+interval, no version chain beyond git, and no provenance field linking a
+page to the Raw it came from; the link runs the other way, in the Raw's
+marker.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Two streams by default.</strong> BM25 over jieba-segmented,
+Porter-stemmed tokens, with a token-overlap gate because BM25Okapi's IDF
+goes non-positive on terms in half the corpus
+(<code>bm25.py:131-175</code>). Vector search over body and summary
+entries, deduplicated to the best chunk per page
+(<code>store.py:445-489</code>). RRF with k=60 and weights 0.4 and 0.6
+(<code>config.py:13-28</code>).</p>
+<p><strong>Four opt-ins.</strong> A wikilink graph stream fuses
+neighbours of the top five fused hits as a third RRF stream
+(<code>fusion.py:56-95</code>). A synonym table adds weighted BM25
+scores. An LLM reranker reorders the top 15 and falls back to the input
+order on any error (<code>rerank.py:25-52</code>).
+<code>max_per_repo</code> reorders without dropping
+(<code>fusion.py:98-117</code>). No skill passes <code>--graph</code> or
+<code>--rerank</code>.</p>
+<p><strong>One filter language, three evaluators.</strong>
+<code>_build_where</code> emits Chroma syntax. The vector stream hands
+it to Chroma; BM25 and graph hand it to <code>_matches</code>, which
+models exactly <code>repo</code>, <code>type</code> and
+<code>category</code> in one table and raises on an unknown field or an
+operator form (<code>bm25.py:22-80</code>). A raise empties that stream
+rather than failing the query. The CHANGELOG records the defect 0.9.0
+fixed: the nested <code>$or</code> had been ignored by BM25 and never
+passed to the graph stream.</p>
+<p><strong>What the agent sees.</strong> Five JSON lines by default,
+each with <code>id</code>, <code>title</code>, <code>type</code>,
+<code>repo</code>, <code>category</code>, <code>tags</code>,
+<code>summary</code> and a cosine <code>score</code>. The query skill
+spends forty lines on reading that number: order is the verdict, a low
+cosine on a BM25 hit is not a demotion, and <code>0.0</code> is
+ambiguous between no key, a failed backfill and a real zero
+(<code>skills/cortex-query/SKILL.md:91-143</code>).</p>
+<p><strong>Failure modes.</strong> A hand-deleted or renamed page
+returns until re-indexed, with a <code>source_path</code> that no longer
+exists; nothing checks. The per-repo cap and the repo filter key on a
+basename, so <code>acme/api</code> and <code>other/api</code> are one
+repo. Without a key the query degrades to BM25 silently, as designed and
+documented.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Raw capture is automatic and total.</strong> Every
+interactive session over 4 KB is recorded, filtered and redacted.
+Redaction is shape matching for GitLab, AWS, OpenAI and Anthropic keys,
+JWTs, cookies, <code>Authorization</code> headers, URL passwords and
+<code>*_TOKEN=</code> values
+(<code>filter-transcript.py:674-728</code>); <code>PRIVACY.md</code>
+says it is not a secrets scanner.</p>
+<p><strong>Pages are written by the model.</strong>
+<code>cortex-evolve</code> saves on a phrase such as <em>"remember
+this"</em>, writes the file from a template, appends a row to
+<code>_index.md</code> and an entry to <code>log.md</code>, commits, and
+runs <code>cortex-vec upsert</code>
+(<code>skills/cortex-evolve/SKILL.md:19-131</code>). It performs no
+dedup check, by its own statement (<code>:109</code>). Distill and
+broadcast write the same way after their confirmation steps. The
+commands grant <code>Write</code>, <code>Edit</code> and unrestricted
+<code>Bash</code> (<code>commands/distill.md:5-11</code>).</p>
+<p><strong>Dedup is advisory.</strong> The thresholds shape the proposal
+the model shows; the user's answer decides
+(<code>skills/cortex-distill/SKILL.md:302-334</code>).
+<code>pending-merge</code> writes no page and defers the merge to
+broadcast.</p>
+<p><strong>Reclaim deletes only redundancy.</strong> A candidate must be
+undistilled, a non-empty line-for-line prefix of the survivor, and carry
+the same <code>repo:</code> label. A cross-repo pair is refused and
+reported on stderr, which the hook logs
+(<code>cortex-vec/src/cortex_vec/reclaim.py:124-177</code>;
+<code>session-end-record.sh:291-314</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The SessionEnd hook returns immediately; the detached body can take
+minutes, bounded by <code>CORTEX_FILTER_TIMEOUT</code>. The hook
+defaults it to 3,600 s (<code>session-end-record.sh:153-163</code>); the
+README's table says 600. A Raw is never retrievable through
+<code>cortex-vec</code>. A page is retrievable once its
+<code>upsert</code> returns, which is two embedding calls and one
+summary call inline in the skill. Each upsert also lists every id in the
+collection to find stale entries (<code>store.py:117-127</code>), and
+re-pickles the whole BM25 index. No background pass rewrites the vault.
+The SessionStart injection is a menu plus topic names, sized by the
+number of top-level directories; it includes an unpushed-commit count
+and baton list, so it varies between sessions.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent's memory surface is the skills. <code>using-cortex</code>
+limits when to search to four signals — an explicit request, a reference
+to earlier work, a topic the SessionStart list named, or a hand-off —
+and says difficulty is not a signal
+(<code>skills/using-cortex/SKILL.md:26-55</code>). Choosing option 4 at
+the menu opts the session out until the user asks.</p>
+<p><code>/cortexes:query</code> is user-only
+(<code>disable-model-invocation: true</code>) and pre-approves exactly
+<code>cortex-vec search</code>, <code>grep</code>,
+<code>git rev-parse</code> and <code>git remote get-url</code>
+(<code>commands/query.md:1-14</code>). Its note on why
+<code>git remote</code> alone was too wide is the one scoped permission
+list in the plugin; every other command grants <code>Bash</code>
+whole.</p>
+<p>Takeoff batons are the one cross-session hand-off that is not memory
+by the plugin's own definition: git-ignored, never indexed, listed in
+the SessionStart menu for the current repo, and soft-deleted into
+<code>.takeoff/.trash/</code> when done
+(<code>skills/cortex-takeoff/SKILL.md:1-20</code>;
+<code>hooks/scripts/takeoff.sh:57</code>).</p>
+<p>Adapting it to another agent means replacing the hook payload parsing
+and the skill procedures; <code>cortex-vec</code> itself is
+agent-neutral.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Keyless mode cannot write.</strong> <code>cmd_upsert</code>
+calls <code>get_collection</code>, which calls
+<code>_get_embedding_function</code>, which calls
+<code>sys.exit(1)</code> without <code>OPENAI_API_KEY</code>, before the
+BM25 update at the end of the function (<code>store.py:26-32</code>,
+<code>:282-283</code>, <code>:330-336</code>). Every note saved by
+evolve, distill or broadcast is therefore missing from the BM25 index
+until <code>rebuild --bm25-only</code>, which no skill runs. The
+README's <em>"Without it nothing breaks"</em> holds for search only.</p>
+<p><strong>A keyless full rebuild drops the vector index.</strong>
+<code>cmd_rebuild</code> deletes the collection, then calls
+<code>get_collection</code> and exits (<code>store.py:200-207</code>).
+The collection is derived and a keyed rebuild restores it; the BM25
+index is not rebuilt either.</p>
+<p><strong>Deletion does not reach the index.</strong> No skill or
+command runs <code>cortex-vec delete</code> or <code>rebuild</code>, and
+<code>genesis</code>, described as rebuilding the index, has no step
+that runs <code>cortex-vec</code> beyond checking it is installed
+(<code>commands/genesis.md:20-35</code>). A page removed or renamed by
+hand stays in both indexes. A renamed page is indexed twice once the new
+path is upserted.</p>
+<p><strong>Confirmation is a request to the model.</strong> Distill's
+verdict prompt, broadcast's y/n per change and evolve's save all rely on
+the model following skill prose, with <code>Write</code>,
+<code>Edit</code> and <code>Bash</code> granted.
+<code>seal --expected-outcome</code> is a caller-set flag. The one
+mechanical gate is coverage before <code>no-insight</code>;
+<code>skip-routine</code>, which also retires a Raw without a page, has
+none (<code>distill_plan.py:308-320</code>).</p>
+<p><strong>Scope.</strong> <code>--repo</code> is a stored key with a
+predicate on every retrieval stream, earning
+<code>scope_enforced</code>. Its limits: <code>Notes/</code> always
+pass, the flag is the model's to add, grep and Raw search ignore it, and
+the key is a basename. The two sides also derive the slug differently.
+For a repo with no <code>origin</code>, the recorder falls back to the
+directory name while the SessionStart hook exits
+(<code>session-end-record.sh:67-72</code>;
+<code>hooks/scripts/lib/repo-slug.sh:13-19</code>).</p>
+<p><strong>Withheld marks.</strong></p>
+<ul>
+<li><code>tombstone</code> — nothing records a rejected value. Outcome
+markers are keyed on a Raw file, and a correction rewrites the
+page.</li>
+<li><code>trust_state</code> — the Raw outcome markers are processing
+states read by queue builders, not by retrieval, and the page
+<code>status</code> field is written to Chroma and read nowhere.</li>
+<li><code>bitemporal</code> — <code>created</code> and the Raw's date
+are record time only.</li>
+<li><code>audit_log</code> — <code>log.md</code> is described as
+append-only, but no code writes it; the model appends to it with
+<code>Edit</code> or <code>printf</code>
+(<code>skills/cortex-evolve/SKILL.md:88-107</code>). Recording and
+reclaim are logged only in git, which the hook names as <em>"the audit
+trail"</em> (<code>session-end-record.sh:321-322</code>).</li>
+<li><code>human_review</code> — the reviewer is the producing model's
+own conversation. The model holds the write tools and the skill asks it
+to ask; nothing checks an actor.</li>
+</ul>
+<p><strong>Failure recovery is the careful part.</strong> The Raw write
+is temp-then-rename; a signal leaves no partial file. Filter stderr is
+redacted before logging, and dropped if redaction cannot run. A failed
+push is logged and counted at the next SessionStart. Plan state is
+written atomically with 0600 permissions and moved aside as
+<code>.corrupt</code> rather than trusted.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin. CI runs both pytest suites with
+the full dependency set on Ubuntu
+(<code>.github/workflows/python.yml</code>). One file carries skip
+markers (<code>tests/test_query_command_smoke.py</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>test_build_where_repo_shape_narrows_projects</code> builds a
+four-page BM25 index, filters through the real
+<code>_build_where</code>, and asserts the <code>acme-web</code> project
+page is absent and the <code>acme-core</code> one present
+(<code>cortex-vec/tests/test_where_shape_lockstep.py:38-46</code>).
+<code>test_graph_does_not_leak_out_of_repo_projects</code> asserts the
+same through <code>fusion.search</code>
+(<code>test_fusion_graph_filter.py:53-63</code>), and the file pins the
+reranker off because a leak in its window failed only
+intermittently.</p>
+<p><strong>Tests that guard the tests.</strong>
+<code>test_build_where_emits_only_fields_matches_models</code> sweeps
+the producer's argument space and fails if it emits a field
+<code>_matches</code> does not model.
+<code>test_known_fields_and_matchers_cannot_drift_apart</code> asserts
+every known field can reject a record
+(<code>test_where_shape_lockstep.py:111-180</code>).
+<code>test_graph_neighbour_order_is_deterministic</code> pins a digest
+value because comparing against the function itself was shown by
+mutation to be circular
+(<code>test_fusion_graph_filter.py:245-274</code>).</p>
+<p><strong>Lifecycle.</strong> The distill plan's gates, including
+<code>no-insight</code> before full review, are covered
+(<code>test_distill_plan.py:63-72</code>); <code>skip-routine</code>
+appears in no test there. Reclaim has 22 cases, including the cross-repo
+refusal built on a recorded vault pair
+(<code>test_reclaim.py:157-176</code>).</p>
+<p><strong>Not covered.</strong> No test runs a real Chroma collection;
+every vector stream is a stub. <code>cmd_upsert</code>,
+<code>cmd_delete</code> and <code>_delete_stale_entries</code> are
+untested. <code>test_upsert_and_delete</code> asserts the BM25 count
+after a delete, not that a search leaves the page out
+(<code>test_bm25.py:46-55</code>).</p>
+<p><strong>Evaluation.</strong> <code>cortex-vec eval</code> runs grep,
+vector, BM25 and hybrid adapters over a JSONL query set and reports P@k,
+R@k and MRR. No query set or scorecard is committed. The README's
+<em>"R@5 0.50→0.667 on a wikilink-stress corpus"</em> has no artifact in
+the tree. No paper or citation block is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give every retrieval arm one filter language, and one
+evaluator table.</strong> Keep the field names and their comparisons in
+a single map, raise on a field the table lacks, and test that the
+producer's output set is a subset of it.</li>
+<li><strong>Gate the negative verdict on coverage, not the positive
+one.</strong> A positive needs one piece of evidence; "nothing here"
+needs proof that everything was read. Record reviewed ranges and refuse
+the negative until they cover the semantic spans.</li>
+<li><strong>Anchor state markers by position.</strong> A marker that
+counts only in the header or as the last line cannot be spoofed by a
+transcript that quotes it.</li>
+<li><strong>Delete redundancy only under a proof.</strong>
+Prefix-of-survivor plus same-label is cheap to check and makes the
+failure mode "duplicate stays".</li>
+<li><strong>Write captured records temp-then-rename, and log failures
+through the same redaction as the record.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An index write that needs the optional service before the
+mandatory one.</strong> Order the local update first, or make each arm's
+write independent.</li>
+<li><strong>A derived index with no reconciliation path the agent
+actually runs.</strong> If the source of truth is files, something on a
+reachable path must diff the index against them.</li>
+<li><strong>A confirmation step that exists only in the procedure
+text.</strong> If the answer is binding, the write should need something
+the model cannot supply.</li>
+<li><strong>A scope key that is a basename.</strong> Use the full remote
+or a stable id.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer on Claude Code who wants every session kept,
+is willing to distill by hand, and reads a Markdown vault in Obsidian
+anyway. The vault is durable and legible without the plugin. The index
+is the fragile layer. Without an OpenAI key it is effectively read-only
+after a rebuild, and the plugin expects a person to notice. Teams should
+walk away: there is one vault per machine, repo identity is a name, and
+no step checks who approved a note. Anyone wanting memory the agent
+writes and trusts without a person in the loop wants a different design;
+this one assumes the person.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the PyPI 0.9.0 wheel match <code>cortex-vec/</code> at the pin?
+It was not compared.</li>
+<li>In practice, do users hold a key, or run keyless and rebuild BM25 by
+hand?</li>
+<li>What did the internal upstream's
+<code>backfill-failed-raws.py</code> and the cited spec contain, and
+does anything in this tree depend on them beyond comments?</li>
+<li>How does Chroma evaluate the nested <code>$or</code> on a multi-repo
+page's per-repo entries in the installed Chroma version? No test
+exercises it.</li>
+<li>How large do real <code>Raw/</code> backlogs get, and how often does
+distill reach a <code>no-insight</code> verdict before the budget runs
+out?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Engine:</strong>
+<code>cortex-vec/src/cortex_vec/store.py</code>, <code>fusion.py</code>,
+<code>bm25.py</code>, <code>graph.py</code>, <code>parser.py</code>,
+<code>config.py</code>, <code>rerank.py</code>,
+<code>cli.py</code>.</li>
+<li><strong>Distill navigation:</strong> <code>distill_plan.py</code>,
+<code>distill_queue.py</code>, <code>raw_source.py</code>,
+<code>raw_map.py</code>, <code>raw_span.py</code>,
+<code>raw_view.py</code>, <code>reclaim.py</code>.</li>
+<li><strong>Hooks:</strong> <code>hooks/hooks.json</code>,
+<code>hooks/scripts/session-end-record.sh</code>,
+<code>hooks/scripts/session-start-inject.sh</code>,
+<code>hooks/scripts/filter-transcript.py</code>,
+<code>hooks/scripts/meta_session.py</code>,
+<code>hooks/scripts/lib/repo-slug.sh</code>,
+<code>hooks/scripts/takeoff.sh</code>.</li>
+<li><strong>Skills and commands:</strong>
+<code>skills/*/SKILL.md</code>, <code>commands/*.md</code>.</li>
+<li><strong>Eval:</strong>
+<code>cortex-vec/src/cortex_vec/eval/</code>.</li>
+<li><strong>Tests:</strong>
+<code>cortex-vec/tests/test_where_shape_lockstep.py</code>,
+<code>test_fusion_graph_filter.py</code>, <code>test_bm25.py</code>,
+<code>test_distill_plan.py</code>, <code>test_reclaim.py</code>;
+<code>tests/test_session_end_record.py</code>,
+<code>tests/test_session_start_inject.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>rg -n 'log\.md' --type py --type sh .</code> — no match; no
+code writes <code>log.md</code>.</li>
+<li><code>rg -n 'cortex-vec (rebuild|delete|upsert)' skills commands hooks</code>
+— <code>upsert</code> in the evolve, distill and broadcast skills; no
+<code>rebuild</code> or <code>delete</code>.</li>
+<li><code>rg -n 'cortex-vec' commands/genesis.md</code> — lines 20-34
+(install check) and 153 (<code>status</code>); no
+<code>rebuild</code>.</li>
+<li><code>rg -n 'get\("status"|\["status"\]' cortex-vec/src/cortex_vec/store.py cortex-vec/src/cortex_vec/fusion.py cortex-vec/src/cortex_vec/bm25.py cortex-vec/src/cortex_vec/graph.py</code>
+— written at <code>store.py:113</code>, read from frontmatter at 226 and
+293; never read from the index.</li>
+<li><code>rg -n -- '--graph' skills commands hooks</code> — one match, a
+git log flag in <code>hooks/scripts/rtk_cmd/git.py:170</code>; no skill
+enables the graph stream.</li>
+<li><code>rg -n 'PersistentClient|EphemeralClient|import chromadb' cortex-vec/tests tests</code>
+— no match.</li>
+<li><code>rg -n '_delete_stale_entries|cmd_delete|cmd_upsert' cortex-vec/tests</code>
+— no match.</li>
+<li><code>rg -n 'skip-routine' cortex-vec/tests/test_distill_plan.py</code>
+— no match.</li>
+<li><code>rg -n -i 'tombstone|valid_from|valid_to|valid_until|bitemporal' cortex-vec/src hooks/scripts --type py --type sh</code>
+— one match, a comment about a truncated transcript at
+<code>filter-transcript.py:559</code>.</li>
+<li><code>find . \( -name '*.jsonl' -o -path '*benchmarks*' \) -not -path './.git/*'</code>
+— no match; no query set or scorecard committed.</li>
+<li><code>find . -name 'backfill*' -not -path './.git/*'</code> and
+<code>find . -path '*docs/specs*' -not -path './.git/*'</code> — no
+match for either cited file.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git</code>
+— no match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/XBlueSky/cortexes/commit/ff2eaeb522f21bb1022ff25b090aad0072d2aca1"><code class="commit-id" title="ff2eaeb522f21bb1022ff25b090aad0072d2aca1">ff2eaeb5…</code></a>
+— first reading, at the head of the default <code>plugin</code> branch,
+a merge dated 22 September 2026. Two marks, <code>scope_enforced</code>
+and <code>negative_eval</code>. Screened before reading: 3 auto-run
+surfaces (<code>.claude-plugin/</code>, <code>hooks/</code>,
+<code>hooks/hooks.json</code> registering SessionStart and SessionEnd),
+1 build-time execution point
+(<code>cortex-vec/tests/conftest.py</code>), 0 inside the cooldown, 1
+unpinned surface (<code>cortex-vec/pyproject.toml</code> with no
+lockfile); no agent-addressed files. Read with <code>rg</code> and
+<code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

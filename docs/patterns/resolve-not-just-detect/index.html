@@ -420,6 +420,17 @@ re-proposes the pair only when a recomputed score moves by 0.02, so a
 mechanical reindex stays suppressed while a content edit earns a new
 judgement. The actor on both sides is the agent, and the disposition set
 is binary: nothing records a reason.</p>
+<p><a href="../../systems/octop-memory/">Octop Memory</a> is the
+counterexample for having a disposition in three places. Its rule-only
+promotion worker parks a candidate whose negation polarity flips against
+a live atom as <code>conflict</code>, and three surfaces resolve the
+queue: the JSON-RPC approve supersedes the contradicted atom, the CLI
+approve writes the new atom and leaves the old one live, and the source
+dashboard's approve sets the status column and writes no atom at all. A
+separate fallback pass promotes anything left in
+<code>needs_review</code> for seven days, including values it re-queued
+because they had been rejected twice. One resolver function called by
+every surface would have closed all three gaps.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

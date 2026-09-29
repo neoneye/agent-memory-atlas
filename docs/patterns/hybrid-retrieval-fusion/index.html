@@ -304,6 +304,18 @@ redistributes its weights to lexical-only when NumPy is missing while
 href="../../systems/moltis/">Moltis</a> makes the same situation
 explicit with a <code>keyword_only()</code> constructor and a
 <code>has_embeddings()</code> predicate callers can branch on.</p>
+<p><a href="../../systems/cortexes/">Cortexes</a> adds a third caution:
+<strong>a filter is only as strict as its weakest arm.</strong> Its
+vector stream hands the <code>--repo</code> clause to Chroma, while BM25
+and the wikilink graph evaluate it in Python, and until
+<code>cortex-vec</code> 0.9.0 the nested <code>$or</code> was ignored by
+one arm and never passed to the other. The repair keeps field names and
+comparisons in one table that raises on anything unmodelled, and a test
+fails when the clause producer emits a field that table lacks. Its
+degradation is explicit where <a
+href="../../systems/holographic/">Holographic</a>'s is not: without a
+key the vector stream is skipped by name and the weight redistributed,
+though the same key gates writes to the lexical index.</p>
 <p>Few systems defend their weights. <a
 href="../../systems/metaclaw/">MetaClaw</a> replays candidate policies
 against past turns and promotes one only on non-regression across eight

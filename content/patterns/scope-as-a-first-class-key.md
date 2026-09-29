@@ -869,6 +869,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 [Exomem](../../systems/exomem/) runs its scope predicate after the shared result cache rather than folding scope into the cache key. `op_find` caches principal-free candidates and then decides each hit for the bound principal, and the comment at the call warns that anything principal-dependent run earlier would cache one principal's decisions for the next. Membership reads the page's own `projects`, `tags` and `types`, and an unbound principal resolves to the most restrictive audience rather than the owner. The limit is who it binds: local stdio, the CLI and the shared REST key are all the owner, so the predicate separates remote audiences and never the owner's own agent.
 
+[MemHop](../../systems/memhop/) puts the key below the query layer entirely. Each record frame in its single `.meh` log carries an 8-byte agent id beside the record's id hash, and both engine indexes are keyed by agent first, so every read — a record fetch, a type scan, the archive search — takes the domain as an argument and has no spelling that crosses it. Its interface suite tests the boundary by keyword and by record id, each beside a read in the same test that must return rows. The one deliberate exception is the L3 knowledge graph, held in a reserved file-wide domain that every agent's session may import into, overwrite or delete.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

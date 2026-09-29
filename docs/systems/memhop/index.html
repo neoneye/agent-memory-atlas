@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An embedded Go memory library
+whose recall is a scene's LLM-distilled keyword tracks, with a seven-day
+raw-text window and background model consolidation.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemHop — Agent Memory Atlas">
+    <meta property="og:description" content="An embedded Go memory
+library whose recall is a scene's LLM-distilled keyword tracks, with a
+seven-day raw-text window and background model consolidation.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemHop — Agent Memory Atlas">
+    <meta name="twitter:description" content="An embedded Go memory
+library whose recall is a scene's LLM-distilled keyword tracks, with a
+seven-day raw-text window and background model consolidation.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemHop — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MemHop",
+      "description": "An embedded Go memory library whose recall is a scene's LLM-distilled keyword tracks, with a seven-day raw-text window and background model consolidation.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A six-layer keyword memory in one embedded
+Go file</p>
+          <h1>MemHop</h1>
+          <p class="document-deck">An embedded Go memory library whose
+recall is a scene's LLM-distilled keyword tracks, with a seven-day
+raw-text window and background model consolidation.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/qyiun666/MemHop">
+              <span>Source</span>
+              <strong>qyiun666/MemHop</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/qyiun666/MemHop/commit/5e1e1f68fe7b39695e401a2d021260095330cf03" title="5e1e1f68fe7b39695e401a2d021260095330cf03">
+              <span>Analyzed revision</span>
+              <code>5e1e1f68…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/qyiun666--MemHop" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>qyiun666--MemHop</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+OR Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>12,915
+lines of Go outside tests, the storage engine included</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>585
+commits on main by 1 contributor, 19 May – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>561
+Go test functions and 13 benchmarks in 32,325 lines; 15 of them need a
+live LLM endpoint</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MemHop is an embedded Go library that gives an agent a memory in one
+<code>.meh</code> file: a turn's text is kept verbatim for seven days,
+and what the agent carries beyond that is an LLM-extracted keyword track
+per turn, folded by a background "Dream" pass into keyword tracks of
+model-written reconstructions. The host drives it — <code>Search</code>
+opens a turn and returns the scene's keyword tracks, <code>Update</code>
+closes it — and there is no scored retrieval at all.</p>
+<p>What is notable is the storage engine and the test discipline around
+it: CRC-checked frames, A/B headers, torn-write recovery, per-agent
+domains keyed in every frame, and interface tests whose negative cases
+carry positive controls and say why. What is weak is the epistemics:
+every layer that outlives the window is model output, nothing marks it
+as less than true, and deletion and retention remove rows from reads
+while the bytes stay in the file.</p>
+<p>The library was built as the memory of MeowAgent, a host the README
+links as "coming soon". Its surface has moved fast: v1.5.0 (1 September
+2026) deleted a BM25, vector and entity retrieval subsystem with RRF
+fusion, and v1.6.5 (22 September 2026) retired the MCP server, leaving a
+Go module only (<code>CHANGELOG.md:369</code>, <code>:857</code>). The
+licence is a dual MIT or Apache-2.0 grant.</p>
+<p>Two marks. <code>scope_enforced</code>, because every record frame
+carries its agent id and every read path is keyed by it.
+<code>negative_eval</code>, on offline interface tests that assert a
+sibling domain's text and a deleted turn's originals stay out of
+populated reads. Section 9 names the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>topic</strong>: one turn of one scene,
+identified by a hash of the scene id and a per-scene turn counter
+(<code>internal/repo/core/model.go:162-169</code>). <code>Search</code>
+mints the id before the turn runs; the host appends the turn's originals
+and events under it; <code>Update</code> writes the user and agent text
+into slots 1 and 2 and asks the model for a keyword list, and only when
+that list is non-empty is the topic written
+(<code>internal/update.go:48-71</code>, <code>:105-141</code>). From
+that moment the track is on the scene's read surface. There is no
+candidate state and no check of what the model extracted.</p>
+<p><strong>What survives is not what was said.</strong> The extraction
+prompt asks for keywords whose union lets a reader recover the
+original's facts and tone, with synonyms added
+(<code>internal/cap/llmops/keywords.go:30-42</code>). The originals are
+swept seven days after they were written; the track is not
+(<code>internal/dream/prune.go:16-47</code>). So after a week a turn is
+its keyword list and nothing else, and no pointer leads back to the
+text.</p>
+<p><strong>Consolidation replaces tracks with tracks of
+reconstructions.</strong> When a scene passes 24 depth-1 topics, Dream
+asks the model which adjacent topics share a thread and to "reconstruct
+the multi-turn keywords" into prose written "as if you are rewriting
+what was originally said"
+(<code>internal/cap/llmops/consolidate.go:39-43</code>). That prose is
+stored as the fused parent's slot-1 utterance with the role
+<code>dream</code>, keywords are extracted from it, and the members sink
+to depth 2 (<code>internal/dream/compress.go:183-210</code>). The
+summary ages from the fold, so a week later the fused topic too is a
+keyword list — of a reconstruction, of keyword lists.</p>
+<p><strong>How a topic stops being a belief.</strong> The host deletes
+it (<code>DeleteTopic</code>, <code>DeleteScene</code>,
+<code>MergeScenes</code>), or Dream folds it off the surface. Nothing
+expires a track. A fold that would sink a topic to depth 4 deletes it
+instead (<code>internal/repo/l2layer.go:37-42</code>), and
+<code>internal/dream/repeated_folds_test.go</code> pins that repeated
+folding collapses to one surface row rather than reaching that gate. The
+profile's personality, MBTI and emotion are refined by Dream from up to
+200 top-ranked scene nodes; the host's name, role and preferences are
+left alone.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a MemHop turn becomes a keyword track, how Dream rewrites it, and what the seven-day window leaves</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a MemHop turn becomes a keyword track, how Dream rewrites it, and what the seven-day window leaves
+flowchart TD
+    S[&quot;Search: mint turn id,&lt;br/&gt;return scene&#39;s depth-1 tracks&quot;] --&gt; A[&quot;AppendArchive: originals&lt;br/&gt;and events under the turn id&quot;]
+    A --&gt; U{&quot;Update: one LLM call,&lt;br/&gt;keywords non-empty?&quot;}
+    U -- &quot;no&quot; --&gt; R[&quot;refused: records stay,&lt;br/&gt;no topic, turn left open&quot;]
+    U -- &quot;yes&quot; --&gt; T[&quot;turn topic on the surface:&lt;br/&gt;keyword track only&quot;]
+    T --&gt; C{&quot;scene has more than&lt;br/&gt;24 depth-1 topics?&quot;}
+    C -- &quot;yes, background Dream&quot; --&gt; G[&quot;model groups adjacent topics&lt;br/&gt;and reconstructs prose&lt;br/&gt;from their keywords&quot;]
+    G --&gt; F[&quot;fused parent: prose stored&lt;br/&gt;as role dream, keywords&lt;br/&gt;extracted from the prose&quot;]
+    F --&gt; K[&quot;members sink to depth 2,&lt;br/&gt;parent&#39;s track on the surface&quot;]
+    A --&gt; W{&quot;Dream sweep:&lt;br/&gt;older than 7 days?&quot;}
+    F --&gt; W
+    W -- &quot;yes&quot; --&gt; X[&quot;originals and summary&lt;br/&gt;tombstoned: only tracks remain&quot;]
+    T --&gt; D[&quot;DeleteTopic / DeleteScene:&lt;br/&gt;tombstone frames,&lt;br/&gt;bytes kept until CompactTo&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>MemHop is a library: <code>api</code> is the public facade,
+<code>internal</code> holds one composition root with per-layer packages
+under it, and <code>internal/repo/core</code> is the storage engine
+(<code>README.md:222-250</code>). Three direct dependencies —
+<code>xxhash</code>, <code>go-openai</code> and
+<code>golang.org/x/sys</code> — and no embedding or vector service
+(<code>go.mod</code>). The LLM is any OpenAI-compatible chat endpoint,
+called for keyword extraction, consolidation and profile
+distillation.</p>
+<p><strong>The engine is an append-only record log.</strong> Each frame
+is type, flags, length, agent id, id hash and a CRC32 over header and
+payload, 26 bytes of header
+(<code>internal/repo/core/frame.go:15-19</code>). Writes append and
+re-point an in-memory index; deletes append a <code>FlagDeleted</code>
+frame with no payload
+(<code>internal/repo/core/engine_delete.go:14-25</code>,
+<code>:75-93</code>). The file opens through an mmap with A/B headers
+and an optional snapshot of the index, and a torn tail is truncated on
+open. A cross-platform exclusive lock makes a second <code>Open</code>
+of the same file fail.</p>
+<p><strong>Domains share one file.</strong> The primary index is
+<code>agentID → idHash → offset</code> and the type index is keyed the
+same way (<code>internal/repo/core/engine.go:33-48</code>), so one file
+holds the primary agent, any number of named sub-agents, and a reserved
+domain for the shared L3 graph (<code>frame.go:40-49</code>). Each
+domain has its own lock, caches and Dream; different domains run in
+parallel.</p>
+<p><strong>Dream is the only background process.</strong>
+<code>Update</code> schedules it for one scene in a goroutine once that
+scene passes the topic threshold, one pass in flight per scene; a host
+may call it too (<code>internal/dream.go:80-114</code>). A pass holds
+the domain lock for its whole run, LLM calls included
+(<code>internal/dream.go:27-78</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing runs beside the host process: one file and an LLM endpoint.
+The endpoint is required at <code>Open</code> — <code>LlmConfig</code>
+is validated before the path is touched — and no turn can close without
+it, because <code>Update</code> refuses to write a topic without
+keywords. Offline, the store opens and reads, and nothing new becomes
+memory. Install is <code>go get</code>. The <code>.meh</code> format is
+binary JSON-in-frames and not hand-editable; only format
+<code>0x0012</code> opens, with no migration from older files
+(<code>README.md:40</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Turn open.</strong> <code>DB.Search</code> resolves the scene
+— the domain's current one, a new one, or a named one that must exist —
+advances its turn counter, reads the profile, and returns the scene's
+depth-1 topics from the L2Meta cache with the new turn id
+(<code>internal/search.go:33-74</code>, <code>:85-118</code>;
+<code>internal/scene/surface.go:14-28</code>). No LLM call and no
+scoring.</p>
+<p><strong>Turn content.</strong> <code>Session.AppendArchive</code>
+validates and writes one utterance or event into the open turn; the call
+names no ids, and with no turn open it is refused. A host may not append
+with role <code>dream</code>
+(<code>internal/content/content.go:76-86</code>;
+<code>api/session.go:299</code>).</p>
+<p><strong>Turn close.</strong> <code>DB.Update</code> batch-validates
+and writes the input, output and outcome records, then
+<code>settleLocked</code> reads the turn's utterances, calls
+<code>llmops.ExtractKeywords</code>, and writes the turn topic with the
+utterances' time bounds (<code>internal/update.go:48-141</code>). Inputs
+over 2,000 runes are chunked, and each chunk runs a ladder of three
+token budgets and one format-constrained retry
+(<code>internal/cap/llmops/keywords.go:61-132</code>).</p>
+<p><strong>Consolidation.</strong> <code>RunDream</code> sweeps archives
+and plan nodes first, then <code>CompressScenes</code> fans out at most
+four scenes, asks <code>llmops.Consolidate</code> for groups, and
+<code>applyOneGroup</code> writes the summary, extracts its keywords,
+creates the fused parent and sinks the members, rolling back on any
+failure (<code>internal/dream.go:27-78</code>;
+<code>internal/dream/compress.go:33-237</code>). Structure stages
+rebuild L1 nodes and hyperedges, decay them, and distill the
+profile.</p>
+<p><strong>Correction.</strong> <code>DeleteTopic</code> and
+<code>DeleteScene</code> enumerate the subtree, then
+<code>scene.DeleteCascade</code> tombstones archives, plan nodes and
+topic and scene records, deepest first
+(<code>internal/scene/delete.go:25-44</code>). <code>DeleteL3</code>
+detaches scene anchors across domains.</p>
+<p><strong>Reads beyond the surface.</strong> <code>SearchL4</code>
+takes keyword, time, ids, topic, kind, plan step and content type as
+conjunctive conditions (<code>internal/repo/l4layer.go:107-121</code>,
+<code>:183-198</code>). <code>QueryL3Nodes</code> is a case-insensitive
+substring over title, content and keywords, and
+<code>QueryL3Subgraph</code> a BFS
+(<code>internal/graph/query.go:41-55</code>).</p>
+<p><strong>Tests.</strong> <code>api/</code> holds the facade suites,
+<code>internal/</code> the white-box ones, and <code>test/</code> the
+host-face interface suite against a mock OpenAI server; seven
+<code>test/</code> files carry the <code>integration</code> tag and need
+a real endpoint.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Eleven record types share one frame format, in six groups plus a
+registry record naming each sub-agent (<code>frame.go:23-38</code>):</p>
+<ul>
+<li><strong><code>ProfileSlot</code></strong> (L0): name, role and
+preferences from the host; personality, MBTI and emotion distilled by
+Dream; <code>AgentType</code> stamped by the library
+(<code>model.go:18-33</code>).</li>
+<li><strong><code>SceneNode</code>, <code>SceneEdge</code></strong>
+(L1): one node per scene with importance, valence and arousal, and
+keyword-overlap hyperedges whose weight decays. Dream is the only
+writer.</li>
+<li><strong><code>SceneSlot</code>, <code>TopicSlot</code></strong>
+(L2): a scene is a host session with a turn counter and an optional L3
+anchor; a topic is a turn or fused group with a parent pointer, depth,
+name, one keyword track and two timestamps
+(<code>model.go:80-130</code>).</li>
+<li><strong><code>HypergraphSlot</code>, <code>HypergraphNode</code>,
+<code>HypergraphEdge</code></strong> (L3): named graphs of typed nodes
+with keywords and an optional source reference, and unweighted kinded
+edges (<code>model.go:171-202</code>).</li>
+<li><strong><code>ArchiveSlot</code></strong> (L4): one utterance or
+event, addressed by topic and slot, with role, content type, event type,
+plan-step binding, <code>CreatedAt</code> and content
+(<code>model.go:217-244</code>).</li>
+<li><strong><code>PlanNode</code></strong> (L5): one step of a turn's
+task tree, with status <code>in_progress</code>, <code>done</code> or
+<code>failed</code> (<code>model.go:246-288</code>).</li>
+</ul>
+<p><strong>Scope</strong> is the frame's agent id, plus the scene id on
+each topic. <strong>Time</strong> is the host-supplied
+<code>CreatedAt</code> on archives, required in milliseconds and refused
+in seconds or microseconds, and the user and agent timestamps on topics.
+There is no validity time, no source on a keyword track, and no status
+on any memory row; the one provenance mark is the <code>dream</code>
+role on a fused summary.</p>
+<p><strong>Ids are positional.</strong> A turn is
+<code>hash("turn:"+scene+":"+seq)</code>, a content slot
+<code>hash("content:"+topic+":"+seq)</code>, and a fused parent hashes
+its bounds and its sorted member set (<code>model.go:141-169</code>,
+<code>:237-244</code>). Re-closing a turn rewrites its two dialogue
+slots in place instead of adding versions.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is none in the ranking sense, by decision. What a host injects
+is the keyword tracks of the scene's depth-1 topics, in the order the
+turns were spoken, served from memory
+(<code>internal/scene/surface.go:14-28</code>). Choosing the scene is
+the host's job: one scene is one session, so the library never guesses
+which past conversation a message belongs to.</p>
+<p>That removes stale-hit and over-recall failures by construction and
+moves them into consolidation. Everything in the scene is recalled every
+turn, and the size of that is held only by Dream converging the scene
+toward <code>DreamCompressMinTopics</code> (default 20) once it passes
+24. A track has no length cap — the extraction prompt says "No limit on
+count" — so the injected block is bounded in topics and unbounded in
+words (<code>keywords.go:37</code>). Topics in other scenes of the same
+domain are not recalled unless the host opens that scene.</p>
+<p>The other reads are lookups. <code>SearchL4</code> over originals is
+a lowercase substring match, and outside the seven-day window it finds
+nothing because the records are gone (<code>l4layer.go:198</code>). L3
+node queries are substring, type and id filters that AND together;
+subgraph walks can be narrowed by edge kind, and an undefined kind is
+refused rather than answered with an empty graph. The
+<code>profile.Brief</code> digest that <code>Search</code> returns is
+capped per field, at 2,100 runes worst case
+(<code>internal/cap/profile/profile.go:19-34</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and host-driven. The engine never decides that
+something is worth remembering: every turn the host closes becomes a
+topic, and the agent's own output is distilled beside the user's, so a
+claim the agent invented is extracted into the same track as one the
+user made (<code>internal/update.go:76-97</code>). Nothing filters
+injected or adversarial text before extraction.</p>
+<p>Updates overwrite in place under a positional id; the old frame stays
+in the log. <code>UpdateL0</code> replaces the host-owned profile
+fields, and the guide warns that a write omitting
+<code>Personality</code> clears the Dream-refined value until the next
+pass (<code>README.md:177</code>). <code>ImportL3</code> has three modes
+— skip, merge (union keywords, append content) and overwrite — over the
+shared pool (<code>internal/graph/import.go:40-57</code>;
+<code>internal/cap/knowledge/nodemerge.go:16-40</code>).</p>
+<p>Consolidation validates what the model proposes against what it was
+shown. A group of one, a member another group already claimed, an id not
+in the listing handed to the model, and an empty summary are each
+counted unusable and skipped; an engine failure mid-group rolls back the
+parent, the summary and any members already sunk
+(<code>internal/dream/compress.go:102-142</code>,
+<code>:160-237</code>). The prompt ranks "an unrelated pair fused into
+one thread is a false memory" above the compression target
+(<code>consolidate.go:41</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p><code>Update</code> is synchronous: one keyword-extraction call,
+inside the domain lock, and the turn is not memory until it returns. A
+long turn is chunked into several calls. After <code>Update</code>
+returns, the track is readable immediately. Dream is deferred but not
+free for the agent: it holds the same lock across one consolidation call
+per qualifying scene, one extraction call per applied group and one
+distillation call over up to 200 samples, so a turn that starts while a
+scene is consolidating waits (<code>internal/dream.go:27-32</code>).
+Every Dream reads all plan nodes from disk; the archive sweep works from
+the in-memory index. Nothing rewrites the whole store. Injection is the
+whole scene's surface each turn, placed wherever the host puts it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MemHop ships no tool server and no hook. The host holds a
+<code>Session</code> per domain and calls <code>Search</code> at turn
+start, <code>AppendArchive</code> while the turn runs and
+<code>Update</code> at its end; <code>INTEGRATION_GUIDE.md</code> §6.5
+shows the loop behind a decision-loop kernel's memory port, and §7.7 is
+a suggested table of eighteen tool bindings with the JSON keys a model
+fills (<code>INTEGRATION_GUIDE.md:556-600</code>).
+<code>api/surface_tool_map_test.go</code> holds the table to the
+facade's shapes, and fails if a struct gains an unlisted field or an
+admin-face method enters the table.</p>
+<p>The split is the design's agency boundary. The eight admin methods —
+scene and topic delete, merge, rename, graph rename and delete, and
+<code>AgentID</code> — are "deliberately absent" from the tool table
+because "a model that can destroy records needs the host's approval
+path" (<code>INTEGRATION_GUIDE.md:596-599</code>). The model may still
+write the profile, append archives, trigger Dream and import into the
+shared graph in overwrite mode. Porting to another Go host is direct; to
+another language it means embedding the library behind a service, which
+the project removed when it retired MCP.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Storage integrity is the strongest part.</strong> Frames are
+CRC-checked, a torn tail is truncated on open, and headers alternate
+(<code>internal/repo/core/engine_recovery.go</code>);
+<code>crash_recovery_test.go</code> and
+<code>snapshot_vs_scan_test.go</code> cover both. An index entry
+pointing past the record area is reported as corruption rather than as
+not-found (<code>engine_read.go:25-35</code>).</p>
+<p><strong>Deletion and retention remove rows from reads, not from the
+file.</strong> <code>DeleteTopic</code>, <code>DeleteScene</code> and
+the seven-day sweep all end in <code>DeleteRecordBatch</code>, which
+appends tombstones (<code>l4layer.go:44-68</code>;
+<code>engine_delete.go:41-72</code>). The deleted payload stays in the
+<code>.meh</code> file until <code>CompactTo</code> writes a copy with
+only live records, which the host must swap in itself
+(<code>internal/db.go:275-300</code>). Nothing calls it automatically.
+The sweep's own comment, "retention is what bounds the file"
+(<code>prune.go:24</code>), is true of the live set and not of the
+bytes.</p>
+<p><strong>Nothing withholds a memory.</strong> A keyword track, a model
+reconstruction and a host-imported graph node are all read as they are.
+The <code>dream</code> role separates a summary from an utterance on the
+archive read, and a host cannot forge it, but the track extracted from
+that summary carries no such mark on the surface.</p>
+<p><strong>The shared L3 pool crosses the domain boundary by
+design.</strong> Any domain's session can import, overwrite, rename or
+delete a graph every other domain reads; the tests assert that sharing
+(<code>test/api_interface_multi_test.go:135-151</code>).</p>
+<p>Marks withheld:</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — <code>FlagDeleted</code>
+frames are keyed on a record id and dropped by <code>CompactTo</code>;
+nothing records a rejected value, and a re-closed or re-imported claim
+is written again.</li>
+<li><strong><code>trust_state</code></strong> — no status field on
+topics, archives, graph nodes or the profile;
+<code>PlanNode.Status</code> is task progress, not belief.</li>
+<li><strong><code>bitemporal</code></strong> — <code>CreatedAt</code> is
+when a line was said, the topic timestamps are its span; no validity
+interval exists.</li>
+<li><strong><code>audit_log</code></strong> — the record log is the
+storage mechanism, is compacted away, and has no reader of past frames;
+<code>DreamReport</code> is returned, not stored.</li>
+<li><strong><code>human_review</code></strong> — no memory waits in any
+state; <code>Update</code> writes the topic on the extraction's
+return.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests and ran none of them. The suite is large for the
+code: 561 test functions and 13 benchmarks in 32,325 lines against
+12,915 lines of source. Of all 574 tests and benchmarks, every one but
+15 runs offline against a mock OpenAI server, and CI runs
+<code>go build</code>, <code>go vet</code>, <code>go test ./...</code>
+and a race run on Linux, macOS and Windows, plus a <code>gofmt</code>
+check and a compile of both guides' skeletons off Windows
+(<code>.github/workflows/workflow.yml</code>).</p>
+<p>The negative cases are the reason for the mark. The isolation tests
+read a sibling's text by keyword and by archive id and assert nothing
+comes back, each beside a read that must return rows — one with the
+failure message <em>"beta's unfiltered read came back empty, so the ids
+case proves nothing"</em>
+(<code>test/api_interface_multi_test.go:87-92</code>,
+<code>:380-394</code>). The delete test asserts the deleted turn's
+originals read back empty while the kept turn stays on the surface
+(<code>test/api_interface_scene_test.go:417-433</code>). Many cases also
+pin a guide's numbers and symbols to the code
+(<code>api/guide_numbers_test.go</code>,
+<code>api/guide_symbols_test.go</code>).</p>
+<p>What the offline suite cannot test is the model. Keyword
+faithfulness, consolidation fidelity and the "false memory" rule in the
+consolidation prompt are exercised only by the integration files —
+<code>TestKeywordFidelity</code>,
+<code>TestDreamCompressionFidelity</code>,
+<code>TestCoreCycleUpdateDream</code> — which need
+<code>MEMHOP_TEST_LLM_KEY</code> and are not in CI.
+<code>benches/fixtures/locomo10.json</code> is used as conversation
+material for ingestion, and the README says why there is no LoCoMo or
+LongMemEval score (<code>test/fixture_test.go:15-18</code>;
+<code>README.md:218-220</code>). No benchmark result is committed. No
+paper was found: the only <code>citation</code> matches are about citing
+code symbols in guides.</p>
+<p>Tests I would want: that a fused group's track contains no keyword
+absent from its members' tracks; and that bytes of a deleted topic are
+absent from the file after <code>CompactTo</code> and present before it,
+so the guarantee a host must act on is pinned.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Key the domain into the frame, not the path.</strong> An
+agent id in every record header, with every index keyed by it first,
+gives one file many tenants and makes a foreign-domain read structurally
+impossible rather than filtered.</li>
+<li><strong>Put a positive control in the same test as the
+negative.</strong> "The same query shape returns rows inside the domain
+— so this is scoping, not a filter that never matches" is the comment to
+copy.</li>
+<li><strong>Validate model proposals against what the model was
+shown.</strong> Refuse a merge group naming an id outside the listing, a
+member already claimed, or an empty summary, and roll back a partial
+group.</li>
+<li><strong>Keep destructive verbs off the tool table and test that they
+stay off.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Chaining lossy model transforms with the source on a
+timer.</strong> Keywords of a reconstruction of keywords, with the
+originals swept after a week, is a store whose contents drift from what
+was said and cannot be checked against it.</li>
+<li><strong>Calling a tombstone sweep retention.</strong> If deletion
+appends, say what bounds the file and make compaction part of the
+lifecycle, or the privacy guarantee is the host's unwritten chore.</li>
+<li><strong>Running consolidation under the lock the next turn
+needs.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>MemHop suits a Go host that runs one agent, or a family of them, over
+sessions it already delimits, and wants a single-file store with no
+retrieval to tune and a storage layer engineered with unusual care. It
+suits badly anything that must answer "what did the user actually say"
+after a week, anything with a deletion obligation the host will not meet
+with <code>CompactTo</code>, and anything that needs recall across
+sessions by relevance, since a topic outside the open scene is reachable
+only by substring over originals that expire. A single maintainer and a
+surface that changed shape twice in September 2026 make it a design to
+study before a dependency to adopt.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How faithful are the tracks in practice? The integration fidelity
+tests exist and need a live model; no run is committed.</li>
+<li>Does the host MeowAgent call <code>CompactTo</code>, and on what
+schedule?</li>
+<li>How large does a scene's surface get between the 24-topic trigger
+and the fold, given tracks have no length cap?</li>
+<li>Is the L3 pool meant to be writable by a sub-agent's model in
+overwrite mode, or only by the host?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Engine:</strong> <code>internal/repo/core/frame.go</code>,
+<code>engine.go</code>, <code>engine_read.go</code>,
+<code>engine_write.go</code>, <code>engine_delete.go</code>,
+<code>engine_recovery.go</code>, <code>engine_lifecycle.go</code>,
+<code>reclaim.go</code>, <code>model.go</code>,
+<code>model_enums.go</code>.</li>
+<li><strong>Layers:</strong> <code>internal/repo/l0layer.go</code> …
+<code>l5layer.go</code>, <code>internal/repo/index/l2meta.go</code>,
+<code>internal/repo/index/l4.go</code>.</li>
+<li><strong>Turn loop:</strong> <code>internal/search.go</code>,
+<code>internal/update.go</code>,
+<code>internal/content/content.go</code>,
+<code>internal/scene/surface.go</code>.</li>
+<li><strong>Dream:</strong> <code>internal/dream.go</code>,
+<code>internal/dream/compress.go</code>,
+<code>internal/dream/prune.go</code>,
+<code>internal/dream/structure.go</code>,
+<code>internal/cap/engram/decay.go</code>,
+<code>internal/cap/profile/distill.go</code>.</li>
+<li><strong>Prompts:</strong>
+<code>internal/cap/llmops/keywords.go</code>,
+<code>consolidate.go</code>, <code>distill.go</code>.</li>
+<li><strong>Domains:</strong> <code>internal/agents.go</code>,
+<code>internal/db.go</code>.</li>
+<li><strong>Correction:</strong> <code>internal/scene/delete.go</code>,
+<code>internal/l2.go</code>, <code>internal/l3.go</code>.</li>
+<li><strong>Facade:</strong> <code>api/open.go</code>,
+<code>api/session.go</code>, <code>api/types.go</code>.</li>
+<li><strong>Tests:</strong>
+<code>test/api_interface_multi_test.go</code>,
+<code>test/api_interface_scene_test.go</code>,
+<code>test/api_interface_delete_cascade_test.go</code>,
+<code>internal/dream/repeated_folds_test.go</code>,
+<code>api/surface_tool_map_test.go</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rloiE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' --exclude-dir=.git .</code>
+— <code>README.md</code> and <code>api/guide_symbols_test.go</code>,
+both about citing code symbols; no <code>CITATION.cff</code>.</li>
+<li><code>grep -rniE 'verified|pending|candidate|approve|quarantin|trust' --include='*.go' . | grep -v _test</code>
+— comments only; no status field on a memory row.</li>
+<li><code>grep -rniE 'audit|journal|mutation log' --include='*.go' .</code>
+— no match.</li>
+<li><code>grep -rnE 'valid_from|valid_to|ValidFrom|ValidUntil|valid_at|invalid_at' --include='*.go' .</code>
+— no match.</li>
+<li><code>grep -rniE 'embedding|cosine|vector' --include='*.go' . | grep -v _test</code>
+— comments recording the removed embedding service; no read path.</li>
+<li><code>grep -rniE '\bmcp\b' --include='*.go' .</code> — no
+match.</li>
+<li><code>grep -rnE '\.DeleteRecordBatch\(|\.DeleteRecord\(' --include='*.go' . | grep -v _test</code>
+— every delete, sweep and decay path; each appends tombstones.</li>
+<li><code>grep -rn 'CompactTo\|\.Compact(' --include='*.go' . | grep -v _test</code>
+— <code>internal/db.go</code> and <code>api/open.go</code> only; no
+caller inside the library.</li>
+<li><code>grep -rn 'RoleDream' --include='*.go' . | grep -v _test</code>
+— one writer, <code>internal/dream/compress.go:190</code>.</li>
+<li><code>grep -rlE '^//go:build integration' --include='*_test.go' .</code>
+— seven files under <code>test/</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/qyiun666/MemHop/commit/5e1e1f68fe7b39695e401a2d021260095330cf03"><code class="commit-id" title="5e1e1f68fe7b39695e401a2d021260095330cf03">5e1e1f68…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 25
+September 2026. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>; section 9 names the five withheld. Screened
+before reading: no auto-run surface, one build-time execution point
+(<code>Makefile</code>), no unpinned surface, and <code>go.mod</code>
+and <code>go.sum</code> inside the cooldown — every file in a depth-1
+clone dates to the tip; the per-package <code>agent.md</code> files were
+treated as data. Read with <code>grep</code> and <code>sed</code>;
+nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

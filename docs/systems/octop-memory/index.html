@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python memory runtime that
+extracts candidates from transcripts, promotes them to atoms through
+five rule checks, and queues conflicts for a person.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Octop
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A Python memory runtime
+that extracts candidates from transcripts, promotes them to atoms
+through five rule checks, and queues conflicts for a person.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Octop
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python memory runtime
+that extracts candidates from transcripts, promotes them to atoms
+through five rule checks, and queues conflicts for a person.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Octop Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Octop Memory",
+      "description": "A Python memory runtime that extracts candidates from transcripts, promotes them to atoms through five rule checks, and queues conflicts for a person.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Candidate-gated fact memory for OpenClaw
+and Hermes</p>
+          <h1>Octop Memory</h1>
+          <p class="document-deck">A Python memory runtime that extracts
+candidates from transcripts, promotes them to atoms through five rule
+checks, and queues conflicts for a person.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/TencentCloud/octop-memory">
+              <span>Source</span>
+              <strong>TencentCloud/octop-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/TencentCloud/octop-memory/commit/8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf" title="8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf">
+              <span>Analyzed revision</span>
+              <code>8b6abc3b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/TencentCloud--octop-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>TencentCloud--octop-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>32,665
+lines of Python under src/octop_memory, a LangGraph checkpoint store
+among them; 1,030 lines of Python and 2,581 of TypeScript in the Hermes
+and OpenClaw plugins</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4
+commits on main by 2 contributor accounts, all on 24 September 2026; the
+history opens with one commit of the whole tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,261
+pytest functions in 81 files, 22,814 lines; 67 node:test cases in the
+OpenClaw plugin; PostgreSQL cases skip without a server, and CI starts
+none</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Octop Memory is a Python memory runtime for LLM agents, published by
+TencentCloud under MIT at version 1.0.0. It runs as a library, a CLI, a
+JSON-RPC bridge, and two host plugins: an OpenClaw extension that spawns
+the bridge as a subprocess and a Hermes provider that calls it
+in-process. Storage is SQLite with FTS5 by default, or PostgreSQL.</p>
+<p>The memory is a five-layer pipeline. Raw events are captured at the
+end of each agent turn. An LLM extracts candidates from them, on
+OpenClaw in the same hook, and a rule-only worker decides each candidate
+in five checks: value, evidence, entity, duplicate and conflict. A
+candidate that passes becomes an <code>AtomCard</code>, a fact with a
+verbatim quote and the raw event ids it came from. Entity pages and
+episode summaries are derived beside the atoms.</p>
+<p>What is notable is how much of the write path refuses to trust the
+model. The parser writes <code>pending</code> as a literal, and the
+extractor's <code>recommended_action</code> is stored and never read. A
+candidate whose cited raw event is missing is parked for review rather
+than dropped, and promotion writes the atom, its supersession, its tree
+leaf, a page-dirty flag and a journal row in one transaction.</p>
+<p>What is weak is the review queue's far end. Three surfaces resolve a
+parked candidate and they disagree: one supersedes the contradicted
+atom, one leaves both live, and the web dashboard marks the candidate
+promoted without writing an atom at all. Conflict detection is a
+negation-token flip between assertions that share three content tokens.
+The opt-in vector arm returns atoms that deprecate and delete have
+retired.</p>
+<p>Five marks: <code>trust_state</code>, <code>scope_enforced</code> on
+the PostgreSQL tier, <code>audit_log</code>, <code>human_review</code>
+and <code>negative_eval</code>. Section 9 names the two withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A fact becomes a belief when a candidate is promoted to an atom.
+Before that it is a claim with a status, and nothing that assembles a
+prompt reads candidates. The candidate may be dropped as chit-chat,
+merged into an identical live atom, parked as <code>needs_review</code>
+or <code>conflict</code>, or promoted. An atom stops being a belief when
+<code>deprecated_at</code> is set by replacement, deprecation, deletion
+or consolidation. After 90 days the GC deletes the row.</p>
+<p><strong>The worker demotes; it does not admit.</strong> Every
+candidate becomes an atom unless a check fires
+(<code>pipeline/promotion/__init__.py:185-258</code>). Low importance
+and low confidence together drop it. An empty evidence list drops it; a
+cited raw event missing from L0 parks it, because <em>"the user might
+still want to manually re-attach evidence"</em>
+(<code>checks.py:205-237</code>). An exact normalised match against a
+live atom merges it. An opposite negation polarity against a live atom
+on the same entity, sharing at least three content tokens, parks it as
+<code>conflict</code> (<code>checks.py:510-553</code>).</p>
+<p><strong>A person resolves the queue, and where they do it decides the
+outcome.</strong> The JSON-RPC <code>promote_candidate</code>
+force-promotes and supersedes the contradicted atom
+(<code>__init__.py:260-314</code>). The CLI
+<code>candidate review</code> writes the atom and supersedes nothing
+(<code>candidate_cmd.py:595-659</code>). The web dashboard sets the
+status column and writes nothing else
+(<code>adapters/dashboard/server.py:578-606</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an Octop Memory candidate becomes a recalled atom, where it can be parked, and the three ways a person resolves a parked one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an Octop Memory candidate becomes a recalled atom, where it can be parked, and the three ways a person resolves a parked one
+flowchart TD
+    H[&quot;turn-end capture hook&lt;br/&gt;OpenClaw or Hermes&quot;] --&gt; CAP[&quot;raw events,&lt;br/&gt;own recall echoes dropped&quot;]
+    CAP --&gt; EX[&quot;LLM extractor: OpenClaw agent_end,&lt;br/&gt;or the CLI on Hermes&quot;]
+    EX --&gt; C[&quot;candidate, status = pending&lt;br/&gt;(literal, not model output)&quot;]
+    C --&gt; V{&quot;low importance&lt;br/&gt;and low confidence?&quot;}
+    V -- &quot;yes&quot; --&gt; REJ[&quot;rejected by rule&quot;]
+    V -- &quot;no&quot; --&gt; E{&quot;cited raw event ids&lt;br/&gt;all present in L0?&quot;}
+    E -- &quot;none cited&quot; --&gt; REJ
+    E -- &quot;one missing&quot; --&gt; NR[&quot;needs_review&quot;]
+    E -- &quot;yes&quot; --&gt; ENT[&quot;resolve entity:&lt;br/&gt;alias, name, optional LLM&quot;]
+    ENT --&gt; D{&quot;exact signature of a&lt;br/&gt;live atom on the entity?&quot;}
+    D -- &quot;yes&quot; --&gt; MG[&quot;merged, candidate promoted,&lt;br/&gt;no new atom&quot;]
+    D -- &quot;no&quot; --&gt; K{&quot;negation flip vs a live atom&lt;br/&gt;sharing 3 content tokens?&quot;}
+    K -- &quot;yes&quot; --&gt; CF[&quot;conflict&quot;]
+    K -- &quot;no&quot; --&gt; AT[&quot;atom + tree leaf + journal,&lt;br/&gt;one transaction&quot;]
+    NR --&gt; Q[&quot;review queue&quot;]
+    CF --&gt; Q
+    Q -- &quot;JSON-RPC promote_candidate&quot; --&gt; AP1[&quot;atom written, contradicted&lt;br/&gt;atom superseded&quot;]
+    Q -- &quot;CLI candidate review&quot; --&gt; AP2[&quot;atom written,&lt;br/&gt;contradicted atom left live&quot;]
+    Q -- &quot;web dashboard approve&quot; --&gt; AP3[&quot;status = promoted,&lt;br/&gt;no atom written&quot;]
+    Q -- &quot;candidate fallback,&lt;br/&gt;7 days in needs_review&quot; --&gt; AP4[&quot;low-confidence atom,&lt;br/&gt;actor rule&quot;]
+    AT --&gt; R{&quot;memory_search&quot;}
+    AP1 --&gt; R
+    R -- &quot;FTS arms&quot; --&gt; F[&quot;deprecated_at IS NULL&quot;]
+    R -- &quot;vector arm&quot; --&gt; G[&quot;get_atom by id,&lt;br/&gt;no deprecation filter&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>Memory</code> in <code>core.py</code> is the facade over a
+<code>MemoryBackend</code>, with SQLite and PostgreSQL implementations
+of one contract (<code>storage/backends/__init__.py</code>).
+<code>MemoryRuntime</code> in <code>application/runtime.py</code> holds
+the host operations: capture, extract, promote, search and get.
+<code>Bridge</code> wraps the runtime as JSON-RPC and adds the
+dashboard's read and write methods to the same dispatch table
+(<code>adapters/bridge/handlers.py:51-61</code>).
+<code>tests/test_architecture_boundaries.py</code> pins the layering:
+pipeline and storage never import adapters.</p>
+<p><strong>The two backends partition differently.</strong> SQLite
+prefixes every table name with the namespace, so
+<code>agent_x_atoms</code> and <code>agent_y_atoms</code> share a file
+and nothing else (<code>sqlite.py:211-480</code>). PostgreSQL puts every
+namespace in one schema, adds <code>namespace</code> to each primary
+key, and binds it into every query (<code>postgres.py:400-423</code>). A
+namespace names one agent's store: the portable exporter discovers them
+as <code>~/.octop/agents/*/memory.sqlite</code>.</p>
+<p>The LLM is injected. Without one, capture, manual <code>store</code>
+and FTS recall work, and extraction returns a failure reason and leaves
+the events unmarked for the next turn (<code>runtime.py:545-554</code>).
+A LangGraph checkpointer shares the database file and a large part of
+the code; it holds execution state, not memory, and is not covered
+here.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install octop-memory</code> has no core dependencies beyond
+the standard library. PostgreSQL, the CLI, and the checkpointers are
+extras. The dashboard ships only from a source checkout:
+<code>pyproject.toml:87-92</code> excludes it from the wheel. The
+OpenClaw plugin needs <code>llm.endpoint</code> configured before it
+calls extract (<code>index.ts:204</code>). A wrong atom is fixed with
+<code>replace_atom</code> from the JSON-RPC surface,
+<code>Memory.delete</code> on its tree leaf, or the CLI.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture</strong> — <code>MemoryRuntime.capture</code>
+filters by role, strips <code>&lt;think&gt;</code> blocks, drops text
+carrying the recall marker <code>## Memory Recall</code>, skips short
+messages unless they state memory intent, redacts, and writes one batch
+(<code>runtime.py:316-425</code>).</li>
+<li><strong>Extract and promote</strong> — <code>_extract_impl</code>
+lists the session's raw events, skips ids this process already
+extracted, runs <code>CandidateExtractor</code>, stores candidates, then
+runs <code>PromotionWorker.promote</code> on them
+(<code>runtime.py:512-575</code>).</li>
+<li><strong>Promotion</strong> — <code>_promote_one</code> and the five
+checks (<code>pipeline/promotion/__init__.py:185-258</code>;
+<code>checks.py:178-553</code>); <code>_apply_promote</code> wraps the
+writes in <code>backend.transaction()</code> and indexes the vector
+after commit (<code>__init__.py:408-507</code>).</li>
+<li><strong>Human resolution</strong> —
+<code>PromotionWorker.approve</code> (<code>__init__.py:165-179</code>),
+<code>promote_candidate</code> and <code>reject_candidate</code> in
+<code>dashboard_data.py:871-948</code>, the CLI <code>review</code> loop
+(<code>candidate_cmd.py:523-724</code>), and the FastAPI PATCH route
+(<code>server.py:578-606</code>).</li>
+<li><strong>Correction</strong> — <code>Memory.replace_atom</code>
+writes a successor, supersedes, journals <code>user_edit</code> and
+swaps the vector entry (<code>core.py:678-762</code>);
+<code>deprecate_atom</code> and <code>delete</code> set
+<code>deprecated_at</code> (<code>core.py:238-279</code>,
+<code>:486-540</code>).</li>
+<li><strong>Recall</strong> — <code>recall_for_prompt</code> runs cache,
+parse, route, gather, raw policy, rerank, diversify, suppress and budget
+(<code>pipeline/recall/__init__.py:330-520</code>);
+<code>gather_candidates</code> does the per-source reads
+(<code>multi_source.py:46-226</code>).</li>
+<li><strong>Fallback</strong> — <code>run_fallback_pass</code>
+(<code>pipeline/promotion/fallback.py:61-286</code>), reached only
+through <code>candidate fallback</code>
+(<code>candidate_cmd.py:732-772</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Six stored layers, each a table set per namespace
+(<code>types.py</code>).</p>
+<ul>
+<li><strong><code>RawEvent</code></strong> (L0) — host, session, thread,
+user, timestamp, event type, content and payload. The evidence every
+candidate must cite.</li>
+<li><strong><code>Candidate</code></strong> (L1) — an extracted claim:
+type (<code>Fact</code>, <code>Decision</code>, <code>Task</code>,
+<code>Preference</code>, <code>ConflictCandidate</code>), status,
+assertion, a verbatim quote of at most 200 characters and the raw event
+it came from, subject name and type, importance and confidence,
+<code>decided_at</code> and <code>decided_by</code>
+(<code>types.py:136-175</code>). The docstring's anti-dilution rule
+requires a high-importance assertion to equal its quote.</li>
+<li><strong><code>AtomCard</code></strong> (L2) — the recalled fact. It
+carries <code>candidate_id</code> and <code>raw_event_ids</code> back to
+its evidence, <code>occurred_at</code> set to the earliest cited raw
+event, <code>superseded_by</code>, and <code>deprecated_at</code>
+(<code>types.py:184-212</code>).</li>
+<li><strong><code>Entity</code></strong>,
+<strong><code>Alias</code></strong> and
+<strong><code>EntityPage</code></strong> (L3) — a narrow anchor, its
+normalised aliases, and an LLM-regenerated summary with a protected
+<code>## My Notes</code> section.</li>
+<li><strong><code>Episode</code></strong> and
+<strong><code>DigestRecord</code></strong> — an emotion-tagged event
+summary with a model-supplied <code>occurred_at</code>, and period
+digests over episodes.</li>
+<li><strong><code>JournalEntry</code></strong> (L4) — action, actor,
+target ids, <code>before</code>, <code>after</code>, note
+(<code>types.py:448-497</code>).</li>
+</ul>
+<p>A tree of root, branch and leaf nodes organises atoms by entity. A
+leaf holds an <code>atom_id</code> and projects the atom's text;
+<code>Memory.update</code> refuses to edit leaf content
+(<code>core.py:229-230</code>), so the tree cannot become a second copy
+of a fact.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The router picks sources from the parsed query: atoms and raw events
+always, page headlines when an entity resolves, vectors when an index is
+injected (<code>router.py:97-108</code>). Atom search runs once per
+token and merges, because the FTS query wraps the whole string as a
+phrase (<code>multi_source.py:285-330</code>). A time window in the
+query switches the atom arm to an <code>occurred_at</code> range.</p>
+<p>Candidates are reranked on five factors with weights
+<code>(0.40, 0.20, 0.15, 0.15, 0.10)</code>: FTS rank position,
+importance, confidence, a 30-day recency half-life, and a layer prior of
+1.0 for atoms and 0.5 for raw (<code>rerank.py:1-40</code>). A
+per-entity cap, Jaccard suppression and a character-proxy token budget
+follow.</p>
+<p><strong>Raw is a last resort.</strong> Under the default
+<code>fallback</code> policy every raw candidate is dropped once any
+atom, page or episode hit exists, and raw from the current session or
+thread is always dropped (<code>recall/__init__.py:528-553</code>). A
+parked candidate's contradicting utterance therefore stays out of the
+prompt while the old atom still matches.</p>
+<p><strong>The FTS arms filter deprecation and the vector arm does
+not.</strong> <code>search_atoms</code> appends
+<code>deprecated_at IS NULL</code> in both backends
+(<code>sqlite.py:1448-1468</code>; <code>postgres.py:1458-1477</code>).
+The vector arm takes ids from the index and loads each with
+<code>get_atom</code>, which has no filter
+(<code>multi_source.py:417-425</code>;
+<code>sqlite.py:1277-1283</code>). Only <code>replace_atom</code>
+removes a vector entry (<code>core.py:754-755</code>). With an index
+configured, an atom retired by deprecation, deletion, consolidation or a
+conflict approval is still returned by semantic search until the GC
+deletes its row.</p>
+<p><code>memory_search</code> also appends hits from the host's own
+Markdown files (<code>MEMORY.md</code>, daily notes) when a host-file
+index is attached (<code>runtime.py:249-267</code>). Those files are the
+host's, and nothing here corrects them.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are automatic on OpenClaw. The plugin's <code>agent_end</code>
+hook sends the turn's messages to <code>capture</code>, then calls
+<code>extract</code> for the session when an LLM endpoint is configured
+(<code>index.ts:195-251</code>). The Hermes provider captures only:
+<code>sync_turn</code>, pre-compression context and the host's own
+memory writes become raw events
+(<code>plugins/hermes/octopmemory/__init__.py:253-298</code>), and
+nothing in it calls <code>extract</code> or <code>promote</code>. On
+Hermes, facts reach the atom layer when someone runs
+<code>candidate extract</code> or <code>backfill</code>; until then
+recall serves raw events.</p>
+<p>Extraction is incremental within one process:
+<code>_seen_ids_for</code> remembers the event ids already extracted per
+session, capped by an LRU (<code>runtime.py:664-673</code>). Across a
+restart, <code>add_candidates</code> skips a candidate whose assertion,
+subject and raw event id set equal an already <code>promoted</code> one
+(<code>core.py:380-390</code>; <code>sqlite.py:1070-1100</code>).</p>
+<p><code>Memory.store</code> is the manual path: it writes a raw event,
+a candidate marked promoted by the user, an atom and a leaf, with no
+model call. <code>Memory.create_atom</code> and
+<code>replace_atom</code> are the correction paths, each journalled.</p>
+<p><strong>Consolidation</strong> clusters live atoms on one entity by
+Jaccard at 0.85 or an LLM <code>same_assertion</code> call, keeps the
+highest-ranked member, and supersedes the rest
+(<code>pipeline/lifecycle/consolidate.py:1-45</code>). It is reached
+from the CLI or a host's idle timer, never from promotion.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>One extraction call per turn with new events, plus at most one LLM
+escalation per candidate for entity disambiguation; duplicate and
+conflict checks are rule-only
+(<code>pipeline/promotion/__init__.py:16-19</code>). Page regeneration
+and episode extraction add calls when a heavy-tier client is configured.
+Recall makes no model call.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Both hosts hand the model two tools, <code>memory_search</code> and
+<code>memory_get</code> (<code>index.ts:368-374</code>;
+<code>plugins/hermes/octopmemory/__init__.py:270-281</code>). Every
+write happens in hooks the model does not drive, or from the CLI. The
+OpenClaw plugin also prefetches recall into the prompt through the
+host's memory-prompt builder (<code>src/auto-recall.ts</code>) and
+registers a <code>/octopmemory</code> chat command limited to status,
+search, show and reindex (<code>chat-command.ts:35-58</code>).</p>
+<p><code>memory_get</code> resolves virtual paths such as
+<code>atom/&lt;id&gt;.md</code> and
+<code>raw/&lt;date&gt;/&lt;id&gt;.md</code> to rows
+(<code>runtime.py:691-751</code>). It reads through
+<code>get_atom</code> and <code>get_raw</code>, so an agent holding an
+old atom id reads a deprecated atom without a marker.</p>
+<p>The JSON-RPC bridge carries more than the plugin uses:
+<code>promote_candidate</code>, <code>reject_candidate</code>,
+<code>deprecate_atom</code>, <code>create_atom</code> and
+<code>replace_atom</code> are on the same dispatch as
+<code>memory_search</code> (<code>handlers.py:51-61</code>;
+<code>dashboard_data.py:1143-1182</code>). The plugin forwards only
+fixed method names, so the model cannot reach them.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The status column is out of the model's reach.</strong> The
+parser assigns <code>status="pending"</code> and a worker-generated id
+(<code>parser.py:284-288</code>). The model's
+<code>recommended_action</code>, including <code>conflict</code>, is
+persisted and has no reader in the promotion code. A model cannot
+promote its own claim by saying so.</p>
+<p><strong>The web dashboard's approve loses the memory.</strong> Its
+confirm dialog says an approved candidate will be written to long-term
+memory on the next cycle (<code>static/index.html:755-771</code>). The
+route sets the status and returns (<code>server.py:578-606</code>).
+<code>promote_pending</code> selects only <code>pending</code>, and
+<code>promote</code> skips <code>promoted</code>, so no cycle picks it
+up. No test calls the route. The dashboard's atom DELETE likewise sets
+<code>deprecated_at</code> without a journal row.</p>
+<p><strong>Contradiction is resolved three ways.</strong> The JSON-RPC
+approve supersedes the old atom and a test pins it
+(<code>tests/test_bridge_dashboard.py:690-732</code>). The CLI approve
+does not, so both sides are recalled. Conflict detection itself catches
+an assertion and its negation when they share three content words, such
+as <code>user uses PostgreSQL for billing</code> against
+<code>user does not use PostgreSQL for billing</code>. It misses
+<code>prefers Go</code> against <code>prefers Python</code>, which carry
+the same polarity.</p>
+<p><strong>The fallback pass composes against its own intent.</strong>
+Task 2 flips a pending candidate whose normalised assertion was rejected
+at least twice to <code>needs_review</code>. Task 1 promotes any
+<code>needs_review</code> row older than seven days as a low-confidence
+atom (<code>fallback.py:94-155</code>, <code>:235-286</code>). Run daily
+as the CLI recommends, a twice-rejected value returns as a memory a week
+later unless someone reviews it. Rule drops count as rejections too.</p>
+<p><strong>Privacy.</strong> Capture redacts configured patterns and
+secret-looking payload keys (<code>runtime.py:948-1001</code>). Raw
+events are the one layer the web dashboard can hard-delete.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded on the candidate status; the
+limits are in the record.</li>
+<li><code>scope_enforced</code> — awarded on the PostgreSQL tier.
+SQLite, the default, is a table-prefix partition and would not carry it
+alone.</li>
+<li><code>audit_log</code> — awarded on the journal; consolidation and
+GC rows expire after 14 days.</li>
+<li><code>human_review</code> — awarded: the queue fills on OpenClaw's
+turn-end path, and no approve verb is on either host's tool list. The
+approve paths' defects are in the record.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — withheld. <code>check_duplicate</code>
+compares against live atoms only (<code>checks.py:470-474</code>), so a
+deprecated assertion re-extracted later is promoted afresh. The
+rejection counter in the fallback pass is keyed on the normalised value,
+runs only from the CLI, re-queues rather than blocks, and loses its
+inputs when the GC deletes rejected candidates after 30 days.</li>
+<li><code>bitemporal</code> — withheld. An atom's
+<code>occurred_at</code> is when the claim was said, a point; an
+episode's is a model-supplied event time, never corrected. No row
+carries a validity interval.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin. <code>docs/agent/HANDOFF.md</code>
+records 1,268 passed and 132 skipped, 129 of them PostgreSQL. That is
+the project's statement, not a run of mine.</p>
+<p><strong>Negative cases.</strong>
+<code>test_search_excludes_deprecated_by_default</code> runs against
+SQLite always and PostgreSQL when a server answers. It stores two atoms
+under one marker, supersedes the first, asserts search returns exactly
+the second, and asserts <code>include_deprecated=True</code> returns
+both (<code>test_backend_parity.py:578-585</code>).
+<code>test_delete_leaf_clears_recall</code> asserts recall finds a
+marker before a delete and returns <code>[]</code> after
+(<code>test_memory_tree.py:288-298</code>).
+<code>test_shared_tables_isolate_namespaces</code> asserts an exact
+one-namespace hit list over shared PostgreSQL tables
+(<code>test_postgres.py:285-298</code>); CI starts no server, so it
+skips there.</p>
+<p><code>TestStrictInjectRaw</code> asserts a raw event matching the
+query is excluded once an atom hits
+(<code>test_recall_pipeline.py:197-210</code>). The promotion, fallback,
+review CLI, GC and consolidation modules each have their own file.</p>
+<p><strong>Gaps.</strong> No test puts a deprecated atom in a vector
+index and searches. No test drives the web dashboard's PATCH route,
+which is where the lost approval sits. Chroma and Qdrant are tested with
+fakes; the README says real integration is unverified.
+<code>evals/recall/</code> computes P@5 and MRR over a synthetic corpus
+and calls itself not a production benchmark. No paper or citation block
+is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep the model's opinion off the status column.</strong>
+Store what the extractor recommends; let rules and people set the state.
+The literal <code>pending</code> in the parser is one line.</li>
+<li><strong>Park a claim whose evidence id does not resolve.</strong> A
+hallucinated source id is a signal that the extraction is unreliable,
+and dropping it loses the case a person could repair.</li>
+<li><strong>One transaction for atom, supersession, index projection and
+journal.</strong> <code>_apply_promote</code> does it and raises if the
+supersede target moved underneath.</li>
+<li><strong>Refuse your own recall block at capture.</strong> Matching
+the rendered header, not a bare tag, stops the feedback loop without
+eating user text.</li>
+<li><strong>Raw as last resort, never from this session.</strong> It
+keeps the prompt from echoing the conversation it is already in.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Several resolvers for one queue.</strong> If a CLI, an RPC
+and a web UI each implement approve, they will differ; put the verb in
+one function and have every surface call it — see <a
+href="../../patterns/resolve-not-just-detect/">resolve, don't just
+detect</a>.</li>
+<li><strong>An approve that only moves a status.</strong> If the worker
+selects on <code>pending</code>, a row set to <code>promoted</code> by
+hand is terminal and empty.</li>
+<li><strong>Retiring a row in one index and not the other.</strong>
+Every path that sets <code>deprecated_at</code> has to drop the vector
+entry, or every read has to filter.</li>
+<li><strong>A fallback that promotes what a counter just
+flagged.</strong> Exclude re-escalated rows from the stale sweep, or key
+the sweep's clock on a human-visible event.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a single agent's personal memory on OpenClaw or Hermes,
+where transcripts are the source, facts are short, and someone will
+occasionally open a review queue. The candidate layer and evidence ids
+make it more defensible than a store that writes whatever the extractor
+emits. It fits less well where paraphrased contradictions matter, since
+the conflict rule reads negation words. It fits poorly with the vector
+arm on until deprecation reaches the index. A multi-tenant deployment
+should use PostgreSQL, where the namespace is a key and a predicate.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does OpenClaw's <code>agent_end</code> context carry the whole
+conversation or the last turn? Capture writes every message it receives
+with a fresh id, so the answer decides whether raw events duplicate each
+turn. The host's contract is not in this tree.</li>
+<li>Which host drives <code>run_idle_maintenance</code>? The docstring
+names the <code>octop-harness</code> <code>MemoryMiddleware</code>,
+which is not in this repository.</li>
+<li>Is the source dashboard in use anywhere approvals matter, or has the
+JSON-RPC dashboard replaced it? The README calls it source-only.</li>
+<li>What name did the project carry before the rename in
+<code>CHANGELOG.md</code>? The tree was scrubbed of it, per
+<code>docs/agent/HANDOFF.md</code>.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Types and API:</strong>
+<code>src/octop_memory/types.py</code>,
+<code>src/octop_memory/core.py</code>,
+<code>src/octop_memory/service.py</code>,
+<code>src/octop_memory/application/runtime.py</code>.</li>
+<li><strong>Promotion:</strong>
+<code>src/octop_memory/pipeline/promotion/__init__.py</code>,
+<code>checks.py</code>, <code>fallback.py</code>,
+<code>llm_hook.py</code>;
+<code>src/octop_memory/pipeline/extractor/parser.py</code>.</li>
+<li><strong>Recall:</strong>
+<code>src/octop_memory/pipeline/recall/__init__.py</code>,
+<code>multi_source.py</code>, <code>router.py</code>,
+<code>rerank.py</code>.</li>
+<li><strong>Storage:</strong>
+<code>src/octop_memory/storage/backends/sqlite.py</code>,
+<code>src/octop_memory/storage/backends/postgres.py</code>,
+<code>src/octop_memory/storage/vector/</code>.</li>
+<li><strong>Lifecycle:</strong>
+<code>src/octop_memory/pipeline/lifecycle/gc.py</code>,
+<code>consolidate.py</code>, <code>maintenance.py</code>.</li>
+<li><strong>Human surfaces:</strong>
+<code>src/octop_memory/adapters/cli/candidate_cmd.py</code>,
+<code>src/octop_memory/application/dashboard_data.py</code>,
+<code>src/octop_memory/adapters/bridge/handlers.py</code>,
+<code>src/octop_memory/adapters/dashboard/server.py</code>,
+<code>src/octop_memory/adapters/dashboard/static/index.html</code>.</li>
+<li><strong>Host plugins:</strong>
+<code>plugins/openclaw/octopmemory/src/index.ts</code>,
+<code>plugins/hermes/octopmemory/__init__.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_backend_parity.py</code>,
+<code>tests/test_memory_tree.py</code>,
+<code>tests/test_postgres.py</code>,
+<code>tests/test_recall_pipeline.py</code>,
+<code>tests/test_bridge_dashboard.py</code>,
+<code>tests/test_promotion_fallback.py</code>,
+<code>tests/test_cli_review.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn -E '\.approve\(|def approve|approve_candidate|reject_candidate' src plugins --include='*.py' --include='*.ts'</code>
+— the definition and one caller, <code>dashboard_data.py:893</code>,
+plus <code>reject_candidate</code> in the dispatch table.</li>
+<li><code>grep -rn -E 'registerTool|get_tool_schemas' plugins --include='*.ts' --include='*.py'</code>
+— <code>index.ts:369</code> and <code>:372</code>, and the Hermes schema
+list; both name only <code>memory_search</code> and
+<code>memory_get</code>.</li>
+<li><code>grep -rn 'run_fallback_pass' src plugins</code> — only
+<code>candidate_cmd.py</code>.</li>
+<li><code>grep -rn '_drop_atom_vector' src</code> — the definition and
+one caller, <code>core.py:755</code> in <code>replace_atom</code>.</li>
+<li><code>grep -rn 'deprecated' src/octop_memory/pipeline/recall/</code>
+— no match.</li>
+<li><code>grep -rn -E 'search_candidates|list_candidates\(' src/octop_memory/pipeline/recall src/octop_memory/application/runtime.py src/octop_memory/service.py</code>
+— no match.</li>
+<li><code>grep -rn 'recommended_action' src --include='*.py'</code> —
+the parser, storage, import, fallback copy and two manual constructors;
+no reader in <code>checks.py</code> or the worker.</li>
+<li>A Python regex over every <code>execute(</code> string in
+<code>postgres.py</code> for <code>SELECT|UPDATE|DELETE</code> without
+<code>namespace</code> — only <code>meta</code> (keyed
+<code>ns:key</code>), advisory locks, catalogue queries, and four
+<code>{where}</code> builders whose condition list starts with
+<code>namespace = %s</code>.</li>
+<li><code>grep -rn 'append_journal' src/octop_memory/adapters/dashboard/server.py</code>
+— no match.</li>
+<li><code>grep -rn -iE 'PATCH|api/candidates/' tests</code> — no match
+on the dashboard route.</li>
+<li><code>grep -rn -iE 'postgres' .github/workflows/</code> — no match;
+CI starts no database.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match, and no <code>CITATION</code> file.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/TencentCloud/octop-memory/commit/8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf"><code class="commit-id" title="8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf">8b6abc3b…</code></a>
+— first reading, at the head of <code>main</code>, the 1.0.0 release
+merge, dated 24 September 2026. Five marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code>. Screened before
+reading: one auto-run surface (<code>.githooks/pre-commit</code>, inert
+unless <code>make install-hooks</code> sets
+<code>core.hooksPath</code>), one build-time execution point
+(<code>Makefile</code>), two unpinned surfaces, five dependency files
+inside the cooldown — every file in a depth-1 clone dates to the tip,
+and the whole history is four commits that week — and
+<code>AGENTS.md</code> recorded as data. Read with <code>grep</code> and
+<code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -259,6 +259,8 @@ non-blocked same-key answer rather than needing a human to remember it exists.
 
 [Kagura Memory Cloud](../../systems/kagura-memory-cloud/) gives a detected supersession a disposition and keeps the queue from refilling. At embedding time the nearest same-context memory at cosine 0.85 or more is stored in a server-only `supersede_candidate` column and surfaced on every recall until the agent accepts it with a `supersedes` edge or rejects it with `update_memory(dismiss_supersede_candidate=true)`. The rejection records the similarity it was made at, and the detector re-proposes the pair only when a recomputed score moves by 0.02, so a mechanical reindex stays suppressed while a content edit earns a new judgement. The actor on both sides is the agent, and the disposition set is binary: nothing records a reason.
 
+[Octop Memory](../../systems/octop-memory/) is the counterexample for having a disposition in three places. Its rule-only promotion worker parks a candidate whose negation polarity flips against a live atom as `conflict`, and three surfaces resolve the queue: the JSON-RPC approve supersedes the contradicted atom, the CLI approve writes the new atom and leaves the old one live, and the source dashboard's approve sets the status column and writes no atom at all. A separate fallback pass promotes anything left in `needs_review` for seven days, including values it re-queued because they had been rejected twice. One resolver function called by every surface would have closed all three gaps.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

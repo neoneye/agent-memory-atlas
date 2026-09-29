@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 666 reports.**
+**This page covers all 670 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5986,3 +5986,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 164,662 lines of Rust in the product crates outside test files, 1,804 commits from 9 contributors counting bot and anonymous authors since 5 November 2025, and 4,656 test functions of which 173 are ignored. One mark, `negative_eval`, on a test asserting a capacity-evicted episode is not returned beside the survivor. Two e2e targets wrap hand-written `main` functions in the libtest harness and run zero tests.
 - Study when: you want coding-agent runs mined deterministically for tool sequences and error recoveries, or want to see an embedding provider's identity carried through every cache and index.
 - Do not copy when: the agent must learn through the MCP server as shipped, deletion must reach derived records, or several users or projects share one store — no record carries a principal key.
+
+### [`memhop`](../systems/memhop/)
+
+- Best idea: **put the tenant in the frame and key every index by it first.** Each 26-byte record header carries an 8-byte agent id, and the engine's primary and type indexes are `agentID → …`, so a sub-agent's read cannot address a sibling's row; the interface tests prove it by keyword and by id, each beside a read that must return rows, one failing with *"so the ids case proves nothing"* if the control comes back empty.
+- Biggest risk: **after seven days, memory is keywords of a reconstruction of keywords.** `Update` stores an LLM keyword list per turn; Dream asks the model to rewrite adjacent lists into prose "as if you are rewriting what was originally said" and extracts keywords from that; the sweep then drops the originals and the prose. Nothing marks the surviving tracks as derived, and nothing can check them against what was said.
+- Most reusable component: `internal/dream/compress.go` `applyGroups` and `applyOneGroup` — a merge proposal is refused when it names an id outside the listing the model was shown, reuses a claimed member or has an empty summary, and a failed group rolls back its parent, summary and any members already sunk.
+- Second risk: **the sweep and every delete append tombstones, so the bytes stay.** `DeleteTopic`, `DeleteScene` and the seven-day retention all end in `DeleteRecordBatch`; only `CompactTo` writes a file without the payloads, nothing calls it, and the host must swap the copy in. The sweep's own comment says retention "bounds the file".
+- Maturity impression: MIT OR Apache-2.0, 12,915 lines of Go outside tests and 585 commits by one contributor between 19 May and 25 September 2026, with 561 test functions and 13 benchmarks in 32,325 lines, 15 of those 574 tests needing a live model. Two marks, `scope_enforced` and `negative_eval`; the negative cases carry positive controls. Scored retrieval was deleted on 1 September 2026 and the MCP server retired on 22 September 2026.
+- Study when: you want an embedded single-file store whose engine and domain isolation are built and tested with unusual care, or you want to see a memory with no retrieval ranking at all, where the host's session boundary decides what is recalled.
+- Do not copy when: you need to know what the user actually said past a week, need deletion to remove bytes without an operator step, or need recall across sessions by relevance.
+
+### [`cortexes`](../systems/cortexes/)
+
+- Best idea: **one filter language across every retrieval arm, held by a table and a test.** `_build_where` emits a Chroma clause; the BM25 and wikilink-graph streams evaluate it through `_matches`, whose field names and comparisons are one map that raises on anything it does not model. `test_build_where_emits_only_fields_matches_models` fails when the producer emits a field the evaluator lacks, and a structural test asserts every stream receives the clause.
+- Biggest risk: **the keyless mode cannot add a note.** `cmd_upsert` reaches `_get_embedding_function`, which calls `sys.exit(1)` without `OPENAI_API_KEY`, before it updates BM25. Every page saved by evolve, distill or broadcast stays out of search until someone runs `rebuild --bm25-only`, which no skill names; a keyless full `rebuild` drops the vector collection and builds nothing.
+- Most reusable component: `cortex-vec/src/cortex_vec/distill_plan.py` — a per-source plan that records reviewed character ranges and refuses a `no-insight` verdict until every semantic and ambiguous span is covered, with atomic 0600 state and a hash check that refuses completion if the source changed beyond its marker.
+- Second risk: **deletion and confirmation stop at the prose.** No skill or command runs `cortex-vec delete` or `rebuild`, so a page removed by hand stays retrievable. The distill verdict, broadcast's y/n per change and evolve's save are instructions to a model that holds `Write`, `Edit` and `Bash`; `skip-routine` retires a Raw with no coverage check at all.
+- Maturity impression: Apache-2.0, 3,773 lines of Python in the engine and 4,536 in hooks, 300 commits on `plugin` from 4 contributors between 10 April and 22 September 2026, 538 pytest functions. Two marks, `scope_enforced` and `negative_eval`, both on the `--repo` predicate; no test runs a real Chroma collection. The tree is a port of an internal upstream, and two files its code cites are absent.
+- Study when: you are building hybrid retrieval with metadata filters and want the arms to agree on what a filter means, or you want a coverage gate on an LLM's "nothing here" verdict.
+- Do not copy when: memory must stay correct without a person, be deleted reliably, or be shared across a team. The vault is one per machine, repo identity is a basename, and nothing checks who approved a note.
+
+### [`wordcell`](../systems/wordcell/)
+- Best idea: Markdown as the only authority, with every derived vector hit reconciled against a fresh scan before it can rank.
+- Biggest risk: deletion is `rm`, and a Supermemory re-import re-creates a deleted imported note.
+- Most reusable component: `updateNoteBodyProgram` and `installBody`, a revision-checked, per-note-locked, quarantine-and-restore file write.
+- Second risk: plan status and `supersedes` group or describe records without withholding any, so superseded material is searched at full rank.
+- Maturity impression: 238 commits by five contributor identities between 22 July and 29 September 2026, 1,680 bun test cases, CI on every pull request and push to `main`.
+- Study when: your agent memory should be documents in the repository, found by path or by words without running a service.
+- Do not copy when: memory must be captured automatically, corrected by the system, or kept apart by user or tenant.
+
+### [`octop-memory`](../systems/octop-memory/)
+
+- Best idea: **keep the model's opinion off the status column.** The extractor's parser assigns `status="pending"` and a worker-generated id as literals, and the model's `recommended_action` — including `conflict` — is stored and read by nothing in the promotion worker. Five deterministic checks then decide, and a candidate citing a raw event id that does not exist is parked for a person rather than dropped.
+- Biggest risk: **the web dashboard's approve loses the memory it approves.** Its confirm dialog promises the candidate will be written to long-term memory on the next cycle; the PATCH route sets `status='promoted'` by raw SQL and returns. The worker selects only `pending` and skips `promoted`, so no cycle writes the atom, and no test calls the route.
+- Most reusable component: `src/octop_memory/pipeline/promotion/checks.py` — the five checks as pure functions over duck-typed lookups, with the evidence check's "park, don't drop" rule for a hallucinated source id and exact-signature dedup over NFKC-folded, case-folded text against live atoms only.
+- Second risk: **retirement does not reach the vector index.** Only `replace_atom` drops a vector entry; deprecate, delete, consolidation and the conflict approval set `deprecated_at` and leave it, and the vector arm loads hits with an unfiltered `get_atom`. With an index configured, retired atoms stay retrievable by semantic search until the 90-day GC.
+- Maturity impression: MIT, 32,665 lines of Python under `src/octop_memory`, and 1,030 lines of Python and 2,581 of TypeScript in the two host plugins, released as 1.0.0 in a four-commit history of 24 September 2026. Five marks, `trust_state`, `scope_enforced` on the PostgreSQL tier, `audit_log`, `human_review` and `negative_eval`, the last on exact-list exclusion tests with positive controls. 1,261 pytest functions; the PostgreSQL cases skip in CI.
+- Study when: you want an extraction pipeline whose write path distrusts the model — evidence ids checked before promotion, a literal status, one transaction per promotion — and a staging layer a person can resolve.
+- Do not copy when: contradictions arrive as paraphrases, since the conflict rule reads negation words; or when you need one approve semantics across surfaces, which this tree has three of.

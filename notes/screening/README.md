@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 666 of 666 screened at the report's current pin.**
+**Progress: 670 of 670 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 308 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 359 |
-| Repositories with build-time execution (`EXEC`) | 488 |
+| Repositories with an auto-run surface (`RUNS`) | 310 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 362 |
+| Repositories with build-time execution (`EXEC`) | 491 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -95,6 +95,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`cortex`](../../content/systems/cortex.md) | `.github/copilot-instructions.md` |
 | [`cortex-engine`](../../content/systems/cortex-engine.md) | `.githooks/`, `hooks/` |
 | [`cortex-hypermnesia`](../../content/systems/cortex-hypermnesia.md) | `.claude-plugin/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `server.json` |
+| [`cortexes`](../../content/systems/cortexes.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`cortexgraph`](../../content/systems/cortexgraph.md) | `.envrc`, `.github/copilot-instructions.md`, `.vscode/settings.json`, `server.json`, `smithery.yaml` |
 | [`craft`](../../content/systems/craft.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json`, `hooks/`, `hooks/hooks.json` |
@@ -236,6 +237,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`nornicdb`](../../content/systems/nornicdb.md) | `.githooks/` |
 | [`nougenshards`](../../content/systems/nougenshards.md) | `.mcp.json`, `hooks/` |
 | [`obsidian-mind`](../../content/systems/obsidian-mind.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json` |
+| [`octop-memory`](../../content/systems/octop-memory.md) | `.githooks/` |
 | [`ogad`](../../content/systems/ogad.md) | `.claude/settings.json`, `.gitattributes`, `.gitmodules`, `.vscode/settings.json` |
 | [`oh-my-hermes`](../../content/systems/oh-my-hermes.md) | `.opencode/` |
 | [`okf-agent-memory`](../../content/systems/okf-agent-memory.md) | `.cursorrules`, `.github/copilot-instructions.md` |

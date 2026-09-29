@@ -341,6 +341,17 @@ project and platform instead of inheriting the server process's has
 exactly one caller in the tree, the console's create path. The editing
 surface is authoritative in the sense this page means, and it is the
 only place the store's scope key can be written on purpose.</p>
+<p><a href="../../systems/wordcell/">Wordcell</a> is the case where the
+editing surface <em>is</em> the store: the memory is a folder of
+Markdown a person opens in any editor, and every index rebuilds from it,
+so an edit needs no second path to take effect. Deletion is where it
+stops holding. No command deletes a note, the migration guide tells a
+user leaving Supermemory to delete the file instead, and the importer
+keys existing notes on <code>external_id</code> found in the vault. A
+deleted imported note is therefore absent from that set and re-created
+as <code>created</code> by the next import of the same export
+(<code>src/import-supermemory.ts:1134-1157</code>). An edit is protected
+by a stored digest; a deletion leaves nothing to compare against.</p>
 <h2 id="tests-to-write-first">Tests to write first</h2>
 <ul>
 <li>Edit a unit, then run the automatic pass, and assert the edit

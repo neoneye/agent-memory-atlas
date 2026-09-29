@@ -217,6 +217,8 @@ moving the head would cost one insert. Editability, negative memory, and
 
 In [marm-memory](../../systems/marm-memory/) the bundled console is not the secondary surface — it is the *more* capable one, and the gap is the finding. A person there creates, replaces and deletes memory rows, and adjudicates the concept graph through merge, dismiss and remove, each under the leased build lock and each aborting on a lost lease rather than half-applying. The connected agent can do none of it: its delete tool accepts only two document kinds and cannot address a memory row, and the flag that lets a caller set a memory's project and platform instead of inheriting the server process's has exactly one caller in the tree, the console's create path. The editing surface is authoritative in the sense this page means, and it is the only place the store's scope key can be written on purpose.
 
+[Wordcell](../../systems/wordcell/) is the case where the editing surface *is* the store: the memory is a folder of Markdown a person opens in any editor, and every index rebuilds from it, so an edit needs no second path to take effect. Deletion is where it stops holding. No command deletes a note, the migration guide tells a user leaving Supermemory to delete the file instead, and the importer keys existing notes on `external_id` found in the vault. A deleted imported note is therefore absent from that set and re-created as `created` by the next import of the same export (`src/import-supermemory.ts:1134-1157`). An edit is protected by a stored digest; a deletion leaves nothing to compare against.
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.

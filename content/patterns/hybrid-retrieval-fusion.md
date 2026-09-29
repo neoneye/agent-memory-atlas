@@ -128,6 +128,8 @@ where [Moltis](../../systems/moltis/) makes the same situation explicit with a
 `keyword_only()` constructor and a `has_embeddings()` predicate callers can
 branch on.
 
+[Cortexes](../../systems/cortexes/) adds a third caution: **a filter is only as strict as its weakest arm.** Its vector stream hands the `--repo` clause to Chroma, while BM25 and the wikilink graph evaluate it in Python, and until `cortex-vec` 0.9.0 the nested `$or` was ignored by one arm and never passed to the other. The repair keeps field names and comparisons in one table that raises on anything unmodelled, and a test fails when the clause producer emits a field that table lacks. Its degradation is explicit where [Holographic](../../systems/holographic/)'s is not: without a key the vector stream is skipped by name and the weight redistributed, though the same key gates writes to the lexical index.
+
 Few systems defend their weights. [MetaClaw](../../systems/metaclaw/) replays
 candidate policies against past turns and promotes one only on non-regression
 across eight metrics. [Somnigraph](../../systems/somnigraph/) sets a separate
