@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 660 reports.**
+**This page covers all 661 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5926,3 +5926,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 2,221 lines of Python with no third-party dependency against 389 pytest functions, run in CI on Python 3.11 and 3.12. The one live-host case skips itself, and the calibration experiments the code comments cite are gitignored. 133 commits by 13 contributors, one with 117, 27 June – 28 September 2026.
 - Study when: you want a skill library a model maintains without write access to it, or a usage-based retirement rule that does not punish idle time.
 - Do not copy when: generated skills share a directory with hand-written ones, skills are shared across a team, or anything must be approved before it reaches a prompt.
+
+### [`megamemory`](../systems/megamemory/)
+
+- Best idea: **soft delete with a required reason, and one predicate on every agent read.** `remove_concept` stamps `removed_at` and `removed_reason`, and `understand`, `get_concept`, `list_roots` and the edge joins all select `removed_at IS NULL` in one file, `src/db.ts`. Beside it, the branch merge compares removed state as content, so a deletion on one branch and an edit on the other surface as a conflict rather than one silently winning.
+- Biggest risk: **the removed row holds its own name hostage.** Ids are slugs of the name under the parent, `nodeExists` ignores removed rows, and the following `INSERT` collides with the removed row's primary key, so re-creating a removed concept fails with a raw SQLite `UNIQUE` error. Nothing restores a removed node, and the same claim under a different name is admitted — a record-keyed near-tombstone that blocks the wrong thing.
+- Most reusable component: `src/merge.ts` — a two-way merge for per-branch SQLite memory files that keeps differing concepts as `::left` and `::right` copies under one merge-group UUID, remaps edges to the copy on their own side, and treats a removal as a difference.
+- Second risk: **conflicts are searched as settled, and resolved by the agent.** Only `list_conflicts` reads `needs_merge`, so `understand` returns both copies; `resolve_conflict` is on the agent's tool list; and it calls `renameNodeId`, which turns foreign keys off inside a transaction where SQLite ignores the pragma, so resolving a connected concept over MCP should fail (read, not run). A default merge also replaces the file and empties the timeline.
+- Maturity impression: MIT, 4,983 lines of TypeScript outside tests, 54 commits on main by 2 contributors between 6 February and 3 May 2026. Two marks: `audit_log` on a per-call timeline table with real limits, and `negative_eval` on a time-slider snapshot case that leaves out a removed node beside a positive control. 153 Vitest cases, run by the publish workflow before a release; the logger and the MCP handlers are untested.
+- Study when: you want the smallest local MCP memory for one coding agent in one repository, or a worked example of merging memory files that diverged on git branches.
+- Do not copy when: memories must be corrected with history, attributed, scoped inside one store, or reviewed by a person — none of those is in the schema, and the web explorer binds every interface with `Access-Control-Allow-Origin: *`.

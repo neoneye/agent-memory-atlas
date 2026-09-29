@@ -361,6 +361,7 @@ page_kind: comparison
 - [`mama`](../systems/mama/)
 - [`mnemosyne-nabzx`](../systems/mnemosyne-nabzx/)
 - [`autoharness`](../systems/autoharness/)
+- [`megamemory`](../systems/megamemory/)
 
 ## Repos Inspected
 
@@ -1026,6 +1027,7 @@ page_kind: comparison
 - [jungjaehoon-lifegamez/MAMA](https://github.com/jungjaehoon-lifegamez/MAMA) at [`6738c694144313481516333312aec7497bae7a04`](https://github.com/jungjaehoon-lifegamez/MAMA/commit/6738c694144313481516333312aec7497bae7a04) — read only, at the head of `main`, a commit dated 28 September 2026. MIT. Screened before reading: 2 auto-run surfaces (`.claude-plugin/marketplace.json` and an empty `.gitmodules`), 2 build-time execution points (a husky `prepare` and the plugin's `postinstall`), 8 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 6 floating surfaces; `AGENTS.md` and `CLAUDE.md` were treated as data. The memory tier of `mama-core`, its MAMA OS consumers and the Claude Code MCP server and hooks were read. Nothing was installed, built or executed.
 - [Nabzx/mnemosyne](https://github.com/Nabzx/mnemosyne) at [`431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6`](https://github.com/Nabzx/mnemosyne/commit/431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6) — read only, at the head of `main`, a commit dated 28 September 2026. Apache-2.0. Screened before reading: 1 auto-run surface (`.githooks/pre-commit`, inert unless `core.hooksPath` points at it), no build-time execution point, 8 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 4 Python manifests with no lockfile; `AGENTS.md` was treated as data. Nothing was installed, built or run.
 - [tigerless-labs/autoharness](https://github.com/tigerless-labs/autoharness) at [`f74a9fb4db512f641bd241e1959fade53044bd7b`](https://github.com/tigerless-labs/autoharness/commit/f74a9fb4db512f641bd241e1959fade53044bd7b) — read only; four auto-run surfaces (the plugin manifest, `.mcp.json`, `hooks/` and `hooks/hooks.json`), no build-time execution and no dependency manifest, so nothing inside the cooldown and nothing unpinned. Nothing was installed, built or run and no benchmark was reproduced. MIT
+- [0xK3vin/MegaMemory](https://github.com/0xK3vin/MegaMemory) at [`e0bb3c270d7fb4f6f280ae4685e0c538eb225d93`](https://github.com/0xK3vin/MegaMemory/commit/e0bb3c270d7fb4f6f280ae4685e0c538eb225d93) — read only, at the head of `main`, tagged v1.6.2 and dated 3 May 2026. MIT. Screened before reading: no auto-run surface, 1 build-time execution point (the npm `prepublishOnly` script), 1 unpinned surface (ten caret ranges in `package.json`, resolved by the committed lockfile) and nothing inside the cooldown, every file in the depth-1 clone dating to the tip; no agent-instruction file is in the tree, and the installer's instruction text and slash commands were treated as data. Nothing was installed, built or executed.
 
 ## What the licences actually say
 

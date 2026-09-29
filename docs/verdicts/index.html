@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 660 reports.</strong></p>
+<p><strong>This page covers all 661 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -27292,6 +27292,54 @@ time.</li>
 <li>Do not copy when: generated skills share a directory with
 hand-written ones, skills are shared across a team, or anything must be
 approved before it reaches a prompt.</li>
+</ul>
+<h3 id="megamemory"><a
+href="../systems/megamemory/"><code>megamemory</code></a></h3>
+<ul>
+<li>Best idea: <strong>soft delete with a required reason, and one
+predicate on every agent read.</strong> <code>remove_concept</code>
+stamps <code>removed_at</code> and <code>removed_reason</code>, and
+<code>understand</code>, <code>get_concept</code>,
+<code>list_roots</code> and the edge joins all select
+<code>removed_at IS NULL</code> in one file, <code>src/db.ts</code>.
+Beside it, the branch merge compares removed state as content, so a
+deletion on one branch and an edit on the other surface as a conflict
+rather than one silently winning.</li>
+<li>Biggest risk: <strong>the removed row holds its own name
+hostage.</strong> Ids are slugs of the name under the parent,
+<code>nodeExists</code> ignores removed rows, and the following
+<code>INSERT</code> collides with the removed row's primary key, so
+re-creating a removed concept fails with a raw SQLite
+<code>UNIQUE</code> error. Nothing restores a removed node, and the same
+claim under a different name is admitted — a record-keyed near-tombstone
+that blocks the wrong thing.</li>
+<li>Most reusable component: <code>src/merge.ts</code> — a two-way merge
+for per-branch SQLite memory files that keeps differing concepts as
+<code>::left</code> and <code>::right</code> copies under one
+merge-group UUID, remaps edges to the copy on their own side, and treats
+a removal as a difference.</li>
+<li>Second risk: <strong>conflicts are searched as settled, and resolved
+by the agent.</strong> Only <code>list_conflicts</code> reads
+<code>needs_merge</code>, so <code>understand</code> returns both
+copies; <code>resolve_conflict</code> is on the agent's tool list; and
+it calls <code>renameNodeId</code>, which turns foreign keys off inside
+a transaction where SQLite ignores the pragma, so resolving a connected
+concept over MCP should fail (read, not run). A default merge also
+replaces the file and empties the timeline.</li>
+<li>Maturity impression: MIT, 4,983 lines of TypeScript outside tests,
+54 commits on main by 2 contributors between 6 February and 3 May 2026.
+Two marks: <code>audit_log</code> on a per-call timeline table with real
+limits, and <code>negative_eval</code> on a time-slider snapshot case
+that leaves out a removed node beside a positive control. 153 Vitest
+cases, run by the publish workflow before a release; the logger and the
+MCP handlers are untested.</li>
+<li>Study when: you want the smallest local MCP memory for one coding
+agent in one repository, or a worked example of merging memory files
+that diverged on git branches.</li>
+<li>Do not copy when: memories must be corrected with history,
+attributed, scoped inside one store, or reviewed by a person — none of
+those is in the schema, and the web explorer binds every interface with
+<code>Access-Control-Allow-Origin: *</code>.</li>
 </ul>
         </article>
       </div>

@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **660 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **661 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -397,6 +397,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/mazemaker/"><span class="az-id">Mazemaker</span><span class="az-what">Validity on the edges, none on the claims</span><code class="az-repo">itsXactlY/mazemaker</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/mcp-memory-service/"><span class="az-id">MCP Memory Service</span><span class="az-what">Quarantine tags the contradiction and recall returns it anyway</span><code class="az-repo">doobidoo/mcp-memory-service</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/mcp-memory/"><span class="az-id">MCP-Memory</span><span class="az-what">A trust model written and never read</span><code class="az-repo">fellowgeek/mcp-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
+<li><a class="az-row" href="../systems/megamemory/"><span class="az-id">MegaMemory</span><span class="az-what">An MCP concept graph a coding agent writes for itself</span><code class="az-repo">0xK3vin/MegaMemory</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/mem0/"><span class="az-id">Mem0</span><span class="az-what">Library-first memory</span><code class="az-repo">mem0ai/mem0</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/mem9/"><span class="az-id">mem9</span><span class="az-what">A test suite for an API that is not here</span><code class="az-repo">mem9-ai/mem9</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/memanto/"><span class="az-id">Memanto</span><span class="az-what">Resolved conflict</span><code class="az-repo">moorcheh-ai/memanto</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>

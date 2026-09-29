@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A per-project SQLite concept graph
+for coding agents over MCP, searched by in-process embeddings,
+soft-deleted with a reason, and merged across branches.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MegaMemory — Agent Memory Atlas">
+    <meta property="og:description" content="A per-project SQLite
+concept graph for coding agents over MCP, searched by in-process
+embeddings, soft-deleted with a reason, and merged across branches.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MegaMemory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A per-project SQLite
+concept graph for coding agents over MCP, searched by in-process
+embeddings, soft-deleted with a reason, and merged across branches.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MegaMemory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MegaMemory",
+      "description": "A per-project SQLite concept graph for coding agents over MCP, searched by in-process embeddings, soft-deleted with a reason, and merged across branches.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An MCP concept graph a coding agent writes
+for itself</p>
+          <h1>MegaMemory</h1>
+          <p class="document-deck">A per-project SQLite concept graph
+for coding agents over MCP, searched by in-process embeddings,
+soft-deleted with a reason, and merged across branches.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/0xK3vin/MegaMemory">
+              <span>Source</span>
+              <strong>0xK3vin/MegaMemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/0xK3vin/MegaMemory/commit/e0bb3c270d7fb4f6f280ae4685e0c538eb225d93" title="e0bb3c270d7fb4f6f280ae4685e0c538eb225d93">
+              <span>Analyzed revision</span>
+              <code>e0bb3c27…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-29</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/0xK3vin--MegaMemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>0xK3vin--MegaMemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>4,983
+lines of TypeScript outside tests, a 147-line opencode plugin and a
+2,133-line single-file web explorer</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>54
+commits on main by 2 contributors, 6 February 2026 – 3 May
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>153
+Vitest cases in 11 files, 3,670 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MegaMemory is a stdio MCP server that lets a coding agent keep a
+graph of <em>concepts</em> about one project — features, modules,
+patterns, decisions — in a SQLite file under <code>.megamemory/</code>.
+The agent writes each concept in its own words, and
+<code>understand</code> finds them again by cosine similarity over
+embeddings computed in process. What is notable is how little it needs:
+no API key, no service, and a soft delete that keeps the removal reason
+while every agent read filters on it. What is weak is correction. An
+update overwrites with no prior value kept, and a removed concept's name
+cannot be used again under the same parent. Unresolved merge copies are
+searched as if settled.</p>
+<p>The design philosophy is in the README and the installed
+instructions: <em>"The LLM is the indexer."</em> There is no parser and
+no extraction pass. The installer writes a block into the agent's global
+<code>CLAUDE.md</code> or <code>AGENTS.md</code> telling it to call
+<code>list_roots</code> at session start, <code>understand</code> before
+a task, and <code>create_concept</code> or <code>update_concept</code>
+after it (<code>src/install.ts:56-67</code>). Everything the graph knows
+arrives through those calls.</p>
+<p>Two pieces go beyond the usual MCP memory server. A
+<code>timeline</code> table logs every tool call, and a
+<code>merge</code> command reconciles two <code>knowledge.db</code>
+files that diverged on git branches, keeping conflicts as
+<code>id::left</code> and <code>id::right</code> copies for a person or
+the agent to resolve.</p>
+<p>Two marks: <code>audit_log</code> for the timeline, with limits that
+section 9 names, and <code>negative_eval</code> for a time-slider
+snapshot case that leaves out a removed node beside a positive control
+over the same fixture. The other five are withheld in section 9.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a node the agent created, and it is a belief from the
+moment <code>create_concept</code> returns. There is no candidate state,
+no confidence, and no source beyond an optional free-text
+<code>created_by_task</code>, which the agent-facing result type does
+not carry (<code>src/types.ts:97-124</code>).</p>
+<p><strong>Identity is the name.</strong> <code>makeId</code> lowercases
+the name, turns runs of spaces and underscores into hyphens, strips
+everything else, and prefixes the parent id with a slash
+(<code>src/tools.ts:33-41</code>). A second concept with the same name
+under the same parent is refused as <em>"already exists. Use
+update_concept"</em> (<code>tools.ts:157-160</code>). An
+<code>update_concept</code> that changes the name keeps the old id.</p>
+<p><strong>A concept stops being believed in three ways.</strong> An
+<code>update_concept</code> replaces the text in place, and the previous
+text is gone. A <code>remove_concept</code> stamps
+<code>removed_at</code> and a required reason, and every agent read then
+filters on <code>removed_at IS NULL</code>
+(<code>src/db.ts:361-378</code>). A merge resolution hard-deletes the
+losing copy (<code>tools.ts:378-405</code>). Nothing expires or
+decays.</p>
+<p><strong>The soft-deleted row blocks its own name.</strong>
+<code>createConcept</code> checks <code>nodeExists</code>, which filters
+removed rows, so a removed id passes the check. The following
+<code>INSERT</code> then hits the primary key held by the removed row
+(<code>db.ts:240-243</code>, <code>:488-495</code>). The agent receives
+a raw SQLite <code>UNIQUE</code> constraint error, not <em>"was
+removed"</em>, and nothing restores a removed node. Choosing a different
+name admits the same claim.</p>
+<p><strong>A merge makes two beliefs out of one.</strong> When both
+branches changed a concept, the merged file holds
+<code>feature::left</code> and <code>feature::right</code> with
+<code>needs_merge = 1</code> (<code>src/merge.ts:303-318</code>). Only
+<code>list_conflicts</code> reads that flag. <code>understand</code>
+returns both copies as ordinary nodes until someone resolves them, and
+the suffix in the id is the only sign.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a MegaMemory concept becomes searchable, how a merge splits it, and how it stops being returned</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a MegaMemory concept becomes searchable, how a merge splits it, and how it stops being returned
+flowchart TD
+    C[&quot;create_concept(name, parent)&quot;] --&gt; ID[&quot;id = slug of name under parent id&quot;]
+    ID --&gt; EX{&quot;a row with this id?&quot;}
+    EX -- &quot;active&quot; --&gt; R1[&quot;refused: already exists&quot;]
+    EX -- &quot;soft-deleted&quot; --&gt; R2[&quot;INSERT fails:&lt;br/&gt;UNIQUE constraint on nodes.id&quot;]
+    EX -- &quot;none&quot; --&gt; ACT[&quot;active node with embedding&quot;]
+    ACT -- &quot;update_concept&quot; --&gt; OW[&quot;fields overwritten,&lt;br/&gt;old text not kept&quot;]
+    OW --&gt; ACT
+    ACT -- &quot;remove_concept(reason)&quot; --&gt; REM[&quot;removed_at and reason kept,&lt;br/&gt;edges hard-deleted&quot;]
+    ACT --&gt; Q[&quot;understand, get_concept, list_roots&lt;br/&gt;filter removed_at IS NULL&quot;]
+    ACT -- &quot;megamemory merge, both sides changed&quot; --&gt; CF[&quot;id::left and id::right,&lt;br/&gt;needs_merge = 1&quot;]
+    CF --&gt; Q
+    CF -- &quot;resolve_conflict by the agent,&lt;br/&gt;or megamemory resolve&quot; --&gt; WIN[&quot;winner renamed back to id,&lt;br/&gt;loser hard-deleted&quot;]
+    WIN --&gt; ACT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Node process per MCP client. <code>megamemory</code> with no
+argument starts the stdio server; <code>serve</code>,
+<code>merge</code>, <code>conflicts</code>, <code>resolve</code>,
+<code>stats</code> and <code>install</code> are CLI subcommands of the
+same binary (<code>src/index.ts:62-143</code>).</p>
+<p>Persistence is one libsql database, opened in WAL mode with foreign
+keys on and a 5-second busy timeout (<code>src/db.ts:12-25</code>). Its
+path is <code>MEGAMEMORY_DB_PATH</code>, or
+<code>.megamemory/knowledge.db</code> under the working directory the
+MCP client launched the server in (<code>index.ts:164-166</code>). Four
+schema versions are migrated under <code>BEGIN IMMEDIATE</code> with a
+re-check, so two processes starting together migrate once
+(<code>db.ts:37-178</code>). Writes retry <code>SQLITE_BUSY</code> up to
+three times with exponential back-off (<code>db.ts:209-225</code>).</p>
+<p>Embeddings come from <code>@xenova/transformers</code> running
+quantized <code>Xenova/all-MiniLM-L6-v2</code> in process
+(<code>src/embeddings.ts:1-18</code>). The README says the model, about
+23 MB, downloads on first use. Search is a brute-force scan. Nothing
+runs in the background.</p>
+<p>The web explorer is an HTTP server over the same file, serving
+<code>web/index.html</code>, which loads d3 from cdnjs and reads eight
+GET routes, among them an SSE stream fed by a 1.5-second poll
+(<code>src/web.ts:546-747</code>). No route writes.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>npm install -g megamemory</code>, then
+<code>megamemory install --target claudecode</code> or another target.
+Nothing else has to run, no key is needed, and after the model download
+it works offline. The store is a SQLite file anyone can open with
+<code>sqlite3</code>; <code>scripts/check-roots-size.sh</code> does
+exactly that to measure the <code>list_roots</code> payload. Because the
+path follows the working directory, launching the MCP client from a
+subdirectory opens a different, empty graph.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>create_concept</code>
+(<code>index.ts:270-320</code>) → <code>createConcept</code>
+(<code>tools.ts:150-191</code>): slug the id, check
+<code>nodeExists</code> for the id and the parent, embed
+<code>"kind: name — summary"</code> (<code>embeddings.ts:53-59</code>),
+then <code>insertNodeAndEdges</code> inserts the node and each edge
+whose target exists, in one transaction, silently skipping an edge to a
+missing target (<code>db.ts:257-297</code>).</p>
+<p><strong>Update.</strong> <code>updateConcept</code>
+(<code>tools.ts:193-223</code>) re-embeds only when <code>summary</code>
+or <code>name</code> changed (<code>:205</code>). A change of
+<code>kind</code> alone leaves the embedding built from the old kind.
+<code>updateNode</code> writes only to rows with
+<code>removed_at IS NULL</code> (<code>db.ts:311-359</code>).</p>
+<p><strong>Link.</strong> <code>link</code>
+(<code>tools.ts:225-253</code>) checks both ends and
+<code>INSERT OR IGNORE</code>s under the unique index on
+<code>(from_id, to_id, relation)</code> added in schema v4
+(<code>db.ts:157-170</code>). <code>deleteEdge</code> exists
+(<code>db.ts:404-411</code>) and has no caller.</p>
+<p><strong>Remove.</strong> <code>removeConcept</code>
+(<code>tools.ts:255-275</code>) → <code>softDeleteNode</code>
+(<code>db.ts:361-378</code>), which sets <code>removed_at</code> and
+<code>removed_reason</code> and deletes every edge touching the node in
+the same transaction.</p>
+<p><strong>Retrieve.</strong> <code>understand</code>
+(<code>tools.ts:109-137</code>) embeds the query, loads every active
+node with an embedding (<code>db.ts:469-486</code>), scores them in
+<code>findTopK</code> (<code>embeddings.ts:100-120</code>), and builds
+each hit with <code>buildNodeWithContext</code>: active children,
+outgoing and incoming edges whose other end is active, and the parent if
+active (<code>tools.ts:58-105</code>). <code>get_concept</code> is
+<code>getNode</code> plus the same context. <code>list_roots</code>
+returns every root and its children's names, with stats
+(<code>tools.ts:277-299</code>).</p>
+<p><strong>Merge.</strong> <code>runMerge</code>
+(<code>src/merge-cli.ts:45-108</code>) → <code>MergeEngine.merge</code>
+(<code>merge.ts:90-111</code>), which opens both inputs and a fresh
+output database, copies identical and one-sided nodes as they are, and
+writes differing ones as suffixed copies sharing a
+<code>merge_group</code> UUID. Edges are inserted in a second pass and
+remapped to the copy on their own side
+(<code>merge.ts:361-401</code>).</p>
+<p><strong>Resolve.</strong> Two routes. <code>megamemory resolve</code>
+with <code>--keep left|right|both</code> hard-deletes the loser and
+renames the winner, or renames both to a branch-suffixed id
+(<code>merge-cli.ts:204-288</code>). The MCP
+<code>resolve_conflict</code> takes a new summary from the agent, keeps
+the active copy as the base, hard-deletes the others, renames the base
+and writes the summary (<code>tools.ts:354-410</code>).</p>
+<p><strong>Timeline.</strong> Every MCP handler calls
+<code>timeline.log</code> after its tool function returns or throws
+(<code>index.ts:205-536</code>); <code>createTimelineLogger</code>
+inserts with one retry and swallows failure
+(<code>src/timeline.ts:14-35</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Columns that matter</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodes</code></td>
+<td><code>id</code>, <code>name</code>, <code>kind</code>,
+<code>summary</code>, <code>why</code>, <code>file_refs</code>,
+<code>parent_id</code>, <code>created_by_task</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>removed_at</code>, <code>removed_reason</code>,
+<code>embedding</code></td>
+<td>merge adds <code>merge_group</code>, <code>needs_merge</code>,
+<code>source_branch</code>, <code>merge_timestamp</code></td>
+</tr>
+<tr>
+<td><code>edges</code></td>
+<td><code>from_id</code>, <code>to_id</code>, <code>relation</code>,
+<code>description</code>, <code>created_at</code></td>
+<td>unique on <code>(from_id, to_id, relation)</code>;
+<code>ON DELETE CASCADE</code> to nodes</td>
+</tr>
+<tr>
+<td><code>timeline</code></td>
+<td><code>seq</code>, <code>timestamp</code>, <code>tool</code>,
+<code>params</code>, <code>result_summary</code>, <code>is_write</code>,
+<code>is_error</code>, <code>affected_ids</code></td>
+<td>one row per MCP call</td>
+</tr>
+</tbody>
+</table></div>
+<p>(<code>db.ts:51-98</code>, <code>:138-148</code>.) <code>kind</code>
+is one of <code>feature</code>, <code>module</code>,
+<code>pattern</code>, <code>config</code>, <code>decision</code>,
+<code>component</code>, and <code>relation</code> one of
+<code>connects_to</code>, <code>depends_on</code>,
+<code>implements</code>, <code>calls</code>, <code>configured_by</code>,
+both enforced by zod on the tool schema (<code>index.ts:196-201</code>),
+not by the table.</p>
+<p><strong>Scope is the file.</strong> No column names a project, user
+or agent. Two agents in the same directory share one graph; the same
+agent in another directory has another. This is a physical partition,
+not a scope key.</p>
+<p><strong>Time is record time.</strong> <code>created_at</code>,
+<code>updated_at</code> and <code>removed_at</code> are set by SQLite's
+<code>datetime('now')</code>. There is no validity interval, and
+<code>updated_at</code> overwrites. <code>getNodesAtTime</code>
+reconstructs membership at a past instant from <code>created_at</code>
+and <code>removed_at</code> (<code>db.ts:891-898</code>), but returns
+each node's current summary. Edges of a removed node were hard-deleted
+at removal, so the explorer's past graph loses them
+(<code>db.ts:372-374</code>, <code>:900-912</code>).</p>
+<p><strong>Hierarchy is soft.</strong> Removing a parent leaves its
+children active with a <code>parent_id</code> that no active row
+answers, so they drop out of <code>list_roots</code> — which selects
+<code>parent_id IS NULL</code> (<code>db.ts:461-467</code>) — while
+<code>understand</code> still finds them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Pure dense retrieval. The query is embedded, every active node's
+embedding is read from SQLite on every call, cosine is computed in
+JavaScript, and the top <code>top_k</code> (default 10, maximum 50) are
+returned whatever their score. No lexical arm, no threshold, no recency
+and no rerank. A query about something the graph lacks still returns ten
+nodes.</p>
+<p>Each hit is expanded one hop: all active children with their
+summaries, all edges both ways with the neighbour's name, and the
+parent. On a well-connected graph that can make one
+<code>understand</code> call several times the size of its ten
+summaries. Nothing bounds it.</p>
+<p>Retrieval is tool-mediated: nothing is injected automatically. The
+installed instructions make <code>list_roots</code> the session-start
+call, and that response is every root with every direct child's name,
+unbounded. The repository ships <code>check-roots-size.sh</code> to
+estimate its tokens.</p>
+<p>The failure a reader should expect is stale context rather than
+noise. A summary the agent did not update after a refactor stays
+authoritative, and during an unresolved merge two contradictory copies
+arrive side by side.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>All writes are explicit tool calls by the agent; the bootstrap and
+save slash commands (<code>commands/bootstrap-memory.md</code>,
+<code>commands/save-memory.md</code>) are prompts asking it to make
+them. No model call happens inside MegaMemory besides the embedding.
+Deduplication is by id only: <code>save-memory.md</code> tells the agent
+to <code>understand</code> first and update rather than create, and the
+server cannot tell two names for one concept apart.</p>
+<p><strong>Update is in place.</strong> The previous
+<code>summary</code>, <code>why</code> and <code>file_refs</code> are
+lost; the timeline row names which fields changed
+(<code>index.ts:341-348</code>).</p>
+<p><strong>Remove is soft for the node and hard for its edges.</strong>
+The tool description promises <em>"The concept and its removal reason
+are preserved in history"</em> (<code>index.ts:405</code>), which holds
+for the node row. Relations are deleted. No MCP verb removes one wrong
+edge without removing a node.</p>
+<p><strong>Conflict handling is branch-level.</strong> Two databases
+merge by id. A concept removed on one side and active on the other is a
+conflict, not a silent deletion (<code>merge.ts:55-58</code>; tested at
+<code>merge.test.ts:387-414</code>). A concept identical on both sides
+merges clean. Resolution writes nothing that records the rejected text,
+so merging again with a branch file that still holds it raises the same
+conflict again.</p>
+<p>Agent-generated content is the only content, and nothing filters
+it.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Write:</strong> synchronous. <code>create_concept</code> and
+a text-changing <code>update_concept</code> block on one local
+embedding; the first call in a process also loads, and on first install
+downloads, the model. The new node is searchable as soon as the call
+returns.</li>
+<li><strong>Background:</strong> none. <code>merge</code> rewrites the
+whole file, on demand.</li>
+<li><strong>Read:</strong> every <code>understand</code> loads every
+active embedding, linear in graph size, which the README bounds as
+<em>"fast enough for graphs with &lt;10k nodes"</em>. Nothing is
+injected unasked.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Nine MCP tools: <code>understand</code>, <code>get_concept</code>,
+<code>create_concept</code>, <code>update_concept</code>,
+<code>link</code>, <code>remove_concept</code>, <code>list_roots</code>,
+<code>list_conflicts</code>, <code>resolve_conflict</code>
+(<code>index.ts:205-536</code>). The agent holds every verb, including
+the one that closes a merge conflict.</p>
+<p><code>megamemory install</code> writes the MCP entry for opencode,
+Claude Code, Codex and Antigravity, appends the workflow block to the
+global instruction file under a <code>## Project Knowledge Graph</code>
+marker, and copies the slash commands and, for opencode, a skill-tool
+plugin (<code>install.ts:498-550</code>,
+<code>plugin/megamemory.ts</code>). The plugin's <code>merge</code>
+action and the <code>resolve_conflict</code> description tell the agent
+to verify both versions against the code and <em>"write the
+truth"</em>.</p>
+<p>Adapting it to another MCP client is a config line. Adapting the
+memory to anything but a coding agent working in one directory would
+mean adding a scope key the schema does not have.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is optional and hidden.</strong>
+<code>created_by_task</code> is a free string the agent may pass, shown
+by the web explorer's node route and absent from <code>understand</code>
+results. Nothing records which agent or session wrote a node.</p>
+<p><strong>The explorer is readable from any web page and any host on
+the network.</strong> <code>server.listen(port, …)</code> passes no
+host, so Node binds every interface, and every JSON response carries
+<code>Access-Control-Allow-Origin: *</code>
+(<code>src/web.ts:28-34</code>, <code>:101</code>). While
+<code>megamemory serve</code> runs, a page in the user's browser can
+fetch <code>/api/graph</code> and read every summary. The routes are
+read-only, so this is disclosure, not tampering.</p>
+<p><strong>MCP conflict resolution likely fails on any connected
+concept.</strong> <code>renameNodeId</code> sets
+<code>PRAGMA foreign_keys = OFF</code> so it can rewrite a
+self-referenced id (<code>db.ts:602-633</code>).
+<code>resolveConflict</code> calls it inside
+<code>runInTransaction</code> (<code>tools.ts:378-392</code>), and
+SQLite documents that pragma as a no-op inside a transaction. The
+<code>UPDATE</code> of the id should then fail on any edge or child
+referencing it. The CLI route calls <code>renameNodeId</code> outside a
+transaction. The one MCP resolution test uses nodes with no edges. This
+was read, not run.</p>
+<p><strong>The log does not survive a merge.</strong> A merge without
+<code>--into</code> writes a fresh database and renames it over the
+first input (<code>merge-cli.ts:59-83</code>); the engine copies nodes
+and edges and never touches <code>timeline</code>
+(<code>merge.ts:100-102</code>).</p>
+<p><strong>Concurrency is handled.</strong> Transactions are
+<code>BEGIN IMMEDIATE</code>, busy errors retry, and
+<code>db.concurrency.test.ts</code> forks writer processes against one
+file.</p>
+<p><strong>Uncertainty is not representable.</strong> A node is active
+or removed; a conflict copy is searched like any node.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>audit_log</code> — awarded. The <code>timeline</code> table is
+a named, insert-only record in the graph's own file, and every MCP write
+appends to it. Its limits are real: written after commit and allowed to
+fail, changed field names without values, no affected ids on
+<code>resolve_conflict</code>, nothing from the CLI <code>merge</code>
+and <code>resolve</code>, and emptied by a default merge.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld. The soft-deleted row refuses a
+re-create of the same slug, but it is keyed on the id, the refusal is an
+unexplained constraint error, and the same claim under another name is
+admitted. A resolved merge records nothing about the rejected copy.</li>
+<li><code>trust_state</code> — withheld. <code>needs_merge</code> is the
+only status-like field, and only <code>list_conflicts</code> and
+<code>megamemory conflicts</code> read it (<code>db.ts:557-568</code>);
+<code>understand</code> returns flagged copies.</li>
+<li><code>bitemporal</code> — withheld. Only record timestamps
+exist.</li>
+<li><code>scope_enforced</code> — withheld. The boundary is one file per
+directory, with no key on a row and no predicate on a read.</li>
+<li><code>human_review</code> — withheld. A conflict waits in
+<code>needs_merge</code> until resolved, and
+<code>resolve_conflict</code> is on the agent's own tool list;
+<code>megamemory resolve</code> is a second door, not the only one.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything here
+is from reading the tests at the pin. The publish workflow runs
+<code>npm test</code> before <code>npm publish</code> on a GitHub
+release (<code>.github/workflows/publish.yml</code>); no workflow runs
+on push.</p>
+<p><strong>The negative case.</strong>
+<code>getNodesAtTime excludes nodes removed before the timestamp</code>
+(<code>src/__tests__/timeline.test.ts:423-428</code>) asserts the
+snapshot read leaves out node-b, soft-deleted before the instant, and
+the next case, over the same fixture and instant
+(<code>:430-435</code>), asserts node-c, removed afterwards, is
+returned. The pair exercises the <code>removed_at</code> predicate in
+<code>getNodesAtTime</code> (<code>src/db.ts:891-898</code>), which
+serves the explorer's time slider rather than an agent tool. The fixture
+also inserts an edge to a node after soft-deleting it
+(<code>:382-404</code>), a state <code>softDeleteNode</code> never
+leaves, so the edge variant tests a row the product cannot produce.</p>
+<p><strong>The merge resolution.</strong>
+<code>keeps left version and removes right on resolve --keep left</code>
+(<code>src/__tests__/merge.test.ts:552-589</code>) merges two files
+whose <code>feature</code> differs, asserts both copies are readable,
+applies the resolution, then asserts <code>getNode("feature")</code>
+returns the left summary and <code>getNode("feature::right")</code>
+returns nothing. The absent row is one the test itself hard-deleted, so
+the case checks the primitives <code>runResolve</code> calls, not a
+filter, and neither <code>runResolve</code> nor
+<code>resolve_conflict</code> is driven.</p>
+<p><strong>A case that passes on nothing.</strong>
+<code>excludes soft-deleted nodes</code>
+(<code>db.test.ts:253-271</code>) inserts one node, removes it, and
+asserts <code>getAllActiveNodesWithEmbeddings</code> has length 0 — the
+<code>understand</code> path's only exclusion test, and it would pass
+against a reader returning nothing. The <code>get_concept</code>
+equivalent (<code>get-concept.test.ts:90-98</code>) asserts a throw,
+with no control in the case.</p>
+<p><strong>Covered well.</strong> Merge: identical, one-sided, removal,
+edge and pre-existing conflicts (<code>merge.test.ts</code>, 32 cases).
+Id slugging, error formatting, embedding arithmetic, migrations, the
+installer's config merging, and a two-case multi-process concurrency
+suite.</p>
+<p><strong>Not covered.</strong> The timeline logger and every MCP
+handler; re-creating a removed concept; <code>resolve_conflict</code> on
+a node with edges; <code>understand</code> over a real embedding. No
+retrieval-quality evaluation exists, and <code>CHANGELOG.md</code> stops
+at 1.0.0 with six tools against the nine in code. No paper or citation
+block is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Soft delete with a required reason, and one predicate on
+every read.</strong> <code>removed_at IS NULL</code> appears on each
+agent-facing query in one file, which is what makes it auditable in a
+minute.</li>
+<li><strong>Log every tool call to a table in the memory's own
+file.</strong> Tool, ids, write flag and error flag cost one insert and
+answer "when did the agent change this".</li>
+<li><strong>Treat a removal on one branch and an edit on another as a
+conflict.</strong> The merge compares removed state as content, so a
+deletion cannot be lost to a concurrent edit or win over one
+silently.</li>
+<li><strong>Measure the session-start payload with a script against the
+real store.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deriving the primary key from a name and keeping the removed
+row under it.</strong> Either the removed row is a tombstone and says so
+with a message, or the key must not collide with it.</li>
+<li><strong>Toggling a connection pragma inside a helper that may run in
+a caller's transaction.</strong> SQLite ignores
+<code>foreign_keys</code> there, and the helper's own tests run it
+outside one.</li>
+<li><strong>Letting unresolved conflict copies into search.</strong> A
+flag nothing on the read path consults is not a state.</li>
+<li><strong>Logging after commit and swallowing the failure</strong>
+when the log is meant to be the record.</li>
+<li><strong>An explorer bound to every interface with
+<code>Access-Control-Allow-Origin: *</code>.</strong> Bind loopback and
+drop the header.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer, one repository and one agent that is
+willing to be disciplined about writing concepts after each task. Its
+value is entirely in the agent's summaries, so it rewards a user who
+reads the explorer and prunes. A team sharing a graph through git gets a
+real merge tool but no attribution, and the agent can settle conflicts
+without a person. Anyone who needs to correct a belief and later show
+what it used to say needs history this schema does not keep; <a
+href="../sqlite-memory-mcp/">sqlite-memory-mcp</a> is the same shape
+with an event ledger and a promotion gate.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does MCP <code>resolve_conflict</code> fail on a node with edges, as
+the pragma rule implies? Running it once would settle it.</li>
+<li>What happens to a running MCP server whose <code>knowledge.db</code>
+a default merge has renamed over? It likely keeps writing to the
+unlinked file.</li>
+<li>How large do real graphs get, and does <code>list_roots</code> stay
+within a useful budget at that size?</li>
+<li>Is the time slider's use of current summaries for past instants
+intended?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong> <code>src/db.ts</code>,
+<code>src/types.ts</code>.</li>
+<li><strong>Tools and retrieval:</strong> <code>src/tools.ts</code>,
+<code>src/embeddings.ts</code>.</li>
+<li><strong>MCP server and timeline:</strong> <code>src/index.ts</code>,
+<code>src/timeline.ts</code>.</li>
+<li><strong>Merge:</strong> <code>src/merge.ts</code>,
+<code>src/merge-cli.ts</code>.</li>
+<li><strong>Explorer:</strong> <code>src/web.ts</code>,
+<code>web/index.html</code>.</li>
+<li><strong>Integration:</strong> <code>src/install.ts</code>,
+<code>plugin/megamemory.ts</code>,
+<code>commands/bootstrap-memory.md</code>,
+<code>commands/save-memory.md</code>.</li>
+<li><strong>Tests:</strong> <code>src/__tests__/db.test.ts</code>,
+<code>merge.test.ts</code>, <code>conflicts.test.ts</code>,
+<code>timeline.test.ts</code>, <code>get-concept.test.ts</code>,
+<code>create-concept.test.ts</code>, <code>embeddings.test.ts</code>,
+<code>db.concurrency.test.ts</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+<li><code>grep -niE 'renamed|formerly' README.md CHANGELOG.md</code> —
+no match.</li>
+<li><code>grep -rnE 'project_id|tenant|workspace_id|agent_id|user_id|session_id' src plugin web</code>
+— no match; no scope column.</li>
+<li><code>grep -rn 'needs_merge' src --exclude-dir=__tests__</code> —
+read only by <code>getConflictNodes</code>,
+<code>getConflictEdges</code> and the merge engine; no retrieval
+query.</li>
+<li><code>grep -rniE 'tombstone|blocklist|denylist|rejected|suppress' src plugin commands</code>
+— no match.</li>
+<li><code>grep -rniE 'restore|undelete|unremove|removed_at = NULL' src --exclude-dir=__tests__</code>
+— no match; nothing reverses a removal.</li>
+<li><code>grep -rn 'deleteEdge(' src plugin</code> — the definition at
+<code>db.ts:404</code> only.</li>
+<li><code>grep -rn 'insertTimelineEntry' src</code> —
+<code>timeline.ts:20</code> outside tests;
+<code>grep -rniE 'DELETE FROM timeline|UPDATE timeline' src</code>
+matches only a test helper.</li>
+<li><code>grep -rn 'timeline' src/merge.ts src/merge-cli.ts</code> — no
+match.</li>
+<li><code>grep -rn 'createTimelineLogger' src/__tests__</code> — no
+match; the logger is untested.</li>
+<li><code>grep -rn 'foreign_keys' src</code> — <code>db.ts:21</code>,
+<code>:606</code>, <code>:631</code>.</li>
+<li><code>grep -rn 'listen(' src</code> — <code>web.ts:101</code>, with
+no host argument.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-29</strong> — <a
+href="https://github.com/0xK3vin/MegaMemory/commit/e0bb3c270d7fb4f6f280ae4685e0c538eb225d93"><code class="commit-id" title="e0bb3c270d7fb4f6f280ae4685e0c538eb225d93">e0bb3c27…</code></a>
+— first reading, at the head of <code>main</code>, tagged v1.6.2 and
+dated 3 May 2026. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>. Screened before reading: no auto-run
+surface, one build-time execution point (the npm
+<code>prepublishOnly</code> script), one floating surface (ten caret
+ranges in <code>package.json</code>, resolved by the committed
+lockfile), and nothing inside the cooldown in a depth-1 clone whose
+files all date to the tip. No agent-instruction file is in the tree; the
+installer's instruction text and the slash commands were read as data.
+Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
