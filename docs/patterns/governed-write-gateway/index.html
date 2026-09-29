@@ -344,6 +344,16 @@ and fails on any new raw caller, with a negative control on its own
 matcher. What the gateway cannot see is the store itself: the corpus is
 Markdown, and a block written by an editor enters recall with no receipt
 at all.</p>
+<p><a href="../../systems/obelyth-cortex/">Cortex (Obelyth)</a> runs two
+write paths with opposite governance into one store. A guest's
+<code>brain_propose</code> lands in a Redis queue that only the passcode
+console or a trusted MCP door can drain, and acceptance commits the note
+and a receipt keyed on the proposal id in one Git operation, so a
+retried accept resolves instead of applying twice. The trusted door's
+<code>brain_write</code> reaches the same <code>writeNote</code> with
+none of that: no review, no receipt, and a <code>replace</code> retry
+that overwrites a concurrent write. The gateway exists, and only the
+untrusted caller is routed through it.</p>
 <h3 id="gates-on-something-other-than-a-write">Gates on something other
 than a write</h3>
 <p>These are analogies rather than instances. Each puts one gate, or one

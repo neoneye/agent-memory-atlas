@@ -360,6 +360,8 @@ rather than dead is deleted, and deletion is permanent."*
 
 **[ZenBrain](../../systems/zenbrain/) ships the decay functions and applies none of them to what it stores.** `@zensation/algorithms` exports FSRS retrievability, Ebbinghaus curves, Hebbian strengthening and decay, and emotion-weighted decay multipliers, each a pure function over state the caller holds. The `MemoryCoordinator` stores facts with FSRS difficulty, stability and next-review time and reads them only to fill a spaced-repetition queue; recall ranks by cosine or lexical score alone, and `consolidate()` reports `pruned` as a constant 0 (`packages/core/src/coordinator.ts:403-444`). The one decay that runs is `exp(-0.05 × minutes)` on an in-process working memory that dies with the process. A library of decay arithmetic is not a decaying store: the question to ask of any design here is which read path multiplies by the curve.
 
+**[Cortex Hub](../../systems/cortex-hub/) shows what reinforcement does when its credit is not attributed.** A quality-gate result from any agent increments completion or fallback on the ten active knowledge documents whose `updated_at` falls in the last hour, across every project (`apps/dashboard-api/src/routes/knowledge.ts:999-1023`), and every search sets `updated_at` on each over-fetched candidate, so the credited set is whatever anyone searched. The same search bumps the timestamp the ranker reads for recency, so exposure refreshes its own recency term. The counters then decide a ranking term, a `deprecated` flag that hides a document from the session brief, and which documents an LLM rewrites.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

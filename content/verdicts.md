@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 673 reports.**
+**This page covers all 675 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6055,3 +6055,23 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 8,629 lines of TypeScript in package sources and 144 commits on main from 6 contributors between 23 March and 26 September 2026. No mark. 673 Vitest cases, but the Postgres adapter's 38 mock `pg` and CI runs no database; the paper's ablation is re-diffed in CI against its published JSON, and measures a simulation rather than the coordinator.
 - Study when: you want small, readable implementations of spaced-repetition and forgetting-curve arithmetic to hold in your own store, or a worked example of a project retracting its own benchmark claim with the arithmetic.
 - Do not copy when: memories must be corrected, scoped or forgotten, or when the architecture described in the paper is the reason you came — the stored layers run none of its decay, strengthening or replay.
+
+### [`obelyth-cortex`](../systems/obelyth-cortex/)
+
+- Best idea: **a deterministic quote check on every answer, aware of retraction.** The reader must cite a verbatim quote by an opaque file tag; the server resolves the tag, checks the quote against one block of the file at the served commit, and stamps SUPERSEDED when that block sits under a retraction banner and CORRECTED when it carries an in-place `(was: "…")` correction.
+- Biggest risk: **the trusted door writes without any gate.** Anything holding `MCP_TOKEN` or the connector URL can replace any live note in one call, there is no delete tool, and a `replace` that races another write overwrites it on retry.
+- Most reusable component: `lib/verify.ts` with `lib/ask.ts` `render` — block-scoped quote matching, the banner-versus-correction distinction, and a stamp that says what a verified quote does not prove.
+- Second risk: **retraction depends on vocabulary.** A claim refuted in prose without SUPERSEDED, CORRECTION, DEPRECATED, `was:` or "Do not answer" verifies as current, and a committed `BUG:` test pins exactly that case.
+- Maturity impression: AGPL-3.0-only, 32,520 lines of TypeScript outside tests and 4,111 lines of SQL migrations, 40 commits on `main` from 4 contributors, one a bot, between 10 August and 17 September 2026, about 2,100 Vitest cases, and 13 native Postgres and Valkey suites that CI refuses to skip. Three marks: `scope_enforced`, `human_review`, `negative_eval`. The retrieval eval's labels live in the operator's private brain, not the tree.
+- Study when: you serve one person's notes to several AI clients and want every answer to say whether its evidence is real, current and in the pack, or you need an untrusted client to propose without writing.
+- Do not copy when: memory is shared by several people, needs semantic recall, or must support deletion and correction as data rather than as edits to prose.
+
+### [`cortex-hub`](../systems/cortex-hub/)
+
+- Best idea: **recall as a precondition for writing, enforced by the harness.** A PreToolUse hook refuses Edit, Write and shell writes until `cortex_knowledge_search` and `cortex_memory_search` have both run, the markers must carry a `tool=` line written by the PostToolUse hook, and the way past an unreachable hub is a named `gate-off` file that leaves a trace.
+- Biggest risk: `track-feedback` increments completion or fallback on the ten active documents whose `updated_at` falls in the last hour, with no project, session or agent predicate, and every search sets `updated_at` on its over-fetched candidates. One team's failing quality gate can push another project's document to `deprecated`, which hides it from the session brief and queues it for an LLM rewrite.
+- Most reusable component: the scoped hash check in `Mem9.add` — an ADD whose normalised MD5 already exists under the same `user_id`, or was added earlier in the same call, becomes NONE, closing the duplicate a repeated session summary created, with no extra model call.
+- Second risk: knowledge search reads `status`, `invalidated_at` and `superseded_by` per hit and filters on none of them unless `asOf` is passed, and a fix archives its parent in SQLite while leaving the parent's chunks in Qdrant.
+- Maturity impression: 39,159 lines of TypeScript and JavaScript outside tests and 173 Vitest cases, 70 of them on the memory library's mechanics; no test reaches the knowledge routes, the feedback path or the fix pass, and the LongMemEval figures were tuned on the same 500 questions and report an NDCG above 1.
+- Study when: you want agents to consult shared memory before they edit, or you want a validity-start field and an `asOf` query on documents a team writes.
+- Do not copy when: usage signals will drive ranking or automatic rewrites; attribute outcomes to what a session actually retrieved before letting a counter decide anything.

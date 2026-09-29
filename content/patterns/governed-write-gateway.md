@@ -180,6 +180,15 @@ than deciding it, and nothing downstream can mark a promoted fact wrong.
 
 [MIND-Mem](../../systems/mind-mem/) makes exclusivity a property of the store rather than of the callers. Every `BlockStore.write_block` implementation calls `require_admission` and raises when no receipt from the governance gate is open, the receipt names an ingest tier whose row in `INITIAL_STATUS` fixes the status the write may carry, and `tests/test_governed_write_paths.py` parses the source tree and fails on any new raw caller, with a negative control on its own matcher. What the gateway cannot see is the store itself: the corpus is Markdown, and a block written by an editor enters recall with no receipt at all.
 
+[Cortex (Obelyth)](../../systems/obelyth-cortex/) runs two write paths with
+opposite governance into one store. A guest's `brain_propose` lands in a Redis
+queue that only the passcode console or a trusted MCP door can drain, and
+acceptance commits the note and a receipt keyed on the proposal id in one Git
+operation, so a retried accept resolves instead of applying twice. The trusted
+door's `brain_write` reaches the same `writeNote` with none of that: no
+review, no receipt, and a `replace` retry that overwrites a concurrent write.
+The gateway exists, and only the untrusted caller is routed through it.
+
 ### Gates on something other than a write
 
 These are analogies rather than instances. Each puts one gate, or one stated

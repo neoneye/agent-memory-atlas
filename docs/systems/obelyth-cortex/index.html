@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MCP server over a
+private GitHub repository of Markdown notes, with lexical retrieval,
+deterministic quote verification and a review queue for guest
+proposals.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cortex
+(Obelyth) — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MCP server
+over a private GitHub repository of Markdown notes, with lexical
+retrieval, deterministic quote verification and a review queue for guest
+proposals.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cortex
+(Obelyth) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MCP server
+over a private GitHub repository of Markdown notes, with lexical
+retrieval, deterministic quote verification and a review queue for guest
+proposals.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cortex (Obelyth) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cortex (Obelyth)",
+      "description": "A self-hosted MCP server over a private GitHub repository of Markdown notes, with lexical retrieval, deterministic quote verification and a review queue for guest proposals.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A Git-backed Markdown brain behind a
+two-door MCP server</p>
+          <h1>Cortex (Obelyth)</h1>
+          <p class="document-deck">A self-hosted MCP server over a
+private GitHub repository of Markdown notes, with lexical retrieval,
+deterministic quote verification and a review queue for guest
+proposals.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Obelyth/cortex">
+              <span>Source</span>
+              <strong>Obelyth/cortex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Obelyth/cortex/commit/ec57124a90ba9c378c5a9b989fe0f5d8f9c98da3" title="ec57124a90ba9c378c5a9b989fe0f5d8f9c98da3">
+              <span>Analyzed revision</span>
+              <code>ec57124a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Obelyth--cortex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Obelyth--cortex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0-only</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>32,520
+lines of TypeScript outside tests (lib 17,008, app 11,480, scripts
+3,873) and 4,111 lines of SQL migrations</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>40
+commits on main by 4 contributors, one a bot, 10 August – 17 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>about
+2,100 Vitest cases in 222 files, 32,284 lines; 13 native Postgres and
+Valkey suites that CI runs with zero skips allowed</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cortex is a self-hosted Next.js application on Vercel that keeps one
+person's memory as Markdown notes in a private GitHub repository and
+serves it over MCP. Trusted clients read and write through
+<code>brain_*</code> tools, and a separate guest door lets an untrusted
+assistant ask questions and propose notes. What is notable is the answer
+path: <code>brain_ask</code> has a reader model cite a verbatim quote,
+then checks it against the file bytes at the served commit and stamps
+the reply, including <code>SUPERSEDED</code> when the quote sits under a
+retraction banner. What is weak is the other side of the trust line: a
+trusted door writes straight into the brain, there is no delete tool,
+and retrieval is BM25 over the whole tarball.</p>
+<p>The code is dense with measured decisions. Budgets, caps and
+fallbacks each carry a comment naming the failure that set them, and
+most of those failures are silent-loss cases: a write that landed where
+no read could reach it, a truncated reply the caller took for the whole
+brain, a suite that skipped itself and looked green.</p>
+<p>The public tree is an export of a private working repository.
+Comments cite measurements on "the live brain" from July 2026, before
+the first public commit, and <code>docs/export-gate.md</code> describes
+a release gate that compares shipped source against the private corpus.
+The retrieval eval's labelled set lives in that private brain, not in
+this tree.</p>
+<p>Three marks: <code>scope_enforced</code> on the project key of
+working-state items, <code>human_review</code> on the guest proposal
+queue, and <code>negative_eval</code> on a native Postgres case over the
+scoped read. Section 9 names the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a note. It becomes a belief when a tool commits it:
+<code>brain_write</code> or <code>brain_capture</code> from a trusted
+door, or <code>brain_accept</code> on a guest's proposal. There is no
+candidate state for a trusted write and no model in the write path. The
+note path fixes its role: <code>profile.md</code>,
+<code>projects/</code>, <code>notes/</code>, <code>log/</code> (one file
+per day) and <code>history/</code> are live, and <code>archive/</code>
+is readable by exact path but excluded from every corpus read
+(<code>lib/brain.ts:35-40</code>; <code>lib/corpus.ts:38</code>).</p>
+<p><strong>A note stops being believed by being edited, not by changing
+state.</strong> The house convention keeps the retired wording on the
+page: a banner <code>&gt; **SUPERSEDED …**</code> or an in-place
+<code>current claim (was: "old claim")</code>. The verifier reads those
+words at answer time (<code>lib/verify.ts:180-256</code>). A quote under
+a banner is stamped SUPERSEDED with "Do not answer from it"; a quote
+beside a <code>was:</code> marker is stamped CORRECTED, because the
+marked block carries the current claim
+(<code>lib/ask.ts:727-739</code>). The reader prompt says the same thing
+in prose (<code>lib/ask.ts:65-85</code>). Nothing filters the retracted
+passage out of the pack. The stamp is a label on the reply, derived from
+text each time.</p>
+<p><strong>Working state is a second, shorter-lived tier.</strong> A
+bubble item is one of <code>focus</code>, <code>decision</code>,
+<code>question</code> or <code>handoff</code>, with a project key. It is
+<code>open</code> until the agent files it into a note it has already
+written, drops it, or leaves it untouched for 14 days, when the next
+read flips it to <code>aged</code>
+(<code>supabase/bootstrap.sql:218-233</code>). Items are never
+deleted.</p>
+<p><strong>Guests propose; something else decides.</strong> A proposal
+is <code>pending</code> in a Redis hash, becomes <code>accepting</code>
+when claimed, and ends as a Git commit, a cancellation receipt, a
+rejection that leaves nothing, or expiry after 30 days
+(<code>lib/proposals.ts:43-48</code>, <code>:184-221</code>).</p>
+<p><strong>Use shapes visibility, not truth.</strong> A
+<code>note_scores</code> view blends access recency, write recency, a
+directory prior and operator pins into hot, warm and cold. Cold notes
+leave the boot router's rendered rows and stay reachable by search
+(<code>lib/frontmatter.ts:541-544</code>, <code>:696-697</code>). A
+cold, never-read note untouched for 180 days can be nominated for
+deletion by a manual script; nothing records a decision on the
+nomination (section 9).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a note becomes a belief in Cortex, how a guest's note waits for a decision, and how retraction is read at answer time</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a note becomes a belief in Cortex, how a guest&#39;s note waits for a decision, and how retraction is read at answer time
+flowchart TD
+    TW[&quot;trusted door:&lt;br/&gt;brain_write or brain_capture&quot;] --&gt; GC[&quot;one GitHub commit,&lt;br/&gt;SHA returned&quot;]
+    GP[&quot;guest door:&lt;br/&gt;brain_propose&quot;] --&gt; Q[&quot;Redis hash:&lt;br/&gt;pending, 30-day TTL&quot;]
+    Q -- &quot;console or trusted&lt;br/&gt;brain_accept&quot; --&gt; ACC[&quot;accepting&quot;]
+    ACC --&gt; GC
+    ACC -- &quot;console cancel&quot; --&gt; CAN[&quot;cancellation receipt,&lt;br/&gt;no note change&quot;]
+    Q -- &quot;brain_reject&quot; --&gt; GONE[&quot;removed, no trace&quot;]
+    Q -- &quot;30 days&quot; --&gt; GONE
+    GC --&gt; LIVE[&quot;live note at branch head&quot;]
+    LIVE -- &quot;moved to archive/&lt;br/&gt;by hand&quot; --&gt; ARCH[&quot;readable by path,&lt;br/&gt;never in a corpus read&quot;]
+    LIVE --&gt; ASK{&quot;brain_ask: BM25 pack,&lt;br/&gt;reader cites a quote&quot;}
+    ASK -- &quot;quote not verbatim&lt;br/&gt;or not in pack&quot; --&gt; UNV[&quot;UNVERIFIED&quot;]
+    ASK -- &quot;block under a&lt;br/&gt;SUPERSEDED banner&quot; --&gt; SUP[&quot;SUPERSEDED:&lt;br/&gt;do not answer from it&quot;]
+    ASK -- &quot;block carries&lt;br/&gt;(was: ...)&quot; --&gt; COR[&quot;CORRECTED&quot;]
+    ASK -- &quot;verbatim, one file&quot; --&gt; VER[&quot;VERIFIED&quot;]
+    B[&quot;brain_bubble add&quot;] --&gt; OPEN[&quot;bubble item: open&quot;]
+    OPEN -- &quot;file into a written note&quot; --&gt; FILED[&quot;filed&quot;]
+    OPEN -- &quot;drop, or 14 days untouched&quot; --&gt; AGED[&quot;aged&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Cortex is a Next.js 16 application meant for Vercel. Three MCP routes
+share one handler factory (<code>lib/handler.ts:38-58</code>):
+<code>/api/mcp</code> with a bearer <code>MCP_TOKEN</code>,
+<code>/api/s/&lt;secret&gt;/mcp</code> for clients that can only hold a
+URL, and <code>/api/g/&lt;secret&gt;/mcp</code> for guests, which
+rewrites onto the bearer handler built with the guest toolset
+(<code>app/api/g/[secret]/[transport]/route.ts:30-62</code>). A passcode
+dashboard lives under <code>/s/&lt;secret&gt;/console</code>.</p>
+<p><strong>The notes are the GitHub repository.</strong> Reads resolve
+the branch head SHA, fetch the tarball when the SHA changed, and keep
+one parsed corpus per warm instance keyed on that SHA
+(<code>lib/corpus.ts:288-330</code>). A head-resolution failure serves
+the cached corpus, and every answer names the commit it was proven
+against. Writes go through the Contents API, one commit each, then
+regenerate <code>INDEX.md</code> for people browsing on GitHub
+(<code>lib/brain.ts:607-636</code>).</p>
+<p><strong>Two optional stores hold what Git should not.</strong>
+Upstash Redis holds the proposal queue, guest policy, a capped call log
+and an answer cache keyed on corpus SHA and door. Supabase Postgres
+holds a byte-identical mirror of each note, bubble items, a per-read
+access log, the <code>note_scores</code> view, pins, deletion
+nominations and <code>note_edges</code>, a graph rebuilt from the corpus
+and the access log (<code>lib/edges.ts:1-19</code>). The bootstrap SQL
+says bubble items exist nowhere else and need their own backup.</p>
+<p>A Vercel cron hits <code>/api/ops/sweep</code> every 15 minutes
+(<code>vercel.json</code>) for the operations ledger and to date notes
+the mirror has not dated. The mirror sync and edge rebuild are scheduled
+after corpus loads (<code>lib/corpus.ts:304-323</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Two accounts, GitHub and Vercel, and a fine-grained token scoped to
+the brain repository are enough to browse and write. No model key is
+needed to store anything; <code>brain_ask</code> needs one for the
+reader (Anthropic by default, OpenAI or Gemini by allowlist). Supabase
+adds working state, scores and the graph; Upstash adds the guest door,
+since proposals have nowhere else to live
+(<code>lib/proposals.ts:68-72</code>). It does not run offline: the
+corpus is always fetched from GitHub. The store is plain Markdown in a
+Git repository, so a bad note is fixed with any editor, and the history
+is Git's.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Trusted write.</strong> <code>brain_write</code>
+(<code>lib/tools.ts:536-579</code>) → <code>writeNote</code>
+(<code>lib/brain.ts:670-749</code>): validate the path against
+<code>PATH_RE</code>, refuse payloads over 500,000 characters, read the
+file, apply the mode, scrub unstorable bytes with
+<code>storableText</code>, <code>putFile</code> with the file SHA, then
+regenerate the index. The <code>edit</code> mode requires
+<code>find</code> to occur exactly once and splices by index rather than
+<code>String.replace</code> (<code>:654-668</code>).
+<code>brain_capture</code> appends a <code>## HH:MM · tags</code> entry
+to <code>log/&lt;date&gt;.md</code> (<code>:758-790</code>).</p>
+<p><strong>Guest proposal.</strong> <code>brain_propose</code>
+(<code>lib/tools.ts:830-879</code>) reads the guest policy, meters the
+call, and calls <code>propose</code>
+(<code>lib/proposals.ts:98-127</code>), which validates the target path
+and runs admission inside a Lua script that applies the same decode the
+prune applies (<code>lib/proposal-queue.ts</code>). The queue refuses
+new rows at 50 rather than evicting unreviewed ones.</p>
+<p><strong>Acceptance.</strong> <code>acceptProposal</code>
+(<code>lib/proposals.ts:184-221</code>) claims the row to
+<code>accepting</code> inside <code>writeNote</code>'s pre-write hook,
+commits the note and a receipt at
+<code>.cortex/accepted-proposals/&lt;sha256&gt;.json</code> in one Git
+operation (<code>lib/proposal-git.ts:12</code>, <code>:23-27</code>),
+then finalizes the queue. A lost reply is resolved by retrying the same
+id, which finds the receipt instead of applying twice.</p>
+<p><strong>Ask.</strong> <code>brain_ask</code> → <code>ask</code>
+(<code>lib/ask.ts:421-560</code>): apply the guest scope first, rank
+with BM25 (<code>narrowDetail</code>), pack up to
+<code>DEFAULT_K = 15</code> notes under 400,000 bytes with at most two
+history parts per page, tag each file block, call the reader, resolve
+the tag server-side, verify the quote, and render a stamp and a coverage
+line (<code>:636-739</code>).</p>
+<p><strong>Boot and handoff.</strong> <code>brain_context</code> →
+<code>getContext</code> (<code>lib/brain.ts:311-556</code>): profile
+under 8,000 bytes, the router under 28,000, then bubble items or recent
+logs under 4,000, all behind a per-request nonce fence.
+<code>brain_handoff</code> (<code>lib/handoff.ts</code>) assembles one
+project page, its open bubble items, log sections tagged with the
+project, and graph neighbours ranked by edge weight and temperature.</p>
+<p><strong>Correction.</strong> Only by editing the note. There is no
+delete mode, and <code>brain_reject</code> discards a proposal "without
+writing anything" (<code>lib/tools.ts:658-675</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Unit</th>
+<th>Where</th>
+<th>Fields that matter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Note</td>
+<td>GitHub repo, one file</td>
+<td>path; optional frontmatter <code>description</code>,
+<code>name</code>, <code>tags</code>, <code>decays</code>,
+<code>reverify</code> (<code>lib/frontmatter.ts:43-85</code>); body
+verbatim</td>
+</tr>
+<tr>
+<td>Mirror row</td>
+<td><code>notes</code></td>
+<td><code>path</code>, <code>content</code>, generated
+<code>bytes</code>, <code>commit_sha</code>,
+<code>mirrored_at</code></td>
+</tr>
+<tr>
+<td>Bubble item</td>
+<td><code>bubble_items</code></td>
+<td><code>kind</code>, <code>project</code>, <code>body</code> (1–2,000
+chars), <code>status</code> open/filed/aged, <code>filed_into</code>,
+<code>surface</code>, <code>created_at</code>,
+<code>touched_at</code></td>
+</tr>
+<tr>
+<td>Access row</td>
+<td><code>note_access</code></td>
+<td><code>path</code>, <code>tool</code>, <code>surface</code>,
+<code>mode</code>, <code>at</code></td>
+</tr>
+<tr>
+<td>Pin</td>
+<td><code>note_pins</code></td>
+<td><code>path</code>, <code>temperature</code>,
+<code>reason</code></td>
+</tr>
+<tr>
+<td>Nomination</td>
+<td><code>deletion_candidates</code></td>
+<td><code>path</code>, <code>reason</code>, <code>decision</code>
+null/keep/approved, <code>decided_at</code></td>
+</tr>
+<tr>
+<td>Edge</td>
+<td><code>note_edges</code></td>
+<td><code>src</code>, <code>dst</code>, <code>kind</code>
+link/tag/coaccess/lexical/correction, <code>weight</code>,
+<code>evidence</code> ≤200 chars</td>
+</tr>
+<tr>
+<td>Proposal</td>
+<td>Redis hash</td>
+<td><code>id</code>, <code>ts</code>, <code>path</code>,
+<code>mode</code>, <code>content</code> ≤20,000, <code>why</code>,
+<code>client</code>, <code>state</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>A note has no author, confidence or validity time beyond its Git
+history and the prose on the page. <code>decays: false</code> marks a
+note as a record of something that happened, which excuses it from the
+stale-stamp and inbox checks; <code>reverify</code> is a date the
+dashboard sets to queue a re-check by the nightly agent
+(<code>lib/frontmatter.ts:57-79</code>).</p>
+<p><strong>Scope.</strong> There is one operator. Bubble items carry
+<code>project</code>, normalised the same way in TypeScript and in SQL
+through a collation chosen for full Unicode case mapping
+(<code>bubble_open_scoped.sql:10-72</code>). Log entries are scoped by
+the tags in their headings. Guest reach is a list of path prefixes that
+must end at a directory boundary, and a stored policy that parses to
+nothing falls back to <code>projects/</code> rather than to everything
+(<code>lib/guest.ts:31-36</code>, <code>:79-114</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is BM25 (<code>K1 = 1.5</code>, <code>B = 1.0</code>) over
+the tokenised corpus, with a segmenter for scripts written without
+spaces (<code>lib/lexical.ts:1-40</code>). The index is prepared per
+corpus SHA. Packs stop adding notes at the byte budget and never
+truncate one already in. When a question shares no vocabulary with any
+note, <code>narrow</code> falls back to the whole corpus in size order
+under the same caps, and a committed <code>BUG:</code> test pins that
+behaviour (<code>tests/hard-surface.test.ts:561-567</code>).</p>
+<p><strong>Other arms were built and kept off the default path.</strong>
+A Postgres full-text <code>search_notes</code> function exists in the
+migrations with no caller in <code>lib/</code> or <code>app/</code>.
+<code>lib/hop.ts</code> widens the BM25 shortlist by one hop over
+structural edges, and its header records that no evaluated shape beat
+BM25 across candidate budgets, so nothing routes through it
+(<code>lib/hop.ts:17-26</code>). The graph is used only by
+<code>brain_handoff</code> to pick neighbours.</p>
+<p><strong>Every bounded reply says what it left out.</strong> The
+router states how many cold and budget-dropped rows it did not list,
+<code>brain_corpus</code> returns a cursor whenever it withholds notes
+(<code>lib/select.ts:13-20</code>), and <code>brain_ask</code> reports
+selected, omitted and unread-but-matching notes. NOT IN BRAIN is
+accepted only after a complete search of the scope; otherwise a miss is
+UNVERIFIED.</p>
+<p>Guest answers run the same <code>ask</code> over the scoped corpus,
+with a k ceiling, a daily limit, no citations by default, and an answer
+cache keyed on question, SHA, model, k, door and scope
+(<code>lib/tools.ts:760-816</code>). A new commit changes the SHA, so a
+correction never meets a cached answer to the old text.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls and synchronous: one GitHub commit per
+<code>brain_write</code> or <code>brain_capture</code>, plus an index
+commit when the tree changed. The next read resolves the new head, so a
+write is retrievable on the next call. No model extracts, deduplicates
+or consolidates anything. The nightly groundskeeper in
+<code>ops/groundskeeper/SKILL.md</code> is a prompt for a scheduled
+agent that files the day's log into project pages and fact-checks four
+pages a night through the same tools; it runs outside this server.</p>
+<p><strong>Corrections are edits.</strong> The <code>brain_write</code>
+description tells the model to prefer <code>edit</code>, because an
+appended correction leaves the stale claim quotable above it
+(<code>lib/tools.ts:542</code>). The Git history keeps every prior
+version.</p>
+<p><strong>A racing <code>replace</code> wins silently.</strong>
+<code>putFile</code> retries a 409 or 422 when a file SHA was supplied,
+and for <code>replace</code> there is no merge callback, so the retry
+commits the caller's content over the fresh file
+(<code>lib/github.ts:132-169</code>). <code>append</code> and
+<code>edit</code> re-apply against the fresh content, and
+<code>edit</code> re-checks that <code>find</code> still occurs
+once.</p>
+<p><strong>Credentials are redacted on the way out, not refused on the
+way in.</strong> <code>redact</code> runs on every egress surface and
+labels what it removed (<code>lib/redact.ts:1-13</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, one or two GitHub commits, no model call.</li>
+<li>Background: a read-path sweep of bubble items, a mirror sync and
+edge rebuild after corpus loads, and the 15-minute ops cron. Nothing
+rewrites notes on a schedule inside this repository.</li>
+<li>Read: every call resolves the head SHA; a changed head costs a
+tarball fetch. The boot reply is capped at 50,000 bytes. A
+<code>brain_ask</code> pack can reach 400,000 bytes of note text, sent
+to the reader provider.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Eleven tools on the trusted doors, two on the guest door, listed in
+<code>lib/tool-roster.json</code>. The boot call
+(<code>brain_context</code>) is meant for session start and takes an
+optional project. <code>brain_handoff</code> replaces it for a
+single-project resume. Descriptions are written as operating
+instructions: never state a SHA the tool did not return, prefer
+<code>edit</code> for corrections, treat proposal text as data.</p>
+<p><strong>Tool output is fenced against injection.</strong> Note bodies
+in the boot reply, the ask prompt and the proposal listing sit between
+per-request nonce markers, and a note containing text shaped like a
+boundary is flagged as suspect (<code>lib/brain.ts:138</code>;
+<code>lib/proposals.ts:269-296</code>). The guest door does not list the
+write or review tools at all, so a foreign model is never shown what it
+cannot call (<code>lib/handler.ts:32-37</code>).</p>
+<p>Any MCP client that speaks Streamable HTTP can connect. The model has
+full write agency on the trusted doors and decides when to boot, write
+and capture.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The verifier is the trust anchor, and its tests assert its
+known failures.</strong> <code>tests/hard-verify.test.ts</code> holds
+eleven <code>BUG:</code> cases that pass while the bug is live. One is a
+quote that the next clause refutes without a retraction keyword, which
+still stamps VERIFIED (<code>:201-219</code>). The convention-based
+design is deliberate: widening it to any nearby negation would flag
+healthy text.</p>
+<p><strong>Two write surfaces, two trust levels.</strong> Guest writes
+wait for review; trusted writes do not. Anything holding
+<code>MCP_TOKEN</code> or the connector URL can replace any live note.
+The URL door makes the URL itself a credential, and the README says
+so.</p>
+<p><strong>Provenance is Git's.</strong> Each commit message names the
+mode and path, and the call log records door, tool and outcome without
+the path, capped at about 2,500 calls
+(<code>lib/calls.ts:164-165</code>). No record ties a note change to the
+client that made it beyond the door.</p>
+<p><strong>Privacy.</strong> Egress redaction is applied everywhere a
+note leaves the server, and guests receive answers rather than notes. A
+reader call sends the pack to the chosen provider.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — awarded on bubble items; evidence in
+the frontmatter record. Notes carry no scope key, and the guest prefix
+list is a path filter on a single operator's corpus.</li>
+<li><code>human_review</code> — awarded on guest proposals. The producer
+cannot reach the verb, and the queue is filled and drained by reachable
+paths.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — withheld. <code>brain_reject</code> removes
+a proposal and leaves nothing, by design, so a rejected guest note can
+be proposed again. <code>deletion_candidates.decision = 'keep'</code>
+would remember a refusal, keyed on a path rather than a value, and no
+code in <code>lib/</code>, <code>app/</code> or <code>scripts/</code>
+writes the column.</li>
+<li><code>trust_state</code> — withheld. SUPERSEDED and CORRECTED are
+stamps derived from words in the note at answer time, and the retracted
+passage stays in the pack. A proposal's <code>pending</code> state
+belongs to a queue outside the memory store.</li>
+<li><code>bitemporal</code> — withheld. No field records when a claim
+was true; dates live in prose such as
+<code>(was: … — updated &lt;date&gt;)</code> and in Git.</li>
+<li><code>audit_log</code> — withheld. Git history is the mutation
+record. The proposal receipts cover accepted or canceled proposals only,
+and the call log is capped and carries no path.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests and CI at the pin.</p>
+<p><strong>The negative case.</strong>
+<code>tests/bubble-scope.pg.test.ts:51-99</code> builds a database,
+inserts 250 items for project <code>other</code> and six more with
+padded, Unicode, general and expired projects, then asserts
+<code>bubble_open_scoped(14, 200, 'harbor', false)</code> returns
+exactly <code>["scoped-old", "tab-padded", "nbsp-padded"]</code> with
+total 3. The exact list is both the positive control and the exclusion.
+CI runs every <code>*.pg.test.ts</code> and
+<code>*.integration.test.ts</code> against Postgres and Valkey and fails
+on any skipped test (<code>.github/workflows/ci.yml:82-105</code>).
+Outside CI the suite skips visibly with a named
+<code>describe.skip</code>.</p>
+<p><code>tests/context-scope.test.ts:79-119</code> asserts a
+harbor-scoped boot keeps <code>harbor passcode work today</code> and
+drops the pier and galley entries, and that the bubble section keeps
+harbor and general items but not pier's. That is the assembled preamble,
+and the mock store ignores its scope argument, so it exercises the
+renderer's filter.</p>
+<p><strong>The guest boundary.</strong>
+<code>tests/guest-door.test.ts:105-141</code> registers both toolsets
+against a stub and asserts the guest gets exactly <code>brain_ask</code>
+and <code>brain_propose</code>, and never any bulk-read, write or review
+tool.</p>
+<p><strong>Live-corpus suites.</strong> <code>hard-*.test.ts</code>
+embed synthetic notes shaped like the private brain and re-check generic
+properties against a clone at <code>BRAIN_DIR</code> when present,
+skipping visibly when not
+(<code>hard-verify.test.ts:814-821</code>).</p>
+<p><strong>Evals.</strong> <code>scripts/eval-retrieval.ts</code> scores
+recall@k per strategy deterministically, and
+<code>scripts/eval.ts</code> runs reader models over the same labels.
+Both read <code>tools/eval/labels.json</code> from the brain clone
+(<code>scripts/eval-retrieval.ts:60-61</code>;
+<code>scripts/eval.ts:384-387</code>), so no label and no result is
+committed to this repository. The recall figures in comments cannot be
+recomputed from the tree. No paper or citation block is in the tree.</p>
+<p><strong>Not covered.</strong> No case asserts that a SUPERSEDED
+passage stays out of an answer, because it does not; the stamp is the
+mechanism. No case asserts a guest answer omits a note outside its
+prefixes over a populated corpus.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Check the model's quote against the stored bytes and stamp
+the reply.</strong> A deterministic check turns a confident fabrication
+into a visible UNVERIFIED, and costs nothing per call.</li>
+<li><strong>Distinguish a retraction banner from an in-place
+correction.</strong> The block carrying <code>was:</code> holds the
+current claim; reading it as dead tells the reader to discard the
+freshest fact.</li>
+<li><strong>Give an untrusted client a separate handler, not a refusing
+one.</strong> A tool that is listed and then errors invites retries; one
+that is absent does not.</li>
+<li><strong>Keep proposals out of the store they are proposing
+to.</strong> A commit per rejected suggestion would make the history a
+record of things never true.</li>
+<li><strong>Say what every bounded reply omitted, and how to reach
+it.</strong></li>
+<li><strong>Make CI fail on a skipped database suite.</strong> A gated
+suite that skips itself looks identical to one that passed.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Retraction by vocabulary.</strong> A refutation that does
+not use the house words verifies as current. If retraction matters, make
+it a field.</li>
+<li><strong>A review queue with no decision writer.</strong> The
+deletion nominations have a <code>decision</code> column and nothing
+that sets it.</li>
+<li><strong>Evals whose labels live in private data.</strong> The gate
+is real for the operator and unrepeatable for anyone reading the
+repository.</li>
+<li><strong>Retrying an overwrite blind.</strong> A last-writer-wins
+retry should at least report that it replaced a newer version.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants a portable, hand-editable brain
+served to several AI clients, already keeps notes in Git, and cares more
+about knowing when an answer is unproven than about recall at scale. It
+assumes a GitHub and Vercel account, tolerates a network round trip per
+call, and relies on the operator maintaining the retraction conventions
+by hand or through the nightly agent. A team, a multi-tenant product, or
+anyone needing semantic recall or deletion guarantees is outside what
+this was built for; the design says it is single-tenant, and nothing in
+it separates two people.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How large does a brain get before a whole-tarball fetch per head
+change and in-process BM25 stop fitting a 60-second function?</li>
+<li>What recall does the production BM25 configuration reach on the
+operator's labels, and how many labels are there?</li>
+<li>Does the nightly groundskeeper, in practice, accept or reject
+proposals, given that it holds <code>brain_accept</code> and is told not
+to use it?</li>
+<li>Is anything outside this repository expected to write
+<code>deletion_candidates.decision</code>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Tools and doors:</strong> <code>lib/tools.ts</code>,
+<code>lib/handler.ts</code>, <code>app/api/[transport]/route.ts</code>,
+<code>app/api/g/[secret]/[transport]/route.ts</code>,
+<code>lib/tool-roster.json</code>.</li>
+<li><strong>Notes:</strong> <code>lib/brain.ts</code>,
+<code>lib/github.ts</code>, <code>lib/corpus.ts</code>,
+<code>lib/frontmatter.ts</code>, <code>lib/redact.ts</code>.</li>
+<li><strong>Retrieval and verification:</strong>
+<code>lib/ask.ts</code>, <code>lib/narrow.ts</code>,
+<code>lib/lexical.ts</code>, <code>lib/select.ts</code>,
+<code>lib/verify.ts</code>, <code>lib/hop.ts</code>,
+<code>lib/handoff.ts</code>, <code>lib/edges.ts</code>.</li>
+<li><strong>Working state and scores:</strong>
+<code>lib/bubble.ts</code>, <code>lib/mirror.ts</code>,
+<code>supabase/bootstrap.sql</code>,
+<code>supabase/migrations/20260908103956_bubble_open_scoped.sql</code>.</li>
+<li><strong>Guests and review:</strong> <code>lib/guest.ts</code>,
+<code>lib/proposals.ts</code>, <code>lib/proposal-git.ts</code>,
+<code>lib/proposal-queue.ts</code>,
+<code>app/s/[secret]/console/proposals/route.ts</code>.</li>
+<li><strong>Maintenance:</strong>
+<code>scripts/lifecycle-sweep.ts</code>, <code>lib/inbox.ts</code>,
+<code>ops/groundskeeper/SKILL.md</code>, <code>vercel.json</code>.</li>
+<li><strong>Tests and evals:</strong>
+<code>tests/bubble-scope.pg.test.ts</code>,
+<code>tests/context-scope.test.ts</code>,
+<code>tests/guest-door.test.ts</code>,
+<code>tests/hard-verify.test.ts</code>,
+<code>tests/hard-surface.test.ts</code>,
+<code>scripts/eval-retrieval.ts</code>, <code>scripts/eval.ts</code>,
+<code>.github/workflows/ci.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'search_notes' .</code> — definitions and comments in
+<code>supabase/bootstrap.sql</code> and the migrations, a design note
+and <code>lib/hop.ts</code>; no call in <code>lib/</code> or
+<code>app/</code>.</li>
+<li><code>rg -n "decided_at|decision=|decision:|'keep'|\"keep\"|'approved'" -g '!supabase/**' -g '!package-lock.json' .</code>
+— only reads of <code>decision=is.null</code> in
+<code>lib/pulse.ts:179</code> and
+<code>scripts/lifecycle-sweep.ts:72</code>; no writer of the
+decision.</li>
+<li><code>rg -n 'propose_deletions' -g '!supabase/**' .</code> —
+<code>scripts/lifecycle-sweep.ts</code> and its tests; no route or
+cron.</li>
+<li><code>rg -n -i 'method: "DELETE"|deleteFile' lib/github.ts lib/brain.ts lib/proposal-git.ts</code>
+and <code>rg -n -i '"delete"|mode.*delete' lib/tools.ts</code> — no
+match; no note deletion path.</li>
+<li><code>rg -n 'acceptProposal|dropProposal|cancelProposal|propose\(|listProposals' -g '!tests/**'</code>
+— <code>lib/tools.ts</code> and the console route and loader; no other
+caller.</li>
+<li><code>rg -n -i 'embedding|vector|pgvector' lib app supabase -l</code>
+— FTS migrations only; no embedding code.</li>
+<li><code>rg -n -i 'arxiv|bibtex|@article|@misc|doi\.org' -g '!package-lock.json' .</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+<li><code>grep -rniE 'renamed|formerly|previously (called|named)' --exclude-dir=.git --exclude=package-lock.json .</code>
+— device-rename and fixture strings only; no project rename.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/Obelyth/cortex/commit/ec57124a90ba9c378c5a9b989fe0f5d8f9c98da3"><code class="commit-id" title="ec57124a90ba9c378c5a9b989fe0f5d8f9c98da3">ec57124a…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 17
+September 2026. Three marks: <code>scope_enforced</code>,
+<code>human_review</code>, <code>negative_eval</code>. Screened before
+reading: 1 auto-run surface
+(<code>.devcontainer/devcontainer.json</code>, whose
+<code>postCreateCommand</code> is <code>npm ci --ignore-scripts</code>),
+no build-time execution point, nothing inside the cooldown, and 1
+unpinned surface (<code>package.json</code>, 12 floating ranges with a
+lockfile present); every file in a depth-1 clone dates to the tip. No
+agent-addressed files. Read with <code>grep</code>, <code>sed</code> and
+<code>rg</code>; nothing installed, built or run. A distinct repository
+from the atlas's other reports named Cortex.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

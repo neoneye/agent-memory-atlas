@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MCP hub for teams of
+coding agents: mem0-style extracted memories in Qdrant beside a
+knowledge base with validity dates and usage-scored ranking.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cortex Hub — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MCP hub for
+teams of coding agents: mem0-style extracted memories in Qdrant beside a
+knowledge base with validity dates and usage-scored ranking.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cortex
+Hub — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MCP hub for
+teams of coding agents: mem0-style extracted memories in Qdrant beside a
+knowledge base with validity dates and usage-scored ranking.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cortex Hub — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cortex Hub",
+      "description": "A self-hosted MCP hub for teams of coding agents: mem0-style extracted memories in Qdrant beside a knowledge base with validity dates and usage-scored ranking.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A self-hosted memory and knowledge hub for
+teams of coding agents</p>
+          <h1>Cortex Hub</h1>
+          <p class="document-deck">A self-hosted MCP hub for teams of
+coding agents: mem0-style extracted memories in Qdrant beside a
+knowledge base with validity dates and usage-scored ranking.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/lktiep/cortex-hub">
+              <span>Source</span>
+              <strong>lktiep/cortex-hub</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/lktiep/cortex-hub/commit/e47a15773d326f3d9accd4abc33a57315eac71a9" title="e47a15773d326f3d9accd4abc33a57315eac71a9">
+              <span>Analyzed revision</span>
+              <code>e47a1577…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/lktiep--cortex-hub" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>lktiep--cortex-hub</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>39,159
+lines of TypeScript and JavaScript outside tests, plus 10,630 of shell
+and PowerShell; the memory and knowledge paths are about 5,400 of
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>761
+commits on master by 4 contributors, one of them a bot, 18 March 2026 –
+28 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>173
+Vitest cases in 16 files (2,999 lines), 70 of them in the memory
+package, plus a 444-line shell suite for the enforcement
+hooks</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cortex Hub is a self-hosted backend that gives a team's coding agents
+one MCP endpoint for memory, a shared knowledge base, code intelligence
+and quality gates. Its memory is two stores. <code>mem9</code> is a
+TypeScript port of the mem0 write pipeline over Qdrant. The knowledge
+base holds titled documents with validity dates, hall types, usage
+counters and a lineage graph.</p>
+<p>What is notable is the recall discipline around it: repository hooks
+refuse an edit until the agent has run both knowledge and memory search,
+and the markers that open the gate must carry evidence of a real tool
+call. What is weak is how the knowledge base learns. A quality-gate
+result from any project is credited to whichever ten documents were
+touched in the last hour. Archived and invalidated documents stay in
+search, and nothing records a memory mutation.</p>
+<p>The memory plane is mem0's shape with two local repairs. A content
+hash is checked within the caller's scope before an ADD, which closes
+the duplicate that a repeated session summary used to create. A sparse
+BM25 arm runs beside the vector arm and is fused by rank. The reason is
+stated at <code>packages/shared-mem9/src/memory.ts:147-154</code>:
+Vietnamese sentences and exact identifiers under an English-only
+embedder.</p>
+<p>The knowledge plane is where the design is ambitious. It borrows the
+validity fields and hall types from <a
+href="../mempalace/">MemPalace</a> and the recipe lineage and quality
+counters from HKUDS/OpenSpace, and wires both into ranking. The wiring
+is where it goes wrong, in three places section 9 traces: global
+feedback attribution, a <code>status</code> column the search path never
+reads, and cluster assignment that only one writer performs.</p>
+<p>Two marks: <code>scope_enforced</code>, on the mem9
+<code>user_id</code> filter, and <code>bitemporal</code>, on
+<code>valid_from</code> against <code>created_at</code> with an
+<code>asOf</code> query. Both carry limits in section 9, which also
+names the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>A mem9 memory is a fact an LLM extracted, and a second LLM
+decides whether it is new.</strong> <code>cortex_memory_store</code>
+wraps the agent's text as one user message, and <code>add()</code> sends
+it through mem0's <em>"Personal Information Organizer"</em> prompt
+(<code>packages/shared-mem9/src/prompts.ts:12-59</code>). Each extracted
+fact is embedded, its five nearest neighbours in the same
+<code>user_id</code> above 0.7 cosine are collected, and a second call
+returns ADD, UPDATE, DELETE or NONE per fact
+(<code>memory.ts:188-243</code>). The facts are beliefs from the moment
+the Qdrant write returns. There is no candidate state.</p>
+<p><strong>A memory stops being one in three ways, none of them
+recorded.</strong> The second LLM call names an existing id to UPDATE,
+which overwrites its text in place. It names an id to DELETE, which
+removes the point. Or an agent calls <code>cortex_memory_delete</code>
+with an id. The event list <code>add()</code> returns goes back to the
+caller and nowhere else.</p>
+<p><strong>The LLM names memories by their raw UUIDs.</strong> The
+decision prompt lists each neighbour as <code>ID: &lt;uuid&gt;</code>
+(<code>prompts.ts:70-72</code>), and the UPDATE and DELETE branches act
+on whatever id comes back without checking it was offered or belongs to
+the caller's scope (<code>memory.ts:297-327</code>). The <a
+href="../mem0/">mem0</a> report describes mem0 mapping UUIDs to small
+integers before this call to stop the model inventing ids; the port
+dropped that step. An UPDATE on a well-formed id that holds nothing
+starts from an empty payload (<code>:301-302</code>), so it writes a
+point with no <code>user_id</code> that no scoped read can reach. This
+was read, not reproduced.</p>
+<p><strong>A knowledge document is stored as written and ages by
+use.</strong> No model sits on the knowledge write path an agent calls.
+A document is <code>active</code> until a fix archives it or an operator
+invalidates it. Its standing in ranking moves with
+<code>selection_count</code>, <code>completion_count</code> and
+<code>fallback_count</code>, and a document whose fallback rate passes
+0.5 is flagged <code>deprecated</code> and dropped from the
+session-start brief.</p>
+<p><strong>Validity is one axis, and the model does not see it.</strong>
+<code>valid_from</code> is the caller's claim about when a fact became
+true, stored beside <code>created_at</code>. <code>invalidated_at</code>
+is stamped with the time of invalidation. Search excludes on either only
+when the caller passes <code>asOf</code>, and the MCP formatter prints
+tags, hall type and a deprecation warning but not status or invalidation
+(<code>apps/hub-mcp/src/tools/knowledge.ts:151-160</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Cortex Hub memory or knowledge document becomes a belief, and where it fails to stop being one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Cortex Hub memory or knowledge document becomes a belief, and where it fails to stop being one
+flowchart TD
+    A[&quot;cortex_memory_store: content, projectId, branch&quot;] --&gt; K[&quot;user_id = project and branch key,&lt;br/&gt;project key, or agent id&quot;]
+    SE[&quot;session end: summary text&quot;] --&gt; K
+    K --&gt; X[&quot;LLM 1: extract facts&lt;br/&gt;with mem0 personal-info prompt&quot;]
+    X --&gt; N[&quot;five neighbours per fact&lt;br/&gt;above 0.7, same user_id&quot;]
+    N --&gt; D{&quot;LLM 2: ADD, UPDATE,&lt;br/&gt;DELETE or NONE by raw UUID&quot;}
+    D -- &quot;ADD, hash new in scope&quot; --&gt; P[&quot;new point carrying user_id&quot;]
+    D -- &quot;ADD, hash already held&quot; --&gt; NN[&quot;NONE: stored once&quot;]
+    D -- &quot;UPDATE any id&quot; --&gt; U[&quot;overwrite by id,&lt;br/&gt;no scope check&quot;]
+    D -- &quot;DELETE any id&quot; --&gt; DEL[&quot;point removed,&lt;br/&gt;no record kept&quot;]
+    P --&gt; S{&quot;cortex_memory_search:&lt;br/&gt;must match user_id&quot;}
+    U --&gt; S
+    S --&gt; R[&quot;vector and BM25 fused by rank,&lt;br/&gt;recency blended, last three&lt;br/&gt;session summaries appended&quot;]
+    KS[&quot;cortex_knowledge_store with validFrom&quot;] --&gt; KD[&quot;knowledge document, status active&quot;]
+    RC[&quot;recipe capture, LLM fix pass,&lt;br/&gt;docs builder&quot;] --&gt; KD
+    INV[&quot;POST invalidate: HTTP only&quot;] --&gt; KD
+    KD --&gt; KQ{&quot;knowledge search&quot;}
+    KQ -- &quot;asOf passed&quot; --&gt; VF[&quot;drop if valid_from after it&lt;br/&gt;or invalidated_at at or before it&quot;]
+    KQ -- &quot;no asOf&quot; --&gt; ALL[&quot;archived and invalidated&lt;br/&gt;documents still returned&quot;]
+    FB[&quot;any quality gate, any project&quot;] --&gt; TF[&quot;completion or fallback added to the&lt;br/&gt;ten documents touched in the last hour&quot;]
+    TF --&gt; DEP[&quot;fallback rate above 0.5:&lt;br/&gt;deprecated, hidden from session brief&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Seven services in <code>infra/docker-compose.yml</code>.
+<code>cortex-api</code> is a Hono server holding the memory, knowledge,
+session, LLM-gateway and dashboard routes, with SQLite on a volume.
+<code>cortex-mcp</code> is the MCP server, a thin proxy that calls
+<code>cortex-api</code> over HTTP
+(<code>apps/hub-mcp/src/api-call.ts:16-46</code>). Qdrant 1.13.6 holds
+vectors. Ollama serves embeddings, and CLIProxy fronts chat providers.
+GitNexus serves the code-intelligence graph, which is out of scope here,
+and Watchtower updates the labelled images.</p>
+<p><code>mem9</code> is an in-process library
+(<code>packages/shared-mem9</code>) that <code>cortex-api</code>
+instantiates as a singleton, rebuilt when the configured chat model
+changes
+(<code>apps/dashboard-api/src/routes/mem9-proxy.ts:83-91</code>). Its
+points live in the <code>cortex_memories</code> collection. Knowledge
+metadata lives in SQLite <code>knowledge_documents</code>
+(<code>apps/dashboard-api/src/db/schema.sql:184-212</code>), its chunks
+in both SQLite and the Qdrant <code>knowledge</code> collection, and
+cluster centroids in <code>knowledge_clusters</code>.</p>
+<p>Every embedding goes through the hub's own gateway at
+<code>/api/llm/v1/embeddings</code>, which resolves a provider from the
+<code>model_routing</code> table
+(<code>apps/dashboard-api/src/lib/embedder-factory.ts:1-33</code>). The
+bundled route is Ollama's <code>all-minilm</code>. The memory write path
+also needs a chat model routed the same way, which the setup wizard
+configures from a provider API key
+(<code>routes/setup.ts:507-515</code>).</p>
+<p>Background work is fire-and-forget. Session end and task completion
+trigger recipe capture, capped at five captures an hour in process
+memory (<code>services/recipe-capture.ts:50-60</code>). The knowledge
+health check runs only when its route is called. An index job rebuilds a
+project's documentation into knowledge documents.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Docker Compose with seven containers, a chat provider for extraction,
+and a host to run them; the README targets a small VPS behind a
+Cloudflare Tunnel. Embeddings work offline through Ollama; storing a
+memory does not, unless the chat route points at a local model.
+<code>cortex-api</code> publishes port 4000 on all host interfaces
+(<code>infra/docker-compose.yml:190-197</code>), and its memory and
+knowledge routes check no credential. Qdrant is bound to loopback.
+Knowledge is readable in the dashboard and in SQLite. mem9 memories have
+no dashboard page and are readable only through search or Qdrant.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Memory write.</strong> <code>cortex_memory_store</code>
+composes <code>user_id</code> from <code>projectId</code> and
+<code>branch</code>
+(<code>apps/hub-mcp/src/tools/memory.ts:30-55</code>) and posts to
+<code>/api/mem9/store</code>, which normalises a project slug to its id
+and calls <code>Mem9.add</code> (<code>mem9-proxy.ts:106-141</code>).
+<code>add()</code> extracts, batch-embeds, looks up neighbours in
+parallel, asks for actions, embeds any reworded text, then executes. The
+ADD branch checks the hash against earlier ADDs in the same call and
+then against the scope in Qdrant (<code>memory.ts:265-295</code>).</p>
+<p><strong>Session summary as memory.</strong>
+<code>POST /api/sessions/:id/end</code> stores
+<code>[Session Summary] …</code> through the same <code>add()</code>
+with metadata <code>type: session-summary</code>, fire-and-forget
+(<code>routes/quality.ts:587-617</code>). The summary therefore passes
+through personal-fact extraction before it is stored.</p>
+<p><strong>Memory read.</strong> <code>cortex_memory_search</code> walks
+branch scope, then project scope, until it has <code>limit</code>
+results (<code>tools/memory.ts:114-151</code>). <code>Mem9.search</code>
+embeds the query, runs the dense and sparse arms with the scope filter,
+fuses by rank, and blends recency (<code>memory.ts:155-177</code>,
+<code>:338-361</code>). The route then reads the project's last three
+completed session summaries from SQLite, scores them 1.0 before a
+two-day recency blend, and merges them in whatever the query
+(<code>mem9-proxy.ts:174-222</code>).</p>
+<p><strong>Knowledge write.</strong> <code>POST /api/knowledge</code>
+inserts the row, chunks at 1,500 characters with 300 overlap, assigns a
+cluster on the first chunk, and upserts each chunk with
+<code>cluster_id</code> (<code>routes/knowledge.ts:264-383</code>). With
+<code>origin: fixed</code> and a <code>parentDocId</code> it archives
+the parent (<code>:338-341</code>). Recipe capture
+(<code>services/recipe-capture.ts:229-303</code>), the fix pass
+(<code>services/knowledge-evolution.ts:182-240</code>) and the docs
+builder (<code>services/docs-knowledge-builder.ts:227-246</code>) insert
+their own rows and chunks through their own code.</p>
+<p><strong>Knowledge read.</strong>
+<code>POST /api/knowledge/search</code> embeds the query, tries
+<code>hierarchicalSearch</code> and falls back to a flat search,
+over-fetching at least 50 chunks (<code>knowledge.ts:603-667</code>). It
+then increments <code>hit_count</code> and <code>selection_count</code>
+on every candidate document, joins metadata per hit, applies
+<code>hallType</code> and <code>asOf</code>, and re-scores
+(<code>:686-790</code>).</p>
+<p><strong>Session start.</strong> <code>cortex_session_start</code>
+registers the session, then runs a knowledge search for <em>"session
+summary progress next session"</em> plus the project name, drops
+<code>deprecated</code> hits, and returns the top one as the mission
+brief (<code>apps/hub-mcp/src/tools/session.ts:68-115</code>).</p>
+<p><strong>Feedback and repair.</strong>
+<code>cortex_quality_report</code> posts <code>completed</code> or
+<code>fallback</code> to <code>/api/knowledge/track-feedback</code>
+(<code>apps/hub-mcp/src/tools/quality.ts:41-52</code>), which updates
+counters on up to ten documents (<code>knowledge.ts:989-1034</code>).
+<code>POST /api/knowledge/health-check</code> selects up to five
+unhealthy documents, asks an LLM whether to rewrite each, and inserts a
+<code>fixed</code> child while archiving the parent
+(<code>knowledge-evolution.ts:257-334</code>).</p>
+<p><strong>Deletion.</strong> <code>DELETE /api/mem9/:id</code> removes
+one point (<code>mem9-proxy.ts:241-251</code>).
+<code>DELETE /api/knowledge/:id</code> removes the Qdrant chunks
+best-effort and the row, with chunks cascading
+(<code>knowledge.ts:552-577</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mem9 point</td>
+<td><code>memory</code>, <code>hash</code></td>
+<td>fact text; MD5 of the lower-cased trimmed text, first 16 hex</td>
+</tr>
+<tr>
+<td>mem9 point</td>
+<td><code>user_id</code>, <code>agent_id</code></td>
+<td>the scope key and the calling agent, <code>default</code> when
+omitted</td>
+</tr>
+<tr>
+<td>mem9 point</td>
+<td><code>metadata</code></td>
+<td>caller tags, <code>project_id</code>, <code>branch</code>,
+<code>type: session-summary</code></td>
+</tr>
+<tr>
+<td>mem9 point</td>
+<td><code>created_at</code>, <code>updated_at</code></td>
+<td>record time only</td>
+</tr>
+<tr>
+<td>knowledge row</td>
+<td><code>status</code></td>
+<td><code>active</code> or <code>archived</code>
+(<code>schema.sql:194</code>)</td>
+</tr>
+<tr>
+<td>knowledge row</td>
+<td><code>hall_type</code></td>
+<td><code>fact</code>, <code>event</code>, <code>discovery</code>,
+<code>preference</code>, <code>advice</code>, <code>general</code></td>
+</tr>
+<tr>
+<td>knowledge row</td>
+<td><code>valid_from</code>, <code>invalidated_at</code>,
+<code>superseded_by</code></td>
+<td>validity start, invalidation time, replacement id</td>
+</tr>
+<tr>
+<td>knowledge row</td>
+<td><code>origin</code>, <code>generation</code></td>
+<td><code>manual</code>, <code>captured</code>, <code>derived</code>,
+<code>fixed</code>; depth in lineage</td>
+</tr>
+<tr>
+<td>knowledge row</td>
+<td>four usage counters</td>
+<td>selection, applied, completion, fallback</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>knowledge_lineage</code> records parent-child edges of kind
+<code>derived</code> or <code>fixed</code>
+(<code>schema.sql:231-240</code>). <code>knowledge_usage_log</code>
+records <code>completed</code> and <code>fallback</code> increments,
+written by track-feedback without task, session or agent
+(<code>knowledge.ts:1020-1023</code>). <code>recipe_capture_log</code>
+records each capture attempt and outcome.</p>
+<p><strong>Scope differs by store.</strong> mem9 carries a
+<code>user_id</code> key and filters on it. Knowledge carries
+<code>project_id</code> on the row and on each chunk and filters only
+when a <code>projectId</code> is passed; an omitted one searches every
+project. The API key table has a <code>project_id</code> column
+(<code>schema.sql:13</code>) that key verification does not select
+(<code>routes/keys.ts:138-160</code>), so no read derives scope from the
+caller's credential.</p>
+<p><strong>The mutation history is declared and unwired.</strong>
+<code>HistoryStore</code> creates <code>mem9_history</code> with
+<code>old_value</code>, <code>new_value</code> and <code>event</code>,
+and exports it (<code>packages/shared-mem9/src/history.ts:22-69</code>,
+<code>index.ts:14</code>). Nothing in the tree constructs it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>mem9 is hybrid and scoped.</strong> The dense arm is Qdrant
+cosine search. The sparse arm hashes BM25 terms into a named sparse
+vector whose document half is written at ADD time with a running average
+length (<code>memory.ts:124-136</code>, <code>sparse.ts</code>). Both
+read at least 30 deep and are fused by reciprocal rank with k = 60,
+scaled so first in every live arm is 1.0 (<code>fusion.ts:24-42</code>).
+A collection created before the sparse arm is searched by vector alone,
+with a warning and a migration to copy it
+(<code>memory.ts:103-117</code>). Recency then takes 10% of the score,
+linear over 90 days, or 50% with a two-day half-life for session
+summaries (<code>recency.ts:17-38</code>).</p>
+<p><strong>The session rows are not retrieved, they are
+appended.</strong> Every memory search on a project scope reads the
+three newest completed session summaries from SQLite and merges them at
+a base score of 1.0 (<code>mem9-proxy.ts:174-222</code>). A summary
+written a day earlier scores about 0.80 and one written that hour close
+to 1.0, so the last three sessions sit among the top results whatever
+was asked.</p>
+<p><strong>Knowledge ranks by a weighted sum tuned on its
+benchmark.</strong> Vector score 0.55, keyword overlap 0.35, the
+effective completion rate 0.05 once a document has three selections, and
+90-day recency on <code>updated_at</code> 0.05
+(<code>knowledge.ts:754-769</code>). The comment beside the weights
+records the LongMemEval-S runs that chose them.</p>
+<p><strong>Search refreshes the recency it ranks by.</strong> Every
+candidate in the over-fetched set has <code>updated_at</code> set to now
+(<code>knowledge.ts:686-692</code>), and recency is read from
+<code>updated_at</code> (<code>:749-751</code>). A document that keeps
+coming up as a candidate keeps a full recency term.</p>
+<p><strong>Hierarchical search cannot reach most writers'
+chunks.</strong> Above 500 chunks in the filtered set, search picks five
+cluster centroids and restricts to chunks whose <code>cluster_id</code>
+is among them (<code>knowledge.ts:142-220</code>). Only
+<code>POST /api/knowledge</code> writes a <code>cluster_id</code>.
+Recipe capture, the fix pass and the docs builder upsert chunks without
+one (<code>recipe-capture.ts:284-291</code>,
+<code>knowledge-evolution.ts:222-229</code>,
+<code>docs-knowledge-builder.ts:238-246</code>), and the migration route
+that would back-fill them has no caller. Section 9 covers the centroid
+write.</p>
+<p><strong>What the agent sees.</strong> Memory results arrive as
+numbered bodies with id and scope. Knowledge results show title, id,
+chunk, score, tags and hall type, with a warning line for
+<code>deprecated</code>. Status and invalidation are not shown.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Memory writes block the agent on two LLM calls.</strong>
+<code>cortex_memory_store</code> waits for extraction, neighbour lookup,
+the decision and the Qdrant writes; the MCP client allows two minutes
+(<code>api-call.ts:32</code>). A memory is searchable once the call
+returns. The session-end memory and recipe capture do not block the
+caller.</p>
+<p><strong>Extraction is aimed at personal facts.</strong> The prompt
+lists food, travel, health and hobbies, and its examples are about a
+user's life (<code>prompts.ts:17-45</code>). Coding-agent text such as
+<em>"payments retry three times"</em> passes through a filter tuned to
+drop it. The repository's own memory benchmark measures ordering over
+stored facts rather than what extraction keeps.</p>
+<p><strong>Deduplication has three layers.</strong> The decision LLM
+sees neighbours above 0.7. An ADD whose hash already exists in scope
+becomes NONE, as does a second identical ADD in one call. Across scopes
+identical text is stored twice, by design and tested
+(<code>memory.test.ts:174-183</code>).</p>
+<p><strong>Knowledge writes are verbatim and synchronous</strong> on the
+agent path: embed each chunk, upsert, insert. A chunk whose embedding
+fails is logged and skipped, and the document keeps its planned
+<code>chunk_count</code> (<code>knowledge.ts:372-374</code>).</p>
+<p><strong>The fix pass rewrites whole documents.</strong> For each of
+up to five unhealthy documents, the LLM receives the chunks
+concatenated, which repeats the 300 overlapping characters at each
+boundary, and returns <code>should_fix</code> with new content
+(<code>knowledge-evolution.ts:101-178</code>). A <code>fixed</code>
+child is inserted and the parent archived; the parent's chunks stay in
+Qdrant.</p>
+<p><strong>Agent-written content is trusted like any other.</strong>
+Nothing checks the content of a memory or a knowledge document, and the
+HTTP routes behind the tools accept any caller that reaches port
+4000.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: memory is synchronous, two chat calls and one or two
+embedding batches; knowledge is one embedding per chunk plus one probe
+embedding per document.</li>
+<li>Background: recipe capture at most five an hour; the fix pass on
+demand, up to five LLM rewrites a call; the docs builder on each index
+job. Nothing sweeps the whole store on a schedule.</li>
+<li>Read: memory search is one embedding and two Qdrant searches per
+scope tried; knowledge search is one embedding, one or three Qdrant
+calls, and a SQLite read and an <code>UPDATE</code> per candidate.
+Injection is bounded by <code>limit</code>, five by default in the MCP
+tools.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers <code>cortex_memory_store</code>,
+<code>cortex_memory_search</code>, <code>cortex_memory_delete</code>,
+<code>cortex_knowledge_store</code>,
+<code>cortex_knowledge_search</code>, <code>cortex_session_start</code>
+and <code>cortex_session_end</code>, beside code, task and quality
+tools. The agent holds every memory verb, including delete by id.</p>
+<p><strong>Recall is enforced by hooks, not by prose.</strong>
+<code>.claude/settings.json</code> wires <code>enforce-session.sh</code>
+on PreToolUse for Edit, Write, NotebookEdit and Bash. Once a session has
+started, any file write, including one through <code>sed -i</code>,
+<code>tee</code> or a redirect, is refused until both
+<code>knowledge-recalled</code> and <code>memory-recalled</code> markers
+exist (<code>.claude/hooks/enforce-session.sh:88-104</code>). The
+markers are written by the PostToolUse hook when the matching tool runs,
+with a <code>tool=… at=…</code> line the gate checks
+(<code>.claude/hooks/track-quality.sh:42-44</code>,
+<code>:97-100</code>). The script's header concedes the agent could
+forge one; the way out is a named <code>gate-off</code> file that leaves
+a trace. <code>.gemini/hooks</code> carries equivalents,
+<code>.codex/instructions.md</code> asks for the same steps in prose,
+and <code>scripts/test-hooks.sh</code> tests the Claude hooks in CI.</p>
+<p><strong>Session start injects knowledge, not memory.</strong> The
+brief is the top knowledge hit and three short descriptions. Memory
+recall happens when the agent calls search, which the gate requires
+before the first edit.</p>
+<p><strong>Adapting it</strong> means running the hub. The memory
+library is separable, but its value here is the MCP tools, the hooks and
+the session flow around it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Feedback is attributed across every project and
+agent.</strong> <code>track-feedback</code> selects the ten active
+documents with <code>selection_count &gt; 0</code> whose
+<code>updated_at</code> falls in the last hour, with no project, session
+or agent predicate, and increments <code>completion_count</code> or
+<code>fallback_count</code> on each
+(<code>knowledge.ts:999-1023</code>). Any
+<code>cortex_quality_report</code> from any agent triggers it
+(<code>tools/quality.ts:41-52</code>). Search sets
+<code>updated_at</code> on every over-fetched candidate
+(<code>knowledge.ts:686-692</code>), so the ten are whatever anyone's
+searches touched. Those counters decide the quality term in ranking, the
+<code>deprecated</code> flag the session brief filters on, and which
+documents the fix pass rewrites. One team's failing build can therefore
+mark another project's document deprecated.</p>
+<p><strong>The selection counter counts candidates, not
+results.</strong> <code>selection_count</code> rises for every document
+among at least 50 over-fetched chunks, before the <code>hallType</code>
+and <code>asOf</code> filters and before the top <code>limit</code> is
+cut. The effective rate <code>completion_count / selection_count</code>
+then divides by exposures the agent never saw.</p>
+<p><strong>Archived and invalidated documents stay retrievable.</strong>
+The search route selects <code>status</code>,
+<code>invalidated_at</code> and <code>superseded_by</code> per hit and
+filters on none of them unless <code>asOf</code> is passed
+(<code>knowledge.ts:699-717</code>). A fix archives the parent in SQLite
+and leaves its chunks in Qdrant, so the replaced text and its
+replacement rank side by side. The list and timeline routes do filter on
+<code>status = 'active'</code> (<code>:230</code>,
+<code>:475</code>).</p>
+<p><strong>Hierarchical search is broken in one of two ways.</strong>
+<code>assignCluster</code> writes a centroid whose point id is
+<code>cluster-</code> plus eight hex characters and does not check the
+response (<code>knowledge.ts:113-133</code>). Qdrant documents point ids
+as unsigned integers or UUIDs, so this write is expected to fail. If it
+does, the centroid collection stays empty and search falls back to flat.
+If it succeeds, the three writers that omit <code>cluster_id</code>
+become unreachable above 500 chunks. Neither was run.</p>
+<p><strong>Scope is a caller claim.</strong> The mem9 filter is real and
+applied on every read. What fills it is the agent's own
+<code>projectId</code> and <code>branch</code> arguments, and the HTTP
+routes behind the tools check no key, so the boundary holds against a
+mistake and not against a caller. The LLM decision can UPDATE or DELETE
+any id it returns. <code>DELETE /api/mem9/:id</code> deletes any point
+by id.</p>
+<p><strong>No provenance a reader can use.</strong> A mem9 point records
+the agent id and the metadata the caller sent. <code>query_logs</code>
+stores every MCP call's arguments (<code>schema.sql:19-29</code>,
+<code>apps/hub-mcp/src/index.ts:376-393</code>), which records what was
+asked of the store but not what extraction added, changed or
+deleted.</p>
+<p><strong>Uncertainty is not representable.</strong> A knowledge
+document is active or archived, and neither state is read by search;
+<code>deprecated</code> is derived from counters and filters only the
+session brief.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — awarded on the mem9
+<code>user_id</code> must-filter; the limits above apply, and knowledge
+search is scoped only when a project is passed.</li>
+<li><code>bitemporal</code> — awarded on <code>valid_from</code> against
+<code>created_at</code> with an <code>asOf</code> query. Validity end is
+the invalidation time, invalidation is reachable only by HTTP, and a
+fix-archived parent carries no <code>invalidated_at</code>.</li>
+<li><code>tombstone</code> — mem9 DELETE removes the point and knowledge
+delete removes the row. Nothing keyed on the rejected text stops the
+next extraction storing it.</li>
+<li><code>trust_state</code> — <code>status</code> is lifecycle and
+unread by search; <code>deprecated</code> is a derived flag, not a
+stored state.</li>
+<li><code>audit_log</code> — withheld because the mechanism is unwired:
+<code>HistoryStore</code> and <code>mem9_history</code> have no
+constructor call. <code>knowledge_lineage</code> records derivations,
+<code>knowledge_usage_log</code> records feedback,
+<code>recipe_capture_log</code> records one writer's attempts, and
+<code>query_logs</code> records requests.</li>
+<li><code>human_review</code> — no pending state exists. The dashboard
+creates, lists, searches and deletes knowledge, and the agent holds the
+same verbs.</li>
+<li><code>negative_eval</code> — no committed case asserts that material
+stays out of a populated result. The one cross-scope test is on the
+write path, and the search tests' fake store ignores the filter (section
+10).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests and benchmark code at the pin.</p>
+<p><strong>The memory package is tested for mechanics.</strong>
+<code>memory.test.ts</code> fakes the embedder, LLM and Qdrant and
+covers batching, rewording, hash dedup within a call and across calls,
+per-user dedup, the sparse write, rank fusion, the vector-only fallback
+and single initialisation
+(<code>packages/shared-mem9/src/memory.test.ts:124-257</code>). The fake
+<code>search</code> returns its fixture regardless of the filter it is
+given (<code>:61-67</code>), so no test exercises the scope predicate on
+a read. <code>fusion</code>, <code>recency</code>, <code>sparse</code>
+and <code>migrate</code> have their own files.</p>
+<p><strong>The one scope assertion is on the write side.</strong>
+<code>does not treat another user's memory as a duplicate</code> stores
+the same fact for two users and asserts two points exist
+(<code>:174-183</code>). That shows the hash lookup is scoped. It says
+nothing about what a search returns.</p>
+<p><strong>The knowledge routes have no tests.</strong> No test
+exercises <code>routes/knowledge.ts</code>, <code>mem9-proxy.ts</code>,
+<code>recipe-capture.ts</code> or <code>knowledge-evolution.ts</code>;
+the one test file that names <code>mem9-proxy.js</code> mocks it out.
+The dashboard-api tests cover code intelligence, organisation moves and
+the conductor. <code>scripts/test-hooks.sh</code> covers the enforcement
+hooks.</p>
+<p><strong>LongMemEval-S is a benchmark of knowledge search.</strong>
+<code>benchmarks/longmemeval_bench.ts</code> imports each haystack
+session's user turns as a knowledge document and scores
+<code>POST /api/knowledge/search</code> by the gold session's rank. The
+README reports 96.0% R@5 and 97.8% R@10 over 500 questions, measured
+with an in-process embedder the tree no longer ships. No result file is
+committed. The ranking weights in <code>knowledge.ts:754-763</code> were
+chosen by runs on the same 500 questions, so the figure is a tuned
+result, not a held-out one.</p>
+<p><strong>The reported NDCG exceeds 1.</strong>
+<code>computeOutcomeMetrics</code> sums a gain for every gold session in
+the top ten and divides by an ideal gain fixed at 1
+(<code>longmemeval_bench.ts:592-621</code>). Questions with several gold
+sessions then score above 1, which fits the multi-session and
+knowledge-update rows at 1.79 and 1.65. The README's comparison of 1.44
+against MemPalace's 0.889 is between different quantities.</p>
+<p><strong>Not covered.</strong> No test for feedback attribution,
+status filtering, cluster assignment, the invalidate route or the fix
+pass. No evaluation of what extraction keeps from coding-agent text. No
+paper or citation file is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make recall a precondition for writing, enforced by the
+harness.</strong> A PreToolUse gate that refuses edits until both recall
+tools have run, with markers that must carry a tool line, and a named
+escape file for when the hub is down.</li>
+<li><strong>Check a content hash in the caller's scope before storing a
+derived fact.</strong> It closes the duplicate a repeated summary
+creates without another model call, and it survives the write-then-read
+lag within one call.</li>
+<li><strong>Add a lexical arm for the languages your embedder does not
+speak.</strong> Fuse by rank, and fall back to the dense arm alone when
+the lexical one has nothing.</li>
+<li><strong>Say why the recency weight differs by memory kind.</strong>
+One constant for facts and a fast decay for session summaries is a
+defensible split.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Crediting feedback to whatever was touched in the last
+hour.</strong> Attribute an outcome to the documents that session
+retrieved, or do not attribute it.</li>
+<li><strong>Refreshing the timestamp you rank recency by on every
+read.</strong> Keep a separate <code>last_selected_at</code>.</li>
+<li><strong>Archiving in one store and not the other.</strong> If the
+vector index is what search reads, archival has to remove or tag the
+chunks there.</li>
+<li><strong>Letting a model name records by raw id.</strong> Map the
+neighbours to small indices, and refuse an id that was not offered.</li>
+<li><strong>Adding an index step that only one of several writers
+performs.</strong> Put the cluster assignment in the shared upsert, not
+in one route.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a small team that already runs its agents through one
+self-hosted hub and wants recall to be unavoidable rather than optional.
+The operational bill is seven containers and a chat provider, and the
+memory plane inherits mem0's personal-assistant extraction. A reader who
+needs knowledge to stay correct across projects should walk away or fix
+three things first: feedback attribution, the unread status column, and
+authentication on port 4000. Anyone wanting only agent memory is taking
+on a code-intelligence and orchestration platform to get it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does Qdrant 1.13.6 reject the <code>cluster-</code> point ids,
+leaving hierarchical search inert in every deployment? Running one write
+would answer it.</li>
+<li>What fraction of coding-agent text survives the personal-information
+extraction prompt? The tree has no case that measures it.</li>
+<li>Is port 4000 exposed beyond the tunnel in the deployments the README
+describes, or does an upstream layer authenticate it?</li>
+<li>How often is <code>POST /api/knowledge/health-check</code> called,
+and by what? Nothing in the tree schedules it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Memory library:</strong>
+<code>packages/shared-mem9/src/memory.ts</code>,
+<code>prompts.ts</code>, <code>vector-store.ts</code>,
+<code>sparse.ts</code>, <code>fusion.ts</code>, <code>recency.ts</code>,
+<code>history.ts</code>, <code>migrate.ts</code>,
+<code>index.ts</code>.</li>
+<li><strong>Memory routes and tools:</strong>
+<code>apps/dashboard-api/src/routes/mem9-proxy.ts</code>,
+<code>apps/hub-mcp/src/tools/memory.ts</code>,
+<code>apps/dashboard-api/src/db/project-utils.ts</code>.</li>
+<li><strong>Knowledge:</strong>
+<code>apps/dashboard-api/src/routes/knowledge.ts</code>,
+<code>apps/hub-mcp/src/tools/knowledge.ts</code>,
+<code>apps/dashboard-api/src/db/schema.sql:183-275</code>,
+<code>apps/dashboard-api/src/db/client.ts:63-120</code>.</li>
+<li><strong>Background writers:</strong>
+<code>apps/dashboard-api/src/services/recipe-capture.ts</code>,
+<code>knowledge-evolution.ts</code>,
+<code>docs-knowledge-builder.ts</code>.</li>
+<li><strong>Session and feedback:</strong>
+<code>apps/hub-mcp/src/tools/session.ts</code>,
+<code>apps/hub-mcp/src/tools/quality.ts</code>,
+<code>apps/dashboard-api/src/routes/quality.ts:534-631</code>.</li>
+<li><strong>Auth and deployment:</strong>
+<code>apps/dashboard-api/src/index.ts:40-117</code>,
+<code>apps/dashboard-api/src/routes/keys.ts:129-167</code>,
+<code>apps/hub-mcp/src/middleware/auth.ts</code>,
+<code>infra/docker-compose.yml</code>.</li>
+<li><strong>Hooks:</strong> <code>.claude/settings.json</code>,
+<code>.claude/hooks/enforce-session.sh</code>,
+<code>.claude/hooks/track-quality.sh</code>,
+<code>scripts/test-hooks.sh</code>.</li>
+<li><strong>Tests and benchmarks:</strong>
+<code>packages/shared-mem9/src/*.test.ts</code>,
+<code>benchmarks/longmemeval_bench.ts</code>,
+<code>benchmarks/gold_memory_search.ts</code>,
+<code>benchmarks/README.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rn 'HistoryStore\|mem9_history' . --exclude-dir=.git</code>
+— the class and its table in <code>history.ts</code>, the export in
+<code>index.ts:14</code>; no constructor call.</li>
+<li><code>grep -rn 'cluster_id' . --exclude-dir=.git | grep -v 'routes/knowledge.ts'</code>
+— no match; only <code>routes/knowledge.ts</code> reads or writes
+it.</li>
+<li><code>grep -rn "migrate-clusters\|migrateClusters" . --exclude-dir=.git</code>
+— the route definition only; no caller.</li>
+<li><code>grep -rn 'invalidate' apps --include='*.ts' --include='*.tsx' | grep -iv cache</code>
+— the route, the migration, the search and timeline reads, and a type in
+<code>dashboard-web/src/lib/api.ts:800</code>; no MCP tool or dashboard
+call posts to it.</li>
+<li><code>grep -rn "health-check\|runHealthCheck" apps --include='*.ts' --include='*.tsx'</code>
+— the route and its implementation; no scheduler or client.</li>
+<li><code>grep -rn "setInterval\|cron\|schedule(" apps/dashboard-api/src apps/hub-mcp/src --include='*.ts'</code>
+— OAuth cleanup, a WebSocket keepalive and an SSE keepalive; nothing for
+memory.</li>
+<li><code>sed -n 603,797p apps/dashboard-api/src/routes/knowledge.ts | grep -n 'status\|invalidated\|superseded'</code>
+— the HTTP status check, the metadata select and the <code>asOf</code>
+branch; no status predicate.</li>
+<li><code>grep -rn "superseded_by" apps --include='*.ts'</code> —
+migration, timeline, invalidate route, search select and a web type; no
+reader acts on it.</li>
+<li><code>grep -rn "Authorization\|X-API-Key\|Bearer" apps/dashboard-api/src --include='*.ts'</code>
+— outbound provider headers, the webhook route's bearer check, and
+<code>X-API-Key-Owner</code> reads in quality, conductor and intel
+routes; none in <code>mem9-proxy.ts</code> or
+<code>knowledge.ts</code>.</li>
+<li><code>grep -rnE 'rejected|tombstone|blocklist|suppress' packages/shared-mem9/src apps/dashboard-api/src/routes/knowledge.ts apps/dashboard-api/src/routes/mem9-proxy.ts apps/hub-mcp/src/tools</code>
+— no match.</li>
+<li><code>grep -rn "negative\|not\.toContain\|not\.toEqual\|toHaveLength(0)" packages/shared-mem9/src/*.test.ts</code>
+— a migration test asserting no DELETE call and a typesafe test
+asserting no calls; neither about retrieval.</li>
+<li><code>grep -rln "routes/knowledge\|mem9-proxy\|recipe-capture\|knowledge-evolution" --include='*.test.ts' .</code>
+— <code>organizations-move.test.ts</code>, which mocks
+<code>mem9-proxy.js</code> out.</li>
+<li><code>grep -rn "api/mem9" apps/dashboard-web/src</code> — no match;
+the dashboard has no memory view.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude=pnpm-lock.yaml</code>
+— no match, and no <code>CITATION</code> file.</li>
+<li><code>grep -rniE 'renamed|formerly' . --exclude-dir=.git</code> —
+matches in an extension log message, a diff-parser test and a code
+comment; no project rename.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/lktiep/cortex-hub/commit/e47a15773d326f3d9accd4abc33a57315eac71a9"><code class="commit-id" title="e47a15773d326f3d9accd4abc33a57315eac71a9">e47a1577…</code></a>
+— first reading, at the head of <code>master</code>, a commit dated 28
+September 2026. Two marks, <code>bitemporal</code> and
+<code>scope_enforced</code>. Screened before reading: four auto-run
+surfaces (<code>.claude/hooks/</code>,
+<code>.claude/settings.json</code>,
+<code>.claude/settings.local.json</code>, <code>.cursorrules</code>), no
+build-time execution point, ten dependency files inside the cooldown,
+every file in the depth-1 clone dating to the tip, and nine unpinned
+surfaces resolved by the root <code>pnpm-lock.yaml</code>.
+<code>AGENTS.md</code>, <code>CLAUDE.md</code> and
+<code>.cursorrules</code> were treated as data. No checkout filter and
+no submodules. Read with <code>grep</code> and <code>sed</code>; nothing
+installed, built or run. The code-intelligence and orchestration layers
+are out of scope.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
