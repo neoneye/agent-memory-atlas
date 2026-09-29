@@ -358,6 +358,8 @@ rather than dead is deleted, and deletion is permanent."*
 
 [Living Mind Cortex](../../systems/living-mind-cortex/) inverts the pattern. Each memory is also a node in a RAM-only heat-equation substrate that recall reheats and every tick cools, and a node that stays below the freeze temperature for eight ticks is written back to Postgres as a new `semantic` row at importance 0.90, tagged `identity` (`cortex/engine.py:482-541`). The service never wires edges between nodes, so heat never diffuses and neglect alone decides promotion: the runtime's 30-second heartbeat lines become permanent identity memories that the only prune exempts. Reinforcement lives in a recall side effect that lowers confidence 5 percent per read, so the most-used rows are the least trusted.
 
+**[ZenBrain](../../systems/zenbrain/) ships the decay functions and applies none of them to what it stores.** `@zensation/algorithms` exports FSRS retrievability, Ebbinghaus curves, Hebbian strengthening and decay, and emotion-weighted decay multipliers, each a pure function over state the caller holds. The `MemoryCoordinator` stores facts with FSRS difficulty, stability and next-review time and reads them only to fill a spaced-repetition queue; recall ranks by cosine or lexical score alone, and `consolidate()` reports `pruned` as a constant 0 (`packages/core/src/coordinator.ts:403-444`). The one decay that runs is `exp(-0.05 × minutes)` on an in-process working memory that dies with the process. A library of decay arithmetic is not a decaying store: the question to ask of any design here is which read path multiplies by the curve.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

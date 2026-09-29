@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 671 reports.</strong></p>
+<p><strong>This page covers all 673 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -27779,6 +27779,83 @@ survive a re-import.</li>
 <li>Do not copy when: scope must be a boundary between projects or
 people; here it is a caller argument that the write path and the search
 fallback both cross.</li>
+</ul>
+<h3 id="memoose"><a
+href="../systems/memoose/"><code>memoose</code></a></h3>
+<ul>
+<li>Best idea: <strong>order a single-valued relation by when it became
+true, not by when it was written.</strong>
+<code>supersede_functional</code> compares <code>valid_from</code>
+before <code>updated_at</code>, so a backfilled older owner is filed as
+history instead of displacing the present one, and the capture prompt
+tells the keeper to store both values under one relation name, oldest
+first.</li>
+<li>Biggest risk: <strong>supersession does not survive a
+restatement.</strong> <code>upsert_relation</code> sets
+<code>superseded=0, superseded_by=NULL</code> on any existing triple, so
+a keeper that sees an old value restated revives it, and on an undated
+functional relation the revived row then supersedes the value that had
+replaced it.</li>
+<li>Most reusable component:
+<code>harness/hooks/_common.py:192-241</code> — a stdlib-only bm25
+search over the store's FTS5 table that drops superseded ids after the
+query, with a docstring naming why a hook that bypasses the library must
+re-apply the filter, and a test running the real hook against a store
+holding both values.</li>
+<li>Second risk: <strong>the background keeper holds a general shell
+with prompts disabled.</strong> <code>capture.py</code> runs
+<code>claude -p --allowedTools Bash --dangerously-skip-permissions</code>
+over user and assistant text, and a non-zero exit still advances the
+transcript cursor; the advisor beside it runs on an allowlist with a
+test asserting it.</li>
+<li>Maturity impression: Apache-2.0, 3,830 lines of Python in the engine
+and 1,276 in the hooks, 38 commits by one contributor between 6 and 25
+September 2026, 98 pytest functions run in CI. Three marks. The LoCoMo
+headline of 90.4 recomputes from committed rows and was measured with
+chunk ingest and an empty graph, which the results page says.</li>
+<li>Study when: you want functional supersession ordered by validity
+time, evidence pointers on every fact, and a dismissal ledger for
+maintenance candidates, all without a model in the engine.</li>
+<li>Do not copy when: a correction must stay corrected, sessions read
+untrusted content, or memory must be scoped by a key rather than by
+which file an agent names.</li>
+</ul>
+<h3 id="zenbrain"><a
+href="../systems/zenbrain/"><code>zenbrain</code></a></h3>
+<ul>
+<li>Best idea: <strong>make a fallback admit it is a fallback.</strong>
+Without embeddings each layer ranks the 500 newest rows by IDF-weighted,
+umlaut-folded token overlap, and when nothing matches it returns the
+newest rows at score exactly 0, so the MCP caller can tell a hit from
+recency (<code>packages/core/src/lexical.ts</code>,
+<code>layers/semantic.ts:118-131</code>).</li>
+<li>Biggest risk: <strong>nothing on the agent's surfaces can remove a
+memory.</strong> The MCP server registers store, recall, consolidate and
+health; the middleware stores every user turn; the layer
+<code>delete</code> methods have no caller in the coordinator. A wrong
+fact stays until someone edits the SQLite file.</li>
+<li>Most reusable component: <code>packages/core/src/lexical.ts</code> —
+154 dependency-free lines of folding, stop-listing, candidate-set IDF
+and a phrase bonus that cannot be clamped away, with tests that name the
+measured failure they replaced.</li>
+<li>Second risk: <strong>core blocks join every recall, and the model
+can create them.</strong> Any <code>zenbrain_store</code> with
+<code>confidence</code> above 0.9 becomes a pinned block returned at 0.5
+or 0.8 and confidence 1.0 whatever the query, outranking partial lexical
+matches and reaching every later prompt.</li>
+<li>Maturity impression: Apache-2.0, 8,629 lines of TypeScript in
+package sources and 144 commits on main from 6 contributors between 23
+March and 26 September 2026. No mark. 673 Vitest cases, but the Postgres
+adapter's 38 mock <code>pg</code> and CI runs no database; the paper's
+ablation is re-diffed in CI against its published JSON, and measures a
+simulation rather than the coordinator.</li>
+<li>Study when: you want small, readable implementations of
+spaced-repetition and forgetting-curve arithmetic to hold in your own
+store, or a worked example of a project retracting its own benchmark
+claim with the arithmetic.</li>
+<li>Do not copy when: memories must be corrected, scoped or forgotten,
+or when the architecture described in the paper is the reason you came —
+the stored layers run none of its decay, strengthening or replay.</li>
 </ul>
         </article>
       </div>

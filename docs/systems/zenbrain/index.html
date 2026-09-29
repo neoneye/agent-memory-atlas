@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A TypeScript memory coordinator
+that routes text into four SQL tables by heuristic, shipped beside a
+neuroscience-named algorithm library it mostly does not call.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ZenBrain — Agent Memory Atlas">
+    <meta property="og:description" content="A TypeScript memory
+coordinator that routes text into four SQL tables by heuristic, shipped
+beside a neuroscience-named algorithm library it mostly does not call.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ZenBrain — Agent Memory Atlas">
+    <meta name="twitter:description" content="A TypeScript memory
+coordinator that routes text into four SQL tables by heuristic, shipped
+beside a neuroscience-named algorithm library it mostly does not call.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ZenBrain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ZenBrain",
+      "description": "A TypeScript memory coordinator that routes text into four SQL tables by heuristic, shipped beside a neuroscience-named algorithm library it mostly does not call.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A neuroscience-named algorithm library over
+a SQL memory coordinator</p>
+          <h1>ZenBrain</h1>
+          <p class="document-deck">A TypeScript memory coordinator that
+routes text into four SQL tables by heuristic, shipped beside a
+neuroscience-named algorithm library it mostly does not call.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/zensation-ai/zenbrain">
+              <span>Source</span>
+              <strong>zensation-ai/zenbrain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/zensation-ai/zenbrain/commit/9854155a9bf3860016f739f213bf34ca06cda7a9" title="9854155a9bf3860016f739f213bf34ca06cda7a9">
+              <span>Analyzed revision</span>
+              <code>9854155a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/zensation-ai--zenbrain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>zensation-ai--zenbrain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+(code); the paper is CC BY 4.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,629
+lines of TypeScript in package sources; the coordinator, layers,
+adapters, MCP server and middleware are 3,385 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>144
+commits on main by 6 contributors including Dependabot, 23 March 2026 –
+26 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>673
+Vitest cases in 43 files and 10,454 lines; 389 cover the algorithm
+library and 53 are the paper's experiment suites</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ZenBrain is a TypeScript monorepo with two halves that the README
+presents as one system. <code>@zensation/algorithms</code> is a
+dependency-free library of pure functions named for memory research —
+FSRS scheduling, Hebbian strengthening, Ebbinghaus curves, emotional
+tagging, sleep replay, Bayesian propagation and ten newer modules.
+<code>@zensation/core</code> is a <code>MemoryCoordinator</code> that
+stores text into four SQL tables and recalls it, served by an MCP
+server, a Vercel AI SDK middleware and SQLite or Postgres adapters.</p>
+<p>What is notable is how little of the first half the second one calls.
+The coordinator and its layers import four modules: the emotion lexicon
+for routing, FSRS to fill a review queue, a string similarity for a
+cross-context layer, and a context-similarity boost whose input nothing
+writes. No stored row decays, strengthens, or is replayed. The project's
+own engineering hygiene is high: the lexical fallback, the SQLite
+adapter and the MCP entry point each carry a comment naming the defect
+they fixed and how it was measured.</p>
+<p>What is weak is the memory contract. No agent-facing surface can
+delete or correct a memory. <code>consolidate()</code> copies the same
+episodes into new facts on every call. Every core block is returned by
+every recall, and the paper's headline ablation runs on a simulation in
+which each mechanism is a hand-set multiplier.</p>
+<p>The paper is <a
+href="https://arxiv.org/abs/2604.23878">arXiv:2604.23878</a>, submitted
+26 April 2026, v3 dated 9 August 2026. No capability mark is awarded;
+section 9 names all seven and why.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a string that <code>store()</code> routes into one of
+four tables and that <code>recall()</code> finds later. It becomes a
+belief at the INSERT: there is no candidate state, no extraction on the
+write path, and no check against what is already stored. It stops being
+one only when a library caller deletes its row by id, or when a core
+block is overwritten under the same label. Nothing expires.</p>
+<p><strong>The layer is chosen by heuristic, in a fixed order.</strong>
+An explicit <code>type</code> wins; then <code>steps</code> or a regex
+such as <code>/^how to /i</code> makes a procedure; then an emotion
+weight above 0.5 — from a keyword lexicon, or the caller's number —
+makes an episode; then a caller <code>confidence</code> above 0.9 makes
+a core block; everything else is a fact at confidence 0.7
+(<code>packages/core/src/coordinator.ts:600-627</code>,
+<code>:268-276</code>). The MCP tool exposes <code>confidence</code>
+with the description <em>"Above 0.9 routes to core memory"</em>, so the
+model chooses permanence by choosing a number.</p>
+<p><strong>Core blocks are the one layer with identity.</strong> The
+label is the first 50 characters of the content with non-alphanumerics
+stripped, and <code>upsertBlock</code> overwrites on a label conflict
+(<code>coordinator.ts:260-266</code>;
+<code>layers/core.ts:47-57</code>). Two different statements that open
+with the same 50 characters are one block, and the second replaces the
+first.</p>
+<p><strong>Consolidation duplicates rather than promotes.</strong>
+<code>consolidate()</code> reads the 100 newest episodes and writes a
+new fact for each whose emotional weight exceeds 0.5, with no marker on
+the episode (<code>coordinator.ts:403-444</code>). Every auto-routed
+episode passed that threshold to become an episode, so every call copies
+all of them again. Recall's Jaccard deduplication hides exact copies
+(<code>:765-816</code>); an LLM summary that varies between passes does
+not collapse.</p>
+<p><strong>The FSRS state is a flashcard schedule, not a retention
+signal.</strong> Each fact is stored with difficulty, stability and
+next-review time, and <code>recordReview</code> updates them from a 1–5
+grade (<code>layers/semantic.ts:143-171</code>). No read path uses them
+for ranking or filtering; they feed <code>getReviewQueue</code> only
+(<code>:174-182</code>). The only decay that runs is on the in-process
+working memory, which multiplies slot relevance by
+<code>exp(-0.05 × minutes)</code> and drops slots below 0.01
+(<code>layers/working.ts:97-111</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how text becomes a ZenBrain memory, how it is recalled, and where the stated mechanisms stop</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how text becomes a ZenBrain memory, how it is recalled, and where the stated mechanisms stop
+flowchart TD
+    S[&quot;store(content, options)&quot;] --&gt; T{&quot;explicit type?&quot;}
+    T -- &quot;no&quot; --&gt; P{&quot;steps given or&lt;br/&gt;how-to regex?&quot;}
+    P -- &quot;yes&quot; --&gt; PR[&quot;INSERT procedural_memories&quot;]
+    P -- &quot;no&quot; --&gt; E{&quot;emotion weight&lt;br/&gt;above 0.5?&quot;}
+    E -- &quot;yes&quot; --&gt; EP[&quot;INSERT episodic_memories&lt;br/&gt;(context kept)&quot;]
+    E -- &quot;no&quot; --&gt; C{&quot;confidence&lt;br/&gt;above 0.9?&quot;}
+    C -- &quot;yes&quot; --&gt; CB[&quot;UPSERT core_memory_blocks&lt;br/&gt;label = first 50 chars&quot;]
+    C -- &quot;no&quot; --&gt; F[&quot;INSERT learned_facts&lt;br/&gt;(context dropped)&quot;]
+    T -- &quot;yes&quot; --&gt; PR
+    S --&gt; WM[&quot;working memory slot,&lt;br/&gt;in process only&quot;]
+    EP --&gt; CON{&quot;consolidate()&quot;}
+    CON -- &quot;every episode above 0.5&lt;br/&gt;among newest 100, every call&quot; --&gt; F
+    R[&quot;recall(query)&quot;] --&gt; L{&quot;embedding provider?&quot;}
+    L -- &quot;yes&quot; --&gt; V[&quot;cosine distance per layer&quot;]
+    L -- &quot;no&quot; --&gt; LX[&quot;token overlap over 500 newest;&lt;br/&gt;no match returns newest at score 0&quot;]
+    R --&gt; ALL[&quot;every core block,&lt;br/&gt;score 0.5 or 0.8&quot;]
+    V --&gt; M[&quot;merge by raw score,&lt;br/&gt;Jaccard dedupe, top N&quot;]
+    LX --&gt; M
+    ALL --&gt; M
+    M --&gt; OUT[&quot;MCP result or&lt;br/&gt;AI SDK system message&quot;]
+    X[&quot;delete by id&quot;] -.-&gt; Z[&quot;layer classes only;&lt;br/&gt;no coordinator, MCP or middleware verb&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Six npm packages in one Turborepo. <code>@zensation/algorithms</code>
+has no runtime dependencies and no storage. <code>@zensation/core</code>
+holds the coordinator, the seven layer classes and four provider
+interfaces — <code>StorageAdapter</code>,
+<code>EmbeddingProvider</code>, <code>LLMProvider</code>,
+<code>CacheProvider</code> — plus in-memory fakes for tests
+(<code>packages/core/src/interfaces/</code>, <code>testing.ts</code>).
+The layers write Postgres-dialect SQL with <code>$N</code> placeholders,
+<code>gen_random_uuid()</code>, <code>NOW()</code> and the pgvector
+<code>&lt;=&gt;</code> operator.</p>
+<p><code>@zensation/adapter-postgres</code> runs that SQL on
+<code>pg</code> against the schema in <code>sql/001_init.sql</code>:
+<code>vector(1536)</code> columns with HNSW indexes, a generated
+<code>tsvector</code> on facts that no query reads, and an optional
+<code>schema</code> that issues <code>SET search_path</code> before
+every query
+(<code>packages/adapters/postgres/src/index.ts:116-119</code>).
+<code>@zensation/adapter-sqlite</code> rewrites the dialect in
+<code>translateQuery</code>, including
+<code>embedding &lt;=&gt; ?1</code> into a registered
+<code>zb_cosine_dist</code> UDF over JSON-array embeddings, and creates
+its schema on open
+(<code>packages/adapters/sqlite/src/index.ts:48-81</code>,
+<code>:120-134</code>, <code>:228-309</code>).</p>
+<p><code>@zensation/mcp</code> wires a file-backed SQLite store to a
+coordinator with no embedding or LLM provider and speaks MCP over stdio
+(<code>packages/mcp/src/index.ts:65-74</code>).
+<code>@zensation/ai-sdk</code> is a middleware object for
+<code>wrapLanguageModel</code>.</p>
+<p>Working memory (seven slots) and short-term memory (a 50-message
+window) live in the coordinator's process and die with it. Cross-context
+memory reads a <code>knowledge_entities</code> table and writes
+<code>cross_context_links</code>.</p>
+<p><code>backend/</code> is not a server. It is the reproduction package
+for the paper's Tables 7–9: four Vitest suites, the reference JSON, and
+888 lines of algorithm files whose headers say they are <em>"NOT yet
+published"</em> in the library, which at this pin ships modules of the
+same names (<code>backend/README.md</code>,
+<code>backend/src/algorithms/fsrs-vmPFC.ts:4</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The MCP path needs Node 22 or newer and nothing else:
+<code>npx @zensation/mcp</code> creates <code>./zenbrain.db</code>. No
+API key is needed to store or recall, and nothing calls a model unless a
+library caller passes an <code>LLMProvider</code>. Without an
+<code>EmbeddingProvider</code> recall is lexical. The store is an
+ordinary SQLite file, readable and repairable with <code>sqlite3</code>;
+the Postgres path needs pgvector and <code>pg_trgm</code> and a manual
+run of the schema file.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Store.</strong> <code>MemoryCoordinator.store</code> →
+<code>resolveStoreType</code> → one of
+<code>ProceduralMemory.record</code>, <code>EpisodicMemory.store</code>,
+<code>CoreMemory.upsertBlock</code> or
+<code>SemanticMemory.storeFact</code>, then
+<code>WorkingMemory.add</code> with relevance 1.0
+(<code>coordinator.ts:231-283</code>). Each layer embeds the text if a
+provider is set and logs, rather than fails, on an embedding error
+(<code>layers/semantic.ts:61-85</code>,
+<code>layers/episodic.ts:34-55</code>,
+<code>layers/procedural.ts:58-78</code>). <code>context</code> reaches
+only the episode branch (<code>coordinator.ts:247-258</code>).</p>
+<p><strong>Recall.</strong> <code>MemoryCoordinator.recall</code> fans
+out to the requested layers — default episodic, semantic, procedural and
+core — in parallel, each catching its own error to a warning
+(<code>coordinator.ts:299-353</code>, <code>:660-758</code>). Then an
+optional context boost, an optional <code>minConfidence</code> filter on
+the float, Jaccard deduplication at 0.9, a sort on raw score, and the
+limit.</p>
+<p><strong>Per-layer search.</strong> With an embedding provider, each
+layer runs <code>ORDER BY embedding &lt;=&gt; $1::vector LIMIT $2</code>
+with <code>1 - distance</code> as score
+(<code>layers/semantic.ts:88-106</code>). Without one, it reads the 500
+newest rows and ranks them with <code>rankByLexicalRelevance</code>; if
+nothing scores above zero it returns the newest rows at score 0
+(<code>:118-131</code>; <code>layers/episodic.ts:76-87</code>).
+Procedures scale lexical score by success rate
+(<code>layers/procedural.ts:81-102</code>).</p>
+<p><strong>Lexical ranking.</strong> <code>scoreCandidates</code> folds
+umlauts and accents, drops a short German and English stop list, weights
+each query token by <code>log(1 + N / (1 + df))</code> over the
+candidate set, caps coverage at 0.8 and adds 0.2 for the whole folded
+query as a substring
+(<code>packages/core/src/lexical.ts:83-123</code>).</p>
+<p><strong>Core blocks in recall.</strong> <code>recallFromCore</code>
+pushes every block, at 0.8 if any query word longer than two characters
+appears in it and 0.5 otherwise, with confidence 1.0
+(<code>coordinator.ts:731-758</code>).</p>
+<p><strong>Consolidate.</strong> <code>coordinator.ts:403-444</code>,
+section 2.</p>
+<p><strong>Review queue.</strong> <code>getReviewQueue</code> →
+<code>getDueForReview</code>; <code>recordReview</code> →
+<code>recordRecall</code> (<code>coordinator.ts:479-497</code>). The
+Mastra example calls <code>recordReview(due[0].id, 4)</code> itself,
+grading the recall as good without a person
+(<code>examples/with-mastra.ts:166-169</code>).</p>
+<p><strong>Delete.</strong> <code>SemanticMemory.delete</code>,
+<code>EpisodicMemory.delete</code>, <code>ProceduralMemory.delete</code>
+and <code>CoreMemory.deleteBlock</code> issue a single
+<code>DELETE</code> (<code>layers/semantic.ts:185-191</code>,
+<code>layers/core.ts:60-66</code>). Nothing in the coordinator, the MCP
+server or the middleware calls them.</p>
+<p><strong>MCP.</strong> Four registered tools:
+<code>zenbrain_store</code>, <code>zenbrain_recall</code>,
+<code>zenbrain_consolidate</code>, <code>zenbrain_health</code>
+(<code>packages/mcp/src/server.ts:69-251</code>). A test pins that list
+exactly (<code>packages/mcp/__tests__/server.test.ts:42-50</code>).</p>
+<p><strong>AI SDK middleware.</strong> <code>transformParams</code>
+recalls on the last user message and prepends the results as a
+<code>system</code> message; <code>wrapGenerate</code> and
+<code>wrapStream</code> store the user turn, and the assistant turn only
+when asked (<code>packages/ai-sdk/src/index.ts:115-130</code>,
+<code>:135-169</code>, <code>:171-209</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Key fields</th>
+<th>Written by</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>learned_facts</code></td>
+<td>content, confidence, source, embedding, FSRS difficulty, stability
+and next review, access_count, created_at, last_accessed</td>
+<td><code>storeFact</code></td>
+<td>search, review queue, count</td>
+</tr>
+<tr>
+<td><code>episodic_memories</code></td>
+<td>content, context, embedding, emotional_weight, metadata JSON,
+created_at</td>
+<td><code>EpisodicMemory.store</code></td>
+<td>search, getRecent, getByTimeRange</td>
+</tr>
+<tr>
+<td><code>procedural_memories</code></td>
+<td>trigger, steps, tools, outcome, embedding, success_rate,
+execution_count</td>
+<td><code>record</code>, <code>feedback</code></td>
+<td>recall, list</td>
+</tr>
+<tr>
+<td><code>core_memory_blocks</code></td>
+<td>label (unique), content, pinned, updated_at</td>
+<td><code>upsertBlock</code></td>
+<td>getBlocks, recall</td>
+</tr>
+<tr>
+<td><code>knowledge_entities</code></td>
+<td>name, type, embedding</td>
+<td>nothing in the tree</td>
+<td><code>detectMergeCandidates</code></td>
+</tr>
+<tr>
+<td><code>cross_context_links</code></td>
+<td>entity_a, entity_b</td>
+<td><code>createLink</code></td>
+<td>nothing</td>
+</tr>
+</tbody>
+</table></div>
+<p>Schemas: <code>packages/adapters/postgres/sql/001_init.sql</code> and
+<code>packages/adapters/sqlite/src/index.ts:228-309</code>.</p>
+<p><strong>Provenance is one free-text column on one table.</strong>
+<code>source</code> is <code>'user'</code> by default,
+<code>'consolidation'</code> for promoted facts, or whatever the MCP
+caller passes (<code>coordinator.ts:271</code>, <code>:431</code>).
+Episodes carry it inside <code>metadata</code>; procedures and core
+blocks have none.</p>
+<p><strong>Temporal fields are record times only.</strong>
+<code>created_at</code>, <code>updated_at</code> and
+<code>last_accessed</code>. <code>getByTimeRange</code> filters episodes
+on <code>created_at</code> (<code>layers/episodic.ts:107-116</code>),
+which is when the row was written.</p>
+<p><strong>Scope.</strong> <code>context</code> is a column on episodes
+with an index, and a predicate in <code>getRecent(limit, context)</code>
+(<code>layers/episodic.ts:58-73</code>). No in-tree caller passes a
+context: <code>consolidate</code> and the lexical search call
+<code>getRecent</code> with a limit only. Facts, procedures and core
+blocks have no scope column.</p>
+<p><strong>The cross-context layer compares a table with
+itself.</strong> <code>detectMergeCandidates</code> loops over the
+configured contexts and runs the same
+<code>SELECT id, name FROM knowledge_entities LIMIT 500</code> for each,
+with no context predicate, then labels each result set with the loop's
+context (<code>layers/cross-context.ts:43-74</code>). Against a real
+store every entity appears once per context and pairs with itself at
+similarity 1.0. The unit tests mock a different row set per call, which
+is the predicate the query lacks
+(<code>packages/core/__tests__/cross-context-memory.test.ts:31-47</code>).
+No code in the tree inserts into <code>knowledge_entities</code>, so in
+a running deployment the layer reads an empty table.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Scores from different layers are not on one scale.</strong>
+Cosine similarity, lexical coverage capped at 1.0, lexical score times
+success rate, and the constants 0.5 and 0.8 for core blocks are merged
+and sorted together (<code>coordinator.ts:350-352</code>). Without
+embeddings, a fact matching half the query's weight scores 0.4 and sorts
+below every unrelated core block.</p>
+<p><strong>Recall is never empty while the store is not.</strong> Each
+lexical layer returns its newest rows at score 0 when nothing matches,
+and every core block is added regardless. The comment states the choice:
+<em>"Recency keeps a recall from coming back empty for a reason the
+caller cannot see"</em> (<code>layers/semantic.ts:128-130</code>). The
+MCP payload keeps the scores, so a client can tell. The AI SDK
+middleware drops them and injects every result as a bullet
+(<code>packages/ai-sdk/src/index.ts:151-153</code>).</p>
+<p><strong>Two recall options do nothing.</strong>
+<code>includeContext</code> multiplies each result's score by a
+similarity computed from <code>metadata.encodingContext</code>
+(<code>coordinator.ts:327-340</code>). No layer writes that key: the
+metadata objects built in <code>recallFromEpisodic</code>,
+<code>recallFromSemantic</code> and the others carry context,
+timestamps, source and counts, and nothing calls
+<code>captureEncodingContext</code> on store. The MCP tool advertises
+both <code>includeContext</code> and <code>taskType</code>.</p>
+<p><strong>Candidate window.</strong> The lexical path ranks the 500
+newest rows per layer (<code>lexical.ts:154</code>); anything older is
+invisible without embeddings. The vector path has no window but, on
+SQLite, a full scan through a JavaScript UDF.</p>
+<p><strong>Injection.</strong> The middleware defaults to five results
+under <em>"Relevant memories from earlier sessions:"</em>, prepended as
+a system message ahead of the caller's own
+(<code>packages/ai-sdk/src/index.ts:68-69</code>,
+<code>:162-168</code>). A stored user turn therefore returns in a later
+call with system-role standing.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous INSERTs on the caller's path, with two
+embedding calls when a provider is set — the layer's and the
+working-memory slot's — and no model call. There is no deduplication on
+write: the same sentence stored twice is two facts. The middleware
+stores every user message by default, each routed by the same
+heuristics, so a chat produces a fact or episode per turn.</p>
+<p>Updates exist in two places: <code>upsertBlock</code> for core blocks
+and the success-rate average in <code>ProceduralMemory.feedback</code>
+(<code>layers/procedural.ts:120-131</code>), which nothing in the
+coordinator or MCP server calls. Facts and episodes are immutable once
+written, apart from FSRS fields.</p>
+<p>Nothing filters content. Agent-generated text arrives through
+<code>zenbrain_store</code> with whatever <code>source</code> and
+<code>confidence</code> the model supplies, and the middleware stores
+assistant replies when <code>store.assistant</code> is true, labelled
+<code>'ai'</code>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, one INSERT and up to two embedding calls;
+visible to the next recall at once.</li>
+<li>Background: none scheduled. <code>consolidate()</code> is O(100)
+reads and up to 100 INSERTs, plus one LLM call per promoted episode when
+a provider is set, on every invocation.</li>
+<li>Read: one query and one query embedding per layer, plus every core
+block; the middleware injects up to five bullets per call, as a leading
+system message, which changes the prompt prefix whenever the recalled
+set changes.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server gives the model store, recall, consolidate and health.
+It cannot delete, update, list by id, or grade a review. Routing hints,
+<code>confidence</code>, <code>emotionalWeight</code> and
+<code>source</code> are all model-supplied.</p>
+<p>The AI SDK middleware is the automatic path: recall before every
+call, store after it, errors swallowed unless <code>onError</code> is
+passed (<code>packages/ai-sdk/src/index.ts:60-66</code>). It has no
+session boundary; working and short-term memory are not used by it.</p>
+<p>The examples wire the library into LangChain, CrewAI, LlamaIndex,
+Mastra and a Claude chat loop. The CrewAI example applies Hebbian
+strengthening to a <code>Map</code> it keeps itself, which is the
+pattern for every algorithm module: the caller owns the state
+(<code>examples/with-crewai.ts:43-57</code>).</p>
+<p>Adapting it to another agent is easy at the MCP level and requires
+library code for anything the four tools do not cover, including every
+correction.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No correction path for an agent or a user of the shipped
+surfaces.</strong> A wrong fact stored through MCP stays until someone
+opens the SQLite file. A wrong core block can be overwritten only by
+storing text whose first 50 characters reproduce its label.</p>
+<p><strong>Core blocks are a permanent injection channel.</strong> Any
+<code>zenbrain_store</code> call with <code>confidence</code> above 0.9
+creates a block that every later recall returns at confidence 1.0,
+whatever the query. A prompt-injected instruction stored that way
+reaches every session.</p>
+<p><strong>Errors are quiet.</strong> Layer searches catch and log, the
+middleware swallows, and a failed embedding stores the row without one —
+after which the vector branch's <code>WHERE embedding IS NOT NULL</code>
+never returns it (<code>layers/semantic.ts:62-70</code>,
+<code>:96-103</code>).</p>
+<p><strong>Postgres isolation is a schema name.</strong>
+<code>SET search_path TO ${this.schema}</code> interpolates the
+configured string unquoted
+(<code>packages/adapters/postgres/src/index.ts:118</code>). It is
+operator configuration, not user input, and it is the only tenant
+boundary the package offers. The adapter retries every query on a
+retryable error code, INSERTs included (<code>:110-148</code>).</p>
+<p><strong>SQLite due dates compare as text.</strong> Facts store
+<code>fsrs_next_review</code> as an ISO string with a <code>T</code>,
+and <code>getDueForReview</code> compares it to
+<code>datetime('now')</code>, which uses a space; on the due date itself
+the ISO string sorts later, so a fact becomes due up to a day late. This
+was read, not reproduced.</p>
+<p><strong>Uncertainty is a float.</strong> <code>confidence</code> is
+stored and can threshold a recall through <code>minConfidence</code>;
+nothing can say a memory is disputed or unverified.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — no record of a rejected value; deletion is
+a row <code>DELETE</code> on the layer classes and is not reachable from
+MCP or the middleware.</li>
+<li><code>trust_state</code> — <code>confidence</code> is a number, and
+<code>minConfidence</code> is a caller's threshold on it. No discrete
+status exists on any table.</li>
+<li><code>bitemporal</code> — record times only;
+<code>getByTimeRange</code> filters write time.</li>
+<li><code>scope_enforced</code> — withheld on the rubric's read-path
+test. The <code>context</code> key exists on episodes and a predicate
+exists in <code>EpisodicMemory.getRecent</code>, but
+<code>recall</code>, every layer <code>search</code>, the MCP tool and
+the middleware never apply it, facts drop the key, and no in-tree caller
+passes one to <code>getRecent</code>. The Postgres
+<code>search_path</code> option is a physical partition.</li>
+<li><code>audit_log</code> — no mutation record.
+<code>cross_context_links</code> is append-only and records links, not
+changes to memory, and nothing writes it outside the layer's own
+method.</li>
+<li><code>human_review</code> — the "review queue" is FSRS spaced
+repetition: a grade reschedules a fact and admits or withholds nothing.
+No memory waits in any state.</li>
+<li><code>negative_eval</code> — the near-miss is
+<code>packages/core/__tests__/lexical.test.ts:39-54</code>, which ranks
+three facts and asserts that <code>Leuchtturm</code> returns only the
+matching one and <code>Quantenchromodynamik</code> returns nothing. It
+runs the pure ranker over an array, not a read path, and the layers that
+consume it put unrelated rows back by design:
+<code>semantic-memory.test.ts:85-93</code> and
+<code>episodic-memory.test.ts:94-102</code> assert that an unmatched
+query <strong>does</strong> return the stored row, at score 0.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tree at the pin.</p>
+<p><strong>What the suite covers.</strong> 673
+<code>it</code>/<code>test</code> calls by my grep in 43 files. The
+algorithm library has 389, mostly numeric properties of each function.
+Core has 116, none against a database: the layer suites mock
+<code>StorageAdapter</code> with <code>vi.fn</code> returning rows the
+test chose, and the rest use the in-memory fakes in
+<code>testing.ts</code> or pure functions. The SQLite adapter has 33 on
+a real in-memory database, including a coordinator round trip through
+the cosine UDF and a regression on parameter order in
+<code>getRecent(limit, context)</code>
+(<code>packages/adapters/sqlite/__tests__/coordinator-integration.test.ts:141-170</code>).
+The README states 528; I did not reconcile the two counts.</p>
+<p><strong>Postgres is never exercised.</strong> All 38 adapter tests
+mock <code>pg</code>
+(<code>packages/adapters/postgres/__tests__/postgres-adapter.test.ts:1-30</code>),
+and CI runs no database service (<code>.github/workflows/ci.yml</code>).
+The pgvector SQL, the HNSW indexes and the <code>search_path</code>
+isolation run only in production.</p>
+<p><strong>Two suites skip themselves on old Node.</strong> The MCP and
+AI SDK SQLite integration files switch to <code>describe.skip</code>
+when the native module does not load, and print that a local green run
+<em>"proves nothing about it"</em>
+(<code>packages/mcp/__tests__/sqlite-integration.test.ts:20-43</code>).
+CI runs Node 22, 24 and 26, where they run.</p>
+<p><strong>Weak assertions.</strong> The cross-context "sorts
+candidates" case asserts inside
+<code>if (candidates.length &gt;= 2)</code>, and "detects merge
+candidates" asserts inside <code>if (candidates.length &gt; 0)</code>
+after a <code>&gt;= 1</code> check
+(<code>cross-context-memory.test.ts:31-47</code>,
+<code>:88-104</code>).</p>
+<p><strong>The paper.</strong> <a
+href="https://arxiv.org/abs/2604.23878">arXiv:2604.23878</a>,
+<em>ZenBrain: A Neuroscience-Inspired 7-Layer Memory Architecture for
+Autonomous AI Systems</em>, submitted 26 April 2026, v3 of 9 August
+2026. Its abstract claims fifteen mechanisms under one
+<code>MemoryCoordinator</code>. The README states that six are
+proprietary Predictive Memory Architecture components that <em>"run in
+the production system"</em>; the coordinator in this tree calls none of
+the fifteen by the paper's names.</p>
+<p><strong>The ablation measures its own constants.</strong>
+<code>ablation-study.test.ts</code> builds a
+<code>SimulatedMemorySystem</code> in which each mechanism is a
+multiplier chosen in the file: vmPFC-FSRS is
+<code>decayRate *= 0.7</code>, iMAD debate is <code>sim *= 1.02</code>,
+TripleCopy is <code>strength *= 1.15</code>
+(<code>backend/src/__tests__/experiments/ablation-study.test.ts:165</code>,
+<code>:197</code>, <code>:321</code>). Strength decays as
+<code>exp(-decayRate × days)</code> floored at 0.01, and Quality is mean
+strength times P@5 (<code>:228</code>, <code>:341-344</code>,
+<code>:538</code>). The suite imports no package from
+<code>packages/</code>. The abstract's "cooperative masking" — nine
+mechanisms turning critical when decay rises to 0.25 a day over 60 days
+— is what multipliers inside an exponent do as rate times duration
+grows. That reading is my inference from the code; I did not run it.</p>
+<p><strong>The reproduction is enforced.</strong> CI runs the suites,
+extracts the JSON and diffs every point estimate against
+<code>backend/results/</code>, failing on drift
+(<code>.github/workflows/ci.yml</code>, the "Ablation tables" step).
+That makes the tables reproducible; it does not make them measurements
+of the shipped coordinator.</p>
+<p><strong>LongMemEval.</strong> No runner is in the tree; the README
+points to a Zenodo deposit. The CHANGELOG entry for 0.4.7, dated 21
+September 2026, retracts the claim that ZenBrain <em>"wins all nine
+head-to-head answer-quality comparisons"</em>: re-run with matched judge
+versions, three hold, all against A-Mem, and six are ties. The arXiv v3
+abstract still carries "wins all nine".</p>
+<p><strong>Missing.</strong> A test that a stored memory can be removed
+through any shipped surface; a test that <code>consolidate()</code> is
+idempotent; a recall test over a populated SQLite store asserting an
+unrelated fact stays out; a Postgres integration run.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make "nothing matched" visible in the score.</strong> A
+fallback that returns recent rows is defensible only if the caller can
+tell; a score of exactly 0 does that for free.</li>
+<li><strong>Fold before you tokenize.</strong> Umlaut, accent and
+<code>ß</code> folding in application code keeps lexical recall working
+across spellings and across SQL dialects.</li>
+<li><strong>Run one dialect everywhere.</strong> Writing Postgres SQL
+once and translating it in the SQLite adapter, including a cosine UDF
+for <code>&lt;=&gt;</code>, kept one code path for both stores.</li>
+<li><strong>Diff reproduced numbers in CI.</strong> A published table
+re-derived on every push and compared value by value cannot drift
+unnoticed.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Promotion without a marker.</strong> A consolidation pass
+must record what it has promoted, or every pass is a copy.</li>
+<li><strong>A pinned layer that joins every recall.</strong>
+Constant-score results merged with relevance scores crowd out real
+matches, and a writer who can reach that layer controls every
+prompt.</li>
+<li><strong>Recall options with no writer behind them.</strong>
+<code>includeContext</code> reads a key no store path writes, and the
+tool still offers it to the model.</li>
+<li><strong>Mocks that return what the missing predicate would have
+filtered.</strong> The cross-context test passes because each mocked
+call returns different rows.</li>
+<li><strong>Ablating a simulation and reporting it as the
+architecture.</strong> If the mechanism is a constant multiplier in the
+harness, the ablation measures the constant.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone who wants the algorithm library: small,
+dependency-free, well-documented functions for FSRS scheduling,
+forgetting curves and Hebbian edges, with the state kept by the caller.
+As a memory system for an agent it is an append-mostly SQL store with
+heuristic routing and no correction verb, adequate for one person's
+notes behind MCP and not for anything where a wrong memory must be
+removed or kept out of another context. A reader drawn by the paper
+should read <code>packages/core/src/coordinator.ts</code> first; it is
+817 lines and settles quickly which mechanisms are running.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does the production system behind the paper run that this tree
+does not, and does the coordinator there persist decay, strength or
+replay state?</li>
+<li>Is <code>knowledge_entities</code> populated by anything outside
+this repository?</li>
+<li>Do the LongMemEval figures come from this coordinator, the
+production system, or another pipeline? The Zenodo deposit would answer
+it and was not read.</li>
+<li>Would the maintainers accept <code>consolidate()</code> marking
+promoted episodes, or is re-promotion intended as reinforcement?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Coordinator and types:</strong>
+<code>packages/core/src/coordinator.ts</code>,
+<code>packages/core/src/types.ts</code>,
+<code>packages/core/src/interfaces/</code>.</li>
+<li><strong>Layers:</strong>
+<code>packages/core/src/layers/semantic.ts</code>,
+<code>episodic.ts</code>, <code>procedural.ts</code>,
+<code>core.ts</code>, <code>cross-context.ts</code>,
+<code>working.ts</code>, <code>short-term.ts</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>packages/core/src/lexical.ts</code>.</li>
+<li><strong>Storage:</strong>
+<code>packages/adapters/sqlite/src/index.ts</code>,
+<code>packages/adapters/postgres/src/index.ts</code>,
+<code>packages/adapters/postgres/sql/001_init.sql</code>.</li>
+<li><strong>Integration:</strong>
+<code>packages/mcp/src/server.ts</code>,
+<code>packages/mcp/src/index.ts</code>,
+<code>packages/ai-sdk/src/index.ts</code>, <code>examples/</code>.</li>
+<li><strong>Algorithms:</strong> <code>packages/algorithms/src/</code>
+(20 modules), <code>backend/src/algorithms/</code>.</li>
+<li><strong>Tests and experiments:</strong>
+<code>packages/core/__tests__/</code>,
+<code>packages/adapters/*/__tests__/</code>,
+<code>packages/mcp/__tests__/</code>,
+<code>packages/ai-sdk/__tests__/</code>,
+<code>backend/src/__tests__/experiments/</code>,
+<code>backend/results/</code>,
+<code>.github/workflows/ci.yml</code>.</li>
+<li><strong>Paper and claims:</strong> <code>README.md</code>,
+<code>CITATION.cff</code>, <code>CHANGELOG.md</code>,
+<code>backend/README.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>rg -n "from '@zensation/algorithms" packages/core/src packages/mcp/src packages/ai-sdk/src</code>
+— four modules: <code>emotional</code>, <code>context-retrieval</code>,
+<code>fsrs</code>, <code>similarity</code>.</li>
+<li><code>rg -n 'encodingContext' --glob '!**/node_modules/**' .</code>
+— one match, the read at <code>coordinator.ts:331</code>; no
+writer.</li>
+<li><code>rg -n 'knowledge_entities' --glob '!**/node_modules/**' .</code>
+— the two schemas, a test assertion, a test call and the reader; no
+INSERT.</li>
+<li><code>rg -n 'INSERT INTO|UPDATE \$\{|DELETE FROM' packages/core/src packages/adapters/sqlite/src packages/adapters/postgres/src</code>
+— writers in the four storage layers and <code>createLink</code>
+only.</li>
+<li><code>rg -n '\.delete\(|deleteBlock\(|forget\(' packages/core/src/coordinator.ts packages/mcp/src packages/ai-sdk/src</code>
+— no match.</li>
+<li><code>rg -n 'registerTool\(' packages/mcp/src</code> — four
+registrations in <code>server.ts</code>.</li>
+<li><code>rg -n -i 'tombstone|audit|valid_from|valid_to|approve|pending|verified|tenant|user_id|agent_id' packages/core/src packages/mcp/src packages/ai-sdk/src packages/adapters/sqlite/src packages/adapters/postgres/src packages/adapters/postgres/sql</code>
+— one match, a comment on <code>search_path</code> in the Postgres
+adapter.</li>
+<li><code>rg -n 'getRecent\(' --glob '!**/__tests__/**' packages</code>
+— <code>coordinator.ts:408</code> and
+<code>layers/episodic.ts:81</code>, neither passing a context.</li>
+<li><code>rg -n '@zensation|packages/' backend/src</code> — comments
+only; the experiment suites import nothing from
+<code>packages/</code>.</li>
+<li><code>rg -n 'vi.mock\(.pg.' packages/adapters/postgres/__tests__</code>
+— the adapter suite mocks <code>pg</code>; <code>ci.yml</code> declares
+no <code>services:</code>.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— <code>README.md</code>, <code>CITATION.cff</code>,
+<code>CHANGELOG.md</code>, <code>llms.txt</code>, package READMEs and
+several algorithm source headers.</li>
+<li><code>grep -rniE 'renamed|formerly|previously known' . --exclude-dir=.git</code>
+— no match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/zensation-ai/zenbrain/commit/9854155a9bf3860016f739f213bf34ca06cda7a9"><code class="commit-id" title="9854155a9bf3860016f739f213bf34ca06cda7a9">9854155a…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 26
+September 2026. No mark awarded; section 9 names all seven. Screened
+before reading: no auto-run surface, no build-time execution point,
+eleven dependency files inside the cooldown — every file in a depth-1
+clone dates to the tip — and nine floating ranges, eight of them without
+a lockfile beside the manifest; <code>AGENTS.md</code> was recorded as
+data. Read with <code>rg</code> and <code>sed</code>; nothing installed,
+built or run. The paper's abstract was read from the arXiv API; the
+Zenodo deposits were not read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

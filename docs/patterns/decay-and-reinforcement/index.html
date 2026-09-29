@@ -546,6 +546,20 @@ neglect alone decides promotion: the runtime's 30-second heartbeat lines
 become permanent identity memories that the only prune exempts.
 Reinforcement lives in a recall side effect that lowers confidence 5
 percent per read, so the most-used rows are the least trusted.</p>
+<p><strong><a href="../../systems/zenbrain/">ZenBrain</a> ships the
+decay functions and applies none of them to what it stores.</strong>
+<code>@zensation/algorithms</code> exports FSRS retrievability,
+Ebbinghaus curves, Hebbian strengthening and decay, and emotion-weighted
+decay multipliers, each a pure function over state the caller holds. The
+<code>MemoryCoordinator</code> stores facts with FSRS difficulty,
+stability and next-review time and reads them only to fill a
+spaced-repetition queue; recall ranks by cosine or lexical score alone,
+and <code>consolidate()</code> reports <code>pruned</code> as a constant
+0 (<code>packages/core/src/coordinator.ts:403-444</code>). The one decay
+that runs is <code>exp(-0.05 × minutes)</code> on an in-process working
+memory that dies with the process. A library of decay arithmetic is not
+a decaying store: the question to ask of any design here is which read
+path multiplies by the curve.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>
