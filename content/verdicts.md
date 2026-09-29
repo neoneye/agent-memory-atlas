@@ -1128,9 +1128,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`pydantic-ai-harness`](../systems/pydantic-ai-harness/)
 - Best idea: a scope key the model can neither name nor see — `{namespace}/{agent_name}` is composed from run context, appears in no tool signature, and is kept out of the injected block by a separate `heading` field, with committed tests asserting the storage segment is absent from a populated block and from the rendered instructions.
-- Biggest risk: the delete is content-free by design, and the only table recording mutations has its payload cleared — so the audit cannot answer what was removed.
+- Biggest risk: the delete is content-free by design, and every store's receipts hold digests and versions, never content — so nothing can answer what was removed.
 - Most reusable component: an idempotency id derived from the run and the tool call, so a retried write is a replay rather than a second append, beside optimistic concurrency on a per-file version, so a retry and a race are two separate cases with two separate answers.
-- Maturity impression: 2,650 lines of tests against 2,483 of implementation, and the content is better than the ratio because the suite asserts what must **not** happen; automatic snapshot loading is a journaled durable operation whose failure path returns an exception type rather than inheriting the engine's retry policy.
+- Maturity impression: 2,540 lines of tests against 2,492 of implementation, and the content is better than the ratio because the suite asserts what must **not** happen; automatic snapshot loading is a journaled durable operation whose failure path returns an exception type rather than inheriting the engine's retry policy.
 - Study when: you are on Pydantic AI, your memory is notebook-shaped, and multi-tenant safety matters more than recall quality.
 - Do not copy when: memory must hold *claims* you will later mark uncertain, correct with provenance, or prove you deleted. There is no unit below the file to attach that to.
 

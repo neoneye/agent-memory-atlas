@@ -475,7 +475,7 @@ page_kind: comparison
 - [GOODMAN-PRO/helm](https://github.com/GOODMAN-PRO/helm) at [`f453eaa9683ea0a66b45c76275cb6576bcf14f73`](https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73)
 - [agno-agi/agno](https://github.com/agno-agi/agno) at [`85b6d1d178b70d59e8f2c0d432d2a66b35004f31`](https://github.com/agno-agi/agno/commit/85b6d1d178b70d59e8f2c0d432d2a66b35004f31)
 - [aiming-lab/SimpleMem](https://github.com/aiming-lab/SimpleMem) at [`db80b6a7c591e0ea730a058e9f5fc4eb06572299`](https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299)
-- [pydantic/pydantic-ai-harness](https://github.com/pydantic/pydantic-ai-harness) at [`e1732b29a6e5980fc6b291ccb60ea7696ad90ecd`](https://github.com/pydantic/pydantic-ai-harness/commit/e1732b29a6e5980fc6b291ccb60ea7696ad90ecd)
+- [pydantic/pydantic-ai](https://github.com/pydantic/pydantic-ai) at [`a205b28248821728d9be049c8df66bc46fca8c9f`](https://github.com/pydantic/pydantic-ai/commit/a205b28248821728d9be049c8df66bc46fca8c9f)
 - [camel-ai/camel](https://github.com/camel-ai/camel) at [`8c791b7b9cf7deab56cb5a92818c34499af9097f`](https://github.com/camel-ai/camel/commit/8c791b7b9cf7deab56cb5a92818c34499af9097f)
 - [microsoft/agent-framework](https://github.com/microsoft/agent-framework) at [`c030fa3582b1d2971488645fa03ec65bffab8617`](https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617)
 - [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) at [`7b796623723474a10d7b9e91516df70801dd679d`](https://github.com/crewAIInc/crewAI/commit/7b796623723474a10d7b9e91516df70801dd679d)
