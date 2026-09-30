@@ -1824,12 +1824,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`token-savior`](../systems/token-savior/)
 
-- Best idea: `was_visible` on every ledger event, which separates "the memory was injected and ignored" from "the memory was never injected" — opposite evidence about the ranker that almost every feedback loop in this atlas folds together.
-- Biggest risk: the LinUCB weights persist to `linucb_model.json` with no versioning against the `FEATURE_NAMES` tuple they were trained on, so changing the feature vector silently reinterprets a trained model.
-- Most reusable component: `linucb_injector.py` — a ten-feature contextual bandit deciding which memory to inject, with a Gauss-Jordan inverse in pure Python and no numpy.
-- Maturity impression: 32,600 lines of Python with 173 test files, a Beta-distributed validity score with quarantine and stale-suspected thresholds, and freshness checked by shelling out to `git log -S` — with the headline tsbench number in a separate repository.
-- Study when: you inject memory automatically and have no way to tell whether it helped.
-- Do not copy when: you need the benchmark claim verified; it is not in this tree.
+- Best idea: crediting the features stored at ranking time when the agent fetches a listed memory — `memory_index` keeps `φ` for each row it ranks, and a `memory_get` within 30 minutes rewards it, a click signal with no model and no extra call.
+- Biggest risk: every prompt-time hook resolves the project as the one with the most observations, so with two projects on one machine the larger project's memory is injected into the smaller one's sessions and its Bash captures are filed there.
+- Most reusable component: `linucb_injector.py` — a ten-feature LinUCB with a Gauss–Jordan inverse in pure Python and no numpy — and the 0.86 distance floor in `memory/search.py`, which ships with must-not-return tests.
+- Maturity impression: 52,383 lines of Python and 2,517 test functions under CI; the outcome ledger declares five outcome columns and only `was_visible` has a writer, and the headline tsbench figure comes from a harness the README says is not public. Two marks: `scope_enforced` on the MCP search path, and `negative_eval` for the distance-floor and rollup-scope cases.
+- Study when: you want a learned ranker over an agent-pulled memory list, or a vector threshold pinned by tests that can fail.
+- Do not copy when: several projects share one store — the hooks' scope rule assumes there is only one.
 
 ### [`recall-substrate`](../systems/recall-substrate/)
 
@@ -2406,12 +2406,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`claude-code-memory-setup`](../systems/claude-code-memory-setup/)
 
-- Best idea: linking on the way in. `insert_wikilinks` gathers every vault note name, sorts longest-first so a longer name beats a shorter one it contains, splits the body on code fences with a capturing regex so code survives untouched, and links the first occurrence only of each name with a guard that refuses to re-wrap an existing `[[link]]`. A new note arrives already connected and nobody maintained the connections.
-- Biggest risk: that rewrite is silent, irreversible and guarded only by a four-character name floor — which removes `api` and keeps `test`, `error` and `database`. With `--move` the original export is deleted, and because links are derived from whatever the vault contained at import time, the graph is a function of import order and re-deriving it means overwriting any edits made since.
-- Most reusable component: `SHORT_KEYWORDS`, ten of the sixty-six keyword-map entries held back to whole-word matching while the rest match as substrings. Splitting a keyword table by how dangerous each entry is costs nothing and almost nobody does it.
-- Maturity impression: MIT, standard library only, tagged 1.0.0 on 10 September 2026, a CI workflow of lint and documentation checks and no tests. Three implemented behaviours — code-fence skipping, no double-wrapping, longest-name-first — are pinned by nothing. The README's headline, "71.5x fewer tokens per session", is not produced or measured by anything in the repository; the token argument belongs to Graphify and to not re-reading files.
-- Study when: you keep an Obsidian vault and want your agent's history to land in it tagged and connected, and you are happy for that to be a command you run.
-- Do not copy when: you need memory to be selective. Everything is kept verbatim, the vault grows with every session, and nothing in the design has an opinion about what mattered — the `SessionEnd` hook added in 1.0.0 writes a mechanical log into the same `logs/` folder `/resume` reads its three newest entries from, so the safety net crowds out the `/save` logs it backs up.
+- Best idea: linking on the way in. `insert_wikilinks` gathers every vault note name, sorts longest-first so a longer name takes the first occurrence ahead of a shorter one it contains, splits the body on code fences with a capturing regex so code survives untouched, and links the first occurrence only of each name. A new note arrives already connected and nobody maintained the connections. The guard against re-wrapping checks only the characters beside a match, so `auth` inside a just-inserted `[[supabase-auth-flow]]` is nested.
+- Biggest risk: that rewrite is silent and guarded only by a four-character name floor — which removes `api` and keeps `test`, `error` and `database`. The guide's cron job runs `claude-extract --all` and then the importer with `--move` every night, so every Claude Code chat still on disk is re-imported onto the same path, its links are re-derived, and any edit made to it in Obsidian is overwritten.
+- Most reusable component: `SHORT_KEYWORDS`, ten of the sixty-three keyword-map entries held back to whole-word matching while the rest match as substrings. Splitting a keyword table by how dangerous each entry is costs nothing; this one leaves `rust`, `test`, `cron` and `go ` on the substring side.
+- Maturity impression: MIT, standard library only apart from the unversioned `claude-conversation-extractor` the wrapper calls, tagged 1.0.0 on 10 September 2026, a CI workflow of lint and documentation checks and no tests. Code-fence skipping and longest-name-first are pinned by nothing, and the re-wrap guard fails on a nested name. The README's tagline, "71.5x fewer tokens per session", and its 499x per-query figure are not produced or measured by anything in the repository; the token argument belongs to Graphify and to not re-reading files.
+- Study when: you keep an Obsidian vault and want your agent's history to land in it tagged and connected, and you are content for imported chats to be a nightly mirror of your transcripts rather than notes you edit.
+- Do not copy when: you need memory to be selective. The pipeline keeps everything verbatim and the vault grows with every session; the only selection is the model's `/save`. The `SessionEnd` hook added in 1.0.0 writes a mechanical log into the same `logs/` folder `/resume` reads its three newest entries from, so the safety net crowds out the `/save` logs it backs up.
 
 ### [`vllm-semantic-router`](../systems/vllm-semantic-router/)
 

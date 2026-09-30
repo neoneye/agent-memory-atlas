@@ -1485,7 +1485,8 @@ clone; nothing was installed or run</li>
 href="https://github.com/Mibayy/token-savior">Mibayy/token-savior</a> at
 <a
 href="https://github.com/Mibayy/token-savior/commit/73e9c7f56fd7cd40ecc72cdc4b032264018f8b4f"><code class="commit-id" title="73e9c7f56fd7cd40ecc72cdc4b032264018f8b4f">73e9c7f5…</code></a>
-— the tsbench benchmark is a separate repository</li>
+— the tsbench harness is not published; the README says so at this
+commit</li>
 <li><a
 href="https://github.com/H-XX-D/recall-memory-substrate">H-XX-D/recall-memory-substrate</a>
 at <a
@@ -2236,8 +2237,8 @@ traced</li>
 href="https://github.com/lucasrosati/claude-code-memory-setup">lucasrosati/claude-code-memory-setup</a>
 at <a
 href="https://github.com/lucasrosati/claude-code-memory-setup/commit/a89c275e139d25deb01529e6c7f1954844164ff7"><code class="commit-id" title="a89c275e139d25deb01529e6c7f1954844164ff7">a89c275e…</code></a>
-— the importer; Obsidian and Graphify are separate and Graphify has its
-own report</li>
+— the importer, its cron wrapper and the SessionEnd hook; Obsidian and
+Graphify are separate and Graphify has its own report</li>
 <li><a
 href="https://github.com/vllm-project/semantic-router">vllm-project/semantic-router</a>
 at <a
@@ -5827,6 +5828,51 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Token Savior report credited <code>audit_log</code> to a
+feedback ledger, withheld <code>negative_eval</code> over committed
+must-not-return cases, said its bandit decides injection and learns from
+that ledger, and placed tsbench in a public repository; corrected
+2026-09-30.</strong> At <a
+href="https://github.com/Mibayy/token-savior/commit/73e9c7f56fd7cd40ecc72cdc4b032264018f8b4f"><code class="commit-id" title="73e9c7f56fd7cd40ecc72cdc4b032264018f8b4f">73e9c7f5…</code></a>,
+which is upstream HEAD, the <a href="../systems/token-savior/">Token
+Savior</a> report awarded <code>audit_log</code> on
+<code>ledger_events</code>, which records injections, misses and blocks
+rather than mutations, and its evidence record cited a diff-summary
+closure and a budget-diagnostic JSONL reader; that overstated the
+system. It described a LinUCB bandit that decides which memory to
+inject, trained on <code>acted_on</code>, <code>ignored</code> and
+<code>was_visible</code>. The bandit ranks only the
+<code>memory_index</code> tool, its reward is a constant 1.0 on a
+<code>memory_get</code> within 30 minutes, and four of the ledger's five
+outcome columns have no writer, which overstated it again. It said the
+suite had no negative eval;
+<code>tests/test_vector_distance_floor.py</code> and a session-rollup
+scope case assert exclusion over populated fixtures beside positive
+controls, which understated it. It placed tsbench at
+<code>Mibayy/tsbench</code>; the README at that pin says the harness is
+not public, and that URL returns 404. It also missed that every
+prompt-time hook scopes to the project with the most observations.</li>
+<li><strong>The claude-code-memory-setup report called chat import
+manual, counted 66 keyword-map entries, said the link guard never
+re-wraps an existing link, and said <code>/save</code> pushes the hook's
+log; corrected 2026-09-30.</strong> At <a
+href="https://github.com/lucasrosati/claude-code-memory-setup/commit/a89c275e139d25deb01529e6c7f1954844164ff7"><code class="commit-id" title="a89c275e139d25deb01529e6c7f1954844164ff7">a89c275e…</code></a>,
+and at the first pin <a
+href="https://github.com/lucasrosati/claude-code-memory-setup/commit/c5f2e0b5465b66699f4ffcb108afee70d2cdf87b"><code class="commit-id" title="c5f2e0b5465b66699f4ffcb108afee70d2cdf87b">c5f2e0b5…</code></a>,
+the wrapper runs <code>claude-extract --all</code> and then the importer
+with <code>--move</code>, and the README schedules both for 22:00 daily
+with a crontab line. The <a
+href="../systems/claude-code-memory-setup/">claude-code-memory-setup</a>
+report said a person exports and runs the importer and that nothing ran
+in the background. The extractor names each file by session, so every
+nightly run re-imports each Claude Code chat onto the same path and
+overwrites edits made in Obsidian. <code>KEYWORD_TAG_MAP</code> has 63
+entries. The <code>(?&lt;!\[\[)</code> and <code>(?!\]\])</code> guard
+tests adjacency, so a shorter name inside a longer inserted link is
+nested. The frontmatter table omitted <code>source</code>,
+<code>processed</code>, <code>status</code> and <code>type</code>, and
+the guide never makes the vault a git repository for <code>/save</code>
+to push. The direction is an understated risk; no mark moved.</li>
 <li><strong>The obsidian-mind report withheld
 <code>scope_enforced</code> in its prose while its frontmatter awarded
 it, said its notes had no confidence and no supersession, and overstated

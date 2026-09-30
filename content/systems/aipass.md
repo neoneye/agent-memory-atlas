@@ -65,8 +65,9 @@ not sufficient.**
 
 Almost every system in this atlas treats "should this be injected" as a ranking
 question with a cutoff. This one treats it as a *rate* question with state, and
-returns the reason. [Token Savior](../token-savior/) reaches the same territory
-by learning a bandit; AIPass gets most of the way there with four counters and no
+returns the reason. [Token Savior](../token-savior/) learns a bandit, but only
+over the list its `memory_index` tool returns, and its automatic injection is a
+fixed top three; AIPass gets most of the way there with four counters and no
 model.
 
 **The second mechanism is a declared entry limit with a linter.** Memory files

@@ -4235,33 +4235,39 @@ property of the collection; and the project is nine days old</td>
 <td><a
 href="../systems/claude-code-memory-setup/"><code>claude-code-memory-setup</code></a></td>
 <td>One Markdown note per exported chat, with YAML frontmatter carrying
-a title, keyword tags, an origin and a created date; session logs
-written by the model on /save and by a SessionEnd hook</td>
+a title, keyword tags, an origin, a created date from the export's
+mtime, an import time and fixed source, status and type values; session
+logs written by the model on /save and by a SessionEnd hook</td>
 <td>An Obsidian vault on disk, notes filed under chats/code or
 chats/web; no database, no index of its own</td>
 <td>None in this repository. Obsidian's own search and graph view, or
 the agent reading vault files, do the finding</td>
-<td>A person runs the importer after exporting, with tags from a
-66-entry keyword map; the model writes a session log when told /save; a
-SessionEnd hook writes a mechanical log on every non-trivial session
-close</td>
-<td>Editing or deleting a note in the vault. Re-importing the same
-export writes the file again and re-links it from scratch</td>
-<td>An origin folder — code or web — inferred per file. No user, project
-or agent scope</td>
-<td>One Claude Code SessionEnd hook, and /save and /resume defined as
-instructions in the vault CLAUDE.md; the agent otherwise sees the vault
-because it is on disk</td>
-<td>A SessionEnd hook on session close; otherwise none, and a shell
-wrapper runs the importer when a person invokes it</td>
+<td>A daily cron job the guide installs exports every Claude Code
+session with claude-extract and imports it with --move, tagging from a
+63-entry keyword map; web chats are exported by hand; the model writes a
+session log when told /save; a SessionEnd hook writes a mechanical log
+on every non-trivial session close</td>
+<td>Editing or deleting a note in the vault. Each nightly run re-imports
+every exported Claude Code session onto the same path, overwriting edits
+and re-linking from scratch</td>
+<td>An origin folder — code or web — inferred per file, and a
+per-project logs folder the hook picks by working-directory basename. No
+user, project or agent key is applied on a read path</td>
+<td>One Claude Code SessionEnd hook, a cron job outside the agent, and
+/save and /resume defined as instructions in the vault CLAUDE.md; the
+agent otherwise sees the vault because it is on disk</td>
+<td>A daily cron job at 22:00 runs export and import; a SessionEnd hook
+runs on session close</td>
 <td>Nothing is verified. The importer's only safety behaviours are
---dry-run and skipping code fences when inserting links</td>
+--dry-run, which the wrapper never passes, and skipping code fences when
+inserting links</td>
 <td>Wikilinks inserted at import time, longest-name-first and once per
 note, so a new note joins the existing graph without anyone maintaining
 it</td>
-<td>Silent, irreversible rewriting of note bodies with a four-character
-name floor as the only false-positive guard, and a token-savings
-headline the repository cannot support</td>
+<td>Silent rewriting of note bodies with a four-character name floor as
+the only false-positive guard, a nightly re-import that overwrites edits
+to imported chats, and token-savings figures the repository cannot
+support</td>
 </tr>
 <tr>
 <td><a
@@ -27311,28 +27317,29 @@ one vocabulary coincidence away</td>
 <tr>
 <td><a
 href="../systems/token-savior/"><code>token-savior</code></a></td>
-<td>An observation with a thirteen-value type vocabulary, from guardrail
-and ruled_out down to idea</td>
+<td>A typed observation; the bandit scores thirteen types, from
+guardrail and ruled_out down to idea</td>
 <td>SQLite with FTS5 and sqlite-vec, plus a JSON file holding the
 bandit's learned weights</td>
-<td>FTS5 and vector k-NN fused by RRF, then ranked for injection by a
-LinUCB contextual bandit</td>
-<td>Automatic extraction from tool traces and turns, with dedup,
-distillation and a precondition hook</td>
-<td>A Beta validity score quarantines below 0.40 and flags
-stale-suspected below 0.60; no rejected-value record</td>
-<td>project_root applied on the read path with an explicit is_global
-opt-in flag rather than a null escape</td>
+<td>FTS5 and vector k-NN under a 0.86 distance floor, fused by RRF; the
+memory_index tool is reranked by a LinUCB bandit</td>
+<td>Automatic capture from Bash, tool traces and turns, with
+content-hash and title-Jaccard dedup; agent writes through
+memory_save</td>
+<td>Soft delete by an archived flag; a close title archives its
+predecessor with superseded_by; no rejected-value record</td>
+<td>project_root with a declared is_global flag on MCP reads; the hooks
+bind it to the most-populous project, not the session</td>
 <td>One MCP server combining structural code navigation, memory and Bash
 output compaction</td>
-<td>Decay, distillation, summarisation, consistency checks against git
-log, and notifications</td>
-<td>A Beta-distributed validity score with two thresholds, plus a
-per-type decay horizon in days</td>
-<td>The reward ledger distinguishes ignored from never-shown, which is
-the counterfactual most feedback loops lose</td>
-<td>The headline benchmark is a separate repository, and quarantine
-leaves no record a re-extraction would consult</td>
+<td>Decay and TTL archiving at session start, a git log consistency
+sweep at stop, session rollups; distillation only suggested</td>
+<td>A Beta validity score fed only by git log, quarantining below 0.40
+and warning below 0.60</td>
+<td>A vector distance floor pinned by committed must-not-return cases
+that sit beside positive controls</td>
+<td>Every prompt-time hook reads and writes the most-populous project,
+whatever directory the session is in</td>
 </tr>
 <tr>
 <td><a href="../systems/tokenmizer/"><code>tokenmizer</code></a></td>
@@ -30309,7 +30316,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>229 of 682:</em> <a
+<p><em>228 of 682:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -30524,7 +30531,6 @@ href="../systems/tencentdb-agent-memory/"><code>tencentdb-agent-memory</code></a
 <a href="../systems/theurian/"><code>theurian</code></a>, <a
 href="../systems/thoughtdag/"><code>thoughtdag</code></a>, <a
 href="../systems/titen/"><code>titen</code></a>, <a
-href="../systems/token-savior/"><code>token-savior</code></a>, <a
 href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/trueforge/"><code>trueforge</code></a>, <a
 href="../systems/ultracontext/"><code>ultracontext</code></a>, <a
@@ -30644,7 +30650,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>395 of 682:</em> <a
+<p><em>396 of 682:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -31016,6 +31022,7 @@ href="../systems/theurian/"><code>theurian</code></a>, <a
 href="../systems/thoughtdag/"><code>thoughtdag</code></a>, <a
 href="../systems/throughline/"><code>throughline</code></a>, <a
 href="../systems/token-optimizer/"><code>token-optimizer</code></a>, <a
+href="../systems/token-savior/"><code>token-savior</code></a>, <a
 href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/tracedecay/"><code>tracedecay</code></a>, <a
 href="../systems/trueforge/"><code>trueforge</code></a>, <a
@@ -31070,7 +31077,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-395 repositories of
+396 repositories of
 682 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

@@ -4333,21 +4333,24 @@ what is searched rather than what is kept, and the licence is PolyForm
 Noncommercial.</p>
 <p><strong>claude-code-memory-setup is the same graph idea at the other
 extreme of effort, and the pairing is instructive.</strong> It is a
-recipe — a 638-line guide and a 387-line importer — that files exported
-Claude Code transcripts into an Obsidian vault with keyword tags, and
-inserts <code>[[wikilinks]]</code> to existing notes into the body as it
-writes: longest name first, first occurrence only, code fences skipped,
-never re-wrapping an existing link. A new note joins the graph with
-nobody curating it. The guard against a false link is that a note name
-must be at least four characters, which removes <code>api</code> and
-keeps <code>test</code>; the rewrite is silent, lands in the note body,
-and is not reversible. Serena, below, faces the identical problem — a
-bare name in prose that should be a link — and <em>warns</em> instead,
-graded by confidence, behind a similarity threshold with a test on each
-side of it and an ignore list for words that are also English. Same
-mechanism, opposite risk posture. Its README also leads with "71.5x
-fewer tokens per session", a figure nothing in that repository produces
-or measures.</p>
+recipe — a guide, a 387-line importer that a nightly cron job runs, and
+a <code>SessionEnd</code> hook — that files Claude Code transcripts into
+an Obsidian vault with keyword tags, and inserts
+<code>[[wikilinks]]</code> to existing notes into the body as it writes:
+longest name first, first occurrence only, code fences skipped. A new
+note joins the graph with nobody curating it. The guard against a false
+link is that a note name must be at least four characters, which removes
+<code>api</code> and keeps <code>test</code>, and the guard against
+re-wrapping checks only the characters beside a match, so a shorter name
+inside a longer link is nested. The rewrite is silent and lands in the
+note body, and each nightly re-import overwrites any edit made to an
+imported chat. Serena, below, faces the identical problem — a bare name
+in prose that should be a link — and <em>warns</em> instead, graded by
+confidence, behind a similarity threshold with a test on each side of it
+and an ignore list for words that are also English. Same mechanism,
+opposite risk posture. Its README also leads with "71.5x fewer tokens
+per session", a figure nothing in that repository produces or
+measures.</p>
 <p><strong>Serena is the only system in this family whose memories are a
 graph and whose links are checked.</strong> A memory is a Markdown file
 whose body may cite another as <code>`mem:name`</code>, and three

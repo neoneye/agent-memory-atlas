@@ -213,7 +213,8 @@ Every revocation that touches an article opens one.
 `MemoryCandidate` declares five separate usage counters —
 `occurrenceCount`, `retrievedCount`, `injectedCount`, `explicitGetCount` and
 `distinctSessionCount`. Separating *injected* from *explicitly fetched* is the
-same distinction [Token Savior](../token-savior/) draws with `was_visible`, and
+distinction [Token Savior](../token-savior/) rewards its bandit on, crediting a
+listed memory only when `memory_get` fetches it, and
 `distinctSessionCount` is the one that would stop a single enthusiastic session
 promoting a memory on its own. Only `occurrenceCount` has a writer; the other
 four are read by the admin list and incremented by no path in `src/`.

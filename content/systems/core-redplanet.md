@@ -288,8 +288,9 @@ published in `RedPlanetHQ/core-benchmark`, a separate repository, with the
 README pointing there "for full results and baseline comparisons". Nothing about
 it is verifiable at this commit. Keeping a benchmark in its own repository is a
 reasonable engineering choice and it has the same consequence recorded here for
-[Vestige](../vestige/) and [Token Savior](../token-savior/): the number on the
-front page is not checkable against the code it describes.
+[Vestige](../vestige/) and for [Token Savior](../token-savior/), whose harness is
+unpublished: the number on the front page is not checkable against the code it
+describes.
 
 29 test files. **I did not run them.** The screen flags a Claude Code plugin
 marketplace manifest as an auto-run surface, build-time execution in

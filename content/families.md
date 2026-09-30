@@ -2017,14 +2017,16 @@ ever corrected or deleted, `MAX_AGE_DAYS` bounds what is searched rather than wh
 is kept, and the licence is PolyForm Noncommercial.
 
 **claude-code-memory-setup is the same graph idea at the other extreme of
-effort, and the pairing is instructive.** It is a recipe — a 638-line guide and a
-387-line importer — that files exported Claude Code transcripts into an Obsidian
-vault with keyword tags, and inserts `[[wikilinks]]` to existing notes into the
-body as it writes: longest name first, first occurrence only, code fences skipped,
-never re-wrapping an existing link. A new note joins the graph with nobody
+effort, and the pairing is instructive.** It is a recipe — a guide, a 387-line
+importer that a nightly cron job runs, and a `SessionEnd` hook — that files Claude
+Code transcripts into an Obsidian vault with keyword tags, and inserts
+`[[wikilinks]]` to existing notes into the body as it writes: longest name first,
+first occurrence only, code fences skipped. A new note joins the graph with nobody
 curating it. The guard against a false link is that a note name must be at least
-four characters, which removes `api` and keeps `test`; the rewrite is silent,
-lands in the note body, and is not reversible. Serena, below, faces the identical
+four characters, which removes `api` and keeps `test`, and the guard against
+re-wrapping checks only the characters beside a match, so a shorter name inside a
+longer link is nested. The rewrite is silent and lands in the note body, and each
+nightly re-import overwrites any edit made to an imported chat. Serena, below, faces the identical
 problem — a bare name in prose that should be a link — and *warns* instead, graded
 by confidence, behind a similarity threshold with a test on each side of it and an
 ignore list for words that are also English. Same mechanism, opposite risk

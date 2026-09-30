@@ -6437,26 +6437,30 @@ does.</li>
 <h3 id="token-savior"><a
 href="../systems/token-savior/"><code>token-savior</code></a></h3>
 <ul>
-<li>Best idea: <code>was_visible</code> on every ledger event, which
-separates "the memory was injected and ignored" from "the memory was
-never injected" — opposite evidence about the ranker that almost every
-feedback loop in this atlas folds together.</li>
-<li>Biggest risk: the LinUCB weights persist to
-<code>linucb_model.json</code> with no versioning against the
-<code>FEATURE_NAMES</code> tuple they were trained on, so changing the
-feature vector silently reinterprets a trained model.</li>
+<li>Best idea: crediting the features stored at ranking time when the
+agent fetches a listed memory — <code>memory_index</code> keeps
+<code>φ</code> for each row it ranks, and a <code>memory_get</code>
+within 30 minutes rewards it, a click signal with no model and no extra
+call.</li>
+<li>Biggest risk: every prompt-time hook resolves the project as the one
+with the most observations, so with two projects on one machine the
+larger project's memory is injected into the smaller one's sessions and
+its Bash captures are filed there.</li>
 <li>Most reusable component: <code>linucb_injector.py</code> — a
-ten-feature contextual bandit deciding which memory to inject, with a
-Gauss-Jordan inverse in pure Python and no numpy.</li>
-<li>Maturity impression: 32,600 lines of Python with 173 test files, a
-Beta-distributed validity score with quarantine and stale-suspected
-thresholds, and freshness checked by shelling out to
-<code>git log -S</code> — with the headline tsbench number in a separate
-repository.</li>
-<li>Study when: you inject memory automatically and have no way to tell
-whether it helped.</li>
-<li>Do not copy when: you need the benchmark claim verified; it is not
-in this tree.</li>
+ten-feature LinUCB with a Gauss–Jordan inverse in pure Python and no
+numpy — and the 0.86 distance floor in <code>memory/search.py</code>,
+which ships with must-not-return tests.</li>
+<li>Maturity impression: 52,383 lines of Python and 2,517 test functions
+under CI; the outcome ledger declares five outcome columns and only
+<code>was_visible</code> has a writer, and the headline tsbench figure
+comes from a harness the README says is not public. Two marks:
+<code>scope_enforced</code> on the MCP search path, and
+<code>negative_eval</code> for the distance-floor and rollup-scope
+cases.</li>
+<li>Study when: you want a learned ranker over an agent-pulled memory
+list, or a vector threshold pinned by tests that can fail.</li>
+<li>Do not copy when: several projects share one store — the hooks'
+scope rule assumes there is only one.</li>
 </ul>
 <h3 id="recall-substrate"><a
 href="../systems/recall-substrate/"><code>recall-substrate</code></a></h3>
@@ -8751,39 +8755,46 @@ href="../systems/claude-code-memory-setup/"><code>claude-code-memory-setup</code
 <ul>
 <li>Best idea: linking on the way in. <code>insert_wikilinks</code>
 gathers every vault note name, sorts longest-first so a longer name
-beats a shorter one it contains, splits the body on code fences with a
-capturing regex so code survives untouched, and links the first
-occurrence only of each name with a guard that refuses to re-wrap an
-existing <code>[[link]]</code>. A new note arrives already connected and
-nobody maintained the connections.</li>
-<li>Biggest risk: that rewrite is silent, irreversible and guarded only
-by a four-character name floor — which removes <code>api</code> and
-keeps <code>test</code>, <code>error</code> and <code>database</code>.
-With <code>--move</code> the original export is deleted, and because
-links are derived from whatever the vault contained at import time, the
-graph is a function of import order and re-deriving it means overwriting
-any edits made since.</li>
+takes the first occurrence ahead of a shorter one it contains, splits
+the body on code fences with a capturing regex so code survives
+untouched, and links the first occurrence only of each name. A new note
+arrives already connected and nobody maintained the connections. The
+guard against re-wrapping checks only the characters beside a match, so
+<code>auth</code> inside a just-inserted
+<code>[[supabase-auth-flow]]</code> is nested.</li>
+<li>Biggest risk: that rewrite is silent and guarded only by a
+four-character name floor — which removes <code>api</code> and keeps
+<code>test</code>, <code>error</code> and <code>database</code>. The
+guide's cron job runs <code>claude-extract --all</code> and then the
+importer with <code>--move</code> every night, so every Claude Code chat
+still on disk is re-imported onto the same path, its links are
+re-derived, and any edit made to it in Obsidian is overwritten.</li>
 <li>Most reusable component: <code>SHORT_KEYWORDS</code>, ten of the
-sixty-six keyword-map entries held back to whole-word matching while the
-rest match as substrings. Splitting a keyword table by how dangerous
-each entry is costs nothing and almost nobody does it.</li>
-<li>Maturity impression: MIT, standard library only, tagged 1.0.0 on 10
-September 2026, a CI workflow of lint and documentation checks and no
-tests. Three implemented behaviours — code-fence skipping, no
-double-wrapping, longest-name-first — are pinned by nothing. The
-README's headline, "71.5x fewer tokens per session", is not produced or
-measured by anything in the repository; the token argument belongs to
-Graphify and to not re-reading files.</li>
+sixty-three keyword-map entries held back to whole-word matching while
+the rest match as substrings. Splitting a keyword table by how dangerous
+each entry is costs nothing; this one leaves <code>rust</code>,
+<code>test</code>, <code>cron</code> and <code>go </code> on the
+substring side.</li>
+<li>Maturity impression: MIT, standard library only apart from the
+unversioned <code>claude-conversation-extractor</code> the wrapper
+calls, tagged 1.0.0 on 10 September 2026, a CI workflow of lint and
+documentation checks and no tests. Code-fence skipping and
+longest-name-first are pinned by nothing, and the re-wrap guard fails on
+a nested name. The README's tagline, "71.5x fewer tokens per session",
+and its 499x per-query figure are not produced or measured by anything
+in the repository; the token argument belongs to Graphify and to not
+re-reading files.</li>
 <li>Study when: you keep an Obsidian vault and want your agent's history
-to land in it tagged and connected, and you are happy for that to be a
-command you run.</li>
-<li>Do not copy when: you need memory to be selective. Everything is
-kept verbatim, the vault grows with every session, and nothing in the
-design has an opinion about what mattered — the <code>SessionEnd</code>
-hook added in 1.0.0 writes a mechanical log into the same
-<code>logs/</code> folder <code>/resume</code> reads its three newest
-entries from, so the safety net crowds out the <code>/save</code> logs
-it backs up.</li>
+to land in it tagged and connected, and you are content for imported
+chats to be a nightly mirror of your transcripts rather than notes you
+edit.</li>
+<li>Do not copy when: you need memory to be selective. The pipeline
+keeps everything verbatim and the vault grows with every session; the
+only selection is the model's <code>/save</code>. The
+<code>SessionEnd</code> hook added in 1.0.0 writes a mechanical log into
+the same <code>logs/</code> folder <code>/resume</code> reads its three
+newest entries from, so the safety net crowds out the <code>/save</code>
+logs it backs up.</li>
 </ul>
 <h3 id="vllm-semantic-router"><a
 href="../systems/vllm-semantic-router/"><code>vllm-semantic-router</code></a></h3>
