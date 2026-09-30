@@ -2531,9 +2531,10 @@ only, no network), and two dependency surfaces sit inside the cooldown,
 so nothing was installed and no test was run</li>
 <li><a href="https://github.com/getzep/zep">getzep/zep</a> at <a
 href="https://github.com/getzep/zep/commit/495bf72880d13f0b81696ec4f88a9817ed85ca73"><code class="commit-id" title="495bf72880d13f0b81696ec4f88a9817ed85ca73">495bf728…</code></a>
-— read only; 23 dependency surfaces sit inside the cooldown, so nothing
-was installed. The committed LoCoMo experiments were read from git
-rather than rerun</li>
+— read only; nothing was installed, built or run. The committed LoCoMo
+experiments were read from git rather than rerun, and Graphiti
+<code>v0.3.21</code> and the <code>zep-cloud</code> 3.28.0 SDK were read
+at their tags for the engine and contract claims</li>
 <li><a
 href="https://github.com/zhongwanjun/MemoryBank-SiliconFriend">zhongwanjun/MemoryBank-SiliconFriend</a>
 at <a
@@ -5850,6 +5851,36 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Zep report awarded <code>bitemporal</code> on a misread
+<code>created_at</code>, said nothing in the tree stores or forgets
+memory, that nothing injects it and that the model only reads, described
+a Community Edition purge tier that nothing calls, and put its LoCoMo
+graders in the wrong order; corrected 2026-09-30.</strong> At <a
+href="https://github.com/getzep/zep/commit/495bf72880d13f0b81696ec4f88a9817ed85ca73"><code class="commit-id" title="495bf72880d13f0b81696ec4f88a9817ed85ca73">495bf728…</code></a>,
+which is upstream HEAD, <code>created_at</code> on a triple is the
+caller's event time — <code>zep-cloud</code> 3.28.0 documents it as "The
+timestamp of the message" — and no code in the tree tracks either time
+axis, so the <a href="../systems/zep/">Zep</a> report's
+<code>bitemporal</code> mark was too generous and is withdrawn; the
+Community Edition's public <code>Fact</code> keeps one timestamp,
+<code>valid_at</code> where present, and drops <code>invalid_at</code>
+and <code>expired_at</code>
+(<code>legacy/src/lib/graphiti/service_ce.go:37-42</code>,
+<code>legacy/src/models/fact_common.go:9-14</code>). The other errors
+ran the opposite way, absences over committed code.
+<code>ZepContextTool.process_llm_request</code> persists each user
+message and appends the returned context to the system instruction
+(<code>integrations/adk/python/src/zep_adk/context_tool.py:309-408</code>),
+and four integration packages register a model-callable write tool. The
+Community Edition keeps sessions and messages in Postgres, extracts
+through a Graphiti service, and purges through
+<code>purgeDeletedResources()</code>; <code>purgeDeleted()</code> has no
+caller and no Go file carries a build constraint. The accuracy grader
+runs after the answer
+(<code>benchmarks/locomo/evaluation.py:166-171</code>).
+<code>benchmarks/longmemeval/</code> is the code for <a
+href="https://arxiv.org/abs/2501.13956">arXiv:2501.13956</a>, which the
+report did not cite.</li>
 <li><strong>The widemem.ai report credited its LoCoMo harness with an
 independent judge and a scored adversarial category, described
 uncertainty modes that decide abstention, presented YMYL decay immunity

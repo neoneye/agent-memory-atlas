@@ -10509,14 +10509,15 @@ same well-meaning agent.</li>
 <ul>
 <li>Best idea: grading retrieval sufficiency and answer correctness as
 two independent judgements of the same question.
-<code>benchmarks/locomo/evaluation.py</code> fires a CORRECT/WRONG
-grader and a COMPLETE/PARTIAL/INSUFFICIENT context grader concurrently,
-records <code>missing_elements</code> per question, and derives
-<code>accuracy_with_complete_context</code>. That last number is flat at
-0.92 across a 5.8x swing in retrieved tokens, which says every point the
-retrieval sweep buys comes from completeness rising and none from the
-reader improving — an attribution almost no memory benchmark in this
-atlas can make.</li>
+<code>benchmarks/locomo/evaluation.py</code> runs a
+COMPLETE/PARTIAL/INSUFFICIENT context judge concurrently with answer
+generation, so it never sees the model's answer, then a CORRECT/WRONG
+grader; it records <code>missing_elements</code> per question and
+derives <code>accuracy_with_complete_context</code>. That last number is
+flat at 0.92 across a 5.8x swing in retrieved tokens, which says every
+point the retrieval sweep buys comes from completeness rising and none
+from the reader improving — an attribution almost no memory benchmark in
+this atlas can make.</li>
 <li>Biggest risk: the mechanism is not here. Extraction, entity
 resolution, edge invalidation and ranking are Zep Cloud's, and the
 repository is the client contract plus the measurement apparatus. The
@@ -10532,11 +10533,12 @@ a preview that makes no API calls. Six anticipated failure modes in 227
 lines, in a transform most teams write as a <code>str.replace</code>
 loop.</li>
 <li>Maturity impression: Apache-2.0, thirteen independently released
-integration packages across Python, TypeScript and Go, about 5,200 lines
-of well-tested ingestion library with 27 test modules, and fifty
-committed benchmark runs. The Community Edition is deprecated in
-<code>legacy/</code>, and the MCP server is a separate Go module
-registering thirteen tools, all of them reads.</li>
+integration packages across Python, TypeScript and Go, most of them
+persisting each user turn and injecting the returned context before the
+model call, about 5,200 lines of well-tested ingestion library with 27
+test modules, and fifty committed benchmark runs. The Community Edition
+is deprecated in <code>legacy/</code>, and the MCP server is a separate
+Go module registering thirteen tools, all of them reads.</li>
 <li>Study when: you are choosing a retrieval budget and want to know
 where the knee is. 20/20 to 30/30 costs 45% more context tokens for 0.26
 points of accuracy — inside one standard deviation — while
@@ -10544,8 +10546,9 @@ accuracy-given-complete-context falls slightly, the shape a mild
 distraction effect makes.</li>
 <li>Do not copy when: you need to inspect, repair or run the store.
 There is no local mode, an API key is required before a single fact is
-written, and the documented MCP surface is thirteen read tools — the
-application ingests and the model only asks.</li>
+written, and the two time axes on a fact are the service's to keep:
+nothing in this tree tracks either, and the deprecated Community Edition
+flattens them into one timestamp.</li>
 </ul>
 <h3 id="memorybank"><a
 href="../systems/memorybank/"><code>memorybank</code></a></h3>

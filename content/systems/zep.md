@@ -1,7 +1,7 @@
 ---
 title: "Zep"
 eyebrow: "Fifty runs of a closed graph"
-description: "The client half of a hosted temporal knowledge graph, whose fifty committed LoCoMo runs separate retrieval sufficiency from answering skill and show accuracy-given-a-complete-context flat at 92 percent across a 5.8x swing in retrieved tokens."
+description: "The client half of Zep Cloud's hosted temporal knowledge graph, whose fifty committed LoCoMo runs grade retrieval sufficiency separately from answer correctness."
 root: ../..
 page_kind: system
 source_name: "getzep/zep"
@@ -9,22 +9,25 @@ source_url: https://github.com/getzep/zep
 archive_name: "getzep--zep"
 revision: 495bf72880d13f0b81696ec4f88a9817ed85ca73
 revision_url: https://github.com/getzep/zep/commit/495bf72880d13f0b81696ec4f88a9817ed85ca73
-analyzed_at: 2026-09-15
-capabilities: "bitemporal, scope_enforced"
+analyzed_at: 2026-09-30
+licence: "Apache-2.0"
+size: "103,387 lines of Python, Go and TypeScript in 568 files; 53,289 of them are the thirteen integration packages, 5,198 the zep-ingest library and 7,885 the deprecated Community Edition"
+activity: "396 commits on main by 18 author names, three of them bots, 29 April 2023 – 11 September 2026"
+tests: "551 pytest functions in 27 zep-ingest modules; 1,043 Python, 296 TypeScript and 60 Go cases across the integrations; 11 in the LoCoMo harness and 12 Go tests in the MCP server; none for the Community Edition; not run"
+capabilities: "scope_enforced"
 capability_evidence:
-  bitemporal: "the fact-triple contract and its readers | ingestion/src/zep_ingest/triples.py:63-64, :108-109; benchmarks/longmemeval/zep_longmem_eval.py:319-320 | `FactTriple` carries `valid_at` and `invalid_at` for when a claim held beside `created_at` for when the graph learned it, each validated as RFC3339 and set independently; the LongMemEval harness and `examples/python/agent-memory-full-example/agents.py:201-203` read both back and render an invalidated fact as a closed date range rather than dropping it. No as-of filter is issued anywhere in this tree, and invalidation itself runs in the hosted service | no committed test reads validity back"
-  scope_enforced: "`Destination` in zep-ingest | ingestion/src/zep_ingest/types.py:66-73; ingestion/src/zep_ingest/verify.py:45-54 | `Destination.__post_init__` raises unless exactly one of `graph_id` or `user_id` is set, and `search_when_ready` builds one before every `graph.search` and passes only that key, so this library cannot issue an unscoped read; the filter itself is applied by the hosted service, and the MCP server's five UUID-addressed getters take no scope key | ingestion/tests/test_types.py:193, :197"
+  scope_enforced: "`Destination` in zep-ingest | ingestion/src/zep_ingest/types.py:66-77; ingestion/src/zep_ingest/verify.py:44-54 | `Destination.__post_init__` raises unless exactly one of `graph_id` or `user_id` is set, and `search_when_ready` builds one before every `graph.search` and passes only that key, so this library cannot issue an unscoped read; the filter itself is applied by the hosted service. Outside this library the MCP server's five UUID-addressed getters take no scope key, and the Community Edition's session search sends no group when neither `user_id` nor `session_ids` is given | ingestion/tests/test_verify.py:73-76; ingestion/tests/test_types.py:191-197"
 stack_storage: "graph, postgres"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
 matrix:
-  memory_unit: "An episode submitted to a hosted graph, and the typed fact edge it later becomes — carrying valid_at, invalid_at and created_at"
-  storage: "Zep Cloud's hosted graph; nothing local. The deprecated Community Edition in legacy/ is a Go server on Postgres"
-  retrieval: "graph.search over edges, nodes or episodes, limit 50, reranked by rrf, mmr, node_distance, episode_mentions or cross_encoder"
+  memory_unit: "An episode submitted to a hosted graph, and the typed fact edge it later becomes — carrying valid_at and invalid_at for world time and created_at and expired_at for the graph's own"
+  storage: "Zep Cloud's hosted graph; nothing local. The deprecated Community Edition in legacy/ keeps sessions and messages in Postgres and hands facts to a Graphiti service on Neo4j"
+  retrieval: "graph.search over edges, nodes or episodes, limit 50, reranked by rrf, mmr, node_distance, episode_mentions or cross_encoder; most integrations inject the returned context before every model call"
   write: "Asynchronous end to end — submit returns batch, episode, message or task handles, wait() polls the tail of each and returns before the fact is searchable, and a poll helper absorbs the rest"
-  update_delete: "invalid_at closes a fact's validity interval; the ingestion library has no delete path at all"
-  scoping: "Destination requires exactly one of graph_id or user_id, and every read carries it"
-  integration: "Nine Python framework packages, three TypeScript, one Go, plus a Go MCP server registering thirteen tools, every one of them a read"
+  update_delete: "No call on the supported path updates or deletes one fact; a triple can carry its own closed interval, and whole graphs, threads and users can be deleted. The Community Edition deletes a fact by UUID"
+  scoping: "Destination requires exactly one of graph_id or user_id, and every zep-ingest read carries it; the MCP server takes user_id from the model"
+  integration: "Nine Python framework packages, three TypeScript, one Go, most with a persist-and-inject hook and several with a model write tool, plus a Go MCP server registering thirteen tools, every one of them a read"
   background: "All extraction is the vendor's; the client sees only processing handles and an indexing lag it polls through"
   trust: "min_fact_rating is a hosted score on a fact, not a state; nothing is candidate, verified or rejected"
   strengths: "A committed retrieval-budget ablation with ten runs per point that isolates memory failure from answering failure"
@@ -33,26 +36,27 @@ matrix:
 
 ## 1. Executive Summary
 
-This repository is not Zep. Its own README says so in the third paragraph: it
-"is **not** Zep's product or service", but example code, framework integrations
-and tooling for Zep Cloud, the hosted agent-memory platform. The engine that
-used to be here — Zep Community Edition — sits deprecated and unsupported in
-`legacy/`, and the open engine that powers the hosted product is a different
-repository, analyzed separately as [Graphiti](../graphiti/).
+This repository is not Zep. Its own README says so under *About This
+Repository*: it "is **not** Zep's product or service", but example code,
+framework integrations and tooling for Zep Cloud, the hosted agent-memory
+platform. The engine that used to be here — Zep Community Edition — sits
+deprecated and unsupported in `legacy/`, and the open engine that powers the
+hosted product is a different repository, analyzed separately as
+[Graphiti](../graphiti/).
 
 So the honest description of what a reader can inspect at this commit is: a
 **client contract** for a closed temporal knowledge graph, plus the measurement
 apparatus its vendor points at it. That sounds like a thin subject for a report,
 and for the memory mechanism it is — extraction, entity resolution, edge
 invalidation and ranking all happen on the other side of an HTTP call. Two
-things make the tree worth reading anyway.
+things in the tree repay the read anyway.
 
 The first is `benchmarks/locomo/experiments/`, which holds **five LoCoMo
 experiments of ten runs each — fifty runs, 77,000 graded question instances,
 with per-run standard deviations, context-token distributions and retrieval
-latency percentiles all committed to git.** Almost nothing else in this atlas
-publishes variance at all; the [benchmarks page](../../benchmarks/) exists partly
-to complain about that. The sweep varies one thing, the retrieval budget, and it
+latency percentiles all committed to git.** The
+[benchmarks page](../../benchmarks/) uses them as its worked case of run-to-run
+variance. The sweep varies one thing, the retrieval budget, and it
 answers a question the field usually leaves as vibes: *how much retrieval is
 enough, and what does the last increment buy?*
 
@@ -66,11 +70,16 @@ searchable when the API says the write succeeded. It refuses to let you register
 These are not marketing claims; they are a vendor's engineers writing down where
 the sharp edges are, in code, next to the guard rails.
 
-The weakness is the obvious one and it is not fixable by reading harder: nothing
-in this tree stores, extracts, ranks or forgets anything. An API key is required
-before a single fact can be written, there is no local mode, and the
-correction semantics that make Zep interesting — bitemporal edge invalidation —
-are asserted at the API boundary and executed somewhere you cannot see.
+The weakness is the obvious one and it is not fixable by reading harder: on the
+supported path nothing in this tree stores, extracts, ranks or forgets anything.
+An API key is required before a single fact can be written, there is no local
+mode, and the correction semantics that make Zep interesting — bitemporal edge
+invalidation — are visible in the API's field names and executed somewhere you
+cannot see. That is why this report carries no `bitemporal` mark (section 5).
+The one server in the tree that holds state, the deprecated Community Edition,
+keeps sessions and messages in Postgres, sends every message to a Graphiti
+service that extracts the facts, and flattens each fact's two time axes into one
+timestamp on the way back.
 
 ## 2. Mental Model
 
@@ -79,11 +88,20 @@ From inside this repository a memory has two forms and a gap between them.
 The form you write is an **episode**: a string, a `data_type` of `text`, `json`
 or `message`, an optional RFC3339 `created_at`, and at most ten metadata keys
 (`ingestion/src/zep_ingest/types.py`). The form you read is a **fact edge**: a
-typed relationship between two named nodes, carrying `fact`, `fact_name` in
-SCREAMING_SNAKE_CASE, and three timestamps — `valid_at` and `invalid_at` for
-when the claim held in the world, `created_at` for when the graph learned it
-(`ingestion/src/zep_ingest/triples.py`). Between the two sits the vendor's
-extraction, which the client never observes.
+typed relationship between two named nodes, carrying `fact`, a relation `name`
+(written as `fact_name`, in SCREAMING_SNAKE_CASE), and four timestamps —
+`valid_at` and `invalid_at` for when the claim held in the world, `created_at`
+and `expired_at` for when the graph made the edge and when it retired it. Those four are the SDK's
+`EntityEdge` (`zep-cloud` 3.28.0, the release current at this commit), and the
+AutoGen integration copies all four into its memory metadata
+(`integrations/autogen/python/src/zep_autogen/graph_memory.py:146-149`). Between
+the two forms sits the vendor's extraction, which the client never observes.
+
+The write side names its clock differently. An episode's `created_at` is the
+source's event time — the loaders stamp it from a Slack `ts`, an email `Date`
+header or, on request, a file's mtime — and `add_fact_triple` documents its own `created_at`
+as "The timestamp of the message". So the one record-time name a client can
+write is an event time.
 
 The states a client can distinguish are therefore states of *submission*, not of
 belief:
@@ -95,24 +113,30 @@ submitted             -> batch id, episode or message UUID, or task id kept;
 result.wait()         -> the tail of the queue reports processed
                       -> but the fact is still not searchable
 search_when_ready()   -> polls every 5s up to 120s until something comes back
-retrieved             -> a fact edge with valid_at / invalid_at / created_at
+retrieved             -> a fact edge with valid_at / invalid_at and
+                         created_at / expired_at
 ```
 
 Belief states are the vendor's. There is no candidate, no verified, no rejected;
 the closest thing is `min_fact_rating`, a floating-point threshold on a hosted
 score that `search_graph` accepts as a filter. A score is not a state, so this
-report withholds the `trust_state` mark, and the near-miss is worth naming
-because Zep is often described as if it had one.
+report withholds the `trust_state` mark. The near-miss is stated here because
+Zep is often described as if it had one.
 
-How a memory dies is the more interesting half. Nothing in the ingestion library
-deletes. The only correction primitive a client can assert is `invalid_at` on a
-`FactTriple`, which closes a validity interval rather than removing a row — the
-same move [Graphiti](../graphiti/) makes, and for the same reason: a graph that
-overwrites cannot answer *what did we believe last March*. The consequence is
-that a wrong fact does not disappear; it becomes a fact that was true until a
-date. Whether the hosted extractor will re-derive it from the same episode on a
-later pass is not answerable from this tree, and there is no record of a
-rejected value anywhere, so the `tombstone` mark is withheld too.
+How a memory dies is the more interesting half. No call on the supported path
+updates or deletes a single fact. A client can submit a `FactTriple` that
+carries its own closed interval, or an episode from which the service may
+invalidate an older edge; the only deletes are whole graphs, threads and users,
+as in AutoGen's `clear()`. Invalidation closes an interval rather than removing
+a row — the same move [Graphiti](../graphiti/) makes, and for the same reason: a
+graph that overwrites cannot answer *what did we believe last March*. A wrong
+fact does not disappear; it becomes a fact that was true until a date.
+
+Whether the hosted extractor will re-derive it from the same episode on a later
+pass is not answerable from this tree. There is no record of a rejected value
+anywhere in it, so the `tombstone` mark is withheld too. The deprecated
+Community Edition is the exception to the first sentence: it forwards a `DELETE`
+for one fact UUID to Graphiti (`legacy/src/api/apihandlers/fact_handlers_ce.go:26-28`).
 
 The one place the client can *cause* a durable epistemic error is the timestamp.
 `_MissingTimestampCounter` in `pipeline.py` exists to count episodes with no
@@ -128,9 +152,9 @@ by history — and because invalidation is ordered by that same clock, the
 corrections land backwards.
 
 ```mermaid
-%% caption: what a client can see of a hosted graph: two lags, three timestamps, and no way to say never again
+%% caption: what a client can see of a hosted graph: two lags, four timestamps, and no way to say never again
 flowchart TB
-    Ep["Episode<br/>data, data_type, created_at?"] --> Guard["LimitGuard splits at 9,500 chars<br/>Alias canonicalizer rewrites names"]
+    Ep["Episode<br/>data, data_type, created_at? (event time)"] --> Guard["LimitGuard splits at 9,500 chars<br/>Alias canonicalizer rewrites names"]
     Guard --> Sub["Submit: batch or sequential<br/>returns batch, episode or task handles"]
     Sub --> Opaque
 
@@ -138,14 +162,15 @@ flowchart TB
       Extract["extraction, entity resolution,<br/>edge invalidation, ranking"]
     end
 
-    Opaque --> Edge[("Fact edge<br/>valid_at … invalid_at<br/>created_at")]
+    Opaque --> Edge[("Fact edge<br/>world: valid_at … invalid_at<br/>graph: created_at … expired_at")]
     Sub -.->|"created_at absent"| Bad["dated to ingestion time:<br/>validity timeline and<br/>invalidation order corrupted"]
     Bad --> Opaque
 
     Wait["result.wait() reports success"] -.->|"fact still not searchable"| Lag["indexing lag<br/>search_when_ready polls 5s / 120s"]
     Lag --> Edge
     Edge --> Read["graph.search<br/>scope edges | nodes | episodes<br/>reranked, limit ≤ 50"]
-    Edge -.->|"correction closes an interval,<br/>it never removes a row"| Keep["no delete path in the client"]
+    Edge --> Inject["integration hooks:<br/>thread.add_messages returns context,<br/>injected before each model call"]
+    Edge -.->|"correction closes an interval,<br/>it never removes a row"| Keep["no per-fact delete<br/>on the supported path"]
     Edge -.->|"min_fact_rating is a score,<br/>not a status"| NoState["no trust state"]
 ```
 
@@ -157,23 +182,30 @@ Six code trees share the repository, developed and released independently.
   `Loader → Transform* → LimitGuard → Submitter` pipeline with loaders for Slack
   exports, `.eml` mail, WebVTT and speaker-labelled transcripts, text/Markdown
   files, and JSONL/CSV/JSON records, plus a `ConcatLoader` that chains loaders
-  into one submit stream. This is the only substantial
-  memory-adjacent implementation in the repository.
+  into one submit stream. It carries most of the tree's write-side logic:
+  validation, chunking, alias rewriting and resumable submission.
 - **`benchmarks/`** — a LoCoMo harness (about 1,800 lines plus tests) with five
-  committed experiments, and a LongMemEval harness with no committed results.
+  committed experiments, and the DMR and LongMemEval code for the Zep paper,
+  with no committed results (section 10).
 - **`zep-eval-harness/`** — about 4,600 lines of Python driving a smaller
   end-to-end ingest-then-ask loop over four conversations and four reference
   documents, with its runs committed under `runs/` (section 10).
 - **`integrations/`** — one package per framework per language, released
   independently: Google ADK, Microsoft Agent Framework, AutoGen, AG2, CrewAI,
   LangGraph, LiveKit, Pydantic AI and Strands in Python; ADK, Mastra and Vercel
-  AI SDK in TypeScript; ADK in Go.
+  AI SDK in TypeScript; ADK in Go. This is the largest tree, about half the
+  code, and where memory meets an agent's turn (sections 6 and 8).
 - **`mcp/zep-mcp-server/`** — about 1,550 lines of Go, a self-contained module
   (`go.mod` declaring `github.com/getzep/zep/mcp/zep-mcp-server`) with a
   `Makefile`, a `Dockerfile` and a `docker-compose.yml`.
-- **`legacy/`** — Zep Community Edition, a Go server on Postgres via `bun`,
-  with `docker-compose.ce.yaml` and a `Dockerfile.ce`. Deprecated and
-  unsupported, per the README and the linked strategy post.
+- **`legacy/`** — Zep Community Edition, a Go server that keeps users,
+  sessions and messages in Postgres via `bun` and sends every message to a
+  Graphiti service for extraction and search (`lib/graphiti/service_ce.go`).
+  `docker-compose.ce.yaml` runs it beside `zepai/graphiti:0.3` and
+  `neo4j:5.22.0`. Deprecated and unsupported, per the README and the linked
+  strategy post.
+
+`examples/` adds Python, TypeScript and Go snippets and a Next.js graph viewer.
 
 `ontology/default_ontology.py` is a single 139-line file of Pydantic models
 defining the entity types the hosted extractor is asked to classify into: `User`
@@ -215,14 +247,15 @@ appeal or a disqualification depending on the reader.
 - **The store is not human-readable or hand-repairable.** Inspection goes
   through `graph.search` and the getters in `zep_graph_inspect.py`.
 - Install is `pip install zep-cloud` for the SDK; `zep-ingest` and each
-  integration package are separate installs. The MCP server is the one thing in
-  the tree an operator runs: `make build` or `docker compose up`, a `ZEP_API_KEY`
-  in the environment, and a stateless proxy holding nothing.
+  integration package are separate installs. On the supported path the MCP
+  server is the one thing an operator runs: `make build` or `docker compose up`,
+  a `ZEP_API_KEY` in the environment, and a stateless proxy holding nothing.
 
-The screen of this checkout found one auto-run surface, 23 dependency surfaces
-inside the seven-day cooldown, 14 build-time execution points and 33 unpinned
-surfaces across 100 files. Nothing here was installed or
-run; the analysis is a read of the tree.
+The screen of this checkout found one auto-run surface — `.cursor/mcp.json`,
+which points an editor at Zep's hosted documentation server — no dependency
+surface inside the seven-day cooldown, 14 build-time execution points and 33
+unpinned surfaces across 100 files. Nothing here was installed or run; the
+analysis is a read of the tree.
 
 ## 4. Essential Implementation Paths
 
@@ -254,11 +287,14 @@ run; the analysis is a read of the tree.
   a `<FACTS>` block and an `<ENTITIES>` block with an instruction that
   timestamps mean event time and not mention time.
 - **Delete path** — none exists in `zep-ingest`.
-- **Legacy purge** — `purgeDeleted()` in `legacy/src/store/purge_common.go`
-  hard-deletes soft-deleted rows in one transaction; the CE build's
-  `tableCleanup()` in `purge_ce.go` is a thirteen-line no-op, so the
-  two-tier soft-delete-then-purge design has an empty second tier in the open
-  edition.
+- **Legacy purge** — deleting a user in the Community Edition deletes the
+  user's Graphiti group and each of its sessions' groups, then calls
+  `purgeDeletedResources()`, which hard-deletes the soft-deleted message rows
+  and runs `VACUUM ANALYZE` (`legacy/src/store/userstore_ce.go:22-34`,
+  `db_utils_ce.go:14-40`); deleting a session calls the same purge. The
+  transactional `purgeDeleted()` in `purge_common.go`, with its no-op
+  `tableCleanup()` in `purge_ce.go`, is reachable only through
+  `memoryStore.PurgeDeleted`, which nothing in the tree calls.
 
 ## 5. Memory Data Model
 
@@ -279,9 +315,16 @@ construction that is not exactly one of `graph_id` or `user_id`
 (`bool(graph_id) == bool(user_id)` raises). Every write and every read in
 `zep-ingest` carries one, which is what earns the `scope_enforced` mark: the
 scope is not a tag that happens to be stored, it is a required argument that
-this read path cannot omit. The mark covers that library and not the whole
-tree — the MCP server's five UUID-addressed getters take no scope key, as
-section 8 sets out.
+this read path cannot omit, and `test_destination_required` asserts that no
+search is sent without one (`ingestion/tests/test_verify.py:73-76`). The mark
+covers that library and not the whole tree. The MCP server's five
+UUID-addressed getters take no scope key, as section 8 sets out. The Community
+Edition's `POST /sessions/search` builds its group list from an optional
+`user_id` and optional `session_ids`, and sends a nil list, JSON `null`, when
+both are absent (`legacy/src/store/memory_ce.go:78-92`). Graphiti reads a null
+group list as every group (`search_utils.py:202` at `v0.3.21`); the field
+comment "Required on Community Edition" is the only guard
+(`legacy/src/models/search_common.go:6`).
 
 `FactTriple` is the richest type and the clearest window into the hosted schema,
 because every documented API limit is re-validated client-side so a bad triple
@@ -295,7 +338,7 @@ fails as a Python error naming the field rather than an HTTP 400 mid-run:
 | `source_node_summary`, `target_node_summary` | ≤ 500 chars |
 | `source_node_labels`, `target_node_labels` | list of **at most one** label |
 | `source_node_uuid`, `target_node_uuid` | valid UUID, pins an endpoint by identity |
-| `valid_at`, `invalid_at`, `created_at` | RFC3339 |
+| `valid_at`, `invalid_at`, `created_at` | RFC3339; `created_at` is the source's event time |
 | `attributes`, `metadata` | scalar maps, metadata ≤ 10 keys |
 
 Two details carry weight. The single-label cap is enforced with the comment that
@@ -305,11 +348,29 @@ And the UUID endpoints exist specifically so "a re-run cannot resolve a slightly
 different name to a new node", which is a plain admission that name-based entity
 resolution is the fragile part.
 
-The three timestamps are what earn the `bitemporal` mark. `valid_at`/`invalid_at`
-are world time and `created_at` is record time, they are independently settable
-on the same edge, and the library's own warning text treats the distinction as
-load-bearing. The caveat a reader should hold: this is bitemporality observed at
-an API contract, not read out of a schema, because the schema is not here.
+**The `bitemporal` mark is withheld, because nothing in this tree tracks either
+axis.** The hosted contract has both: a returned edge carries world time in
+`valid_at`/`invalid_at` and graph time in `created_at`/`expired_at`. But the
+record axis is written only by the service. The one field of that name a client
+submits, `FactTriple.created_at`, is the caller's event time, and the
+`zep-cloud` SDK also accepts a caller's `expired_at` on a triple. What the tree
+itself does with the axes is read them. The LongMemEval harness and the
+full-example agent render `valid_at … invalid_at` as a date range
+(`benchmarks/longmemeval/zep_longmem_eval.py:319-320`,
+`examples/python/agent-memory-full-example/agents.py:201-203`), and the LoCoMo
+harness prints `valid_at` alone as `event_time` (`benchmarks/locomo/evaluation.py:200`).
+No as-of filter is issued anywhere in the tree.
+
+The one server in the tree collapses the axes. The Community Edition's
+`graphiti.Fact` receives all four timestamps, and its public `Fact` keeps one:
+`ExtractCreatedAt()` substitutes `valid_at` for `created_at`, and `invalid_at`
+and `expired_at` are dropped (`legacy/src/lib/graphiti/service_ce.go:27-42`,
+`legacy/src/store/memory_ce.go:44-54`, `legacy/src/models/fact_common.go:9-14`).
+Graphiti's search at `v0.3.21`, the last tag of the line the compose file's
+`zepai/graphiti:0.3` image names, returns invalidated edges unfiltered, so a
+Community Edition client receives a superseded fact dated like a current one.
+The open engine that does track both axes is [Graphiti](../graphiti/), which
+carries the mark.
 
 ## 6. Retrieval Mechanics
 
@@ -320,13 +381,23 @@ benchmark: a query string, a `scope` of `edges`, `nodes` or `episodes`, a
 `episode_mentions` and `cross_encoder`. Filters are `min_fact_rating`,
 `node_labels`, `edge_types`, and `center_node_uuid` for node-distance
 reranking; `mmr_lambda` tunes diversity. The handler defaults `scope` to
-`edges` and `limit` to 10 and enforces no ceiling — the maximum of 50 that
+`edges` and `limit` to 10 and enforces no ceiling — the 50-result maximum that
 `docs/TOOLS.md` records is the service's, checked on the other side.
 
-Retrieval is application-driven. There is no automatic injection: the caller
-searches, formats and places the result. The benchmark's pattern is the one to
-copy — two searches in parallel, edges and nodes, with independent limits and
-independent rerankers, assembled into `<FACTS>` and `<ENTITIES>` blocks.
+`zep-ingest` and the MCP server inject nothing; the integration packages do.
+ADK's `ZepContextTool` persists the user's message with
+`thread.add_messages(return_context=True)` and appends the returned context
+block to the system instruction before every model call
+(`integrations/adk/python/src/zep_adk/context_tool.py:309`, `:385`, `:408`).
+Pydantic AI's history processor, LiveKit's `on_user_turn_completed` and
+Microsoft Agent Framework's `before_run` do the same. Mastra and LangGraph
+inject through an input processor and a `pre_model_hook` and persist in a
+separate step, and AG2 exposes the call for the application to make each turn.
+On those paths retrieval happens without the model asking.
+
+The benchmark's pattern is the one to copy for a hand-built read — two searches
+in parallel, edges and nodes, with independent limits and independent
+rerankers, assembled into `<FACTS>` and `<ENTITIES>` blocks.
 
 The observable failure mode is under-recall at small budgets, and the repository
 measures it rather than guessing. See section 10.
@@ -342,8 +413,8 @@ own graph back is otherwise awkward.
 **The write path is asynchronous end to end, and the repository is unusually
 explicit about the two separate lags this creates.**
 
-`Pipeline.run()` "submits the transformed stream and returns immediately". The
-docstring instructs the caller to bind the result before waiting, so the resume
+`Pipeline.run()` is documented as "Submit the transformed stream and return
+immediately." The docstring instructs the caller to bind the result before waiting, so the resume
 handles survive a timeout:
 
 ```python
@@ -354,7 +425,7 @@ result.wait()
 That is lag one: the extraction work is queued and `wait()` blocks on it. It polls
 one handle per submission path — `batch.get` on the last batch, the `processed`
 flag of the last-submitted `graph.add` episode, the last message UUID of each
-thread, and every task id for nodes and triples — and when a single queue's tail
+thread, and every task id for nodes and triples. When a single queue's tail
 reports processed it marks everything submitted before it processed too
 (`ingestion/src/zep_ingest/result.py:210-218`), on the documented premise that
 plain `graph.add` episodes are processed in submission order. The default
@@ -362,8 +433,7 @@ deadline is 60 seconds per submitted item with a 120-second floor (`:82-94`).
 Until 0.3.0 the sequential thread path looked for a `task_id` that
 `thread.add_messages` does not return, so every such backfill was counted as
 untracked and `wait()` refused to wait on it. Lag
-two is the one that matters and is almost never documented anywhere in this
-atlas — from `verify.py`:
+two is the one that matters, and `verify.py` states it:
 
 > Ingestion is asynchronous end to end: even after `IngestResult.wait()`
 > reports success, just-written facts take a few more seconds to become
@@ -377,15 +447,18 @@ A read-your-writes window measured in seconds, with a documented 120-second
 worst case, is a real constraint on any agent that writes a fact and then
 reasons about it in the same turn.
 
-Nothing here blocks the agent on an LLM call — but nothing here is on an agent's
-turn at all. `zep-ingest` is a bulk backfill tool. The per-turn write path is
-`thread.add_messages`, capped at 30 messages per call.
+`zep-ingest` is a bulk backfill tool and sits on no agent's turn. The per-turn
+write path is `thread.add_messages`, capped at 30 messages per call, which most
+of the integration hooks in section 6 call before every model request. With
+`return_context=True` the context comes back in the same round trip, so the turn
+waits on one HTTP call per model request.
 
 Deduplication, consolidation and conflict handling are the vendor's. The client
 contributes exactly one pre-ingestion normalization, the alias canonicalizer,
-and one explicit path around extraction, `ingest_fact_triples`. No background
-pass in this tree re-reads or rewrites the store; whether one runs on the other
-side is not knowable here.
+and one explicit path around extraction, `ingest_fact_triples`. No code in this
+tree re-reads or rewrites the store in the background. Whether a pass runs on
+the hosted side is not knowable here; in the Community Edition that work
+belongs to the Graphiti service.
 
 On the read side the benchmark measures the injection budget directly: at the
 default-ish 20/20 setting the assembled context has a median of 1,378 tokens and
@@ -424,12 +497,19 @@ by bare UUID — `get_node`, `get_edge`, `get_episode`, `get_node_edges`,
 holding a UUID out of one user's search result can fetch that object without
 naming a user. Whether the hosted API refuses a cross-user fetch on the API key
 is not observable from here; the client does not attempt the check, which is
-the opposite of the invariant `Destination` enforces in `zep-ingest`.
+the opposite of the invariant `Destination` enforces in `zep-ingest`. The
+eight keyed tools take their `user_id` or `thread_id` as an argument the model
+fills (`internal/handlers/types.go:7-8`, `search.go:26-28`), so on the MCP
+surface the boundary is the API key, not the user.
 
-Agency over memory is consequently low by construction. The model does not
-decide what to remember; the application ingests, the vendor extracts, and the
-agent searches. For a reader who wants an agent that curates its own memory,
-this is the wrong shape entirely.
+Agency over memory depends on the surface. Under MCP the model only reads. The
+integration packages hand it a write verb: AG2 registers `add_memory` and
+`add_graph_data` beside its search tools
+(`integrations/ag2/python/src/zep_ag2/tools.py:782-793`), and AutoGen, CrewAI
+and Mastra each ship a model-callable write tool. In all four the user or graph
+is bound when the tool is built or resolved from the runtime, never taken from
+the model's arguments, so the model chooses what to write and not where. The
+vendor still extracts, so a model's write is an episode, not a fact.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -457,14 +537,20 @@ graph, which is a data-corruption engine if it is naive. It is not naive:
   alias is visible before any API call.
 
 That is six distinct failure modes anticipated in one 227-line file, in a
-transform most teams would write as a `str.replace` loop. It is the strongest
-example in this atlas of treating pre-ingestion normalization as a hazard rather
-than a convenience.
+transform most teams would write as a `str.replace` loop, and it treats
+pre-ingestion normalization as a hazard rather than a convenience.
 
-Against that: **there is no defence against prompt-injected false memory
-anywhere in the tree.** Anything a loader reads — a Slack message, an inbound
-`.eml`, a document — is submitted as an episode and becomes graph content. The
-Slack loader defaults to public channels only and reports unselected private
+Against that: **nothing on the write path defends the graph against
+prompt-injected false memory.** Anything a loader reads — a Slack message, an
+inbound `.eml`, a document — is submitted as an episode and becomes graph
+content. The one LLM step in `zep-ingest` guards only its own prompt: the
+optional `LLMContextualizer` tells the model the document is data, strips its
+tag vocabulary from input and output, and caps the output length
+(`transforms/contextualizer.py:8-13`, `:78-79`, `:91`). The README's security
+notes tell the operator the rest, that graph content reaches agents' prompts and
+should be sanitized upstream (`ingestion/README.md:581-588`).
+
+The Slack loader defaults to public channels only and reports unselected private
 channels and DMs in warnings, which is a privacy boundary rather than a trust
 one. `min_fact_rating` filters at read time on a score assigned by the vendor,
 so a caller can decline low-rated facts but cannot mark one rejected.
@@ -482,7 +568,7 @@ side of it and nothing more.
 
 ## 10. Tests, Evals, and Benchmarks
 
-`ingestion/tests/` holds about thirty test modules covering loaders,
+`ingestion/tests/` holds 27 test modules covering loaders,
 transforms, submitters, validation, limits, threads, triples and the example
 ontology — a well-tested client library. `benchmarks/locomo/tests/` adds tests
 for config, persistence and common utilities. The MCP server's twelve Go tests
@@ -495,8 +581,10 @@ no tests for the Community Edition in this tree.
 
 The benchmark harness is the contribution. `benchmarks/locomo/` runs LoCoMo-10
 (1,540 questions per run, pulled from `snap-research/locomo`) and grades each
-answer on **two independent axes** with two separate LLM calls made
-concurrently (`evaluation.py:154`):
+answer on **two independent axes** (`evaluation.py:154-171`). The completeness
+judge runs concurrently with answer generation, so it sees the retrieved context
+and the gold answer and never the model's answer; the accuracy grader runs
+after:
 
 1. **Accuracy** — a generous CORRECT/WRONG grader against the gold answer
    (`prompts.py`, `GRADER_PROMPT`).
@@ -547,11 +635,11 @@ distraction effect makes. The knee is at 20/20.
 
 The second harness, `zep-eval-harness/`, commits one complete run chain and it
 is a much smaller artifact than the LoCoMo sweep. `runs/chunk_sets/1_20260331T222430/`
-holds ten chunks from four reference documents at `chunk_size: 500`;
+holds ten chunks from four reference documents at `chunk_size: 500`.
 `runs/users/1_20260331T222436/manifest.json` and
 `runs/documents/1_20260331T222500/manifest.json` record two synthetic users,
 four conversations, the custom entity and edge types used, and the resulting
-Zep episode UUIDs; `runs/evaluations/1_20260331T222821/results.json` grades
+Zep episode UUIDs. `runs/evaluations/1_20260331T222821/results.json` grades
 **four questions** with `gemini-2.5-flash-lite` as both answerer and judge — 4
 of 4 COMPLETE, 3 of 4 correct, `accuracy_when_complete` 75%, median prompt
 3,144 tokens, median search 337 ms. Four questions across two users, all in one
@@ -569,16 +657,31 @@ two-axis grading as the LoCoMo harness is used — `zep_evaluate.py` runs an
 accuracy judge and a COMPLETE/PARTIAL/INSUFFICIENT completeness judge — so the
 design idea in section 11 is applied twice in this tree rather than once.
 
-What is not here: `benchmarks/longmemeval/` ships a runner, a dataset analysis
-script and a notebook, but no results. And no committed result compares Zep to
-anything else — the sweep is Zep against its own configuration, which is the
-right experiment for choosing a limit and the wrong one for choosing a vendor.
+`benchmarks/longmemeval/` is the experiment code for the Zep paper,
+[arXiv:2501.13956](https://arxiv.org/abs/2501.13956) (Rasmussen et al., 20
+January 2025), which reports 94.8% against MemGPT's 93.4% on DMR and LongMemEval
+accuracy gains of up to 18.5% over a baseline. Its README names two notebooks,
+one per experiment. The tree holds one, `zep_memgpt_eval.ipynb`, the DMR run
+over MemGPT's MSC set with a full-context and a summary baseline, committed with
+no cell outputs. Beside it are a LongMemEval script, a two-file test harness and
+a dataset statistics summary dated 2025-07-19, and a `.gitignore` excluding
+`*.json`, where the README says results are saved. No row behind either
+headline number is committed. No committed result compares Zep to anything
+else: the LoCoMo sweep is Zep against its own configuration, the right
+experiment for choosing a limit and the wrong one for choosing a vendor.
 
 The tests a reader would want before trusting this and cannot find: anything
 asserting that `invalid_at` actually stops a superseded fact from being
 retrieved, anything measuring how long the post-`wait()` indexing lag really is,
 and any negative case asserting that deleted or scoped-out material must not
-appear in a search result.
+appear in a search result. The fifty LoCoMo runs cannot speak to the first: the
+harness prints each fact with `valid_at` alone (`evaluation.py:200`), so the
+reader never sees whether a fact was invalidated. The integration suites assert
+request shapes against a mocked SDK. All thirteen packages add a live suite that
+skips unless `ZEP_API_KEY` is set (`integrations/adk/go/live_test.go:29-31`);
+the Python and TypeScript CI jobs pass that secret in
+(`.github/workflows/test-integrations.yml:82-85`), and a local run without it is
+green having reached no service.
 
 ## 11. For Your Own Build
 
@@ -637,16 +740,17 @@ nothing about whether the knee is in a good place.
 Adopt this if memory is not the product you are building and you would rather
 buy the hard parts — entity resolution, temporal invalidation, reranking — than
 maintain them. The integration breadth is real, thirteen packages across three
-languages, and the client library is better engineered than most of the systems
-in this atlas that ship an actual engine.
+languages, most of which wire memory into the turn without the model asking. The
+client library validates every documented limit before the first call and
+leaves resumable handles when a wait times out.
 
 Walk away if any of three things is true. If you need to inspect or repair the
 store, you cannot: the mechanism is on the other side of an API and this
 repository is the map, not the territory. If you need offline or air-gapped
 operation, there is no local mode and the self-hostable edition is deprecated.
-And if you want an agent that decides what to remember, the MCP server
-registers thirteen tools and all thirteen are reads — this design assumes the
-application ingests and the model only asks.
+And if you want an agent that curates its own memory, the MCP server's thirteen
+tools are all reads, and the integration tools that do let a model write still
+send that write through the vendor's extractor as an episode.
 
 The reader who gets the most from this repository may be one who never adopts
 Zep at all, and takes `benchmarks/locomo/` to point at their own system instead.
@@ -661,9 +765,10 @@ Zep at all, and takes `benchmarks/locomo/` to point at their own system instead.
   re-extraction loop is possible and undetectable from here.
 - What does `min_fact_rating` actually score, and on what scale? It appears only
   as a filter parameter.
-- Is `tableCleanup()` a no-op only in the Community Edition build, or was the
-  second tier of the purge never implemented? The build tag split says the
-  former; the tree cannot confirm it.
+- When a client submits a triple with its own `created_at`, does the hosted
+  edge keep that value or stamp its own clock? The returned `created_at` is
+  documented as the edge's creation time and the submitted one as the message's
+  timestamp, and nothing in the tree reads one back against the other.
 - Why is the LoCoMo sweep's 30/30 retrieval median (0.189 s) *lower* than
   20/20's (0.241 s)? Most likely load rather than budget, but the harness does
   not record enough to say.
@@ -703,23 +808,63 @@ Zep at all, and takes `benchmarks/locomo/` to point at their own system instead.
 - `mcp/zep-mcp-server/internal/server/tools.go`, `server.go` — the thirteen tool declarations and `registerTools()`.
 - `mcp/zep-mcp-server/internal/handlers/` — one file per tool; `types.go` carries the input schemas and shows which tools take a scope key.
 - `mcp/zep-mcp-server/pkg/zep/client.go`, `internal/config/config.go`, `internal/transform/` — SDK wrapper, config, parameter and result marshalling.
-- `mcp/zep-mcp-server/docs/TOOLS.md` — the tool documentation, including the service-side `limit` maximum of 50.
+- `mcp/zep-mcp-server/docs/TOOLS.md` — the tool documentation, including the service-side 50-result `limit` ceiling.
+
+**Integrations**
+
+- `integrations/adk/python/src/zep_adk/context_tool.py` — `ZepContextTool.process_llm_request`, persist-and-inject before every model call.
+- `integrations/pydantic-ai/python/src/zep_pydantic_ai/history_processor.py`, `integrations/livekit/python/src/zep_livekit/agent.py`, `integrations/ms-agent-framework/python/src/zep_ms_agent_framework/context_provider.py`, `integrations/mastra/typescript/src/processors.ts`, `integrations/langgraph/python/src/zep_langgraph/hooks.py` — the other injection hooks.
+- `integrations/ag2/python/src/zep_ag2/tools.py`, `integrations/autogen/python/src/zep_autogen/tools.py`, `integrations/crewai/python/src/zep_crewai/tools.py`, `integrations/mastra/typescript/src/remember-tool.ts` — model-callable write tools with a construction-bound scope.
+- `integrations/autogen/python/src/zep_autogen/graph_memory.py` — carries all four edge timestamps into memory metadata; `clear()` deletes the whole graph.
 
 **Evals**
 
 - `benchmarks/locomo/experiments/` — five experiments, ten runs each, with configs and summaries.
 - `benchmarks/locomo/benchmark.py`, `persistence.py`, `config.py`, `ontology.py`.
-- `benchmarks/longmemeval/` — runner and notebook, no committed results.
+- `benchmarks/longmemeval/` — the experiment code for [arXiv:2501.13956](https://arxiv.org/abs/2501.13956): `zep_memgpt_eval.ipynb` (DMR, no outputs), `zep_longmem_eval.py`, `Zep Test Harness/`, `session_analysis_summary.txt`; no result rows.
 - `zep-eval-harness/zep_evaluate.py` — the second two-axis grader; `data/test_cases/` with per-answer `needles`.
 - `zep-eval-harness/runs/` — one committed chain: chunk set, user and document manifests, and a four-question `evaluations/1_20260331T222821/results.json`, each with its config snapshot.
 
 **Legacy Community Edition**
 
-- `legacy/src/store/purge_common.go`, `purge_ce.go` — soft delete and the no-op cleanup.
-- `legacy/src/store/schema_ce.go`, `memory_ce.go`, `sessionstore_ce.go` — the Postgres store.
-- `legacy/docker-compose.ce.yaml`, `Dockerfile.ce` — the deprecated self-host path.
+- `legacy/src/lib/graphiti/service_ce.go` — the HTTP client for the Graphiti service: `Fact` with four timestamps, `ExtractCreatedAt()`, `DeleteFact`, `DeleteGroup`.
+- `legacy/src/store/memory_ce.go` — `_get` and `_searchSessions`, where the four timestamps become one and an absent group list goes out as `null`.
+- `legacy/src/models/fact_common.go`, `search_common.go` — the public `Fact` and the unenforced "Required on Community Edition" comment.
+- `legacy/src/store/db_utils_ce.go`, `userstore_ce.go`, `sessionstore_ce.go` — `purgeDeletedResources()` and its two callers.
+- `legacy/src/store/purge_common.go`, `purge_ce.go` — `purgeDeleted()` and the no-op `tableCleanup()`, reachable only through the uncalled `memoryStore.PurgeDeleted`.
+- `legacy/docker-compose.ce.yaml`, `Dockerfile.ce` — the deprecated self-host path: the server, `pgvector` Postgres, `zepai/graphiti:0.3` and Neo4j.
+
+**Engine read outside this tree**
+
+- Graphiti `v0.3.21` ([`6536401c8c00115fccf4b834f21d2240008a38e1`](https://github.com/getzep/graphiti/commit/6536401c8c00115fccf4b834f21d2240008a38e1)), the last tag of the 0.3 line: `server/graph_service/routers/retrieve.py` and `dto/retrieve.py` (optional `group_ids`), `graphiti_core/search/search_utils.py:202` (a null group list matches every group; no filter on `invalid_at` or `expired_at`).
+- `zep-cloud` 3.28.0 ([`7f514a610245d1b8cde850032abc4a52a01da9d4`](https://github.com/getzep/zep-python/commit/7f514a610245d1b8cde850032abc4a52a01da9d4)), the SDK release current on 11 September 2026: `src/zep_cloud/types/entity_edge.py` and `add_fact_triple` in `src/zep_cloud/graph/client.py`.
+
+### Recorded searches
+
+Run at the tree root of the pinned checkout unless a path is given.
+
+```sh
+rg -n -i 'tombstone|suppress|blocklist|denylist|reject(ed)?_value|never again' --glob '!*.ipynb' .
+rg -n -i '\b(verified|unverified|candidate|pending_review|approved|quarantin|provisional|disputed|retracted|trust_state)\b' --glob '!*.ipynb' .
+rg -n 'expired_at|ExpiredAt|expiredAt' --glob '!*.ipynb' .
+rg -n 'edge\.update|Edge\.Update|edge\.delete|graph\.edge\.' --glob '!*.ipynb' .
+rg -n '\.delete\(|\.Delete\(|delete_' integrations ingestion/src mcp zep-eval-harness benchmarks examples
+rg -n 'PurgeDeleted\(|purgeDeleted\(' legacy/src
+rg -n 'lib/search' legacy/src
+rg -n '//go:build|// \+build' legacy/src
+rg -n -i 'prompt.?injection|untrusted|sanitiz' --glob '!*.ipynb' .
+rg -n -i 'append_instructions|pre_model_hook|before_run|on_user_turn_completed|return_context' integrations
+rg -n -i "not in (result|context|response|out|text|content|prompt|facts)|not\.toContain|assertNotIn|!strings\.Contains" --glob '**/test*/**' --glob '*_test.go' --glob '*.test.ts' .
+rg -n 'ZEP_API_KEY' --glob 'test_integration.py' --glob 'live.test.ts' --glob 'live_test.go' integrations
+rg -n -i 'arxiv|bibtex|@article|@misc|citation|doi\.org' --glob '!*.ipynb' --glob '!**/experiments/**' .
+git ls-files legacy | grep -E '_test\.go$'
+```
+
+`lib/search` has no importer, so the Community Edition's MMR and RRF helpers rank nothing; no Go file carries a build constraint, so the `_ce` suffix is a naming convention rather than a build tag. The paper search returns nothing: `benchmarks/longmemeval/README.md` names the paper by title only.
 
 ## History
+
+**2026-09-30** — [`495bf72880d13f0b81696ec4f88a9817ed85ca73`](https://github.com/getzep/zep/commit/495bf72880d13f0b81696ec4f88a9817ed85ca73) — same pin; upstream had not moved. Screened again: one auto-run surface, none inside the cooldown, 14 build-time execution points, 33 unpinned surfaces across 100 files; nothing installed, built or run. `bitemporal` withdrawn ([section 5](#5-memory-data-model)): its record read `FactTriple.created_at` as record time, but that field is the caller's event time, no code here tracks either axis, and the Community Edition collapses the four timestamps into one. The other corrections were absence claims over committed code. The integrations inject context before model calls and four hand the model a write tool ([section 8](#8-agent-integration)). The Community Edition runs on Graphiti and purges through `purgeDeletedResources()`, and has no build tags. The LoCoMo accuracy grader runs after the answer. `benchmarks/longmemeval/` is the code for [arXiv:2501.13956](https://arxiv.org/abs/2501.13956), without results. Census added.
 
 **2026-09-15** — [`495bf72880d13f0b81696ec4f88a9817ed85ca73`](https://github.com/getzep/zep/commit/495bf72880d13f0b81696ec4f88a9817ed85ca73) — five commits on, to 2026-09-11. Screened at the new pin before reading: one auto-run surface, 23 dependency surfaces inside the cooldown, 14 build-time execution points and 33 unpinned surfaces across 100 files; nothing was installed or run. `zep-ingest` went to 0.3.0. Batches now roll over at 10,000 items by default instead of filling to the 50,000 cap. Every file or loader bound for one graph is submitted before anything waits, and `wait()` polls the tail of each submission path, inferring that the queue in front of a processed tail has drained, with a deadline of 60 seconds per item and a 120-second floor. Sequential thread backfills now poll the last message UUID per thread: at the previous pin that path looked for a `task_id` which `thread.add_messages` never returns, so those backfills were all counted untracked and `wait()` refused them. A `ConcatLoader`, multi-path sources and `IngestResult.combine()` were added, along with a production smoke script that needs a live key. The other two commits repair the Python, TypeScript and Go examples for SDK v3. Nothing in `benchmarks/`, `mcp/`, `integrations/` or `legacy/` changed. Both marks were re-checked and stand, now with evidence records. `bitemporal` rests on the triple contract and on readers that render the closed interval; no as-of filter is issued in this tree. `scope_enforced` rests on `Destination`, which `search_when_ready` builds before every read.
 

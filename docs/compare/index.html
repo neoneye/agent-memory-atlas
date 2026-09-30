@@ -29477,19 +29477,25 @@ code</td>
 <tr>
 <td><a href="../systems/zep/"><code>zep</code></a></td>
 <td>An episode submitted to a hosted graph, and the typed fact edge it
-later becomes — carrying valid_at, invalid_at and created_at</td>
+later becomes — carrying valid_at and invalid_at for world time and
+created_at and expired_at for the graph's own</td>
 <td>Zep Cloud's hosted graph; nothing local. The deprecated Community
-Edition in legacy/ is a Go server on Postgres</td>
+Edition in legacy/ keeps sessions and messages in Postgres and hands
+facts to a Graphiti service on Neo4j</td>
 <td>graph.search over edges, nodes or episodes, limit 50, reranked by
-rrf, mmr, node_distance, episode_mentions or cross_encoder</td>
+rrf, mmr, node_distance, episode_mentions or cross_encoder; most
+integrations inject the returned context before every model call</td>
 <td>Asynchronous end to end — submit returns batch, episode, message or
 task handles, wait() polls the tail of each and returns before the fact
 is searchable, and a poll helper absorbs the rest</td>
-<td>invalid_at closes a fact's validity interval; the ingestion library
-has no delete path at all</td>
+<td>No call on the supported path updates or deletes one fact; a triple
+can carry its own closed interval, and whole graphs, threads and users
+can be deleted. The Community Edition deletes a fact by UUID</td>
 <td>Destination requires exactly one of graph_id or user_id, and every
-read carries it</td>
-<td>Nine Python framework packages, three TypeScript, one Go, plus a Go
+zep-ingest read carries it; the MCP server takes user_id from the
+model</td>
+<td>Nine Python framework packages, three TypeScript, one Go, most with
+a persist-and-inject hook and several with a model write tool, plus a Go
 MCP server registering thirteen tools, every one of them a read</td>
 <td>All extraction is the vendor's; the client sees only processing
 handles and an indexing lag it polls through</td>
@@ -29908,7 +29914,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>117 of 682:</em> <a
+<p><em>116 of 682:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -30026,8 +30032,7 @@ href="../systems/vortx-emem/"><code>vortx-emem</code></a>, <a
 href="../systems/waggle/"><code>waggle</code></a>, <a
 href="../systems/wax/"><code>wax</code></a>, <a
 href="../systems/xerj/"><code>xerj</code></a>, <a
-href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
-<a href="../systems/zep/"><code>zep</code></a></p>
+href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag. This certifies that the key reaches the query
