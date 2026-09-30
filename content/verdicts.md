@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 680 reports.**
+**This page covers all 681 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6124,3 +6124,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 225 commits by 2 contributors between 16 August and 7 September 2026; 14,318 lines of TypeScript in src outside a 4,210-line smoke script with 713 assertions, run in CI. The committed benchmark raw files are a 0.8.0 run; the 0.8.5 headline has a report and no raw run.
 - Study when: you are building automatic distilled memory inside a host with message provenance and want the capture hygiene, the mode switches and a bounded, fallback-routed LLM pipeline.
 - Do not copy when: users must be able to delete or correct a memory, the store is shared, or you need to explain why a memory exists.
+
+### [`cyrene-agent`](../systems/cyrene-agent/)
+
+- Best idea: **check the evidence quote in code, and keep nothing from a batch that fails.** `parseAndValidateSocialExtraction` requires each atom's `evidenceQuote` to be a substring of the turn it cites, takes facts only from user turns and open loops only from the assistant, and lets a supersede or resolve target only an atom it was shown for the same conversation. The scheduler applies the batch only when nothing was rejected, and retries twice with the rejected output quoted as data.
+- Biggest risk: **the profile's explicit-user rule lives on one writer.** The judge path refuses an L0 candidate unless it is `explicit` and `user_explicit`. The `write_memory` tool stamps both values on every candidate itself, and the reflection pass every 20 turns rewrites L0 from a model shown only the current profile, at confidence 0.6 or more.
+- Most reusable component: `src/main/social-context/` — six files, 582 lines: the validated extractor, an all-or-nothing scheduler with repair retries, a store filtered on conversation and status, and BM25 ranking with a 30-day half-life.
+- Second risk: **each read path writes its own status predicate, and one forgot two states.** Vector recall admits only `active` or `aging`; `getActiveL2ForPrompt`, which feeds voice calls and proactive messages, excludes only `archived`, so a superseded or merged episode is injected on a keyword hit. Weight decay skips rows at weight 0 and archives those recalled one to ten times.
+- Maturity impression: MIT, 141,698 lines of TypeScript outside tests and 1,797 commits from 19 contributors since 11 June 2026; the memory and social-context modules are 6,547 lines with 158 test cases, run in CI on Windows. Four marks: `trust_state`, `scope_enforced` and `negative_eval` rest mostly on the opt-in atom store, `audit_log` on an append-only trace file that records ids and field names only.
+- Study when: you want a small, checkable extraction contract for conversation-scoped memory, or a multi-store commit with per-step rollback and a startup reconciliation between store and vector index.
+- Do not copy when: memory is reached by more than one person or must be correctable by one. The profile store has no scope and channel senders write into it, episodes cannot be deleted in the app, and conflicts marked for clarification reach nobody.

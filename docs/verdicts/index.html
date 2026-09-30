@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 680 reports.</strong></p>
+<p><strong>This page covers all 681 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28152,6 +28152,51 @@ host with message provenance and want the capture hygiene, the mode
 switches and a bounded, fallback-routed LLM pipeline.</li>
 <li>Do not copy when: users must be able to delete or correct a memory,
 the store is shared, or you need to explain why a memory exists.</li>
+</ul>
+<h3 id="cyrene-agent"><a
+href="../systems/cyrene-agent/"><code>cyrene-agent</code></a></h3>
+<ul>
+<li>Best idea: <strong>check the evidence quote in code, and keep
+nothing from a batch that fails.</strong>
+<code>parseAndValidateSocialExtraction</code> requires each atom's
+<code>evidenceQuote</code> to be a substring of the turn it cites, takes
+facts only from user turns and open loops only from the assistant, and
+lets a supersede or resolve target only an atom it was shown for the
+same conversation. The scheduler applies the batch only when nothing was
+rejected, and retries twice with the rejected output quoted as
+data.</li>
+<li>Biggest risk: <strong>the profile's explicit-user rule lives on one
+writer.</strong> The judge path refuses an L0 candidate unless it is
+<code>explicit</code> and <code>user_explicit</code>. The
+<code>write_memory</code> tool stamps both values on every candidate
+itself, and the reflection pass every 20 turns rewrites L0 from a model
+shown only the current profile, at confidence 0.6 or more.</li>
+<li>Most reusable component: <code>src/main/social-context/</code> — six
+files, 582 lines: the validated extractor, an all-or-nothing scheduler
+with repair retries, a store filtered on conversation and status, and
+BM25 ranking with a 30-day half-life.</li>
+<li>Second risk: <strong>each read path writes its own status predicate,
+and one forgot two states.</strong> Vector recall admits only
+<code>active</code> or <code>aging</code>;
+<code>getActiveL2ForPrompt</code>, which feeds voice calls and proactive
+messages, excludes only <code>archived</code>, so a superseded or merged
+episode is injected on a keyword hit. Weight decay skips rows at weight
+0 and archives those recalled one to ten times.</li>
+<li>Maturity impression: MIT, 141,698 lines of TypeScript outside tests
+and 1,797 commits from 19 contributors since 11 June 2026; the memory
+and social-context modules are 6,547 lines with 158 test cases, run in
+CI on Windows. Four marks: <code>trust_state</code>,
+<code>scope_enforced</code> and <code>negative_eval</code> rest mostly
+on the opt-in atom store, <code>audit_log</code> on an append-only trace
+file that records ids and field names only.</li>
+<li>Study when: you want a small, checkable extraction contract for
+conversation-scoped memory, or a multi-store commit with per-step
+rollback and a startup reconciliation between store and vector
+index.</li>
+<li>Do not copy when: memory is reached by more than one person or must
+be correctable by one. The profile store has no scope and channel
+senders write into it, episodes cannot be deleted in the app, and
+conflicts marked for clarification reach nobody.</li>
 </ul>
         </article>
       </div>

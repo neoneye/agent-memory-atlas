@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Live2D desktop companion whose
+memory is a JSON profile and episode store with LLM extraction and
+conflict resolution, plus an opt-in per-conversation atom store.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cyrene
+Agent — Agent Memory Atlas">
+    <meta property="og:description" content="A Live2D desktop companion
+whose memory is a JSON profile and episode store with LLM extraction and
+conflict resolution, plus an opt-in per-conversation atom store.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cyrene
+Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Live2D desktop companion
+whose memory is a JSON profile and episode store with LLM extraction and
+conflict resolution, plus an opt-in per-conversation atom store.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cyrene Agent — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cyrene Agent",
+      "description": "A Live2D desktop companion whose memory is a JSON profile and episode store with LLM extraction and conflict resolution, plus an opt-in per-conversation atom store.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Layered companion memory inside a Live2D
+desktop agent</p>
+          <h1>Cyrene Agent</h1>
+          <p class="document-deck">A Live2D desktop companion whose
+memory is a JSON profile and episode store with LLM extraction and
+conflict resolution, plus an opt-in per-conversation atom store.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Playa-Cyrene/Cyrene-Agent">
+              <span>Source</span>
+              <strong>Playa-Cyrene/Cyrene-Agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Playa-Cyrene/Cyrene-Agent/commit/be6ce1f88d6ae94958109a9a21e17cae353c2931" title="be6ce1f88d6ae94958109a9a21e17cae353c2931">
+              <span>Analyzed revision</span>
+              <code>be6ce1f8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Playa-Cyrene--Cyrene-Agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Playa-Cyrene--Cyrene-Agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT;
+the bundled Live2D model is credited separately in MODEL_LICENSE.md,
+with a no-commercial-use note on the character IP</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>141,698
+lines of TypeScript outside tests; src/main/memory and
+src/main/social-context are 6,547 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,797
+commits on master by 19 contributors, 11 June 2026 – 28 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>4,605
+Vitest cases in 524 test files (90,059 lines); 158 cases in the memory
+and social-context modules</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cyrene Agent is an Electron desktop companion built around a Live2D
+fan character, with chat, work, code and learn modes, voice calls, and
+WeChat, Feishu and QQ channels. Its memory, called PMRS in the code, is
+one subsystem and the only one this report covers: a single
+<code>memory.json</code> holding an L0 profile, an L1 recent state and
+L2 episodes, a JSON vector store, and an opt-in per-conversation "social
+atom" store. The rest of the agent is out of scope.</p>
+<p>What is notable is the evidence discipline at the edges. The social
+atom extractor admits an atom only when its quote is a verbatim
+substring of the turn it cites, and applies a batch only when every
+operation validates. L2 recall reads each episode's status from the
+canonical store and turns it into an allowlist, so a stale copy in the
+vector index cannot leak a superseded row.</p>
+<p>What is weak is that the gates are per-writer. The L2 injection path
+for calls and proactive messages ignores the superseded and merged
+states. Weight decay archives episodes that were recalled and spares
+ones that never were. The profile store has no scope, and the resolver
+model sets statuses directly.</p>
+<p>Two writers bypass the judge's rule that the profile takes only
+explicit statements the user made. The <code>write_memory</code> tool
+stamps <code>certainty: "explicit"</code> and
+<code>attribution: "user_explicit"</code> on every candidate itself
+(<code>src/main/orchestrator/tools/registry/tool-registry.ts:324-360</code>).
+The reflection pass rewrites L0 from a model that sees only the current
+profile and no conversation, at confidence 0.6 or more
+(<code>src/main/memory/memory-compressor.ts:151-255</code>).</p>
+<p>Four marks: <code>trust_state</code>, <code>scope_enforced</code> and
+<code>negative_eval</code> rest mostly on the social atom store, and
+<code>audit_log</code> on the trace file of the main store. Section 9
+names the three withheld. The code is MIT; the bundled Live2D model is
+credited separately, and <code>MODEL_LICENSE.md</code> notes the
+character IP may not be used commercially.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>Three kinds of belief share one file.</strong> L0 is five
+profile strings — preferred name, occupation, long-term interests,
+language, a free note. L1 is three recent-state strings. L2 is an
+episode: an LLM-written summary, the trigger text, an optional verbatim
+quote, and an evidence record with a 300-character snippet
+(<code>src/main/memory/memory-types.ts:1-83</code>,
+<code>src/main/memory/memory-store.ts:148-206</code>). L0 and L1 are
+overwritten; they have no history beyond the trace log.</p>
+<p><strong>An L2 moves through five statuses, and several actors move
+it.</strong> It is born <code>active</code> with weight 0. Recall adds
+weight and holds it <code>active</code> or <code>aging</code>
+(<code>memory-store.ts:212-247</code>). A lexical contradiction with a
+newer episode drops it to <code>aging</code> (<code>:312-334</code>).
+The resolver model sets any of the five on either side
+(<code>:549-566</code>). Compression archives the sources of a summary,
+and decay archives by weight (<code>:620-652</code>). Nothing moves a
+row out of <code>archived</code>: <code>updateL2RecallStats</code> skips
+non-recallable rows, and <code>pinL2</code>, the only other path back,
+has no caller.</p>
+<p><strong>Decay runs backwards from its intent.</strong>
+<code>decayL2Weights</code> skips any row with weight 0 and archives any
+row whose weight falls below 10 (<code>memory-store.ts:624-652</code>).
+An episode recalled one to ten times is archived at the next tick, every
+50 turns; one never recalled stays <code>active</code> indefinitely. The
+committed test pins this: weight 10 becomes 9 and <code>archived</code>
+(<code>src/main/memory/memory-store.test.ts:84-118</code>).</p>
+<p><strong>Prompt injection follows a second state machine.</strong>
+DMAE, the project's activation engine, keeps a score per L2 in
+<code>l2DmaeStates</code>, raised by vector recall rank and by any
+keyword of the episode appearing in the user's text, and decayed by
+silence (<code>src/main/rag/worldbook.ts:232-330</code>). A score at or
+above 30 is <code>Active</code> and is injected in voice calls and
+proactive messages. The engine reads only <code>archived</code> from the
+L2 status (<code>l2-dmae-manager.ts:29-38</code>,
+<code>:162-176</code>), so a superseded episode whose keywords the user
+repeats is injected beside its replacement.</p>
+<p><strong>Social atoms are a separate, stricter store.</strong> An atom
+is <code>active</code>, <code>superseded</code> or
+<code>resolved</code>, and <code>short_term</code> and
+<code>open_loop</code> atoms carry an <code>expiresAt</code>
+(<code>src/main/social-context/types.ts:1-30</code>). Only a
+<code>supersede</code> operation that quotes a user turn verbatim can
+retire a fact, and every read drops non-active and expired atoms
+(<code>store.ts:21-24</code>, <code>retrieval.ts:55-58</code>). When the
+store is enabled, a chat-mode turn feeds it instead of the L0/L1/L2
+judge
+(<code>src/main/orchestrator/build-options.ts:1047-1069</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a turn becomes a profile field or an L2 episode, the five L2 statuses, and which read honours them</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a turn becomes a profile field or an L2 episode, the five L2 statuses, and which read honours them
+flowchart TD
+    T[&quot;every finished turn: roundCount + 1&quot;] --&gt; J{&quot;roundCount divisible by 6?&quot;}
+    J -- &quot;yes&quot; --&gt; JU[&quot;Memory Judge LLM over the last eight turns,&lt;br/&gt;any conversation&quot;]
+    JU --&gt; PF{&quot;shouldWrite, no overclaim;&lt;br/&gt;L0 needs explicit + user_explicit&quot;}
+    WT[&quot;write_memory tool:&lt;br/&gt;stamps explicit + user_explicit itself&quot;] --&gt; PF
+    PF -- &quot;L0 or L1&quot; --&gt; P[&quot;profile field overwritten&quot;]
+    RF[&quot;reflection every 20 turns:&lt;br/&gt;profile-only prompt, confidence 0.6+&quot;] --&gt; P
+    PF -- &quot;L2&quot; --&gt; A[&quot;L2 active, weight 0,&lt;br/&gt;DMAE state archived&quot;]
+    A --&gt; C{&quot;polarity clash with a&lt;br/&gt;similar active L2?&quot;}
+    C -- &quot;yes&quot; --&gt; Q[&quot;conflict log candidate;&lt;br/&gt;older L2 to aging; queued by score&quot;]
+    Q --&gt; R[&quot;resolver LLM, one item per 5 turns:&lt;br/&gt;writes old and new status&quot;]
+    R --&gt; S[&quot;active / aging / archived /&lt;br/&gt;superseded / merged&quot;]
+    A --&gt; K[&quot;compression every 20 turns:&lt;br/&gt;3+ similar become one summary,&lt;br/&gt;sources archived&quot;]
+    A --&gt; D[&quot;decay every 50 turns:&lt;br/&gt;weight 1 to 10 becomes archived,&lt;br/&gt;weight 0 skipped&quot;]
+    S --&gt; V{&quot;user_memory tool:&lt;br/&gt;active or aging, and synced?&quot;}
+    S --&gt; I{&quot;call and proactive prompt:&lt;br/&gt;DMAE activation 30+, not archived?&quot;}
+    V -- &quot;yes&quot; --&gt; OUT1[&quot;returned to the model&quot;]
+    I -- &quot;yes, superseded and merged included&quot; --&gt; OUT2[&quot;injected into the prompt&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs in the Electron main process and persists to the
+userData directory. <code>memory.json</code> holds L0, L1, L2, evidence,
+reflection logs (capped at 50), conflict logs (capped at 100) and DMAE
+states, and is rewritten whole with <code>fs.writeFileSync</code> on
+every mutation (<code>src/main/memory/memory-store-io.ts:31-35</code>).
+The vector store is <code>rag-data/memory-store.json</code>, written by
+tmp-and-rename after five quiet seconds
+(<code>src/main/rag/vectorstore.ts:96-140</code>). Beside them sit
+<code>memory-trace.log</code>, <code>chat-social-atoms.json</code> and
+<code>entity-graph.json</code>.</p>
+<p>Retrieval is in-process: a full scan for cosine similarity, BM25 over
+jieba tokens, weighted 0.7 and 0.3, then an optional cross-encoder
+rerank (<code>src/main/rag/retriever.ts:223-296</code>). Embeddings come
+from a local <code>@xenova/transformers</code> model or a cloud
+endpoint. Every memory LLM call goes through one serial queue,
+<code>enqueueLLMTask</code>
+(<code>src/main/llm-queue.ts:45-57</code>).</p>
+<p>At startup <code>reconcileMemoryRag</code> compares recallable L2
+rows with their vectors, rebuilds mismatched ones, deletes vectors no
+recallable row claims, and backs up both files first
+(<code>src/main/memory/memory-rag-reconciliation.ts:54-130</code>,
+<code>src/main/application/default-dependencies.ts:162-176</code>). A
+bound Obsidian vault receives a Markdown export on every save and
+returns edited L2 content through a watcher
+(<code>src/main/memory/obsidian-importer.ts:1-9</code>,
+<code>:140-194</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A Windows desktop build, packaged with electron-builder. Nothing else
+has to run. The judge needs a model API key, and without one it returns
+no candidates, so nothing is extracted
+(<code>src/main/memory/memory-judge.ts:37-42</code>). Embeddings can be
+local. The store is plain JSON and readable by hand; the Obsidian export
+is the intended human view. A wrong L2 can be rewritten there but not
+deleted: a deleted vault file is skipped
+(<code>obsidian-importer.ts:196-202</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> A finished run calls
+<code>onRunFinished</code>, which schedules either social atom
+extraction or <code>scheduleMemoryWrite</code>
+(<code>build-options.ts:1047-1069</code>); channel runs reach the same
+function (<code>src/main/channels/bootstrap.ts:200-209</code>).
+<code>MemoryScheduler</code> appends the turn to one global buffer,
+bumps <code>L1.roundCount</code>, and on every sixth count runs the
+judge over the last eight turns
+(<code>src/main/memory/memory-scheduler.ts:12-13</code>,
+<code>:34-72</code>).</p>
+<p><strong>Extraction.</strong>
+<code>MemoryJudge.judgeRecentTurns</code> sends a conservative prompt —
+<em>"宁可漏记，不要误记"</em>, better to miss than to misremember — and
+post-filters candidates on <code>shouldWrite</code>,
+<code>forbiddenOverclaims</code>, the L0 rule and a list of absolute
+terms absent from the quoted evidence
+(<code>memory-judge.ts:6-22</code>, <code>:44-140</code>).
+<code>MemoryManager.writeMemory</code> repeats the skip and L0 checks,
+validates the L0 field name, and writes
+(<code>src/main/memory/memory-manager.ts:40-102</code>).</p>
+<p><strong>L2 write and conflict.</strong> <code>writeL2</code> stores
+the episode <code>pending_sync</code>, embeds it, marks it
+<code>synced</code>, then searches for similar active episodes and runs
+a lexical polarity check — 喜欢 against 不喜欢, 是 against 不是
+(<code>memory-manager.ts:104-202</code>,
+<code>src/main/memory/memory-conflict.ts</code>). A hit marks the older
+row, appends a <code>candidate</code> conflict log, scores it and queues
+it if the priority is not <code>none</code>
+(<code>memory-store.ts:438-492</code>).</p>
+<p><strong>Resolution.</strong> Every fifth turn
+<code>resolveNextConflict</code> takes the highest-scoring queued log,
+sends both summaries and evidence to the model, and hands its JSON to
+<code>applyResolverResolution</code>
+(<code>src/main/memory/memory-resolver.ts:189-253</code>). The model's
+<code>oldMemoryStatus</code> and <code>newMemoryStatus</code> are
+applied as given; a <code>clarification_needed</code> log is written
+after the statuses are already changed
+(<code>memory-store.ts:549-583</code>). The parser checks only that each
+status is in the enum
+(<code>src/main/memory/memory-schemas.ts:350-366</code>,
+<code>:397-404</code>).</p>
+<p><strong>Retrieval.</strong>
+<code>searchMemoryEntries(query, "user_memory")</code> loads every L2,
+keeps those passing <code>isL2LocallyRecallable</code>, and passes the
+matching vector ids as <code>allowedEntryIds</code> to both arms
+(<code>src/main/rag/index.ts:189-227</code>,
+<code>retriever.ts:336-347</code>, <code>vectorstore.ts:398-401</code>).
+Each returned hit adds one weight to its episode
+(<code>index.ts:229-243</code>).</p>
+<p><strong>Context assembly.</strong> <code>buildAlwaysOnContext</code>
+injects L0 and L1 whole every turn
+(<code>src/main/orchestrator/index.ts:136-164</code>).
+<code>buildMemoryInjection</code> injects up to four DMAE-active L2 with
+a quote suffix and a warning suffix for conflict markers, then two
+document chunks and entity lines (<code>index.ts:24-79</code>). Only
+<code>call-prompt-builder.ts:34-50</code> and
+<code>proactive-lifecycle.ts:113-117</code> call it.</p>
+<p><strong>Social atoms.</strong> <code>buildChatSocialContext</code>
+lists active atoms for the conversation, ranks them and compiles at most
+five (<code>src/main/orchestrator/agent-runtime.ts:228-236</code>).
+After the turn, <code>parseAndValidateSocialExtraction</code> checks
+each operation and the scheduler applies the batch only when nothing was
+rejected, retrying twice with the rejected output shown as data
+(<code>src/main/social-context/extractor.ts:77-210</code>,
+<code>scheduler.ts:30-67</code>).</p>
+<p><strong>Maintenance.</strong> Compression groups three or more active
+L2 at cosine 0.85 or above, summarises them, and commits through
+<code>commitMemoryCompression</code>, which archives the sources only
+after the summary vector is written and undoes each step on failure
+(<code>memory-compressor.ts:23-147</code>,
+<code>src/main/memory/memory-compression-transaction.ts:36-100</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryStore</code> has <code>schemaVersion</code>,
+<code>l0</code>, <code>l1</code>, <code>l2</code>,
+<code>evidence</code>, <code>reflectionLogs</code>,
+<code>conflictLogs</code> and <code>l2DmaeStates</code>
+(<code>memory-types.ts:212-224</code>). An L2 row carries
+<code>sourceConversationId</code>, <code>sourceMessageIds</code>,
+<code>evidenceIds</code>, <code>conflictWith</code> (vector ids),
+<code>supersededBy</code>, <code>mergedInto</code>,
+<code>subEntryIds</code> for summaries, and <code>keywords</code> for
+DMAE matching (<code>:31-72</code>). <code>MemoryEvidence</code> has its
+own <code>sourceStatus</code> of <code>active</code>,
+<code>archived</code> or <code>deleted</code> (<code>:151-161</code>),
+which nothing in the tree changes after creation.</p>
+<p><code>ConflictLog</code> has six statuses and a separate resolver
+lifecycle — <code>not_queued</code>, <code>queued</code>,
+<code>processing</code>, <code>resolved</code>, <code>failed</code> —
+with attempt counts and timestamps (<code>:93-122</code>). A failed log
+stays <code>failed</code>; nothing requeues it.</p>
+<p>The only temporal fields are <code>createdAt</code>,
+<code>lastAccessedAt</code>, L0 <code>updatedAt</code>, and on atoms
+<code>expiresAt</code>. None records when a fact held in the world.</p>
+<p><strong>Scope.</strong> None on L0, L1 or L2.
+<code>sourceConversationId</code> is stored and used as provenance in
+the resolver prompt, never as a filter. Channel conversation ids hash
+the sender (<code>src/main/channels/dispatcher.ts:7-9</code>), but they
+reach the global store all the same. The QQ settings declare
+<code>groupMemoryPolicy</code> with the single value
+<code>"shared-personal"</code> and no reader
+(<code>src/main/channels/settings-store.ts:172</code>,
+<code>:230</code>). Social atoms carry <code>conversationId</code>,
+which the read applies (<code>store.ts:56-59</code>).</p>
+<p>The entity graph stores names, types, aliases and mention counts. Its
+<code>relations</code> array has no writer in the tree, and its search
+splits the query on whitespace, so a Chinese sentence is one token that
+an entity name must contain
+(<code>src/main/memory/entity-graph.ts:149-185</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The agent reaches L2 two ways. In work, code and learn modes the
+model can call <code>user_memory</code>, which runs the filtered hybrid
+search with a default of five results
+(<code>tool-registry.ts:226-255</code>). In voice calls, the same search
+seeds DMAE: recall ranks one to four get intrinsic values 36, 8, 8 and
+1, an archived-state hit is woken to 35, and keyword hits in the user or
+model text add reward (<code>l2-dmae-manager.ts:21-23</code>,
+<code>:97-159</code>). The injected set is pinned rows first, then
+<code>Active</code> rows by activation, four in all
+(<code>:162-176</code>).</p>
+<p><code>read_memory</code> is the unfiltered path. With no argument it
+lists L0, L1 and the 50 newest L2 titles with their status; with an id
+it returns one episode in full (<code>tool-registry.ts:361-419</code>).
+A superseded episode is labelled as such, and the model decides what to
+do with it.</p>
+<p>Social atoms use BM25 over jieba tokens with a 30-day half-life, keep
+open loops at a floor score, and return at most five
+(<code>retrieval.ts:48-71</code>). The compiled block tells the model
+not to recite it (<code>context.ts:3-17</code>).</p>
+<p>Failure modes follow from the paths above. Keyword activation
+over-recalls: any shared keyword wakes an episode regardless of meaning.
+The superseded leak is confined to calls and proactive messages.
+<code>recall_history</code> searches raw chat history across every
+conversation with no conversation filter
+(<code>src/main/orchestrator/tools/history-tools.ts:41-80</code>,
+<code>index.ts:248-260</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are background and batched. The judge sees a window rather
+than one turn, so a fact stated once is judged in context. The prompt
+forbids turning a one-off state into a stable preference and absolute
+words into rules, and the post-filter enforces the second in code
+(<code>memory-judge.ts:8-22</code>).</p>
+<p>Two writers skip that pipeline. <code>write_memory</code> is
+described as for explicit user requests only, but the candidate it
+builds is always <code>explicit</code>/<code>user_explicit</code>, so
+the L0 rule in <code>canWriteCoreProfile</code> passes for whatever the
+model chooses to write (<code>tool-registry.ts:324-360</code>,
+<code>memory-manager.ts:44-46</code>). <code>runReflection</code> writes
+L0 and L1 from a prompt containing only the current profile and the
+round count (<code>memory-compressor.ts:161-174</code>,
+<code>:228-248</code>). It can only rephrase or invent, and it does so
+at a confidence floor of 0.6 without the judge's filters.</p>
+<p>L0 and L1 are overwrites. L2 is append plus status change;
+<code>deleteL2</code> has one caller, the compression rollback
+(<code>memory-compressor.ts:127</code>). The L0 lock is checked on three
+paths, but no writer in the tree sets <code>isPinned</code> on L0 or L2,
+and the panel's save handler accepts only the five text fields
+(<code>src/main/memory/memory-user-ipc.ts:42-43</code>,
+<code>:161-176</code>).</p>
+<p>Social atoms are written only through <code>applyOperations</code>,
+after validation. Facts must quote a user turn; open loops must quote
+the assistant; a supersede or resolve must target an atom the extractor
+was shown for the same conversation (<code>extractor.ts:102-187</code>).
+Retries of the same turn are deduplicated on evidence turn and trimmed
+content (<code>store.ts:82-89</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks the reply: every memory LLM call is enqueued after the
+run. A new L2 is retrievable once the judge's sixth-turn pass and its
+embedding finish, so the lag is up to five turns plus the queue. Every
+turn rewrites <code>memory.json</code> in full to bump
+<code>roundCount</code>, appends a trace line, and notifies the Obsidian
+exporter (<code>memory-scheduler.ts:72</code>,
+<code>memory-store.ts:86-99</code>). Compression compares every active
+L2 with every other each 20 turns. Per turn the prompt carries L0 and L1
+whole; calls and proactive messages add up to four L2.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is mostly background. The model holds four tools —
+<code>user_memory</code>, <code>read_memory</code>,
+<code>write_memory</code> and <code>recall_history</code> — registered
+without a mode restriction (<code>tool-registry.ts:226-475</code>,
+<code>history-tools.ts:41-80</code>). Chat mode admits a tool only when
+chat tools are switched on, which they are not by default, and that tool
+is opted in
+(<code>src/main/orchestrator/run-capabilities.ts:25-40</code>,
+<code>src/main/settings/settings-facade.ts:123</code>). With the
+defaults no L2 episode reaches a chat-mode model: L0 and L1 are
+injected, and episodes extracted from chat return only in other modes,
+in calls and in proactive messages. Channel runs default to
+<code>toolSandbox: "all"</code>, which gives them work mode with
+<code>permissionMode: "allow_all"</code>, except in QQ groups
+(<code>settings-store.ts:245</code>,
+<code>src/main/channels/agent-policy.ts:12-40</code>). A channel sender
+outside a group therefore reaches the same memory tools as the desktop
+user.</p>
+<p>A person edits L0 and L1 in the memory panel, sees L2 and reflection
+logs, and edits L2 content through Obsidian. There is no in-app L2
+delete, no status control and no surface for conflicts marked
+<code>clarification_needed</code>, which only the Obsidian export lists
+(<code>src/main/memory/obsidian-exporter.ts:563</code>).</p>
+<p>The social atom store ports to another agent easily: six small files,
+582 lines, with a narrow interface. The L0/L1/L2 store is bound to
+Electron's <code>app.getPath</code> and to module singletons.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is recorded but not enforced on the main
+store.</strong> Every L2 gets an evidence record, and the resolver sees
+both chains. <code>memory-audit.ts</code> checks for missing evidence,
+absolute overclaims and broken supersession links, but has no caller
+outside its test.</p>
+<p><strong>The profile belongs to whoever talks to the agent.</strong>
+The judge's buffer is one array across conversations, so eight turns can
+mix a WeChat sender and the desktop user, and candidates are attributed
+to the triggering conversation (<code>memory-scheduler.ts:29-58</code>).
+Any allowed channel sender, including QQ group members under the only
+memory policy value, can become "the user" in L0.</p>
+<p><strong>Durability.</strong> <code>memory.json</code> is written in
+place, not by rename, while the vector store and the atom store use a
+temporary file. A crash during the write that runs every turn can
+truncate the store; <code>load</code> then backs up the broken file and
+starts empty (<code>memory-store.ts:68-82</code>).</p>
+<p><strong>Uncertainty.</strong> <code>conflictWith</code> is surfaced
+as a warning suffix on injected episodes, and <code>aging</code> exists,
+but the model reads both as prose. A resolution of
+<code>uncertain</code> can still supersede a row.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded; the social atom status filters
+every read, and the L2 status filters vector recall but not DMAE
+injection.</li>
+<li><code>scope_enforced</code> — awarded on the opt-in social store;
+the default store has no scope.</li>
+<li><code>audit_log</code> — awarded; <code>memory-trace.log</code> is
+append-only and covers the store's mutating methods by id, with the gaps
+named in the record.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld. <code>superseded</code> is keyed
+on a row; nothing stops the judge re-extracting a superseded fact as a
+new active L2, and a superseded atom's text can be added again.</li>
+<li><code>bitemporal</code> — withheld. <code>expiresAt</code> is a
+retention deadline set at write; nothing records when a fact became or
+stopped being true.</li>
+<li><code>human_review</code> — withheld. No memory waits on a person:
+extraction, resolution and status changes apply at once, and
+<code>clarification_needed</code> has no reader that asks anyone.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin. CI runs <code>src/main/memory</code> and
+<code>src/main/rag</code> as one step and the social-context tests in
+the catch-all step, on Windows, for pushes and pull requests to
+<code>master</code> (<code>.github/workflows/test.yml:1-8</code>,
+<code>:61-68</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>isolates conversations and filters expired or inactive atoms</code>
+seeds an included atom, one from another conversation, one expired and
+one superseded, and asserts the exact list for each conversation
+(<code>src/main/social-context/social-context.test.ts:26-37</code>).
+<code>adds a correction atom and marks its target superseded</code>
+asserts the replacement is the only active atom (<code>:39-55</code>).
+<code>returns no unrelated facts but can surface a recent open loop</code>
+asserts <code>['loop']</code> exactly (<code>:113-125</code>).
+<code>returns only consistently mapped, recallable L2 vectors</code>
+indexes an active and an archived episode and asserts only the active
+vector returns (<code>src/main/rag/index.test.ts:106-133</code>).</p>
+<p><strong>What else is pinned.</strong> The compression transaction's
+rollback, reconciliation of mismatched vectors, the resolver's trace and
+rate limit, schema parsing, the scheduler's cadence, migrations,
+Obsidian round-trips and DMAE activation each have a test file in
+<code>src/main/memory</code>. <code>src/main/sim</code> holds a DMAE
+parameter simulator with ASCII activation charts, a tuning aid rather
+than a test.</p>
+<p><strong>Not covered.</strong> No test gives
+<code>getActiveL2ForPrompt</code> a superseded or merged episode. No
+test checks that <code>write_memory</code> or reflection respect the L0
+rule. The decay test asserts the inverted behaviour as correct. No
+retrieval-quality evaluation and no paper or citation are in the
+tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Check an evidence quote against the source text in
+code.</strong> A substring test against the cited turn, plus a role
+check on which speaker may ground which kind of fact, removes a class of
+invented memories no prompt can.</li>
+<li><strong>Apply an extraction batch all or nothing.</strong> One
+rejected operation means the model misunderstood the turn; keep none of
+it and retry with the rejected output quoted as data.</li>
+<li><strong>Filter on the canonical status, not the index's
+copy.</strong> Build the allowlist from the store at query time and hand
+it to every arm.</li>
+<li><strong>Write the compensating step for every step of a multi-store
+commit</strong>, and archive sources only after the summary is
+durable.</li>
+<li><strong>Reconcile store and index at startup, with a backup
+first.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A gate on one writer.</strong> A rule that the profile takes
+only explicit user statements has to live in the store, or every tool
+and background pass that writes the profile must be audited against
+it.</li>
+<li><strong>Decay that only touches rows with positive weight.</strong>
+It punishes use. Decay from the last access time, and let an unused row
+age too.</li>
+<li><strong>One status predicate per read path, written
+separately.</strong> The injection path here forgot two of the four
+excluded states.</li>
+<li><strong>A model output that writes status directly.</strong> Derive
+the status from the resolution type, and hold anything the model marks
+uncertain.</li>
+<li><strong>A global turn buffer feeding per-user
+extraction.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person on one Windows machine who wants a companion
+that remembers a profile and a stream of episodes, and who is willing to
+curate them through Obsidian. It does not suit a shared or
+channel-facing deployment: the profile has no owner, and the channel
+defaults hand senders the memory tools. The social atom store is the
+part built to a stricter standard, and it is off by default.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Do the WeChat and Feishu adapters restrict who may message the
+agent, as QQ's allowlists do? Their adapters were not read.</li>
+<li>Is the decay inversion intended, given the manager's comment that
+decay is not yet mounted while the scheduler calls it every 50 turns
+(<code>memory-manager.ts:214-221</code>)?</li>
+<li>Is <code>pinL2</code> meant to be reachable from a panel control
+that has not landed?</li>
+<li>How large does <code>memory-trace.log</code> grow on a long-lived
+install, given a line per turn?</li>
+<li>Does the relationship log in <code>src/main/relationship/</code>
+feed anything back into L0 or L2? It was not read.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>src/main/memory/memory-types.ts</code>,
+<code>memory-store.ts</code>, <code>memory-store-io.ts</code>,
+<code>memory-store-defaults.ts</code>,
+<code>memory-store-migrations.ts</code>, <code>memory-trace.ts</code>,
+<code>src/main/social-context/types.ts</code>, <code>store.ts</code>,
+<code>src/main/memory/entity-graph.ts</code>.</li>
+<li><strong>Write path:</strong>
+<code>src/main/memory/memory-scheduler.ts</code>,
+<code>memory-judge.ts</code>, <code>memory-manager.ts</code>,
+<code>memory-schemas.ts</code>, <code>memory-conflict.ts</code>,
+<code>memory-conflict-score.ts</code>,
+<code>src/main/social-context/extractor.ts</code>,
+<code>scheduler.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/main/rag/index.ts</code>,
+<code>retriever.ts</code>, <code>vectorstore.ts</code>,
+<code>worldbook.ts</code>,
+<code>src/main/memory/l2-dmae-manager.ts</code>,
+<code>src/main/social-context/retrieval.ts</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>src/main/orchestrator/index.ts</code>,
+<code>src/main/call/call-prompt-builder.ts</code>,
+<code>src/main/proactive/proactive-lifecycle.ts</code>,
+<code>src/main/orchestrator/agent-runtime.ts:228-236</code>,
+<code>src/main/orchestrator/build-options.ts:607-700</code>,
+<code>:1040-1069</code>.</li>
+<li><strong>Background:</strong>
+<code>src/main/memory/memory-resolver.ts</code>,
+<code>memory-compressor.ts</code>,
+<code>memory-compression-transaction.ts</code>,
+<code>memory-rag-reconciliation.ts</code>,
+<code>src/main/application/default-dependencies.ts:162-176</code>.</li>
+<li><strong>Tools and UI:</strong>
+<code>src/main/orchestrator/tools/registry/tool-registry.ts</code>,
+<code>src/main/orchestrator/tools/history-tools.ts</code>,
+<code>src/main/memory/memory-user-ipc.ts</code>, <code>panel.ts</code>,
+<code>obsidian-exporter.ts</code>,
+<code>obsidian-importer.ts</code>.</li>
+<li><strong>Channels:</strong>
+<code>src/main/channels/bootstrap.ts</code>,
+<code>agent-policy.ts</code>, <code>settings-store.ts</code>,
+<code>dispatcher.ts</code>.</li>
+<li><strong>Tests:</strong>
+<code>src/main/social-context/social-context.test.ts</code>,
+<code>src/main/rag/index.test.ts</code>,
+<code>src/main/memory/*.test.ts</code>,
+<code>src/main/orchestrator/build-memory-injection.test.ts</code>,
+<code>.github/workflows/test.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rn -E 'memoryStore\.(save|load)\(|store\.l2 = |appendMemoryTrace' src --include='*.ts' | grep -v '\.test\.ts' | grep -v memory-store.ts</code>
+— only <code>memory-resolver.ts</code> mutates the store outside
+<code>MemoryStoreManager</code>, and it appends a trace line after each
+save.</li>
+<li><code>grep -rn 'isL2LocallyRecallable' src</code> — one production
+caller, <code>src/main/rag/index.ts:202</code>.</li>
+<li><code>grep -rn -E 'l2DmaeManager\.|buildMemoryInjection\b' src | grep -v '\.test\.'</code>
+— callers in <code>call-prompt-builder.ts</code> and
+<code>proactive-lifecycle.ts</code> only.</li>
+<li><code>grep -rn 'isPinned\|pinL2\|MEMORY_PANEL_PIN\|PIN_L' src --include='*.ts' --include='*.tsx' | grep -v '\.test\.'</code>
+— reads and <code>false</code> literals; <code>pinL2</code> is defined
+in <code>memory-store.ts:249</code> and never called.</li>
+<li><code>grep -rn -E 'clarification_needed|shouldAskUser|clarificationNeeded|getConflictLogs\(|conflictLogs' src --include='*.ts' --include='*.tsx' | grep -v '\.test\.'</code>
+— written in <code>memory-store.ts</code>; read only by
+<code>obsidian-exporter.ts:466-471</code>, <code>:563</code>.</li>
+<li><code>grep -rn -E 'reconcileMemoryRag\(|auditMemoryStore\(|auditMemoryFile\(|runDecay|decayL2Weights|deleteL2\(|pinL2\(|updateL2Content\(' src | grep -v '\.test\.'</code>
+— the audit functions have no production caller; <code>deleteL2</code>
+is called only from the compression rollback.</li>
+<li><code>grep -rn 'memory-trace' . --exclude-dir=.git --exclude-dir=node_modules | grep -v '\.test\.'</code>
+— the writer and its path only; no reader, no rotation.</li>
+<li><code>grep -rn -i -E 'tombstone|blocklist|denylist|rejected_?values|suppress' src/main/memory src/main/social-context src/main/rag --include='*.ts' | grep -v '\.test\.'</code>
+— two unrelated comments in <code>rag/</code>.</li>
+<li><code>grep -rn -E 'validFrom|validTo|valid_from|valid_until|validUntil|eventTime|occurredAt' src/main/memory src/main/social-context --include='*.ts'</code>
+— no match.</li>
+<li><code>grep -rn 'groupMemoryPolicy\|shared-personal' src | grep -v '\.test\.'</code>
+— the type and two defaults in <code>settings-store.ts</code>; no
+reader.</li>
+<li><code>grep -rn 'relations.push\|addRelation' src/main | grep -v test</code>
+— only local arrays in <code>obsidian-exporter.ts</code>; no entity
+relation writer.</li>
+<li><code>grep -rn 'chatSocialContextEnabled' src | grep -v '\.test\.'</code>
+— default <code>false</code> in <code>settings-facade.ts:40</code> and
+the renderer.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— no match, and no <code>CITATION</code> file.</li>
+<li><code>grep -rniE 'renamed|formerly|原名|更名' README.md README.en.md docs/ .github/</code>
+— two unrelated matches; no rename.</li>
+<li>Test counts:
+<code>find . -path ./node_modules -prune -o -type f \( -name '*.test.ts' -o -name '*.test.tsx' -o -name '*.spec.ts' \) -print</code>,
+then <code>grep -E -c '^\s*(it|test)(\.each\([^)]*\))?\('</code> summed
+over those files.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/Playa-Cyrene/Cyrene-Agent/commit/be6ce1f88d6ae94958109a9a21e17cae353c2931"><code class="commit-id" title="be6ce1f88d6ae94958109a9a21e17cae353c2931">be6ce1f8…</code></a>
+— first reading, at the head of <code>master</code>, a commit dated 28
+September 2026. Four marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>. Scoped to the memory subsystem
+(<code>src/main/memory</code>, <code>src/main/social-context</code> and
+the retrieval code they call); the rest of the agent is not covered.
+Screened before reading: no auto-run surface, no build-time execution
+point, seven dependency files inside the cooldown — every file in a
+depth-1 clone dates to the tip — and two unpinned surfaces; no agent
+instruction files in the tree. Read with <code>grep</code> and
+<code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
