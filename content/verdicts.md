@@ -963,10 +963,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: your correction requirement is strong — making "forget this" durable means reaching into the Markdown tree, and the memory layer will not do it for you.
 
 ### [`gitlord`](../systems/gitlord/)
-- Best idea: git *is* the memory. Turns are commits, sessions are branches, commit shas are addresses, and forking a conversation is a first-class operation because the substrate already supports it.
-- Biggest risk: it stores what was said rather than what is believed, so a correction and the mistake sit in the log in order with nothing preferring either.
-- Most reusable component: log-as-authority with the index as a projection you can rebuild, and per-branch context-cache invalidation.
-- Maturity impression: 233 test functions across fifteen files, no memory benchmark and no retrieval measurement — consistent with a system whose claim is durability rather than recall. One capability mark, `negative_eval`, on the single test asserting that a summarized turn does not reach the assembled context; the summary machinery it guards is complete and has no caller outside `tests/`.
+- Best idea: git *is* the memory. Turns are commits, sessions are refs, commit shas are addresses, and forking a conversation is one `update-ref` at an earlier commit because the substrate already supports it.
+- Biggest risk: it stores what was said rather than what is believed, so a correction and the mistake sit in the log in order with nothing preferring either. Beside that, the default subagent cleanup deletes a subagent's ref while the parent's `Subagent-Result` trailer still names its final sha, so `git gc` can prune the history the trailer points at.
+- Most reusable component: log-as-authority with both indexes as projections `IndexBuilder` rebuilds from it, and a compare-and-swap ref update that re-commits onto the moved tip when two writers race.
+- Maturity impression: 233 test functions in 13 files with no CI configuration, no memory benchmark and no retrieval measurement — consistent with a system whose claim is durability rather than recall. No capability mark: the one negative assertion about content keeps a summarized turn out of an assembled message list, which is context assembly over events rather than memory retrieval. The package ships no agent loop, and it rebuilds the whole JSON index on every commit.
 - Study when: auditability and replay are the requirement — runs you must reconstruct exactly, experiments you want to fork.
 - Do not copy when: belief is the requirement, or you assume git gives you deletion. Pair it with something that has an opinion about what is true, and keep the evidence here.
 

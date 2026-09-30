@@ -9239,29 +9239,38 @@ mechanism; no value tombstone</td>
 </tr>
 <tr>
 <td><a href="../systems/gitlord/"><code>gitlord</code></a></td>
-<td>A turn — user, assistant or tool call — committed as JSON on a
-branch, addressed by commit sha and path</td>
-<td>A git repository. Sessions are branches; the commit graph is the
-durable record</td>
-<td>A <code>ContextAssembler</code> over the turn history with a dedup
-index and a per-branch context cache, plus a RAG module</td>
-<td><code>append_turn</code> and its typed variants commit;
-<code>_commit_turn</code> can rebuild a chain onto a new parent</td>
-<td>Git's own semantics — a rewritten chain is a new set of commits, and
-the old objects remain until they are collected</td>
-<td>A branch per session; nothing composes a scope key into a retrieval
-predicate</td>
-<td>A CLI, an MCP server, and a LiteLLM-backed model layer with a
-tool-schema translator</td>
-<td>None — a summary turn role exists with an assembler branch reading
-it, and no entry point produces one</td>
+<td>A turn — system, user, assistant, tool call, tool result or summary
+— committed as JSON under turns/ on a branch, addressed by commit
+sha</td>
+<td>A bare git repository with a ref per session under refs/agents/, a
+JSON index file rebuilt from it, and an optional Chroma collection
+rebuilt from it</td>
+<td>Three library read paths: ContextAssembler walks one branch into a
+message list, TurnQuery filters the JSON index across every session, and
+VectorIndex queries Chroma; no module in the package calls the first or
+the third</td>
+<td>append_turn and its typed variants commit through a compare-and-swap
+ref update that rebuilds the commit onto the moved tip on a race; each
+commit then rebuilds the whole JSON index</td>
+<td>No update or delete verb for a turn. rewind adds a ref at an earlier
+commit; subagent drain and trim delete refs, leaving the commits
+unreachable until git gc prunes them</td>
+<td>A branch per session for context assembly; the JSON index and the
+vector index hold every session, and session.query() applies no session
+filter</td>
+<td>A Python library, a Typer CLI whose run command commits a user turn
+and calls no model, an MCP client that supervises external tool servers,
+and a LiteLLM router with a tool-schema translator</td>
+<td>None. Summary turns are a documented library call the package never
+makes, and the assembler drops the summary together with the turns it
+covers</td>
 <td>None. A turn is what happened; there is no claim, status or
 confidence anywhere</td>
-<td>A durable log that is inspectable, forkable and replayable by
-construction, with the derived index rebuildable from it and a test that
-rebuilds it</td>
-<td>It stores what was said rather than what is believed, so nothing
-distinguishes a fact from a correction of it</td>
+<td>A durable log that is inspectable and forkable by construction, with
+both indexes regenerated from it rather than maintained beside it</td>
+<td>It stores what was said rather than what is believed; the default
+subagent cleanup makes subagent history unreachable to git while a
+trailer still names its sha</td>
 </tr>
 <tr>
 <td><a href="../systems/gitmem/"><code>gitmem</code></a></td>
@@ -30583,7 +30592,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>395 of 681:</em> <a
+<p><em>394 of 681:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -30701,7 +30710,6 @@ href="../systems/gbrain/"><code>gbrain</code></a>, <a
 href="../systems/genome/"><code>genome</code></a>, <a
 href="../systems/gh-aw/"><code>gh-aw</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
-href="../systems/gitlord/"><code>gitlord</code></a>, <a
 href="../systems/gmr/"><code>gmr</code></a>, <a
 href="../systems/gomaa/"><code>gomaa</code></a>, <a
 href="../systems/goodai-ltm/"><code>goodai-ltm</code></a>, <a
@@ -31009,7 +31017,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-395 repositories of
+394 repositories of
 681 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

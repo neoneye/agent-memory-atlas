@@ -681,10 +681,10 @@ assistant, memory is the notes the *assistant* keeps for itself. The sharp edge
 is `forget`, which removes every entry matching a case-insensitive substring and
 returns no list of what it took.
 
-**GitLord is the strongest instance of the mechanism the rubric deliberately
+**GitLord is a clear instance of the mechanism the rubric deliberately
 excludes.** Every turn is a git commit, every session a branch, and
-`DedupIndex.rebuild_from_log` regenerates the retrieval index by walking the
-log — the log is the authority and the index is a projection, which is
+`IndexBuilder` regenerates both its JSON index and its Chroma index by walking
+the log — the log is the authority and the indexes are projections, which is
 [Core Memory](../systems/core-memory/)'s arrangement obtained for free by making
 the authority a repository. It carries no capability marks and the reason is a
 category difference rather than a deficiency: it durably records *what happened*
