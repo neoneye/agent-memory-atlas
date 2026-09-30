@@ -81,6 +81,14 @@ AUTORUN_PATHS = [
     (".gitmodules", "submodules pull further untrusted trees on `--recursive`"),
     ("smithery.yaml", "MCP packaging manifest; declares a start command"),
     ("server.json", "MCP server manifest; declares a start command"),
+    # Harness configs outside `.mcp.json` that start MCP servers on launch. Recollect
+    # shipped both of the first two, each starting a server with `npx -y`, and the
+    # screen recorded neither (2026-09-30).
+    ("opencode.json", "OpenCode config; its `mcp` entries start local servers"),
+    ("opencode.jsonc", "OpenCode config; its `mcp` entries start local servers"),
+    (".codex/config.toml", "Codex CLI config; `[mcp_servers.*]` entries start local servers"),
+    (".vscode/mcp.json", "MCP servers auto-started by VS Code"),
+    (".gemini/settings.json", "Gemini CLI settings; `mcpServers` entries start local servers"),
     # A distributed plugin registers its hooks from its own package root rather
     # than from the consumer's `.claude/`, so a repository whose entire purpose
     # is installing hooks can present a clean `.claude/` and still ship three of
@@ -92,6 +100,11 @@ AUTORUN_PATHS = [
     ("hooks/hooks.json", "plugin-root hook registrations (SessionStart / PreCompact / Stop)"),
     ("hooks/", "hook scripts a plugin manifest can register"),
 ]
+
+# A launcher that fetches and runs a package when the harness starts, so what
+# executes is whatever the registry serves that day rather than anything pinned
+# in the tree.
+PACKAGE_LAUNCHER = re.compile(r"\b(npx|bunx|uvx|pipx run|pnpm dlx|yarn dlx)\b")
 
 # Substrings that make an autorun file worth reading rather than merely noting.
 AUTORUN_TRIGGERS = (
@@ -158,7 +171,7 @@ MSBUILD_EXEC = re.compile(r"<(Exec|PreBuildEvent|PostBuildEvent)\b", re.I)
 
 # Ecosystems this screen can parse. Printed with NOTHING SCANNED so the reader
 # knows what the silence covers rather than assuming it covers everything.
-KNOWN_ECOSYSTEMS = "npm, Python, Rust, Go, Ruby, PHP, MSBuild/.NET, git hooks, agent harnesses"
+KNOWN_ECOSYSTEMS = "npm, Bun, Python, Rust, Go, Ruby, PHP, MSBuild/.NET, git hooks, agent harnesses"
 
 # ---------------------------------------------------------------- pinning
 
@@ -166,6 +179,7 @@ LOCKFILES = [
     "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "npm-shrinkwrap.json",
     "poetry.lock", "uv.lock", "Pipfile.lock", "pdm.lock",
     "Cargo.lock", "go.sum", "composer.lock", "Gemfile.lock",
+    "bun.lock", "bun.lockb",
 ]
 
 # A requirement line that does not pin to an exact version.
@@ -209,6 +223,9 @@ def scan_autorun(root: Path, out: list) -> int:
         text = read(target)
         hits = sorted({t for t in AUTORUN_TRIGGERS if t in text})
         detail = why + (f" — mentions {', '.join(hits)}" if hits else "")
+        launchers = sorted(set(PACKAGE_LAUNCHER.findall(text)))
+        if launchers:
+            detail += f"; launches a package fetched at run time ({', '.join(launchers)})"
         out.append(("RUNS", rel(root, target), detail))
     return scanned
 

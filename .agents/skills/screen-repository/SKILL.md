@@ -87,6 +87,11 @@ What to look for, in order of how often it is the answer:
 - A hook that reaches the network at all, especially with anything it read.
 - A command that is obfuscated, base64-encoded, minified, or fetches and pipes to
   a shell (`curl … | sh`).
+- An MCP config (`.mcp.json`, `opencode.json`, `.codex/config.toml`,
+  `.vscode/mcp.json`, `.gemini/settings.json`) whose server starts through a
+  package launcher. The script notes `npx`, `bunx`, `uvx` and the like, because
+  what runs is whatever the registry serves on the day the harness starts,
+  not anything pinned in the tree.
 - Anything in `.gitattributes` with `filter=`, which runs during checkout and is
   the one surface that fires before you have read a single file.
 
