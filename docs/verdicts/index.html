@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 703 reports.</strong></p>
+<p><strong>This page covers all 704 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -29212,6 +29212,53 @@ tree lacks.</li>
 <li>Do not copy when: memory must stay inside one project, the agent
 must not be able to retire a memory by itself, or a removed text must
 leave no trace anywhere in the store.</li>
+</ul>
+<h3 id="claude-engram-mlapeter"><a
+href="../systems/claude-engram-mlapeter/"><code>claude-engram-mlapeter</code></a></h3>
+<ul>
+<li>Best idea: <strong>encoding is dumb and durable, selection is
+detached and restorable.</strong> The Stop hook only appends the turn to
+a per-project buffer; a detached runner claims the buffer by rename,
+extracts per 16 KB chunk, and returns only the failed chunks' text to
+the buffer before clearing the claim, so an API outage delays memories
+instead of reading as a day with nothing worth keeping
+(<code>src/hooks/run-extraction.ts:38-131</code>).</li>
+<li>Biggest risk: <strong><code>forget</code> cannot reach the
+archive.</strong> <code>remove</code> filters <code>memories.json</code>
+only (<code>src/core/store.ts:281-295</code>), while gist promotion
+archives the verbatim original under a fresh id with
+<code>gist_of</code> (<code>src/core/consolidation.ts:448-455</code>).
+Forgetting the gist leaves the original wording where
+<code>deep_recall</code> finds it, and <code>reactivate: true</code>
+puts it back in the active store.</li>
+<li>Most reusable component: <code>applyConsolidation</code>
+(<code>src/core/consolidation.ts:1079-1213</code>), which enforces in
+code what the prompt only asks for: no merge across the self, person and
+craft registers, no protected source merged or pruned, and merged
+salience the component-wise maximum of its sources, so deduplication
+never makes a memory matter less.</li>
+<li>Second risk: <strong>the dashboard is not local-only.</strong>
+<code>Bun.serve</code> gets a port and no hostname, Bun's documented
+default is <code>0.0.0.0</code>, and no route checks a credential, so
+<code>GET /api/backup/download</code> returns every memory in every
+project and <code>POST /api/inbox</code> queues text that the next
+consolidation turns into memories
+(<code>src/dashboard/server.ts:107-110</code>,
+<code>:618-671</code>).</li>
+<li>Maturity impression: AGPL-3.0-only, 7,370 lines of TypeScript under
+<code>src/</code> and 102 commits by one contributor between 16 February
+and 17 July 2026. 359 vitest cases in 24 files with no CI workflow; two
+association-read cases assert an archived or cross-scope neighbour is
+not returned beside a positive control, and one archive case is vacuous.
+<code>AUDIT-WHAT-FIRES.md</code> records which mechanisms were ever
+measured.</li>
+<li>Study when: you want a failure-tolerant capture pipeline for a hook
+host, register-specific decay and merge rules, or a day-of-use clock for
+decay.</li>
+<li>Do not copy when: memory must be corrected reliably or kept private
+on a network. Every compression step leaves a copy deletion does not
+chase, the agent holds every correcting verb, and the dashboard has no
+access control.</li>
 </ul>
         </article>
       </div>

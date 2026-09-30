@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 703 of 703 screened at the report's current pin.**
+**Progress: 704 of 704 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 328 |
+| Repositories with an auto-run surface (`RUNS`) | 329 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 381 |
 | Repositories with build-time execution (`EXEC`) | 507 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
@@ -73,6 +73,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`caura`](../../content/systems/caura.md) | `.claude/hooks/`, `.claude/settings.json`, `.mcp.json` |
 | [`chump`](../../content/systems/chump.md) | `.claude/settings.json`, `.cursor/rules/`, `.gitmodules` |
+| [`claude-engram-mlapeter`](../../content/systems/claude-engram-mlapeter.md) | `hooks/` |
 | [`claude-mem`](../../content/systems/claude-mem.md) | `.claude-plugin/` |
 | [`claude-mem-lite`](../../content/systems/claude-mem-lite.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`claude-self-reflect`](../../content/systems/claude-self-reflect.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json` |

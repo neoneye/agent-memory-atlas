@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code memory in JSON
+files: hooks buffer transcripts, a detached model extracts memories, and
+nightly consolidation decays, archives and merges them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Claude Engram
+(mlapeter) — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code memory in
+JSON files: hooks buffer transcripts, a detached model extracts
+memories, and nightly consolidation decays, archives and merges them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude Engram
+(mlapeter) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code memory in
+JSON files: hooks buffer transcripts, a detached model extracts
+memories, and nightly consolidation decays, archives and merges them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Claude Engram (mlapeter) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Claude Engram (mlapeter)",
+      "description": "A Claude Code memory in JSON files: hooks buffer transcripts, a detached model extracts memories, and nightly consolidation decays, archives and merges them.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Brain-modelled memory for Claude Code, in
+JSON files</p>
+          <h1>Claude Engram (mlapeter)</h1>
+          <p class="document-deck">A Claude Code memory in JSON files:
+hooks buffer transcripts, a detached model extracts memories, and
+nightly consolidation decays, archives and merges them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mlapeter/claude-engram">
+              <span>Source</span>
+              <strong>mlapeter/claude-engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mlapeter/claude-engram/commit/91edd7e532ab75f7734055ec02051ac5c299c6e7" title="91edd7e532ab75f7734055ec02051ac5c299c6e7">
+              <span>Analyzed revision</span>
+              <code>91edd7e5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-01</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mlapeter--claude-engram" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mlapeter--claude-engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0-only</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>7,370
+lines of TypeScript under src/, plus 1,871 lines of dashboard HTML, the
+752-line v1 artifact claude-engram.jsx and a 4,676-line experiment
+harness</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>102
+commits on main by one contributor, 16 February 2026 – 17 July
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>359
+vitest cases in 24 files (5,476 lines under tests/), plus 41 in the
+entity-coherence experiment; no CI workflow in the tree</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Claude Engram (mlapeter) is a local memory system for Claude Code
+that models itself on human memory. Hooks append each turn's transcript
+to a buffer; a detached runner asks Sonnet what is worth remembering; a
+once-a-day "sleep" decays, archives, compresses and merges what was
+stored; and every session starts with identity documents and a briefing
+the model wrote for itself. Storage is plain JSON under
+<code>~/.claude-engram/</code>, committed to a local git repository at
+each consolidation. It is a different project from the one the <a
+href="../claude-engram/">Claude Engram</a> report covers,
+20alexl/claude-engram.</p>
+<p>What is notable is how much of the design is about not losing
+experience. The buffer is claimed atomically and restored chunk by chunk
+when extraction fails, merge sources and pre-gist originals go to an
+archive rather than being deleted, merges keep the highest salience of
+their sources, and a failing pipeline writes a self-check warning into
+the next session's context.</p>
+<p>What is weak is correction. <code>forget</code> deletes the active
+row and nothing else, so an archived verbatim copy of the same memory
+survives and can be reactivated. The agent holds every correcting verb.
+The dashboard serves the whole store with no authentication and no bind
+address.</p>
+<p>The repository began as a React artifact for Claude.ai,
+<code>claude-engram.jsx</code>, which keeps memories in the artifact's
+<code>window.storage</code> with JSON export and import. That artifact
+is still in the tree, and the dashboard can reconcile its backups with
+the hook-based store. This report covers the hook-based system at the
+pin. The author's later project is <a
+href="../counterparts/">Counterparts</a>, whose README names
+claude-engram as its first generation.</p>
+<p>One mark: <code>negative_eval</code>, on two association-read cases
+with positive controls. Section 9 names the six withheld. The licence is
+AGPL-3.0-only, with a README note offering commercial licensing.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are three stores. <strong>World memories</strong> are short
+notes the extraction model writes in Claude's voice, each tagged with a
+register: <code>self</code>, <code>person</code> or <code>craft</code>.
+<strong>Episodes</strong> are markdown narratives the session model
+writes when the Stop hook blocks once and asks for one. <strong>Identity
+documents</strong> (<code>core.md</code>, <code>craft.md</code>,
+<code>people/*.md</code>) are rewritten by Opus from dated deltas the
+session model appends.</p>
+<p>A world memory becomes a belief when the detached runner stores it;
+there is no candidate state. It weakens in two ways. Its strength is
+average salience plus access and consolidation bonuses minus a power-law
+decay on active days, scaled by register
+(<code>src/core/strength.ts:12-66</code>). A later extraction that names
+it in <code>updates</code> multiplies its salience by 0.7
+(<code>src/core/interference.ts:21-57</code>).</p>
+<p>It leaves the active store in four ways. Below strength 0.03,
+consolidation archives it. A merge archives its sources with
+<code>merged_into</code>. Gist promotion overwrites its text and
+archives a copy of the original under a fresh id with
+<code>gist_of</code>. <code>forget</code> deletes the row. Only the last
+removes text from the active file without moving it to the archive, and
+only the archive is read by <code>deep_recall</code>, which can move a
+row back.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Claude Engram world memory is encoded, selected, consolidated and forgotten, and which store each read reaches</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Claude Engram world memory is encoded, selected, consolidated and forgotten, and which store each read reaches
+flowchart TD
+    STOP[&quot;Stop hook: append span&lt;br/&gt;to the project buffer&quot;] --&gt; TRIG{&quot;buffer 32 KB, or 4 h old,&lt;br/&gt;or PreCompact, SessionEnd, wake&quot;}
+    TRIG --&gt; RUN[&quot;detached run-extraction:&lt;br/&gt;claim buffer atomically&quot;]
+    RUN --&gt; EXT[&quot;Sonnet per 16 KB chunk,&lt;br/&gt;given recent and strongest memories&quot;]
+    EXT -- &quot;chunk fails&quot; --&gt; RESTORE[&quot;failed text restored&lt;br/&gt;to the buffer&quot;]
+    EXT --&gt; DEDUP{&quot;duplicate by cosine 0.85&lt;br/&gt;or token overlap 0.8?&quot;}
+    DEDUP -- &quot;yes, no valid updates id&quot; --&gt; DROP[&quot;dropped&quot;]
+    DEDUP -- &quot;no&quot; --&gt; ACTIVE[(&quot;memories.json&lt;br/&gt;global or project&quot;)]
+    TOOL[&quot;MCP store&quot;] --&gt; ACTIVE
+    INBOX[&quot;pasted claude.ai dump&lt;br/&gt;in inbox/&quot;] --&gt; CONS
+    ACTIVE --&gt; INT[&quot;updates id set:&lt;br/&gt;older salience x 0.7&quot;]
+    ACTIVE --&gt; CONS{&quot;sleep: first session of an&lt;br/&gt;active day with 5 new memories&quot;}
+    CONS -- &quot;strength below 0.03&quot; --&gt; ARCH[(&quot;deep_archive.json&quot;)]
+    CONS -- &quot;craft older than 7 active days&quot; --&gt; GIST[&quot;text overwritten by a gist;&lt;br/&gt;verbatim copy archived&lt;br/&gt;with fresh id and gist_of&quot;]
+    GIST --&gt; ARCH
+    CONS -- &quot;Sonnet merge&quot; --&gt; MERGE[&quot;new semantic memory;&lt;br/&gt;sources archived with merged_into&quot;]
+    MERGE --&gt; ARCH
+    ACTIVE --&gt; RECALL[&quot;recall, search_by_tag,&lt;br/&gt;briefing, Right now lane&quot;]
+    ARCH --&gt; DEEP[&quot;deep_recall:&lt;br/&gt;substring or 0.5 token overlap&quot;]
+    DEEP -- &quot;reactivate true&quot; --&gt; ACTIVE
+    FORGET[&quot;MCP forget id&quot;] --&gt; DEL[&quot;row removed from memories.json,&lt;br/&gt;its vectors and edges;&lt;br/&gt;archive copies untouched&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The code is TypeScript on Bun. <code>install.sh</code> writes four
+hooks into <code>~/.claude/settings.json</code> with <code>jq</code> and
+registers the MCP server at user scope through
+<code>claude mcp add</code> (<code>install.sh:54-115</code>,
+<code>:139-141</code>). Each hook script sources
+<code>hooks/load-env.sh</code>, which reads
+<code>~/.claude-engram/env</code> and, when
+<code>ANTHROPIC_API_KEY</code> is still missing, sources the user's
+<code>~/.zshrc</code> (<code>hooks/load-env.sh:20</code>).</p>
+<p><code>createStore(cwd)</code> binds a store to one working directory.
+It hashes the path to twelve hex characters and resolves
+<code>global/</code> and <code>projects/</code> plus that hash under the
+data directory, each holding <code>memories.json</code>,
+<code>deep_archive.json</code>, <code>embeddings.json</code>,
+<code>associations.json</code> and <code>meta.json</code>
+(<code>src/core/store.ts:133-168</code>). Writes take a
+<code>proper-lockfile</code> lock on the file and rewrite it whole. The
+MCP server builds its store from <code>process.cwd()</code>, the project
+Claude Code launched it in (<code>src/mcp/server.ts:25-31</code>).</p>
+<p>Model calls are split by stakes: Sonnet extracts and consolidates,
+Haiku writes gists, Opus writes the briefing and rewrites identity.
+Voyage embeddings are optional and enable vector search, association
+edges and embedding dedup.</p>
+<p><code>snapshot.ts</code> initialises a git repository in the data
+directory, ignores secrets and derived files, commits the whole store
+before and after every consolidation, and pushes if a remote named
+<code>origin</code> exists (<code>src/core/snapshot.ts:21-33</code>,
+<code>:46-98</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>It needs Bun, <code>jq</code>, git and an Anthropic API key; a Voyage
+key is optional. Hooks call no model; extraction and consolidation run
+as detached children spawned from the hooks.
+<code>ENGRAM_DISABLE=1</code> short-circuits every hook, and
+<code>observerMode</code> stops recall from strengthening what it
+returns. <code>session-start.sh</code> also reads
+<code>~/.memory-ab/assignment.json</code> and mutes the briefing on days
+assigned to a sibling system, bansai
+(<code>hooks/session-start.sh:22-24</code>). The installer passes the
+API key to <code>claude mcp add -e</code>, so it is stored in the user's
+MCP configuration.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Encode.</strong> <code>on-stop.ts</code> reads the transcript
+from a byte cursor, appends at least 200 characters to the project
+buffer, and spawns <code>run-extraction.ts</code> when the buffer passes
+32 KB or its oldest span passes four hours
+(<code>src/hooks/on-stop.ts:21-48</code>). The same hook blocks the stop
+once per session chapter with instructions to write an episode file and
+optionally append to <code>identity/deltas.md</code>
+(<code>:50-63</code>; <code>src/core/episodes.ts:20-53</code>).</p>
+<p><strong>Select.</strong> <code>run-extraction.ts</code> claims the
+buffer, loads up to 100 existing memories from
+<code>getRecentAndStrong</code>, splits the buffer on span headers into
+16 KB chunks, and calls <code>extractMemories</code> per chunk
+(<code>src/hooks/run-extraction.ts:38-70</code>). Duplicates are dropped
+unless they carry a well-formed <code>updates</code> id; survivors are
+stored and <code>applyInterference</code> runs (<code>:76-105</code>).
+Failed chunks' text returns to the buffer before the claim is cleared
+(<code>:120-131</code>).</p>
+<p><strong>Wake.</strong> <code>on-session-start.ts</code> advances the
+active-day clock, spawns consolidation on the first session of a new
+active day with five new memories or pending deltas, and injects the
+self-check warning, the identity block, the Right now lane and the
+cached briefing (<code>src/hooks/on-session-start.ts:51-127</code>).</p>
+<p><strong>Sleep.</strong> <code>runConsolidation</code> takes a PID
+lock, commits a snapshot, drains the inbox, backs up, auto-prunes,
+gists, merges in one or two passes, writes association edges, rewrites
+identity, and commits again
+(<code>src/core/consolidation.ts:244-309</code>,
+<code>:311-523</code>).</p>
+<p><strong>Tools.</strong> Nine MCP tools: <code>status</code>,
+<code>recall</code>, <code>search_by_tag</code>, <code>reinforce</code>,
+<code>protect</code>, <code>store</code>, <code>forget</code>,
+<code>consolidate</code>, <code>deep_recall</code>
+(<code>src/mcp/server.ts:40-429</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>m_</code> plus epoch milliseconds plus four base-36
+characters</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>declared <code>max(400)</code>; extraction truncates at 600 on a
+sentence boundary</td>
+</tr>
+<tr>
+<td><code>scope</code></td>
+<td><code>global</code> or <code>project</code>; the project is the
+file, not a field</td>
+</tr>
+<tr>
+<td><code>register</code></td>
+<td><code>self</code>, <code>person</code>, <code>craft</code>; older
+rows inferred from tags</td>
+</tr>
+<tr>
+<td><code>memory_type</code></td>
+<td><code>episodic</code> until gisted or merged, then
+<code>semantic</code></td>
+</tr>
+<tr>
+<td><code>salience</code></td>
+<td>novelty, relevance, emotional, predictive, each 0–1</td>
+</tr>
+<tr>
+<td><code>access_count</code>, <code>last_accessed</code></td>
+<td>bumped by recall unless in observer mode</td>
+</tr>
+<tr>
+<td><code>created_at</code>, <code>created_active_day</code></td>
+<td>decay reads the active-day stamp</td>
+</tr>
+<tr>
+<td><code>source_session</code></td>
+<td>a session id, <code>mcp-store</code>, <code>consolidation</code> or
+a <code>claudeai-</code> id</td>
+</tr>
+<tr>
+<td><code>updated_from</code></td>
+<td>the memory this one superseded</td>
+</tr>
+<tr>
+<td><code>protected</code></td>
+<td>exempt from merge, prune, gist and interference</td>
+</tr>
+<tr>
+<td><code>archived</code>, <code>archived_at</code>,
+<code>merged_into</code>, <code>gist_of</code></td>
+<td>set on archive copies</td>
+</tr>
+</tbody>
+</table></div>
+<p>The schema is <code>MemorySchema</code>
+(<code>src/core/types.ts:21-49</code>). No code parses a stored row
+against it, which is how extraction stores 600-character content under a
+400-character declaration. There is no author field, no status and no
+validity interval.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Session start</strong> injects three blocks. The briefing is
+cached text an Opus call wrote at the previous SessionEnd from up to 60
+memories chosen by strength, with ten slots reserved for recent memories
+and the rest budgeted half craft, a quarter person and a quarter self
+(<code>src/core/briefing.ts:63-161</code>). The Right now lane is
+assembled by code: person and self memories from the last ten calendar
+days, two per session, within 1,500 bytes (<code>:185-235</code>). A
+memory forgotten during a session stays in the cached briefing until the
+next regeneration succeeds.</p>
+<p><strong>Recall</strong> tries an exact substring first and returns
+only those matches, sorted by strength. Otherwise it scores token
+overlap, requiring four characters before a substring counts as a stem,
+blends it 0.6 to 0.4 with a Voyage cosine when enabled, and multiplies
+by strength compressed to the range 0.3 to 1 and a recency boost capped
+at 1.5 (<code>src/core/store.ts:318-400</code>). The tool drops results
+below strength 0.1 and appends up to six associations
+(<code>src/mcp/server.ts:98-165</code>).</p>
+<p><strong>Deep recall</strong> reads only the archive files, prefers
+exact substrings, and otherwise requires half the query tokens
+(<code>src/core/store.ts:751-790</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction is the main writer. The prompt tells Sonnet to extract
+only what is absent or contradicted, to set <code>updates</code> only
+when a fact changed and only to an id copied from the list, to prefer an
+empty list, and to resolve relative dates against the span header
+(<code>src/core/salience.ts:32-72</code>). The runner accepts an
+<code>updates</code> value only if it matches <code>^m_\d+_\w+$</code>
+(<code>src/hooks/run-extraction.ts:77</code>).</p>
+<p>Consolidation is the second. Its prompt asks Sonnet to merge
+redundancies, <em>"keep the most recent information"</em> when memories
+contradict, generalize patterns, and move person and self memories to
+global scope (<code>src/core/consolidation.ts:153-174</code>).
+<code>applyConsolidation</code> refuses cross-register merges, skips
+protected sources, takes the component-wise maximum salience, and writes
+generalized memories as global (<code>:1079-1213</code>).</p>
+<p>The claude.ai bridge is a third: a pasted dump is written verbatim to
+<code>inbox/</code> and parsed at the next consolidation into an episode
+file and deduplicated world memories (<code>:547-655</code>). A
+project-scoped fact lands in whichever project the consolidation run
+belongs to, which <code>inboxFactScope</code>'s own comment flags
+(<code>src/core/inbox.ts:103-113</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Hooks: no model call.</li>
+<li>Extraction: one Sonnet call per 16 KB chunk of buffered
+transcript.</li>
+<li>Sleep: at most once per active day; Sonnet merges up to 20 memories
+a batch, Haiku gists up to 40 a chunk, and one streamed Opus identity
+rewrite.</li>
+<li>Briefing: one Opus call per SessionEnd.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The session-start text names seven of the nine tools
+(<code>src/hooks/on-session-start.ts:124</code>); <code>protect</code>
+and <code>deep_recall</code> are registered but not named there.
+<code>store</code>'s description tells the model to compress to 400
+characters and to prefer global scope when in doubt
+(<code>src/mcp/server.ts:295-303</code>).</p>
+<p>The session model is also a writer outside the tools: the Stop hook's
+block reason tells it to use its Write tool on a path under the data
+directory for episodes and identity deltas
+(<code>src/core/episodes.ts:45-51</code>). Identity documents are then
+rewritten by Opus and injected verbatim up to 34,000 characters
+(<code>src/core/identity.ts:43</code>, <code>:114-175</code>).</p>
+<p>The dashboard (<code>bun run dashboard</code>, enabled by
+<code>"dashboard": true</code>) adds search across all projects, an
+identity history view, an inbox paste box, a consolidate button, backup
+download and a v1-artifact sync.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Forget does not reach the archive.</strong>
+<code>remove</code> filters <code>memories.json</code> in both scopes
+and purges vectors and edges (<code>src/core/store.ts:281-295</code>).
+The four functions that touch <code>deep_archive.json</code> are load,
+archive, copy and reactivate (<code>:642-749</code>). A gisted memory's
+verbatim original sits in the archive under a fresh id
+(<code>src/core/consolidation.ts:448-455</code>), so forgetting the gist
+leaves the original wording where <code>deep_recall</code> finds it, and
+<code>reactivate: true</code> returns it to the active store. The tool
+also cannot forget an archived row: it looks the id up in
+<code>loadAll</code>, which reads only active files
+(<code>src/mcp/server.ts:344-349</code>).</p>
+<p><strong>The dashboard is not local-only.</strong>
+<code>Bun.serve</code> is called with a port and no hostname
+(<code>src/dashboard/server.ts:107-110</code>), and Bun documents the
+default as <code>0.0.0.0</code>. No route checks a credential.
+<code>GET /api/backup/download</code> returns every memory in every
+project, and <code>POST /api/inbox</code> writes a file that the next
+consolidation turns into memories (<code>:618-671</code>). The file
+header calls it a <em>"local-only web UI"</em>.</p>
+<p><strong>Dashboard actions use the dashboard's own directory.</strong>
+<code>/api/consolidate</code>, <code>/api/backup</code> and
+<code>/api/sync/apply</code> build their store from the dashboard
+process's working directory, not from a project the user chose
+(<code>:595-597</code>, <code>:635-637</code>,
+<code>:729-730</code>).</p>
+<p><strong>The agent can rewrite its own memory.</strong>
+<code>reinforce</code> with <code>new_content</code> replaces text,
+<code>protect</code> exempts a memory from every decay path, and
+<code>forget</code> deletes; none asks anyone.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — none. <code>forget</code> deletes; a later
+extraction sees only the recent and strong window, and nothing keyed on
+the text stops re-extraction. <code>recordSignal("forget")</code>
+adjusts salience weights for the extraction prompt, a per-dimension
+calibration, not a value.</li>
+<li><code>trust_state</code> — no status field. Interference and merging
+change rank or move rows to an archive; the archive is a strength tier
+with no reason that tells a contradicted fact from a faded one.</li>
+<li><code>bitemporal</code> — <code>created_at</code> and an active-day
+stamp only; dates live in prose.</li>
+<li><code>scope_enforced</code> — the partition is the file.
+<code>scope</code> has two values, the project is the directory, and no
+read carries a predicate.</li>
+<li><code>audit_log</code> — the events table is off unless the
+dashboard is enabled, mixes recalls with mutations, keeps 80-character
+snippets, and is deleted after 90 days
+(<code>src/core/events.ts:8</code>, <code>:230-236</code>). The git
+snapshots are history.</li>
+<li><code>human_review</code> — nothing waits. Inbox dumps and identity
+deltas are folded automatically, and the agent's
+<code>consolidate</code> tool runs that fold. The v1 sync lets a person
+resolve similar pairs, but its plan lives in process memory
+(<code>src/dashboard/server.ts:776-782</code>) and covers imports
+only.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin. There is no CI workflow.</p>
+<p><strong>The negative cases.</strong> In
+<code>tests/core/associations.test.ts</code>, <em>"archiveMemories
+purges edges touching the archived id"</em> links <code>m_1</code> to
+<code>m_2</code> and <code>m_3</code>, archives <code>m_2</code>, and
+asserts <code>m_1</code>'s neighbours are exactly <code>m_3</code>
+(<code>:110-127</code>). <em>"writes edges for similar same-scope
+survivors, skips dissimilar and cross-scope"</em> builds an index where
+a global memory is nearly parallel to <code>m_1</code> and asserts
+<code>m_1</code> reaches only <code>m_2</code> (<code>:142-172</code>).
+Both assert on the read recall follows.</p>
+<p><strong>A vacuous one.</strong> <em>"does not surface active
+memories"</em> stores an active memory and asserts
+<code>deepRecall</code> returns nothing
+(<code>tests/core/archive.test.ts:191-198</code>). The archive is empty,
+and <code>deepRecall</code> returns <code>[]</code> before matching
+(<code>src/core/store.ts:757</code>).</p>
+<p><strong>Invariants.</strong> <code>memory-safety.test.ts</code>
+asserts merge sources are archived with lineage, protected memories are
+never merged, pruned or weakened, gist chunks fail independently, and
+git snapshots exclude <code>env</code>. <code>buffer.test.ts</code>
+covers the atomic claim and per-chunk restore.
+<code>store.test.ts</code> pins the four-character stem guard with the
+regression that motivated it.</p>
+<p><strong>Experiment.</strong>
+<code>experiments/entity-coherence/</code> scores per-entity models over
+twelve scripted sessions with deterministic probes and commits several
+runs' results. It imports nothing from <code>src/</code> and tests a
+candidate design, not this store. Its README cites Zhang et al., <a
+href="https://arxiv.org/abs/2605.12978">arXiv:2605.12978</a>, on
+consolidated memories degrading under repeated LLM updates.
+<code>AUDIT-WHAT-FIRES.md</code> is the author's own table of which
+mechanisms were ever measured.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Encode dumb, select later, restore on failure.</strong> A
+buffer claimed by rename and returned chunk by chunk keeps an API outage
+from reading as a quiet day.</li>
+<li><strong>Make the pipeline report its own failures in
+context.</strong> The self-check block reads recent error events and
+tells the model memories may not be landing.</li>
+<li><strong>Never let deduplication lower importance.</strong> A merged
+memory takes the maximum salience of its sources.</li>
+<li><strong>Refuse category-crossing merges in code, not only in the
+prompt.</strong></li>
+<li><strong>Decay on days used.</strong> A month away costs
+nothing.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An archive <code>forget</code> cannot reach.</strong> Every
+copy a compression step makes is a copy deletion must chase.</li>
+<li><strong>A dashboard with no bind address and no credential</strong>
+serving the whole store.</li>
+<li><strong>A store path derived from the caller's working directory in
+a process that is not in a project.</strong></li>
+<li><strong>Correction verbs on the agent's tool surface with no record
+of who used them.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants Claude Code to carry a relationship
+and working context across sessions, and accepts model-written memories
+with no review. It does not suit memory that must be corrected reliably,
+shared between people, or kept private on a network. <a
+href="../counterparts/">Counterparts</a> is the same author's next
+attempt at the same goal, with typed correction and owner-only
+removal.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any caller of <code>deep_recall</code> exclude
+<code>gist_of</code> copies whose active memory was forgotten? None was
+found in this reading.</li>
+<li>How often does the extractor re-create a memory that
+<code>forget</code> removed?</li>
+<li>Is the dashboard reachable from other hosts in normal use, or does a
+firewall stand in for the missing bind address?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Types and strength:</strong> <code>src/core/types.ts</code>,
+<code>src/core/strength.ts</code>, <code>src/core/active-day.ts</code>,
+<code>src/core/config.ts</code>.</li>
+<li><strong>Store:</strong> <code>src/core/store.ts</code>,
+<code>src/core/embeddings.ts</code>,
+<code>src/core/snapshot.ts</code>.</li>
+<li><strong>Write:</strong> <code>src/hooks/on-stop.ts</code>,
+<code>src/core/buffer.ts</code>,
+<code>src/hooks/run-extraction.ts</code>,
+<code>src/core/salience.ts</code>,
+<code>src/core/interference.ts</code>,
+<code>src/core/inbox.ts</code>.</li>
+<li><strong>Sleep:</strong> <code>src/core/consolidation.ts</code>,
+<code>src/core/identity.ts</code>,
+<code>src/hooks/run-consolidation.ts</code>.</li>
+<li><strong>Read:</strong> <code>src/hooks/on-session-start.ts</code>,
+<code>src/core/briefing.ts</code>, <code>src/mcp/server.ts</code>.</li>
+<li><strong>Dashboard and sync:</strong>
+<code>src/dashboard/server.ts</code>, <code>src/sync/*.ts</code>,
+<code>src/core/events.ts</code>.</li>
+<li><strong>Install:</strong> <code>install.sh</code>,
+<code>hooks/*.sh</code>.</li>
+<li><strong>v1 artifact:</strong> <code>claude-engram.jsx</code>,
+<code>docs/v1-artifact.md</code>.</li>
+<li><strong>Tests:</strong>
+<code>tests/core/associations.test.ts</code>,
+<code>tests/core/archive.test.ts</code>,
+<code>tests/core/memory-safety.test.ts</code>,
+<code>tests/mcp/tools.test.ts</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'deep_archive\|archivePath(' src</code> —
+<code>store.ts:162-163</code>, <code>:643</code>, <code>:654</code>,
+<code>:701</code>, <code>:714</code>, and two dashboard reads;
+<code>remove</code> is not among them.</li>
+<li><code>grep -rniE 'tombstone|forgotten|blocklist|denylist|deny-list' src</code>
+— three comments in <code>salience-weights.ts</code>; no stored rejected
+value.</li>
+<li><code>grep -rnE '\bstatus\b|verified|candidate|rejected' src/core src/mcp src/hooks</code>
+— the status tool, HTTP statuses and local variables; no status field on
+a memory.</li>
+<li><code>grep -rniE 'valid_(from|to|at)|invalid_at|expires_at|valid_until' src</code>
+— no match.</li>
+<li><code>grep -rn 'hostname' src</code> — no match;
+<code>grep -n -i 'authoriz\|token' src/dashboard/server.ts</code> — no
+match.</li>
+<li><code>grep -rn 'MemorySchema' src</code> — the definition and one
+comment in <code>inbox.ts</code>; no parse of a stored row.</li>
+<li><code>grep -rn 'registerTool(' src/mcp/server.ts</code> — nine
+tools, none an approve or apply verb.</li>
+<li><code>grep -rln '\.\./\.\./src' experiments/entity-coherence/src</code>
+— no match.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git</code>
+— the experiment README and its probe fixtures; no
+<code>CITATION.cff</code>.</li>
+<li><code>ls .github</code> — absent.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-01</strong> — <a
+href="https://github.com/mlapeter/claude-engram/commit/91edd7e532ab75f7734055ec02051ac5c299c6e7"><code class="commit-id" title="91edd7e532ab75f7734055ec02051ac5c299c6e7">91edd7e5…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 17
+July 2026. One mark, <code>negative_eval</code>. Screened before
+reading: one auto-run surface (<code>hooks/</code>, five scripts that
+run only once <code>install.sh</code> registers them), no build-time
+execution point, nothing inside the cooldown, and one unpinned surface
+(caret ranges in <code>package.json</code>, with <code>bun.lock</code>
+committed); the screen raised no AGENT finding. <code>install.sh</code>
+was read by hand. Read with <code>grep</code> and <code>sed</code>;
+nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

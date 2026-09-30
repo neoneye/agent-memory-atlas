@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 703 reports.**
+**This page covers all 704 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6351,3 +6351,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 118,197 lines of TypeScript under `src/`, 1,381 commits on master by one contributor from 25 August 2026 to 30 September 2026. 4,482 bun test cases in 130 files; no CI workflow, no committed retrieval result and no paper.
 - Study when: you want contradiction handling with typed outcomes and a reversible trail, an owner-only destruction path enforced by the import graph, or tool descriptions that cannot claim a mechanism the tree lacks.
 - Do not copy when: memory must stay inside one project, the agent must not be able to retire a memory by itself, or a removed text must leave no trace anywhere in the store.
+
+### [`claude-engram-mlapeter`](../systems/claude-engram-mlapeter/)
+
+- Best idea: **encoding is dumb and durable, selection is detached and restorable.** The Stop hook only appends the turn to a per-project buffer; a detached runner claims the buffer by rename, extracts per 16 KB chunk, and returns only the failed chunks' text to the buffer before clearing the claim, so an API outage delays memories instead of reading as a day with nothing worth keeping (`src/hooks/run-extraction.ts:38-131`).
+- Biggest risk: **`forget` cannot reach the archive.** `remove` filters `memories.json` only (`src/core/store.ts:281-295`), while gist promotion archives the verbatim original under a fresh id with `gist_of` (`src/core/consolidation.ts:448-455`). Forgetting the gist leaves the original wording where `deep_recall` finds it, and `reactivate: true` puts it back in the active store.
+- Most reusable component: `applyConsolidation` (`src/core/consolidation.ts:1079-1213`), which enforces in code what the prompt only asks for: no merge across the self, person and craft registers, no protected source merged or pruned, and merged salience the component-wise maximum of its sources, so deduplication never makes a memory matter less.
+- Second risk: **the dashboard is not local-only.** `Bun.serve` gets a port and no hostname, Bun's documented default is `0.0.0.0`, and no route checks a credential, so `GET /api/backup/download` returns every memory in every project and `POST /api/inbox` queues text that the next consolidation turns into memories (`src/dashboard/server.ts:107-110`, `:618-671`).
+- Maturity impression: AGPL-3.0-only, 7,370 lines of TypeScript under `src/` and 102 commits by one contributor between 16 February and 17 July 2026. 359 vitest cases in 24 files with no CI workflow; two association-read cases assert an archived or cross-scope neighbour is not returned beside a positive control, and one archive case is vacuous. `AUDIT-WHAT-FIRES.md` records which mechanisms were ever measured.
+- Study when: you want a failure-tolerant capture pipeline for a hook host, register-specific decay and merge rules, or a day-of-use clock for decay.
+- Do not copy when: memory must be corrected reliably or kept private on a network. Every compression step leaves a copy deletion does not chase, the agent holds every correcting verb, and the dashboard has no access control.
