@@ -5746,27 +5746,32 @@ is not blocked</td>
 href="../systems/core-redplanet/"><code>core-redplanet</code></a></td>
 <td>A statement — an atomic fact extracted from an episode and
 classified into one of twelve aspects</td>
-<td>A pluggable graph provider for triple aspects, an aspects store for
-voice aspects, and six vector namespaces</td>
+<td>Neo4j for world facts as triples, a Postgres voice_aspects table for
+voice facts, and six pgvector namespaces; the only graph and vector
+providers the factory builds</td>
 <td>An LLM router classifying the query into six types, each with a
-dedicated handler, merged and optionally reranked</td>
-<td>Episodes chunked and diffed, entities deduped by normalization plus
-vector similarity, statements classified by aspect</td>
-<td>A contradiction writes invalidAt and an invalidatedBy pointer;
-history is preserved, never overwritten</td>
+dedicated handler, merged and optionally reranked; a BM25 pipeline
+behind the v1 search route and the non-V3 fallback</td>
+<td>Episodes chunked and diffed, two extractors split world from voice
+facts, entities deduped by normalization plus vector similarity,
+statements resolved by one model call</td>
+<td>A model-judged contradiction stamps invalidAt from the resolution
+clock and an invalidatedBy episode pointer; the stamp has no guard, so a
+second one overwrites the first</td>
 <td>userId as an unconditional predicate on every graph query;
-workspaceId required by the search service and optional at the provider,
-which drops its predicate when absent; no agent scope</td>
-<td>An MCP server, forty-plus connectors, a Tauri desktop app, a web app
-and a CLI</td>
-<td>Sync jobs per connector, session compaction, persona generation and
-aspect derivation on a queue</td>
+workspaceId required by the search services and optional at the
+provider, which drops its predicate when absent; no agent scope</td>
+<td>An MCP server, thirty-eight connectors, a Tauri desktop app, a web
+app and a CLI</td>
+<td>Sync jobs per connector, statement and aspect resolution, session
+compaction, persona generation on a queue</td>
 <td>Aspect classification and provenance; no epistemic status field on a
 statement</td>
 <td>Splitting storage by whether a fact decomposes into a triple, rather
 than forcing everything into one</td>
-<td>Twelve aspects, six query types and two stores is a large surface,
-and the benchmark is a separate repository</td>
+<td>Contradiction rests on one model call that sees candidates without
+their state; the LoCoMo number is a year older than this pin and lives
+in another repository</td>
 </tr>
 <tr>
 <td><a href="../systems/cortana/"><code>cortana</code></a></td>

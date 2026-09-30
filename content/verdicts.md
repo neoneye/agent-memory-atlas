@@ -1842,12 +1842,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`core-redplanet`](../systems/core-redplanet/)
 
-- Best idea: splitting statement storage on whether the fact decomposes — `Identity`/`Knowledge`/`Event` become subject-predicate-object triples, while `Directive`/`Preference`/`Belief` stay whole "since they carry meaning that does not decompose cleanly into triples". Triple-ifying a preference throws away the phrasing that carries its force.
-- Biggest risk: an invalidated statement can be re-extracted from a new episode and become current again — correct for a memory over the user's own mail, and the wrong default for anything an agent writes.
-- Most reusable component: `invalidatedBy` beside `invalidAt`, which names the statement that ended this one and turns a set of timestamped rows into a walkable history.
-- Maturity impression: 152,800 lines across a monorepo with forty-plus connectors, a pluggable graph provider behind a three-value enum, six vector namespaces and nine pages of accurate documentation — beside 29 test files, AGPL-3.0 with a Commons Clause, and a LoCoMo number published in a different repository.
+- Best idea: splitting statement storage on whether the fact decomposes — `Identity`/`Knowledge`/`Event` become subject-predicate-object triples in Neo4j, while `Directive`/`Preference`/`Belief` stay whole in Postgres "since they carry meaning that does not decompose cleanly into triples". Triple-ifying a preference throws away the phrasing that carries its force.
+- Biggest risk: contradiction is one model call that sees each candidate as an id and a fact without its state, and the close it writes has no guard — a closed statement named again is re-closed later by another episode, and a re-extracted one can become current again or be merged into the closed one.
+- Most reusable component: `invalidatedBy` beside `invalidAt`, which points a closed statement at the episode that ended it, so the history is a walk through provenance rather than a re-sort of timestamped rows.
+- Maturity impression: about 230,000 lines of TypeScript across a monorepo with thirty-eight connectors, six vector namespaces and nine pages of mostly accurate documentation — beside a graph-provider interface with one implementation behind a three-value enum, 29 test files that never reach the memory code, AGPL-3.0 with a Commons Clause, and a LoCoMo number from August 2025 published in a different repository.
 - Study when: your memory holds both facts and directives and you are storing them the same way.
-- Do not copy when: you need lexical retrieval; V2 dropped BM25, and the pipeline that has it is reached through a version fallback or an opt-in backstop that is off by default.
+- Do not copy when: you need lexical retrieval; V2 dropped BM25, and the pipeline that has it is reached through the v1 search route, a version fallback or an opt-in backstop that is off by default.
 
 ### [`yantrikdb`](../systems/yantrikdb/)
 
