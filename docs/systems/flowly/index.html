@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A personal AI agent whose memory
+governance layer wraps MEMORY.md and a temporal knowledge graph with a
+status machine, audit trail and review queue.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Flowly — Agent Memory Atlas">
+    <meta property="og:description" content="A personal AI agent whose
+memory governance layer wraps MEMORY.md and a temporal knowledge graph
+with a status machine, audit trail and review queue.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Flowly — Agent Memory Atlas">
+    <meta name="twitter:description" content="A personal AI agent whose
+memory governance layer wraps MEMORY.md and a temporal knowledge graph
+with a status machine, audit trail and review queue.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Flowly — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Flowly",
+      "description": "A personal AI agent whose memory governance layer wraps MEMORY.md and a temporal knowledge graph with a status machine, audit trail and review queue.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A governed lifecycle layer inside a
+personal agent</p>
+          <h1>Flowly</h1>
+          <p class="document-deck">A personal AI agent whose memory
+governance layer wraps MEMORY.md and a temporal knowledge graph with a
+status machine, audit trail and review queue.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Nocetic/flowly">
+              <span>Source</span>
+              <strong>Nocetic/flowly</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Nocetic/flowly/commit/a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c" title="a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c">
+              <span>Analyzed revision</span>
+              <code>a5dc7c30…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Nocetic--flowly" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Nocetic--flowly</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>208,247
+lines of Python in the flowly package; the memory subsystem is about
+6,000 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>570
+commits on main by one contributor, 25 June – 17 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>5,058
+pytest functions in 102,392 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Flowly is a self-hosted personal agent — a terminal UI, a gateway
+speaking to Telegram, Slack, WhatsApp and other channels, cron, skills
+and an MCP server — and this report covers only its memory subsystem.
+That subsystem is a governance layer over two older stores: free-form
+notes appended to <code>MEMORY.md</code>, and a temporal knowledge graph
+of subject-predicate-object triples. A SQLite governance store gives
+every memory a status, a confidence, a privacy level and an audit trail.
+Three writers feed it: a live hook on the agent's memory tools, a
+background "dreamer" that extracts memories from transcripts, and
+importers for ChatGPT, Gemini and Obsidian material.</p>
+<p>What is notable is how much of the lifecycle is enforced rather than
+described. Status moves go through a transition table that raises on
+anything unlisted, each one writes an audit row, and consolidation lets
+an LLM propose merges while a validator decides whether to apply them.
+Imported and vault-derived memories cannot activate themselves.</p>
+<p>What is weak is that the live capture path governs a copy.
+<code>memory_append</code> writes its line into <code>MEMORY.md</code>,
+and <code>knowledge_graph add</code> writes its triple, before the hook
+creates the governance item. The prompt injects the whole file and the
+graph summary, so an item parked in <code>needs_review</code>, or later
+rejected, still reaches the model.</p>
+<p>Five marks: <code>trust_state</code>, <code>bitemporal</code>,
+<code>audit_log</code>, <code>human_review</code> and
+<code>negative_eval</code>. Each rests on the governance store and the
+paths whose text lives only there; section 9 names what each leaves open
+and the two withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a governance item. It either wraps an external record
+(<code>ref_kind</code> <code>memory_md</code>, <code>kg_triple</code> or
+<code>obsidian_note</code>) or carries its text <code>inline</code>
+(<code>flowly/memory/governance.py:125-147</code>). Its status is one of
+<code>candidate</code>, <code>active</code>, <code>needs_review</code>,
+<code>stale</code>, <code>superseded</code> and <code>rejected</code>,
+and <code>transition()</code> refuses any move the table does not list
+(<code>:64-86</code>, <code>:453-496</code>). <code>rejected</code> is
+terminal; <code>superseded</code> can only return to <code>active</code>
+through undo.</p>
+<p><strong>How a thing becomes a belief depends on who wrote
+it.</strong> A <code>memory_append</code> or
+<code>knowledge_graph add</code> in a user-channel session is activated
+at once with a fixed confidence of 0.85 or 0.90. The same write from a
+session whose key starts <code>heartbeat:</code>, <code>cron:</code>,
+<code>subagent:</code> or <code>system:</code>, or one that trips the
+injection scanner, lands in <code>needs_review</code>
+(<code>flowly/memory/coordinator.py:280-376</code>,
+<code>flowly/memory/dreamer.py:154-167</code>). The dreamer calibrates
+confidence from whether the user said it and how often it recurs, then
+activates at 0.80, reviews between 0.55 and 0.80, and rejects below
+(<code>dreamer.py:416-554</code>). Imports never activate
+(<code>flowly/memory/importer.py:421-430</code>).</p>
+<p><strong>A contradiction is keyed, not judged.</strong> Facts key on
+<code>fact:&lt;subject&gt;|&lt;predicate&gt;</code>, notes on
+<code>pref:</code> plus the first six words. A new active fact on the
+same key supersedes the old one and closes its triple. The dreamer lets
+a newcomer win only when it is explicit and clears the auto floor;
+otherwise the contradiction waits for review
+(<code>dreamer.py:511-542</code>).</p>
+<p><strong>Belief ends by transition, never by deletion.</strong> A
+consolidation pass marks items <code>stale</code> or
+<code>superseded</code>; the user can reject, correct or undo; unhelpful
+feedback demotes below 0.55. The governance row and its audit history
+stay.</p>
+<p><strong>Where the state machine stops.</strong> The status decides
+what <code>memory_recall</code> returns and what the generated block of
+<code>MEMORY.md</code> lists. It does not decide what the rest of
+<code>MEMORY.md</code> says, or what the graph summary says, and on the
+live path those already hold the text.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Flowly memory becomes active, and the live path where the status arrives after the text is already injected</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Flowly memory becomes active, and the live path where the status arrives after the text is already injected
+flowchart TD
+    A[&quot;memory_append / knowledge_graph add&quot;] --&gt; RAW[&quot;line appended to MEMORY.md&lt;br/&gt;or triple written to the KG&quot;]
+    RAW --&gt; HOOK{&quot;post_tool_call hook:&lt;br/&gt;automation session&lt;br/&gt;or injection flag?&quot;}
+    HOOK -- &quot;no&quot; --&gt; ACT[&quot;active&lt;br/&gt;(0.85 note / 0.90 fact)&quot;]
+    HOOK -- &quot;yes&quot; --&gt; REV[&quot;needs_review&quot;]
+    D[&quot;dreamer over transcripts&quot;] --&gt; CAL{&quot;calibrated confidence&quot;}
+    CAL -- &quot;0.80 or more,&lt;br/&gt;no conflict&quot; --&gt; ACT
+    CAL -- &quot;0.55 to 0.80, sensitive,&lt;br/&gt;or losing contradiction&quot; --&gt; REV
+    CAL -- &quot;below 0.55&quot; --&gt; REJ[&quot;rejected&quot;]
+    IMP[&quot;ChatGPT / Gemini import,&lt;br/&gt;Obsidian ingest&quot;] --&gt; REV
+    REV -- &quot;CLI / TUI / RPC accept&quot; --&gt; ACT
+    REV -- &quot;reject&quot; --&gt; REJ
+    ACT -- &quot;same-key newer fact,&lt;br/&gt;consolidation op&quot; --&gt; SUP[&quot;superseded / stale&quot;]
+    SUP -- &quot;undo&quot; --&gt; ACT
+    ACT --&gt; GEN[&quot;generated block + memory_recall&lt;br/&gt;(active only)&quot;]
+    RAW --&gt; INJ[&quot;whole MEMORY.md + KG summary&lt;br/&gt;injected every turn&quot;]
+    GEN --&gt; INJ
+    REJ -. &quot;text still in MEMORY.md&lt;br/&gt;and triple still open&quot; .-&gt; INJ</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Memory runs in-process inside the <code>AgentLoop</code> of the
+gateway or the TUI. Three SQLite files sit under the profile data
+directory (<code>~/.flowly</code> or <code>~/.flowly/profiles/</code>,
+one subdirectory per profile): <code>memory_governance.sqlite3</code>,
+<code>knowledge_graph.sqlite3</code> and
+<code>memory_index.sqlite</code>. <code>MEMORY.md</code> and dated daily
+notes sit in the workspace's <code>memory/</code> directory
+(<code>flowly/agent/memory.py:9-54</code>).</p>
+<p>The governance store is one connection behind a
+<code>threading.RLock</code>, WAL mode, foreign keys on
+(<code>governance.py:263-281</code>). There is no cross-process lock:
+the CLI and the feature RPC each open their own connection to the same
+file. The dreamer holds an advisory lock in <code>memory_meta</code>
+that goes stale after 30 minutes (<code>dreamer.py:259-274</code>).</p>
+<p><code>AgentLoop._maybe_enable_memory_governance</code> builds the
+facade, registers the hook, pushes it into the subagent manager,
+registers four memory tools, and reads the consolidation and dreamer
+schedules (<code>flowly/agent/loop.py:1477-1560</code>).
+<code>run()</code> starts the consolidation timer and the dreamer's idle
+and daily timers (<code>loop.py:3442-3443</code>). The config default is
+<code>enabled = True</code>
+(<code>flowly/config/schema.py:221-260</code>).</p>
+<p><code>memory_search</code> is a separate index over every
+<code>.md</code> under <code>memory/</code>: FTS5 BM25 always, and
+brute-force cosine over stored embeddings when an embedding provider
+resolves (<code>flowly/memory/manager.py:100-150</code>,
+<code>flowly/memory/search.py</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing beyond Python and an LLM key has to run; every store is a
+local file. Storing a memory needs no key. The dreamer, consolidation
+and import each spend a model call on the user's provider, and search
+degrades to keyword-only without an embedding provider. The documented
+install is a <code>curl | bash</code> script. <code>MEMORY.md</code> is
+readable and hand-editable outside its sentinel markers; the governance
+store is readable with <code>flowly memory list</code> and repairable
+with <code>accept</code>, <code>reject</code>, <code>correct</code> and
+<code>undo</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Live capture.</strong> <code>MemoryAppendTool.execute</code>
+scans the content, rejects exact and trigram near-duplicates, and
+appends a timestamp comment plus the text to <code>MEMORY.md</code>
+under a file lock
+(<code>flowly/agent/tools/filesystem.py:494-636</code>). The post-tool
+hook <code>_governance_post_tool</code> derives
+<code>auto_activate</code> from the session id and calls
+<code>ingest_append</code> or, for a <code>knowledge_graph add</code>,
+pulls the triple id from the result string and calls
+<code>ingest_kg_fact</code> (<code>loop.py:1562-1592</code>).</p>
+<p><strong>Dreamer.</strong>
+<code>SessionIndexDeltaSource.read_since</code> reads user-channel
+messages past a watermark, excluding automation sessions in SQL
+(<code>dreamer.py:170-196</code>). A tool-less subagent extracts JSON
+candidates, which <code>_commit_candidate</code> scans, reconciles
+against active, queued and candidate items on the same key, calibrates
+and routes (<code>dreamer.py:416-498</code>). The watermark advances
+only after the commit pass, and an <code>ExtractionError</code> holds it
+(<code>:366-397</code>).</p>
+<p><strong>Retrieval and injection.</strong>
+<code>ContextBuilder._compute_memory_block</code> reads the whole of
+<code>MEMORY.md</code>, runs <code>scan_context_file</code> over it, and
+appends <code>KnowledgeGraph.summary(max_entities=20)</code>
+(<code>flowly/agent/context.py:1125-1163</code>).
+<code>memory_recall</code> returns active, non-secret items ordered by
+confidence (<code>coordinator.py:199-227</code>).</p>
+<p><strong>Update and correction.</strong> <code>accept</code>,
+<code>reject</code>, <code>correct</code> and <code>undo</code> sit on
+the facade (<code>coordinator.py:66-189</code>). <code>undo</code>
+demotes the current active sibling and reopens the old triple through
+<code>SqliteKGMirror.restore</code>
+(<code>flowly/memory/kg_mirror.py:44-59</code>).</p>
+<p><strong>Consolidation.</strong> <code>build_context</code> snapshots
+active items; the LLM returns <code>merge</code>, <code>supersede</code>
+or <code>stale</code> ops; <code>apply_operations</code> skips any op
+whose target or merge survivor is not active
+(<code>flowly/memory/consolidate.py:60-176</code>). The loop runs it
+every 50 turns or 30 minutes when the store is dirty
+(<code>loop.py:1594-1637</code>).</p>
+<p><strong>Surfaces.</strong> The <code>flowly memory</code> CLI has
+<code>list</code>, <code>review</code>, <code>accept</code>,
+<code>reject</code>, <code>correct</code>, <code>undo</code>,
+<code>feedback</code>, <code>consolidate</code>, <code>dream</code>,
+<code>import</code> and <code>migrate</code>
+(<code>flowly/cli/memory_cmd.py</code>). The <code>memory.*</code>
+feature RPC methods are registered at
+<code>flowly/channels/feature_rpc.py:4761-4776</code>, and the TUI
+review panel is <code>flowly/tui/panes/memory_review.py</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_items</code> holds kind, text, status,
+<code>ref_kind</code>/<code>ref_id</code>, <code>normalized_key</code>,
+confidence, <code>privacy_level</code>, <code>source_session</code>,
+<code>source_message_ids</code>, <code>supersedes</code>,
+<code>valid_from</code>, <code>valid_to</code>,
+<code>last_seen_at</code>, <code>last_used_at</code>, timestamps and
+JSON metadata. <code>memory_audit</code>, <code>memory_meta</code> and
+<code>memory_feedback</code> sit beside it
+(<code>governance.py:185-240</code>). Nine kinds are allowed; only
+<code>fact</code> references the graph.</p>
+<p>The graph has <code>entities</code>, <code>aliases</code> and
+<code>triples</code>, each triple carrying <code>valid_from</code>,
+<code>valid_to</code>, confidence, <code>source</code> and
+<code>extracted_at</code>
+(<code>flowly/memory/knowledge_graph.py:36-72</code>). Value predicates
+such as <code>email</code> store the object as text rather than as an
+entity.</p>
+<p><strong>Scope.</strong> There is no user, tenant or project key. A
+profile is a separate data directory. <code>source_session</code>
+records provenance and nothing filters on it.</p>
+<p><strong>Privacy.</strong> <code>secret</code> is excluded from recall
+and from the generated block; <code>sensitive</code> is excluded from
+recall unless the caller passes <code>include_sensitive</code>, which is
+a parameter on the agent's own tool
+(<code>coordinator.py:210-215</code>,
+<code>flowly/agent/tools/memory_recall.py:32-48</code>).</p>
+<p><strong>Time.</strong> The governance item's <code>valid_from</code>
+and <code>valid_to</code> are columns with no writer on a live path; the
+graph's validity pair is the one in use.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Injection is whole-file.</strong> Every turn the system
+prompt carries all of <code>MEMORY.md</code> — the manual region, the
+appended timestamped lines and the generated block — plus the top 20
+graph entities by current triple count. The append tool caps the file at
+12,000 characters by evicting the oldest timestamped entries
+(<code>filesystem.py:601-611</code>). Its parser splits on timestamp
+comments, so the generated block is not an entry of its own. It travels
+with whichever chunk precedes the next timestamp and is evicted with it
+until the turn-end regeneration appends it again.</p>
+<p><strong>If the scanner flags the file, all memory goes.</strong>
+<code>scan_context_file</code> returns a placeholder for the whole
+<code>MEMORY.md</code>, which replaces it in the prompt
+(<code>context.py:1130-1138</code>).</p>
+<p><strong>Tool retrieval.</strong> <code>memory_recall</code> orders by
+confidence and nothing else, and its <code>limit</code> is applied
+before the privacy filter, so a secret among the top rows shortens the
+result (<code>coordinator.py:204-215</code>). <code>memory_search</code>
+ranks chunks by <code>0.7 × cosine + 0.3 × normalised BM25</code> and
+drops below 0.35 (<code>search.py</code>).
+<code>knowledge_graph query</code> resolves an entity by id or alias and
+returns one-hop edges, optionally <code>as_of</code> a date
+(<code>knowledge_graph.py:310-365</code>).</p>
+<p><strong>A freeze option</strong> snapshots the memory block per
+session to keep the provider prompt cache stable; it defaults off
+(<code>schema.py:254-260</code>, <code>context.py:1165-1177</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Live writes block the turn for a few SQLite
+statements.</strong> The hook is synchronous; <code>MEMORY.md</code> is
+regenerated once at turn end rather than per write
+(<code>loop.py:8920-8927</code>). A live write is in the prompt on the
+next turn because the raw line is already in the file.</p>
+<p><strong>The dreamer is deferred.</strong> It runs on idle after 30
+minutes, daily at 03:30 and every 10 user turns, in a worker thread,
+reading at most 500 messages per pass (<code>schema.py:239-248</code>,
+<code>loop.py:1641-1720</code>). A new dreamer memory is retrievable
+after the next pass and visible in the prompt after the
+<code>on_committed</code> refresh.</p>
+<p><strong>Consolidation re-reads every active item.</strong> Each pass
+sends the full active set and the graph summary to the agent's main
+model. It is gated on a dirty flag, so it runs only after new writes,
+but its input grows with the store, not with the day's writes.</p>
+<p><strong>Deduplication</strong> happens three times: trigram
+similarity at 0.75 in the tool, exact normalised text against active
+items in <code>ingest_append</code>
+(<code>coordinator.py:299-303</code>), and same-key exact text in the
+dreamer, which bumps confidence by 0.05 instead of inserting.</p>
+<p><strong>Filtering.</strong> The tool refuses content
+<code>scan_content</code> flags; the hook routes
+<code>scan_context_file</code> hits to review and fails closed if the
+scanner raises (<code>coordinator.py:29-37</code>). Self-referential
+triples with subject equal to object are not governed
+(<code>:340-344</code>), but the tool has already written them to the
+graph.</p>
+<p><strong>Nothing is deleted in governance.</strong> No statement in
+the governance module deletes a row. <code>merge_entities</code> in the
+graph does delete duplicate triples and the source entity
+(<code>knowledge_graph.py:267-306</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds <code>memory_append</code>,
+<code>knowledge_graph</code>, <code>memory_search</code>,
+<code>memory_get</code>, <code>memory_recall</code>,
+<code>memory_feedback</code>, <code>memory_consolidate</code> and
+<code>memory_import</code>, plus <code>obsidian_ingest</code> when a
+vault is configured. Tool descriptions and a system-prompt section steer
+notes to <code>memory_append</code> and structured facts to the graph. A
+pre-compaction flush turn exposes only <code>memory_append</code> and
+<code>knowledge_graph</code> (<code>loop.py:7378-7400</code>).</p>
+<p>The self-review subagent runs in the background after qualifying
+turns with exactly those two tools
+(<code>flowly/agent/subagent.py:755-759</code>,
+<code>loop.py:2222-2239</code>). Its registry receives the governance
+hook (<code>subagent.py:694-702</code>).</p>
+<p>The agent has agency over what enters memory and can retire active
+items through consolidation. It cannot approve a queued item. It can
+also rewrite <code>MEMORY.md</code> with <code>write_file</code> or
+<code>edit_file</code>, which scan content under <code>memory/</code>
+and record nothing in governance
+(<code>filesystem.py:314-323</code>).</p>
+<p>Adapting this to another agent means porting the hook contract: a
+<code>post_tool_call</code> context carrying tool name, params, result
+and session id.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The live path governs a copy.</strong>
+<code>ingest_append</code> and <code>ingest_kg_fact</code> run after the
+tool has written. <code>reject</code> transitions the item and does
+nothing else (<code>coordinator.py:130-137</code>). The appended line
+stays in the manual region that <code>splice_generated_block</code>
+preserves (<code>summary.py:104-118</code>), and the triple keeps
+<code>valid_to</code> null, so <code>summary()</code> still reports it
+(<code>knowledge_graph.py:457-501</code>). The CLI <code>reject</code>
+does not regenerate the generated block either. A
+<code>needs_review</code> automation write is in the prompt from the
+next turn.</p>
+<p><strong>Subagent writes bypass the automation gate.</strong> The hook
+reads <code>ctx.session_id</code>, which the registry fills from
+<code>set_active_session</code> or an explicit <code>session_key</code>
+(<code>flowly/agent/tools/registry.py:304-308</code>,
+<code>:753-757</code>). The subagent loop calls
+<code>tools.execute(name, args)</code> without either
+(<code>subagent.py:1032-1034</code>), and only the main loop binds a
+session (<code>loop.py:7667</code>).
+<code>is_automation_session("")</code> is false, so self-review writes
+activate as if a user had asked. The gating test calls the facade with
+<code>auto_activate=False</code> directly, and the hook test
+re-implements the hook, so neither exercises this derivation
+(<code>tests/test_coordinator_review_gating.py</code>,
+<code>tests/test_memory_governance_hook.py:34-45</code>).</p>
+<p><strong>Rejected values come back.</strong> The dreamer reconciles
+against <code>active</code>, <code>needs_review</code> and
+<code>candidate</code> only (<code>dreamer.py:441-444</code>), and its
+extractor context lists active and queued items (<code>:287-304</code>).
+A value the user rejected is a fresh candidate the next time a
+transcript mentions it.</p>
+<p><strong>Actor labels are call-site constants.</strong>
+<code>accept</code>, <code>reject</code>, <code>correct</code>,
+<code>undo</code> and <code>ingest_feedback</code> record
+<code>actor="user"</code> whoever calls them, so the agent's
+<code>memory_feedback</code> demotion is logged as a user action
+(<code>coordinator.py:248-252</code>).</p>
+<p><strong>Graph and governance drift.</strong> The hook handles
+<code>add</code> only. An agent <code>invalidate</code> closes the
+triple while the governance item stays active and its text stays in the
+generated block.</p>
+<p><strong>Concurrency</strong> is one in-process writer; the CLI and
+RPC are extra connections on WAL with no application lock.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded; the filter holds for items whose
+text lives only in the governance store. Limits above.</li>
+<li><code>bitemporal</code> — awarded on the graph's validity pair
+beside <code>extracted_at</code>.</li>
+<li><code>audit_log</code> — awarded on <code>memory_audit</code>; text
+and confidence edits are not in it.</li>
+<li><code>human_review</code> — awarded; the queue is real for dreamer,
+import and vault items and advisory for live automation writes.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld. <code>rejected</code> is a status
+on a record, and no reader consults it before inserting.</li>
+<li><code>scope_enforced</code> — withheld. The profile is a physical
+partition, with no key on an item and no predicate on a read.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed or run for this report; the following is from
+reading the tests at the pin. CI runs <code>uv run pytest</code>
+(<code>.github/workflows/ci.yml:45</code>).</p>
+<p><strong>Negative cases with controls.</strong>
+<code>test_recall_excludes_secret_includes_normal</code> asserts a
+normal item is recalled and a secret one is not
+(<code>tests/test_memory_coordinator.py:110-120</code>). The Obsidian
+pair asserts nothing is recalled before acceptance, one item after, and
+none after rejecting it, with an accepted secret staying out throughout
+(<code>tests/test_obsidian.py:205-242</code>).
+<code>test_render_only_active_items</code> and
+<code>test_regenerate_omits_secret_items</code> assert a candidate and a
+secret stay out of the generated block beside a rendered active item
+(<code>tests/test_memory_summary_migration.py:37-44</code>,
+<code>:210-218</code>).</p>
+<p><strong>Lifecycle.</strong> <code>test_memory_governance.py</code>
+covers the transition table;
+<code>test_memory_calibration_supersede.py</code> covers calibration and
+asserts the graph holds one current email after a supersede.
+<code>test_memory_dreamer.py</code>,
+<code>test_dreamer_fail_closed.py</code> and
+<code>test_dreamer_source_filter.py</code> cover routing, the
+fail-closed scanner and the automation filter.</p>
+<p><strong>Not covered.</strong> No test asserts what the prompt
+contains after a reject. No test drives a subagent write through the
+real hook. No test uses <code>as_of</code>. No retrieval-quality
+evaluation or benchmark is committed, and no paper or citation block is
+in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let the model propose and a validator apply.</strong>
+Consolidation ops name ids; anything not active is skipped and recorded,
+and nothing deletes.</li>
+<li><strong>Enforce the transition table in the store.</strong> A raised
+<code>InvalidTransition</code> is cheaper than auditing how a row
+reached an impossible state.</li>
+<li><strong>Make import land in review by construction.</strong> An auto
+floor above 1.0 is a one-line guarantee that no imported claim activates
+itself.</li>
+<li><strong>Hold the watermark on extraction failure.</strong> An empty
+result and a failed call must advance differently.</li>
+<li><strong>Fail the injection scanner closed into review</strong>, not
+into active and not into silence.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Governing after the write.</strong> If the raw text reaches
+the prompt before the status exists, the status can only annotate. Put
+the gate in front of the store the prompt reads.</li>
+<li><strong>A reject that touches only the wrapper.</strong> Every store
+holding the value must hear about it; here the file and the graph do
+not.</li>
+<li><strong>Deriving trust from a field one caller forgets to
+set.</strong> An empty session id reads as "user channel". Default the
+unknown case to the stricter branch.</li>
+<li><strong>Testing a copy of the hook.</strong> A test that
+re-implements the production hook cannot catch the production hook's
+input being wrong.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person running their own agent who wants memory that
+tidies itself and a place to review what the background passes learned.
+The design assumes a single process, one user per profile and a model
+budget for recurring consolidation. Anyone who needs rejection to stick,
+or review to gate what the model sees on every path, has to close the
+live-capture gap first, which means moving the tools' writes behind the
+governance decision.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does a reject in the desktop client trigger any cleanup of
+<code>MEMORY.md</code> that the gateway RPC does not show?</li>
+<li>How often does the size cap evict the generated block in practice,
+and does anything rely on its position in the file?</li>
+<li>Is the empty subagent session id intended, given the governance
+document says background runs land in review?</li>
+<li>What does a typical consolidation pass cost on the default
+model?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>flowly/memory/governance.py</code>,
+<code>flowly/memory/knowledge_graph.py</code>,
+<code>flowly/memory/kg_mirror.py</code>,
+<code>flowly/agent/memory.py</code>,
+<code>flowly/memory/indexer.py</code>.</li>
+<li><strong>Write path:</strong>
+<code>flowly/agent/tools/filesystem.py</code>
+(<code>MemoryAppendTool</code>),
+<code>flowly/agent/tools/knowledge_graph.py</code>,
+<code>flowly/memory/coordinator.py</code>,
+<code>flowly/memory/dreamer.py</code>,
+<code>flowly/memory/extractor.py</code>,
+<code>flowly/memory/importer.py</code>,
+<code>flowly/memory/calibration.py</code>.</li>
+<li><strong>Retrieval and context:</strong>
+<code>flowly/agent/context.py:1125-1177</code>,
+<code>flowly/memory/summary.py</code>,
+<code>flowly/memory/manager.py</code>,
+<code>flowly/memory/search.py</code>,
+<code>flowly/agent/tools/memory_search.py</code>,
+<code>flowly/agent/tools/memory_recall.py</code>.</li>
+<li><strong>Background:</strong>
+<code>flowly/agent/loop.py:1477-1720</code>,
+<code>flowly/memory/consolidate.py</code>,
+<code>flowly/agent/tools/memory_consolidate.py</code>,
+<code>flowly/agent/subagent.py</code>.</li>
+<li><strong>Surfaces:</strong> <code>flowly/cli/memory_cmd.py</code>,
+<code>flowly/channels/feature_rpc.py</code>,
+<code>flowly/tui/panes/memory_review.py</code>,
+<code>flowly/memory/editor.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_memory_*.py</code>,
+<code>tests/test_coordinator_review_gating.py</code>,
+<code>tests/test_dreamer_*.py</code>,
+<code>tests/test_obsidian.py</code>.</li>
+<li><strong>Design document:</strong>
+<code>docs/memory-governance-architecture.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'STATUS_REJECTED\|"rejected"' flowly --include='*.py'</code>
+— memory hits are the constant, the transition table and three writers
+(<code>coordinator.py:136</code>, <code>dreamer.py:434</code>,
+<code>:547</code>); no read before an insert.</li>
+<li><code>grep -n 'kg_mirror' flowly/memory/coordinator.py</code> —
+supersede in the Obsidian accept, undo and <code>ingest_kg_fact</code>;
+restore in undo; none in <code>reject</code>.</li>
+<li><code>grep -rn 'atomic_write(\|write_long_term(' flowly --include='*.py'</code>
+— <code>MEMORY.md</code> is written by <code>summary.py:147</code>,
+<code>editor.py:98</code> and <code>filesystem.py:634</code>; none
+removes a governed line.</li>
+<li><code>grep -rn -E 'UPDATE memory_audit|DELETE FROM memory_(audit|items)' flowly</code>
+— no match.</li>
+<li><code>grep -rn 'set_active_session(' flowly --include='*.py'</code>
+— <code>loop.py:7667</code> and <code>:7701</code> only.</li>
+<li><code>grep -n 'user_id\|tenant\|scope\|profile' flowly/memory/governance.py</code>
+— one hit, the <code>profile</code> kind.</li>
+<li><code>grep -n 'invalidate' flowly/agent/loop.py</code> — no hook
+branch for a graph invalidate.</li>
+<li><code>grep -rln 'as_of' tests</code> — no match.</li>
+<li><code>grep -rnoiE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git</code>
+— only skill names and tool-output fixtures in tests; no paper.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/Nocetic/flowly/commit/a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c"><code class="commit-id" title="a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c">a5dc7c30…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 17
+September 2026. Five marks: <code>trust_state</code>,
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code>. Screened before
+reading: no auto-run surface, five build-time execution points (three
+<code>setup.py</code>, two <code>conftest.py</code>), three unpinned
+surfaces (two <code>package.json</code>, one skill
+<code>requirements.txt</code>), nothing inside the cooldown, and no
+agent-instruction file. Read with <code>grep</code> and
+<code>sed</code>; nothing installed, built or run. Only the memory
+subsystem is covered.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

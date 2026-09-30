@@ -189,6 +189,8 @@ door's `brain_write` reaches the same `writeNote` with none of that: no
 review, no receipt, and a `replace` retry that overwrites a concurrent write.
 The gateway exists, and only the untrusted caller is routed through it.
 
+[Flowly](../../systems/flowly/) has the governance and puts it on the wrong side of the write. Its `GovernanceStore` enforces a transition table and audits every move, but the live hook runs after `memory_append` has appended to `MEMORY.md` and after `knowledge_graph add` has written its triple — the two stores the prompt injects whole. A `needs_review` automation write is therefore in context on the next turn, and `reject` changes the wrapper row while the line and the open triple stay. The gate is real for the dreamer, the importers and Obsidian ingest, whose text exists only inside the governance store.
+
 ### Gates on something other than a write
 
 These are analogies rather than instances. Each puts one gate, or one stated

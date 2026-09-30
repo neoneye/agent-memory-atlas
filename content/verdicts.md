@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 688 reports.**
+**This page covers all 689 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6203,3 +6203,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: source-available non-commercial licence, 107,025 lines of TypeScript in `src` plus a 35,794-line VS Code extension, 314 commits on main by 3 contributors from 23 March to 30 September 2026. Two marks, `trust_state` and `audit_log`; the audit covers only the Explorer's three curated mutations. 1,328 vitest cases, none on decay, deduplication or retrieval, and the one negative case on a rejection swallows its own `expect`.
 - Study when: you want to separate hypotheses from beliefs in a knowledge graph and gate promotion on independent evidence, or need a worked example of provenance-gated promotion into a fact graph with a retroactive quarantine.
 - Do not copy when: a correction has to stick, a review has to be a person, or the memory has to be a component rather than a product — it cannot be lifted out of its architecture ontology, and the licence bars production use without a commercial agreement.
+
+### [`flowly`](../systems/flowly/)
+
+- Best idea: **the model proposes cleanup and a validator applies it.** Consolidation hands the LLM the active set and accepts only `merge`, `supersede` and `stale` ops naming ids; `apply_operations` skips any target or survivor that is not active, audits every move, and deletes nothing. Beside it, an import runs with an auto floor of 1.01, so no pasted ChatGPT or Gemini memory can activate without a person.
+- Biggest risk: **the live path governs a copy.** `memory_append` appends its line to `MEMORY.md`, and `knowledge_graph add` writes its triple, before the post-tool hook creates the governance item. The prompt injects the whole file and the graph summary, so an automation write parked in `needs_review` is in context next turn, and `reject` leaves both the line and the open triple in place.
+- Most reusable component: `flowly/memory/governance.py` — the status enum, a transition table that raises on unlisted moves, and `add_item`/`transition` writing an audit row inside the same lock and commit as the change.
+- Second risk: **the automation gate reads a field the subagent path never sets.** Self-review runs through a subagent registry that is never bound to a session, so the hook sees an empty session id, `is_automation_session("")` is false, and background writes activate as if a user asked. The dreamer also reconciles against active, queued and candidate items only, so a rejected value returns as a fresh candidate.
+- Maturity impression: Apache-2.0, 208,247 lines of Python and 570 commits on main from one contributor between 25 June and 17 September 2026, with the memory subsystem about 6,000 lines. Five marks — `trust_state`, `bitemporal`, `audit_log`, `human_review`, `negative_eval` — each resting on the governance store and the paths whose text lives only there. 5,058 pytest functions; the gating and hook tests bypass the production session derivation.
+- Study when: you want a governance wrapper over existing stores — status machine, audit, calibrated confidence, review queue and LLM-proposed consolidation — and a design document that says which parts are wired.
+- Do not copy when: the stores the prompt reads are written before the wrapper decides. Put the gate in front of `MEMORY.md` and the graph, or rejection and review will only annotate.
