@@ -285,6 +285,8 @@ reaches the model unmarked.
 
 [CTX Cognitive Version Control](../../systems/ctx-open/) shows detection with the disposition decided before anyone looks. Its branch merge compares every entity present on both sides, records a `DivergentChange` for each difference, and then keeps the incoming copy of every shared id and saves the merged working context before returning the list, whose summary calls the conflicts *"requiring review"*. There is no keep-current, keep-both or refuse outcome, and goals are merged without a conflict check at all. The comparison is C# record equality over list-valued fields, so after a round-trip to disk it should also flag entities that did not change — a queue that is both pre-drained and over-filled.
 
+[Counterparts](../../systems/counterparts/) meets requirements 1, 3 and 4 and misses 5. A pair a dream flags or a write notices stays live with an *"Unsettled — may be out of date"* label, and a settle picks `changed`, `corrected` or `open`, each with its own effect on the losing memory, an actor, a reason and an exact undo on the `contradiction_settles` trail. What the settle does not do is reach the write path: a `corrected` memory is archived by id, so the same claim written again in other words mints a new live row, and the write-time neighbour check leaves archived rows out.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

@@ -466,6 +466,16 @@ refuse outcome, and goals are merged without a conflict check at all.
 The comparison is C# record equality over list-valued fields, so after a
 round-trip to disk it should also flag entities that did not change — a
 queue that is both pre-drained and over-filled.</p>
+<p><a href="../../systems/counterparts/">Counterparts</a> meets
+requirements 1, 3 and 4 and misses 5. A pair a dream flags or a write
+notices stays live with an <em>"Unsettled — may be out of date"</em>
+label, and a settle picks <code>changed</code>, <code>corrected</code>
+or <code>open</code>, each with its own effect on the losing memory, an
+actor, a reason and an exact undo on the
+<code>contradiction_settles</code> trail. What the settle does not do is
+reach the write path: a <code>corrected</code> memory is archived by id,
+so the same claim written again in other words mints a new live row, and
+the write-time neighbour check leaves archived rows out.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

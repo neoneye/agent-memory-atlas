@@ -403,6 +403,7 @@ page_kind: comparison
 - [`tree-ring-memory`](../systems/tree-ring-memory/)
 - [`engram-mcp`](../systems/engram-mcp/)
 - [`dsh-continual-harness`](../systems/dsh-continual-harness/)
+- [`counterparts`](../systems/counterparts/)
 
 ## Repos Inspected
 
@@ -1110,6 +1111,7 @@ page_kind: comparison
 - [TerminallyLazy/Tree-Ring-Memory](https://github.com/TerminallyLazy/Tree-Ring-Memory) at [`31d7aaf5647b0325233fcf5551eed4ba23d37fce`](https://github.com/TerminallyLazy/Tree-Ring-Memory/commit/31d7aaf5647b0325233fcf5551eed4ba23d37fce) — read only, at the head of `main`, a commit dated 17 September 2026. MIT. Screened before reading: 1 auto-run surface (`.claude-plugin/marketplace.json`, a plugin manifest whose hooks call the `tree-ring` binary), no build-time execution point, no unpinned surface and nothing inside the cooldown, the depth-1 clone dating every file to the tip; twelve `AGENTS.md` files were treated as data. Nothing was installed, built or executed.
 - [edg-l/engram-mcp](https://github.com/edg-l/engram-mcp) at [`71d945d85c2137ae8261722dbe178ddf9cc5cc52`](https://github.com/edg-l/engram-mcp/commit/71d945d85c2137ae8261722dbe178ddf9cc5cc52) — read only, at the head of `master`, a commit dated 23 September 2026. Apache-2.0 per the LICENSE file; `Cargo.toml` declares MIT and the README MIT OR Apache-2.0. Screened before reading: one auto-run surface (`hooks/`, a README and JSON payload fixtures, nothing executable), no build-time execution point, nothing inside the cooldown, no unpinned surface (`Cargo.lock` present); `CLAUDE.md` and the two `skills/` files were treated as data. Nothing was installed, built or executed.
 - [jasen215/dsh-continual-harness](https://github.com/jasen215/dsh-continual-harness) at [`403451a215740275780436fe16f739ecd95e8958`](https://github.com/jasen215/dsh-continual-harness/commit/403451a215740275780436fe16f739ecd95e8958) — read only; MIT; no auto-run surface, no build-time execution, one floating surface (`package.json` ranges under a committed `pnpm-lock.yaml`), two dependency files inside the cooldown in a depth-1 clone where every file dates to the tip, an uninstalled git hook payload under `scripts/githooks/`, no agent-instruction file; nothing installed, built or run
+- [mlapeter/counterparts](https://github.com/mlapeter/counterparts) at [`928b9d30f38b04d72626f90572871ca3fce7b141`](https://github.com/mlapeter/counterparts/commit/928b9d30f38b04d72626f90572871ca3fce7b141) — read only, at the head of `master`, a commit dated 30 September 2026. MIT. Screened before reading: no auto-run surface, no build-time execution point, one dependency file inside the cooldown (`package.json`, every file in the depth-1 clone dating to the tip) and one unpinned surface (three caret ranges in `package.json`; the screen did not recognise the committed `bun.lock`); `CLAUDE.md` was treated as data. Nothing was installed, built or executed.
 
 ## What the licences actually say
 

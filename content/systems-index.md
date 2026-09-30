@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **702 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **703 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -168,6 +168,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/cortexes/"><span class="az-id">Cortexes</span><span class="az-what">A git-backed Markdown vault distilled from Claude Code sessions</span><code class="az-repo">XBlueSky/cortexes</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/cortexgraph/"><span class="az-id">CortexGraph</span><span class="az-what">Forgetting as the default</span><code class="az-repo">prefrontal-systems/cortexgraph</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/cosmonapse/"><span class="az-id">Cosmonapse</span><span class="az-what">A memory contract with a failure vocabulary</span><code class="az-repo">Cosmonapse/cosmonapse-core</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/counterparts/"><span class="az-id">Counterparts</span><span class="az-what">Human-memory physics for a Claude Code companion</span><code class="az-repo">mlapeter/counterparts</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/cowagent/"><span class="az-id">CowAgent</span><span class="az-what">Daily-distilled memory</span><code class="az-repo">zhayujie/CowAgent</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/craft/"><span class="az-id">craft</span><span class="az-what">A harness that keeps its rulings</span><code class="az-repo">drobins25/craft</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/create-context-graph/"><span class="az-id">Create Context Graph</span><span class="az-what">Memory that ships as a template</span><code class="az-repo">neo4j-labs/create-context-graph</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>

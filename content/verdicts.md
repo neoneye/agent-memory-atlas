@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 702 reports.**
+**This page covers all 703 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6341,3 +6341,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 61 commits by 1 contributor between 17 August and 30 September 2026; 8,665 lines of TypeScript in 39 source files; 631 Vitest cases in 37 spec files, run in CI with coverage floors. No test uses a real model, and the ranking and cache measurements quoted in comments come from a local corpus the tree excludes.
 - Study when: you want an agent that edits its own harness with reversible, reason-carrying writes, or an injection block that keeps a provider's prefix cache warm.
 - Do not copy when: recalled content must actually reach the model each turn, several processes share one harness root, or a person must approve what enters the shared layer.
+
+### [`counterparts`](../systems/counterparts/)
+
+- Best idea: **a contradiction ends in a typed disposition, not a flag.** `changed` cuts the older memory's strength once and labels it earlier, `corrected` archives it out of every recall read while its own id still answers, and `open` keeps both; each settle writes actor, reason and undo detail to `contradiction_settles`, and `undo` reverses exactly what was recorded.
+- Biggest risk: **any session can archive a memory by naming two ids.** `note` accepts `settle: {holds, over, how: "corrected"}`, and `memoryRefusal` stops only protected and core memories, so a prompt-injected instruction naming an id from a footnote takes that memory out of recall until the owner runs `counterparts settle --undo`.
+- Most reusable component: the MCP tool registry in `src/adapters/mcp/tools.ts`, where every stated privilege names the file that enforces it, the description the host sees is rendered from those rows, and `test/mcp.test.ts` fails when a named file is missing.
+- Second risk: **removal leaves a hash of the words in two logs.** The removal record and tombstone refuse a content hash because low-entropy content is brute-forceable, while the `gate.deposit` event keeps `hashText` of the deposited text as its `ref` and the per-project `proposals.jsonl` ledger keeps the normalized content's hash; the chase touches neither.
+- Maturity impression: MIT, 118,197 lines of TypeScript under `src/`, 1,381 commits on master by one contributor from 25 August 2026 to 30 September 2026. 4,482 bun test cases in 130 files; no CI workflow, no committed retrieval result and no paper.
+- Study when: you want contradiction handling with typed outcomes and a reversible trail, an owner-only destruction path enforced by the import graph, or tool descriptions that cannot claim a mechanism the tree lacks.
+- Do not copy when: memory must stay inside one project, the agent must not be able to retire a memory by itself, or a removed text must leave no trace anywhere in the store.
