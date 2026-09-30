@@ -1743,9 +1743,11 @@ href="https://github.com/jordanmccann/agentmemory/commit/3aa3b8389896f81dd813fdf
 obtained</li>
 <li><a href="https://github.com/vstorm-co/memv">vstorm-co/memv</a> at <a
 href="https://github.com/vstorm-co/memv/commit/21891376f0bf58c8523895c1bebe29df49125677"><code class="commit-id" title="21891376f0bf58c8523895c1bebe29df49125677">21891376…</code></a>
-— read only at the second pin; one documentation commit and no source
-change, nothing installed or run. Both marks re-tested and given
-evidence records</li>
+— read at the second pin and audited there on 2026-09-30, which is
+upstream HEAD; two auto-run surfaces in <code>.claude/</code> and two
+build-time execution points, read rather than executed; nothing
+installed, built or run. The audit added <code>negative_eval</code> on
+committed isolation and expiry cases that predate both pins</li>
 <li><a href="https://github.com/maydali28/memcp">maydali28/memcp</a> at
 <a
 href="https://github.com/maydali28/memcp/commit/81c7177d4374cd7aecca8f6a8da43e229cadefee"><code class="commit-id" title="81c7177d4374cd7aecca8f6a8da43e229cadefee">81c7177d…</code></a></li>
@@ -3572,9 +3574,10 @@ results page of the project</li>
 href="https://github.com/benclawbot/open-brain">benclawbot/open-brain</a>
 at <a
 href="https://github.com/benclawbot/open-brain/commit/02a7e65a8064a04ad91d77ddbe9dc048d6746153"><code class="commit-id" title="02a7e65a8064a04ad91d77ddbe9dc048d6746153">02a7e65a…</code></a>
-— read only; one build-time execution point, two unpinned surfaces, no
-manifests inside the cooldown, <code>AGENTS.md</code> treated as data;
-nothing installed or run</li>
+— MIT declared in <code>pyproject.toml</code> and the README, no licence
+file; read only; one build-time execution point, two unpinned surfaces,
+no manifests inside the cooldown, <code>AGENTS.md</code> treated as
+data; nothing installed or run</li>
 <li><a
 href="https://github.com/lna-lab/distill-kura">lna-lab/distill-kura</a>
 at <a
@@ -5828,6 +5831,48 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Open Brain report said memory search had no identity
+filter and used full text, that the one memory update stamped
+attribution, that nothing incremented assertion feedback counters, and
+that staged imports fed the memory table; corrected 2026-09-30.</strong>
+At <a
+href="https://github.com/benclawbot/open-brain/commit/02a7e65a8064a04ad91d77ddbe9dc048d6746153"><code class="commit-id" title="02a7e65a8064a04ad91d77ddbe9dc048d6746153">02a7e65a…</code></a>,
+which is upstream HEAD, MCP and REST store and search through
+<code>src/db/attribution.py</code>, whose search takes an optional
+<code>captured_by</code> filter, and the text fallback is
+<code>ILIKE</code>; the <a href="../systems/open-brain/">Open Brain</a>
+report cited the older <code>queries.py</code> copies.
+<code>attribution.py:192</code> regenerates embeddings.
+<code>save_context_feedback</code> increments <code>useful_count</code>
+and <code>harmful_count</code>, which understated the system. Staged
+imports stay in <code>import_record</code>, and the maintenance
+orchestrator generates no lifecycle proposals, which overstated it. The
+report also missed that context packets are empty in any deployment
+built from the code, so three of its four adapters never recall what
+they remember. No mark moved.</li>
+<li><strong>The memv report called it Apache-licensed, drew an unused
+SQL query as its as-of read path, said an inverted interval cannot be
+stored, withheld <code>negative_eval</code> over committed
+must-not-return cases, and said no benchmark result is committed;
+corrected 2026-09-30.</strong> At <a
+href="https://github.com/vstorm-co/memv/commit/21891376f0bf58c8523895c1bebe29df49125677"><code class="commit-id" title="21891376f0bf58c8523895c1bebe29df49125677">21891376…</code></a>,
+which is upstream HEAD, and at the first pin <a
+href="https://github.com/vstorm-co/memv/commit/fd314bac28247df1149edfbf0d1f7881690ef448"><code class="commit-id" title="fd314bac28247df1149edfbf0d1f7881690ef448">fd314bac…</code></a>,
+<code>LICENSE</code> is MIT. The <a href="../systems/memv/">memv</a>
+report drew <code>WHERE valid_at … AND expired_at IS NULL</code> feeding
+retrieval and credited it with filtering validity before ranking;
+<code>get_valid_at</code> has no caller outside <code>tests/</code>, and
+the retriever filters in Python after fusion, so an as-of query can
+return fewer than <code>top_k</code>, which overstated the system.
+<code>check_temporal_range</code> guards only
+<code>KnowledgeInput</code>, the injection model.
+<code>tests/test_retriever.py</code> and
+<code>tests/test_memory_e2e.py</code> assert that another user's
+statement, an expired one and an out-of-interval one are not retrieved,
+which understated it by one mark. <code>notes/PLAN.md</code> carries a
+30-question LongMemEval baseline at 36.7%. The report also said the
+cold-start prompt reads the narrative, which it does not, and called
+<code>extraction.py</code> 200-odd lines; it is 151.</li>
 <li><strong>The KektorDB report put eight dependency files inside the
 screening cooldown, gave its version as 0.6.1, said setup covered
 OpenCode and Hermes and installed <code>skills/kektordb</code>, and

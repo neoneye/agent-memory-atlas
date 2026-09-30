@@ -16785,23 +16785,26 @@ telemetry on by default</td>
 expired_at</td>
 <td>SQLite or Postgres behind one storage layer, with vector and BM25
 indexes</td>
-<td>Vector similarity plus BM25 fused by reciprocal rank, as of an event
-time</td>
+<td>Vector similarity plus BM25 fused by reciprocal rank; expiry and an
+optional event time filtered after fusion</td>
 <td>Predict what the episode should contain, then extract only the
 prediction's gaps</td>
-<td>invalid_at closes validity; expired_at closes belief; both are
-queried</td>
-<td>user_id is a WHERE clause on the knowledge reads</td>
-<td>A Python library with an MCP surface, a dashboard, and pluggable LLM
-adapters</td>
-<td>A processing pipeline over episodes; a LongMemEval harness with
-checkpointing</td>
+<td>Supersession sets expired_at and, when the model names the old
+entry, superseded_by; delete is a hard DELETE</td>
+<td>user_id is a predicate inside both index searches; the MCP tools
+take it as an optional argument</td>
+<td>A Python library with an MCP server, a terminal dashboard, and
+pluggable LLM and embedding adapters</td>
+<td>Extraction on process or flush, or as a background task at a message
+threshold; a LongMemEval harness with checkpointing and ablation
+presets</td>
 <td>No status field; validity and expiry carry the epistemic weight
 instead</td>
 <td>Extraction gated by prediction error, sourced only from the original
 messages</td>
-<td>No committed benchmark results despite a checkpointed harness in the
-tree</td>
+<td>The prediction criterion is unmeasured; the one committed benchmark
+is a 30-question default-configuration baseline with no ablation
+run</td>
 </tr>
 <tr>
 <td><a href="../systems/memvid/"><code>memvid</code></a></td>
@@ -20211,38 +20214,44 @@ wire</td>
 entities, tags, importance, capturing agent — and an idempotent
 <code>event</code> with identities and a payload; declared but
 unwritten: assertions, decisions, outcomes, projects and tasks</td>
-<td>One PostgreSQL database with pgvector and 15 migrations: memory,
-events, identities, sessions, imports, event compactions, context
-caches, and the assertion, proposal, execution and tombstone tables</td>
-<td>Memory search by embedding or full text with source, tag and date
-filters; context packets assembled from structured project and task
-records and event rollups with trust labels, freshness and a token
-budget</td>
-<td>MCP, REST, CLI and a provider SDK store memories with tagging and
-entity extraction, and ingest events with idempotency keys; importers
-stage Hermes, Mem0, Honcho, Hindsight, chat and log exports with
-rollback</td>
-<td>No delete path for memories or events; event rollups supersede
-earlier rollups; assertion lifecycle, consolidation and pruning
-proposals would change statuses through reviewed, reversible
-executions</td>
+<td>One PostgreSQL database with pgvector and 16 migration files:
+memory, events, identities, sessions, imports, event compactions,
+context caches, and the assertion, proposal, execution and tombstone
+tables</td>
+<td>Memory search by embedding, or a substring ILIKE match when the
+query cannot be embedded, with source, tag, capturing-agent and date
+filters; context packets built from project, task, decision, outcome and
+assertion rows and project or task rollups, all of which need project
+rows nothing creates</td>
+<td>MCP, REST and the Hermes provider store memories with tagging and
+entity extraction; connectors write Gmail, Telegram, WhatsApp, Claude
+Code logs and folders straight into the memory table; adapters ingest
+events with idempotency keys; staged importers record Hermes, Mem0,
+Honcho and Hindsight exports as import records that nothing
+promotes</td>
+<td>No delete path for memories or events; the one memory update
+rewrites an embedding; event rollups supersede earlier rollups;
+assertion lifecycle, consolidation and pruning proposals would change
+statuses through reviewed, reversible executions</td>
 <td>Events carry user, agent, workspace, session, project and task
-identities; memory search has no scope filter</td>
+identities; memory search takes a capturing-agent filter the caller may
+omit; context packets filter rollups by project or task</td>
 <td>A native Hermes memory provider, adapters for Medusa, Codex and
 Claude Code, MCP tools, REST, a CLI, a Streamlit dashboard and a
 provider conformance suite</td>
-<td>A bounded maintenance orchestrator that runs compaction and
-generates lifecycle, consolidation and pruning proposals</td>
+<td>A bounded maintenance orchestrator that generates consolidation and
+pruning proposals, cleans the context cache, reports tombstone retention
+and compacts project or task events when given an id</td>
 <td>Declared: assertion statuses from candidate through confirmed to
 contradicted, authority and confidence, and trust labels on context
-items; live: trust labels on event rollups</td>
+items; live: a constant curated_memory label on event rollups</td>
 <td>Idempotent, provenance-carrying event ingestion; deterministic event
 rollups with source fingerprints; staged imports with rollback; a
 careful review-and-reverse design for every automated change</td>
 <td>Nothing writes assertions, evidence, decisions, outcomes, projects
-or tasks, so the status model, reviews, tombstones and structured
-context are unreachable; the licence is claimed in the README with no
-licence file</td>
+or tasks, so the status model, reviews, tombstones and context packets
+are unreachable; the Medusa, Codex and Claude Code adapters remember
+into the event log and recall empty packets; no licence file</td>
 </tr>
 <tr>
 <td><a href="../systems/open-bridge/"><code>open-bridge</code></a></td>
@@ -30658,7 +30667,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>396 of 682:</em> <a
+<p><em>397 of 682:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -30887,6 +30896,7 @@ href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/memspec/"><code>memspec</code></a>, <a
 href="../systems/memtomem/"><code>memtomem</code></a>, <a
 href="../systems/memu/"><code>memu</code></a>, <a
+href="../systems/memv/"><code>memv</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/mentedb/"><code>mentedb</code></a>, <a
 href="../systems/mentisdb/"><code>mentisdb</code></a>, <a
@@ -31085,7 +31095,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-396 repositories of
+397 repositories of
 682 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

@@ -1636,10 +1636,11 @@ agents whose schema defines assertions with candidate, confirmed, superseded and
 contradicted statuses, validity windows and evidence, and wraps every lifecycle,
 consolidation and pruning change in a reviewed, reversible execution with
 restorable tombstones. No code in the service inserts an assertion, decision,
-outcome, project or task — only tests seed them — so what runs is a flat
-pgvector memory table and an idempotent event log with deterministic rollups,
-reached through a native Hermes provider and adapters for Medusa, Codex and
-Claude Code.
+outcome, project or task — only tests seed them. Because events can name a
+project or task only by a foreign key to those empty tables, context packets are
+empty too, so the Medusa, Codex and Claude Code adapters remember into an event
+log and recall nothing. What runs is a flat pgvector memory table that the Hermes
+provider and the MCP tools write and search.
 
 **pond takes the same observation as deja-vu and answers it differently, and the
 difference is one column.** Apache-2.0, 462 commits from seven authors since May
