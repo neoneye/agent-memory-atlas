@@ -28693,36 +28693,44 @@ like is bounded and lossy by design</td>
 <td>A <code>Memory</code> — content, user, agent and run ids, a tier of
 fact, summary or theme, importance 0-10, a YMYL category, a content
 hash, extracted entities, created, updated and optional event times</td>
-<td>FAISS by default, Qdrant or pgvector optional, with metadata on the
-vector rows and a separate SQLite history database</td>
+<td>FAISS by default, held in process memory unless a path is set,
+Qdrant or pgvector optional, with metadata on the vector rows and a
+separate SQLite history database</td>
 <td>Vector search with optional BM25 fusion, importance, recency decay
-and topic boosts, YMYL decay immunity, entity boost, hierarchical
-routing between facts, summaries and themes, and a confidence level with
-abstention modes</td>
-<td>LLM extraction of facts with importance and YMYL classification,
-then one batched LLM call deciding ADD, UPDATE, DELETE or NONE per fact
-against nearby memories; a prompt-injection sanitizer on content</td>
-<td>Updates overwrite in place with the old content logged; contradicted
-memories are hard-deleted; <code>ttl_days</code> hides old rows from
-search; <code>purge_expired()</code> deletes them, sparing YMYL rows by
+and topic boosts, opt-in YMYL decay immunity, entity boost, hierarchical
+routing between facts, summaries and themes, and a confidence level per
+result set</td>
+<td>LLM extraction of facts with importance and opt-in YMYL
+classification, then one batched LLM call deciding ADD, UPDATE, DELETE
+or NONE per fact against nearby memories, with an overwrite refused
+unless nothing is lost or an atomic memory is quoted as contradicted; a
+regex prompt-injection sanitizer on extraction input</td>
+<td>Updates overwrite in place with the old content logged; a resolver
+DELETE hard-deletes its target and stores nothing from the fact;
+<code>ttl_days</code> hides old rows from search;
+<code>purge_expired()</code> deletes them, sparing YMYL rows by
 default</td>
 <td>Optional user and agent ids applied as filters when passed; the
-write path excludes other users' rows even for unscoped calls, the
-search path does not</td>
-<td>A Python API, an HTTP server, an MCP server, a LangChain retriever,
-a CLI and a Claude Code skill</td>
-<td>None; summaries and themes are built when the hierarchy manager is
-called</td>
-<td>None as a state; YMYL categories raise importance floors and exempt
-rows from decay, and retrieval returns HIGH, MODERATE, LOW or NONE
-confidence from similarity thresholds</td>
-<td>A write history held complete by a source-walking test; README
-claims checked by tests; a public corrections log; a LoCoMo harness that
-forbids self-grading and scores unanswerable questions as
-abstention</td>
+write path excludes other users' rows even for unscoped calls, while
+search, delete by id, export and summarize do not</td>
+<td>A Python API, an HTTP server, an MCP server and a LangChain
+retriever; the console script covers benchmarks only, and the Claude
+Code skill lives in a separate repository</td>
+<td>None; summaries and themes are built when <code>summarize()</code>
+is called</td>
+<td>None as a state; opt-in YMYL categories raise importance floors and
+exempt rows from decay, retrieval returns HIGH, MODERATE, LOW or NONE
+confidence from similarity thresholds, and <code>explain=True</code>
+derives an answerable and requires-review verdict per query</td>
+<td>A write history with no update or delete path and a source-walking
+test over <code>core/memory.py</code>; README claims checked by tests; a
+public corrections log; tested evaluation controls and a committed
+held-out split</td>
 <td>Search with no user id returns every user's memories, and the MCP
 tools take the user id from the model; contradictions delete rather than
-supersede; published LoCoMo result files are not committed</td>
+supersede; the committed LoCoMo runners skip the adversarial category
+and default to self-grading; the published LoCoMo result files are not
+committed</td>
 </tr>
 <tr>
 <td><a

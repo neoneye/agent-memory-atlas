@@ -63,10 +63,12 @@ those is the reinforce / supersede / archive lifecycle — so every correction
 mechanism this atlas measures is, here, an instruction to build one.
 **[widemem.ai](../systems/widemem-ai/) keeps the Mem0 shape and puts its
 effort into what must not be forgotten and what must not be claimed.** Facts are
-extracted and resolved into add, update or delete in one batched call; health,
-legal and financial facts get an importance floor and immunity from decay and
-purges; retrieval returns a confidence level so an agent can abstain. A test
-fails any method that writes without a history entry, README claims are tested,
+extracted and resolved into add, update or delete in one batched call, and an
+overwrite is refused unless it loses nothing or replaces a short memory the model
+quotes as contradicted. With YMYL enabled, health, legal and financial facts get
+an importance floor and immunity from decay and purges; retrieval returns a
+confidence level so an agent can abstain. A test fails any method in
+`core/memory.py` that writes without a history entry, README claims are tested,
 and a public corrections log records the audit gap and the transposed benchmark
 labels it fixed. Its scope is split: the write pipeline checks every candidate's
 ids in code, while a search with no user id reads across all users.
