@@ -5416,27 +5416,28 @@ approve a draft: the schema points at a separate enterprise repository
 for the write sites, so the withholding is enforced here and the lifting
 is not.</p>
 <p><strong><a href="../systems/openzync-core/">OpenZync Core</a> is the
-family's temporal backend, and its validity filter is one predicate
-every read path shares.</strong> AGPL-3.0 with a commercial-licence file
-beside it, 562 commits since 5 June 2026 by two authors, 72,199 lines of
-Python beside 3,542 test functions on Postgres with pgvector. One LLM
-call per turn returns the classification, the entities, the fact triples
-and the structured extractions together, each applied in its own
+family's temporal backend, and its validity filter runs on every fact
+search and listing at an instant the caller can name.</strong> AGPL-3.0
+with a commercial-licence file beside it, 648 commits since 5 June 2026
+by two authors, 80,690 lines of Python beside 3,673 test functions on
+Postgres with pgvector. One LLM call per turn returns the
+classification, the entities, the fact triples, the structured
+extractions and the facts the turn contradicts, each applied in its own
 savepoint; a fact carries <code>valid_from</code>, <code>valid_to</code>
-and a separate <code>invalid_at</code>, and
-<code>_effective_at_clause</code> is the single expression both search
-legs, the point-in-time reader and the project reader all apply, with an
-as-of parameter threaded to the graph backends and a GiST exclusion
-constraint enforcing non-overlap in the database. Five marks, among them
-a retraction gate keyed on the triple's value and consulted on both
-write paths, and a negative eval that gives the superseded fact the
-<em>same embedding</em> as its successor so ranking cannot do the
-filter's work. Three findings. The re-assertion gate covers retraction
-and not supersession, by a choice the code states: a superseded or
-expired triple said again is inserted again. The four search legs carry
-the project key and not the organisation key, leaving that to route
-guards and row-level security. And the cross-tenant suite sits under a
-class-level skip in a directory CI does not run.</p>
+and a separate <code>invalid_at</code>, and both search legs, the
+point-in-time and project readers and the conflict scan apply the same
+effective-at test, with an as-of parameter threaded to the graph
+backends. Five marks, among them a retraction gate keyed on the triple's
+value and consulted on both insert paths, and a negative eval that gives
+the superseded fact the <em>same embedding</em> as its successor so
+ranking cannot do the filter's work. Three findings. The project wipe
+stamps the retraction column on every fact, so every wiped triple is
+refused if it is said again and stays readable to an earlier
+<code>as_of</code>. The effective-at test is restated inline at most
+read sites rather than imported from the one shared expression. And the
+search SQL carries the project key and not the organisation key, over
+row-level security that binds only a role that does not own the
+tables.</p>
 <p><strong><a href="../systems/sibyl-memory/">Sibyl Memory</a> is the
 family's answer to a question most stores leave to the caller: what a
 zero result means.</strong> MIT, 68 commits since 20 May 2026 by four

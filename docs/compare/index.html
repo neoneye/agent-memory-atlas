@@ -21367,11 +21367,11 @@ extracted from it: a subject, predicate and object with types and
 optional entity ids, a confidence float, the source episode,
 <code>valid_from</code>/<code>valid_to</code>/<code>invalid_at</code>, a
 <code>superseded_by_fact_id</code> and its own embedding</td>
-<td>PostgreSQL with pgvector, pg_trgm and btree_gist, 54 Alembic
-revisions; Redis for the ARQ job queues and cache; a pluggable graph
-backend defaulting to FalkorDB with one graph per organisation and
-project, with SurrealDB and a deprecated Postgres-native backend beside
-it</td>
+<td>PostgreSQL with pgvector (768-dimension columns under HNSW cosine
+indexes), pg_trgm and btree_gist, 62 Alembic revisions; Redis for the
+ARQ job queues and cache; a pluggable graph backend defaulting to
+FalkorDB with one graph per organisation and project, with SurrealDB and
+a deprecated Postgres-native backend beside it</td>
 <td>Five legs run in sequence — vector over episodes, vector over facts,
 BM25 over episodes, BM25 over facts, and a breadth-first graph walk —
 fused by reciprocal rank at k=60 with episodes and facts fused
@@ -21380,52 +21380,56 @@ rerank. Any leg failing aborts the whole search rather than returning a
 partial result, and there is no relevance threshold anywhere on the
 path</td>
 <td><code>POST /v1/projects/{id}/memory</code> stores the turn inline —
-idempotency key, session resolution, content-hash dedup under a
-race-safe claim, sequence number, PII detection and redaction, batch
-insert, commit — then enqueues three background jobs per episode: one
-LLM call producing classification, entities, fact triples and
-schema-driven structured extractions in a single response, applied in
-independent savepoints, plus embedding and entity linking</td>
-<td>A fact is never edited. Supersession closes the predecessor's window
-by setting <code>valid_to = now</code> and naming the successor;
-retraction sets <code>invalid_at</code>; both are recorded as rows in
-<code>fact_invalidation_events</code> with a kind of superseded,
-retracted, llm_invalidated or time_expired. An episode is soft-deleted
-with a flag the read paths filter on. Nothing consults the invalidation
-events on a later write</td>
-<td>An organisation and a project column on every record, row-level
-security policies on eleven tables matching the organisation against a
-per-request session setting, and a membership dependency on every
-project-scoped route; the four search legs themselves filter on the
-project alone</td>
-<td>A FastAPI service with thirty routers, an ARQ worker with fifteen
-task types and a cron schedule, a Streamlit chat client, Docker Compose
-and Helm charts, OpenBao for secrets and a Grafana stack. The MCP server
-the README advertises is not in this repository</td>
-<td>Enrichment, embedding, entity linking, blob text extraction, audit
-writes, entity merging, community summarisation, observation
-computation, webhook delivery, user summaries, orphan-blob cleanup, and
-cron jobs that reconcile stalled enrichment and expire graph edges</td>
+archived-project check, idempotency key, session resolution, an atomic
+content-hash claim, fail-closed PII redaction, sequence numbers under a
+session row lock, batch insert, commit — then enqueues three background
+jobs per episode: one LLM call producing classification, entities, fact
+triples, structured extractions and contradiction invalidations in a
+single response, applied in independent savepoints, plus embedding and
+entity linking</td>
+<td>A fact is never edited. Re-asserting the same normalized triple with
+new content, or an LLM-detected contradiction, closes the predecessor's
+window with <code>valid_to = now</code>; retraction sets
+<code>invalid_at</code>; each is recorded in
+<code>fact_invalidation_events</code> as superseded, llm_invalidated or
+retracted, and the fourth permitted kind, time_expired, has no writer.
+The retracted set is consulted before every insert. The project wipe
+soft-deletes episodes and stamps <code>invalid_at</code> on every fact,
+so each wiped triple becomes a tombstone and the facts stay readable
+through an earlier <code>as_of</code></td>
+<td>An organisation and a project column on every record and a
+membership dependency on every project-scoped route; the four search
+legs filter on the project and the graph leg opens a
+per-organisation-and-project graph; row-level security on the
+organisation binds only a role that does not own the tables</td>
+<td>A FastAPI service with thirty-one router modules, an ARQ worker with
+fifteen task types and a cron schedule, a Streamlit chat client, Docker
+Compose and Helm charts, OpenBao for secrets and a Grafana stack. The
+MCP server the README advertises is not in this repository</td>
+<td>Enrichment with contradiction invalidation, embedding, entity
+linking, blob text extraction, audit writes, entity merging, community
+summarisation, observation computation, webhook delivery, user
+summaries, orphan-blob cleanup, and cron jobs that reconcile stalled
+enrichment and expire graph edges</td>
 <td>A confidence float on a fact, thresholded at 0.3 once at extraction
-time and never read again; no status, no state, and no filter on it at
-read time</td>
-<td>One temporal predicate shared by every read path rather than
-re-derived per query; an as-of parameter threaded from the route to the
-graph backends; a database-level exclusion constraint backing the
-application's temporal logic; row-level security under the application's
-own scope checks; a negative test that forces the ranking to fail if the
-filter does</td>
-<td>A superseded fact is still invisible to the conflict scan, so a
-triple closed by supersession rather than retraction is inserted again —
-the gate is deliberately narrow and the code says so; the two vector
-search legs carry the project key but cannot carry the organisation key,
-which their BM25 siblings and the graph leg do, leaving those two to a
-route guard above and a fail-closed row-level security policy below; the
-cross-tenant suite runs now but CI still collects only
-<code>tests/unit/</code> and <code>tests/integration/</code>, so nothing
-runs it; <code>episodes.token_count</code> is returned to clients and
-written by nothing; community summaries are hardcoded empty in the
-retriever that the README says assembles them</td>
+time and offered as a sort key on the fact listings; no status, no
+state, and no retrieval leg ranks or filters on it</td>
+<td>One effective-at test applied on every fact search and listing, with
+an as-of instant threaded from the route to the graph backends; a
+retraction gate keyed on the normalized triple and consulted on both
+insert paths; a negative test that forces the ranking to fail if the
+filter does; a cross-tenant search test with a positive control</td>
+<td>The project wipe stamps the retraction column on every fact, so
+wiped facts stay readable through an earlier as_of and every wiped
+triple is refused if it is said again; the effective-at test is restated
+inline at most read sites rather than shared; the search SQL carries the
+project key and not the organisation key, and row-level security binds
+only a role that does not own the tables, which the tag-deploy
+workflow's single database URL does not arrange; a superseded triple is
+inserted again by design; no GitHub Actions job runs the cross-tenant
+suite; <code>episodes.token_count</code> is returned to clients and
+written by nothing; the context formatter's community section is always
+handed an empty list</td>
 </tr>
 <tr>
 <td><a href="../systems/optmem/"><code>optmem</code></a></td>
