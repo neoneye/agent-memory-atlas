@@ -283,6 +283,8 @@ explicit `supersedes_id` changes the chain. MCP search returns it per hit, while
 the hook that injects memories automatically drops it, so the flagged record
 reaches the model unmarked.
 
+[CTX Cognitive Version Control](../../systems/ctx-open/) shows detection with the disposition decided before anyone looks. Its branch merge compares every entity present on both sides, records a `DivergentChange` for each difference, and then keeps the incoming copy of every shared id and saves the merged working context before returning the list, whose summary calls the conflicts *"requiring review"*. There is no keep-current, keep-both or refuse outcome, and goals are merged without a conflict check at all. The comparison is C# record equality over list-valued fields, so after a round-trip to disk it should also flag entities that did not change — a queue that is both pre-drained and over-filled.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

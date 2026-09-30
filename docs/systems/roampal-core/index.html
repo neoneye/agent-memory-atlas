@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP server and hook memory for
+Claude Code and OpenCode whose model rates each injected memory,
+promoting or deleting it across ChromaDB tiers.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Roampal
+Core — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP server and hook
+memory for Claude Code and OpenCode whose model rates each injected
+memory, promoting or deleting it across ChromaDB tiers.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Roampal
+Core — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP server and hook
+memory for Claude Code and OpenCode whose model rates each injected
+memory, promoting or deleting it across ChromaDB tiers.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Roampal Core — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Roampal Core",
+      "description": "An MCP server and hook memory for Claude Code and OpenCode whose model rates each injected memory, promoting or deleting it across ChromaDB tiers.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Outcome-scored tiered memory for coding
+agents</p>
+          <h1>Roampal Core</h1>
+          <p class="document-deck">An MCP server and hook memory for
+Claude Code and OpenCode whose model rates each injected memory,
+promoting or deleting it across ChromaDB tiers.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/roampal-ai/roampal-core">
+              <span>Source</span>
+              <strong>roampal-ai/roampal-core</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/roampal-ai/roampal-core/commit/211e7e05bb1e364471d29dd98c45d8b3bb3f12b0" title="211e7e05bb1e364471d29dd98c45d8b3bb3f12b0">
+              <span>Analyzed revision</span>
+              <code>211e7e05…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/roampal-ai--roampal-core" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>roampal-ai--roampal-core</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>22,370
+lines of Python outside tests plus a 2,541-line TypeScript OpenCode
+plugin; the memory module is 7,881 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>137
+commits on main by 1 contributor, 15 December 2025 – 26 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,090
+pytest functions in 23,169 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Roampal Core is a local memory server for Claude Code and OpenCode.
+Hooks inject eight retrieved memories before each prompt; the next turn
+asks the model to rate each one <code>worked</code>,
+<code>partial</code>, <code>unknown</code> or <code>failed</code>, and
+those ratings move a raw score that promotes an exchange summary from
+<code>working</code> to <code>history</code> to <code>patterns</code>,
+or deletes it. A separate <code>memory_bank</code> holds permanent facts
+the agent writes and edits through MCP.</p>
+<p>What is notable is the operational care and the honesty of the
+companion paper. Profile routing is per request and refuses an unknown
+profile rather than falling back. A down embedder produces a visible
+marker instead of an empty injection. The paper removed its own Wilson
+ranking after measuring that it hurt retrieval.</p>
+<p>What is weak is the loop the product is named for. The model that
+used a memory is the one that rates it, and a memory retrieved and not
+used loses score until it is demoted or deleted.
+<code>delete_memory</code> archives the nearest semantic match when no
+text matches, and archived rows are hard-deleted the next time the
+profile loads. The 85.8% LoCoMo figure on the README was measured with
+promotion and decay switched off.</p>
+<p>The final order is a cross-encoder score over a tag-routed vector
+pool (<code>search_service.py:195-231</code>). Outcome scores and Wilson
+bounds are shown to the model beside each memory; in ranking they only
+choose which candidates reach the reranker when there are more than 40,
+and set the order when the reranker is unavailable. Their main effect is
+on what survives.</p>
+<p>One mark, <code>negative_eval</code>, on a committed integration case
+asserting an archived fact is absent after identical text is re-added,
+beside a positive control. Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one of three things. An <strong>exchange summary</strong>
+or <strong>atomic fact</strong> the model writes when it answers a
+scoring prompt; a <strong>key takeaway</strong> it writes with
+<code>record_response</code>; or a <strong>memory_bank fact</strong> it
+writes with <code>add_to_memory_bank</code>. Book chunks are reference
+material and are never scored. Nothing is extracted by a background
+model from transcripts on the Claude Code path: every durable row is
+text the agent chose to write.</p>
+<p><strong>Summaries and facts have to earn survival within a
+day.</strong> They land in <code>working</code> at score 0.5; takeaways
+at 0.7. <code>worked</code> adds 0.2, <code>partial</code> 0.05,
+<code>unknown</code> subtracts 0.05 and <code>failed</code> 0.3
+(<code>outcome_service.py:237-284</code>). A working row reaching 0.7
+with two uses moves to <code>history</code>; a history row at 0.9 with
+three uses and five successes counted since its promotion moves to
+<code>patterns</code>; a pattern under 0.4 moves back
+(<code>promotion_service.py:118-133</code>). A working row not promoted
+within 24 hours is deleted, and a history row is deleted 30 days after
+its original creation unless it reached <code>patterns</code>
+(<code>:492-588</code>).</p>
+<p><strong>Deletion by score has two thresholds.</strong> At runtime a
+row under 0.2 is deleted, or under 0.1 if it is seven days old or
+younger (<code>promotion_service.py:282-317</code>). The startup pass
+deletes every working, history and patterns row under 0.2 regardless of
+age (<code>unified_memory_system.py:786-835</code>). A row under a week
+old at 0.15 survives at runtime and is deleted at the next start.</p>
+<p><strong>The rater is the reader.</strong> On Claude Code the scoring
+prompt asks the same model to label each memory it was shown, and says
+<code>unknown</code> means <em>"didn't use this memory"</em>
+(<code>hooks/session_manager.py:562-569</code>). Each
+<code>unknown</code> subtracts 0.05, so a pattern the retriever keeps
+surfacing for queries it does not answer drifts under 0.4 after about
+ten turns and is demoted. Demotion keeps the original
+<code>created_at</code>, and the history cleanup deletes by that date,
+so a demoted pattern more than 30 days old is deleted at the next
+cleanup (<code>promotion_service.py:254-280</code>,
+<code>:540-588</code>). On OpenCode the rater is an optional sidecar
+model, off until configured.</p>
+<p><strong>memory_bank facts do not die by score.</strong> They are
+scored for display, and <code>_handle_deletion</code> returns early for
+<code>memory_bank</code> and <code>books</code>
+(<code>promotion_service.py:290-294</code>). They stop being believed
+only when <code>delete_memory</code> sets <code>status=archived</code>,
+and stop existing when the profile next loads and
+<code>cleanup_archived()</code> hard-deletes every archived row
+(<code>server/main.py:1021-1025</code>,
+<code>memory_bank_service.py:441-472</code>).</p>
+<p><strong>Nothing is held as unconfirmed.</strong> The injected block
+tells the model <em>"Memories may be outdated or wrong. Verify before
+treating as ground truth"</em> and heads facts <em>"use for direction,
+not authority"</em> (<code>unified_memory_system.py:1476-1479</code>,
+<code>:1543-1545</code>). That is a request to the model. Every row that
+survives the filters is injected.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Roampal memory survives, moves between tiers and dies; the rater is the model that was shown the memory</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Roampal memory survives, moves between tiers and dies; the rater is the model that was shown the memory
+flowchart TD
+    SM[&quot;score_memories: summary and facts&quot;] -- &quot;score 0.5&quot; --&gt; W[&quot;working&quot;]
+    RR[&quot;record_response takeaway&quot;] -- &quot;score 0.7&quot; --&gt; W
+    W --&gt; RATE{&quot;next turn: the same model&lt;br/&gt;rates each injected memory&quot;}
+    RATE -- &quot;worked +0.2 / partial +0.05&quot; --&gt; P1{&quot;score at least 0.7&lt;br/&gt;and 2 uses?&quot;}
+    RATE -- &quot;unknown -0.05 / failed -0.3&quot; --&gt; LOW{&quot;score under 0.2&lt;br/&gt;or 0.1 if 7 days old or less&quot;}
+    P1 -- &quot;yes&quot; --&gt; H[&quot;history, success_count reset&quot;]
+    P1 -- &quot;no, 24 hours pass&quot; --&gt; DEL[&quot;hard delete&quot;]
+    H --&gt; P2{&quot;score at least 0.9, 3 uses,&lt;br/&gt;5 successes since promotion&quot;}
+    P2 -- &quot;yes&quot; --&gt; PAT[&quot;patterns&quot;]
+    H -- &quot;30 days after creation&quot; --&gt; DEL
+    PAT -- &quot;score under 0.4&quot; --&gt; H
+    LOW -- &quot;yes&quot; --&gt; DEL
+    AB[&quot;add_to_memory_bank&quot;] --&gt; MB[&quot;memory_bank, status active,&lt;br/&gt;scored for display only&quot;]
+    MB -- &quot;delete_memory: substring match&lt;br/&gt;or else top semantic hit&quot; --&gt; ARC[&quot;status archived,&lt;br/&gt;filtered from every search&quot;]
+    ARC -- &quot;profile next loads&quot; --&gt; DEL</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One process owns the data. <code>roampal init</code> wires Claude
+Code hooks and an MCP entry, or copies a TypeScript plugin into
+OpenCode. The first hook or tool call spawns a FastAPI server on
+<code>127.0.0.1:27182</code> that holds a
+<code>UnifiedMemorySystem</code> per profile
+(<code>server/main.py:973-1051</code>). The MCP server is an HTTP client
+of it (<code>mcp/server.py:522-544</code>), and so are the hooks. The
+server retires itself after 30 idle minutes and is respawned by the next
+client.</p>
+<p>Storage is ChromaDB's embedded <code>PersistentClient</code>: five
+collections named <code>roampal_books</code>,
+<code>roampal_working</code>, <code>roampal_history</code>,
+<code>roampal_patterns</code> and <code>roampal_memory_bank</code> in
+<code>&lt;profile&gt;/chromadb</code>, with SQLite WAL and
+<code>FULL</code> synchronous on the catalog
+(<code>chromadb_adapter.py:21-55</code>,
+<code>unified_memory_system.py:576-595</code>). Session transcripts are
+JSONL files under <code>mcp_sessions/</code>, kept 30 days
+(<code>hooks/session_manager.py:46-62</code>).</p>
+<p>Two ONNX models run on CPU: a multilingual mpnet INT8 embedder
+(<code>embedding_service.py:50-51</code>) and the
+<code>mmarco-mMiniLMv2-L12-H384-v1</code> INT8 cross-encoder, shared
+across profiles (<code>search_service.py:77-82</code>). Tag extraction
+for summaries without <code>noun_tags</code> goes to a sidecar LLM when
+one is configured and is skipped otherwise.</p>
+<p><code>ContextService</code> is constructed at initialization and has
+no caller outside its own module and tests
+(<code>unified_memory_system.py:630-634</code>), so its per-conversation
+repetition check never runs.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Running:</strong> a Python process with two ONNX models; the
+README gives about 500 MB of RAM and 500 MB of model files, downloaded
+from Hugging Face on first use. No GPU, no external database.</li>
+<li><strong>Offline:</strong> fully local once the models are cached.
+Tag extraction and OpenCode scoring need a sidecar model; with none,
+retrieval still works and OpenCode memories are never scored.</li>
+<li><strong>API key:</strong> none to store anything. A sidecar may use
+one, read from an environment variable.</li>
+<li><strong>Install:</strong> <code>pip install roampal</code> and
+<code>roampal init</code>. There is no lockfile; <code>chromadb</code>
+and <code>mcp</code> are capped below 2.0 and the other eight
+dependencies have a floor only.</li>
+<li><strong>Repair by hand:</strong> poor. The store is ChromaDB's
+SQLite and HNSW files; the code works around HNSW phantoms in four
+places. <code>roampal stats</code>, <code>books</code> and
+<code>remove</code> exist; no command lists, restores or edits memory
+rows.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Injection.</strong>
+<code>hooks/user_prompt_submit_hook.py</code> posts to
+<code>/api/hooks/get-context</code>
+(<code>server/main.py:1096-1377</code>). On the first message of a
+session <code>_build_cold_start_profile</code> adds one
+<code>memory_bank</code> fact per priority tag (<code>:448-609</code>).
+<code>get_context_for_injection</code> runs two concurrent searches of
+limit four, one with <code>memory_type != fact</code> and one with
+<code>memory_type == fact</code>
+(<code>unified_memory_system.py:1382-1395</code>), and
+<code>_format_context_injection</code> renders the block
+(<code>:1414-1553</code>). Surfaced ids are cached per conversation for
+scoring (<code>server/main.py:1274-1298</code>).</p>
+<p><strong>Scoring and capture.</strong> The next get-context builds a
+scoring prompt listing those ids
+(<code>hooks/session_manager.py:517-594</code>). The model calls
+<code>score_memories</code>, which posts to
+<code>/api/record-outcome</code> (<code>mcp/server.py:1273-1317</code>,
+<code>server/main.py:1947-2288</code>). Each rated id goes to
+<code>OutcomeService.record_outcome</code>
+(<code>outcome_service.py:56-189</code>), which writes score, uses,
+success count and a ten-entry outcome history onto the row, then
+schedules <code>handle_promotion</code> as a fire-and-forget task
+(<code>:173-186</code>). The summary and each fact are stored in
+<code>working</code> by <code>store_working</code>
+(<code>unified_memory_system.py:1870-1940</code>).</p>
+<p><strong>Explicit writes.</strong> <code>add_to_memory_bank</code> →
+<code>/api/memory-bank/add</code> → <code>store_memory_bank</code>,
+which embeds, checks for a near-duplicate inside
+<code>memory_bank</code> only, and writes
+(<code>unified_memory_system.py:1157-1206</code>,
+<code>memory_bank_service.py:59-128</code>). <code>update_memory</code>
+rewrites by id (<code>memory_bank_service.py:172-221</code>).
+<code>delete_memory</code> → <code>archive()</code>
+(<code>:223-290</code>).</p>
+<p><strong>Retrieval.</strong> <code>UnifiedMemorySystem.search</code>
+delegates to <code>SearchService.search</code>
+(<code>search_service.py:309-407</code>), then drops ghost book ids and
+archived rows (<code>unified_memory_system.py:957-967</code>).</p>
+<p><strong>Lifecycle.</strong>
+<code>PromotionService._handle_promotion_inner</code>
+(<code>promotion_service.py:98-139</code>); TTL cleanups
+(<code>:492-588</code>), called at startup and every 50 outcome
+recordings (<code>outcome_service.py:222-230</code>). The hourly batch
+promoter <code>promote_valuable_working_memory</code>
+(<code>promotion_service.py:323-339</code>) is called only by a unit
+test.</p>
+<p><strong>Profile routing.</strong> <code>_resolve_profile_name</code>
+takes the <code>X-Roampal-Profile</code> header, then an
+<code>X-Roampal-Cwd</code> directory binding, then the persisted
+default, then the launch pin (<code>server/main.py:911-970</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema file; a row is ChromaDB metadata. Working rows
+carry <code>content</code>, <code>text</code>, <code>score</code>,
+<code>uses</code>, <code>created_at</code>,
+<code>conversation_id</code>, <code>memory_type</code>
+(<code>exchange_summary</code> or <code>fact</code>),
+<code>noun_tags</code> as a JSON string, and after scoring
+<code>success_count</code>, <code>last_outcome</code>,
+<code>last_used</code> and <code>outcome_history</code> truncated to its
+last ten entries (<code>unified_memory_system.py:1906-1915</code>,
+<code>outcome_service.py:142-159</code>). Promotion appends to a
+<code>promotion_history</code> JSON field and sets
+<code>original_id</code>, so a stale id in a later rating is found in
+the next tier (<code>promotion_service.py:153-166</code>,
+<code>outcome_service.py:90-112</code>).</p>
+<p>A <code>memory_bank</code> row adds <code>tags</code> (the MCP schema
+offers six values), <code>importance</code>, <code>confidence</code>,
+<code>status</code>, <code>mentioned_count</code>, and on update
+<code>updated_at</code> and <code>update_reason</code>
+(<code>memory_bank_service.py:104-118</code>, <code>:197-203</code>).
+Ids are <code>&lt;collection&gt;_&lt;8 hex&gt;</code>, and the prefix is
+how a rating finds its collection.</p>
+<p><strong>Scope</strong> is physical. A named profile is a registered
+directory (<code>profile_manager.py</code>), and the server keeps one
+<code>UnifiedMemorySystem</code> per profile name.
+<code>conversation_id</code> is stored and not read by any retrieval;
+the one query that filters on it is the write-side duplicate check
+<code>_merge_into_recent_summary</code>
+(<code>server/main.py:334-342</code>). The per-conversation caches that
+scoring uses — <code>_search_cache</code>, <code>_injection_map</code> —
+are module globals keyed by conversation id, not by profile
+(<code>server/main.py:73-89</code>). When <code>ROAMPAL_DATA_PATH</code>
+is set, every profile name opens a <code>UnifiedMemorySystem</code> on
+that one path (<code>server/main.py:990-1013</code>).</p>
+<p><strong>Time</strong> is <code>created_at</code> or
+<code>timestamp</code> and <code>updated_at</code>, record time only.
+<strong>Correction</strong> is overwrite in place for
+<code>memory_bank</code> and archival; nothing records the prior text.
+<strong>Provenance</strong> is absent: no row records which tool,
+session or model wrote it, beyond the <code>conversation_id</code> on
+working rows.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is automatic on every prompt and tool-mediated through
+<code>search_memory</code>. Both reach the same
+<code>SearchService.search</code>.</p>
+<p><strong>Tag routing, then vectors.</strong>
+<code>TagService.match_query_tags</code> word-boundary matches the query
+against every <code>noun_tags</code> value seen, longest first, up to
+eight (<code>tag_service.py:616-642</code>). For each matched tag and
+collection it runs a vector query of <code>limit * 8</code> with no tag
+predicate and keeps rows whose <code>noun_tags</code> contain the tag,
+in Python (<code>search_service.py:437-484</code>). Results are pooled
+by how many tags they matched, cosine order within a tier, and the pool
+is filled to 40 from an untagged cosine search (<code>:509-550</code>).
+With no tag match, the pool is the cosine search alone. BM25 was removed
+in v0.4.1.2 (<code>chromadb_adapter.py:353-374</code>).</p>
+<p><strong>The cross-encoder is the rank.</strong>
+<code>apply_scoring_to_results</code> first sorts the pool by a blend of
+embedding similarity and a learned score that becomes the Wilson bound
+after three uses (<code>scoring_service.py:151-193</code>,
+<code>:313-343</code>). <code>_rerank_with_ce</code> then replaces
+<code>final_rank_score</code> with the raw cross-encoder score for the
+first 40 and sorts them (<code>search_service.py:195-231</code>); the
+docstring cites the benchmark finding that Wilson hurt retrieval at
+every stage. The blend survives in one place: on the untagged path each
+collection contributes <code>limit * 3</code> candidates, 48 for an
+injection lane over four collections, so the blend chooses which 40 are
+reranked. Collection boosts — patterns ×0.9 distance, memory_bank
+cold-start quality, books under seven days ×0.7 — act on the same
+pre-rerank order (<code>:645-674</code>).</p>
+<p><strong>Filters.</strong> Archived <code>memory_bank</code> rows are
+excluded by a <code>status != archived</code> predicate on every
+ChromaDB query of that collection
+(<code>search_service.py:446-455</code>, <code>:617-627</code>) and
+again after search (<code>unified_memory_system.py:962-967</code>).
+Direct lookup by id through <code>search_memory(id=...)</code> goes to
+<code>get_by_id</code>, which applies neither
+(<code>unified_memory_system.py:1252-1274</code>).</p>
+<p><strong>Budget.</strong> Eight memories per turn, no size cap. Full
+text is repeated only when content changed: on Claude Code a memory
+already delivered this session renders as a one-line pointer, recorded
+only after the hook acknowledges delivery
+(<code>unified_memory_system.py:1509-1520</code>,
+<code>server/main.py:1300-1332</code>).</p>
+<p><strong>Failure modes.</strong> A ChromaDB query error returns
+<code>[]</code> from <code>query_vectors</code>
+(<code>chromadb_adapter.py:287-289</code>) and reads as no memories. An
+embedder failure is surfaced as a degraded marker instead
+(<code>server/main.py:1348-1371</code>). Tag routing over-fetches from
+the whole collection, so a tag's rows outside the nearest
+<code>limit * 8</code> vectors are not seen. The empty-query path behind
+the SessionStart recency list reads at most 1,000 rows per collection
+before it sorts (<code>search_service.py:701</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a tool call or a hook, synchronous in the request. On
+Claude Code the Stop hook stores the raw exchange in the session JSONL
+only; the durable summary arrives with the next turn's
+<code>score_memories</code> (<code>server/main.py:1420-1432</code>). On
+OpenCode the plugin's sidecar summarizes and the Stop hook stores the
+summary in <code>working</code> (<code>:1433-1499</code>).</p>
+<p><strong>Length is refused, not truncated.</strong> Summaries and
+memory_bank entries over 600 characters and facts over 150 get an HTTP
+400 carrying a rewrite message, and nothing is stored
+(<code>memory_limits.py:30-32</code>,
+<code>server/main.py:1966-1981</code>).</p>
+<p><strong>Dedup is per tier and by vector.</strong> A <code>fact</code>
+in working, history or patterns is skipped when any of the four tiers
+holds a fact within L2 distance 0.32; a <code>memory_bank</code> write
+checks <code>memory_bank</code> only, so a permanent write is never
+blocked by a transient copy
+(<code>unified_memory_system.py:402-416</code>, <code>:517-554</code>,
+<code>:1181-1187</code>). Archived rows are excluded from dedup.</p>
+<p><strong>Conflict</strong> is not handled. Two memory_bank facts that
+disagree are both stored and both injected; the tool description tells
+the model to call <code>update_memory</code> or
+<code>delete_memory</code>.</p>
+<p><strong>Deletion by content picks a neighbour.</strong>
+<code>archive()</code> searches <code>memory_bank</code> for the given
+text, takes the first active hit where either string contains the other,
+and otherwise takes the top active hit
+(<code>memory_bank_service.py:244-269</code>). The MCP description
+states this (<code>mcp/server.py:853</code>). <code>restore()</code>
+exists and has no caller outside tests, and
+<code>cleanup_archived()</code> runs on the first access to each profile
+after a server start. A wrong archive is reversible by editing ChromaDB
+metadata until the next restart, and then it is gone.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Blocking:</strong> the agent blocks on an embedding per
+write and a scoring call per turn. There is no LLM on the Claude Code
+write path; the model writes the summary itself as a tool argument.</li>
+<li><strong>Lag:</strong> a stored row is searchable when the call
+returns. Promotion runs in a background task seconds later.</li>
+<li><strong>Whole-store passes:</strong> startup reads every working,
+history and patterns row's metadata, re-reads every memory_bank row for
+the status backfill once, and sweeps HNSW phantoms. The TTL cleanup
+every 50 ratings iterates every working and history id with one
+<code>get</code> per id. <code>_format_context_injection</code> lists
+the whole <code>memory_bank</code> on every prompt to find the user's
+name (<code>unified_memory_system.py:1435</code>); the bank is capped at
+500 active rows.</li>
+<li><strong>Injection:</strong> eight memories and, on a scoring turn, a
+prompt listing their ids. It arrives through the UserPromptSubmit hook's
+stdout, so it sits in the user turn rather than in a cached system
+prefix.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Six MCP tools: <code>search_memory</code>,
+<code>add_to_memory_bank</code>, <code>update_memory</code>,
+<code>delete_memory</code>, <code>score_memories</code> and
+<code>record_response</code> (<code>mcp/server.py:608-996</code>).
+<code>score_memories</code> is hidden on OpenCode when a sidecar scores.
+The descriptions are long and specific, with WHEN TO USE, BEHAVIOR and
+ERRORS blocks that cite source lines.</p>
+<p>The model has wide agency. It writes, edits and archives permanent
+facts, sets their <code>importance</code> and <code>confidence</code>,
+and rates every memory it was shown. The scoring prompt says it <em>"MAY
+also score any other memory visible"</em>
+(<code>hooks/session_manager.py:569</code>), and
+<code>memory_scores</code> accepts any id
+(<code>server/main.py:2098-2107</code>).</p>
+<p><strong>An empty rating scores someone else's cache.</strong> When no
+memories were surfaced, the prompt itself tells the model to send
+<code>memory_scores={}</code>
+(<code>hooks/session_manager.py:585-590</code>). The MCP handler drops
+the empty map (<code>mcp/server.py:1287-1288</code>), and the endpoint
+falls through to scoring cached doc ids with the exchange outcome. With
+no cache under the resolved conversation it takes the most recent entry
+of any conversation still inside the 30-minute TTL
+(<code>server/main.py:2081-2094</code>, <code>:2129-2140</code>). With
+two sessions on one server, one session's <code>failed</code> exchange
+is applied to the other's injected memories.</p>
+<p><strong>Session boundaries.</strong> <code>roampal init</code>
+registers <code>roampal context --recent-exchanges</code> as the
+SessionStart hook for <code>startup</code>, <code>compact</code> and
+<code>clear</code> (<code>cli/setup.py:528-543</code>). It resets the
+per-conversation pointer record, so a compacted session receives full
+text again, and prints the four most recent exchange summaries by
+recency (<code>cli/memory_cmds.py:714-804</code>).</p>
+<p>Adapting it to another agent means reusing the HTTP API: the hooks
+and plugin are thin clients of <code>/api/hooks/get-context</code> and
+<code>/api/hooks/stop</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope: withheld.</strong> Profiles are separate directories,
+one ChromaDB per profile, and the routing is careful. An unregistered
+profile name gets a 404 naming <code>roampal profile create</code>
+instead of a silent write to the default store
+(<code>server/main.py:985-1007</code>), and the server never resolves a
+profile from its own cwd. That is a physical partition with no key on
+the row and no predicate on the read. <code>conversation_id</code> is on
+working rows and nothing retrieves by it. Setting
+<code>ROAMPAL_DATA_PATH</code> collapses every profile onto one
+directory.</p>
+<p><strong>Tombstone: withheld.</strong> Archival is keyed on the row
+and purged at the next load.
+<code>test_archive_then_add_similar_fact_succeeds</code> asserts that
+re-adding an archived fact's exact text succeeds with a new id
+(<code>test_archive_dedup_cycle.py:62-85</code>): re-assertion is the
+intended behaviour, fixed for issue #8. The <code>ghost_ids.json</code>
+registry for removed books is durable and keyed on chunk ids.</p>
+<p><strong>Trust state: withheld.</strong> <code>status</code> holds
+<code>active</code> or <code>archived</code>, a deletion flag.
+<code>confidence</code> is a float the agent sets. It scales a distance
+boost for memory_bank rows with fewer than three uses, before the
+cross-encoder reranks, and orders the cold-start profile
+(<code>search_service.py:653-662</code>,
+<code>server/main.py:471-479</code>). Wilson scores, uses and last
+outcome are rendered for the model to weigh, and no read excludes a row
+on them.</p>
+<p><strong>Audit log: withheld.</strong> <code>outcome_history</code>
+keeps the last ten ratings on the row
+(<code>outcome_service.py:142-149</code>) and
+<code>promotion_history</code> travels with it; both are overwritten or
+deleted with the row. <code>update_memory</code> overwrites text with no
+prior copy. Session JSONL files are transcripts with a 30-day TTL.</p>
+<p><strong>Human review: withheld.</strong> No path holds a memory for a
+person. Every write, edit, archive and rating verb is on the agent's MCP
+surface, and the CLI has no command to list, approve or restore memory
+rows.</p>
+<p><strong>Bi-temporal: withheld.</strong> Record time only.</p>
+<p><strong>Prompt-injected memories.</strong> Anything the model writes
+is stored and injected next turn, subject to the length rule and dedup.
+A poisoned fact loses score only if the same model later labels it
+<code>failed</code>. The paper's poison run is the evidence on this,
+with lifecycle enabled, and it states that the mechanism was not
+isolated.</p>
+<p><strong>Local surface.</strong> The server binds
+<code>127.0.0.1</code> with no authentication
+(<code>server/main.py:2696</code>). Any local process can read, write or
+archive any registered profile by naming it in a header.</p>
+<p><strong>Data loss.</strong> A wrong semantic archive (section 7)
+becomes a hard delete at restart. Repeated <code>unknown</code> ratings
+demote a pattern, and a demoted pattern past 30 days is deleted. The
+startup pass deletes new rows its runtime counterpart would keep.
+<code>update_by_id</code> does not check <code>status</code>, so
+updating an archived id reports success and the row stays invisible
+(<code>memory_bank_service.py:190-221</code>).</p>
+<p><strong>Crash safety</strong> is taken seriously: WAL with
+<code>FULL</code> synchronous on the ChromaDB catalog, atomic temp-file
+replace for transcript state, a single-writer server, and phantom sweeps
+for HNSW entries left by hard deletes.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing. The counts come from the checkout: 1,090 pytest
+functions, mostly unit tests with mocked collections, plus six
+integration files against a real ChromaDB. CI runs unit tests on Linux
+and macOS across Python 3.10–3.13, integration tests on Linux and
+Windows, WAL tests in-process, a CLI golden suite on three operating
+systems, and a Bun parse of the OpenCode plugin
+(<code>.github/workflows/tests.yml</code>).</p>
+<p><strong>The negative case that earns the mark.</strong>
+<code>test_search_after_archive_and_readd</code> archives a fact,
+re-adds identical text, and asserts the archived id is absent and the
+new id present in a <code>memory_bank</code> search
+(<code>test_archive_dedup_cycle.py:178-202</code>). The integration job
+runs the directory with the real embedder (<code>tests.yml:295</code>,
+<code>:314</code>). The case above it,
+<code>test_search_excludes_archived_after_cycle</code>
+(<code>:153-175</code>), asserts only the absence, and its comment
+concedes the other fact may not match.</p>
+<p><strong>A scope-boundary case.</strong>
+<code>test_many_profiles_at_once_route_independently</code> stores a
+marker per profile through four routing paths, asserts each client finds
+its own, then asserts no foreign marker in any client's results
+(<code>test_multi_profile_routing.py:276-396</code>). It uses a fake
+embedder and disables the cross-encoder.</p>
+<p><strong>A regression guard with a negative control.</strong>
+<code>test_dedup_regression.py</code> stores three distinct facts
+through the real <code>store_memory_bank</code> path and asserts all
+three survive, forces the v0.5.9 broken threshold to show the same case
+can fail, and repeats both over recorded real-model vectors in
+<code>dedup_real_vectors.json</code> (<code>:159-200</code>,
+<code>:308-370</code>).</p>
+<p><strong>Not covered.</strong> No test exercises the semantic fallback
+in <code>archive()</code> or the purge of archived rows on load.
+<code>test_record_outcome_marks_scored</code> sends an empty
+<code>memory_scores</code> and asserts only that the turn is marked
+scored (<code>test_fastapi_endpoints.py:727-737</code>); no test asserts
+which ids the cache fallback then scores. Score-driven deletion is
+tested on <code>PromotionService</code> with mocks, not through the HTTP
+path. No retrieval-quality evaluation is committed to this
+repository.</p>
+<p><strong>The paper.</strong> The README cites <em>Beyond Ingestion:
+What Conversational Memory Learning Reveals on a Corrected LoCoMo
+Benchmark</em> (Logan Teague, April 2026) and links <a
+href="https://github.com/roampal-ai/roampal-labs">roampal-labs</a> for
+data and scripts. It is <code>paper.md</code> in that repository at <a
+href="https://github.com/roampal-ai/roampal-labs/commit/6b20c0d8f40c4f1eec0ccd0bb9e73cffea961ae7"><code class="commit-id" title="6b20c0d8f40c4f1eec0ccd0bb9e73cffea961ae7">6b20c0d8…</code></a>;
+an arXiv title search returned no entry. Three points bear on the
+code:</p>
+<ul>
+<li>The 85.8% non-adversarial figure is in its section 4.1, headed
+<em>learning OFF</em>, and its method section describes that run as
+<em>"promotion and decay disabled — all memories remain in working tier,
+outcome scores tracked but not acted on"</em>. The lifecycle ran only in
+the poison runs.</li>
+<li>It measured that Wilson scoring hurt retrieval at every stage. The
+code lets the cross-encoder set the final order, and the blend still
+picks which candidates reach it on the untagged path (section 6).</li>
+<li>Its pipeline used English <code>ms-marco-MiniLM-L-6-v2</code> and
+ChromaDB's default <code>all-MiniLM-L6-v2</code> embedder. The code
+ships the multilingual mmarco cross-encoder and a multilingual mpnet
+INT8 embedder. The paper states the reranker difference in its
+limitations and does not list the embedder.</li>
+</ul>
+<p>It also states that the contribution of the outcome metadata shown to
+the model was not isolated, and neither were the three candidate
+explanations for poison resilience. Those are the paper's own limits,
+not findings here.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Route by an explicit client-named scope and refuse the
+unknown one.</strong> A header every client must send, a 404 for an
+unregistered name, and a server that never infers scope from its own
+environment.</li>
+<li><strong>Make a degraded read loud to the model.</strong> "Embedder
+down, do not claim memories were checked" in the injected block is
+better than an empty block that reads as "no memories".</li>
+<li><strong>Ablate your own trust signal before shipping it into
+ranking.</strong> The paper measured the Wilson blend, found it harmful,
+and the code keeps it out of the final order while still showing
+it.</li>
+<li><strong>Refuse over-long writes with a rewrite message</strong>
+instead of truncating.</li>
+<li><strong>Dedup facts per tier, with the permanent tier checking only
+itself</strong>, so a transient near-copy never blocks a durable
+write.</li>
+<li><strong>Deduplicate repeated injections by id and content hash,
+committed only on delivery acknowledgement.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Letting the consumer grade the memory.</strong> The model
+that was shown a memory and the model that rates it are the same, and
+"not used this turn" counts against the memory. Usefulness for one query
+is not truth, and retrieval noise becomes demotion and then
+deletion.</li>
+<li><strong>Deleting by nearest neighbour.</strong> A delete keyed on
+content that falls back to the top semantic hit removes a memory the
+caller did not name. Resolve to an id first, and refuse when the match
+is not exact.</li>
+<li><strong>A soft delete that a restart hardens.</strong> Reversibility
+that lasts until the next process start, with no restore verb on any
+surface, is a hard delete with a delay.</li>
+<li><strong>A fallback that reaches across sessions.</strong> When the
+scoring target cannot be resolved, score nothing.</li>
+<li><strong>Two thresholds for one deletion rule.</strong> The startup
+and runtime paths disagree about new rows.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants hook-injected memory in Claude
+Code or OpenCode, running locally on CPU, and who is comfortable with
+the model curating its own store. The operational engineering is
+careful: crash-safe writes, explicit degraded states, routing that fails
+loudly. A reader who needs a stored fact to stay put until a person
+removes it should use <code>memory_bank</code> only, and read section 7
+before exposing <code>delete_memory</code>. A team, or anyone who needs
+to know why a memory exists or who changed it, will find no provenance,
+no history and no review surface, and should walk away. The outcome loop
+is the distinctive part and the least evidenced: its own headline
+benchmark ran without it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does <code>delete_memory</code> fall back to the top
+active hit in practice, and do the tool descriptions steer models to
+paste exact text?</li>
+<li>What fraction of summaries survive the 24-hour working window under
+normal use, given that a summary needs two ratings in that window, one
+of them <code>worked</code>?</li>
+<li>Does ChromaDB's <code>$ne</code> on <code>memory_type</code> include
+<code>memory_bank</code> rows that carry no <code>memory_type</code>, as
+the lane comment assumes?</li>
+<li>Is the empty-<code>memory_scores</code> cache fallback hit with
+multiple sessions in the field?</li>
+<li>Would the poison-run result hold with the metadata tags stripped,
+which the paper names as untested?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>roampal/backend/modules/memory/chromadb_adapter.py</code>,
+<code>memory_types.py</code>, <code>config.py</code>,
+<code>roampal/memory_limits.py</code>,
+<code>roampal/profile_manager.py</code>.</li>
+<li><strong>Write path:</strong> <code>unified_memory_system.py</code>
+(<code>store_working</code>, <code>store_memory_bank</code>,
+<code>_find_duplicate_fact</code>), <code>memory_bank_service.py</code>,
+<code>server/main.py:1392-1585, 1742-1818, 1910-2288</code>.</li>
+<li><strong>Scoring and lifecycle:</strong>
+<code>outcome_service.py</code>, <code>promotion_service.py</code>,
+<code>scoring_service.py</code>,
+<code>unified_memory_system.py:786-897</code>.</li>
+<li><strong>Retrieval:</strong> <code>search_service.py</code>,
+<code>tag_service.py</code>, <code>routing_service.py</code>,
+<code>embedding_service.py</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>unified_memory_system.py:1335-1553</code>,
+<code>server/main.py:448-609, 1096-1377</code>,
+<code>roampal/hooks/session_manager.py</code>.</li>
+<li><strong>Integration:</strong> <code>roampal/mcp/server.py</code>,
+<code>roampal/hooks/</code>,
+<code>roampal/plugins/opencode/roampal.ts</code>,
+<code>roampal/cli/</code>.</li>
+<li><strong>Tests:</strong>
+<code>tests/integration/test_archive_dedup_cycle.py</code>,
+<code>tests/integration/test_multi_profile_routing.py</code>,
+<code>tests/unit/test_dedup_regression.py</code>,
+<code>tests/unit/test_search_service.py</code>,
+<code>tests/unit/test_memory_bank_service.py</code>,
+<code>.github/workflows/tests.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rniE 'audit|event_log|append-only|appendonly' roampal --include='*.py' --include='*.ts' | grep -v '/tests/'</code>
+— comments only (hook output described as append-only, an audit finding
+id); no mutation record.</li>
+<li><code>grep -rniE 'valid_(from|to|at|until)|invalid_at|effective_(from|at)' roampal --include='*.py' --include='*.ts'</code>
+— no match.</li>
+<li><code>grep -rniE '\b(approve|approval|pending_review|needs_review|quarantine|candidate)\b' roampal --include='*.py' --include='*.ts' | grep -v '/tests/'</code>
+— candidate pools and path candidates only.</li>
+<li><code>grep -rniE 'tombstone|reject(ed)?_value|blocklist|denylist|suppress' roampal --include='*.py' --include='*.ts' | grep -v '/tests/'</code>
+— two unrelated comments.</li>
+<li><code>grep -rn '\.restore(\|delete_permanent(\|cleanup_archived(' roampal --include='*.py' | grep -v '/tests/'</code>
+— <code>restore</code> and <code>delete_permanent</code> have no caller;
+<code>cleanup_archived</code> is called at
+<code>server/main.py:1023</code> and
+<code>memory_bank_service.py:412</code>.</li>
+<li><code>grep -rn 'context_service\|ContextService' roampal --include='*.py' | grep -v '/tests/'</code>
+— imports and the constructor at
+<code>unified_memory_system.py:630</code>; no call.</li>
+<li><code>grep -rn 'promote_valuable_working_memory' roampal --include='*.py' --include='*.ts'</code>
+— the definition and one unit test.</li>
+<li><code>grep -rnE '"where"|where=' roampal --include='*.py' | grep -v '/tests/'</code>
+— <code>conversation_id</code> appears only in
+<code>_merge_into_recent_summary</code>
+(<code>server/main.py:335-340</code>); retrieval filters come from
+<code>metadata_filters</code>, which no caller fills with a scope
+key.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git</code>
+— <code>README.md</code> (a paper cited by title, no identifier) and a
+test comment; no <code>CITATION.cff</code>.</li>
+<li><code>curl -s 'https://export.arxiv.org/api/query?search_query=ti:%22Beyond%20Ingestion%22&amp;max_results=5'</code>
+— no entry.</li>
+<li><code>find . -iname AGENTS.md -o -iname CLAUDE.md -o -iname GEMINI.md -o -iname .cursorrules</code>
+— none in the tree.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/roampal-ai/roampal-core/commit/211e7e05bb1e364471d29dd98c45d8b3bb3f12b0"><code class="commit-id" title="211e7e05bb1e364471d29dd98c45d8b3bb3f12b0">211e7e05…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 26
+September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: no auto-run surface, four build-time execution points (three
+<code>conftest.py</code> files and <code>roampal/cli/setup.py</code>),
+one unpinned surface (<code>pyproject.toml</code> with no lockfile), and
+one file inside the cooldown, which in a depth-1 clone dates every file
+to the tip. No agent instruction files were present. The companion paper
+was read in <code>roampal-ai/roampal-labs</code>. Read with
+<code>grep</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

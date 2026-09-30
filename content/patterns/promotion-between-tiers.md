@@ -178,6 +178,8 @@ rather than moved to a lower tier.
 
 [eMEM](../../systems/emem/) computes its tier rule from the wrong clock. Its archival sweep selects `long_term` observations whose event `timestamp` is older than `archive_after_seconds`, while the setting is commented as time spent in `long_term`, and no column records when a row was promoted — so all but the last hour of a long episode is archived on the first sweep after consolidation. The tier DBSCAN rejects has no exit at all: noise points stay `short_term`, which archival never selects, and are re-clustered on every time-window pass for as long as the file exists.
 
+[Roampal Core](../../systems/roampal-core/) computes its tier rule from ratings the consuming model gives. Summaries enter `working` at 0.5 and move to `history` at 0.7 with two uses, and to `patterns` at 0.9 with three uses and five successes counted since promotion; `unknown`, meaning the memory was shown and not used, subtracts 0.05, so retrieval noise drifts a pattern toward demotion. A working row not promoted within 24 hours is deleted, and demotion keeps the original `created_at`, so a demoted pattern past 30 days is deleted at the next history cleanup. The companion paper's headline accuracy was measured with promotion and decay disabled, so its own benchmark does not measure the rule.
+
 ### Separate inputs, a ceiling, a recorded decision — argued
 
 No system cited here has all three on a storage-tier move; each has part.

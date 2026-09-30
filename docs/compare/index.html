@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-693, generated from each report's frontmatter —
+696, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-693, generated from each report's frontmatter —
+696, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-693, generated from each report's frontmatter —
+696, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 693, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 696, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-693, generated from each report's frontmatter —
+696, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 693 systems by the seven mechanisms
+filters all 696 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -4319,6 +4319,61 @@ support</td>
 </tr>
 <tr>
 <td><a
+href="../systems/claude-engram/"><code>claude-engram</code></a></td>
+<td>One MemoryEntry: content, category (rule, mistake, decision,
+discovery, context, lesson, priority, note), relevance 1-10, tags,
+related_files, created_at, last_accessed, access_count, source,
+archived_at and an optional rule detector. No project field and no
+status</td>
+<td>JSON under ~/.claude_engram: projects/HASH/memory.json per
+registered project path, a manifest from path to hash, one archive.json
+at the store root keyed by project path, and per-project embedding
+matrices</td>
+<td>Hooks score hot entries by file match 0.35, tags, recency,
+relevance, access count and a category bonus, and inject the top three
+only with direct file relevance. The MCP memory tool fuses word-overlap
+keyword, the same scorer and optional bge-base vectors by RRF, reranks,
+and drops zero scores</td>
+<td>Hooks store failed-tool output as mistakes and gated user sentences
+as decisions; a detached miner extracts decisions, mistakes and
+preferences from transcripts; MCP remember, add_rule, log_mistake and
+log_decision. Dedupe is exact text on the hook path and 0.85 Jaccard in
+the store, over hot entries only</td>
+<td>modify, delete, batch_delete, promote, archive and restore by id;
+forget removes a project's directory and manifest entry and leaves its
+rows in the root archive.json. Idle entries archive after 14 days;
+cleanup hard-deletes entries it judges broken, rules included. No
+tombstone</td>
+<td>Physical: one memory.json per registered project path. The hook
+readers merge ancestor stores and fall back to any registered project
+with the same directory basename; MCP reads open only the named
+project's file. No key on the row</td>
+<td>Claude Code hooks on SessionStart, UserPromptSubmit, PreToolUse,
+PostToolUse, PostToolUseFailure, PreCompact, PostCompact, Stop,
+StopFailure, Notification and SessionEnd, merged into
+~/.claude/settings.json; a 16-tool MCP server; an /engram skill</td>
+<td>A detached transcript miner at session end, on a project's first
+session and on a debounced live tick; the session-end and first-session
+runs also apply cleanup with decay and archive stale mistakes; optional
+Ollama digests; a loopback daemon serving embeddings and hook events
+that exits after 30 idle minutes</td>
+<td>None as state. Categories are types, archived_at is a storage tier
+that hook reads skip, and decision capture is a write-time shape
+gate</td>
+<td>Path-aware file matching that refuses bare generic basenames; an
+injection gate that stays silent without direct file relevance; one
+decision-shape gate shared by the prompt hook, the miner and a pruning
+migration; archive-not-delete for consolidation and mistake hygiene;
+stale-save merge by entry id</td>
+<td>Both hook readers fall back to another registered project with the
+same basename; acknowledged mistakes are re-captured because dedupe
+reads only the hot tier; forget leaves archived rows behind;
+post-session cleanup deletes a rule under 20 characters as broken; the
+loopback daemon runs hook handlers for any local caller; the benches
+cannot fail a run</td>
+</tr>
+<tr>
+<td><a
 href="../systems/claude-mem-lite/"><code>claude-mem-lite</code></a></td>
 <td>An observation — type (decision, bugfix, feature, refactor,
 discovery, change), title, subtitle, facts, narrative, concepts, lesson
@@ -6373,6 +6428,54 @@ produces; memory_candidates is selected, updated and swept by five
 statements and inserted into by none; and the lesson-trigger cache
 injects up to 50 lessons every turn with neither the project nor the
 lifecycle predicate the rest of the read paths carry</td>
+</tr>
+<tr>
+<td><a href="../systems/ctx-open/"><code>ctx-open</code></a></td>
+<td>Typed cognitive records: goal, epic, task, hypothesis, decision,
+evidence, conclusion, plus operational runbooks and cognitive triggers.
+Each carries a state enum and a Traceability record with a
+caller-supplied author and created and updated times</td>
+<td>A .ctx directory of indented JSON files beside the project: one
+working-context file holding every goal, task, hypothesis, decision,
+evidence item and conclusion; one file per commit, runbook, trigger,
+packet and run</td>
+<td>No search. A context packet takes up to three goals by priority and
+six tasks, then follows id links to hypotheses ordered by confidence,
+decisions, evidence and conclusions, each capped; runbooks are scored by
+task, goal and trigger substring match. A goal or task id that matches
+nothing falls back to the top goals</td>
+<td>Explicit CLI or MCP verbs, synchronous, under a process and file
+lock. Hypotheses are born Proposed; decisions and conclusions take any
+state the caller passes; evidence is always stamped Validated. A
+heuristic bootstrap reads documents and writes a goal, task, hypotheses
+and evidence without a model call</td>
+<td>Update in place by id, with state changes, merge and supersede
+verbs. No delete verb for any record. Commits snapshot the whole working
+context with a diff against the previous commit. Branch merge takes the
+incoming copy of every entity</td>
+<td>Physical: one .ctx directory per project. The MCP server is pinned
+to one repository unless started with an allowed root. Commits carry a
+branch name that the log filters on; the working context holds one
+branch at a time</td>
+<td>CLI, a stdio MCP server that is read-only unless started with --mode
+write, an ACP-style JSON-RPC agent that is read-only, a local web
+viewer, and prompt files that teach the agent the loop</td>
+<td>None. Commits are cut by the agent or a person; runs call OpenAI or
+Anthropic only when invoked</td>
+<td>State enums are rendered into the packet as labels and used by
+planning, audit and next-work filters; the packet itself filters no
+hypothesis, decision, evidence or conclusion by state. Runbooks are
+filtered to Active</td>
+<td>A typed reasoning model with explicit hypothesis, decision and
+conclusion states; commits that store a full snapshot and an entity
+diff; a consistency audit that names missing evidence and open
+hypotheses on closed tasks; atomic temp-file writes under a process and
+file lock; read-only MCP by default</td>
+<td>Superseded hypotheses reach the packet under their old state label;
+merge overwrites divergent entities with the incoming copy after
+reporting them, and its equality test is reference-based on lists;
+bootstrap_map reads any file path, bypassing the repository guard, in
+read-only mode; documented states silently become defaults</td>
 </tr>
 <tr>
 <td><a href="../systems/ctx/"><code>ctx</code></a></td>
@@ -24601,6 +24704,59 @@ memory</td>
 has a test</td>
 </tr>
 <tr>
+<td><a
+href="../systems/roampal-core/"><code>roampal-core</code></a></td>
+<td>A text row in one of five ChromaDB collections: an exchange summary,
+atomic fact or key takeaway in working, history or patterns; a
+memory_bank fact with tags, importance and confidence; or a book chunk.
+Rows carry a raw outcome score, uses, success_count and the last ten
+outcomes</td>
+<td>Five ChromaDB PersistentClient collections in one directory per
+profile, SQLite WAL on the catalog; session transcripts as JSONL files
+and a ghost_ids.json registry for removed books beside them</td>
+<td>Per turn, two lanes of four (summaries, facts) over working,
+history, patterns and memory_bank. Query words matched against a
+known-tag index choose tag-filtered vector queries, cosine fills a
+40-candidate pool, and a multilingual cross-encoder score is the final
+rank. Outcome and Wilson scores only pick which candidates reach the
+reranker when there are more than 40</td>
+<td>The agent through MCP: score_memories stores a summary and facts in
+working, record_response a takeaway at score 0.7, add_to_memory_bank a
+permanent fact. OpenCode's stop hook stores a sidecar summary. A fact
+within cosine distance 0.32 of a stored fact is not written</td>
+<td>update_memory rewrites a memory_bank row by id; delete_memory
+archives the best semantic match, falling back to the top active hit,
+and archived rows are hard-deleted when the profile next loads. Working
+expires at 24 hours, history at 30 days, a low outcome score deletes. No
+tombstone</td>
+<td>Physical: one data directory per named profile, chosen per request
+by an X-Roampal-Profile header, a directory binding or a persisted
+default. conversation_id is stored on working rows and no retrieval
+filters on it</td>
+<td>Claude Code UserPromptSubmit and Stop hooks and an MCP server with
+six tools, both proxying to a local FastAPI server on port 27182; an
+OpenCode TypeScript plugin with an optional sidecar scorer</td>
+<td>Startup cleanup deletes low-score and expired rows and sweeps HNSW
+phantoms; every 50 outcome recordings a TTL cleanup runs; a one-time
+background re-embed after an embedder change; optional sidecar LLM tag
+extraction</td>
+<td>None as state. The injected block says memories may be wrong and
+labels facts as direction, not authority; wilson, uses and last-outcome
+tags print beside each memory. status is only active or archived</td>
+<td>Per-request profile routing that refuses an unregistered profile
+with a 404 instead of writing to the default store; archived rows
+excluded at the query predicate and again after search; explicit
+degraded markers when the embedder is down; a dedup regression guard
+over recorded real vectors; a published ablation that removed its own
+Wilson ranking</td>
+<td>The model that used a memory rates it, and ratings drive promotion
+and deletion; delete_memory archives the top semantic hit when no text
+matches, and the archive is purged at the next load; an empty
+memory_scores scores another session's cached results; the headline
+benchmark ran with the lifecycle off; the localhost server has no
+authentication</td>
+</tr>
+<tr>
 <td><a href="../systems/rrsi/"><code>rrsi</code></a></td>
 <td>An accepted harness edit: a commit of program text (prompt, control
 flow, client tool, skill or subagent) on the domain's evolve branch,
@@ -30224,7 +30380,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>64 of 693:</em> <a
+<p><em>64 of 696:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -30292,7 +30448,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>177 of 693:</em> <a
+<p><em>177 of 696:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -30476,7 +30632,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>119 of 693:</em> <a
+<p><em>119 of 696:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -30603,7 +30759,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>322 of 693:</em> <a
+<p><em>322 of 696:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -30940,7 +31096,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>235 of 693:</em> <a
+<p><em>235 of 696:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -31185,7 +31341,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>94 of 693:</em> <a
+<p><em>94 of 696:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
@@ -31283,7 +31439,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>406 of 693:</em> <a
+<p><em>409 of 696:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -31343,6 +31499,7 @@ href="../systems/cashew/"><code>cashew</code></a>, <a
 href="../systems/cass-memory-system/"><code>cass-memory-system</code></a>,
 <a href="../systems/caura/"><code>caura</code></a>, <a
 href="../systems/citra/"><code>citra</code></a>, <a
+href="../systems/claude-engram/"><code>claude-engram</code></a>, <a
 href="../systems/claude-mem/"><code>claude-mem</code></a>, <a
 href="../systems/claude-mem-lite/"><code>claude-mem-lite</code></a>, <a
 href="../systems/claude-total-memory/"><code>claude-total-memory</code></a>,
@@ -31367,6 +31524,7 @@ href="../systems/cortexgraph/"><code>cortexgraph</code></a>, <a
 href="../systems/create-context-graph/"><code>create-context-graph</code></a>,
 <a href="../systems/crewai/"><code>crewai</code></a>, <a
 href="../systems/csm/"><code>csm</code></a>, <a
+href="../systems/ctx-open/"><code>ctx-open</code></a>, <a
 href="../systems/cyrene-agent/"><code>cyrene-agent</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/deepcode/"><code>deepcode</code></a>, <a
@@ -31628,6 +31786,7 @@ href="../systems/repowise/"><code>repowise</code></a>, <a
 href="../systems/rexleimo-aios/"><code>rexleimo-aios</code></a>, <a
 href="../systems/rightmemory/"><code>rightmemory</code></a>, <a
 href="../systems/ripwire/"><code>ripwire</code></a>, <a
+href="../systems/roampal-core/"><code>roampal-core</code></a>, <a
 href="../systems/ruflo/"><code>ruflo</code></a>, <a
 href="../systems/rushdb/"><code>rushdb</code></a>, <a
 href="../systems/rust-self-learning-memory/"><code>rust-self-learning-memory</code></a>,
@@ -31720,8 +31879,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-406 repositories of
-693 assert that particular material must
+409 repositories of
+696 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -31794,7 +31953,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 693 is the real figure for the second kind, and
+of 696 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

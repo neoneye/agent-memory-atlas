@@ -322,6 +322,17 @@ the first sweep after consolidation. The tier DBSCAN rejects has no exit
 at all: noise points stay <code>short_term</code>, which archival never
 selects, and are re-clustered on every time-window pass for as long as
 the file exists.</p>
+<p><a href="../../systems/roampal-core/">Roampal Core</a> computes its
+tier rule from ratings the consuming model gives. Summaries enter
+<code>working</code> at 0.5 and move to <code>history</code> at 0.7 with
+two uses, and to <code>patterns</code> at 0.9 with three uses and five
+successes counted since promotion; <code>unknown</code>, meaning the
+memory was shown and not used, subtracts 0.05, so retrieval noise drifts
+a pattern toward demotion. A working row not promoted within 24 hours is
+deleted, and demotion keeps the original <code>created_at</code>, so a
+demoted pattern past 30 days is deleted at the next history cleanup. The
+companion paper's headline accuracy was measured with promotion and
+decay disabled, so its own benchmark does not measure the rule.</p>
 <h3 id="separate-inputs-a-ceiling-a-recorded-decision--argued">Separate
 inputs, a ceiling, a recorded decision — argued</h3>
 <p>No system cited here has all three on a storage-tier move; each has

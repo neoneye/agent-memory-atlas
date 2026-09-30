@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code hook and MCP suite
+that captures mistakes, decisions and rules into per-project JSON files
+and injects file-matched memories before every edit.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Claude
+Engram — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code hook and MCP
+suite that captures mistakes, decisions and rules into per-project JSON
+files and injects file-matched memories before every edit.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude
+Engram — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code hook and MCP
+suite that captures mistakes, decisions and rules into per-project JSON
+files and injects file-matched memories before every edit.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Claude Engram — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Claude Engram",
+      "description": "A Claude Code hook and MCP suite that captures mistakes, decisions and rules into per-project JSON files and injects file-matched memories before every edit.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Hook-driven project memory for Claude
+Code</p>
+          <h1>Claude Engram</h1>
+          <p class="document-deck">A Claude Code hook and MCP suite that
+captures mistakes, decisions and rules into per-project JSON files and
+injects file-matched memories before every edit.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/20alexl/claude-engram">
+              <span>Source</span>
+              <strong>20alexl/claude-engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/20alexl/claude-engram/commit/a7903274531c2ca00659b03e173f0f0f2079333a" title="a7903274531c2ca00659b03e173f0f0f2079333a">
+              <span>Analyzed revision</span>
+              <code>a7903274…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/20alexl--claude-engram" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>20alexl--claude-engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>34,944
+lines of Python in the claude_engram package across 63 files, plus a
+663-line installer; the memory store, tools/memory.py, is 3,294 of
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>305
+commits on main by one author under two identities, 20 January 2026 – 27
+September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>14,260
+lines under tests/: 198 pytest-style functions across 20 files, and 39
+bench scripts that print pass counts</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Claude Engram is a set of Claude Code hooks plus an MCP server that
+turns a coding session's own events into per-project memory. A failed
+tool call becomes a <em>mistake</em>, a sentence the user types that
+reads as a choice becomes a <em>decision</em>, and a rule is added by
+hand or seeded from a default pack. A background miner reads past
+transcripts for more of the same. Before each edit the hook scores the
+project's memories against the file and injects at most three, and the
+session-start banner prints rules, mistakes and the last checkpoint.</p>
+<p>What is notable is the injection discipline. A memory reaches the
+prompt only with a direct, path-aware file match. Generic basenames such
+as <code>utils.py</code> need a full path, and so do entries older than
+30 days. The code comments record the incident behind each gate.</p>
+<p>What is weak is the boundary and the correction path. Scope is a file
+per project path, and both hook readers fall back to <em>any</em>
+registered project with the same directory name when the current path is
+unregistered. An acknowledged mistake is archived, and the next
+identical failure captures it again, because dedupe reads only the hot
+tier. The post-session cleanup deletes a rule shorter than 20 characters
+as "broken".</p>
+<p>The first commit, on 20 January 2026, is titled <em>"Mini Claude MCP
+server with 38 tools"</em>; the tree at the pin carries only the Claude
+Engram name. Beyond the memory store it ships checkpoint rings, a
+<code>/goal</code> run bracket, stall and context-pressure detection, a
+code index and session mining. This report covers the memory store and
+the mined patterns that feed the same banner.</p>
+<p>One mark: <code>negative_eval</code>, on a scoping bench with
+positive controls and a pytest case over the mined patterns report.
+Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <code>MemoryEntry</code>: a content string with a
+category, a relevance from 1 to 10, tags, related files and access
+statistics (<code>claude_engram/tools/memory.py:41-67</code>). It
+becomes a belief the moment it is written; there is no candidate state
+and no model judgement between capture and injection. Five producers
+write:</p>
+<ul>
+<li><strong>Failed tools.</strong>
+<code>_auto_log_detected_mistake</code> parses the error class, message
+and traceback files out of the output and appends a <code>mistake</code>
+at relevance 9, <code>source: auto-detected</code>
+(<code>claude_engram/hooks/remind.py:2727-2873</code>).</li>
+<li><strong>Typed prompts.</strong>
+<code>_auto_capture_from_prompt</code> runs
+<code>capture_decision</code>, which requires the shape
+<code>decision_gate.py</code> defines — a declarative sentence with a
+deciding word, not a question, acknowledgement, count or paste — and
+appends a <code>decision</code> (<code>remind.py:2624-2694</code>;
+<code>claude_engram/mining/decision_gate.py:1-14</code>).</li>
+<li><strong>The miner.</strong> After a session it extracts decisions at
+confidence 0.6 or more, mistakes with an error type, and user
+corrections, and files each under the project whose files it names
+(<code>claude_engram/mining/extractors.py:1080-1199</code>).</li>
+<li><strong>The model.</strong> <code>memory(remember)</code>,
+<code>memory(add_rule)</code>, <code>work(log_mistake)</code> and
+<code>work(log_decision)</code>.</li>
+<li><strong>The default pack.</strong> Seeded once per project at
+session start (<code>claude_engram/default_pack.py:351-417</code>).</li>
+</ul>
+<p>A memory leaves the injected set in four ways. It is archived: idle
+14 days, a machine-written mistake 21 days old that never recurred, or
+acknowledged. It is consolidated into a digest and archived. It is
+deleted. Or cleanup judges it broken. Only deletion and the broken rule
+remove it; the rest move it to <code>archive.json</code>, from which
+<code>restore</code> brings it back. Rules, lessons and mistakes never
+age out (<code>memory.py:2224-2234</code>). Relevance 8 or more exempts
+any entry from age archiving, a threshold the comment places above every
+default producer (<code>memory.py:29-38</code>).</p>
+<p><strong>The archive is a tier, not a verdict.</strong> An
+acknowledged mistake is moved, not marked wrong, and no write path
+consults the archive. The hook writer derives the entry id as
+<code>md5(content)[:12]</code> (<code>remind.py:2854</code>) and checks
+only the hot file for identical text (<code>remind.py:2574</code>). The
+same failure the next day writes the same id back into
+<code>memory.json</code>, and it injects again.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Claude Engram memory is written, injected and archived, and the two paths where the boundary or the correction does not hold</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Claude Engram memory is written, injected and archived, and the two paths where the boundary or the correction does not hold
+flowchart TD
+    FT[&quot;failed tool output&quot;] --&gt; HW[&quot;hook append:&lt;br/&gt;exact-text dedupe&lt;br/&gt;against memory.json only&quot;]
+    UP[&quot;typed prompt passing&lt;br/&gt;the decision-shape gate&quot;] --&gt; HW
+    MN[&quot;post-session miner:&lt;br/&gt;decisions, mistakes,&lt;br/&gt;preferences&quot;] --&gt; SW[&quot;MemoryStore write:&lt;br/&gt;0.85 Jaccard dedupe&lt;br/&gt;against memory.json only&quot;]
+    MCP[&quot;MCP remember, add_rule,&lt;br/&gt;log_mistake, log_decision&quot;] --&gt; SW
+    HW --&gt; HOT[(&quot;projects/HASH/memory.json&lt;br/&gt;hot tier, no project key&quot;)]
+    SW --&gt; HOT
+    HOT --&gt; RD{&quot;hook read for&lt;br/&gt;the project path&quot;}
+    RD -- &quot;path or an ancestor&lt;br/&gt;registered&quot; --&gt; MERGE[&quot;own entries plus&lt;br/&gt;every ancestor store&quot;]
+    RD -- &quot;path unregistered&quot; --&gt; NAME[&quot;first registered project&lt;br/&gt;with the same basename&quot;]
+    MERGE --&gt; GATE{&quot;direct file match?&lt;br/&gt;full path if generic or&lt;br/&gt;older than 30 days&quot;}
+    NAME --&gt; GATE
+    GATE -- &quot;yes&quot; --&gt; INJ[&quot;top three injected&lt;br/&gt;before the edit&quot;]
+    GATE -- &quot;no&quot; --&gt; SIL[&quot;nothing injected&quot;]
+    HOT -- &quot;idle 14 days, acknowledge,&lt;br/&gt;consolidate, stale mistake&quot; --&gt; ARC[(&quot;archive.json at store root,&lt;br/&gt;keyed by project path&quot;)]
+    ARC -- &quot;restore by id&quot; --&gt; HOT
+    ARC -. &quot;never read by a writer:&lt;br/&gt;the same failure is&lt;br/&gt;captured again&quot; .-&gt; HW
+    HOT -- &quot;cleanup: under 20 chars&lt;br/&gt;or placeholder text&quot; --&gt; DEL[&quot;deleted, no archive copy&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything is Python and JSON on the local machine. The hooks run
+<code>claude_engram.hooks.remind</code>, which <code>install.py</code>
+merges into <code>~/.claude/settings.json</code> for eleven events
+(<code>install.py:138-245</code>). The MCP server,
+<code>claude_engram.server:main</code>, exposes 16 tools;
+<code>memory</code>, <code>work</code>, <code>context</code> and
+<code>session_mine</code> each bundle reads and writes behind an
+<code>operation</code> enum
+(<code>claude_engram/tool_definitions_v2.py:62-204</code>).</p>
+<p>A resident daemon binds a free port on <code>127.0.0.1</code> and
+writes the port to a file in the store
+(<code>claude_engram/hooks/scorer_server.py:364-373</code>). It serves
+embeddings and decision scores, and it also runs hook dispatch
+in-process: a request carrying <code>hook_event</code>, a
+<code>stdin</code> payload and an <code>env</code> with
+<code>CLAUDE_PROJECT_DIR</code> is fed to <code>remind.main()</code>
+(<code>:219-263</code>, <code>:266-285</code>). Hooks fall back to
+in-process when the daemon is down.</p>
+<p>The store lives under <code>CLAUDE_ENGRAM_DIR</code>, default
+<code>~/.claude_engram</code>. A <code>manifest.json</code> maps each
+normalized project path to an eight-character md5 prefix, and
+<code>projects/HASH/</code> holds <code>memory.json</code>, the
+embedding matrix and index, <code>patterns.json</code>, the session
+index and the checkpoint ring (<code>memory.py:218-234</code>). The cold
+tier is one <code>archive.json</code> at the store root whose
+<code>projects</code> object is keyed by path
+(<code>memory.py:177</code>, <code>:2193-2222</code>). The README and
+the library book place it under <code>projects/HASH/</code>; the code
+and the tests that read it (<code>tests/test_smoke.py:853</code>) use
+the root.</p>
+<p>Two readers parse the same files. <code>MemoryStore</code> is a
+pydantic model with a per-project cache, used by the MCP server and the
+miner. <code>HotMemoryReader</code> and <code>hooks/storage.py</code>
+are stdlib-only dict readers, because the pre-edit hook has a one-second
+budget and the pydantic import cost about 185 ms
+(<code>claude_engram/hooks/hot_reader.py:1-9</code>).</p>
+<p><strong>Concurrency is last-writer-wins with a merge.</strong> Every
+write is a temp file then <code>replace</code>. A
+<code>MemoryStore</code> that mutated a project on a stale base merges
+by entry id before saving, and its docstring states the cost: it
+<em>"can resurrect an entry the other writer deleted in the same
+instant"</em> (<code>memory.py:649-686</code>). The hook writer is a
+plain read-modify-write with no merge
+(<code>remind.py:2531-2611</code>).</p>
+<p>Embeddings are optional: the <code>semantic</code> extra brings
+sentence-transformers and <code>BAAI/bge-base-en-v1.5</code>, served by
+the daemon. Ollama, when present, is used for consolidation, reflection
+and scout search.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A virtualenv, an editable install and <code>python install.py</code>,
+which writes the global hooks, a <code>.mcp.json</code> to copy per
+project, a launcher script and the <code>/engram</code> skill, and runs
+data migrations. No service and no API key are needed to store anything.
+The store is pretty-printed JSON, readable and repairable by hand. The
+hooks are global, so every project opened afterwards is captured,
+whether or not it has <code>.mcp.json</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Hook capture.</strong> <code>_append_memory_entry</code>
+registers an unknown project in the manifest, loads
+<code>memory.json</code>, skips exact-content duplicates and an optional
+caller predicate, appends, and writes an embedding to
+<code>embeddings_pending.json</code> for the next
+<code>MemoryStore</code> load to merge
+(<code>remind.py:2531-2611</code>). Its callers are the prompt capture
+(<code>:2676-2692</code>) and the failed-tool capture
+(<code>:2856-2870</code>).</p>
+<p><strong>Store write.</strong> <code>remember_discovery</code> creates
+the project and runs <code>_is_duplicate</code> at Jaccard 0.85 over the
+hot entries; a hit bumps the existing entry's access count and relevance
+instead. It then extracts tags and file references and appends
+(<code>memory.py:821-880</code>; <code>:587-611</code>).
+<code>add_rule</code> dedupes against rules only
+(<code>:1850-1908</code>).</p>
+<p><strong>Miner write.</strong> The post-session phase routes each
+extraction with <code>target_project_for_files</code>, then dedupes
+decisions on the bare sentence across the destination and its ancestors,
+so the prompt hook's copy and the miner's copy of one sentence are
+stored once (<code>extractors.py:1080-1199</code>).</p>
+<p><strong>Pre-edit injection.</strong>
+<code>_auto_run_pre_edit_check</code> loads the project through
+<code>load_project_memory</code>, matches mistakes to the file name by
+regex (full path for generic names), then calls
+<code>get_contextual_memories</code> for scored entries
+(<code>remind.py:1048-1196</code>). The scorer and gate are
+<code>score_entry</code> and <code>score_loaded_entries</code>
+(<code>hot_reader.py:171-308</code>).</p>
+<p><strong>Session-start banner.</strong> Rules with inheritance, past
+mistakes ranked by <code>_mistake_scope</code>, the latest checkpoint,
+and <code>_recurring_lines</code> over the mined
+<code>patterns.json</code>
+(<code>claude_engram/hooks/storage.py:196-247</code>;
+<code>remind.py:3661-3740</code>).</p>
+<p><strong>MCP read.</strong> <code>handle_memory</code> dispatches
+<code>search</code> to <code>search_memories</code>,
+<code>hybrid_search</code> to keyword plus score plus vector RRF with a
+rerank, and <code>recall</code>, <code>recent</code>,
+<code>list_rules</code> and <code>list_mistakes</code> to direct reads
+(<code>claude_engram/handlers.py:1441-1924</code>;
+<code>memory.py:1254-1326</code>, <code>:2904-2986</code>).</p>
+<p><strong>Correction.</strong> <code>modify_memory</code>,
+<code>delete_memory</code>, <code>batch_delete</code> (rules and
+mistakes refused by category, allowed by id),
+<code>promote_to_rule</code> and <code>restore_from_archive</code>
+(<code>memory.py:2013-2180</code>, <code>:2436-2467</code>).
+<code>acknowledge_mistake</code> moves one mistake into the archive
+(<code>handlers.py:1884-1918</code>). <code>forget</code> calls
+<code>forget_project</code>, which removes the project directory and its
+manifest entry (<code>memory.py:988-1008</code>).</p>
+<p><strong>Maintenance.</strong> <code>cleanup_memories</code> finds
+broken entries, near-duplicates (Jaccard, then embeddings when
+available), archivable entries and decay, and
+<code>_apply_cleanup</code> applies them
+(<code>memory.py:1337-1739</code>). The miner calls it with
+<code>dry_run=False</code> and default decay after each post-session
+run, then <code>archive_stale_mistakes</code> over every registered
+project (<code>claude_engram/mining/background.py:458-486</code>).
+<code>consolidate</code> asks Ollama for a dated digest of a tag group
+of ten or more, keeps the top five originals and archives the rest
+(<code>memory.py:3090-3293</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>md5 of the content, first 12 hex characters, with a counter suffix
+on collision in the target project (<code>memory.py:568-585</code>)</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>free text; mined entries carry prefixes such as
+<code>MISTAKE: </code>, <code>DECISION: </code>,
+<code>USER PREFERENCE: </code></td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>rule, mistake, decision, discovery, context, lesson, priority,
+note</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td><code>auto-detected</code>, <code>auto-prompt</code>,
+<code>session_mining</code>, <code>add_rule</code>,
+<code>consolidation</code>, or none</td>
+</tr>
+<tr>
+<td><code>relevance</code></td>
+<td>1-10; manual remember 5, auto-prompt 6, mined decisions 7, mined
+mistakes 8, auto-detected mistakes 9, rules 9</td>
+</tr>
+<tr>
+<td><code>tags</code>, <code>related_files</code></td>
+<td>extracted from content by regex, plus caller values</td>
+</tr>
+<tr>
+<td><code>created_at</code>, <code>last_accessed</code>,
+<code>access_count</code></td>
+<td>recency and frequency inputs to the scorer</td>
+</tr>
+<tr>
+<td><code>archived_at</code></td>
+<td>set when moved to the cold tier</td>
+</tr>
+<tr>
+<td><code>detector</code></td>
+<td>rules only: a hand-written matcher on tool name, command, paths or
+input</td>
+</tr>
+</tbody>
+</table></div>
+<p>The containing <code>ProjectMemory</code> adds a summary, key files,
+recent searches, file and tag indexes and clusters
+(<code>memory.py:97-130</code>).</p>
+<p><strong>Scope is the file.</strong> Nothing on the entry names its
+project; the project is whichever <code>memory.json</code> it sits in.
+Workspace inheritance is a read-time walk:
+<code>HotMemoryReader.load_entries</code> and
+<code>load_project_memory</code> add every registered ancestor's
+entries, and the loader marks them <code>_inherited</code> in memory
+only (<code>hot_reader.py:365-393</code>;
+<code>storage.py:80-189</code>). Rules inherit on the MCP side through
+<code>get_rules_with_inheritance</code>
+(<code>memory.py:1940-1984</code>). Other MCP reads open only the named
+project's file, so a memory the pre-edit hook injects from the workspace
+root is not found by <code>memory(search)</code> in the sub-project.</p>
+<p><strong>The unregistered-path fallback crosses the boundary.</strong>
+When no entry is found for the path or its ancestors,
+<code>HotMemoryReader.load_entries</code> loads the first registered
+project whose directory basename equals the current one
+(<code>hot_reader.py:386-392</code>). <code>load_project_memory</code>
+goes further: when the path itself is unregistered, it takes the
+same-basename project <em>before</em> considering ancestors
+(<code>storage.py:132-138</code>). A new checkout named
+<code>backend</code> or <code>api</code> therefore reads another
+registered <code>backend</code>'s rules and mistakes on its first edits,
+until a write registers it. This was read, not reproduced.</p>
+<p>The default-pack seeder reads its coverage through the same loader
+(<code>default_pack.py:312-326</code>), so a same-named project's rules
+can make it skip seeding. No temporal validity, no provenance beyond
+<code>source</code>, no link from a consolidated digest to the originals
+it replaced, and no version history.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Hook injection is gated, not only ranked.</strong>
+<code>score_entry</code> sums file match 0.35, tag overlap 0.20, recency
+0.20 on a 30-day half-life, relevance 0.15 and access frequency 0.10,
+plus 0.3 for rules, 0.25 for lessons and 0.2 for mistakes
+(<code>hot_reader.py:19-26</code>, <code>:171-219</code>).
+<code>score_loaded_entries</code> then admits a non-rule only when its
+path-aware file match clears a gate of 0.5 divided by an outcome weight
+bounded to 0.8-1.2. Past 30 days it also needs a full-path match, unless
+it is a mistake. A rule rides along only when it names the file or its
+directory, capped at one, and only beside a file-relevant memory. With
+nothing file-relevant the hook injects nothing
+(<code>:237-308</code>).</p>
+<p><code>_file_match_score</code> treats diverging paths with a shared
+basename as no match. Generic names — <code>__init__.py</code>,
+<code>README.md</code>, <code>CLAUDE.md</code>,
+<code>pyproject.toml</code>, <code>utils.py</code> and about forty more
+— score zero without a full-path signal
+(<code>hot_reader.py:30-148</code>).</p>
+<p><strong>The outcome loop.</strong> <code>mining/outcomes.py</code>
+records which kinds of injection preceded passing tests and writes a
+multiplier the gate reads (<code>hot_reader.py:222-234</code>). It
+shifts the threshold; it does not change any memory.</p>
+<p><strong>MCP search.</strong> <code>search_memories</code> is word-set
+intersection with tag and file index lookups, sorted by stored
+relevance, and it bumps access counts on every hit
+(<code>memory.py:1254-1326</code>). <code>hybrid_search</code> fuses
+keyword (weight 1.5), score ranking (1.0) and vectors (0.5) by RRF with
+k=60, reranks by embedding, and drops zero scores, because the score arm
+contributes candidates for any query (<code>:2904-2986</code>). Vector
+hits join to hot entries by id, so a deleted memory's orphan vector is
+never returned (<code>:2842-2902</code>).</p>
+<p><strong>Mined patterns.</strong> Recurring errors carry a
+<code>projects</code> list computed from the edits of the sessions they
+occurred in (<code>claude_engram/mining/patterns.py:283-415</code>). The
+banner shows one only when that list intersects the session's project,
+or when the list is empty (<code>remind.py:3683-3706</code>). The MCP
+<code>session_mine(errors)</code> recomputes the same list and prints
+every entry without applying it
+(<code>handlers.py:2286-2305</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are hot-path and model-free on the hook side: a regex parse of
+an error, a regex or semantic score over a prompt sentence, then the
+shape gate. The semantic tier asks the local daemon and falls back to
+regex when it is down. The miner runs detached after each session and on
+a debounced live tick, and calls no hosted model;
+<code>consolidate</code> and <code>reflect</code> call Ollama when it
+runs.</p>
+<p><strong>Dedupe reads the hot tier only.</strong> The hook compares
+whole content strings against <code>memory.json</code>, and the store
+compares Jaccard 0.85 against <code>proj.entries</code>, the hot list
+(<code>remind.py:2574</code>; <code>memory.py:841</code>). The archive,
+which holds every acknowledged and hygiene-archived mistake, is never
+consulted.</p>
+<p><strong>Cleanup deletes on its own judgement.</strong>
+<code>_is_broken_memory</code> flags empty text, anything under 20
+characters, a few truncation strings and placeholder endings
+(<code>memory.py:1600-1651</code>). The broken pass skips only lessons
+(<code>:1383-1405</code>), and broken entries are removed without an
+archive copy (<code>:1701-1706</code>). The miner runs this with
+<code>dry_run=False</code> after every post-session pass
+(<code>background.py:465</code>). The MCP <code>session_start</code>
+runs it too, under a comment calling that call non-destructive
+(<code>handlers.py:684-692</code>). A rule stored without a reason and
+under 20 characters — <code>Never push to main</code> is 18 — is deleted
+at the next session end. Entries touched by decay and age archiving are
+archived before they leave the hot file.</p>
+<p><strong>Tool- and agent-derived text is stored like the
+user's.</strong> A traceback message, a <code>(from user)</code>
+sentence and a <code>(confirmed)</code> assistant proposal the user said
+yes to all become memories. Nothing but <code>source</code> and a prefix
+tells them apart, and the hook injects each as a relevant memory for the
+file.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous on the hook path, one JSON parse and rewrite of
+the project file per captured event, plus an optional local embedding.
+No LLM.</li>
+<li>Deferred: mined memories appear after the session-end miner
+finishes. The library book records a post-session run at about 3.1 GB
+resident for seven minutes
+(<code>library-book/10-appendix.md:326</code>); that figure is the
+project's, not measured here.</li>
+<li>Background rewrite: every post-session run cleans the project it
+mined and sweeps stale mistakes across every registered project.</li>
+<li>Read: at most three memories and one rule per edit, and a bounded
+banner at session start. Injection arrives as hook output beside the
+tool call, after the cached prefix.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The hooks do the work; the model need call nothing.
+<code>/engram</code> tells the model to use the tools on purpose.
+Subagents get no injections, but their edits are tracked. After
+compaction the banner re-injects rules, mistakes and the checkpoint
+banked before it.</p>
+<p>The model holds every memory verb: <code>remember</code>,
+<code>add_rule</code>, <code>modify</code>, <code>delete</code>,
+<code>batch_delete</code>, <code>promote</code>, <code>archive</code>,
+<code>restore</code>, <code>acknowledge_mistake</code>,
+<code>cleanup</code>, <code>consolidate</code> and <code>forget</code>.
+The last removes a project's whole store directory
+(<code>tool_definitions_v2.py:62-204</code>). Only eight analysis tools
+carry <code>readOnlyHint</code> (<code>:729-739</code>), so a client
+that auto-approves read-only tools still asks before
+<code>memory</code>.</p>
+<p>The MCP half works with any MCP client. The hook half depends on
+Claude Code's event model, transcript format and statusline; the
+SessionStart banner warns when the transcript format is no longer
+recognized.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The boundary is a directory name away from leaking.</strong>
+A physical partition per project path is a real boundary. The
+same-basename fallback in both hook readers undoes it for the sessions
+most likely to trip it: a fresh clone, a renamed checkout, the same
+repository at a second path. Workspace pooling is handled with more care
+— <code>_mistake_scope</code> ranks a sibling's pooled mistake last and
+<code>_recurring_lines</code> filters attributed errors — but ranking is
+not exclusion. The pre-edit path calls <code>get_past_mistakes</code>
+without a project, so a pooled sibling mistake naming the same file name
+still fires (<code>remind.py:1066-1087</code>).</p>
+<p><strong>The hook daemon trusts every local caller.</strong>
+<code>_handle_client</code> reads one JSON line from any connection to
+the loopback port, and a <code>hook_event</code> request runs the hook
+dispatcher with the caller's <code>stdin</code> payload and
+<code>CLAUDE_PROJECT_DIR</code> (<code>scorer_server.py:219-263</code>,
+<code>:266-285</code>). The accepted events include
+<code>prompt_json</code> and <code>tool_failure_json</code>, the two
+capture paths (<code>:172-182</code>). No token or peer check was found
+in the daemon or <code>hook_client.py</code>. Any process on the machine
+that can read the port file or scan ports can therefore write mistakes
+and decisions into any project path. This was read, not reproduced.</p>
+<p><strong>Forget does not reach the cold tier.</strong>
+<code>forget_project</code> removes <code>projects/HASH/</code> and the
+manifest entry and never touches <code>archive.json</code>, where that
+project's archived rows stay keyed by path
+(<code>memory.py:988-1008</code>, <code>:2208-2222</code>). Registering
+the same path again makes <code>archive_search</code> and
+<code>restore</code> find them.</p>
+<p><strong>Provenance.</strong> Error text from any tool, including a
+command that printed a file the agent read, becomes a relevance-9
+mistake, and a recurring error is replayed with its recorded fix.
+Nothing marks machine-captured text as unverified when it is
+injected.</p>
+<p><strong>Concurrency.</strong> Hook writes can race the MCP server.
+The store's merge keeps both sides' additions and can resurrect a
+concurrent delete, as its docstring says. A consolidated digest is
+stamped with its date, which is the only representation of
+uncertainty.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld. <code>acknowledge_mistake</code>
+archives the record, and the writers dedupe against the hot file only.
+The id is already a hash of the text and the archive already holds it,
+so the tombstone is one lookup away; that lookup is not in the
+tree.</li>
+<li><code>trust_state</code> — withheld. <code>archived_at</code> keeps
+an entry out of hook reads, but it marks a storage tier reached by age
+and hygiene as well as by acknowledgement, and
+<code>archive_search</code> returns the entry as a memory. Nothing says
+a memory is not believed. Categories are types, and the decision gate is
+a write-time filter.</li>
+<li><code>bitemporal</code> — withheld. <code>created_at</code>,
+<code>last_accessed</code> and <code>archived_at</code> record system
+time only.</li>
+<li><code>scope_enforced</code> — withheld. <code>MemoryEntry</code> has
+no project key; the scope is which <code>memory.json</code> a row sits
+in, a physical partition. The one key-plus-predicate is
+<code>projects</code> on mined recurring errors. The banner filters on
+it, <code>session_mine(errors)</code> over the same data does not, and
+rows with an empty list pass.</li>
+<li><code>audit_log</code> — withheld. No mutation record exists.
+<code>injection_outcomes.json</code> is a feedback log, run reports are
+per-session artifacts, and the library book's changelog documents the
+code.</li>
+<li><code>human_review</code> — withheld. No memory waits for anyone,
+and the agent holds every verb, including <code>promote</code> and
+<code>forget</code>.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; what follows is
+from reading the tests at the pin.</p>
+<p><strong>Two kinds of test.</strong> <code>tests/test_smoke.py</code>
+and nineteen <code>bench_*.py</code> files hold pytest-style functions,
+198 in all. The other bench scripts are <code>__main__</code> programs
+that print PASS or FAIL per case and return counts. The README's product
+figures (<em>"multi-project isolation 11/11"</em>) come from those.
+There is no CI configuration in the tree.</p>
+<p><strong>The negative cases.</strong>
+<code>bench_multi_project.py</code> seeds a workspace root and
+<code>backend</code> and <code>frontend</code> sub-projects. For a
+backend file it requires <code>JWT</code> and the workspace
+<code>linter</code> rule and forbids <code>React</code> and
+<code>Tailwind</code>, and for a frontend file the mirror
+(<code>:177-199</code>). Each case checks the combined output of
+<code>MemoryStore.score_and_rank</code> and
+<code>HotMemoryReader.get_scored_memories</code>
+(<code>:286-313</code>). The required keywords make an empty result
+fail. The two cases that forbid a file-irrelevant workspace mistake have
+no required keyword. A failing case prints FAIL; the script and
+<code>bench_integration.py</code>, which aggregates it, exit zero either
+way (<code>bench_integration.py:87-98</code>,
+<code>:125-126</code>).</p>
+<p><code>test_recurring_errors_are_scoped_to_the_sessions_project</code>
+writes a pooled <code>patterns.json</code> and asserts that
+<code>KeyError: 'sue'</code> appears in one sub-project's banner lines
+and <code>InputEncoderRegistry</code> does not, then the reverse for the
+other sub-project (<code>test_smoke.py:246-274</code>). This one fails
+the pytest run.</p>
+<p><strong>A negative half the positive half entails.</strong>
+<code>test_edit_reminders_need_a_file_match_for_rules_and_a_full_path_when_old</code>
+asserts ids 1, 3 and 5 are injected and 2 and 4 are not, at
+<code>limit=3</code> (<code>test_smoke.py:193-206</code>). With three
+required ids in a result capped at three, the exclusion cannot fail on
+its own. The rule gate for id 4 is not exercised, because the one-rule
+cap would hide a leak.</p>
+<p><strong>Vacuous in part.</strong>
+<code>test_hybrid_search_drops_the_zero_score_tail</code> asserts an
+empty result for a no-match query, then <code>all(score &gt; 0 …)</code>
+over a second query that could return nothing
+(<code>test_smoke.py:529-546</code>).</p>
+<p><strong>Retrieval benchmarks.</strong>
+<code>bench_longmemeval.py</code>, <code>bench_convomem.py</code> and
+<code>bench_locomo.py</code> load the published datasets from a path
+argument into a <code>MemoryStore</code> and score recall. No dataset
+and no result file is committed, so the README's R@5 of 0.966 and the
+other figures are claims this reading could not check. They measure the
+MCP store's <code>hybrid_search</code>, not the hook injection that is
+the product's main read path.</p>
+<p><strong>Missing.</strong> No test forgets a project and checks the
+archive, re-captures an acknowledged mistake, covers the same-basename
+fallback, runs cleanup over a short rule, or sends a hook event to the
+daemon from outside a hook. No paper or citation block is in the
+tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Gate injection on direct relevance and be silent
+otherwise.</strong> Ranking always returns something; a gate that
+returns nothing when nothing matches keeps a pre-edit injection from
+becoming noise.</li>
+<li><strong>Make file matching path-aware and distrust generic
+basenames.</strong> A shared <code>__init__.py</code> or
+<code>README.md</code> is not evidence that two memories concern the
+same file.</li>
+<li><strong>One capture gate for every producer.</strong> The prompt
+hook, the transcript miner and the pruning migration share
+<code>decision_gate.py</code>, so a rule tightened once applies to live
+capture, backfill and the existing store.</li>
+<li><strong>Archive, never delete, on every automatic path</strong> —
+and write down, as <code>consolidate</code> does, why the earlier delete
+was wrong.</li>
+<li><strong>Merge by id on a stale save, and document what the merge can
+resurrect.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A fallback that picks a scope by name.</strong> When a scope
+lookup misses, return nothing; a directory basename is not an
+identity.</li>
+<li><strong>Dedupe against the hot tier only.</strong> Anything a person
+dismissed lives in the cold tier, and the next capture of the same text
+walks past it.</li>
+<li><strong>A validity heuristic that deletes.</strong> A length floor
+for "broken" should archive, and should never apply to the categories
+the rest of the system treats as permanent.</li>
+<li><strong>A loopback socket as an entry point without a
+secret.</strong> A port file in the user's store plus a per-start token
+costs a few lines.</li>
+<li><strong>A benchmark harness that cannot fail.</strong> A printed
+FAIL in a script that exits zero reads, in a README, as a pass.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer on Claude Code who wants their own failures
+and stated preferences to come back at the file they concern, with no
+service to run and a store they can read. It does not suit shared
+machines, several people in one store, or anyone who must show that a
+dismissed memory stays dismissed or that a project's memory stays in
+that project. The install is global and captures every project opened
+afterwards; a reader who works across client codebases should weigh that
+before running it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does the same-basename fallback fire in practice, and does
+anything register a project before its first pre-edit read?</li>
+<li>Can a sandboxed tool subprocess reach the daemon's loopback port
+under Claude Code's sandbox settings?</li>
+<li>Is the README's placement of <code>archive.json</code> under
+<code>projects/HASH/</code> the intended design, with the root file a
+leftover?</li>
+<li>What do the retrieval benchmarks give on the hook injection path
+rather than on <code>hybrid_search</code>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Store and schema:</strong>
+<code>claude_engram/tools/memory.py</code>.</li>
+<li><strong>Hook read path:</strong>
+<code>claude_engram/hooks/hot_reader.py</code>,
+<code>claude_engram/hooks/storage.py</code>,
+<code>claude_engram/hooks/remind.py</code>
+(<code>_auto_run_pre_edit_check</code>,
+<code>get_contextual_memories</code>, <code>_recurring_lines</code>,
+<code>_hook_session_start</code>).</li>
+<li><strong>Hook write path:</strong>
+<code>claude_engram/hooks/remind.py</code>
+(<code>_append_memory_entry</code>,
+<code>_auto_capture_from_prompt</code>,
+<code>_auto_log_detected_mistake</code>),
+<code>claude_engram/hooks/intent.py</code>,
+<code>claude_engram/mining/decision_gate.py</code>.</li>
+<li><strong>Daemon:</strong>
+<code>claude_engram/hooks/scorer_server.py</code>,
+<code>claude_engram/hooks/hook_client.py</code>.</li>
+<li><strong>Miner:</strong>
+<code>claude_engram/mining/background.py</code>,
+<code>claude_engram/mining/extractors.py</code>,
+<code>claude_engram/mining/patterns.py</code>.</li>
+<li><strong>MCP:</strong> <code>claude_engram/server.py</code>,
+<code>claude_engram/handlers.py</code>,
+<code>claude_engram/tool_definitions_v2.py</code>.</li>
+<li><strong>Install and defaults:</strong> <code>install.py</code>,
+<code>claude_engram/default_pack.py</code>,
+<code>claude_engram/migrations.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_smoke.py</code>,
+<code>tests/bench_multi_project.py</code>,
+<code>tests/bench_injection_relevance.py</code>,
+<code>tests/bench_integration.py</code>,
+<code>tests/bench_longmemeval.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+<li><code>grep -rniE 'renamed|formerly|previously (called|named)|mini.claude|mini_claude' --exclude-dir=.git .</code>
+— two matches about project directories and one changelog line renaming
+a response class; none renames the project. The commits API gives the
+first commit's title.</li>
+<li><code>grep -rnE 'tombstone|blocklist|denylist' --include='*.py' .</code>
+— no match.</li>
+<li><code>grep -rnE 'valid_from|valid_to|valid_until|effective_at|invalid_at' --include='*.py' .</code>
+— no match.</li>
+<li><code>grep -rnE 'audit_log|mutation_log|events\.jsonl|memory_events|history\.jsonl' --include='*.py' claude_engram</code>
+— no match.</li>
+<li><code>grep -rn 'archive' claude_engram/mining/*.py claude_engram/hooks/storage.py</code>
+— the stale-mistake sweep and read-side skips; no writer reads the
+archive before appending.</li>
+<li><code>grep -rn --include='*.py' 'archive\.json\|archive_file' .</code>
+— the root <code>archive.json</code> in <code>memory.py</code>,
+<code>migrations.py</code> and two tests; no per-project archive
+path.</li>
+<li><code>grep -rn --include='*.py' 'cleanup_memories(' .</code> —
+<code>handlers.py:379</code>, <code>handlers.py:688</code>,
+<code>mining/background.py:465</code>.</li>
+<li><code>grep -rn -i 'name-based' tests claude_engram</code> — the two
+fallbacks in <code>hot_reader.py</code> and <code>storage.py</code>; no
+test.</li>
+<li><code>grep -niE 'auth|secret|nonce|hmac|token' claude_engram/hooks/scorer_server.py claude_engram/hooks/hook_client.py</code>
+— two comment lines about text tokens; no caller check.</li>
+<li><code>ls -a | grep -E '^\.github$|^\.gitlab|^\.circleci'</code> — no
+CI configuration.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/20alexl/claude-engram/commit/a7903274531c2ca00659b03e173f0f0f2079333a"><code class="commit-id" title="a7903274531c2ca00659b03e173f0f0f2079333a">a7903274…</code></a>
+— first reading, at the head of <code>main</code>, the 0.8.61 commit
+dated 27 September 2026. One mark, <code>negative_eval</code>. Screened
+before reading: no auto-run surface, no build-time execution point, one
+dependency file inside the cooldown (<code>pyproject.toml</code>; every
+file in a depth-1 clone dates to the tip), one unpinned surface
+(<code>pyproject.toml</code> with no lockfile), and
+<code>CLAUDE.md</code> recorded as data. Read with <code>grep</code> and
+<code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

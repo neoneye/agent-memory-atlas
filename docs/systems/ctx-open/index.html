@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A C# CLI and MCP server versioning
+an agent's goals, hypotheses, evidence and decisions as JSON commits;
+refuted and rejected items still reach the packet.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CTX Cognitive Version
+Control — Agent Memory Atlas">
+    <meta property="og:description" content="A C# CLI and MCP server
+versioning an agent's goals, hypotheses, evidence and decisions as JSON
+commits; refuted and rejected items still reach the packet.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CTX Cognitive Version
+Control — Agent Memory Atlas">
+    <meta name="twitter:description" content="A C# CLI and MCP server
+versioning an agent's goals, hypotheses, evidence and decisions as JSON
+commits; refuted and rejected items still reach the packet.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CTX Cognitive Version Control — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "CTX Cognitive Version Control",
+      "description": "A C# CLI and MCP server versioning an agent's goals, hypotheses, evidence and decisions as JSON commits; refuted and rejected items still reach the packet.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Version control for an agent's
+reasoning</p>
+          <h1>CTX Cognitive Version Control</h1>
+          <p class="document-deck">A C# CLI and MCP server versioning an
+agent's goals, hypotheses, evidence and decisions as JSON commits;
+refuted and rejected items still reach the packet.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/diegoxtr/ctx-open">
+              <span>Source</span>
+              <strong>diegoxtr/ctx-open</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/diegoxtr/ctx-open/commit/c31d84e07c830f2d126f780f65ad2b0228fe54eb" title="c31d84e07c830f2d126f780f65ad2b0228fe54eb">
+              <span>Analyzed revision</span>
+              <code>c31d84e0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/diegoxtr--ctx-open" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>diegoxtr--ctx-open</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>CTX
+Source-Available License v1.0: local, self-hosted and on-premise
+commercial use allowed; hosted or competing services need a separate
+agreement</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>14,215
+lines of C# outside tests in eleven projects; CtxApplicationService.cs
+alone is 5,993 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>81
+commits by 2 contributors, 10 April 2026 – 21 September 2026; the first
+is an initial public export snapshot</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>129
+xUnit test functions in 6,329 lines; no CI workflow runs
+them</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CTX is a "cognitive version control system": a .NET 8 CLI, a stdio
+MCP server, an ACP-style agent endpoint and a local web viewer over a
+<code>.ctx</code> directory of JSON. The agent records goals, tasks,
+hypotheses, evidence, decisions and conclusions as typed records, and
+<code>ctx commit</code> snapshots the whole working context with a diff,
+git-style, with branches and merge. <code>ctx plan</code> and
+<code>ctx context</code> assemble a packet from those records for the
+next turn.</p>
+<p>What is notable is the data model. Hypotheses carry
+<code>Proposed</code>, <code>UnderEvaluation</code>,
+<code>Supported</code>, <code>Refuted</code> and a separate branch
+lifecycle; decisions carry <code>Accepted</code>, <code>Rejected</code>,
+<code>Superseded</code>; evidence links to what it supports; and a
+consistency audit names a done task with no accepted conclusion or an
+accepted decision with no evidence. Planning reads those states to pick
+the next task.</p>
+<p>What is weak is that the packet the model reads does not use them. A
+refuted hypothesis or a rejected decision is injected with its label,
+ordered by confidence, and a superseded hypothesis keeps its old label
+because supersede changes a field the packet never renders. Branch merge
+reports conflicts and then writes the incoming copy over every one.</p>
+<p>The licence is source-available and restrictive: local, self-hosted
+and on-premise commercial use are granted; offering CTX or <em>"a
+substantially similar cognitive version control service"</em> as a
+hosted service is not (<code>LICENSE</code>, sections 2 and 5).
+<code>COPYRIGHT.md</code> separately says <em>"No open source license is
+granted for redistribution or commercial exploitation"</em>, which reads
+against the redistribution grant in <code>LICENSE</code> section 3.</p>
+<p>One mark, <code>negative_eval</code>, on runbook selection. Section 9
+names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory in CTX is a typed record in the working context, and it
+becomes durable when a commit snapshots it. The README's own phrasing is
+the model: <em>"<code>Working context</code> = cognition in motion"</em>
+and <em>"<code>Commit history</code> = durable cognitive
+snapshots"</em>. Nothing is extracted from conversation; every record is
+written by an explicit verb.</p>
+<p><strong>Entry states are chosen by the writer.</strong>
+<code>AddHypothesisAsync</code> fixes
+<code>HypothesisState.Proposed</code>
+(<code>Ctx.Core/CtxApplicationService.cs:914</code>).
+<code>AddDecisionAsync</code> and <code>AddConclusionAsync</code> parse
+whatever state the caller passes and fall back to <code>Proposed</code>
+or <code>Draft</code> when it does not parse (<code>:1267</code>,
+<code>:1440</code>), so a decision can be born <code>Accepted</code>.
+Evidence is always stamped <code>LifecycleState.Validated</code>
+(<code>:1357</code>), including evidence the bootstrap infers from
+keyword matches in a document (<code>:5379</code>,
+<code>:5396</code>).</p>
+<p><strong>States move only by update verbs.</strong>
+<code>ctx hypo update --state</code>, <code>decision update</code>,
+<code>conclusion update</code> and their MCP twins set any enum value;
+update throws on an unknown state where add silently defaults
+(<code>:1301-1306</code> against <code>:1267</code>).
+<code>ctx hypo supersede</code> sets the old hypothesis's
+<code>BranchState</code> to <code>Deprecated</code> and adds a relation,
+and leaves <code>State</code> as it was (<code>:1106-1111</code>).
+<code>ctx hypo merge</code> sets <code>BranchState = Merged</code>
+(<code>:1066-1072</code>).</p>
+<p><strong>Nothing dies.</strong> No verb deletes a record (Recorded
+searches). A wrong hypothesis becomes <code>Refuted</code>, a wrong
+decision <code>Rejected</code> or <code>Superseded</code>, and both stay
+in the working context and every later commit.</p>
+<p><strong>The states steer planning, not belief.</strong>
+<code>BuildNextWorkCandidates</code> treats a task as closed only when
+an <code>Accepted</code> conclusion names it, and surfaces
+<code>Proposed</code> or <code>UnderEvaluation</code> hypotheses on
+closed tasks as gaps (<code>:4880-4884</code>, <code>:4958-4978</code>).
+The packet builder renders every hypothesis as
+<code>[State] (Confidence) Statement</code>, ordered by confidence, with
+no state predicate (<code>Ctx.Core/ContextBuilder.cs:49-53</code>,
+<code>:84</code>). The model is told the label and left to weigh it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a CTX record is born, how its state moves, and which reads consult the state</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a CTX record is born, how its state moves, and which reads consult the state
+flowchart TD
+    A[&quot;ctx hypo add&quot;] --&gt; P[&quot;Hypothesis&lt;br/&gt;State = Proposed&quot;]
+    D[&quot;ctx decision add --state X&quot;] --&gt; DS{&quot;X parses as&lt;br/&gt;DecisionState?&quot;}
+    DS -- &quot;yes&quot; --&gt; DX[&quot;Decision in state X,&lt;br/&gt;Accepted allowed at birth&quot;]
+    DS -- &quot;no&quot; --&gt; DP[&quot;Decision Proposed&quot;]
+    E[&quot;ctx evidence add&lt;br/&gt;or bootstrap apply&quot;] --&gt; EV[&quot;Evidence&lt;br/&gt;always Validated&quot;]
+    P --&gt; U[&quot;hypo update --state&lt;br/&gt;Supported or Refuted&quot;]
+    P --&gt; S[&quot;hypo supersede old --by new&quot;]
+    S --&gt; SD[&quot;old: BranchState = Deprecated,&lt;br/&gt;State unchanged&quot;]
+    U --&gt; WC[(&quot;working-context.json&quot;)]
+    SD --&gt; WC
+    DX --&gt; WC
+    DP --&gt; WC
+    EV --&gt; WC
+    WC --&gt; PK[&quot;context packet:&lt;br/&gt;every linked hypothesis, decision,&lt;br/&gt;evidence, conclusion, labelled by State,&lt;br/&gt;no state filter&quot;]
+    WC --&gt; NX[&quot;next / gaps / audit:&lt;br/&gt;Accepted conclusions close tasks,&lt;br/&gt;open hypotheses become gaps&quot;]
+    WC --&gt; CM[&quot;ctx commit:&lt;br/&gt;full snapshot + entity diff&lt;br/&gt;to commits/id.json&quot;]
+    CM --&gt; MG{&quot;ctx merge branch&quot;}
+    MG --&gt; MW[&quot;conflicts reported,&lt;br/&gt;incoming copy written&lt;br/&gt;for every shared id&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Eleven .NET projects outside the tests. <code>Ctx.Domain</code> holds
+records and enums; <code>Ctx.Core</code> holds the application service,
+context builder, commit, diff and merge engines;
+<code>Ctx.Persistence</code> writes JSON files; <code>Ctx.Cli</code>,
+<code>Ctx.Mcp</code>, <code>Ctx.Agent.Acp</code> and
+<code>Ctx.Viewer</code> are the four front ends;
+<code>Ctx.Providers</code> calls OpenAI and Anthropic for
+<code>ctx run</code>. <code>Bootstrapper.Create</code> wires one runtime
+shared by CLI and MCP
+(<code>Ctx.Infrastructure/Bootstrapper.cs:27-65</code>).</p>
+<p><strong>Storage is a directory of JSON.</strong>
+<code>RepositoryPaths</code> lays out <code>.ctx/</code> with
+<code>working/working-context.json</code>, <code>staging/</code>,
+<code>commits/</code>, <code>branches/</code>, <code>runbooks/</code>,
+<code>triggers/</code>, <code>packets/</code>, <code>runs/</code> and
+<code>metrics/usage.json</code>
+(<code>Ctx.Persistence/WorkingContextRepository.cs:11-38</code>). Every
+goal, task, hypothesis, decision, evidence item and conclusion lives in
+the one working-context file, rewritten whole on each write through a
+temp file and <code>File.Move</code> (<code>:155-176</code>,
+<code>:244-268</code>). Commits, runbooks and triggers are written with
+<code>File.WriteAllTextAsync</code> directly
+(<code>CommitRepository.cs:15-16</code>,
+<code>OperationalRunbookRepository.cs:15-19</code>).</p>
+<p><strong>Writes serialise on a lock.</strong>
+<code>FileSystemRepositoryWriteLock</code> takes an in-process semaphore
+per <code>.ctx</code> root and then an exclusive <code>write.lock</code>
+file handle, retrying every 25 ms
+(<code>RepositoryWriteLock.cs:11-52</code>). Every mutating service
+method runs inside it (<code>CtxApplicationService.cs:5976-5985</code>).
+Reads take no lock.</p>
+<p><strong>Runbooks and triggers sit outside the branch.</strong> They
+are separate files, not part of <code>WorkingContext</code>. A commit
+snapshots them, but <code>CheckoutAsync</code> restores only the working
+context (<code>:1617-1634</code>), so checking out an older branch keeps
+the current runbooks.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing runs besides the CLI or the MCP process; there is no
+database, and no API key unless <code>ctx run</code> calls a provider.
+The store is indented JSON that a person can read and repair by hand.
+The <code>.gitignore</code> excludes a root <code>.ctx/</code>, while
+the examples commit theirs. Install is a script or a build of
+<code>Ctx.sln</code>. The devcontainer runs
+<code>bash scripts/ensure-dotnet-sdk.sh &amp;&amp; dotnet restore Ctx.sln</code>
+on create and a demo script on start, and forwards the viewer on port
+5271 as <code>public</code>
+(<code>.devcontainer/devcontainer.json</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> Each CLI verb in
+<code>Ctx.Cli/Program.cs</code> and each MCP tool in
+<code>Ctx.Mcp/Mcp/CtxWriteTools.cs</code> calls one
+<code>CtxApplicationService</code> method. The method loads the working
+context, builds a new record or a <code>with</code> copy, marks
+<code>Dirty</code>, and saves (<code>AddHypothesisAsync</code>
+<code>:894-929</code>, <code>UpdateHypothesisAsync</code>
+<code>:931-1001</code>, <code>AddDecisionAsync</code>
+<code>:1260-1288</code>, <code>AddEvidenceAsync</code>
+<code>:1342-1385</code>, <code>AddConclusionAsync</code>
+<code>:1431-1462</code>). The CLI stamps
+<code>Environment.UserName</code> as author; the MCP tools default
+<code>createdBy</code> to <code>"mcp-agent"</code> and accept any
+string.</p>
+<p><strong>Commit.</strong> <code>CommitAsync</code> loads the context,
+head, previous commit, runbooks and triggers;
+<code>CommitEngine.CreateCommit</code> builds a
+<code>RepositorySnapshot</code>, hashes it, and diffs it against the
+previous commit (<code>:1523-1542</code>;
+<code>Ctx.Core/CommitEngine.cs:24-65</code>). <code>DiffEngine</code>
+compares entities by id and by serialised JSON, emitting
+<code>Added</code>, <code>Modified</code> and <code>Removed</code> with
+a one-line summary (<code>Ctx.Core/DiffEngine.cs:28-61</code>).</p>
+<p><strong>Context assembly.</strong> <code>ContextBuilder.Build</code>
+(<code>Ctx.Core/ContextBuilder.cs:20-110</code>) selects goals, tasks,
+linked hypotheses (top six by confidence), decisions, evidence (top
+eight by confidence), conclusions, two runbooks and two triggers, and
+renders each section as bullet text. <code>ctx_context</code> and
+<code>ctx_plan</code> expose it over MCP
+(<code>Ctx.Mcp/Mcp/CtxReadTools.cs:71-91</code>); <code>PlanAsync</code>
+adds next-work candidates and guidance
+(<code>CtxApplicationService.cs:1224-1258</code>).</p>
+<p><strong>Runbook selection.</strong>
+<code>OperationalRunbookSelection.Select</code> keeps
+<code>State == Active</code>, scores a task match 100, a trigger
+substring 120, a goal match 70 and a guardrail +20, and gives a
+troubleshooting runbook −100 unless the purpose mentions a lock. It
+drops negatives and takes task-attached runbooks plus fillers up to two
+(<code>Ctx.Core/OperationalRunbookSelection.cs:31-76</code>).</p>
+<p><strong>Merge.</strong> <code>MergeAsync</code> loads the source
+branch's head commit and the current working context, calls
+<code>MergeEngine.Merge</code>, and saves the merged snapshot whatever
+the conflicts (<code>CtxApplicationService.cs:1636-1674</code>).</p>
+<p><strong>Bootstrap.</strong> <code>BootstrapMapAsync</code> and
+<code>BootstrapApplyAsync</code> read up to 40 text files and pick lines
+containing <code>hypothesis</code>, <code>we believe</code>,
+<code>should</code>, <code>will</code>, <code>so that</code> or
+<code>in order to</code> as candidate hypotheses at confidence 0.66
+(<code>:5658-5709</code>). Apply writes the strongest thread as a goal,
+a <code>Ready</code> task, up to three <code>Proposed</code> hypotheses
+and <code>Validated</code> evidence tagged <code>bootstrap</code> and
+<code>provisional</code> (<code>:2048-2149</code>,
+<code>:5405-5414</code>).</p>
+<p><strong>Audit.</strong> <code>AuditAsync</code> is a consistency
+linter, not a log. It flags a task without a goal or hypothesis, a done
+task without an accepted conclusion, a hypothesis without evidence, an
+open hypothesis on done tasks, an accepted decision without support, a
+draft conclusion on a done task, and an active goal with no open work
+(<code>:2215-2381</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Record</th>
+<th>State field</th>
+<th>Other fields that matter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hypothesis</td>
+<td><code>HypothesisState</code> Proposed, UnderEvaluation, Supported,
+Refuted, Archived; <code>HypothesisBranchState</code> Active, Weakening,
+Merged, Deprecated, Promoted</td>
+<td>Confidence, Impact, EvidenceStrength, CostToValidate, relations,
+supersedes and merged-into ids</td>
+</tr>
+<tr>
+<td>Decision</td>
+<td><code>DecisionState</code> Proposed, Accepted, Rejected,
+Superseded</td>
+<td>rationale, hypothesis and evidence ids</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td><code>LifecycleState</code>, always Validated</td>
+<td>source string, kind, confidence, supported references</td>
+</tr>
+<tr>
+<td>Conclusion</td>
+<td><code>ConclusionState</code> Draft, Accepted, Superseded</td>
+<td>decision, evidence, goal and task ids</td>
+</tr>
+<tr>
+<td>Runbook</td>
+<td><code>LifecycleState</code>, born Active</td>
+<td>triggers, do, verify, preconditions, escalation boundary</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sources: <code>Ctx.Domain/Enums.cs:3-54</code>, <code>:89-94</code>;
+<code>Ctx.Domain/Model.cs:48-100</code>, <code>:103-151</code>.</p>
+<p><strong>Provenance is a caller string and two timestamps.</strong>
+<code>Traceability</code> holds <code>CreatedBy</code>,
+<code>CreatedAtUtc</code>, <code>UpdatedBy</code>,
+<code>UpdatedAtUtc</code>, tags, related ids, and a model name and
+version read from <code>CTX_MODEL_NAME</code> or
+<code>OPENAI_MODEL</code>
+(<code>Ctx.Domain/DomainPrimitives.cs:3-11</code>;
+<code>CtxApplicationService.cs:2504-2520</code>). An update overwrites
+<code>UpdatedBy</code>, so a record keeps its creator and its last
+editor; intermediate values survive only in commits.</p>
+<p><strong>Hypothesis score is a fixed formula.</strong> It is
+<code>0.35·probability + 0.35·impact + 0.20·evidence strength − 0.10·cost</code>,
+each clamped to [0, 1], with <code>Probability</code> an alias of
+<code>Confidence</code> (<code>Model.cs:68-69</code>,
+<code>:526-540</code>). Nothing recomputes confidence from linked
+evidence.</p>
+<p><strong>Documented states the enums lack.</strong> The CLI reference
+offers <code>conclusion add --state Draft|Accepted|Rejected</code>
+(<code>docs/CLI_COMMANDS.md:1242</code>), and
+<code>ConclusionState</code> has no <code>Rejected</code>. The add path
+parses it, fails, and stores <code>Draft</code> without an error; the
+update path throws.</p>
+<p><strong>No scope key.</strong> No record carries a user, agent or
+tenant field; the project is the directory.
+<code>ContextCommit.Branch</code> is the one key a read filters on:
+<code>GetHistoryAsync</code> returns commits whose branch matches the
+head's (<code>CommitRepository.cs:30-48</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is structural. Given an optional goal or task id and a
+purpose string, the builder walks id links from goals to tasks to
+hypotheses to decisions, evidence and conclusions. No text query touches
+hypothesis or evidence content; the purpose string is matched only
+against runbook triggers
+(<code>OperationalRunbookSelection.cs:38</code>).</p>
+<p><strong>A focus that matches nothing widens silently.</strong> If
+<code>goalId</code> selects no goal, the builder takes the top two goals
+by priority; if no task survives, it takes up to four tasks under those
+goals (<code>ContextBuilder.cs:36-47</code>). The packet does not say it
+fell back.</p>
+<p><strong>No state predicate on the knowledge sections.</strong>
+Hypotheses are ordered by <code>Confidence</code> and capped at six;
+decisions are taken in stored order and capped at six; evidence by
+confidence, capped at eight; conclusions capped at four
+(<code>:49-72</code>). A <code>Refuted</code> hypothesis at 0.9
+confidence outranks a <code>Supported</code> one at 0.6. The rendered
+line carries <code>State</code> and confidence but not
+<code>BranchState</code>, so a superseded hypothesis still reads
+<code>[Supported]</code> if that was its state (<code>:84</code>).
+Triggers are the one knowledge section with a state filter, excluding
+<code>Archived</code> (<code>:124-125</code>).</p>
+<p><strong>Budget is by count.</strong> <code>EstimatedTokens</code> is
+characters over four and is reported, not enforced
+(<code>:215-216</code>). <code>RepositoryConfig.PacketTokenLimit</code>
+is declared and no builder reads it (Recorded searches).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is an explicit verb, synchronous, one lock acquisition
+and one whole-file rewrite of the working context. A record is readable
+by the next packet at once; it becomes part of history only when someone
+commits.</p>
+<p><strong>Deduplication is absent for knowledge records.</strong> Two
+<code>hypo add</code> calls with the same statement create two
+hypotheses. The only dedup is on automatic triggers, by kind, summary,
+text and linked ids, skipping archived ones
+(<code>CtxApplicationService.cs:2629-2641</code>).</p>
+<p><strong>Conflict handling is a merge-time report.</strong>
+<code>MergeEngine.FindConflicts</code> compares each shared id with
+<code>Equals(currentItem, pair.Value)</code> and records a
+<code>DivergentChange</code>
+(<code>Ctx.Core/MergeEngine.cs:50-79</code>). <code>MergeById</code>
+keeps <code>group.Last()</code> of current-then-incoming, so the
+incoming copy wins every shared id (<code>:81-82</code>).
+<code>MergeAsync</code> writes the result before returning the conflict
+list (<code>CtxApplicationService.cs:1655-1672</code>). The summary says
+conflicts are <em>"requiring review"</em>; the working context already
+holds the incoming values.</p>
+<p><strong>The equality test is reference-based on lists.</strong> Every
+record is a C# positional record, whose synthesised <code>Equals</code>
+compares <code>IReadOnlyList</code> members by reference, and every
+record's <code>Traceability</code> holds a <code>Tags</code> list. The
+two sides of a real merge are deserialised from different files, so an
+unchanged entity on both branches should compare unequal and be
+reported. The committed test builds both sides in memory from shared
+arrays and cannot see this
+(<code>Ctx.Tests/MergeEngineTests.cs:9-36</code>). This was read, not
+run. <code>Goals</code> and <code>Runs</code> are merged without any
+conflict check (<code>MergeEngine.cs:15-22</code>).</p>
+<p><strong>Agent-generated content is admitted as written.</strong> The
+bootstrap stamps keyword-matched document lines as
+<code>Validated</code> evidence. Its own guidance text says everything
+it writes <em>"should be reviewed before any accepted decision or
+closing conclusion"</em> (<code>:2143</code>); nothing enforces
+that.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, no model call, one full rewrite of
+<code>working-context.json</code> and
+<code>graph/current-graph.json</code> per mutation
+(<code>WorkingContextRepository.cs:111-115</code>).</li>
+<li>Background: none.</li>
+<li>Read: one packet per <code>plan</code> or <code>context</code> call,
+bounded by count caps; the runbook and trigger directories are listed in
+full on each call.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server exposes read tools (<code>ctx_status</code>,
+<code>ctx_plan</code>, <code>ctx_context</code>, <code>ctx_next</code>,
+<code>ctx_audit</code>, list and show per record type, graph and
+lineage). Write tools throw unless the server was started with
+<code>--mode write</code>
+(<code>Ctx.Mcp/Mcp/CtxMcpOptions.cs:5-23</code>;
+<code>RepositoryGuard.cs:43-51</code>). A <code>repo</code> argument is
+honoured only when it equals the configured root or sits under
+<code>--allow-root</code> (<code>RepositoryGuard.cs:12-41</code>).</p>
+<p><strong><code>ctx_bootstrap_map</code> bypasses that guard.</strong>
+It is declared <code>ReadOnly = true</code>, resolves <code>repo</code>
+through the guard, and then reads the <code>from</code> path as given.
+<code>ResolveBootstrapSourcePath</code> accepts any rooted path, and a
+single file is read whatever its extension
+(<code>CtxWriteTools.cs:455-468</code>;
+<code>CtxApplicationService.cs:5265-5275</code>,
+<code>:5288-5292</code>). Excerpts return in the map, so a read-only MCP
+session can read excerpts of any file the process can open. This was
+read, not reproduced.</p>
+<p>In write mode the agent holds every state verb:
+<code>ctx_decision_add</code> with <code>state = "Accepted"</code>,
+<code>ctx_decision_update</code>, <code>ctx_conclusion_add</code>,
+<code>ctx_conclusion_update</code>, <code>ctx_hypothesis_update</code>
+and <code>ctx_commit</code> (<code>CtxWriteTools.cs:177-199</code>,
+<code>:276-356</code>). The ACP endpoint is read-only; its trigger
+persistence throws <code>NotSupportedException</code>
+(<code>Ctx.Agent/CtxAgentService.cs:80-89</code>). Prompt files under
+<code>prompts/</code> teach the loop <code>ctx</code>,
+<code>ctx next</code>, <code>ctx plan</code>, work,
+<code>ctx closeout</code>, <code>ctx commit</code>. No hook injects
+context automatically.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Write integrity is careful for the working context and not
+for the rest.</strong> The context file is replaced atomically under a
+two-level lock. Commit, runbook and trigger files are written in place,
+and <code>ImportAsync</code> rewrites commit files by id from a JSON
+export (<code>CtxApplicationService.cs:2439-2502</code>), so a commit is
+not immutable.</p>
+<p><strong>Uncertainty is representable and not enforced at read
+time.</strong> The states exist and the audit reports inconsistencies
+between them; the packet passes every state through with a label.</p>
+<p><strong>Merge loses the current side</strong> (section 7), and
+<strong>the bootstrap path escapes the repository guard</strong>
+(section 8).</p>
+<p><strong>Privacy and deletion.</strong> There is no delete. Removing a
+record means editing <code>working-context.json</code> by hand, and
+every earlier commit still holds it.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded, on runbook selection; section
+10.</li>
+<li><code>trust_state</code> — withheld. Hypothesis, decision and
+conclusion states are discrete and stored, and the reads that filter on
+them are planning reads: next-work, gaps, check and audit. The packet,
+the list tools and the graph pass <code>Refuted</code>,
+<code>Rejected</code> and superseded records through with a label. The
+runbook filter keeps <code>Active</code> only, and runbooks are born
+<code>Active</code> with no candidate stage; the same filter drops a
+runbook marked <code>Validated</code>.</li>
+<li><code>audit_log</code> — withheld. A commit is a snapshot with a net
+entity diff, cut when the agent or a person chooses: version history of
+the git kind, kept in the system's own store. A state that flips twice
+between commits leaves one record, and commit files are rewritable by
+import. <code>usage.json</code> counts command invocations.</li>
+<li><code>human_review</code> — withheld. The agent's own MCP tools set
+<code>Accepted</code> and commit; the viewer only displays;
+<code>createdBy</code> is a caller string.</li>
+<li><code>scope_enforced</code> — withheld. The boundary is the
+<code>.ctx</code> directory, guarded on the MCP side by path.
+<code>Branch</code> on a commit is filtered by the log read, and it is a
+lineage label, not an access scope; the packet reads the one working
+context.</li>
+<li><code>tombstone</code> — no. A rejected decision is a row keyed on
+its id, and the same text can be added again.</li>
+<li><code>bitemporal</code> — no. Created and updated times only.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin.</p>
+<p><strong>Scale.</strong> 129 xUnit <code>[Fact]</code> and
+<code>[Theory]</code> functions, 81 in
+<code>ApplicationServiceTests.cs</code>, driving the real file-system
+repositories in temp directories. The only workflow,
+<code>.github/workflows/live-demo-pages.yml</code>, publishes the demo
+site; release notes record <code>dotnet test</code> passing by hand
+(<code>docs/RELEASE_1_0_12.md:51</code>).</p>
+<p><strong>The negative case.</strong>
+<code>Context_IncludesTopTwoRunbooksAndAdditionalAvailability</code>
+stores four runbooks and builds a packet for the purpose
+<code>"publish-local git-commit viewer refresh"</code> with a goal and a
+task. It asserts two runbooks selected by name and one listed as
+additional, then asserts the troubleshooting runbook
+<code>Recover index lock</code> does not appear in the section
+(<code>Ctx.Tests/ApplicationServiceTests.cs:3299-3374</code>). The
+positive assertions come first, so an empty section fails.</p>
+<p><strong>Other exclusions.</strong> A graph export at a commit does
+not contain a task added after it (<code>:1766-1771</code>). A read-only
+MCP server refuses write tools while <code>ctx_bootstrap_map</code>
+succeeds, over a source inside the repository
+(<code>Ctx.Tests/McpToolTests.cs:162-208</code>).</p>
+<p><strong>Not covered.</strong> No test merges two branches through
+<code>MergeAsync</code> after a round-trip to disk. No test exercises
+<code>SupersedeHypothesisAsync</code> or checks what a superseded
+hypothesis looks like in a packet. No test asks the context builder to
+leave out a refuted hypothesis (Recorded searches).</p>
+<p><strong>Metrics.</strong> <code>RepeatedIterations</code> has no
+writer outside the record constructor, and
+<code>AvoidedRedundancyCount</code> is incremented by one on every
+provider run regardless of outcome
+(<code>Ctx.Core/RunOrchestrator.cs:79-90</code>;
+<code>Model.cs:364-368</code>). The README's <em>"we have not lost
+context again in practice"</em> is a product claim with no committed
+measurement. No paper or citation block is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Separate the claim from its disposition.</strong>
+Hypothesis, decision and conclusion as three record types with their own
+states, linked by id, is a sharper vocabulary than one "memory" with a
+confidence number.</li>
+<li><strong>A consistency linter over the reasoning graph.</strong> Done
+task without an accepted conclusion, accepted decision without evidence,
+open hypothesis on closed work: each is one loop and each finds a real
+gap.</li>
+<li><strong>Diff by serialised value, keyed by id.</strong>
+<code>DiffEngine</code> compares JSON, which is what the merge engine
+should have done too.</li>
+<li><strong>Read-only MCP by default, with the write mode named in every
+tool's error.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Rendering a state instead of filtering on it.</strong> If a
+record can be refuted, the read path that feeds the model should drop or
+quarantine it, not print the word and rank it by confidence.</li>
+<li><strong>Two lifecycle fields where the reader renders one.</strong>
+Supersede writes <code>BranchState</code>; the packet shows
+<code>State</code>.</li>
+<li><strong>Detect-then-overwrite merges.</strong> Reporting a conflict
+after writing one side over the other is worse than refusing the
+merge.</li>
+<li><strong>Record equality for change detection</strong> in any
+language where collections compare by reference.</li>
+<li><strong>A guard on the repository argument that the file argument
+skips.</strong></li>
+<li><strong>Defaults on parse failure for epistemic fields.</strong> A
+misspelled or undocumented state should fail, as the update path
+does.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>CTX suits one person or one agent in one project who wants an
+inspectable, versioned record of why work went the way it did, and who
+reads the packet with judgement. It is a planning and provenance tool
+first. A reader who needs memory that stops asserting a claim once it is
+refuted, or who wants several agents merging lines of work, would have
+to change the context builder and the merge engine before relying on
+either. The source-available licence also bars offering the result as a
+hosted service.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does a real <code>ctx merge</code> after a disk round-trip report
+every shared entity as a conflict, as the record equality implies?</li>
+<li>Is the <code>.ctx</code> directory meant to be committed to the
+project's git repository, and are CTX branches merged in practice?</li>
+<li>Why is a <code>Validated</code> runbook excluded from selection
+while <code>Active</code> is kept?</li>
+<li>What does the private history before the "initial public export
+snapshot", dated 10 April 2026, contain, and do its tests run in CI
+there?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Domain:</strong> <code>Ctx.Domain/Model.cs</code>,
+<code>Ctx.Domain/Enums.cs</code>,
+<code>Ctx.Domain/DomainPrimitives.cs</code>.</li>
+<li><strong>Service and engines:</strong>
+<code>Ctx.Core/CtxApplicationService.cs</code>,
+<code>Ctx.Core/ContextBuilder.cs</code>,
+<code>Ctx.Core/OperationalRunbookSelection.cs</code>,
+<code>Ctx.Core/CommitEngine.cs</code>,
+<code>Ctx.Core/DiffEngine.cs</code>,
+<code>Ctx.Core/MergeEngine.cs</code>,
+<code>Ctx.Core/RunOrchestrator.cs</code>.</li>
+<li><strong>Storage:</strong>
+<code>Ctx.Persistence/WorkingContextRepository.cs</code>,
+<code>Ctx.Persistence/CommitRepository.cs</code>,
+<code>Ctx.Persistence/RepositoryWriteLock.cs</code>,
+<code>Ctx.Persistence/OperationalRunbookRepository.cs</code>.</li>
+<li><strong>Front ends:</strong> <code>Ctx.Cli/Program.cs</code>,
+<code>Ctx.Mcp/Mcp/CtxReadTools.cs</code>,
+<code>Ctx.Mcp/Mcp/CtxWriteTools.cs</code>,
+<code>Ctx.Mcp/Mcp/RepositoryGuard.cs</code>,
+<code>Ctx.Mcp/Mcp/CtxMcpOptions.cs</code>,
+<code>Ctx.Agent/CtxAgentService.cs</code>,
+<code>Ctx.Viewer/Program.cs</code>.</li>
+<li><strong>Wiring:</strong>
+<code>Ctx.Infrastructure/Bootstrapper.cs</code>.</li>
+<li><strong>Tests:</strong>
+<code>Ctx.Tests/ApplicationServiceTests.cs</code>,
+<code>Ctx.Tests/MergeEngineTests.cs</code>,
+<code>Ctx.Tests/ContextBuilderTests.cs</code>,
+<code>Ctx.Tests/McpToolTests.cs</code>.</li>
+<li><strong>Licence:</strong> <code>LICENSE</code>,
+<code>COPYRIGHT.md</code>, <code>CONTRIBUTOR_ASSIGNMENT.md</code>,
+<code>TRADEMARK.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn --include='*.cs' -iE 'File\.Delete|Directory\.Delete|Remove\(|RemoveAll|delete|forget' . | grep -v Ctx.Tests</code>
+— only temp-file cleanup and a <code>FileShare.Delete</code> flag; no
+record deletion.</li>
+<li><code>grep -rn --include='*.cs' -E 'HypothesisState\.|DecisionState\.|ConclusionState\.|HypothesisBranchState\.' . | grep -v Ctx.Tests</code>
+— readers in audit, check, gaps and next-work; none in
+<code>ContextBuilder.cs</code>.</li>
+<li><code>grep -rn --include='*.cs' 'LifecycleState\.' . | grep -v Ctx.Tests</code>
+— filters in runbook selection, trigger selection, goal lifecycle and
+the viewer's trigger ranking; evidence written <code>Validated</code> at
+three sites.</li>
+<li><code>grep -rn --include='*.cs' 'PacketTokenLimit' .</code> — one
+match, the record declaration at
+<code>Ctx.Domain/Model.cs:324</code>.</li>
+<li><code>grep -rln -i 'supersede' Ctx.Tests</code> —
+<code>McpToolTests.cs</code> only, as a tool name in the registry
+list.</li>
+<li><code>grep -n 'MergeAsync' Ctx.Tests/*.cs</code> — no match.</li>
+<li><code>grep -rn 'AvoidedRedundancy\|RepeatedIterations' --include='*.cs' .</code>
+— one increment at <code>RunOrchestrator.cs:88</code>;
+<code>RepeatedIterations</code> only in the record.</li>
+<li><code>grep -rn 'dotnet test' --exclude-dir=.git .</code> —
+documentation and release notes; no workflow.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' --exclude-dir=.git .</code>
+— no match.</li>
+<li><code>grep -rniE 'renamed|formerly' --exclude-dir=.git .</code> —
+one line in a helper prompt about CLI command renames; no project
+rename.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/diegoxtr/ctx-open/commit/c31d84e07c830f2d126f780f65ad2b0228fe54eb"><code class="commit-id" title="c31d84e07c830f2d126f780f65ad2b0228fe54eb">c31d84e0…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 21
+September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: 1 RUNS (<code>.devcontainer/devcontainer.json</code>,
+<code>postCreateCommand</code> and <code>postStartCommand</code>), 0
+EXEC, 0 FRESH and 0 FLOAT across the 14 files scanned; no AGENT files,
+and the <code>prompts/</code> files were read as data. No
+<code>.gitattributes</code> or <code>.gitmodules</code>. Read with
+<code>grep</code>, <code>sed</code> and <code>awk</code>; nothing
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

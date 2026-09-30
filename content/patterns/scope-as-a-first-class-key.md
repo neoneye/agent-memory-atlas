@@ -883,6 +883,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[RightMemory](../../systems/rightmemory/) keys one sharing channel and prompts the other.** File views reach consumers through a hub whose connect tokens are minted with the invitation's `view_id`, and `download_package` answers 403 to a token bound to another view, a refusal the hub test asserts after a positive download. Question views skip the key: `answer_question_view` prepends the provider's `retriever.md` to the consumer's question and runs the ordinary retrieve role over the provider's whole root, in one session per view shared by every consumer. **When a store is shared two ways, put the same key on both; a prompt that describes the boundary is not one.**
 
+**[Claude Engram](../../systems/claude-engram/) partitions by file and then chooses the file by name.** Each registered project path has its own `memory.json` and no row carries a project key. When the current path is unregistered, both hook readers load the first registered project whose directory basename matches, and `load_project_memory` prefers that match over the path's own ancestors, so a new `backend` checkout is injected with another `backend`'s rules and mistakes. **A missed scope lookup should return nothing; a basename is not an identity.**
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

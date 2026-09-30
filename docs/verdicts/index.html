@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 693 reports.</strong></p>
+<p><strong>This page covers all 696 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28797,6 +28797,129 @@ predicates applied consistently across FTS, vector and graph arms.</li>
 hold against a later digest, or agents and tenants need separate scopes
 — the store is one graph for every agent, and <code>from_agents</code>
 filters on a string the writer supplies.</li>
+</ul>
+<h3 id="claude-engram"><a
+href="../systems/claude-engram/"><code>claude-engram</code></a></h3>
+<ul>
+<li>Best idea: <strong>an injection gate that returns nothing rather
+than the best of nothing.</strong> <code>score_loaded_entries</code>
+admits a memory before an edit only on a path-aware file match, refuses
+bare generic basenames such as <code>README.md</code> and
+<code>utils.py</code>, and asks old entries for a full path, so an edit
+with no relevant memory injects nothing.</li>
+<li>Biggest risk: <strong>scope is chosen by directory name when the
+path is unknown.</strong> Both hook readers load the first registered
+project with the same basename when the current path is unregistered,
+and <code>load_project_memory</code> does so before looking at
+ancestors, so a fresh checkout named <code>backend</code> reads another
+project's rules and mistakes until its first write.</li>
+<li>Most reusable component:
+<code>claude_engram/mining/decision_gate.py</code>, one shape test for a
+decision shared by the prompt hook, the transcript miner and a pruning
+migration.</li>
+<li>Second risk: <strong>dismissal does not stick and cleanup
+deletes.</strong> <code>acknowledge_mistake</code> moves the row to the
+archive, while both writers dedupe against the hot file only, so the
+same failure is captured again under the same content-hash id. The
+post-session cleanup removes any entry under 20 characters without an
+archive copy, rules included.</li>
+<li>Maturity impression: MIT, 34,944 lines of Python in the package, 305
+commits on main by one author under two identities from 20 January 2026
+to 27 September 2026. 198 pytest-style functions and 39 bench scripts,
+the benches printing pass counts without failing a run; no CI
+configuration and no committed retrieval result.</li>
+<li>Study when: you are building capture from an agent's own tool
+failures and prompts, and want a worked set of gates against noise, each
+with the incident that produced it.</li>
+<li>Do not copy when: projects share directory names, a dismissed memory
+must stay dismissed, or other local processes should not be able to
+write memory through the loopback daemon.</li>
+</ul>
+<h3 id="ctx-open"><a
+href="../systems/ctx-open/"><code>ctx-open</code></a></h3>
+<ul>
+<li>Best idea: <strong>split the claim from its disposition.</strong>
+Hypotheses (<code>Proposed</code>, <code>UnderEvaluation</code>,
+<code>Supported</code>, <code>Refuted</code>), decisions
+(<code>Accepted</code>, <code>Rejected</code>, <code>Superseded</code>)
+and conclusions (<code>Draft</code>, <code>Accepted</code>) are separate
+record types linked by id, and <code>ctx audit</code> walks the links to
+name a done task with no accepted conclusion, an accepted decision with
+no evidence, and an open hypothesis on closed work.</li>
+<li>Biggest risk: <strong>the packet renders the state and does not
+filter on it.</strong> <code>ContextBuilder.Build</code> orders linked
+hypotheses by confidence and prints
+<code>[State] (confidence) statement</code> with no state predicate, so
+a refuted hypothesis at 0.9 outranks a supported one at 0.6.
+<code>ctx hypo supersede</code> sets
+<code>BranchState = Deprecated</code>, a field the packet never prints,
+so a superseded hypothesis still reads under its old state.</li>
+<li>Most reusable component: <code>Ctx.Core/DiffEngine.cs</code> — 62
+lines that diff two snapshots by id and serialised JSON into
+<code>Added</code>, <code>Modified</code> and <code>Removed</code> per
+record type, the change detection the merge engine beside it should have
+used.</li>
+<li>Second risk: <strong>merge detects, then overwrites.</strong>
+<code>MergeEngine</code> records a <code>DivergentChange</code> per
+shared id, keeps the incoming copy of every one through
+<code>group.Last()</code>, and <code>MergeAsync</code> saves that before
+returning the conflicts. Its equality is C# record equality, which
+compares list members by reference, so after a disk round-trip every
+shared entity should report as a conflict. Read, not run.</li>
+<li>Maturity impression: source-available licence barring hosted or
+competing services; 14,215 lines of C# outside tests in eleven projects;
+81 commits by 2 contributors from 10 April 2026, the first an initial
+public export snapshot. 129 xUnit test functions and no CI workflow that
+runs them. One mark, <code>negative_eval</code>, on a runbook-selection
+case with positive controls.</li>
+<li>Study when: you want a typed vocabulary for an agent's working
+hypotheses and decisions, with git-style snapshots and a linter over the
+reasoning graph, in a store a person can read by hand.</li>
+<li>Do not copy when: refuted or superseded material must stay out of
+the model's context, several agents will merge lines of work, or the
+read-only MCP mode is expected to confine file reads —
+<code>ctx_bootstrap_map</code> reads any path it is given.</li>
+</ul>
+<h3 id="roampal-core"><a
+href="../systems/roampal-core/"><code>roampal-core</code></a></h3>
+<ul>
+<li>Best idea: <strong>route every request to a scope the client names,
+and refuse an unknown one.</strong> The hooks, MCP server and plugin
+each send <code>X-Roampal-Profile</code>; the server resolves header,
+directory binding, persisted default and launch pin in that order, never
+its own working directory, and answers an unregistered name with a 404
+instead of writing into the default store. Beside it, a down embedder is
+announced to the model in the injected block rather than read as no
+memories.</li>
+<li>Biggest risk: <strong>deletion by nearest neighbour, hardened by a
+restart.</strong> <code>delete_memory</code> archives the first active
+<code>memory_bank</code> hit whose text contains the argument or is
+contained by it, and otherwise the top semantic hit.
+<code>restore()</code> has no caller, and
+<code>cleanup_archived()</code> hard-deletes every archived row the
+first time each profile loads after a server start.</li>
+<li>Most reusable component: <code>roampal/server/main.py</code> lines
+911-1051 — per-request profile resolution and lazy per-profile store
+construction, with an explicit refusal for unregistered names.</li>
+<li>Second risk: <strong>the reader grades the memory.</strong> The
+model that was shown a memory rates it, <code>unknown</code> (shown and
+not used) subtracts score, and ratings drive promotion, demotion and
+deletion. An empty <code>memory_scores</code>, which the scoring prompt
+itself requests when nothing was surfaced, falls back to scoring the
+most recent cached ids of any conversation.</li>
+<li>Maturity impression: Apache-2.0, 22,370 lines of Python outside
+tests plus a 2,541-line TypeScript plugin, 137 commits on main from 1
+contributor between 15 December 2025 and 26 September 2026, with 1,090
+pytest functions run in CI on Linux, macOS and Windows. One mark,
+<code>negative_eval</code>, on an archived fact asserted absent beside
+its re-added copy. The companion paper's headline figure was measured
+with the lifecycle off.</li>
+<li>Study when: you want hook-injected local memory for Claude Code or
+OpenCode, or a worked example of outcome-rated tier promotion with the
+author's own ablations beside it.</li>
+<li>Do not copy when: a stored fact must stay until a person removes it,
+or you need provenance, history or review. None exists, and the agent
+holds every write, edit, archive and rating verb.</li>
 </ul>
         </article>
       </div>

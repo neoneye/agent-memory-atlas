@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 693 of 693 screened at the report's current pin.**
+**Progress: 696 of 696 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 324 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 375 |
-| Repositories with build-time execution (`EXEC`) | 503 |
+| Repositories with an auto-run surface (`RUNS`) | 325 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 377 |
+| Repositories with build-time execution (`EXEC`) | 504 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -102,6 +102,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`craft`](../../content/systems/craft.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`ctx`](../../content/systems/ctx.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md` |
+| [`ctx-open`](../../content/systems/ctx-open.md) | `.devcontainer/devcontainer.json` |
 | [`cua`](../../content/systems/cua.md) | `.vscode/settings.json` |
 | [`daem0n-mcp`](../../content/systems/daem0n-mcp.md) | `.claude-plugin/`, `.opencode/`, `hooks/` |
 | [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |

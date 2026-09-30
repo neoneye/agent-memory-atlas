@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 693 reports.**
+**This page covers all 696 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6253,3 +6253,33 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 50,239 lines of TypeScript in `src/` plus 92,059 in the Electron client, 150 commits on main by 3 contributor identities from 13 April to 30 September 2026. Four marks, `tombstone`, `trust_state`, `audit_log` and `negative_eval`, each resting on one subsystem. 4,728 Vitest cases in 386 files run in CI; the exclusion cases carry live controls, while the annotate rejection filter and the `node_versions` append have no test.
 - Study when: you want a pending-then-confirmed edge pipeline, a value-keyed rejection fed back into a background tagger, or lifecycle predicates applied consistently across FTS, vector and graph arms.
 - Do not copy when: memory has to stay as written, a correction has to hold against a later digest, or agents and tenants need separate scopes — the store is one graph for every agent, and `from_agents` filters on a string the writer supplies.
+
+### [`claude-engram`](../systems/claude-engram/)
+
+- Best idea: **an injection gate that returns nothing rather than the best of nothing.** `score_loaded_entries` admits a memory before an edit only on a path-aware file match, refuses bare generic basenames such as `README.md` and `utils.py`, and asks old entries for a full path, so an edit with no relevant memory injects nothing.
+- Biggest risk: **scope is chosen by directory name when the path is unknown.** Both hook readers load the first registered project with the same basename when the current path is unregistered, and `load_project_memory` does so before looking at ancestors, so a fresh checkout named `backend` reads another project's rules and mistakes until its first write.
+- Most reusable component: `claude_engram/mining/decision_gate.py`, one shape test for a decision shared by the prompt hook, the transcript miner and a pruning migration.
+- Second risk: **dismissal does not stick and cleanup deletes.** `acknowledge_mistake` moves the row to the archive, while both writers dedupe against the hot file only, so the same failure is captured again under the same content-hash id. The post-session cleanup removes any entry under 20 characters without an archive copy, rules included.
+- Maturity impression: MIT, 34,944 lines of Python in the package, 305 commits on main by one author under two identities from 20 January 2026 to 27 September 2026. 198 pytest-style functions and 39 bench scripts, the benches printing pass counts without failing a run; no CI configuration and no committed retrieval result.
+- Study when: you are building capture from an agent's own tool failures and prompts, and want a worked set of gates against noise, each with the incident that produced it.
+- Do not copy when: projects share directory names, a dismissed memory must stay dismissed, or other local processes should not be able to write memory through the loopback daemon.
+
+### [`ctx-open`](../systems/ctx-open/)
+
+- Best idea: **split the claim from its disposition.** Hypotheses (`Proposed`, `UnderEvaluation`, `Supported`, `Refuted`), decisions (`Accepted`, `Rejected`, `Superseded`) and conclusions (`Draft`, `Accepted`) are separate record types linked by id, and `ctx audit` walks the links to name a done task with no accepted conclusion, an accepted decision with no evidence, and an open hypothesis on closed work.
+- Biggest risk: **the packet renders the state and does not filter on it.** `ContextBuilder.Build` orders linked hypotheses by confidence and prints `[State] (confidence) statement` with no state predicate, so a refuted hypothesis at 0.9 outranks a supported one at 0.6. `ctx hypo supersede` sets `BranchState = Deprecated`, a field the packet never prints, so a superseded hypothesis still reads under its old state.
+- Most reusable component: `Ctx.Core/DiffEngine.cs` — 62 lines that diff two snapshots by id and serialised JSON into `Added`, `Modified` and `Removed` per record type, the change detection the merge engine beside it should have used.
+- Second risk: **merge detects, then overwrites.** `MergeEngine` records a `DivergentChange` per shared id, keeps the incoming copy of every one through `group.Last()`, and `MergeAsync` saves that before returning the conflicts. Its equality is C# record equality, which compares list members by reference, so after a disk round-trip every shared entity should report as a conflict. Read, not run.
+- Maturity impression: source-available licence barring hosted or competing services; 14,215 lines of C# outside tests in eleven projects; 81 commits by 2 contributors from 10 April 2026, the first an initial public export snapshot. 129 xUnit test functions and no CI workflow that runs them. One mark, `negative_eval`, on a runbook-selection case with positive controls.
+- Study when: you want a typed vocabulary for an agent's working hypotheses and decisions, with git-style snapshots and a linter over the reasoning graph, in a store a person can read by hand.
+- Do not copy when: refuted or superseded material must stay out of the model's context, several agents will merge lines of work, or the read-only MCP mode is expected to confine file reads — `ctx_bootstrap_map` reads any path it is given.
+
+### [`roampal-core`](../systems/roampal-core/)
+
+- Best idea: **route every request to a scope the client names, and refuse an unknown one.** The hooks, MCP server and plugin each send `X-Roampal-Profile`; the server resolves header, directory binding, persisted default and launch pin in that order, never its own working directory, and answers an unregistered name with a 404 instead of writing into the default store. Beside it, a down embedder is announced to the model in the injected block rather than read as no memories.
+- Biggest risk: **deletion by nearest neighbour, hardened by a restart.** `delete_memory` archives the first active `memory_bank` hit whose text contains the argument or is contained by it, and otherwise the top semantic hit. `restore()` has no caller, and `cleanup_archived()` hard-deletes every archived row the first time each profile loads after a server start.
+- Most reusable component: `roampal/server/main.py` lines 911-1051 — per-request profile resolution and lazy per-profile store construction, with an explicit refusal for unregistered names.
+- Second risk: **the reader grades the memory.** The model that was shown a memory rates it, `unknown` (shown and not used) subtracts score, and ratings drive promotion, demotion and deletion. An empty `memory_scores`, which the scoring prompt itself requests when nothing was surfaced, falls back to scoring the most recent cached ids of any conversation.
+- Maturity impression: Apache-2.0, 22,370 lines of Python outside tests plus a 2,541-line TypeScript plugin, 137 commits on main from 1 contributor between 15 December 2025 and 26 September 2026, with 1,090 pytest functions run in CI on Linux, macOS and Windows. One mark, `negative_eval`, on an archived fact asserted absent beside its re-added copy. The companion paper's headline figure was measured with the lifecycle off.
+- Study when: you want hook-injected local memory for Claude Code or OpenCode, or a worked example of outcome-rated tier promotion with the author's own ablations beside it.
+- Do not copy when: a stored fact must stay until a person removes it, or you need provenance, history or review. None exists, and the agent holds every write, edit, archive and rating verb.
