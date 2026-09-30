@@ -237,15 +237,15 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 
 | Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
 | --- | ---: | ---: | --- | --- | ---: | ---: |
-| SQLite | 327 | 272 | | Lexical | 485 | 422 |
-| Files on disk | 324 | 274 | | Vector | 436 | 365 |
-| Postgres | 128 | 105 | | Graph | 211 | 181 |
+| SQLite | 328 | 273 | | Lexical | 486 | 423 |
+| Files on disk | 324 | 274 | | Vector | 437 | 366 |
+| Postgres | 128 | 105 | | Graph | 211 | 182 |
 | Delegated to the adopter | 51 | 36 | | No arm named in the review | 84 | 54 |
-| Graph database | 42 | 36 | |  |  |  |
+| Graph database | 42 | 37 | |  |  |  |
 | In-process only | 33 | 26 | |  |  |  |
 | Chroma | 31 | 26 | |  |  |  |
 | Qdrant | 24 | 16 | |  |  |  |
-| LanceDB | 22 | 17 | |  |  |  |
+| LanceDB | 23 | 18 | |  |  |  |
 | Embedded key-value | 20 | 16 | |  |  |  |
 | Redis | 15 | 9 | |  |  |  |
 | Milvus | 10 | 8 | |  |  |  |
@@ -258,6 +258,6 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 | Weaviate | 1 | 1 | |  |  |  |
 | TepinDB | 1 | 1 | |  |  |  |
 
-Counted across 682 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 558 of 682 reports have been read that way, and the other 124 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
+Counted across 682 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 559 of 682 reports have been read that way, and the other 123 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
 
 <!-- END GENERATED STACK -->

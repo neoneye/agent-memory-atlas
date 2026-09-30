@@ -13740,35 +13740,43 @@ coordination, receipts — is the part the benchmark does not score</td>
 </tr>
 <tr>
 <td><a href="../systems/m-flow/"><code>m-flow</code></a></td>
-<td>Typed graph nodes — Entity, Facet, FacetPoint, Episode — plus a
-versioned Procedure built from key points and context points</td>
-<td>A graph database with Cypher retrieval, alongside lexical and
-Jaccard retrievers and an episodic bundle store</td>
-<td>Anchor on the most precise node, then path-cost propagation over
-typed edges: each hop widens the field and adds cost, so only coherent
-low-cost paths compete</td>
-<td>Episodic capture, then a worth-storing screen and a classifier
-before a procedure is built and indexed</td>
-<td>Procedures are versioned with conflict detection and a generated
-version diff; <code>reconcile_active</code> decides which version is
-live</td>
-<td>Datasets, by stored read permission: with backend access control on
-— the default whenever the graph and vector handlers support per-dataset
-databases, which the defaults do — search resolves the datasets the user
-holds <code>read</code> on before any retriever runs</td>
-<td>An MCP server, a frontend, worker queues, an OpenClaw skill and a
-starter kit</td>
-<td>Worker tasks that queue memory-node writes and save them out of
-band</td>
-<td>A sensitivity screen on procedural content and usage statistics; no
-status field withholding a memory from use</td>
-<td>Every expensive step is fronted by a cheap deterministic one —
-worth-storing, conflict detection and procedural triggering are each
-two-level</td>
-<td>Per-edge path costs are uncalibrated in the repository; the LoCoMo
-and LongMemEval figures in the README are reproduced in a separate
-repository, and the in-repo procedural eval is twenty cases with a
-committed baseline</td>
+<td>Typed graph nodes — Entity, Facet, FacetPoint, Episode — each with
+an event-time interval beside its record time, plus versioned Procedure
+nodes built from key points and context points</td>
+<td>SQLite for users, datasets, ACLs and a node-and-edge ledger; an
+embedded Kuzu graph and LanceDB vectors, one pair per dataset under
+access control; Neo4j, pgvector and others as alternatives</td>
+<td>Five recall modes the caller names; the episodic mode scores each
+Episode by the cheapest path from a vector-hit node, where an edge costs
+its own text's distance to the query, a missed edge 0.9 and a hop
+0.05</td>
+<td>memorize summarises documents into Episodes, Facets, FacetPoints and
+Entities with model calls; procedural extraction is off by default and,
+when run, sends every summary to a model router first</td>
+<td>A procedure's new version deprecates the old node and links it by a
+supersedes edge; a patch merges into the same node; document delete
+removes the subgraph and stamps deleted_at on ledger rows</td>
+<td>Datasets, by stored read permission and current tenant, resolved
+before any retriever runs; each permitted dataset has its own graph and
+vector database. One environment value turns it off</td>
+<td>Python library, FastAPI server, an MCP server with memorize, search,
+learn, delete and prune tools, a Next.js frontend, an OpenClaw skill and
+a starter kit</td>
+<td>The MCP memorize tool runs the pipeline as an in-process task and
+returns a task id; a Modal worker queue replaces direct graph and vector
+writes only when MFLOW_DISTRIBUTED is true, on the Neo4j and pgvector
+adapters</td>
+<td>A procedure status of active or deprecated and a high or low
+confidence, both spent as ranking penalties and a card label; nothing
+withholds a memory from use</td>
+<td>Query-conditional edge costs with a minimum over paths, documented
+and implemented as documented; dataset isolation that fails closed on
+unsupported backends and is tested across users and tenants in CI</td>
+<td>The procedural governance package — worth-storing,
+deterministic-first conflict detection, the two-layer trigger, version
+diffs, active reconciliation, usage statistics and the sensitivity
+screen — has no importer; the CYPHER recall mode runs caller text as
+Cypher behind read permission</td>
 </tr>
 <tr>
 <td><a href="../systems/m3-memory/"><code>m3-memory</code></a></td>

@@ -4712,37 +4712,38 @@ verbatim with no secret scanning found.</li>
 <h3 id="m-flow"><a
 href="../systems/m-flow/"><code>m-flow</code></a></h3>
 <ul>
-<li>Best idea: three separate modules front an expensive model call with
-a zero-cost deterministic one and say so in the docstring — the
-procedural trigger ("Layer 1: Rule trigger (zero cost). Layer 2: LLM
-light classification"), the conflict detector ("Deterministic first, LLM
-fallback"), and a worth-storing screen that runs before a procedure is
-built and indexed rather than pruning afterwards. The trigger also
-separates <em>should we retrieve</em> from <em>should we inject</em>,
-which almost nothing else here does.</li>
-<li>Biggest risk: the claim that distinguishes it — anchor on the most
-precise node, then path-cost propagation, beating layer-selection
-retrieval — is a retrieval-quality claim whose LoCoMo and LongMemEval
-evidence lives in a separate repository, while the per-edge costs that
-make paths compete are uncalibrated against anything in this one.
-Dataset access control, on by default, is disabled by a single
-environment value.</li>
-<li>Most reusable component: the procedural governance chain —
-worth-storing, classifier, deterministic-then-LLM conflict detection, a
-generated version diff, and <code>reconcile_active</code> deciding which
-version is live.</li>
-<li>Maturity impression: 149,000 lines across four deployable packages
-with Alembic migrations, Docker and a starter kit; a cross-user
-permission test in the end-to-end workflow and a twenty-case procedural
-eval with a committed baseline — none of it run here, since it needs a
-graph database and a worker queue.</li>
-<li>Study when: you are building tiered gates around model calls, or you
-want a third point on the spreading-activation axis beside NOOA Memory's
-ACT-R decay and HippoRAG's PageRank.</li>
-<li>Do not copy when: "one strong path is enough" would be applied to
-belief rather than recall — a single low-cost chain is a good reason to
-look somewhere and a weak reason to believe something, and the graph
-does not distinguish.</li>
+<li>Best idea: an edge costs the query's vector distance to that edge's
+own text, or a fixed miss cost outside the vector hits. An Episode takes
+the minimum over its paths, with a penalty on the direct summary hit.
+"One strong path is enough" is a literal <code>min</code>, and the same
+edge is cheap for one question and dear for the next.</li>
+<li>Biggest risk: the procedural governance — worth-storing screen,
+deterministic-first conflict detector, two-layer retrieval trigger,
+version diffs, active-version reconciliation, usage statistics and the
+sensitivity screen — is 2,402 lines that no file imports. The live path
+sends every summary to a model router, leaves secret redaction to a
+prompt, and returns deprecated versions at a 0.4 cost penalty. The
+CYPHER recall mode executes caller text behind read permission, and
+<code>prune</code> is on the MCP surface.</li>
+<li>Most reusable component: the dataset-permission layer — ACL rows
+resolved and filtered to the current tenant before any retriever runs, a
+graph and vector database per dataset, an unset switch that raises on
+backends that cannot isolate, and CI tests across users and tenants with
+a read grant as the positive control.</li>
+<li>Maturity impression: 149,142 lines of Python across four deployable
+packages with Alembic migrations, Docker and a starter kit; cross-user
+and cross-tenant isolation tests in the end-to-end workflow; the
+README's LoCoMo 81.8% recomputes exactly from the separate benchmark
+repository, and its LongMemEval 89% is the Oracle variant's first 100
+questions. Nothing was run here.</li>
+<li>Study when: you want a graph ranker whose scores you can reason
+about by hand, or a third point on the spreading-activation axis beside
+NOOA Memory's ACT-R decay and HippoRAG's PageRank.</li>
+<li>Do not copy when: you need procedural memory whose gates run, or
+"one strong path is enough" would be applied to belief rather than
+recall — a single low-cost chain is a good reason to look somewhere and
+a weak reason to believe something, and the graph does not
+distinguish.</li>
 </ul>
 <h3 id="nova-ai"><a
 href="../systems/nova-ai/"><code>nova-ai</code></a></h3>
