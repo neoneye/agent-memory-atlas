@@ -383,6 +383,7 @@ page_kind: comparison
 - [`dsh-layered-memory`](../systems/dsh-layered-memory/)
 - [`cyrene-agent`](../systems/cyrene-agent/)
 - [`neo-agent-brain`](../systems/neo-agent-brain/)
+- [`octobrain`](../systems/octobrain/)
 
 ## Repos Inspected
 
@@ -1070,6 +1071,7 @@ page_kind: comparison
 - [JunNanLYS/dsh-layered-memory](https://github.com/JunNanLYS/dsh-layered-memory) at [`69028fbee43e9950fffecc578430909fc827527e`](https://github.com/JunNanLYS/dsh-layered-memory/commit/69028fbee43e9950fffecc578430909fc827527e) — read only; MIT; no auto-run surface, no build-time execution, nothing inside the cooldown, one floating surface (`package.json` ranges under a committed `pnpm-lock.yaml`), four subdirectory `AGENTS.md` files read as data; nothing installed, built or run, and the committed benchmark scores were summed from the result JSON with Python
 - [Playa-Cyrene/Cyrene-Agent](https://github.com/Playa-Cyrene/Cyrene-Agent) at [`be6ce1f88d6ae94958109a9a21e17cae353c2931`](https://github.com/Playa-Cyrene/Cyrene-Agent/commit/be6ce1f88d6ae94958109a9a21e17cae353c2931) — read only, at the head of `master`, a commit dated 28 September 2026. MIT; the bundled Live2D model is credited separately in `MODEL_LICENSE.md`. Scoped to the memory subsystem (`src/main/memory`, `src/main/social-context` and the retrieval code they call). Screened before reading: no auto-run surface, no build-time execution point, 7 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 2 unpinned surfaces; no agent instruction files in the tree. Nothing installed, built or run.
 - [neomjs/neo-agent-brain](https://github.com/neomjs/neo-agent-brain) at [`83c0e09eaffd0474664e846f684ef9d18beb67cb`](https://github.com/neomjs/neo-agent-brain/commit/83c0e09eaffd0474664e846f684ef9d18beb67cb) — read only, at the head of `dev`, a commit dated 29 September 2026. MIT. Screened before reading: no auto-run surface, 1 build-time execution point (the npm `prepare` script), 8 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 5 unpinned surfaces, including `neo.mjs` from a GitHub archive; no agent-instruction file in the tree. Only the Memory Core was read. Nothing was installed, built or executed.
+- [Muvon/octobrain](https://github.com/Muvon/octobrain) at [`ccc1d53a09ab7065caa23db085acf2de38609f8c`](https://github.com/Muvon/octobrain/commit/ccc1d53a09ab7065caa23db085acf2de38609f8c) — read only, at the head of `master`, the 0.14.4 release commit dated 30 September 2026. Apache-2.0. Screened before reading: 1 auto-run surface (`server.json`, an MCP registry manifest declaring a start command), 2 build-time execution points (`Makefile`, `benches/Makefile`), 3 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and no unpinned surface; `AGENTS.md` was treated as data. Nothing was installed, built or executed.
 
 ## What the licences actually say
 

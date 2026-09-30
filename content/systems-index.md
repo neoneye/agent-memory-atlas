@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **682 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **683 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -542,6 +542,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 <ul class="az">
 <li><a class="az-row" href="../systems/obsidian-mind/"><span class="az-id">obsidian-mind</span><span class="az-what">A silent loss is worse than the bloat</span><code class="az-repo">breferrari/obsidian-mind</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/octobrain/"><span class="az-id">Octobrain</span><span class="az-what">Git-scoped LanceDB memory served over MCP</span><code class="az-repo">Muvon/octobrain</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/octop-memory/"><span class="az-id">Octop Memory</span><span class="az-what">Candidate-gated fact memory for OpenClaw and Hermes</span><code class="az-repo">TencentCloud/octop-memory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/octopoda-os/"><span class="az-id">Octopoda</span><span class="az-what">RLS as the trust wall</span><code class="az-repo">RyjoxTechnologies/Octopoda-OS</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/ods/"><span class="az-id">ODS</span><span class="az-what">Forgetting by scheduled reversion</span><code class="az-repo">Osmantic/ODS</code><span class="az-caps"></span></a></li>

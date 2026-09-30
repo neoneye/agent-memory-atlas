@@ -877,6 +877,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[Neo Agent Brain](../../systems/neo-agent-brain/) puts the tenant key on every row from the transport and applies it unevenly by read.** `add_memory` stamps `userId` from the OIDC token or the stdio identity, never from a tool argument; `query_recent_turns` puts `userId = ?` into its SQL and returns nothing when no tenant resolves, while the semantic and session reads apply the key only under the `private` policy, and the shipped default is `team`. A caller-supplied `memorySharing` is clamped so it can narrow and never widen. **Clamp the request to the configured scope, and write down which reads the default leaves unfiltered.**
 
+**[Octobrain](../../systems/octobrain/) enforces the key on every read and overwrites it on every rewrite.** One `build_scalar_predicate` puts `(scope = 'X' OR scope = '')` on the vector, hybrid and filter-only searches, and `get_memory` carries the same clause. The upsert writes the store's own scope rather than the row's, so a global memory that a project session updates, tags or penalises moves into that project, while `forget` of the same row matches nothing and reports success. **Take the scope of a rewrite from the row being rewritten, and make read and delete predicates agree.**
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

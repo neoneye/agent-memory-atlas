@@ -1233,6 +1233,17 @@ the <code>private</code> policy, and the shipped default is
 clamped so it can narrow and never widen. <strong>Clamp the request to
 the configured scope, and write down which reads the default leaves
 unfiltered.</strong></p>
+<p><strong><a href="../../systems/octobrain/">Octobrain</a> enforces the
+key on every read and overwrites it on every rewrite.</strong> One
+<code>build_scalar_predicate</code> puts
+<code>(scope = 'X' OR scope = '')</code> on the vector, hybrid and
+filter-only searches, and <code>get_memory</code> carries the same
+clause. The upsert writes the store's own scope rather than the row's,
+so a global memory that a project session updates, tags or penalises
+moves into that project, while <code>forget</code> of the same row
+matches nothing and reports success. <strong>Take the scope of a rewrite
+from the row being rewritten, and make read and delete predicates
+agree.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

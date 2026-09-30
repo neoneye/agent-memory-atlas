@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 682 reports.</strong></p>
+<p><strong>This page covers all 683 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28297,6 +28297,52 @@ controls against vacuity.</li>
 surface, a privacy field enforced on every read, or a memory small
 enough to lift out of its platform — the Memory Core needs the
 orchestrator, a Chroma server and local models to run.</li>
+</ul>
+<h3 id="octobrain"><a
+href="../systems/octobrain/"><code>octobrain</code></a></h3>
+<ul>
+<li>Best idea: <strong>one predicate builder for every search, and
+supersession as a rank penalty.</strong>
+<code>build_scalar_predicate</code> spells the scope clause once and the
+vector, hybrid, filter-only and query-expansion searches all push it
+down, so no search path forgets it. A <code>supersedes</code> edge
+multiplies the old memory's score by 0.1 and tags it, keeping history
+queryable while the current fact wins.</li>
+<li>Biggest risk: <strong>writes take the session's scope, not the
+row's.</strong> <code>store_memory_with_embedding</code> writes
+<code>self.scope</code> and <code>self.role</code> and
+<code>merge_insert</code> updates every column, while a project read
+returns global rows. <code>update</code>, tag edits, the stale sweep's
+penalty and staleness propagation therefore move a global memory into
+whichever project touched it. Deletes go the other way: scoped exactly,
+so <code>forget</code> on a visible global memory deletes nothing and
+reports success.</li>
+<li>Most reusable component: the stale-reference sweep in
+<code>src/memory/manager.rs</code> with
+<code>src/memory/git_utils.rs</code> — incremental from a marker commit,
+one <code>git log</code> rename map per range, renames rewritten rather
+than treated as deletions.</li>
+<li>Second risk: <strong>the scope arrives only by handshake.</strong>
+The CLI's <code>--scope</code> has no default despite its help text, an
+MCP call without the argument reads every scope, and a session locked by
+role alone caches an unscoped provider. <code>global=true</code> is
+computed and then discarded by the locked-session cache. With no related
+files, <code>memorize</code> attaches whatever
+<code>git diff HEAD</code> lists, and the sweep deletes the memory when
+those files are gone.</li>
+<li>Maturity impression: Apache-2.0, about 13,100 lines of Rust outside
+tests, 251 commits on master by 2 contributors since 24 January 2026,
+with the memory module about 4,800 lines. 118 Rust test functions, none
+of which opens the memory store; the scope tests assert predicate
+strings. A BEIR harness covers the knowledge index; no memory benchmark
+result is committed.</li>
+<li>Study when: you want a compact local MCP memory with hybrid ranking,
+decay, soft supersession and git-aware upkeep, and want to see each of
+those done in a few hundred lines of Rust.</li>
+<li>Do not copy when: global and project memories must stay where they
+were written, several clients share one server over HTTP, or the source
+tier must gate anything. The tier is the model's own claim and only
+reorders.</li>
 </ul>
         </article>
       </div>

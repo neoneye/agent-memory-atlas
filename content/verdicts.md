@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 682 reports.**
+**This page covers all 683 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6144,3 +6144,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 311,039 lines of JavaScript outside tests of which the Memory Core services and MCP server are 50,373, 623 commits on `dev` from 11 contributors between 23 August and 29 September 2026, and 12,175 Playwright cases in 814 spec files. Two marks: `scope_enforced` on a transport-derived `userId`, and `negative_eval` on a Dockerised cross-tenant sentinel case. Trust is a per-author tier from a hardcoded table, not a per-memory state.
 - Study when: you are building shared memory for several long-running agents and want a write path that cannot be failed by the embedder, a read-after-write overlay, and tests that carry their own positive controls against vacuity.
 - Do not copy when: you need a delete that removes a turn from every surface, a privacy field enforced on every read, or a memory small enough to lift out of its platform — the Memory Core needs the orchestrator, a Chroma server and local models to run.
+
+### [`octobrain`](../systems/octobrain/)
+
+- Best idea: **one predicate builder for every search, and supersession as a rank penalty.** `build_scalar_predicate` spells the scope clause once and the vector, hybrid, filter-only and query-expansion searches all push it down, so no search path forgets it. A `supersedes` edge multiplies the old memory's score by 0.1 and tags it, keeping history queryable while the current fact wins.
+- Biggest risk: **writes take the session's scope, not the row's.** `store_memory_with_embedding` writes `self.scope` and `self.role` and `merge_insert` updates every column, while a project read returns global rows. `update`, tag edits, the stale sweep's penalty and staleness propagation therefore move a global memory into whichever project touched it. Deletes go the other way: scoped exactly, so `forget` on a visible global memory deletes nothing and reports success.
+- Most reusable component: the stale-reference sweep in `src/memory/manager.rs` with `src/memory/git_utils.rs` — incremental from a marker commit, one `git log` rename map per range, renames rewritten rather than treated as deletions.
+- Second risk: **the scope arrives only by handshake.** The CLI's `--scope` has no default despite its help text, an MCP call without the argument reads every scope, and a session locked by role alone caches an unscoped provider. `global=true` is computed and then discarded by the locked-session cache. With no related files, `memorize` attaches whatever `git diff HEAD` lists, and the sweep deletes the memory when those files are gone.
+- Maturity impression: Apache-2.0, about 13,100 lines of Rust outside tests, 251 commits on master by 2 contributors since 24 January 2026, with the memory module about 4,800 lines. 118 Rust test functions, none of which opens the memory store; the scope tests assert predicate strings. A BEIR harness covers the knowledge index; no memory benchmark result is committed.
+- Study when: you want a compact local MCP memory with hybrid ranking, decay, soft supersession and git-aware upkeep, and want to see each of those done in a few hundred lines of Rust.
+- Do not copy when: global and project memories must stay where they were written, several clients share one server over HTTP, or the source tier must gate anything. The tier is the model's own claim and only reorders.

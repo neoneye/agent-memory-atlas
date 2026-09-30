@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 682 of 682 screened at the report's current pin.**
+**Progress: 683 of 683 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 317 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 368 |
-| Repositories with build-time execution (`EXEC`) | 495 |
+| Repositories with an auto-run surface (`RUNS`) | 318 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 369 |
+| Repositories with build-time execution (`EXEC`) | 496 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -242,6 +242,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`nougenshards`](../../content/systems/nougenshards.md) | `.mcp.json`, `hooks/` |
 | [`obelyth-cortex`](../../content/systems/obelyth-cortex.md) | `.devcontainer/devcontainer.json` |
 | [`obsidian-mind`](../../content/systems/obsidian-mind.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json` |
+| [`octobrain`](../../content/systems/octobrain.md) | `server.json` |
 | [`octop-memory`](../../content/systems/octop-memory.md) | `.githooks/` |
 | [`ogad`](../../content/systems/ogad.md) | `.claude/settings.json`, `.gitattributes`, `.gitmodules`, `.vscode/settings.json` |
 | [`oh-my-hermes`](../../content/systems/oh-my-hermes.md) | `.opencode/` |
