@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 687 reports.**
+**This page covers all 688 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6193,3 +6193,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 59,869 lines of Go outside tests, 1,032 commits on master from eight contributor entries between 16 February and 7 September 2026, 1,688 Go test functions. One mark, `negative_eval`, on the workspace-isolation suite, which sits among the 148 integration-tagged test functions the CI workflow does not compile. An LLM consolidator and a decision/lesson extractor are written, unit-tested over fakes and never constructed.
 - Study when: you want a self-hosted memory server that shares one retrieval pipeline between agent notes, session summaries and code, and want to see where a copied fallback query loses its predicates.
 - Do not copy when: memory must be corrected rather than accumulated. Nothing demotes a superseded note, deletion of harvested material does not stick, and `memory_ticket` returns session snippets from every workspace with no argument that can scope it.
+
+### [`dreamgraph`](../systems/dreamgraph/)
+
+- Best idea: **a speculative graph that retrieval never reads.** Dream edges live in `dream_graph.json` with a `candidate`/`latent`/`validated`/`rejected` status; only the normaliser's gate — confidence 0.62, plausibility 0.45, evidence 0.4, two independent evidence sources — copies an edge into `validated_edges.json`, the one edge store `graph_rag_retrieve` and the cognitive preamble load. Deduplication also refuses to reinforce an edge the normaliser rejected, so repetition by deterministic strategies cannot saturate confidence.
+- Biggest risk: **the rejection outlives nothing.** The rejected-duplicate guard is keyed on the endpoint pair and relation, and lasts only while the rejected row survives, about four cycles at double decay; the expired key then goes into an in-process `reinforcementMemory` that boosts the next re-derivation by up to +0.20. An Explorer reject flips the first `candidate_edges.json` row for an id while the normaliser reads the last.
+- Most reusable component: `normalize` in `src/cognitive/normalizer.ts` — structural scoring against the fact graph, an optional LLM rescue pass, strict mode applied after the rescue, a promotion gate with an evidence-count floor, and a rollback of the multi-file promotion to the pre-write snapshot on failure.
+- Second risk: **the agent holds the verbs a person would.** `lucid_action accept` writes any suggested dream edge of confidence 0.3 or more, rejected included, into the validated store as "human+system"; `resolve_tension` takes `resolved_by` from the caller; `mutate_validated_edge` deletes rows and `clear_dreams` empties any store, including two the data-model document calls append-only.
+- Maturity impression: source-available non-commercial licence, 107,025 lines of TypeScript in `src` plus a 35,794-line VS Code extension, 314 commits on main by 3 contributors from 23 March to 30 September 2026. Two marks, `trust_state` and `audit_log`; the audit covers only the Explorer's three curated mutations. 1,328 vitest cases, none on decay, deduplication or retrieval, and the one negative case on a rejection swallows its own `expect`.
+- Study when: you want to separate hypotheses from beliefs in a knowledge graph and gate promotion on independent evidence, or need a worked example of provenance-gated promotion into a fact graph with a retroactive quarantine.
+- Do not copy when: a correction has to stick, a review has to be a person, or the memory has to be a component rather than a product — it cannot be lifted out of its architecture ontology, and the licence bars production use without a commercial agreement.

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 687 reports.</strong></p>
+<p><strong>This page covers all 688 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28523,6 +28523,58 @@ want to see where a copied fallback query loses its predicates.</li>
 Nothing demotes a superseded note, deletion of harvested material does
 not stick, and <code>memory_ticket</code> returns session snippets from
 every workspace with no argument that can scope it.</li>
+</ul>
+<h3 id="dreamgraph"><a
+href="../systems/dreamgraph/"><code>dreamgraph</code></a></h3>
+<ul>
+<li>Best idea: <strong>a speculative graph that retrieval never
+reads.</strong> Dream edges live in <code>dream_graph.json</code> with a
+<code>candidate</code>/<code>latent</code>/<code>validated</code>/<code>rejected</code>
+status; only the normaliser's gate — confidence 0.62, plausibility 0.45,
+evidence 0.4, two independent evidence sources — copies an edge into
+<code>validated_edges.json</code>, the one edge store
+<code>graph_rag_retrieve</code> and the cognitive preamble load.
+Deduplication also refuses to reinforce an edge the normaliser rejected,
+so repetition by deterministic strategies cannot saturate
+confidence.</li>
+<li>Biggest risk: <strong>the rejection outlives nothing.</strong> The
+rejected-duplicate guard is keyed on the endpoint pair and relation, and
+lasts only while the rejected row survives, about four cycles at double
+decay; the expired key then goes into an in-process
+<code>reinforcementMemory</code> that boosts the next re-derivation by
+up to +0.20. An Explorer reject flips the first
+<code>candidate_edges.json</code> row for an id while the normaliser
+reads the last.</li>
+<li>Most reusable component: <code>normalize</code> in
+<code>src/cognitive/normalizer.ts</code> — structural scoring against
+the fact graph, an optional LLM rescue pass, strict mode applied after
+the rescue, a promotion gate with an evidence-count floor, and a
+rollback of the multi-file promotion to the pre-write snapshot on
+failure.</li>
+<li>Second risk: <strong>the agent holds the verbs a person
+would.</strong> <code>lucid_action accept</code> writes any suggested
+dream edge of confidence 0.3 or more, rejected included, into the
+validated store as "human+system"; <code>resolve_tension</code> takes
+<code>resolved_by</code> from the caller;
+<code>mutate_validated_edge</code> deletes rows and
+<code>clear_dreams</code> empties any store, including two the
+data-model document calls append-only.</li>
+<li>Maturity impression: source-available non-commercial licence,
+107,025 lines of TypeScript in <code>src</code> plus a 35,794-line VS
+Code extension, 314 commits on main by 3 contributors from 23 March to
+30 September 2026. Two marks, <code>trust_state</code> and
+<code>audit_log</code>; the audit covers only the Explorer's three
+curated mutations. 1,328 vitest cases, none on decay, deduplication or
+retrieval, and the one negative case on a rejection swallows its own
+<code>expect</code>.</li>
+<li>Study when: you want to separate hypotheses from beliefs in a
+knowledge graph and gate promotion on independent evidence, or need a
+worked example of provenance-gated promotion into a fact graph with a
+retroactive quarantine.</li>
+<li>Do not copy when: a correction has to stick, a review has to be a
+person, or the memory has to be a component rather than a product — it
+cannot be lifted out of its architecture ontology, and the licence bars
+production use without a commercial agreement.</li>
 </ul>
         </article>
       </div>

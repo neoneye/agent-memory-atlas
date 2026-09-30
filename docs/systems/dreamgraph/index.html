@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP daemon that dreams
+speculative edges over a code-architecture graph, scores them against
+the fact graph, and promotes only validated ones into retrieval.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="DreamGraph — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP daemon that dreams
+speculative edges over a code-architecture graph, scores them against
+the fact graph, and promotes only validated ones into retrieval.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DreamGraph — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP daemon that dreams
+speculative edges over a code-architecture graph, scores them against
+the fact graph, and promotes only validated ones into retrieval.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>DreamGraph — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "DreamGraph",
+      "description": "An MCP daemon that dreams speculative edges over a code-architecture graph, scores them against the fact graph, and promotes only validated ones into retrieval.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A speculative architecture graph behind a
+scored promotion gate</p>
+          <h1>DreamGraph</h1>
+          <p class="document-deck">An MCP daemon that dreams speculative
+edges over a code-architecture graph, scores them against the fact
+graph, and promotes only validated ones into retrieval.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mmethodz/dreamgraph">
+              <span>Source</span>
+              <strong>mmethodz/dreamgraph</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mmethodz/dreamgraph/commit/563d10c8109cbe3388cde71168bdcff149c96e0f" title="563d10c8109cbe3388cde71168bdcff149c96e0f">
+              <span>Analyzed revision</span>
+              <code>563d10c8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mmethodz--dreamgraph" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mmethodz--dreamgraph</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>DreamGraph
+Source-Available Community License v2.0 — personal, academic, evaluation
+and non-commercial use; commercial and production use need a separate
+licence</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>107,025
+lines of TypeScript in src outside tests, plus a 35,794-line VS Code
+extension; src/cognitive, the memory engine, is 25,227
+lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>314
+commits on main by 3 contributors, 23 March 2026 – 30 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,328
+vitest cases in 156 files (31,524 lines) across the daemon and the
+extension; none cover the decay, deduplication or retrieval of dream
+edges</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>DreamGraph is a per-project daemon that keeps an architecture
+knowledge graph of a codebase — features, workflows, data-model
+entities, ADRs, UI elements — and exposes it to coding agents over MCP,
+a VS Code extension and a browser Architect. Its memory is two graphs. A
+<strong>fact graph</strong> is filled by source scanners, LLM enrichment
+and the agent. A <strong>dream graph</strong> holds speculative edges
+generated between facts by deterministic and LLM "dream" strategies, and
+a normaliser scores each one and promotes it to
+<code>validated_edges.json</code> only when it clears a threshold.</p>
+<p>What is notable is that separation. Retrieval reads the fact graph
+and the validated store, never the dream graph, so a speculative edge
+cannot reach an agent's context by being frequent. Rejected edges are
+also barred from reinforcement, which closes the confidence-inflation
+loop the project fixed in v8.2.6.</p>
+<p>What is weak is everything around the gate. A rejected edge decays
+out within about four cycles, and its key then boosts the next
+incarnation. The agent's own tools can accept any dream edge into the
+validated store, resolve a tension "as human", delete validated edges
+and wipe every store. Two stores the data-model document calls
+append-only are rewritten by reachable code.</p>
+<p>The licence is source-available and non-commercial. Reading,
+evaluation, academic research and personal use are granted; production
+use, internal business use including internal code analysis beyond
+evaluation, and any competing product need a separate commercial licence
+(<code>LICENSE</code>, sections 4, 5 and 7).</p>
+<p>Two marks: <code>trust_state</code>, on the dream-edge status that
+gates what retrieval can see, and <code>audit_log</code>, on the
+Explorer's JSONL mutation record. Section 9 names the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>edge between two architecture
+entities</strong>, and it has two possible homes. It is born speculative
+in the dream graph as <code>candidate</code> — from a dream strategy, or
+from the agent's <code>solidify_cognitive_insight</code>, which writes
+with strategy <code>reflective</code> and no special standing
+(<code>src/tools/solidify-insight.ts:931-975</code>). It becomes a
+belief when the normaliser moves it to <code>validated</code> and the
+promotion gate copies it into <code>validated_edges.json</code>; only
+there can retrieval see it.</p>
+<p><strong>The normaliser is the only automatic door.</strong>
+<code>normalize</code> scores each eligible edge on plausibility,
+evidence and contradiction against the fact graph, lets an optional LLM
+pass rescue latent and low-signal rejected edges, then applies the gate:
+confidence 0.62, plausibility 0.45, evidence 0.4, two independent
+evidence sources and contradiction below 0.3 by default
+(<code>src/cognitive/types.ts:161-168</code>). A cold-start profile
+relaxes the floor to 0.50 until the graph reaches size or a window
+elapses. <code>validated</code> and <code>rejected</code> are final for
+that edge id; a <code>latent</code> edge is re-scored once it has been
+reinforced (<code>src/cognitive/normalizer.ts:1080-1098</code>).</p>
+<p><strong>Beliefs mostly stop by decay, not by correction.</strong>
+Every dream edge loses 0.05 confidence and one TTL unit per cycle from a
+default TTL of 8, and a <code>rejected</code> one loses both at double
+rate (<code>src/cognitive/engine.ts:731-741</code>). Validated edges do
+not decay; they leave only through a <code>mutate_validated_edge</code>
+delete, a <code>clear_dreams</code> reset, or a quarantine cascade from
+their endpoint entities.</p>
+<p><strong>A rejection is remembered only while the rejected row
+survives.</strong> <code>deduplicateAndAppendEdges</code> keys each
+incoming edge on the sorted endpoint pair and the relation with its
+<code>strengthened_</code>, <code>reverse_of_</code> and
+<code>potential_</code> prefixes stripped
+(<code>engine.ts:2799-2808</code>), and drops a duplicate of a
+<code>rejected</code> edge without reinforcing it
+(<code>:855-869</code>). When that edge expires, its key is written into
+<code>reinforcementMemory</code>, and a later edge with the same key
+inherits the count and up to +0.20 confidence (<code>:745-757</code>,
+<code>:892-913</code>). That map is a field of the engine object and is
+never persisted (<code>:159</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a DreamGraph edge becomes retrievable, and the two paths around the normaliser</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a DreamGraph edge becomes retrievable, and the two paths around the normaliser
+flowchart TD
+    S[&quot;dream strategies, solidify_cognitive_insight&quot;] --&gt; K{&quot;normalized key already&lt;br/&gt;in the dream graph?&quot;}
+    K -- &quot;yes, status rejected&quot; --&gt; DROP[&quot;duplicate dropped,&lt;br/&gt;no reinforcement&quot;]
+    K -- &quot;yes, other status&quot; --&gt; RE[&quot;reinforce: confidence bump,&lt;br/&gt;TTL reset&quot;]
+    K -- &quot;no&quot; --&gt; MEM{&quot;key in in-process&lt;br/&gt;reinforcement memory?&quot;}
+    MEM -- &quot;yes&quot; --&gt; BOOST[&quot;new edge inherits the count,&lt;br/&gt;up to +0.20 confidence&quot;]
+    MEM -- &quot;no&quot; --&gt; CAND[&quot;candidate&quot;]
+    BOOST --&gt; CAND
+    CAND --&gt; N{&quot;normalize: structural score,&lt;br/&gt;optional LLM rescue, gate&quot;}
+    RE --&gt; N
+    N -- &quot;latent&quot; --&gt; LAT[&quot;latent, re-scored&lt;br/&gt;once reinforced&quot;]
+    N -- &quot;rejected&quot; --&gt; REJ[&quot;rejected: decays at 2x,&lt;br/&gt;TTL drains by 2&quot;]
+    N -- &quot;validated, gate passed&quot; --&gt; VAL[&quot;validated_edges.json&quot;]
+    REJ -- &quot;TTL or confidence hits 0&quot; --&gt; EXP[&quot;expired: key saved&lt;br/&gt;to reinforcement memory&quot;]
+    EXP -.-&gt; MEM
+    VAL --&gt; RAG[&quot;graph_rag_retrieve and the&lt;br/&gt;cognitive preamble read only this&quot;]
+    LU[&quot;lucid_action accept on a dream edge&lt;br/&gt;of any status, confidence 0.3 or more&quot;] --&gt; VAL
+    MV[&quot;mutate_validated_edge delete&quot;] --&gt; GONE[&quot;row spliced out,&lt;br/&gt;no record&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>DreamGraph runs as a Node 20 daemon per <strong>instance</strong>, a
+UUID directory under <code>~/.dreamgraph/</code> holding
+<code>instance.json</code>, <code>config/</code>, <code>data/</code>,
+<code>runtime/</code>, <code>logs/</code> and <code>exports/</code>
+(<code>src/instance/scope.ts:1-16</code>). One instance binds to one
+project, which may span several repositories. The daemon serves MCP over
+stdio or HTTP, the dashboard, the Explorer SPA and the Architect routes
+from one process (<code>src/server/server.ts</code>).</p>
+<p><strong>Every store is a JSON file in <code>data/</code>.</strong>
+<code>dream_graph.json</code>, <code>candidate_edges.json</code>,
+<code>validated_edges.json</code>, <code>tension_log.json</code>,
+<code>dream_history.json</code>, the fact-graph seed files
+(<code>features.json</code>, <code>workflows.json</code>,
+<code>data_model.json</code>, <code>index.json</code>) and a dozen more
+are read whole and rewritten whole through <code>atomicWriteFile</code>
+under <code>withFileLock</code>
+(<code>src/cognitive/engine.ts:649-663</code>, <code>:1024-1029</code>,
+<code>:1089-1094</code>). The file lock is an in-process mutex keyed on
+the file name. The lucid path writes <code>validated_edges.json</code>
+with <code>atomicWriteFile</code> and no lock
+(<code>src/cognitive/lucid.ts:366-406</code>).</p>
+<p><strong>Background work is an in-process scheduler.</strong> It is
+enabled by default and ticks every 30 seconds, but runs only schedules a
+user or agent created through <code>schedule_dream</code>, on an
+interval, a cycle count, idle time or a cron-like rule
+(<code>src/cognitive/types.ts:2499-2510</code>,
+<code>src/cognitive/scheduler.ts:1-19</code>). A
+<code>scan_project</code> run also calls <code>applyDecay</code>
+(<code>src/tools/scan-project.ts:1435</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> the daemon, from a source build
+(<code>npm install &amp;&amp; npm run build</code>, or
+<code>scripts/install.sh</code>). No database; <code>DATABASE_URL</code>
+enables live schema introspection of the user's own database, not a
+memory store.</li>
+<li><strong>LLM:</strong> optional for storage. Deterministic strategies
+and the structural normaliser run without one; the LLM dream strategy,
+the normaliser's rescue pass and enrichment need OpenAI, Anthropic,
+Ollama or LM Studio.</li>
+<li><strong>Offline:</strong> possible with a local model server, and
+without any model at reduced output.</li>
+<li><strong>Repair by hand:</strong> every store is pretty-printed JSON,
+readable and editable. The protection manifest marks the cognitive files
+as off-limits to external writes, and nothing on the file system
+enforces it.</li>
+<li><strong>Weight:</strong> the repository root carries eight prior
+release tarballs of the daemon and six VSIX builds, about 85 MB of
+binaries in all.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>dream</code> in
+<code>src/cognitive/dreamer.ts:123-343</code> runs the selected
+strategies (<code>src/cognitive/strategies/</code>: gap detection,
+symmetry completion, cross-domain bridging, orphan bridging, missing
+abstraction, weak reinforcement, tension-directed, schema grounding, PGO
+wave, LLM dream), caps the output and hands it to
+<code>engine.deduplicateAndAppendEdges</code>
+(<code>src/cognitive/engine.ts:834-935</code>). The agent's path is
+<code>solidify_cognitive_insight</code>, which briefly enters the REM
+state to satisfy the engine's guards and calls the same function
+(<code>src/tools/solidify-insight.ts:931-975</code>).</p>
+<p><strong>Normalisation and promotion.</strong> <code>normalize</code>
+in <code>src/cognitive/normalizer.ts:1006-1341</code> requires the
+engine to be in the <code>normalizing</code> state, builds a fact lookup
+(<code>:104-160</code>), scores each eligible edge
+(<code>validateEdge</code>, <code>:376-468</code>), runs
+<code>llmSemanticValidation</code> (<code>:651-763</code>), applies
+strict mode after the LLM pass (<code>:1135-1143</code>), then the
+promotion gate (<code>:1145-1175</code>). It writes the dream graph,
+appends the judgments, and calls <code>engine.promoteEdges</code> and
+<code>engine.promoteNodesToFactGraph</code>; a failure restores the
+dream-graph snapshot and downgrades the promoted edges to latent
+(<code>:1221-1277</code>).</p>
+<p><strong>Entity promotion into the fact graph.</strong>
+<code>promoteNodesToFactGraph</code> (<code>engine.ts:1228-1395</code>)
+writes validated dream nodes into the seed files only when a provenance
+path exists: source files, <code>human_asserted</code>, or a
+<code>derived_hub</code> whose supports are themselves grounded,
+iterated to a fixed point (<code>buildGroundedEntityIndex</code>,
+<code>:1131</code>). This contradicts
+<code>docs/data-model.md:286-288</code>, which calls the fact graph
+"never modified by the cognitive system".</p>
+<p><strong>Retrieval.</strong> <code>graphRagRetrieve</code>
+(<code>src/cognitive/graph-rag.ts:501-735</code>) loads the fact graph,
+validated edges, unresolved tensions and story chapters
+(<code>:186-221</code>), resolves seed entities, extracts a BFS subgraph
+over validated edges (<code>:283-318</code>), ranks and serialises.
+<code>getCognitivePreamble</code> (<code>:913-1077</code>) is the
+compact version, and <code>compileTaskPreamble</code>
+(<code>:802-911</code>) adds a budget decision that omits context when
+it is not economical.</p>
+<p><strong>Correction.</strong> <code>mutate_validated_edge</code>
+(<code>src/tools/graph-edge-mutations.ts:63-209</code>) deletes or
+retargets one validated edge. <code>resolve_tension</code>
+(<code>src/cognitive/register.ts:1527-1608</code>) archives a tension.
+The Explorer funnel (<code>src/explorer/mutations.ts:110-271</code>)
+runs <code>tension.resolve</code>, <code>candidate.promote</code> and
+<code>candidate.reject</code> through
+<code>engine.userResolveTension</code>,
+<code>userPromoteCandidate</code> and <code>userRejectCandidate</code>
+(<code>engine.ts:2662-2789</code>).
+<code>quarantine_source_less_facts</code> moves ungrounded fact entities
+to a report file and cascades to edges and tensions
+(<code>engine.ts:2272-2450</code>).</p>
+<p><strong>Tests.</strong>
+<code>tests/cognitive/quarantine-source-less-facts.test.ts</code>,
+<code>tests/explorer-mutations.test.ts</code>,
+<code>tests/cognitive-producers.test.ts</code> and
+<code>tests/tension-resolution.test.ts</code> are the memory-relevant
+suites; section 10 says what they reach.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Dream edge</strong> (<code>DreamEdge</code> in
+<code>src/cognitive/types.ts</code>): <code>id</code> (a timestamp and
+counter, <code>strategies/_shared.ts:153</code>), <code>from</code>,
+<code>to</code>, <code>relation</code>, <code>type</code>,
+<code>reason</code>, <code>confidence</code>, <code>plausibility</code>,
+<code>evidence_score</code>, <code>contradiction_score</code>,
+<code>strategy</code>, <code>ttl</code>, <code>decay_rate</code>,
+<code>reinforcement_count</code>, <code>last_reinforced_cycle</code>,
+<code>dream_cycle</code>, and <code>status</code>
+(<code>candidate</code>, <code>latent</code>, <code>validated</code>,
+<code>rejected</code>). The id is not derived from the content, so the
+only value key is the one <code>normalizeEdgeKey</code> computes at
+deduplication time.</p>
+<p><strong>Validation result</strong>
+(<code>candidate_edges.json</code>): one row per assessment, keyed by
+<code>dream_id</code>, with scores, <code>status</code>,
+<code>reason_code</code> and <code>normalization_cycle</code>. A latent
+edge that has been reinforced is re-scored every normalisation, because
+<code>reinforcement_count</code> is never reset, and each re-score
+appends another row for the same <code>dream_id</code>
+(<code>normalizer.ts:1097</code>, <code>engine.ts:1031-1037</code>).</p>
+<p><strong>Validated edge</strong> (<code>validated_edges.json</code>):
+endpoints, relation, the scores at promotion,
+<code>evidence_summary</code>, <code>evidence_count</code>,
+<code>validated_at</code>, <code>status: "validated"</code>. Nothing
+de-duplicates on insert (<code>engine.ts:1096-1116</code>), and an edge
+accepted through lucid carries <code>normalization_cycle: 0</code>
+(<code>lucid.ts:773-795</code>).</p>
+<p><strong>Fact-graph entities</strong> carry <code>source_repo</code>,
+<code>source_files</code>, <code>provenance_kind</code>
+(<code>source_backed</code>, <code>human_asserted</code>,
+<code>derived_hub</code>), <code>derived_from_node_ids</code> and
+optional enrichment metadata (<code>docs/data-model.md:299-328</code>).
+There is no status field.</p>
+<p><strong>Tension</strong> (<code>tension_log.json</code>):
+<code>type</code>, <code>domain</code>, <code>entities</code>,
+<code>urgency</code>, <code>ttl</code>, <code>occurrences</code>,
+<code>resolved</code>, an optional <code>resolution_candidate</code>.
+Resolved tensions move to <code>resolved_tensions</code> with
+<code>resolved_by</code> (<code>human</code> or <code>system</code>),
+<code>resolution_type</code> and an optional <code>recheck_ttl</code>
+(<code>engine.ts:1538-1590</code>).</p>
+<p><strong>Scope.</strong> The instance directory is the boundary.
+Inside it, <code>source_repo</code> is a grounding key used by the
+normaliser's repo-coherence check (<code>normalizer.ts:198-206</code>)
+and the promotion gate; no read path takes it as a filter.</p>
+<p><strong>Time.</strong> <code>created_at</code>,
+<code>validated_at</code>, <code>dream_cycle</code>,
+<code>normalization_cycle</code>, <code>first_seen</code> and
+<code>last_seen</code> are all record time. Nothing records when a
+relationship held in the code.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Entity resolution is lexical.</strong>
+<code>resolveEntities</code> tries an exact id, then a case-insensitive
+exact name, then TF-IDF over entity names, descriptions, keywords and
+domains, and keeps ten seeds
+(<code>src/cognitive/graph-rag.ts:242-278</code>,
+<code>:527-528</code>). No embedding is computed anywhere in
+<code>src/</code>.</p>
+<p><strong>Expansion is a BFS over validated edges</strong> to a default
+depth of 2 (<code>:283-318</code>). Edges are ranked by
+<code>0.4 × confidence + 0.3 × recency + 0.3 × query-term overlap</code>
+(<code>:323-350</code>) and serialised under a default budget of 2,000
+tokens, estimated at four characters each (<code>:55-57</code>,
+<code>:361-495</code>). Mode <code>tension_focused</code> seeds from the
+ten most urgent unresolved tensions; <code>narrative_focused</code> from
+story chapters.</p>
+<p><strong>The preamble is small and fixed.</strong>
+<code>getCognitivePreamble</code> states entity counts, the five
+highest-confidence validated edges and the three most urgent tensions,
+trimmed from the end to 500 tokens by default (<code>:913-975</code>).
+<code>compileTaskPreamble</code> refuses evidence anchors that fail
+validation and omits the whole block when its estimated cost exceeds the
+expected savings (<code>:802-911</code>).</p>
+<p><strong>Three other reads open the dream graph, without the
+gate.</strong> <code>get_dream_insights</code> ranks every dream edge by
+<code>confidence × (1 + 0.5 × reinforcement_count)</code> and returns
+the top n as "strongest hypotheses" with no status filter
+(<code>src/cognitive/register.ts:1307-1333</code>); the VS Code context
+builder calls it
+(<code>extensions/vscode/src/context-builder.ts:1679</code>). Lucid
+exploration reports any dream edge of confidence 0.5 or more touching
+the hypothesis as "supporting"
+(<code>src/cognitive/lucid.ts:190-214</code>). <code>query_dreams</code>
+returns all statuses unless the caller passes one
+(<code>register.ts:1063-1117</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Four ways in, one of them gated.</strong> Dream strategies
+and <code>solidify_cognitive_insight</code> write candidates that must
+pass the normaliser. <code>enrich_seed_data</code> upserts or replaces
+fact-graph entities directly, with <code>source_repo</code> defaulting
+to the empty string (<code>src/tools/enrich-seed-data.ts:100</code>,
+<code>:780-791</code>), and <code>scan_project</code> writes
+scanner-derived entities. <code>lucid_action accept</code> converts a
+suggested dream edge into a validated edge with confidence at least 0.75
+and the evidence summary "Authority: human+system"
+(<code>lucid.ts:590-600</code>, <code>:773-795</code>).</p>
+<p><strong>Deduplication reinforces rather than appends</strong>, with a
+dampened bump of
+<code>0.3 × candidate confidence / (1 + 0.1 × prior count)</code> and a
+TTL reset (<code>engine.ts:866-889</code>). Nodes follow the same rule
+by name similarity (<code>:940-990</code>).</p>
+<p><strong>Conflict handling is structural.</strong>
+<code>findContradictions</code> flags an edge whose declared type
+matches neither endpoint's type (<code>normalizer.ts:224-247</code>),
+and a contradiction score at or above 0.3 rejects the edge. Nothing
+compares a new edge's relation with an existing validated edge between
+the same endpoints.</p>
+<p><strong>Deletion is hard.</strong> <code>mutate_validated_edge</code>
+splices the row (<code>graph-edge-mutations.ts:83-96</code>);
+<code>clear_dreams</code> empties the dream graph, candidates, validated
+edges, tensions or history (<code>register.ts:1183-1246</code>,
+<code>engine.ts:2452-2477</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Blocking:</strong> capture does not block the agent;
+dreaming and normalisation run as tool calls or schedules. A
+<code>dream_cycle</code> tool call blocks its caller for the strategies'
+LLM calls.</li>
+<li><strong>Lag:</strong> a new edge is retrievable only after a
+normalisation promotes it, and the gate asks for two independent
+evidence sources, so an edge usually needs reinforcement across cycles.
+On a manual workflow that is as long as the operator waits between
+cycles.</li>
+<li><strong>Whole-store passes:</strong> every decay and every
+normalisation loads and rewrites the whole dream graph and candidate
+file; the normaliser yields to the event loop every 100 items
+(<code>normalizer.ts:76</code>). <code>candidate_edges.json</code> grows
+by one row per re-scored latent edge per cycle and is compacted only by
+quarantine, promotion or a clear.</li>
+<li><strong>Injection:</strong> the preamble is bounded at 500 tokens
+and retrieval at a caller-set budget, both estimated by character
+count.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers about ninety tools
+(<code>src/cognitive/register.ts</code>,
+<code>src/tools/register.ts</code>,
+<code>src/discipline/tools.ts</code>): graph queries, scanning and
+enrichment, source reading and editing, cognition
+(<code>dream_cycle</code>, <code>normalize_dreams</code>,
+<code>nightmare_cycle</code>, <code>lucid_dream</code>,
+<code>lucid_action</code>), retrieval (<code>graph_rag_retrieve</code>,
+<code>get_cognitive_preamble</code>), ADRs, schedules, webhooks and a
+discipline protocol. The agent saves explicitly, through
+<code>solidify_cognitive_insight</code> and
+<code>enrich_seed_data</code>, and queries explicitly; the VS Code
+extension's context builder calls the insight tools on the agent's
+behalf.</p>
+<p><strong>The discipline layer is advisory.</strong>
+<code>src/discipline/manifest.ts</code> classifies every tool by class,
+protection level and allowed phases — <code>clear_dreams</code> is
+<code>internal-only</code> with no allowed phase (<code>:523-530</code>)
+— but the check runs only when the agent calls
+<code>discipline_check_tool</code>
+(<code>src/discipline/tools.ts:240-252</code>); no tool handler consults
+it.</p>
+<p><strong>Adapting it</strong> means adopting the daemon: the memory is
+not separable from the graph model of features, workflows and data-model
+entities it grows on.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — present, and bypassable.</strong> The status on
+each dream edge is a discrete epistemic state that decides whether the
+edge can reach retrieval, because only <code>validated</code> edges are
+copied into the one edge store <code>graph_rag_retrieve</code> and the
+preamble read. That earns the mark. Three paths go around it.
+<code>lucid_action accept</code> promotes any suggested dream edge of
+confidence 0.3 or more whatever its status.
+<code>get_dream_insights</code> and lucid's "supporting" signals read
+the dream graph unfiltered. And the fact graph, which retrieval reads
+too, has no status and takes direct writes from
+<code>enrich_seed_data</code>.</p>
+<p><strong>Rejected edges can clear lucid's floor.</strong> Strict mode
+turns every latent edge into <code>rejected</code> while keeping its
+latent-level confidence (<code>normalizer.ts:1135-1143</code>), and a
+latent edge needs plausibility of at least 0.35, so its confidence sits
+near or above 0.3. A rejected edge then loses 0.10 per cycle, so for a
+cycle or two it can be suggested and accepted.</p>
+<p><strong>An Explorer rejection may not reach the normaliser.</strong>
+<code>userRejectCandidate</code> flips the first
+<code>candidate_edges.json</code> row with the given
+<code>dream_id</code> (<code>engine.ts:2772-2775</code>);
+<code>normalize</code> builds its map from the same array, so the last
+row per id wins (<code>normalizer.ts:1080-1082</code>). A latent edge
+re-scored more than once has several rows, the newest stays
+<code>latent</code>, and the next cycle re-scores and may promote it.
+The dream edge's own status is never changed, so deduplication keeps
+reinforcing it.</p>
+<p><strong>Human review — withheld.</strong> Three verbs a person would
+own sit on the agent's tool surface. <code>resolve_tension</code> takes
+<code>resolved_by: "human" | "system"</code> from the caller
+(<code>register.ts:1538-1543</code>); <code>lucid_action accept</code>
+writes validated edges labelled human-accepted;
+<code>mutate_validated_edge</code> deletes them. The Explorer's HTTP
+funnel is a separate surface, requiring the instance UUID header, an
+<code>If-Match</code> etag and a reason. It does not close the MCP door,
+and no memory waits for it, since the normaliser promotes on its own.
+The Explorer also labels every resolved tension "Human-reviewed
+decision", including those expired by decay as <code>system</code>
+(<code>src/explorer/queries.ts:347-358</code>,
+<code>engine.ts:1602-1640</code>).</p>
+<p><strong>Tombstone — withheld, and the near-miss is
+instructive.</strong> The rejected-duplicate guard is keyed on the value
+and consulted on the write path, which is the shape the mark asks for.
+It lasts only as long as the rejected row: at a TTL drain of 2 per cycle
+from 8, about four cycles, after which the key moves into
+<code>reinforcementMemory</code> and a re-derivation arrives boosted. A
+tension resolved as <code>false_positive</code> is not consulted by
+<code>recordTension</code> either (<code>engine.ts:1446-1459</code>), so
+the same tension can be raised again next cycle.</p>
+<p><strong>Audit log — present on the Explorer only.</strong>
+<code>explorer_audit.jsonl</code> is append-only in code and records
+failures and dry runs. Nothing else is. The data model calls
+<code>candidate_edges.json</code> an "append-only log … never truncated"
+and <code>dream_history.json</code> "never modified, only appended"
+(<code>docs/data-model.md:86-88</code>, <code>:183-185</code>), while
+<code>userPromoteCandidate</code> splices the first and
+<code>clear_dreams</code> empties both (<code>engine.ts:2741</code>,
+<code>:2457-2477</code>).</p>
+<p><strong>Scope, bi-temporal, negative eval — withheld.</strong> Scope
+is a physical partition by instance directory. Validity time is absent.
+Negative eval is covered in section 10.</p>
+<p><strong>Other risks.</strong> <code>reinforcementMemory</code> is
+lost on restart, so behaviour differs between a long-lived daemon and
+one restarted between cycles. The lucid write to
+<code>validated_edges.json</code> bypasses the file lock the normaliser
+and the Explorer take. Env-driven thresholds use
+<code>Number(x) || default</code>, so a configured <code>0</code>
+silently becomes the default (<code>types.ts:161-168</code>).</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing. The counts below come from the checkout.</p>
+<p><strong>What is tested.</strong> The Explorer funnel is covered for a
+missing or wrong instance header, missing reason and etag, a stale etag,
+dry run and each intent's effect, and the audit file is read back after
+each (<code>tests/explorer-mutations.test.ts:217-417</code>). Quarantine
+is covered end to end, including the cascade to validated edges and
+tensions, with exact-list assertions on the rewritten seed files
+(<code>tests/cognitive/quarantine-source-less-facts.test.ts:99-115</code>).
+<code>tests/cognitive-producers.test.ts</code> covers event emission,
+strict-mode inheritance and the rule that weak low-signal rejections
+raise no tension.</p>
+<p><strong>A case that cannot fail.</strong> "flips status to rejected
+without adding a validated edge" wraps
+<code>expect(validated.edges.length).toBe(0)</code> in a
+<code>try</code> whose <code>catch</code> accepts any error as "File
+doesn't exist — also acceptable"
+(<code>tests/explorer-mutations.test.ts:409-415</code>). A failing
+<code>expect</code> throws, so the assertion is swallowed. Its fixture
+also holds one row per <code>dream_id</code>, so it cannot see the
+first-row and last-row mismatch in section 9.</p>
+<p><strong>Negative eval — withheld.</strong> The quarantine cases
+assert that grounded entities stay and ungrounded ones leave the seed
+files, which is a statement about storage, not about a retrieval result.
+No test calls <code>graphRagRetrieve</code>,
+<code>getCognitivePreamble</code>, <code>applyDecay</code> or
+<code>handleLucidAction</code>, and the one that touches
+<code>deduplicateAndAppendEdges</code> stubs it. The rejected-edge
+guard, the decay rates and the rule that retrieval sees only validated
+edges are untested.</p>
+<p><strong>Benchmark.</strong>
+<code>benchmarks/context-benchmark-summary.md</code> compares an old and
+a rewritten VS Code context builder on ten prompts: average estimated
+tokens 2,280 against 1,160, relevance 3.0 against 4.7, continuity 2.0
+against 4.1. The averages recompute from the table. The per-prompt files
+are estimates — "Likely included sections", "Estimated new runtime
+context tokens" — and the summary's own caveat says they are not
+serialized prompt dumps. The paths it cites under
+<code>plans/benchmarks/</code> do not exist in the tree. It measures
+context assembly, not memory. No paper or citation block is in the
+tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep hypotheses and beliefs in different stores, and point
+retrieval at one of them.</strong> A speculative edge then cannot leak
+into context by any ranking accident; the promotion write is the
+admission decision.</li>
+<li><strong>Refuse to reinforce what the critic rejected.</strong>
+Deterministic generators re-derive the same claim every cycle, and
+without the guard repetition alone saturates confidence. The comment at
+<code>engine.ts:855-860</code> states the defect and the fix.</li>
+<li><strong>Require independent evidence sources, not a score
+alone,</strong> before promotion, and roll back a multi-file promotion
+to the pre-write snapshot on failure.</li>
+<li><strong>Give promotion into the fact graph a provenance
+chain.</strong> A derived hub is admitted only when its supports are
+grounded, iterated to a fixed point, and a retroactive quarantine
+enforces the same invariant.</li>
+<li><strong>Audit failures and dry runs, not only successes,</strong>
+with before and after hashes and a mandatory reason.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A value-keyed guard that lives only as long as the row it
+guards.</strong> If the rejected record expires, the rejection expires
+with it; decay the row's weight and keep the key.</li>
+<li><strong>Carrying evidence across incarnations without carrying the
+verdict.</strong> An expiry cache that boosts the next copy of a claim
+should know the last copy was rejected.</li>
+<li><strong>A human-authority value the caller supplies.</strong>
+<code>resolved_by: "human"</code> in an agent tool schema makes the
+label a string the model types.</li>
+<li><strong>Applying a verdict to a judgment log by first match while
+the reader takes the last.</strong> Key verdicts on the subject, or
+write the verdict onto the subject.</li>
+<li><strong>Documenting a store as append-only and handing the agent a
+reset tool for it.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>DreamGraph suits a single developer or small team who want an
+agent-maintained model of one product's architecture — features,
+workflows, schemas, ADRs, tensions — and will run a daemon, curate
+through an Explorer, and live with a large, fast-moving surface built by
+one maintainer. It is a product, not a memory component: the memory
+cannot be lifted out of its architecture ontology. The licence rules out
+production and internal business use without a commercial agreement,
+which settles the question for most teams before the design does. Anyone
+who needs corrections to stick should treat the normaliser as a noise
+filter, not as a record of what was ruled out.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How large do <code>candidate_edges.json</code> and
+<code>dream_graph.json</code> grow on a real project after months of
+scheduled cycles, and how long does one normalisation take then?</li>
+<li>Does any shipped workflow call <code>lucid_action accept</code>
+without a person in the loop, for example from the Architect's tool
+selection?</li>
+<li>How often do rejected edges return through
+<code>reinforcementMemory</code> in practice, and do they then pass the
+gate?</li>
+<li>Is the daemon's HTTP port bound to loopback in every transport, and
+does anything besides the instance UUID guard the Explorer's mutation
+routes?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Stores and state machine:</strong>
+<code>src/cognitive/engine.ts</code>,
+<code>src/cognitive/types.ts</code>,
+<code>src/cognitive/trust-state.ts</code>,
+<code>src/utils/atomic-write.ts</code>, <code>src/utils/mutex.ts</code>,
+<code>src/instance/scope.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/cognitive/dreamer.ts</code>,
+<code>src/cognitive/strategies/</code>,
+<code>src/cognitive/normalizer.ts</code>,
+<code>src/tools/solidify-insight.ts</code>,
+<code>src/tools/enrich-seed-data.ts</code>,
+<code>src/cognitive/lucid.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/cognitive/graph-rag.ts</code>,
+<code>src/tools/query-resource.ts</code>,
+<code>src/cognitive/register.ts</code> (<code>query_dreams</code>,
+<code>get_dream_insights</code>).</li>
+<li><strong>Correction:</strong>
+<code>src/tools/graph-edge-mutations.ts</code>,
+<code>src/explorer/mutations.ts</code>,
+<code>src/explorer/audit.ts</code>, <code>src/explorer/auth.ts</code>,
+<code>src/explorer/queries.ts</code>.</li>
+<li><strong>Background:</strong>
+<code>src/cognitive/scheduler.ts</code>.</li>
+<li><strong>Agent surface:</strong> <code>src/server/server.ts</code>,
+<code>src/tools/register.ts</code>,
+<code>src/discipline/manifest.ts</code>,
+<code>src/discipline/tools.ts</code>,
+<code>extensions/vscode/src/context-builder.ts</code>.</li>
+<li><strong>Tests and artifacts:</strong>
+<code>tests/explorer-mutations.test.ts</code>,
+<code>tests/cognitive/quarantine-source-less-facts.test.ts</code>,
+<code>tests/cognitive-producers.test.ts</code>,
+<code>tests/tension-resolution.test.ts</code>,
+<code>benchmarks/</code>.</li>
+<li><strong>Claims:</strong> <code>docs/data-model.md</code>,
+<code>docs/cognitive-engine.md</code>, <code>LICENSE</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'reinforcementMemory' src</code> — declared and used
+only in <code>src/cognitive/engine.ts</code>; no file read or
+write.</li>
+<li><code>grep -rnE 'status (===|!==) "(rejected|latent|validated|candidate|expired)"' src</code>
+— the status reads are the normaliser, decay, deduplication, statistics,
+<code>query_dreams</code> on request, and the Explorer's latent listing;
+none in <code>graph-rag.ts</code> or <code>lucid.ts</code>.</li>
+<li><code>grep -rn 'appendAuditRow' src</code> — one caller,
+<code>src/explorer/mutations.ts:292</code>.</li>
+<li><code>grep -rln 'deduplicateAndAppendEdges\|applyDecay\|normalize(\|graphRagRetrieve\|mutate_validated_edge\|executeGraphEdgeMutation\|handleLucidAction\|resolveTension' tests</code>
+— <code>tests/cognitive-producers.test.ts</code> and
+<code>tests/tools/solidify-insight.test.ts</code>, which stubs
+<code>deduplicateAndAppendEdges</code>.</li>
+<li><code>grep -rn 'proxyToolCall\|checkToolPermission' src</code> —
+only <code>src/discipline/tools.ts:248</code>, inside
+<code>discipline_check_tool</code>.</li>
+<li><code>grep -rnE '\.results\s*=|results\.splice|saveCandidateEdges' src</code>
+— quarantine filter, clear, promote splice and reject rewrite, all in
+<code>engine.ts</code>.</li>
+<li><code>grep -rliE 'embedding|cosine|vector store|pgvector' src</code>
+— <code>types.ts</code>, <code>graph-rag.ts</code> and a Go scanner
+extractor; no embedding call.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match outside release archives; no <code>CITATION.cff</code>.</li>
+<li><code>ls plans/benchmarks</code> — no such directory.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/mmethodz/dreamgraph/commit/563d10c8109cbe3388cde71168bdcff149c96e0f"><code class="commit-id" title="563d10c8109cbe3388cde71168bdcff149c96e0f">563d10c8…</code></a>
+— first reading, at the head of <code>main</code>, released as v13.4.0
+and dated the same day. Two marks, <code>trust_state</code> and
+<code>audit_log</code>. Screened before reading: 1 auto-run surface
+(<code>.github/copilot-instructions.md</code>, read as data), 0
+build-time execution points, 9 dependency files inside the cooldown —
+every file in a depth-1 clone dates to the tip — and 5 unpinned surfaces
+beside a root lockfile. Read with <code>grep</code> and
+<code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
