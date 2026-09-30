@@ -8023,20 +8023,25 @@ log-and-projection with git supplying the log, and
 <code>git blame</code> giving per-line provenance at no storage cost.
 Retrieval is an LLM issuing <code>grep</code>, <code>git log</code>,
 <code>git diff</code> and <code>git blame</code> behind a
-thirteen-command allowlist that validates every segment of a chain and
-gives <code>git</code> a second allowlist of read-only subcommands.</li>
+thirteen-command allowlist that validates every segment its splitters
+produce and gives <code>git</code> a second allowlist of seven
+subcommands.</li>
 <li>Biggest risk: validation tokenises with <code>shlex.split</code> and
 execution runs <code>subprocess.run(cmd_str, shell=True)</code> on the
-original string, with nothing rejecting <code>$(…)</code>, backticks or
-redirection — so an argument the validator approved can be syntax the
-shell expands. It matters here because an LLM composes the commands and,
-in the named production deployment, the repository holds text the
-operator did not author. Behind it, the resolver runs the plan's own
-<code>git_cmd</code> with <code>shell=True</code> after checking only a
-<code>git </code> prefix, pointer paths are not held to the user's
-worktree, and <code>awk</code>, <code>find</code> and <code>sed</code>
-on the allowlist can execute or write. None of the 22 test files covers
-the router or the resolver.</li>
+original string. The splitters never break on a single
+<code>&amp;</code> or a newline, and nothing rejects <code>$(…)</code>,
+backticks or redirection, so a validated <code>grep</code> can carry a
+second command. It matters here because an LLM composes the commands
+and, in the named production deployment, the repository holds text the
+operator did not author — and
+<code>POST /memory/{user_id}/run-command</code> hands the same router to
+any HTTP caller, with authentication off by default. Behind it, the
+resolver runs the plan's own <code>git_cmd</code> with
+<code>shell=True</code> after checking only a <code>git </code> prefix,
+no model-named path is held to the worktree, and <code>awk</code>,
+<code>find</code>, <code>sed</code>, <code>git grep -O</code> and
+<code>--output=</code> can execute or write. No test under
+<code>tests/</code> covers the router, the resolver or the route.</li>
 <li>Most reusable component: the pluggable executor — endpoints build a
 thunk closing over the real writer or consolidator call and hand it to
 <code>submit_write</code>, so the queue backend and the memory internals
