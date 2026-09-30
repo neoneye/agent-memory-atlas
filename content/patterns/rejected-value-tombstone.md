@@ -515,6 +515,8 @@ first row's reason and time.
 
 [Recollect](../../systems/recollect/) consults its rule at every write and suppresses on the read, and the read half reaches past the claim store. A reject, correct or withdraw review writes an `assertion_rules` row keyed on the normalised subject, predicate and value; a later proposal of that value from any writer is stored as `blocked_by_rule` and cleared from every eligibility gate, and recall withholds any raw source chunk whose text contains all three keys, so a copied note repeating the corrected value stays out outside history mode. Its committed case asserts exactly that after a positive lexical control, a `REINDEX` and a rebuilt router. The two limits are the text key, which a paraphrase walks past, and erasure, which blanks the rule's keys with the claim it came from.
 
+**[TideMind](../../systems/tidemind/) has the value-keyed form on tag assignments and nothing on content.** A person rejecting a tag on the desktop flips the node-to-tag link to `rejected_by_user` rather than deleting it, and the background annotator drops any model-proposed tag whose case-folded name matches a rejected one for that node; the existence check keeps tag-promote from re-linking it, and decay and pending-link GC never touch the row. The re-extraction the tombstone guards against is live, because a recall-time rewrite resets the node to unannotated. Content has no equivalent: a corrected value re-digested later dedup-merges into the corrected node under a prompt that says the newer text wins, and a link the evaluator rejects is soft-deleted and can be proposed again.
+
 ### Sorted by what actually stops the value
 
 The mark covers four different mechanisms. The table sorts the holders this page

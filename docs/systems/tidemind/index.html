@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local SQLite knowledge graph
+that stores agent digests verbatim, links them by embedding similarity,
+and lets background LLM passes rewrite, relate and fade them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="TideMind — Agent Memory Atlas">
+    <meta property="og:description" content="A local SQLite knowledge
+graph that stores agent digests verbatim, links them by embedding
+similarity, and lets background LLM passes rewrite, relate and fade
+them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TideMind — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local SQLite knowledge
+graph that stores agent digests verbatim, links them by embedding
+similarity, and lets background LLM passes rewrite, relate and fade
+them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>TideMind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "TideMind",
+      "description": "A local SQLite knowledge graph that stores agent digests verbatim, links them by embedding similarity, and lets background LLM passes rewrite, relate and fade them.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A self-rewriting knowledge graph behind
+three MCP tools</p>
+          <h1>TideMind</h1>
+          <p class="document-deck">A local SQLite knowledge graph that
+stores agent digests verbatim, links them by embedding similarity, and
+lets background LLM passes rewrite, relate and fade them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/SawyerHan-AI/TideMind">
+              <span>Source</span>
+              <strong>SawyerHan-AI/TideMind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/SawyerHan-AI/TideMind/commit/29cef6271b6e044923d4bf740efcc4c114c55225" title="29cef6271b6e044923d4bf740efcc4c114c55225">
+              <span>Analyzed revision</span>
+              <code>29cef627…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/SawyerHan-AI--TideMind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>SawyerHan-AI--TideMind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>50,239
+lines of TypeScript in src/ and 92,059 in the Electron client; the
+memory core is about 9,600 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>150
+commits on main by 3 contributor identities, 13 April 2026 – 30
+September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>4,728
+Vitest cases in 386 files, 119,822 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>TideMind is a local-first memory layer for coding and chat agents: an
+MCP server with three tools, <code>brain_prepare</code>,
+<code>brain_recall</code> and <code>brain_digest</code>, over one SQLite
+graph of nodes and typed links, plus an Electron desktop app and
+note-source importers for Logseq, Obsidian, Apple Notes and Notion.
+Digests are stored verbatim. Everything else is done afterwards by a
+scheduler of LLM and heuristic passes that tag, link, merge, rewrite,
+crystallise and fade.</p>
+<p>What is notable is the care in the read predicates and in the one
+place a person corrects the machine. Archived and superseded rows are
+filtered on the FTS query, the vector arm, the hybrid expansion and the
+graph walk, each with a comment naming the leak it closes. A tag a
+person rejects stays rejected against the background tagger.</p>
+<p>What is weak is that the model owns the content. Recall triggers a
+reconsolidation that may rewrite a memory's text, a dedup merge tells
+the model the newer text wins, and nothing a person approves stands
+between those writes and the next session.</p>
+<p>Four marks: <code>tombstone</code> on tag rejection,
+<code>trust_state</code> on link status, <code>audit_log</code> on
+<code>node_versions</code>, and <code>negative_eval</code> on the
+expansion and hybrid exclusion suites. Each rests on one subsystem, and
+section 9 names the three withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a node whose content is whatever the agent passed to
+<code>brain_digest</code>, stored as written
+(<code>src/tools/digest.ts:464-527</code>). It is searchable by BM25 as
+soon as the FTS trigger fires, and by vector once the embedding lands.
+From then on it is material for a background graph, and the system
+serves it as settled until something rewrites or hides it.</p>
+<p><strong>Landing decides identity by similarity.</strong> The new
+node's nearest neighbour decides what happens next
+(<code>src/graph/landing.ts:49-175</code>). At 0.92 or above the new
+text is merged into the neighbour by an LLM and the new node is
+archived. At 0.80 a <code>confirmed</code> link is written, at 0.60 a
+<code>pending</code> one, and a node whose inferred actuality is below
+0.3 gets only <code>pending</code> links. The thresholds live in a
+strategy file the desktop can edit
+(<code>data/strategies/metabolism-params.system.md:40-43</code>).</p>
+<p><strong>Links are the only thing with an epistemic state.</strong> A
+<code>pending</code> link waits for <code>runLinkEvaluate</code>, which
+asks a model whether the relation holds and either confirms it or
+soft-deletes it (<code>src/metabolism/link-evaluate.ts:229-242</code>).
+Unevaluated ones expire after seven days. Traversal follows confirmed
+links only. A person can mark a tag link <code>rejected_by_user</code>
+from the desktop, and nothing ages that row out.</p>
+<p><strong>Content changes in five ways, and only one is a
+person's.</strong> The agent's <code>correction</code> overwrites text
+in place. Deep reconsolidation on recall lets a model rewrite it
+(<code>src/metabolism/reconsolidate.ts:421-424</code>). A dedup merge
+folds a new digest in under a prompt that says the newer text wins on
+conflict (<code>data/strategies/dedup-merge.system.md:7</code>). Crystal
+enrichment rewrites crystal nodes. The desktop edit supersedes the old
+node with a new one. Every rewrite through <code>updateNode</code>
+leaves the prior text in <code>node_versions</code>.</p>
+<p><strong>A memory stops being served when it is archived, superseded
+or cold.</strong> Archive sets <code>archived=1</code> and heat 0.02 and
+deletes the vectors; supersession sets <code>is_superseded=1</code> and
+heat 0.01. Heat decay only lowers rank until a node falls under the 0.01
+floor. The skill tells the agent to archive when the user says "forget"
+(<code>data/skill/base-skill.md:23</code>), so forgetting is hiding: the
+row, its versions and the daily stream file keep the text.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a TideMind digest becomes a node, how links and tags gain and lose standing, and the ways a node stops being served</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a TideMind digest becomes a node, how links and tags gain and lose standing, and the ways a node stops being served
+flowchart TD
+    D[&quot;brain_digest(content)&quot;] --&gt; S[&quot;dated stream file:&lt;br/&gt;raw text, append-only&quot;]
+    D --&gt; N[&quot;node created verbatim,&lt;br/&gt;FTS indexed at once&quot;]
+    N --&gt; E{&quot;embedding available?&quot;}
+    E -- &quot;no&quot; --&gt; LIVE[&quot;live node&quot;]
+    E -- &quot;yes&quot; --&gt; L{&quot;nearest neighbour&lt;br/&gt;similarity&quot;}
+    L -- &quot;0.92 or more&quot; --&gt; M[&quot;LLM merge into neighbour,&lt;br/&gt;newer text wins;&lt;br/&gt;new node archived&quot;]
+    L -- &quot;0.80 or more&quot; --&gt; C[&quot;confirmed link&quot;]
+    L -- &quot;0.60 or more,&lt;br/&gt;or low actuality&quot; --&gt; P[&quot;pending link&quot;]
+    L --&gt; LIVE
+    P --&gt; EV{&quot;link-evaluate LLM&quot;}
+    EV -- &quot;valid&quot; --&gt; C
+    EV -- &quot;invalid&quot; --&gt; SD[&quot;soft-deleted,&lt;br/&gt;can be proposed again&quot;]
+    P -- &quot;7 days unevaluated&quot; --&gt; SD
+    C --&gt; T[&quot;followed by graph expansion&quot;]
+    LIVE --&gt; AN[&quot;annotate: LLM tags,&lt;br/&gt;title, dimensions&quot;]
+    AN --&gt; TG[&quot;tagged link&quot;]
+    TG -- &quot;person rejects on desktop&quot; --&gt; RJ[&quot;rejected_by_user:&lt;br/&gt;tag name refused on&lt;br/&gt;every later annotate&quot;]
+    LIVE -- &quot;recall hit&quot; --&gt; RC[&quot;deep reconsolidation:&lt;br/&gt;LLM may rewrite content,&lt;br/&gt;prior text to node_versions&quot;]
+    RC -- &quot;refinement reset to 0&quot; --&gt; AN
+    LIVE -- &quot;agent correction&quot; --&gt; COR[&quot;content overwritten,&lt;br/&gt;prior text to node_versions&quot;]
+    LIVE -- &quot;archive by agent or person&quot; --&gt; AR[&quot;archived, vectors dropped&quot;]
+    LIVE -- &quot;desktop edit or note re-sync&quot; --&gt; SUP[&quot;superseded by a new node&quot;]
+    LIVE -- &quot;heat under 0.01&quot; --&gt; COLD[&quot;not served&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three kinds of process share one SQLite file under
+<code>~/.tidemind</code> (<code>src/config.ts:60</code>) in WAL mode: a
+stdio MCP server per connected agent (<code>src/index.ts</code>), a
+daemon that ticks the metabolism scheduler every minute
+(<code>src/daemon.ts</code>), and the Electron desktop app, which
+imports the server modules through an <code>@server</code> alias and
+adds its own IPC handlers (<code>client/electron/ipc/</code>). The MCP
+process also runs maintenance opportunistically on every
+<code>brain_prepare</code> (<code>src/tools/prepare.ts:74</code>).</p>
+<p>Storage is <code>nodes</code>, <code>links</code>,
+<code>node_versions</code>, <code>operation_log</code>,
+<code>timeline_events</code> and a set of support tables
+(<code>src/db/schema.ts:70-560</code>), an FTS5 index kept by triggers,
+and <code>nodes_vec</code> in sqlite-vec holding one embedding per
+content segment. Every digest is also appended to a dated Markdown
+stream file under a lock with <code>fsync</code>
+(<code>src/stream/writer.ts</code>). The client carries cloud-sync
+triggers and a reconciler for a hosted service the README lists as not
+yet available.</p>
+<p>LLM work goes through a client that calls Anthropic, Vertex or Gemini
+directly or drives an installed CLI (<code>src/llm/client.ts</code>,
+<code>src/llm/cli/</code>), with a circuit breaker per task. Embeddings
+come from Ollama, Vertex or Gemini. Without either, digest and BM25
+recall work and every metabolism task marked <code>requiresLLM</code> is
+skipped (<code>src/metabolism/tasks.ts</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing external is required to store and search:
+<code>npm install</code>, <code>npm run build</code>, and the desktop
+writes the MCP and hook configuration for each host. Vector search waits
+for a node-count gate, 50 by default (<code>src/config.ts:98</code>).
+The store is readable with any SQLite client, and the stream files are
+plain Markdown. Repair by hand is possible, but the graph has many
+derived columns (heat, maturity, connectivity, <code>edit_seq</code>,
+<code>decay_gen</code>) that background tasks recompute and cross-device
+reconciliation compares. The macOS app is the supported install; the
+source path builds a native <code>better-sqlite3</code> and a macOS-only
+keychain addon in a <code>postinstall</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>brain_digest</code>
+(<code>src/index.ts:293-334</code>) → <code>digest</code>
+(<code>src/tools/digest.ts:48</code>). The default is asynchronous: the
+stream line is written, a <code>pending_digests</code> row is enqueued
+as <code>processing</code>, and the rest runs detached
+(<code>:290-381</code>). <code>processDigestContent</code> creates the
+node with no model call, then <code>generateAndStoreEmbedding</code>
+inserts segment vectors and calls <code>findLandingConnections</code>
+(<code>:589-668</code>). A failed async digest is retried by the
+<code>digest-retry</code> task.</p>
+<p><strong>Correct, unlink, archive.</strong> On the same tool,
+<code>intent: correction</code> with <code>target_node</code> overwrites
+content through <code>updateNode(..., 'correction')</code>, re-embeds,
+and writes a <code>meta</code> node holding the before and after text
+(<code>digest.ts:82-156</code>). <code>correction</code> with
+<code>target_link</code> soft-deletes every live link between the pair
+(<code>:159-194</code>). <code>archive</code> with
+<code>target_node</code> calls <code>archiveNodeWithVectors</code>,
+guarded on <code>archived = 0</code> (<code>:197-234</code>). A missing
+correction target can raise an MCP elicitation when
+<code>interactive_mode</code> is <code>ask</code>; the default is
+<code>silent</code> (<code>src/config.ts:114</code>).</p>
+<p><strong>Recall.</strong> <code>brain_recall</code>
+(<code>src/index.ts:199-268</code>) validates the inputs, maps legacy
+fields (<code>src/tools/recall-input.ts</code>), and dispatches in
+<code>recall</code> (<code>src/tools/recall.ts:26-526</code>):
+<code>node_id</code>, <code>vault_file</code>, <code>index_ref</code>,
+<code>from_node</code> traversal, a hybrid query, or a browse by
+recency. The query branch is <code>searchHybrid</code>
+(<code>src/search/hybrid.ts:14-226</code>): BM25 over FTS5 and, past the
+gate, <code>searchVector</code>, fused as
+<code>0.3·bm25 + 0.5·vector + 0.1·heat + 0.1·maturity</code>, then one
+hop over confirmed links from the top five.</p>
+<p><strong>Recall writes.</strong> Every returned node gets
+<code>bumpHeat</code> (<code>recall.ts:281-307</code>).
+<code>reconsolidateOnRecall</code> runs on the exact matches
+(<code>:331-335</code>) and may create pending links or rewrite content.
+A query recall also fires <code>revalidateLinks</code> without awaiting
+it (<code>:491-512</code>).</p>
+<p><strong>Prepare.</strong> <code>brain_prepare</code> →
+<code>prepare</code> (<code>src/tools/prepare.ts:23-78</code>) reads the
+synthesised <code>user-profile</code> meta node, up to 15 keystones, 30
+tags, 20 crystals and 15 nodes active in the last 48 hours, each
+filtered on <code>is_superseded = 0 AND archived = 0</code>. The
+SessionStart hook (<code>src/hook-session-start.ts</code>) formats the
+same output under a 9,000-character budget and a 9,800 hard cap
+(<code>src/hook-session-format.ts:17-19</code>).</p>
+<p><strong>Background.</strong> <code>ALL_TASKS</code>
+(<code>src/metabolism/tasks.ts</code>) lists annotate, link-evaluate,
+pending-link GC, link-discover, synaptic decay, keystone-enrich,
+tag-promote, divergent scan, crystal emergence, temporal crystal,
+profile synthesis, Learning II and III, and a structure-holes
+precompute, each on its own interval and gate.</p>
+<p><strong>Desktop writes.</strong> <code>write:editNode</code> digests
+the new text synchronously and supersedes the old node
+(<code>client/electron/ipc/write.ts:26-69</code>);
+<code>write:archiveNode</code> and <code>write:deleteLink</code> route
+through <code>digest</code> (<code>:72-113</code>);
+<code>links:rejectTag</code> and <code>links:undoRejectTag</code> handle
+tag rejection (<code>client/electron/ipc/nodes.ts:561-630</code>,
+<code>:632-683</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodes</code></td>
+<td>content, title, type, tags JSON, heat, refinement, connectivity,
+independence, specificity, subjectivity, actuality, role flags,
+<code>source_tool</code>, <code>source_session</code>,
+<code>source_stream</code>, <code>source_timestamp</code>,
+<code>created</code>, <code>version</code>, <code>archived</code>,
+<code>is_superseded</code>, <code>edit_seq</code>,
+<code>decay_gen</code></td>
+<td><code>src/db/schema.ts:70-123</code></td>
+</tr>
+<tr>
+<td><code>links</code></td>
+<td><code>from_id</code>, <code>to_id</code>, relation array of type and
+confidence, strength, note, <code>auto</code>, status,
+<code>deleted</code></td>
+<td><code>:126-146</code>; nine relation types</td>
+</tr>
+<tr>
+<td><code>node_versions</code></td>
+<td>prior version and content, <code>change_reason</code>,
+<code>changed_at</code></td>
+<td><code>:147-155</code></td>
+</tr>
+<tr>
+<td><code>operation_log</code></td>
+<td>every prepare, recall and digest call with input summary, tool,
+session, agent id and recall diagnostics</td>
+<td><code>:157-174</code></td>
+</tr>
+<tr>
+<td><code>timeline_events</code></td>
+<td>activity-feed rows with type, subtype, detail JSON, node ids and
+actor</td>
+<td><code>:405-416</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Provenance is caller-stated.</strong>
+<code>source_tool</code> and <code>source_session</code> come from the
+<code>source</code> object the agent passes to <code>brain_digest</code>
+(<code>digest.ts:481-482</code>), not from the <code>EB_AGENT_ID</code>
+the MCP process is launched with, which reaches only
+<code>operation_log</code>. <code>source_stream</code> points at the raw
+stream entry, the one pointer that cannot drift from what was said.</p>
+<p><strong>Time.</strong> <code>created</code> is the digest time, or a
+note's inferred authoring time for imported segments;
+<code>source_timestamp</code> is the ingestion time. No field records
+when a fact held.</p>
+<p><strong>Scope.</strong> No scope column. The <code>agents</code>
+table identifies installations for the bridge guard, which refuses
+memory to a removed or superseded installation
+(<code>src/agent-bridge-guard.ts</code>); it partitions nothing.</p>
+<p><strong>Derived categories.</strong> <code>specificity</code>,
+<code>subjectivity</code> and <code>actuality</code> are floats the
+annotator sets, and <code>type</code> is derived from them
+(<code>src/metabolism/annotate.ts:185</code>). The architecture
+document's record/knowledge/belief/hypothesis/intention categories are
+computed at read time and not stored.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The query branch is hybrid. BM25 always runs, over-fetching and
+filtering <code>archived</code> and <code>is_superseded</code> in SQL
+(<code>src/db/fts.ts:96-97</code>). The vector arm runs when the
+node-count gate opens and skips archived and superseded hits
+(<code>src/search/vector.ts:49</code>). Scores are fused linearly with
+heat and an intent-weighted maturity bonus, crystals get +0.15 and
+keystones +0.05, and neighbours of the top five enter at 0.7 of their
+heat-and-maturity score (<code>hybrid.ts:91-214</code>).
+<code>match: 'all'</code> switches BM25 to AND and drops the vector arm
+and the neighbours.</p>
+<p><strong>Filters are applied after ranking.</strong> Tags,
+<code>from_agents</code> and <code>sort: recent</code> are post-filters
+over an over-fetch of five times the limit, capped at 100
+(<code>recall.ts:137-180</code>). A narrow filter on a large store can
+return fewer matches than exist.</p>
+<p><strong>Recall never returns empty on the query path.</strong> When
+fewer than five exact matches survive, a heat fallback fills toward ten
+with the hottest nodes of the last month that pass the same type, tag
+and source filters, labelled <code>related_matches</code>
+(<code>recall.ts:209-257</code>).</p>
+<p><strong>The browse path widens.</strong> Without a query, the
+recent-nodes branch honours <code>from_agents</code>, but the graph
+expansion that follows it adds neighbours with no source or tag
+predicate (<code>recall.ts:259-279</code>).</p>
+<p><strong>Detail mode returns links as facts.</strong> Up to five links
+per node, with target title, relation and strength and no status, so a
+pending relation reads the same as a confirmed one
+(<code>recall.ts:389-404</code>). <code>computeFreshness</code> adds a
+contradiction note when any listed link is a <code>contradicts</code>,
+pending included (<code>src/utils/freshness.ts:29-32</code>).</p>
+<p><strong>Prepare is the injected context.</strong> Its sections are
+fixed-size lists ranked by link count, heat and recency; nothing is
+query-dependent except the <code>hint</code> logged to
+<code>operation_log</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Capture is explicit and verbatim. The skill asks the agent to digest
+before every reply, with a low bar
+(<code>data/skill/base-skill.md</code>), and the PreCompact hook reminds
+it before compaction. Two gates run before storage: content under five
+characters, or made only of bullets and separators, is refused, and a
+heuristic sets initial heat from length and URL-ness
+(<code>digest.ts:261-280</code>). Nothing filters secrets or
+instructions.</p>
+<p><strong>Consolidation is model-driven and ongoing.</strong> Dedup
+merge rewrites the neighbour under a prompt that favours the newer text,
+and refuses a result shorter than half the old text and shorter than the
+new (<code>src/graph/dedup.ts:33-72</code>). Deep reconsolidation on
+recall can replace content and resets <code>refinement</code> to 0,
+which sends the node back through annotation. Crystal emergence writes
+new <code>crystal</code> nodes from hubs, and temporal crystals
+summarise periods.</p>
+<p><strong>Updates keep the old text.</strong> Every content change
+through <code>updateNode</code> appends the prior version to
+<code>node_versions</code>. The desktop edit instead creates a node and
+supersedes the old one, moving its links and adding an
+<code>updates</code> link between them
+(<code>src/db/node-lifecycle.ts:162-234</code>).</p>
+<p><strong>The desktop edit can hide what it edits.</strong>
+<code>write:editNode</code> calls <code>digest</code> with
+<code>async: false</code>, which runs landing with the dedup merge
+enabled. If the edited text is 0.92 similar to its own original, as a
+small edit is likely to be, the new node is merged into the old and
+archived. <code>editNode</code> then supersedes the old node with that
+archived one (<code>write.ts:38-53</code>;
+<code>digest.ts:612-645</code>), and both are excluded from every read.
+The flow test mocks <code>isVecLoaded</code> to <code>false</code>, the
+one setting that skips this branch
+(<code>tests/tools/edit-node-flow.test.ts:45-48</code>). This was read,
+not reproduced.</p>
+<p><strong>Deletion.</strong> No MCP or desktop verb hard-deletes a
+node. Archive hides it and drops its vectors; unarchive re-embeds. Only
+a note-source rollback deletes rows
+(<code>src/integrations/shared/rollback.ts:80-83</code>). The stream
+file is never pruned.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: asynchronous by default; the agent waits for a stream append
+and an enqueue. The node is searchable by BM25 within the detached task,
+and by vector once the embedding call returns. No LLM runs on the write
+path.</li>
+<li>Background: annotation, link evaluation, reconsolidation and the
+crystal passes each call a model on bounded batches. None rereads the
+whole store in one pass, though profile synthesis and Learning II read
+wide aggregates.</li>
+<li>Read: recall returns 8 detail items or 30 index items by default,
+and may start LLM reconsolidation on up to three nodes per call. Session
+injection is capped at 9,800 characters and sits at session start.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three MCP tools, whose descriptions the desktop can override through
+a <code>mcp-descriptions.json</code> in the data directory
+(<code>src/index.ts:132-146</code>). Hook scripts cover Claude Code,
+Codex, Gemini, Cursor, Windsurf, Kimi, OpenClaw, Qwen and Pi, each with
+a SessionStart or equivalent that injects the prepare output, and
+PreCompact and PostCompact scripts that prompt a digest. Per-host skills
+live in <code>data/skill/</code>.</p>
+<p>The agent holds every verb it needs to change memory: store,
+overwrite any node by id, archive any node, and cut any link, all
+through <code>brain_digest</code>, with no confirmation in the default
+<code>silent</code> mode. It cannot hard-delete, reject a tag, or reach
+the desktop's edit and restore handlers.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The read predicates are consistent.</strong>
+<code>archived</code> and <code>is_superseded</code> are checked on the
+FTS query, the vector loop, hybrid expansion, graph expansion, every
+direct-lookup branch in recall, and each prepare section. Comments at
+each site record the leak it closed, such as archive's heat of 0.02
+sitting above the 0.01 floor
+(<code>src/graph/expansion.ts:84-88</code>).</p>
+<p><strong>Model output becomes memory without review.</strong> Deep
+reconsolidation, dedup merge and crystal enrichment rewrite content, and
+landing plus link evaluation decide the graph.
+<code>node_versions</code> keeps what was replaced, but nothing flags
+the rewrite to the agent, and recall serves the rewritten text.</p>
+<p><strong>Correction does not stick against a re-digest.</strong> A
+corrected node is an ordinary node. A later digest of the old wrong text
+lands at high similarity to it, and the merge prompt tells the model to
+prefer the newer input.</p>
+<p><strong>Privacy.</strong> Forgetting archives. The text stays in the
+row, in <code>node_versions</code>, in the correction meta node and in
+the dated stream file.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — awarded on tag rejection; the record states
+it covers tag assignments only.</li>
+<li><code>trust_state</code> — awarded on link status; nodes carry none,
+and recall's detail mode shows pending links unlabelled.</li>
+<li><code>audit_log</code> — awarded on <code>node_versions</code>, for
+content rewrites. <code>operation_log</code> records MCP calls including
+recalls, and <code>timeline_events</code> is an activity feed that
+summarises some tasks as counts; neither is a mutation record.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>bitemporal</code> — withheld. <code>created</code> against
+<code>source_timestamp</code> separates authoring from ingestion, not
+validity from record time.</li>
+<li><code>scope_enforced</code> — withheld. The store is one graph for
+every agent and note source by design. The nearest thing,
+<code>from_agents</code>, filters on a <code>source_tool</code> string
+the writer supplies, and <code>brain_prepare</code>, an agent-reachable
+read over the same store, has no predicate. The browse path's graph
+expansion drops the filter.</li>
+<li><code>human_review</code> — withheld. Tag rejection, edit and
+archive on the desktop are a person's corrections after the fact; no
+memory waits in a state for one, and pending links are resolved by a
+model or by expiry.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin. CI runs <code>npm test</code> on
+push and pull request (<code>.github/workflows/ci.yml</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>tests/graph/expansion.test.ts:84-96</code> archives B through
+<code>archiveNode</code> and asserts B and the two nodes behind it are
+absent while sibling C is present; <code>:98-105</code> does the same
+for a superseded node at heat 0.9; <code>:107-118</code> asserts a
+neighbour on a pending link is not reached while one on a confirmed link
+is. <code>tests/search/hybrid.test.ts:211-277</code> asserts that
+pending-linked, archived and superseded neighbours stay out of real
+hybrid results beside the BM25 hit.
+<code>tests/db/links-rejection.test.ts:87-100</code> asserts each link
+reader omits a rejected link and returns the kept one.</p>
+<p><strong>The rejection.</strong>
+<code>tests/metabolism/tag-promote-rejection.test.ts:55-133</code>
+asserts tag-promote neither re-scores nor re-creates a rejected tag
+link. The annotate half of the tombstone, the name filter, has no
+test.</p>
+<p><strong>Where a test sets aside the risky branch.</strong> The
+edit-node flow test disables vectors, and the recall case named
+<code>should not return archived nodes</code> lowers heat to 0.005
+without setting <code>archived</code>
+(<code>tests/tools/recall.test.ts:205-212</code>).</p>
+<p><strong>Scale and host work.</strong> Much of the suite covers host
+integration, schema migrations, scheduler locking and a metabolism
+performance harness with committed thresholds
+(<code>scripts/metabolism-worker-candidate-thresholds.json</code>). No
+retrieval-quality evaluation, benchmark result or paper is in the tree;
+the README cites Bush and Clark and Chalmers as inspiration.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the lifecycle predicate on every read arm, and write
+down the leak.</strong> FTS, vector, expansion and direct lookup each
+check <code>archived</code> and <code>is_superseded</code>, because a
+heat floor alone let archived rows back in.</li>
+<li><strong>Keep a person's rejection as a row and feed its name to the
+extractor.</strong> Changing a link's status instead of deleting it
+gives the next annotation pass something to consult, and the recent
+rejections double as negative examples in the prompt.</li>
+<li><strong>Give inferred relations a pending state and traverse only
+confirmed ones.</strong> Cheap similarity proposes, a slower judge
+confirms, and retrieval walks only what was confirmed.</li>
+<li><strong>Store the raw input outside the graph.</strong> A dated
+append-only stream with a pointer from each node lets any rewrite be
+checked against what was said.</li>
+<li><strong>Budget session injection below the host's own limit, with a
+floor for the profile.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Letting a model rewrite stored content on read.</strong>
+Reconsolidation on recall turns every retrieval into a possible write,
+with the prior text kept and nothing surfaced.</li>
+<li><strong>A merge prompt that prefers the newer input.</strong> It is
+how a corrected value comes back: the old claim, re-digested, is newer
+than the correction.</li>
+<li><strong>An edit built as "store new, then supersede old" through a
+path that can merge.</strong> Run the edit with dedup disabled, or
+supersede only after checking the new node is live.</li>
+<li><strong>Status on the edge but not in what the agent reads.</strong>
+A pending link shown without its status is a confirmed link to the
+reader.</li>
+<li><strong>Soft-deleting a model-rejected candidate.</strong> A
+soft-deleted link is invisible to the existence check, so the discoverer
+can propose it again.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants every agent and note app they use to
+share one growing, self-organising store on their own machine, and who
+accepts that a model will edit that store continuously. The desktop,
+hooks and host catalogue are extensive, and the local footprint is one
+file. It is the wrong base for anyone who needs memory to stay as
+written, for a team or tenant boundary, or for a system where a
+correction must hold: the design treats rewriting as the feature, and
+its controls sit on tags and links rather than on content.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the desktop edit collapse into an archived node in practice,
+and how often do small edits clear the 0.92 dedup threshold against
+their original?</li>
+<li>How often does deep reconsolidation rewrite content, and does anyone
+inspect <code>node_versions</code> afterwards?</li>
+<li>Does link-discover re-propose links the evaluator soft-deleted, and
+at what token cost per week?</li>
+<li>What does the hosted TideMind Cloud do with the metabolism tasks the
+client's reconciler anticipates?</li>
+<li>How do several MCP processes and the daemon behave under
+<code>busy_timeout</code> contention on a large store? A contention test
+exists and was not read in full.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong> <code>src/db/schema.ts</code>,
+<code>src/db/nodes.ts</code>, <code>src/db/links.ts</code>,
+<code>src/db/node-lifecycle.ts</code>, <code>src/db/fts.ts</code>,
+<code>src/db/vectors.ts</code>.</li>
+<li><strong>Write:</strong> <code>src/tools/digest.ts</code>,
+<code>src/graph/landing.ts</code>, <code>src/graph/dedup.ts</code>,
+<code>src/stream/writer.ts</code>,
+<code>src/db/pending-digests.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/tools/recall.ts</code>,
+<code>src/tools/recall-input.ts</code>,
+<code>src/search/hybrid.ts</code>, <code>src/search/bm25.ts</code>,
+<code>src/search/vector.ts</code>, <code>src/graph/expansion.ts</code>,
+<code>src/utils/freshness.ts</code>.</li>
+<li><strong>Context:</strong> <code>src/tools/prepare.ts</code>,
+<code>src/hook-session-start.ts</code>,
+<code>src/hook-session-format.ts</code>,
+<code>data/skill/base-skill.md</code>.</li>
+<li><strong>Background:</strong> <code>src/metabolism/tasks.ts</code>,
+<code>scheduler.ts</code>, <code>annotate.ts</code>,
+<code>link-evaluate.ts</code>, <code>pending-link-gc.ts</code>,
+<code>link-discover.ts</code>, <code>reconsolidate.ts</code>,
+<code>synaptic.ts</code>, <code>divergent.ts</code>,
+<code>tag-promote.ts</code>.</li>
+<li><strong>MCP and desktop:</strong> <code>src/index.ts</code>,
+<code>src/mcp-tool-contracts.ts</code>,
+<code>client/electron/ipc/write.ts</code>,
+<code>client/electron/ipc/nodes.ts</code>.</li>
+<li><strong>Tests:</strong> <code>tests/graph/expansion.test.ts</code>,
+<code>tests/search/hybrid.test.ts</code>,
+<code>tests/db/links-rejection.test.ts</code>,
+<code>tests/metabolism/tag-promote-rejection.test.ts</code>,
+<code>tests/tools/edit-node-flow.test.ts</code>,
+<code>tests/tools/recall.test.ts</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n "rejected_by_user" -g '!tests/**'</code> — one writer,
+<code>client/electron/ipc/nodes.ts:584</code>; readers in
+<code>src/db/links.ts</code>, <code>annotate.ts</code>,
+<code>link-evaluate.ts</code>, <code>structure-holes.ts</code> and the
+client.</li>
+<li><code>rg -n "getRejectedTag|getRecentRejected" src client/electron</code>
+— <code>annotate.ts:13</code>, <code>:109</code>, <code>:117</code>
+only.</li>
+<li><code>rg -ln "rejectedTagNames|getRejectedTagNamesForNode" tests</code>
+— no match; the annotate filter is untested.</li>
+<li><code>rg -n "node_versions" src client/electron</code> — inserts at
+<code>src/db/nodes.ts:159</code> and
+<code>src/metabolism/divergent.ts:577</code>; one DELETE,
+<code>src/db/node-lifecycle.ts:54</code>.</li>
+<li><code>rg -n "UPDATE nodes SET[^'\</code>]*content" src
+client/electron<code>—</code>divergent.ts:582` only.</li>
+<li><code>rg -n "DELETE FROM (timeline_events|operation_log|node_versions)" -g '!tests/**'</code>
+— <code>node-lifecycle.ts:54</code> only.</li>
+<li><code>rg -n "linkExists" src/metabolism/link-discover.ts</code> —
+<code>:92</code>, <code>:155</code>; <code>linkExists</code> checks
+<code>deleted = 0</code> (<code>src/db/links.ts:211-227</code>).</li>
+<li><code>rg -n "from_agents|fromAgents" src</code> — the contract, the
+handler, the types, <code>recall-input.ts</code>, <code>recall.ts</code>
+and <code>listNodes</code>; in <code>prepare.ts</code> only inside the
+guidance string (<code>:227</code>), and none in
+<code>src/graph/expansion.ts</code>.</li>
+<li><code>rg -n "isVecLoaded" tests/tools/edit-node-flow.test.ts</code>
+— mocked to <code>false</code> at <code>:47</code>.</li>
+<li><code>rg -n -o -i 'arxiv[^ ]{0,40}|bibtex|@article|@misc|doi\.org[^ ]{0,30}|CITATION' .</code>
+— every hit is inside <code>elicitation</code>; no paper and no
+<code>CITATION.cff</code>.</li>
+<li><code>rg -n -i 'renamed|formerly' -g '*.md' .</code> — no match. The
+code migrates <code>~/.external-brain</code> to <code>~/.tidemind</code>
+(<code>src/index.ts:37</code>), and
+<code>rg -il 'external-brain|external brain'</code> over the atlas's
+<code>content/</code> finds no report under the old name.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/SawyerHan-AI/TideMind/commit/29cef6271b6e044923d4bf740efcc4c114c55225"><code class="commit-id" title="29cef6271b6e044923d4bf740efcc4c114c55225">29cef627…</code></a>
+— first reading, at the head of <code>main</code>, a commit from the
+same day. Four marks: <code>tombstone</code>, <code>trust_state</code>,
+<code>audit_log</code>, <code>negative_eval</code>; section 9 names the
+three withheld. Screened before reading: no auto-run surface, two
+build-time execution points (an npm <code>postinstall</code> running
+<code>electron-rebuild</code>, and a <code>binding.gyp</code> native
+addon), five dependency files inside the cooldown — every file in a
+depth-1 clone dates to the tip — four unpinned surfaces, and no
+agent-instruction file. Read with <code>rg</code> and <code>sed</code>;
+nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

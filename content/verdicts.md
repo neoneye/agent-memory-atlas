@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 692 reports.**
+**This page covers all 693 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6243,3 +6243,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 43,765 lines of Python and 624 commits by one contributor between 1 May and 30 September 2026, self-described Alpha. 1,557 test functions run on Ubuntu and Windows in CI. One mark, `negative_eval`, on the shared-view hub's refusal of another view's package; `scope_enforced` is withheld because question views bypass the view key; the retrieval experiment's labelled cases are not committed.
 - Study when: you want memory curated by a model without trusting the model's writes — worktree isolation, runtime validation, exact-input records and fenced cross-device coordination are each separable.
 - Do not copy when: memory must stay on one machine, transcripts must not be mined, or shared memory must be partitioned finer than a whole root. Every write, read and background loop spends model tokens.
+
+### [`tidemind`](../systems/tidemind/)
+
+- Best idea: **a person's tag rejection outlives re-annotation.** `links:rejectTag` on the desktop flips the node-to-tag link to `rejected_by_user` instead of deleting it, and `runAnnotation` drops any model-proposed tag whose case-folded name matches a rejected one for that node, while `linkExists` keeps tag-promote from re-linking it. Deep reconsolidation resets a node to unannotated, so the refusal is exercised, and decay and pending GC never touch the rejected row.
+- Biggest risk: **the model owns the text.** Recall triggers a deep reconsolidation that can replace a memory's content, and the dedup merge runs under a prompt that says the newer input wins on conflict, so a re-digest of a value the agent corrected can overwrite the correction. `node_versions` keeps the prior text; nothing surfaces the rewrite.
+- Most reusable component: `findLandingConnections` in `src/graph/landing.ts` with `runLinkEvaluate` in `src/metabolism/link-evaluate.ts` — similarity thresholds that write a confirmed or pending link, forced pending for low-actuality nodes, and an LLM judge that confirms or soft-deletes, with graph expansion restricted to confirmed links.
+- Second risk: **the desktop edit can hide what it edits.** `write:editNode` digests the new text with the dedup merge enabled; an edit 0.92 similar to its original is merged into the old node and archived, and the handler then supersedes the old node with the archived one. The flow test mocks vectors off, the setting that skips that branch.
+- Maturity impression: MIT, 50,239 lines of TypeScript in `src/` plus 92,059 in the Electron client, 150 commits on main by 3 contributor identities from 13 April to 30 September 2026. Four marks, `tombstone`, `trust_state`, `audit_log` and `negative_eval`, each resting on one subsystem. 4,728 Vitest cases in 386 files run in CI; the exclusion cases carry live controls, while the annotate rejection filter and the `node_versions` append have no test.
+- Study when: you want a pending-then-confirmed edge pipeline, a value-keyed rejection fed back into a background tagger, or lifecycle predicates applied consistently across FTS, vector and graph arms.
+- Do not copy when: memory has to stay as written, a correction has to hold against a later digest, or agents and tenants need separate scopes — the store is one graph for every agent, and `from_agents` filters on a string the writer supplies.
