@@ -391,6 +391,7 @@ page_kind: comparison
 - [`dreamgraph`](../systems/dreamgraph/)
 - [`flowly`](../systems/flowly/)
 - [`global-agent-memory`](../systems/global-agent-memory/)
+- [`recollect`](../systems/recollect/)
 
 ## Repos Inspected
 
@@ -1086,6 +1087,7 @@ page_kind: comparison
 - [mmethodz/dreamgraph](https://github.com/mmethodz/dreamgraph) at [`563d10c8109cbe3388cde71168bdcff149c96e0f`](https://github.com/mmethodz/dreamgraph/commit/563d10c8109cbe3388cde71168bdcff149c96e0f) — read only, at the head of `main`, released as v13.4.0 and dated 30 September 2026. DreamGraph Source-Available Community License v2.0, non-commercial; production and commercial use need a separate licence. Screened before reading: 1 auto-run surface (`.github/copilot-instructions.md`, treated as data), 0 build-time execution points, 9 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 5 unpinned surfaces beside a root lockfile. Nothing was installed, built or executed.
 - [Nocetic/flowly](https://github.com/Nocetic/flowly) at [`a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c`](https://github.com/Nocetic/flowly/commit/a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c) — read only, at the head of `main`, a commit dated 17 September 2026. Apache-2.0. Screened before reading: no auto-run surface, 5 build-time execution points (three `setup.py`, two `conftest.py`), 3 unpinned surfaces (two `package.json`, one skill `requirements.txt`) and nothing inside the cooldown; no agent-instruction file in the tree. Only the memory subsystem was read. Nothing was installed, built or executed.
 - [ozankasikci/global-agent-memory](https://github.com/ozankasikci/global-agent-memory) at [`53480fd2906b41c9921326f1c61e4c42fe8d5134`](https://github.com/ozankasikci/global-agent-memory/commit/53480fd2906b41c9921326f1c61e4c42fe8d5134) — read only, at the head of `main`, a commit dated 1 September 2026. MIT. Screened before reading: 1 auto-run surface (`server.json`, an MCP registry manifest naming the PyPI package), 1 build-time execution point (`Makefile`), 1 unpinned surface (`dashboard/package.json`, lockfile present) and nothing inside the cooldown; `dashboard/AGENTS.md` and the integration snippets were treated as data. Nothing was installed, built or executed.
+- [MikeK184/Recollect](https://github.com/MikeK184/Recollect) at [`6a85f6a1ec1e6ca69eb0ecf66aa73f781b30a75c`](https://github.com/MikeK184/Recollect/commit/6a85f6a1ec1e6ca69eb0ecf66aa73f781b30a75c) — read only, at the head of `main`, a commit dated 30 September 2026. Apache-2.0. Screened before reading: 1 auto-run surface (`.opencode/`, six agent prompt files), no build-time execution point, 10 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 1 unpinned surface (`web/package.json`, lockfile present); `opencode.json` and `.codex/config.toml` declare MCP servers launched with `npx -y`, which the screen does not flag; `AGENTS.md` was treated as data. Read with `grep`, `sed` and `awk`; nothing was installed, built or executed.
 
 ## What the licences actually say
 

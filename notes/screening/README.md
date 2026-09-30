@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 690 of 690 screened at the report's current pin.**
+**Progress: 691 of 691 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 323 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 372 |
+| Repositories with an auto-run surface (`RUNS`) | 324 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 373 |
 | Repositories with build-time execution (`EXEC`) | 502 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
@@ -291,6 +291,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`re-call`](../../content/systems/re-call.md) | `.claude-plugin/`, `hooks/`, `server.json` |
 | [`reasonix`](../../content/systems/reasonix.md) | `.githooks/` |
 | [`recallnest`](../../content/systems/recallnest.md) | `.claude-plugin/`, `.mcp.json` |
+| [`recollect`](../../content/systems/recollect.md) | `.opencode/` |
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
 | [`reflexion`](../../content/systems/reflexion.md) | `.gitmodules` |
 | [`rekal`](../../content/systems/rekal.md) | `.claude-plugin/`, `.gitattributes` |

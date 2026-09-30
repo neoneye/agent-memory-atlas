@@ -513,6 +513,8 @@ first row's reason and time.
 
 [MeMesh](../../systems/memesh/) carries the narrowest instance in the corpus that still fits the definition, and its scope is exactly where its rejections arise. The Stop hook restates three per-session snapshot entities from the transcript on every turn, which is a re-extraction from a retained source by construction; removing one observation from such a snapshot writes the SHA-256 of its exact text into `metadata.forgotten_observation_hashes` in the same transaction, and `captureEntity` drops any restated line whose hash is listed. Untrusted writes filter it as well, and only a trusted explicit write clears it. There is no normalisation, the list lives on one session's entity, and entity-level `forget` is ordinary archival that a plain `remember` reverses.
 
+[Recollect](../../systems/recollect/) consults its rule at every write and suppresses on the read, and the read half reaches past the claim store. A reject, correct or withdraw review writes an `assertion_rules` row keyed on the normalised subject, predicate and value; a later proposal of that value from any writer is stored as `blocked_by_rule` and cleared from every eligibility gate, and recall withholds any raw source chunk whose text contains all three keys, so a copied note repeating the corrected value stays out outside history mode. Its committed case asserts exactly that after a positive lexical control, a `REINDEX` and a rebuilt router. The two limits are the text key, which a paraphrase walks past, and erasure, which blanks the rule's keys with the claim it came from.
+
 ### Sorted by what actually stops the value
 
 The mark covers four different mechanisms. The table sorts the holders this page

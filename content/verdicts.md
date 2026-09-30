@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 690 reports.**
+**This page covers all 691 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6223,3 +6223,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 10,117 lines of Python and 2,764 of TypeScript, 267 commits on main by 2 contributors between 12 July and 1 September 2026. Three marks: `trust_state` on a default `active` filter, `audit_log` on an append-only mutation file, and `negative_eval` on a populated nine-note project-and-status isolation test. 164 Python test functions and no CI workflow in the tree.
 - Study when: you want a single-owner, human-readable memory with serious transactional hygiene — idempotency, optimistic concurrency, atomic file moves between lifecycle folders — and a protected-memory grant flow for an MCP-only client.
 - Do not copy when: the review queue must bind. Promotion is on the agent's surface twice, the audit cannot say who approved, a rejected text can be proposed again unflagged, and an agent with a shell reads protected and sealed bodies straight from the Vault.
+
+### [`recollect`](../systems/recollect/)
+
+- Best idea: **key the rejection on the value and apply it to evidence, not only to claims.** `assertion_rules` holds normalised subject, predicate and value keys; `memory::save`, the learning worker and handover generation stamp a match `blocked_by_rule`, and recall withholds any source chunk whose text contains all three keys, so a copied note repeating a corrected value stays out of every mode but history.
+- Biggest risk: **the default policy routes around the review gate.** Every Brain the browser creates enables capture of prompts, replies and tool results and the autonomous policy, under which the learning worker marks model extractions `accepted_by_policy`. A bearer token may import a source and queue learning, so an agent's own text can become strict-eligible memory with no person involved.
+- Most reusable component: `crates/server/src/memory_policy.rs` (`eligibility`) with `crates/server/src/retrieval_candidates.sql` — one status and scope predicate computed in Rust and mirrored in the single candidate query that lexical, semantic and graph recall all wrap, re-checked per item after ranking.
+- Second risk: **erasure removes the ban it protected.** Erasing a rejected claim or its evidence blanks the rule's keys, and rules match normalised text only, so a paraphrase, or a value erased and then relearned, is readmitted.
+- Maturity impression: Apache-2.0, 41,514 lines of Rust under crates/*/src, 30 commits on main by one contributor with author dates from 6 April to 30 September 2026 in a repository created on 16 September 2026, and 207 Rust test functions, 169 of them needing the project's PostgreSQL, with no CI workflow in the tree. Seven marks. The project's design documents name this atlas as an input.
+- Study when: you are building correctable, auditable memory for a team's coding agents with per-repository applicability, and want rejection rules, review authority and fact-time and knowledge-time reads enforced in SQL.
+- Do not copy when: you want a light single-user store, or you need every accepted memory to have passed a person — the default configuration does not require it.
