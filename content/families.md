@@ -3983,6 +3983,20 @@ days whether or not it was ever discharged. An obligation is the one memory type
 where the correct behaviour is to persist undiminished until it is met and then
 stop, which is a state machine and not a half-life.
 
+[Counterparts](../systems/counterparts/) takes the retrieval side of the boundary
+dispute below on purpose. A dated memory's arriving window is not a scheduled
+fire: *"Arrival is a cue, not a command. There is no bypass lane"*
+(`src/core/prospective/CONTRACT.md:20`), so the calendar reaching the date enters
+the same activation, gate and tier competition as a word in the user's turn
+(`src/core/counterpart.ts:1998-2013`). Its stated rule is *"Hold debts, lose
+deadlines"* (`CONTRACT.md:13`): a memory that surfaces at its first retrievable
+moment is a task queue, not memory. Of the three requirements below it meets
+none outright. The trigger is a date, not a meaning. Prospectivity is derived
+from the event date and never stored, so there is no open or done state
+(`CONTRACT.md:40-43`). Archival keeps a row from arriving, but it is keyed on the
+row. The one bypass lane is a `remind: "plain"` item the author asked to be told
+outright on its day (`CONTRACT.md:25`).
+
 Four occupants bracket the design question rather than settling it. A declared
 commitment is a memory; an inferred commitment is a claim about someone's
 intentions, which is a stronger claim than any preference in this atlas and the

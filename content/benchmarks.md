@@ -3247,6 +3247,36 @@ exist.
 
 <a id="contradiction-test"></a>
 
+### A benchmark that scores forgetting in every query, and the audit that sinks its headline
+
+`mlapeter/recall-bench` (RECALL) is a memory benchmark by the author of
+[Counterparts](../systems/counterparts/), read at
+[`bcdb3dd630efc0e1794c59aec06c7f20ab44d953`](https://github.com/mlapeter/recall-bench/commit/bcdb3dd630efc0e1794c59aec06c7f20ab44d953),
+MIT. It gets no report because it stores nothing. It scores fifteen dimensions
+on a world axis and a self axis, among them `decay`, `correction` ("superseded
+answers never resurface"), `calibration` (abstain rather than confabulate) and
+`prospective` (`README.md:26-47`). The mechanism this page keeps asking for is
+built into the scorer. Every Tier 1 query combines `recall`, `verbatim`,
+`abstention` and a `forget` component that requires stale keywords to be
+**absent** (`README.md:185`), so a correction query fails a system that
+returns the superseded value next to the new one.
+
+The shipped table makes the argument. A store-everything BM25 adapter posts the
+highest headline, 56.9%, while scoring 38% on correction and 2% on calibration.
+The author's own engram v3 scores 52% on correction, or 65% once the benchmark
+projects its virtual clock onto the system's wall clock (`README.md:53-64`).
+
+**The part worth copying is `VALIDITY.md`, which the author ran against their
+own benchmark and published.** A full-context reread with no memory system
+scores 90.1%, 33 or more points above every memory system, and no dimension
+resists it. Run-to-run noise is ±2.9 points on the headline and up to ±10 per
+dimension. Both mechanism ablations failed their predictions: turning decay off
+did not move `decay`, and turning interference on did not move `interference`
+or `correction` (`VALIDITY.md:10-30`). Its own guidance is *"do not target the
+Tier 1 headline"*. Three limits stand beside that candour. The corpus is
+frozen, results exist for three adapters, one of them the author's, and
+Counterparts itself is not scored. This project has run none of it.
+
 ## 7. The Contradiction Test
 
 Forgetting has no benchmark, only

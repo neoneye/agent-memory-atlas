@@ -164,6 +164,23 @@ Mere retrieval is at most a usefulness signal.</p>
 <p>Protect verified, pinned, legally retained, and correction/tombstone
 records from ordinary pruning. Keep a reactivation path and enough audit
 history to explain why strength changed.</p>
+<p><strong>Say which kind of forgetting each step performs.</strong>
+Memory research separates a trace that is gone from one that is intact
+but no longer found, and the distinction maps onto code exactly: a
+filter on reads is a retrieval failure, and a delete is forgetting. The
+two need different guarantees. A retrieval failure should be reversible
+and readable by id; forgetting should be a deliberate act with a record.
+<a href="../../systems/counterparts/">Counterparts</a> keeps them apart.
+Its nightly prune archives a row below strength 0.02 after 90 lived days
+of dwell, and an archived row leaves every recall read but stays
+readable by its own id. Removal is a separate owner verb with its own
+append-only <code>removal_record</code>. <a
+href="../../systems/roampal-core/">roampal-core</a> shows the collapse.
+<code>delete_memory</code> sets <code>status=archived</code>,
+<code>restore()</code> has no caller outside tests, and
+<code>cleanup_archived()</code> hard-deletes every archived row on the
+first access to the profile after a server start. An archive that reads
+as retrieval failure becomes forgetting at the next restart.</p>
 <h2 id="why-it-works">Why it works</h2>
 <p>The corpus can forget operationally without pretending old means
 false. Durable truths remain recoverable, temporary details fade, and
