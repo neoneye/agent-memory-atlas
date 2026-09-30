@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 676 reports.**
+**This page covers all 677 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6085,3 +6085,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT by README with no `LICENSE` file, 185 commits by 11 contributors from 30 June to 29 August 2026, 51,442 lines of Python in the server, and 1,242 test functions of which CI runs only the SDK's. Two marks — `scope_enforced` on the project key and `negative_eval` on a store-level cross-project read with a positive control. Benchmark figures match the paper and are not recomputable from the tree; the eval runs use presets named for LoCoMo and PersonaMem.
 - Study when: you are building a multi-tenant memory service and want a worked mutation-plan boundary, a gate between model-proposed actions and writes, and entity property timelines fed by extraction.
 - Do not copy when: end users within one tenant must not see or merge each other's memories, when a deleted fact must stay deleted, or when one developer wants local memory for a coding agent — the stack is three services and an LLM call per stored turn.
+
+### [`lindahaviv-second-brain`](../systems/lindahaviv-second-brain/)
+
+- Best idea: **license deletion with evidence that the distiller ran.** `memory_expire.py` rotates the raw run log and dialogue turns after 90 days, and refuses with a failing exit unless the newest consolidation fact is at most seven days old, so a broken consolidator cannot let months of undistilled experience expire. Content rows are appended to a local archive first; rows tagged `business` are deliberately not archived, because a privacy floor that keeps a copy is not one.
+- Biggest risk: **every consolidation deletes every fact and inserts what the model returned.** `semantic_memory.consolidate` feeds the prior facts back as input and asks for the full updated set, then runs `DELETE … WHERE source = 'consolidation'` and reinserts in one transaction. A failed call rolls back; a successful short or empty answer replaces the set, and nothing compares the counts. A fact has no identity across runs, so a person who deletes a wrong one by SQL has not stopped the next run deriving it again.
+- Most reusable component: `oracle/agent/oamp_memory.py`'s `violates_privacy` and `enforce_privacy` — a regex deny-list shared by every memory writer as a write-time tag and run after the managed extractor as a deletion sweep, because a prompt instruction to the extractor was shown to leak a contract term.
+- Second risk: **one of the two MCP write tools skips the deny-list.** `save_chat` stores a chat summary with `visibility` hardcoded to `content`, the classifier covers only imported chat platforms, and the notes check covers only `note` posts, so a saved conversation that mentions a fee is searchable. The chat-capture gate that would filter it is unit-tested and has no caller in the tree.
+- Maturity impression: MIT, 12,304 lines of Python outside tests and 368 of SQL, 331 commits on main by one contributor from 14 June to 20 September 2026, 177 test functions and five eval scripts. Two marks: `scope_enforced` on the sensitivity key, and `negative_eval` on privacy tests with positive controls, which need a live Oracle container and have no CI workflow in the tree.
+- Study when: you want a personal knowledge base reachable from several assistants, and want to see sensitivity enforced in SQL on every read with the tag set by a deterministic check rather than a prompt.
+- Do not copy when: facts must be correctable, attributed or stable across runs, or more than one person shares the store. The distilled layer is a nightly snapshot without provenance, and the default backend cannot be inspected.

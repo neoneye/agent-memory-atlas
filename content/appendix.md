@@ -377,6 +377,7 @@ page_kind: comparison
 - [`obelyth-cortex`](../systems/obelyth-cortex/)
 - [`cortex-hub`](../systems/cortex-hub/)
 - [`mindmemos`](../systems/mindmemos/)
+- [`lindahaviv-second-brain`](../systems/lindahaviv-second-brain/)
 
 ## Repos Inspected
 
@@ -1058,6 +1059,7 @@ page_kind: comparison
 - [Obelyth/cortex](https://github.com/Obelyth/cortex) at [`ec57124a90ba9c378c5a9b989fe0f5d8f9c98da3`](https://github.com/Obelyth/cortex/commit/ec57124a90ba9c378c5a9b989fe0f5d8f9c98da3) — read only, at the head of `main`, a commit dated 17 September 2026. AGPL-3.0-only. Screened before reading: 1 auto-run surface (`.devcontainer/devcontainer.json`, `postCreateCommand` `npm ci --ignore-scripts`), no build-time execution point, nothing inside the cooldown and 1 unpinned surface (`package.json`, 12 floating ranges with `package-lock.json` present); no agent-addressed files. Nothing was installed, built or executed.
 - [lktiep/cortex-hub](https://github.com/lktiep/cortex-hub) at [`e47a15773d326f3d9accd4abc33a57315eac71a9`](https://github.com/lktiep/cortex-hub/commit/e47a15773d326f3d9accd4abc33a57315eac71a9) — read only, at the head of `master`, a commit dated 28 September 2026. MIT. Screened before reading: 4 auto-run surfaces (`.claude/hooks/`, `.claude/settings.json`, `.claude/settings.local.json`, `.cursorrules`), 0 build-time execution points, 10 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 9 unpinned surfaces resolved by the root `pnpm-lock.yaml`; `AGENTS.md`, `CLAUDE.md` and `.cursorrules` were treated as data. No checkout filter and no submodules. Nothing was installed, built or executed.
 - [mindscale-noah/MindMemOS](https://github.com/mindscale-noah/MindMemOS) at [`186db4a75122b1d8691933f280bec10191c82c28`](https://github.com/mindscale-noah/MindMemOS/commit/186db4a75122b1d8691933f280bec10191c82c28) — read only, at the head of `main`, a merge of `develop` dated 29 August 2026. MIT as stated in the README; the tree has no `LICENSE` file and GitHub reports none. Screened before reading: 0 auto-run surfaces, 4 build-time execution points, 0 dependency files inside the cooldown and 5 unpinned surfaces; `skills/mindmemos-cli/SKILL.md` was treated as data. Nothing was installed, built or executed.
+- [LindaHaviv/second-brain](https://github.com/LindaHaviv/second-brain) at [`4890df9fe9e4ebbea8fc1ad34ec39c22594188f7`](https://github.com/LindaHaviv/second-brain/commit/4890df9fe9e4ebbea8fc1ad34ec39c22594188f7) — read only, at the head of `main`, a commit dated 20 September 2026. MIT. Screened before reading: 1 auto-run surface (`.claude/settings.json`, a PreToolUse hook blocking agent edits to `.env` files), no build-time execution point, nothing inside the cooldown and 1 unpinned surface (`oracle/agent/requirements.txt`); `AGENTS.md` and `CLAUDE.md` were treated as data. The default backend's `oracleagentmemory` package, which publishes wheels only, was not read. Nothing was installed, built or run.
 
 ## What the licences actually say
 

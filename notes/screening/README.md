@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 676 of 676 screened at the report's current pin.**
+**Progress: 677 of 677 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 314 |
+| Repositories with an auto-run surface (`RUNS`) | 315 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 366 |
 | Repositories with build-time execution (`EXEC`) | 494 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
@@ -166,6 +166,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`leankg`](../../content/systems/leankg.md) | `.claude-plugin/` |
 | [`leteo`](../../content/systems/leteo.md) | `.claude-plugin/`, `server.json` |
 | [`light-mem`](../../content/systems/light-mem.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md` |
+| [`lindahaviv-second-brain`](../../content/systems/lindahaviv-second-brain.md) | `.claude/settings.json` |
 | [`linggen-memory`](../../content/systems/linggen-memory.md) | `.claude-plugin/` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
 | [`lobu`](../../content/systems/lobu.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitmodules`, `server.json` |

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 676 reports.</strong></p>
+<p><strong>This page covers all 677 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -27977,6 +27977,54 @@ and writes, and entity property timelines fed by extraction.</li>
 each other's memories, when a deleted fact must stay deleted, or when
 one developer wants local memory for a coding agent — the stack is three
 services and an LLM call per stored turn.</li>
+</ul>
+<h3 id="lindahaviv-second-brain"><a
+href="../systems/lindahaviv-second-brain/"><code>lindahaviv-second-brain</code></a></h3>
+<ul>
+<li>Best idea: <strong>license deletion with evidence that the distiller
+ran.</strong> <code>memory_expire.py</code> rotates the raw run log and
+dialogue turns after 90 days, and refuses with a failing exit unless the
+newest consolidation fact is at most seven days old, so a broken
+consolidator cannot let months of undistilled experience expire. Content
+rows are appended to a local archive first; rows tagged
+<code>business</code> are deliberately not archived, because a privacy
+floor that keeps a copy is not one.</li>
+<li>Biggest risk: <strong>every consolidation deletes every fact and
+inserts what the model returned.</strong>
+<code>semantic_memory.consolidate</code> feeds the prior facts back as
+input and asks for the full updated set, then runs
+<code>DELETE … WHERE source = 'consolidation'</code> and reinserts in
+one transaction. A failed call rolls back; a successful short or empty
+answer replaces the set, and nothing compares the counts. A fact has no
+identity across runs, so a person who deletes a wrong one by SQL has not
+stopped the next run deriving it again.</li>
+<li>Most reusable component: <code>oracle/agent/oamp_memory.py</code>'s
+<code>violates_privacy</code> and <code>enforce_privacy</code> — a regex
+deny-list shared by every memory writer as a write-time tag and run
+after the managed extractor as a deletion sweep, because a prompt
+instruction to the extractor was shown to leak a contract term.</li>
+<li>Second risk: <strong>one of the two MCP write tools skips the
+deny-list.</strong> <code>save_chat</code> stores a chat summary with
+<code>visibility</code> hardcoded to <code>content</code>, the
+classifier covers only imported chat platforms, and the notes check
+covers only <code>note</code> posts, so a saved conversation that
+mentions a fee is searchable. The chat-capture gate that would filter it
+is unit-tested and has no caller in the tree.</li>
+<li>Maturity impression: MIT, 12,304 lines of Python outside tests and
+368 of SQL, 331 commits on main by one contributor from 14 June to 20
+September 2026, 177 test functions and five eval scripts. Two marks:
+<code>scope_enforced</code> on the sensitivity key, and
+<code>negative_eval</code> on privacy tests with positive controls,
+which need a live Oracle container and have no CI workflow in the
+tree.</li>
+<li>Study when: you want a personal knowledge base reachable from
+several assistants, and want to see sensitivity enforced in SQL on every
+read with the tag set by a deterministic check rather than a
+prompt.</li>
+<li>Do not copy when: facts must be correctable, attributed or stable
+across runs, or more than one person shares the store. The distilled
+layer is a nightly snapshot without provenance, and the default backend
+cannot be inspected.</li>
 </ul>
         </article>
       </div>

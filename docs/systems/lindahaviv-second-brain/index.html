@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-user second brain on
+Oracle 26ai whose memory rows carry a write-time sensitivity tag every
+read filters, beside a nightly rewrite of all facts.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="second-brain
+(LindaHaviv) — Agent Memory Atlas">
+    <meta property="og:description" content="A single-user second brain
+on Oracle 26ai whose memory rows carry a write-time sensitivity tag
+every read filters, beside a nightly rewrite of all facts.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="second-brain
+(LindaHaviv) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-user second brain
+on Oracle 26ai whose memory rows carry a write-time sensitivity tag
+every read filters, beside a nightly rewrite of all facts.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>second-brain (LindaHaviv) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "second-brain (LindaHaviv)",
+      "description": "A single-user second brain on Oracle 26ai whose memory rows carry a write-time sensitivity tag every read filters, beside a nightly rewrite of all facts.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A privacy-scoped personal brain on one
+Oracle database</p>
+          <h1>second-brain (LindaHaviv)</h1>
+          <p class="document-deck">A single-user second brain on Oracle
+26ai whose memory rows carry a write-time sensitivity tag every read
+filters, beside a nightly rewrite of all facts.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/LindaHaviv/second-brain">
+              <span>Source</span>
+              <strong>LindaHaviv/second-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/LindaHaviv/second-brain/commit/4890df9fe9e4ebbea8fc1ad34ec39c22594188f7" title="4890df9fe9e4ebbea8fc1ad34ec39c22594188f7">
+              <span>Analyzed revision</span>
+              <code>4890df9f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/LindaHaviv--second-brain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>LindaHaviv--second-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>12,304
+lines of Python outside tests and 368 of SQL; the memory layer is about
+1,070 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>331
+commits on main by one contributor, 14 June 2026 – 20 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>177
+test functions and five eval scripts in 3,294 lines; the integration
+cases need a running Oracle container</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>second-brain is a single-user personal knowledge base on Oracle AI
+Database 26ai. Loaders pull a creator's posts, transcripts, notes and AI
+chats into one <code>posts</code> model. A research agent answers over
+them and writes each run to an episodic table, a nightly LLM pass
+distills those runs into semantic facts, and an MCP server exposes it
+all to Claude, ChatGPT and a phone.</p>
+<p>What is notable is how privacy is enforced in the memory layer. A
+deterministic regex deny-list runs at write time and tags a run or a
+dialogue turn <code>business</code>; every read of those tables filters
+to <code>content</code> in SQL. The raw log expires after 90 days only
+while consolidation is demonstrably running.</p>
+<p>What is weak is the distilled layer. Each consolidation deletes every
+fact and inserts the model's new set, with nothing comparing the
+two.</p>
+<p><strong>Two backends, one of them uninspectable.</strong> The default
+memory core is Oracle's <code>oracleagentmemory</code> package
+(<code>oracle/agent/oamp_memory.py</code>), selected unless
+<code>MEMORY_BACKEND=custom</code> or <code>LLM_PROVIDER=ollama</code>
+(<code>oracle/agent/research_agent.py:29-50</code>). Its 26.6.0 release
+on PyPI ships wheels only, with no sdist and no source repository in its
+metadata; its design is described in <a
+href="https://arxiv.org/abs/2607.13157">arXiv:2607.13157</a> (Alake et
+al., 14 July 2026). This report reads the in-tree code: the hand-built
+<code>custom</code> backend, the episodic and procedural layers both
+backends use, and the privacy sweep this repository runs over the
+package's table.</p>
+<p><strong>Scope.</strong> The loaders, the wiki compiler and the Notion
+and social integrations are a content pipeline and are covered only
+where they write rows the memory reads. The memory is the four tables in
+<code>oracle/schema/02</code>, <code>03</code>, <code>05</code> and
+<code>06</code>, and the MCP write tools that the tool descriptions
+present as <em>"remember that…"</em>.</p>
+<p>Two marks: <code>scope_enforced</code> on the sensitivity key, and
+<code>negative_eval</code> on the privacy tests with positive controls.
+Section 9 names the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>Episodic memory is ground truth about what the agent
+did.</strong> <code>record</code> writes one <code>agent_memory</code>
+row per research run: the question, the answer's first 500 characters,
+an outcome of <code>success</code> or <code>failure</code>, a reward of
+1.0 or 0.0, and a <code>detail</code> naming the sources the answer used
+(<code>oracle/agent/research_agent.py:337-351</code>). Outcome is
+<code>success</code> when the answer opened or named a source, not when
+it was right. A row stops being a belief only when it expires.</p>
+<p><strong>The sensitivity tag is decided once, at write time.</strong>
+<code>record</code> and <code>record_turn</code> call
+<code>violates_privacy</code> on the text and write
+<code>business</code> on a match
+(<code>oracle/agent/memory.py:21-23</code>;
+<code>conversation.py:18-19</code>). The patterns are money amounts,
+money words within 40 characters of a digit, contract vocabulary and
+banking terms, extended by comma-separated regexes in
+<code>OAMP_DENY_EXTRA</code> (<code>oamp_memory.py:71-88</code>). A
+business row is kept, and no read path in the tree selects it.</p>
+<p><strong>Semantic memory is a snapshot, not a set of records.</strong>
+<code>consolidate</code> feeds the previous facts, 80 recent content
+titles, 30 content-scope runs and 30 content-scope user turns to the
+model, asks for the full updated set of about 40 facts, then deletes
+every <code>source = 'consolidation'</code> row and inserts the answer
+in one transaction (<code>semantic_memory.py:48-114</code>). A fact has
+no identity across runs. It survives only if the model repeats it, and
+it dies when the model omits it.</p>
+<p><strong>Nothing is held as uncertain.</strong> The verification pass
+rewrites an unsupported claim with the literal marker
+<em>(unverified)</em> in the answer text
+(<code>research_agent.py:90-99</code>), and the consolidator prompt says
+not to promote such claims (<code>semantic_memory.py:30-34</code>). That
+is an instruction to a model, not a state on a row.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a second-brain memory is tagged, read, distilled and retired on the custom backend, with the default backend's sweep beside it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a second-brain memory is tagged, read, distilled and retired on the custom backend, with the default backend&#39;s sweep beside it
+flowchart TD
+    RUN[&quot;research run: record()&quot;] --&gt; DENY{&quot;deny-list regex&lt;br/&gt;matches the text?&quot;}
+    TURN[&quot;ask.py turn or MCP search query:&lt;br/&gt;record_turn()&quot;] --&gt; DENY
+    DENY -- &quot;yes&quot; --&gt; BIZ[&quot;row kept,&lt;br/&gt;visibility = business&quot;]
+    DENY -- &quot;no&quot; --&gt; CON[&quot;row kept,&lt;br/&gt;visibility = content&quot;]
+    CON --&gt; READ[&quot;recall, recent_turns, Memory view:&lt;br/&gt;WHERE visibility = content&quot;]
+    BIZ -. &quot;selected by no read&quot; .-&gt; EXP
+    CON --&gt; CONS[&quot;consolidate(): prior facts,&lt;br/&gt;content runs and user turns to the LLM&quot;]
+    CONS --&gt; WIPE[&quot;DELETE every consolidation fact,&lt;br/&gt;INSERT the returned set&quot;]
+    WIPE --&gt; SEM[&quot;semantic_memory:&lt;br/&gt;no visibility column&quot;]
+    SEM --&gt; SR[&quot;semantic_recall:&lt;br/&gt;nearest facts, no filter&quot;]
+    SEM --&gt; CONS
+    CON --&gt; EXP{&quot;older than 90 days, and a&lt;br/&gt;consolidation under 7 days old?&quot;}
+    EXP -- &quot;yes&quot; --&gt; ARCH[&quot;content rows appended to&lt;br/&gt;memory_tombstones.jsonl&quot;]
+    ARCH --&gt; DEL[&quot;both scopes deleted&quot;]
+    SAVE[&quot;MCP save_chat&quot;] --&gt; POST[&quot;posts row,&lt;br/&gt;visibility = content, no deny check&quot;]
+    POST --&gt; READ
+    OAMP[&quot;default backend: exchange&lt;br/&gt;to the package thread&quot;] --&gt; EXT[&quot;package extractor,&lt;br/&gt;prompt privacy guard&quot;]
+    EXT --&gt; SWEEP[&quot;deny-list sweep:&lt;br/&gt;delete_memory on a match&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything lives in one Oracle schema, <code>CCC</code>, applied by
+<code>oracle/bootstrap.sh</code> from ten SQL files. The embedding model
+is MiniLM L12 loaded into the database as ONNX
+(<code>oracle/setup/01_load_onnx_model.sql</code>), so every INSERT
+computes its vector with
+<code>VECTOR_EMBEDDING(MINILM USING … AS DATA)</code> and search needs
+no API key. Recall is exact <code>VECTOR_DISTANCE</code> without an
+index; an HNSW index is an optional setup step
+(<code>oracle/schema/02_agent_memory.sql:33-35</code>).</p>
+<p>The Python is a set of modules under <code>oracle/agent/</code> and
+scripts under <code>scripts/</code>, with no package or service
+boundary. The MCP server (<code>oracle/agent/mcp_server.py</code>) runs
+over stdio or as a hosted Starlette app (<code>mcp_http.py</code>)
+behind WorkOS OAuth with an allowlist that refuses to start unconfigured
+(<code>mcp_server.py:43-58</code>). A read-only web UI is served from
+the same app and is off by default (<code>webui.py:1-20</code>).</p>
+<p>Background work is one scheduled script,
+<code>scripts/sync.py</code>, whose step list runs loaders, reconcile,
+wiki refresh, <code>Consolidate</code>,
+<code>Memory expiry --apply</code> and
+<code>Memory review --write</code> in order, and appends
+<code>OAMP privacy sweep</code> when the backend resolves to the package
+(<code>scripts/sync.py:35-75</code>). A step's failure is recorded and
+the sync continues.</p>
+<p>The default backend hands conversational and semantic memory to
+<code>OracleAgentMemory</code>, constructed over the repository's
+connection pool with the in-database embedder,
+<code>SearchStrategy.HYBRID</code> and the privacy rule passed as
+<code>memory_extraction_custom_instructions</code>
+(<code>oamp_memory.py:148-169</code>). The package creates its own
+<code>BRAIN_*</code> tables. Episodic and procedural memory stay in this
+repository's tables on both backends
+(<code>oamp_memory.py:8-20</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The documented path is Colima, the Oracle 26ai Free container, a
+Python 3.12 venv, <code>download-model.sh</code> and
+<code>bootstrap.sh</code>, on Apple Silicon. Search needs no LLM;
+consolidation, verification and the package's extraction need one, from
+Anthropic, OpenAI or Ollama. Fully local runs are possible on Ollama,
+which selects the custom backend. The store is plain SQL and readable by
+hand. The repository's own guidance is to fix a wrong memory with
+SQL.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Episodic write.</strong> <code>run_research</code> ends with
+<code>record(conn, "research", question, answer[:500], "research", outcome, reward, detail)</code>
+(<code>research_agent.py:349-351</code>). <code>record</code> clamps
+each column, tags visibility and inserts with the embedding of
+<code>task | action | detail</code> (<code>memory.py:10-37</code>).</p>
+<p><strong>Episodic recall.</strong> <code>recall</code> orders
+content-scope rows by cosine distance and returns the top k
+(<code>memory.py:40-59</code>). <code>run_research</code> recalls three
+and injects their <code>detail</code> lines as <em>"Prior research notes
+(episodic)"</em> (<code>research_agent.py:259-273</code>).</p>
+<p><strong>Dialogue.</strong> <code>record_turn</code> computes
+<code>seq</code> as <code>MAX(seq)+1</code> for the session and inserts
+(<code>conversation.py:14-29</code>). <code>recent_turns</code> returns
+the last twelve content-scope turns in order (<code>:32-46</code>).
+Callers are <code>ask.py:31-34</code>, the demos, and
+<code>_log_query</code>, which writes every first-page MCP search query
+as a user turn in an <code>mcp-&lt;date&gt;</code> session unless
+<code>MCP_READONLY</code> or <code>MCP_LOG_QUERIES=0</code>
+(<code>mcp_server.py:214-232</code>).</p>
+<p><strong>Consolidation.</strong> Triggered from
+<code>run_research</code> after five new runs on the custom backend
+(<code>research_agent.py:216-238</code>) and daily by
+<code>scripts/consolidate.py</code> on both. <code>consolidate</code>
+builds the prompt from content-scope inputs, calls
+<code>llm.structured</code> with a JSON schema, then deletes and
+reinserts inside a try/rollback
+(<code>semantic_memory.py:48-114</code>).</p>
+<p><strong>Semantic recall.</strong> <code>semantic_recall</code>
+returns the nearest facts with no filter
+(<code>semantic_memory.py:138-154</code>). On the default backend
+<code>recall_facts</code> searches the package with <code>user_id</code>
+and <code>exact_user_match=True</code>, then appends up to three
+consolidated facts whose first 60 characters are new
+(<code>oamp_memory.py:172-193</code>).</p>
+<p><strong>Procedural.</strong> <code>seed_tools</code> MERGEs the
+agent's tool list into <code>procedural_memory</code> once per process,
+and <code>select_tools</code> ranks tools by distance to the question;
+the result is a hint line in the prompt
+(<code>procedural.py:12-60</code>;
+<code>research_agent.py:195-213</code>).</p>
+<p><strong>Package exchange.</strong> <code>record_exchange</code>
+appends the Q/A pair to a process-wide thread, then calls
+<code>enforce_privacy(conn, hours=1)</code> over the package's memory
+table (<code>oamp_memory.py:196-217</code>).</p>
+<p><strong>Expiry.</strong> <code>memory_expire.main</code> counts rows
+older than <code>MEMORY_RETENTION_DAYS</code> (default 90), refuses with
+exit 1 unless the newest consolidation fact is at most seven days old,
+appends content-scope rows to
+<code>exports/memory_tombstones.jsonl</code>, then deletes old rows from
+both raw tables in one transaction
+(<code>scripts/memory_expire.py:52-147</code>).</p>
+<p><strong>MCP writes.</strong> <code>ingest_note</code> inserts a
+<code>note</code> post and paragraph chunks
+(<code>mcp_server.py:653-713</code>); <code>save_chat</code> inserts a
+<code>chat_capture</code> post with <code>visibility</code> set to the
+literal <code>'content'</code> (<code>:715-785</code>, the INSERT at
+<code>:748-752</code>). Both are registered only when
+<code>MCP_READONLY</code> is unset.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Key columns</th>
+<th>Scope key</th>
+<th>Written by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agent_memory</code></td>
+<td><code>run_id</code>, <code>task</code>, <code>action</code>,
+<code>tool</code>, <code>outcome</code> (<code>CHECK</code> success or
+failure), <code>reward</code>, <code>detail</code>,
+<code>embedding</code>, <code>created_at</code></td>
+<td><code>visibility</code></td>
+<td><code>memory.record</code></td>
+</tr>
+<tr>
+<td><code>semantic_memory</code></td>
+<td><code>fact</code>, <code>category</code>, <code>source</code>
+default <code>consolidation</code>, <code>embedding</code>,
+<code>created_at</code></td>
+<td>none</td>
+<td><code>consolidate</code> only</td>
+</tr>
+<tr>
+<td><code>conversations</code></td>
+<td><code>session_id</code>, <code>seq</code>, <code>role</code>,
+<code>content</code>, <code>created_at</code></td>
+<td><code>visibility</code></td>
+<td><code>conversation.record_turn</code></td>
+</tr>
+<tr>
+<td><code>procedural_memory</code></td>
+<td><code>name</code> unique, <code>description</code>,
+<code>schema_json</code>, <code>kind</code>, <code>embedding</code></td>
+<td>none</td>
+<td><code>procedural.seed_tools</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Schemas are <code>oracle/schema/02_agent_memory.sql:12-27</code>,
+<code>03_semantic_memory.sql:9-16</code>,
+<code>05_conversational_memory.sql:7-17</code> and
+<code>06_procedural_memory.sql:8-15</code>. The <code>tool_stats</code>
+view aggregates outcomes per tool over all of <code>agent_memory</code>
+without the visibility predicate; it returns tool names and counts, not
+text (<code>02_agent_memory.sql:39-45</code>).</p>
+<p><strong>One time axis.</strong> Each table has a
+<code>created_at</code> and nothing else; consolidation regenerates
+every fact's <code>created_at</code>, so a fact's age is the age of the
+last run.</p>
+<p><strong>No provenance on facts.</strong> A semantic fact does not
+record which runs, turns or titles produced it. The prompt asks for
+facts <em>"directly supported by the inputs"</em>
+(<code>semantic_memory.py:30-34</code>), and nothing checks it.</p>
+<p><strong><code>posts.visibility</code> has three values in
+use</strong>: <code>content</code>, <code>business</code> and
+<code>archived</code>
+(<code>oracle/schema/01_content_duality.sql:42</code>), set by the LLM
+classifier over chat platforms
+(<code>scripts/classify_private.py:74-106</code>) or by loaders.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Memory recall is pure vector: exact cosine distance between the
+in-database embedding of the question and each row, ordered and cut at
+k, with the visibility predicate in the same <code>WHERE</code>. There
+is no threshold, so the top three episodic rows are injected however
+distant.</p>
+<p>Content retrieval is hybrid. <code>search_content</code> unions
+posts, chunks and wiki pages by vector distance,
+<code>_lexical_posts</code> ranks posts by how many of up to eight query
+terms appear in a <code>LIKE</code> match, and
+<code>search_hybrid</code> collapses each list to one entry per document
+before summing weighted reciprocal-rank scores with <code>C=60</code>
+(<code>content.py:12-198</code>). Source weights favour published posts
+(1.15) over notes (1.0), script drafts (0.85) and imported chats (0.75)
+(<code>content.py:121-149</code>). Wiki pages enter the vector arm with
+no visibility predicate (<code>content.py:39-44</code>).
+<code>get_wiki_page</code> re-checks each citation's visibility at read
+time, because a post can be reclassified after the page was compiled
+(<code>content.py:218-230</code>).</p>
+<p>The injected block per research run is three episodic details, five
+facts and a tool hint, prepended to the user message
+(<code>research_agent.py:259-273</code>). It is bounded by k, not by
+tokens.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous SQL on the agent's path; the embedding is
+computed inside the INSERT. On the custom backend a run is retrievable
+at once, and every fifth run triggers a synchronous consolidation call
+before <code>run_research</code> returns.</p>
+<p><strong>Consolidation is a wholesale rewrite.</strong> The
+delete-then-insert sits in one transaction with a rollback, so a failed
+call leaves the old facts (<code>semantic_memory.py:97-113</code>). A
+call that succeeds with a short or empty list replaces the set with it;
+nothing compares the new count or content to the old. The expiry step's
+licence reads <code>MAX(created_at)</code> of those facts, so an emptied
+set blocks rotation (<code>scripts/memory_expire.py:73-82</code>), and
+nothing else notices.</p>
+<p><strong>Correction is by prompt.</strong> The consolidator is told
+that <em>"a user correction of an earlier answer outranks the prior fact
+it contradicts"</em> (<code>semantic_memory.py:24-26</code>). A person
+who deletes a wrong fact with SQL removes it from the prior-facts input;
+the runs and turns it came from stay for up to 90 days, and the next
+consolidation can derive it again.</p>
+<p><strong>The deny-list is the only filter on memory writes.</strong>
+Content that is private but matches no pattern — a health question, a
+client name — is stored as <code>content</code>. The chat-capture module
+states a broader personal-life boundary and unit-tests it
+(<code>oracle/agent/chat_capture.py:1-61</code>), and
+<code>should_capture</code> has no caller in this tree.</p>
+<p><strong><code>save_chat</code> skips the deny-list.</strong> It
+writes the summary and key points as <code>content</code> directly
+(<code>mcp_server.py:748-752</code>), while
+<code>digest_agent.save_note</code> runs the same deny-list before
+writing a note (<code>digest_agent.py:52-55</code>).
+<code>classify_private.py</code> covers only <code>claude</code>,
+<code>claude_code</code> and <code>chatgpt</code> posts
+(<code>:77-78</code>), and <code>security_check.py</code> checks only
+<code>note</code> posts against the deny-list (<code>:165-172</code>). A
+saved chat that mentions a fee is therefore searchable.</p>
+<p><strong>Reloads reset tags.</strong> Chat loaders delete a platform's
+posts and reinsert them at the default <code>content</code>
+(<code>scripts/chatgpt.py:88</code>). <code>sync.py</code> re-runs the
+classifier before the wiki and consolidation steps when more than 50
+chats exist and none is tagged (<code>scripts/sync.py:76-95</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: one INSERT with an in-database embedding; no LLM on the
+custom backend except the consolidation every fifth run. On the default
+backend the package's extractor runs per exchange, followed by a
+deny-list scan of the last hour's package memories.</li>
+<li>Background: one consolidation call per day over bounded inputs (80
+titles, 30 runs, 30 turns, the prior facts),
+<code>max_tokens=8192</code>. Expiry and review are SQL.</li>
+<li>Read: three runs, five facts and a tool hint per question, prepended
+to the user turn after the system prompt, so the system prefix stays
+cacheable.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers ten read tools (<code>search</code>,
+<code>fetch</code>, <code>overview</code>, <code>list_agents</code>,
+<code>source_status</code>, <code>wiki</code>, <code>topics</code>,
+<code>recent</code>, <code>by_series</code>, <code>related</code>) and,
+unless <code>MCP_READONLY=1</code>, two write tools.
+<code>test_brain.py</code> asserts eight of them are registered and that
+both write tools disappear under <code>MCP_READONLY=1</code>
+(<code>tests/test_brain.py:331-355</code>). No MCP tool reads or writes
+<code>agent_memory</code>, <code>semantic_memory</code> or
+<code>procedural_memory</code>; those are used by the research agent and
+shown by the web UI.</p>
+<p>Four MCP prompts — <code>research_brief</code>,
+<code>interview_prep</code>, <code>caption_pack</code>,
+<code>weekly_review</code> — are playbooks the client model executes
+with the read tools (<code>mcp_server.py:787-878</code>). An MCP
+client's memory writes are therefore content rows, not agent memory.</p>
+<p>The research agent is Claude-specific
+(<code>MODEL = "claude-opus-4-8"</code> with server-side web search,
+<code>research_agent.py:52</code>, <code>:188</code>). Memory is
+injected, not tool-mediated: the agent does not choose to recall.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The write-time tag is a stronger control than the prompt it
+backs.</strong> The package's extraction receives the privacy rule as
+instructions, and the source comments record that a contract term once
+survived it (<code>oamp_memory.py:41-44</code>, <code>:64-70</code>).
+The regex sweep that follows deletes matches through the package's own
+<code>delete_memory</code> (<code>:91-115</code>). It runs over the last
+hour after each exchange and over everything in the daily sync.</p>
+<p><strong>Whether the inline sweep sees the new memories is not
+established here.</strong> <code>record_exchange</code> sweeps
+immediately after <code>add_messages</code> without waiting, while
+<code>tests/eval_oamp.py:121</code> calls
+<code>wait_for_memory_extraction()</code> before searching. If
+extraction is asynchronous in 26.6.0, a violating memory can be
+searchable until the daily sweep. The package source was not read.</p>
+<p><strong>Deletion reaches the raw tables and the local archive, not
+the facts.</strong> Expiry deletes business rows outright and does not
+archive them (<code>memory_expire.py:85-97</code>), which is the correct
+direction for a privacy floor. Facts distilled from a run outlive it by
+design.</p>
+<p><strong>Prompt injection.</strong> Tool results are framed as data in
+the system prompt (<code>research_agent.py:69-71</code>), and MCP search
+results say the same, except for notes titled <em>"WORKFLOW:"</em>,
+which the tool description tells the client to follow
+(<code>mcp_server.py:255-257</code>). Anything that can write a note can
+publish a procedure the client is told to run.</p>
+<p><strong>Single user.</strong> <code>BRAIN_USER</code> defaults to
+<code>me</code> (<code>oamp_memory.py:38</code>). No row in the custom
+tables carries a user, and the hosted server admits the allowlisted
+identities to the same data.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — awarded; the sensitivity key on
+episodic, dialogue and content rows is applied in every read of them. It
+is a sensitivity class, not an owner, and the limits are in the evidence
+record.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld.
+<code>exports/memory_tombstones.jsonl</code> is an archive of expired
+content rows, written so a person can restore them
+(<code>memory_expire.py:85-115</code>); nothing reads it to refuse a
+value. The deny-list is keyed on categories of text, not on a rejected
+value, and lives in code and an environment variable.</li>
+<li><code>trust_state</code> — withheld. No memory table has a status
+column. The <em>(unverified)</em> marker is text inside an answer.</li>
+<li><code>bitemporal</code> — withheld. One <code>created_at</code> per
+row.</li>
+<li><code>audit_log</code> — withheld. The archive records one deletion
+path and only content rows, without a deletion time;
+<code>exports/loop_ledger.jsonl</code> records LLM token spend
+(<code>oracle/agent/llm.py:34-60</code>); consolidation's rewrite leaves
+no record.</li>
+<li><code>human_review</code> — withheld. <code>memory_review.py</code>
+is report-only and its own docstring says a person retires rows by SQL
+(<code>scripts/memory_review.py:35-38</code>); that is editing after the
+fact. The web UI accepts only GET and HEAD
+(<code>webui.py:276-277</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin.</p>
+<p><strong>The negative cases.</strong>
+<code>test_episodic_memory_privacy_filter</code> records a business
+memory mentioning a $5,000 fee and a content memory, asserts
+<code>recall</code> queried with the business token returns no row
+containing it and <code>recall</code> for the content token does, then
+that <code>list_recent</code> holds the content probe and not the
+business one (<code>tests/test_brain.py:239-267</code>).
+<code>test_conversation_privacy_filter</code> asserts the working-memory
+window holds the control turn and not the rate turn
+(<code>:270-287</code>). Both assert a positive before or beside the
+negative. <code>test_related_posts_visibility_and_shape</code>,
+<code>test_graph_data_visibility</code> and
+<code>test_related_topics_visibility</code> do the same for content
+reads (<code>:99-211</code>).</p>
+<p><strong>Adjacent, off the read path.</strong>
+<code>test_consolidation_inputs_are_content_scope</code> stubs the LLM,
+captures the consolidation prompt, and asserts business probes are
+absent from it and content probes present (<code>:687-728</code>).
+<code>test_memory_expiry_tombstone_is_content_scope</code> asserts the
+archive holds content rows and not the business one
+(<code>:528-560</code>).</p>
+<p><strong>How the suite runs.</strong> <code>test_brain.py</code>
+connects to the live database, has a standalone runner, and counts a
+<code>SkipTest</code> only for empty tables (<code>:19-24</code>,
+<code>:1377-1394</code>). The tree has no <code>.github/</code>
+directory, so no committed CI runs it.</p>
+<p><strong>Evals.</strong> <code>eval_oamp.py</code> runs seven probes
+against the package. Its scope probe asserts another user's Monday
+memory is absent from a search with <code>exact_user_match=True</code>,
+with no assertion that the same search returns the evaluated user's
+Thursday memory, so an empty result passes
+(<code>tests/eval_oamp.py:162-172</code>).
+<code>eval_retrieval.py</code> supports
+<code>forbid_title_contains</code> cases, and
+<code>tests/golden_retrieval.json</code> holds two positive cases and no
+negative one.</p>
+<p><strong>No paper for this repository.</strong> A grep for arxiv,
+bibtex, citation blocks and DOIs found none. The package's paper is
+cited in section 1 and makes claims about the package, not this
+code.</p>
+<p><strong>Missing.</strong> No test covers <code>save_chat</code>
+visibility, an empty consolidation result, or the inline sweep's
+timing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Decide sensitivity at write time with a deterministic check,
+and filter it in the query.</strong> A regex that fires on money amounts
+is crude, and it is the same on every run; a prompt instruction was
+not.</li>
+<li><strong>Put the sweep behind the prompt.</strong> When a model is
+told not to store a category, scan what it stored for that category and
+delete it.</li>
+<li><strong>License deletion with evidence that the distiller
+ran.</strong> Expiry here refuses unless a consolidation happened within
+seven days, so a broken distiller cannot let the raw log rotate away
+unread.</li>
+<li><strong>Do not archive what you quarantined.</strong> Restorable
+deletion and a privacy floor pull in opposite directions; this code
+picks per row.</li>
+<li><strong>Re-check derived citations at read time</strong> when the
+source's visibility can change after the derivation.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Rewriting the whole fact set from one model call without a
+diff.</strong> Keep fact identities, or at least refuse a result that
+drops most of the set.</li>
+<li><strong>Two write paths into one table with different privacy
+checks.</strong> <code>save_chat</code> and
+<code>digest_agent.save_note</code> both write searchable posts; one
+runs the deny-list.</li>
+<li><strong>A label keyed on the row when rows are rebuilt.</strong>
+Delete-and-reload loaders return every private chat to the default until
+a classifier runs.</li>
+<li><strong>A negative probe without a positive in the same
+query.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a well-instrumented reference build for one person who wants
+their own content and chats searchable from any assistant, and who will
+run Oracle to get in-database embeddings. The memory is secondary to the
+content brain: four small tables, a nightly distillation and a privacy
+discipline that is more careful than the retrieval. A reader who needs
+correctable facts, provenance or several users should take the
+sensitivity pattern and the expiry licence and build the fact layer
+differently. A reader who cannot inspect the default backend's package
+should run <code>MEMORY_BACKEND=custom</code>.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>oracleagentmemory</code> extraction synchronous inside
+<code>add_messages</code> in 26.6.0? The inline sweep's value depends on
+it.</li>
+<li>Does the private companion repository the README describes call
+<code>should_capture</code>, and does the hosted deployment run the
+classifier over <code>chat_capture</code> posts?</li>
+<li>How often does consolidation shrink the fact set in practice?</li>
+<li>Does the package's <code>delete_memory</code> remove the row's
+embedding from its hybrid index at once?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong>
+<code>oracle/schema/01_content_duality.sql</code>,
+<code>02_agent_memory.sql</code>, <code>03_semantic_memory.sql</code>,
+<code>05_conversational_memory.sql</code>,
+<code>06_procedural_memory.sql</code>.</li>
+<li><strong>Memory layer:</strong> <code>oracle/agent/memory.py</code>,
+<code>semantic_memory.py</code>, <code>conversation.py</code>,
+<code>procedural.py</code>, <code>oamp_memory.py</code>.</li>
+<li><strong>Agent:</strong> <code>oracle/agent/research_agent.py</code>,
+<code>ask.py</code>, <code>digest_agent.py</code>.</li>
+<li><strong>Content retrieval:</strong>
+<code>oracle/agent/content.py</code>, <code>wiki.py</code>.</li>
+<li><strong>MCP and UI:</strong>
+<code>oracle/agent/mcp_server.py</code>, <code>mcp_http.py</code>,
+<code>webui.py</code>.</li>
+<li><strong>Background:</strong> <code>scripts/sync.py</code>,
+<code>consolidate.py</code>, <code>memory_expire.py</code>,
+<code>memory_review.py</code>, <code>oamp_sweep.py</code>,
+<code>classify_private.py</code>, <code>security_check.py</code>.</li>
+<li><strong>Unwired:</strong>
+<code>oracle/agent/chat_capture.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_brain.py</code>,
+<code>tests/eval_oamp.py</code>, <code>tests/eval_retrieval.py</code>,
+<code>tests/golden_retrieval.json</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'should_capture|import chat_capture|from chat_capture' -g '!tests/*'</code>
+— only the definition in <code>oracle/agent/chat_capture.py</code>.</li>
+<li><code>rg -n 'violates_privacy|enforce_privacy' --type py</code> —
+callers in <code>memory.py</code>, <code>conversation.py</code>,
+<code>digest_agent.py</code>, <code>oamp_memory.py</code>,
+<code>security_check.py</code> and tests; none in
+<code>mcp_server.py</code>.</li>
+<li><code>rg -n "chat_capture'" --type py</code> — only
+<code>mcp_server.py:741-750</code>; <code>classify_private.py</code>
+selects <code>('claude','claude_code','chatgpt')</code>.</li>
+<li><code>rg -n -i 'semantic_memory' --type py</code> — one writer,
+<code>semantic_memory.consolidate</code>; no read filters on a scope
+column.</li>
+<li><code>rg -n -i 'from\s+agent_memory|from\s+conversations|tool_stats' --type py -g '!tests/*'</code>
+— every text read filters visibility; <code>tool_stats</code> and the
+watchdog scans do not.</li>
+<li><code>rg -n -i "status|approv|pending|candidate|verified|reject" oracle/schema/*.sql</code>
+— only <code>deals.status</code> and a sync-run comment; no memory
+status column.</li>
+<li><code>grep -rniE 'arxiv|bibtex|@article|@misc|doi\.org|citation\.cff' . --exclude-dir=.git</code>
+— no match; no <code>CITATION</code> file.</li>
+<li><code>grep -rniE 'renamed|formerly' . --exclude-dir=.git</code> —
+one unrelated match in <code>docs/LOOP_ENGINEERING.md</code>.</li>
+<li><code>ls .github</code> — no such directory.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/LindaHaviv/second-brain/commit/4890df9fe9e4ebbea8fc1ad34ec39c22594188f7"><code class="commit-id" title="4890df9fe9e4ebbea8fc1ad34ec39c22594188f7">4890df9f…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 20
+September 2026. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>. Screened before reading: one auto-run
+surface (<code>.claude/settings.json</code>, a PreToolUse hook that
+blocks agent edits to <code>.env</code> files), no build-time execution,
+nothing inside the cooldown, one unpinned surface
+(<code>oracle/agent/requirements.txt</code>), and <code>AGENTS.md</code>
+and <code>CLAUDE.md</code> recorded as data. Read with <code>grep</code>
+and <code>sed</code>; nothing installed, built or run. The default
+backend's <code>oracleagentmemory</code> package was not read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
