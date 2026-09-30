@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 689 reports.**
+**This page covers all 690 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6213,3 +6213,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 208,247 lines of Python and 570 commits on main from one contributor between 25 June and 17 September 2026, with the memory subsystem about 6,000 lines. Five marks — `trust_state`, `bitemporal`, `audit_log`, `human_review`, `negative_eval` — each resting on the governance store and the paths whose text lives only there. 5,058 pytest functions; the gating and hook tests bypass the production session derivation.
 - Study when: you want a governance wrapper over existing stores — status machine, audit, calibrated confidence, review queue and LLM-proposed consolidation — and a design document that says which parts are wired.
 - Do not copy when: the stores the prompt reads are written before the wrapper decides. Put the gate in front of `MEMORY.md` and the graph, or rejection and review will only annotate.
+
+### [`global-agent-memory`](../systems/global-agent-memory/)
+
+- Best idea: **make every mutation replay-safe and every edit a compare-and-set.** Each tool call carries a `request_id`; a retry returns the stored result and a reused id with a different payload hash fails with `REQUEST_ID_CONFLICT`. Updates take `expected_updated_at` and fail with `VERSION_CONFLICT` instead of overwriting, and the Markdown Vault stays canonical with every SQLite index rebuildable from it.
+- Biggest risk: **candidate-first review is a convention the agent can skip.** `memory_approve` is one of the seventeen MCP tools and passes `_authorize` for any standard note; the e2e suite remembers and approves in one session. `memory_supersede` with a replacement draft writes it as a candidate and then as `active` in the same call, and the shipped skill tells agents to use it for newer knowledge.
+- Most reusable component: `src/global_memory/access/service.py` — purpose-bound protected-memory grants whose matched set is computed on the server, whose approval may lower permission and duration but never raise them, and which re-check current policy on every use and revoke themselves when a note is reclassified.
+- Second risk: **the owner's credential reaches the agent.** `memory_dashboard_open` returns the dashboard URL with its one-time ticket, and the access-approval route needs only the resulting cookie and a fixed header, so an agent that can make an HTTP request can approve its own protected-access request. The candidates resource and `memory_get` take no project, and the audit log records no actor.
+- Maturity impression: MIT, 10,117 lines of Python and 2,764 of TypeScript, 267 commits on main by 2 contributors between 12 July and 1 September 2026. Three marks: `trust_state` on a default `active` filter, `audit_log` on an append-only mutation file, and `negative_eval` on a populated nine-note project-and-status isolation test. 164 Python test functions and no CI workflow in the tree.
+- Study when: you want a single-owner, human-readable memory with serious transactional hygiene — idempotency, optimistic concurrency, atomic file moves between lifecycle folders — and a protected-memory grant flow for an MCP-only client.
+- Do not copy when: the review queue must bind. Promotion is on the agent's surface twice, the audit cannot say who approved, a rejected text can be proposed again unflagged, and an agent with a shell reads protected and sealed bodies straight from the Vault.

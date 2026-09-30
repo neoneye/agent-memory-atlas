@@ -390,6 +390,7 @@ page_kind: comparison
 - [`nano-brain`](../systems/nano-brain/)
 - [`dreamgraph`](../systems/dreamgraph/)
 - [`flowly`](../systems/flowly/)
+- [`global-agent-memory`](../systems/global-agent-memory/)
 
 ## Repos Inspected
 
@@ -1084,6 +1085,7 @@ page_kind: comparison
 - [nano-step/nano-brain](https://github.com/nano-step/nano-brain) at [`fc58b4b7eeeae658565c76e215d355e6799f3fac`](https://github.com/nano-step/nano-brain/commit/fc58b4b7eeeae658565c76e215d355e6799f3fac) — read only, at the head of `master`, a commit dated 7 September 2026. MIT. Screened before reading: 3 auto-run surfaces (`.claude/settings.json` with one PreToolUse hook that runs a harness check only on `gh pr create`, its script under `.claude/hooks/`, and an `.opencode/` bundle whose five third-party MCP servers are disabled), 2 build-time execution points (`Makefile`, an npm `postinstall` that downloads the release binary), 2 floating ranges and nothing inside the cooldown; `AGENTS.md` and `CLAUDE.md` were treated as data. Only the memory half was read; the code-intelligence packages were not. Nothing was installed, built or executed.
 - [mmethodz/dreamgraph](https://github.com/mmethodz/dreamgraph) at [`563d10c8109cbe3388cde71168bdcff149c96e0f`](https://github.com/mmethodz/dreamgraph/commit/563d10c8109cbe3388cde71168bdcff149c96e0f) — read only, at the head of `main`, released as v13.4.0 and dated 30 September 2026. DreamGraph Source-Available Community License v2.0, non-commercial; production and commercial use need a separate licence. Screened before reading: 1 auto-run surface (`.github/copilot-instructions.md`, treated as data), 0 build-time execution points, 9 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 5 unpinned surfaces beside a root lockfile. Nothing was installed, built or executed.
 - [Nocetic/flowly](https://github.com/Nocetic/flowly) at [`a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c`](https://github.com/Nocetic/flowly/commit/a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c) — read only, at the head of `main`, a commit dated 17 September 2026. Apache-2.0. Screened before reading: no auto-run surface, 5 build-time execution points (three `setup.py`, two `conftest.py`), 3 unpinned surfaces (two `package.json`, one skill `requirements.txt`) and nothing inside the cooldown; no agent-instruction file in the tree. Only the memory subsystem was read. Nothing was installed, built or executed.
+- [ozankasikci/global-agent-memory](https://github.com/ozankasikci/global-agent-memory) at [`53480fd2906b41c9921326f1c61e4c42fe8d5134`](https://github.com/ozankasikci/global-agent-memory/commit/53480fd2906b41c9921326f1c61e4c42fe8d5134) — read only, at the head of `main`, a commit dated 1 September 2026. MIT. Screened before reading: 1 auto-run surface (`server.json`, an MCP registry manifest naming the PyPI package), 1 build-time execution point (`Makefile`), 1 unpinned surface (`dashboard/package.json`, lockfile present) and nothing inside the cooldown; `dashboard/AGENTS.md` and the integration snippets were treated as data. Nothing was installed, built or executed.
 
 ## What the licences actually say
 

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 689 of 689 screened at the report's current pin.**
+**Progress: 690 of 690 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 322 |
+| Repositories with an auto-run surface (`RUNS`) | 323 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 372 |
-| Repositories with build-time execution (`EXEC`) | 501 |
+| Repositories with build-time execution (`EXEC`) | 502 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -136,6 +136,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`genome`](../../content/systems/genome.md) | `mcp.json`, `server.json` |
 | [`gh-aw`](../../content/systems/gh-aw.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.vscode/settings.json` |
 | [`gitmem`](../../content/systems/gitmem.md) | `hooks/`, `server.json` |
+| [`global-agent-memory`](../../content/systems/global-agent-memory.md) | `server.json` |
 | [`gobii`](../../content/systems/gobii.md) | `server.json` |
 | [`goodmemory`](../../content/systems/goodmemory.md) | `server.json` |
 | [`graft`](../../content/systems/graft.md) | `.gitmodules` |

@@ -191,6 +191,8 @@ The gateway exists, and only the untrusted caller is routed through it.
 
 [Flowly](../../systems/flowly/) has the governance and puts it on the wrong side of the write. Its `GovernanceStore` enforces a transition table and audits every move, but the live hook runs after `memory_append` has appended to `MEMORY.md` and after `knowledge_graph add` has written its triple — the two stores the prompt injects whole. A `needs_review` automation write is therefore in context on the next turn, and `reject` changes the wrapper row while the line and the open triple stay. The gate is real for the dreamer, the importers and Obsidian ingest, whose text exists only inside the governance store.
 
+[Global Agent Memory](../../systems/global-agent-memory/) converges every adapter — MCP tool, CLI, dashboard — on one `MemoryService` over one `VaultRepository`, and that gateway enforces idempotency by request id, compare-and-set on `updated_at`, a pure lifecycle transition table and an append-only audit line. It enforces no actor. The same `approve` is reached from the agent's tool list and the owner's dashboard, and `supersede` activates a candidate replacement without passing the transition table. It is the clearest case of a gateway whose invariants are all about consistency and none about authority.
+
 ### Gates on something other than a write
 
 These are analogies rather than instances. Each puts one gate, or one stated

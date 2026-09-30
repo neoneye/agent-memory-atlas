@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 689 reports.</strong></p>
+<p><strong>This page covers all 690 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28621,6 +28621,53 @@ are wired.</li>
 <li>Do not copy when: the stores the prompt reads are written before the
 wrapper decides. Put the gate in front of <code>MEMORY.md</code> and the
 graph, or rejection and review will only annotate.</li>
+</ul>
+<h3 id="global-agent-memory"><a
+href="../systems/global-agent-memory/"><code>global-agent-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>make every mutation replay-safe and every edit a
+compare-and-set.</strong> Each tool call carries a
+<code>request_id</code>; a retry returns the stored result and a reused
+id with a different payload hash fails with
+<code>REQUEST_ID_CONFLICT</code>. Updates take
+<code>expected_updated_at</code> and fail with
+<code>VERSION_CONFLICT</code> instead of overwriting, and the Markdown
+Vault stays canonical with every SQLite index rebuildable from it.</li>
+<li>Biggest risk: <strong>candidate-first review is a convention the
+agent can skip.</strong> <code>memory_approve</code> is one of the
+seventeen MCP tools and passes <code>_authorize</code> for any standard
+note; the e2e suite remembers and approves in one session.
+<code>memory_supersede</code> with a replacement draft writes it as a
+candidate and then as <code>active</code> in the same call, and the
+shipped skill tells agents to use it for newer knowledge.</li>
+<li>Most reusable component:
+<code>src/global_memory/access/service.py</code> — purpose-bound
+protected-memory grants whose matched set is computed on the server,
+whose approval may lower permission and duration but never raise them,
+and which re-check current policy on every use and revoke themselves
+when a note is reclassified.</li>
+<li>Second risk: <strong>the owner's credential reaches the
+agent.</strong> <code>memory_dashboard_open</code> returns the dashboard
+URL with its one-time ticket, and the access-approval route needs only
+the resulting cookie and a fixed header, so an agent that can make an
+HTTP request can approve its own protected-access request. The
+candidates resource and <code>memory_get</code> take no project, and the
+audit log records no actor.</li>
+<li>Maturity impression: MIT, 10,117 lines of Python and 2,764 of
+TypeScript, 267 commits on main by 2 contributors between 12 July and 1
+September 2026. Three marks: <code>trust_state</code> on a default
+<code>active</code> filter, <code>audit_log</code> on an append-only
+mutation file, and <code>negative_eval</code> on a populated nine-note
+project-and-status isolation test. 164 Python test functions and no CI
+workflow in the tree.</li>
+<li>Study when: you want a single-owner, human-readable memory with
+serious transactional hygiene — idempotency, optimistic concurrency,
+atomic file moves between lifecycle folders — and a protected-memory
+grant flow for an MCP-only client.</li>
+<li>Do not copy when: the review queue must bind. Promotion is on the
+agent's surface twice, the audit cannot say who approved, a rejected
+text can be proposed again unflagged, and an agent with a shell reads
+protected and sealed bodies straight from the Vault.</li>
 </ul>
         </article>
       </div>

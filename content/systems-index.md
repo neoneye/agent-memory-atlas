@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **689 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **690 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -262,6 +262,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/gini-agent/"><span class="az-id">Gini Agent</span><span class="az-what">Reimplemented memory model</span><code class="az-repo">Open-Curiosity/gini-agent</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/gitlord/"><span class="az-id">GitLord</span><span class="az-what">Git as the agent&#x27;s event log</span><code class="az-repo">yashneil75/gitlord</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/gitmem/"><span class="az-id">GitMem</span><span class="az-what">You may not record a lesson without two arguments against it</span><code class="az-repo">gitmem-dev/gitmem</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/global-agent-memory/"><span class="az-id">Global Agent Memory</span><span class="az-what">Reviewable Markdown memory over MCP for coding agents</span><code class="az-repo">ozankasikci/global-agent-memory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/gmr/"><span class="az-id">GMR</span><span class="az-what">Surface the memory when its basis drifts</span><code class="az-repo">Anchorstate-Lab/GMR</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/gobii/"><span class="az-id">Gobii</span><span class="az-what">Memory as a database the agent writes</span><code class="az-repo">gobii-ai/gobii-platform</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/gomaa/"><span class="az-id">Gomaa</span><span class="az-what">The token is neutralised in prose and preserved in a code fence</span><code class="az-repo">M4F-S/gomaa</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
