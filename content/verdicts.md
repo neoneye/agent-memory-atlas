@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 698 reports.**
+**This page covers all 700 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6302,3 +6302,23 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: FSL-1.1-MIT, 89,669 lines of Go outside tests and 193 commits on main from six contributor identities between 8 August and 29 September 2026, with 1,774 Go test functions and four Python black-box suites. No mark: two negative-case near-misses, one satisfied by the keyword alone and one a fail-closed refusal with no positive control.
 - Study when: you want a code-structure memory whose freshness is a hash comparison, or a crash-safe, CAS-guarded batch write for file-backed memory.
 - Do not copy when: memory must record decisions or preferences, or an entry must be able to say it is disputed while its source is unchanged.
+
+### [`mcp-context-server`](../systems/mcp-context-server/)
+
+- Best idea: **generate before the transaction and let the expensive legs veto the write.** `run_generation` runs embedding-plus-compression and the flat summary concurrently and raises naming every failed leg before any row exists, so no entry is stored that semantic search cannot find; the dedup update then re-asserts the content hash its pre-check saw, turning a lost race into an insert.
+- Biggest risk: **ownership is recorded and not enforced.** Every row carries a server-stamped `owner_id` and a `visibility` defaulting to `private`; no read filters on either, and `update_context` checks the owner only when the call changes visibility. Under the `jwt` provider any principal reads, rewrites and deletes any other's private entries, which `docs/environment-variables.md` states.
+- Most reusable component: `app/repositories/context_repository.py` (`store_with_deduplication`) — a latest-same-source dedup that suppresses itself when an opposite-source turn intervened and whose update carries `content_hash IS` the observed value, identical on SQLite and PostgreSQL.
+- Second risk: **the mandatory full read has no scope.** The shipped retrieval skill forbids concluding from search previews and requires `get_context_by_ids`, which reads by id with no thread argument, as do `navigate_context` and `read_context_range`; group grants are written on insert and never read.
+- Maturity impression: Elastic License 2.0 in the tree, MIT up to v2.2.2 by the project's statement; 50,651 lines of Python under app/, 912 commits on main by 3 contributor identities, two of them bots, between 25 September 2025 and 30 September 2026, the latest being sync commits from a separate source repository. One mark, `negative_eval`, on a planted near-duplicate vector in another thread. 4,105 Python test functions; CI runs on pull requests only.
+- Study when: you want a single-owner, multi-agent Claude Code context store with serious write-path hygiene — generation-first atomicity, compare-and-set updates, backend parity — and hybrid search over compressed embeddings.
+- Do not copy when: principals must be isolated on one instance, you need to host it for others (the licence bars it), or corrections must leave a record: update overwrites and delete is hard, with no history or tombstone.
+
+### [`tree-ring-memory`](../systems/tree-ring-memory/)
+
+- Best idea: **take the injected brief's scope from the harness and refuse it from the payload.** The project comes from the configured root, the identity from the hook's `session_id` and `agent_id`, a payload carrying a root, store id or task hint is rejected, and the predicate is compiled into SQL before the candidate cap, with expired, superseded, sensitive and tombstoned rows excluded in the same clause.
+- Biggest risk: **two read paths with two definitions of live.** The startup brief drops expired and tombstoned rows; explicit `recall` checks neither, so an expired memory stays retrievable until someone runs `maintain --apply-expired`, and a protected one indefinitely.
+- Most reusable component: `crates/tree-ring-memory-sqlite/src/session_recall.rs` lines 56-150 — one scoped, capped visibility query for an automatic brief, with its set-equality and 300-row starvation tests beside it.
+- Second risk: **correction leaves nothing behind.** The forget reason is checked for blankness and never stored, the redaction tombstone is keyed on the memory id rather than the value, and the authorization log that could record a mutation is empty until coordinated mode is switched on.
+- Maturity impression: MIT, 20,423 lines of Rust outside tests, 534 commits on main by two contributor identities between 4 July and 17 September 2026, 606 Rust test functions run by `cargo test` in CI. Two marks, `scope_enforced` and `negative_eval`. The committed recall-quality fixtures feed an example binary that no test runs.
+- Study when: you are wiring hook-injected memory into Claude Code or Codex and want the brief's boundary out of the model's reach, or idempotent multi-worker writes on one SQLite file.
+- Do not copy when: a correction must stick or be reviewable. Nothing is keyed on a rejected value, no read filters on the review flag, and the agent holds every write verb and `forget`.

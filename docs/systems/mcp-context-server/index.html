@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP server keeping thread-keyed
+agent context in SQLite or PostgreSQL, searched by FTS and vectors, with
+row ownership stamped but never read.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MCP Context
+Server — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP server keeping
+thread-keyed agent context in SQLite or PostgreSQL, searched by FTS and
+vectors, with row ownership stamped but never read.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MCP Context
+Server — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP server keeping
+thread-keyed agent context in SQLite or PostgreSQL, searched by FTS and
+vectors, with row ownership stamped but never read.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MCP Context Server — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MCP Context Server",
+      "description": "An MCP server keeping thread-keyed agent context in SQLite or PostgreSQL, searched by FTS and vectors, with row ownership stamped but never read.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Thread-keyed context entries behind an MCP
+server</p>
+          <h1>MCP Context Server</h1>
+          <p class="document-deck">An MCP server keeping thread-keyed
+agent context in SQLite or PostgreSQL, searched by FTS and vectors, with
+row ownership stamped but never read.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/alex-feel/mcp-context-server">
+              <span>Source</span>
+              <strong>alex-feel/mcp-context-server</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/alex-feel/mcp-context-server/commit/ed6a24d8f40805fce43f019c1f6393bd515b93dc" title="ed6a24d8f40805fce43f019c1f6393bd515b93dc">
+              <span>Analyzed revision</span>
+              <code>ed6a24d8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/alex-feel--mcp-context-server" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>alex-feel--mcp-context-server</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Elastic
+License 2.0 in the tree; the project states releases up to v2.2.2 were
+MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>50,651
+lines of Python under app/, plus 3,445 in the Claude Code
+hooks</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>912
+commits on main by 3 contributor identities, two of them bots, 25
+September 2025 – 30 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>4,105
+Python test functions in 114,684 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MCP Context Server is a Python FastMCP server that stores <em>context
+entries</em> — user prompts, agent reports, notes, images — under a
+<code>thread_id</code>, and exposes sixteen tools to store, search,
+fetch, navigate, update and delete them. Storage is SQLite or
+PostgreSQL. Each write generates an embedding, a TurboQuant compressed
+copy of it and an LLM summary before the transaction opens, and search
+offers filter listing, full-text, semantic and RRF hybrid modes with
+cross-encoder reranking.</p>
+<p>What is notable is the write-path discipline: generation happens
+first and nothing is stored if an abort-mandatory leg fails, text
+updates are a compare-and-set on a <code>version</code> column, and the
+deduplication update re-asserts the content hash it observed. What is
+weak is the access model. Every row carries a server-stamped
+<code>owner_id</code> and a <code>visibility</code> defaulting to
+<code>private</code>, and no read consults either. The project says so
+in its own environment reference.</p>
+<p>That statement is precise: <em>"Read-path filtering by visibility is
+not enforced yet: until it lands, all entries remain readable by any
+connected client"</em> (<code>docs/environment-variables.md:54</code>).
+Update and delete check ownership only when the call changes visibility.
+Under the <code>jwt</code> provider, which exists to separate
+principals, any authenticated caller can read, overwrite and delete
+another principal's private entry.</p>
+<p>The licence changed with the v3 schema. The tree at the pin carries
+the Elastic License 2.0, which bars offering the software to third
+parties as a hosted or managed service. The project states that releases
+up to v2.2.2 were published under MIT and remain available under it.
+<code>pyproject.toml</code> still reads <code>version = "2.2.2"</code>
+while the README describes v3.x.x, so the pin sits between the last
+tagged release and the relicensed one.</p>
+<p>The public repository is a sync target. The pin and the four commits
+before it are titled <em>"chore: sync from source"</em> followed by a
+short hash of a commit that is not in this repository, authored by
+<code>sync-bot</code>. Development history between syncs is not in this
+repository.</p>
+<p>One mark, <code>negative_eval</code>, on a compressed-search case
+that plants a near-identical vector in another thread and asserts it
+stays out beside a same-thread positive control. Section 9 names the six
+withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a context entry. It becomes one when a store tool
+commits: there is no candidate state, no extraction and no model
+deciding what to keep. The model is called only to describe the entry —
+a one-paragraph summary and, optionally, a summary per Markdown heading
+— and those descriptions are attached to the entry rather than stored as
+claims of their own.</p>
+<p><strong>The entry's identity is a UUIDv7, and a retransmit is folded
+into it.</strong> A store whose <code>thread_id</code>,
+<code>source</code> and text hash match the latest entry of that thread
+and source updates that entry's metadata, tags, images and summary
+instead of inserting a second row. An opposite-source entry written
+after the candidate suppresses the fold, so a user repeating the same
+sentence as a new turn gets a new row
+(<code>app/repositories/context_repository.py:346-400</code>).</p>
+<p><strong>Correction is overwrite.</strong> <code>update_context</code>
+replaces text, metadata, tags or images, regenerates embeddings and
+summary for new text, and bumps <code>version</code> under a
+compare-and-set, so a slow update cannot overwrite a newer one
+(<code>context_repository.py:1572-1573</code>). The replaced text is not
+kept. Deletion removes the row, its tags, images, grants and embeddings;
+nothing records that the value was rejected.</p>
+<p><strong>Nothing ranks one entry as more believable than
+another.</strong> <code>source</code> records whether a user or an agent
+wrote the entry, and the shipped retrieval skill tells agents that user
+messages are <em>"the primary source of truth"</em>
+(<code>agents/common/skills/context-retrieval-protocol/SKILL.md:19</code>).
+That is an instruction to the reader. No query weights or filters on it
+unless the caller passes <code>source</code>.</p>
+<p><strong>The model is told not to believe the summary.</strong> Search
+returns a 300-character preview and the generated summary. The retrieval
+skill makes reading the full entry through
+<code>get_context_by_ids</code> mandatory before drawing any conclusion,
+because summaries <em>"MAY omit critical conditions, caveats, or
+nuance"</em> (<code>SKILL.md:225</code>). The same step is the one read
+that cannot carry a thread filter.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a context entry is written, which reads carry the thread predicate, and the two ownership columns nothing reads</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a context entry is written, which reads carry the thread predicate, and the two ownership columns nothing reads
+flowchart TD
+    W[&quot;store_context / store_context_batch&lt;br/&gt;or the UserPromptSubmit hook&quot;] --&gt; P[&quot;principal: verified token&lt;br/&gt;or ACCESS_CONTROL_DEFAULT_PRINCIPAL&quot;]
+    P --&gt; G[&quot;generate first:&lt;br/&gt;embedding + compression,&lt;br/&gt;LLM summary, node summaries&quot;]
+    G -- &quot;embedding or summary fails&quot; --&gt; X[&quot;ToolError,&lt;br/&gt;nothing stored&quot;]
+    G --&gt; D{&quot;latest entry with same&lt;br/&gt;thread, source, text hash&lt;br/&gt;and no later opposite-source row?&quot;}
+    D -- &quot;yes&quot; --&gt; U[&quot;update that row&#39;s metadata,&lt;br/&gt;tags, images, summary;&lt;br/&gt;owner and visibility untouched&quot;]
+    D -- &quot;no&quot; --&gt; I[&quot;insert row with thread_id,&lt;br/&gt;owner_id, visibility&quot;]
+    I --&gt; R1{&quot;search, FTS, semantic,&lt;br/&gt;hybrid, grep&quot;}
+    U --&gt; R1
+    R1 -- &quot;thread_id supplied&quot; --&gt; F[&quot;thread_id = ? on every leg&quot;]
+    R1 -- &quot;thread_id omitted&quot; --&gt; A[&quot;every thread&quot;]
+    F --&gt; B[&quot;get_context_by_ids,&lt;br/&gt;navigate, read_context_range:&lt;br/&gt;by id, no thread&quot;]
+    A --&gt; B
+    I -. &quot;owner_id, visibility,&lt;br/&gt;grants&quot; .-&gt; N[&quot;read by no query&quot;]
+    UP[&quot;update_context&quot;] --&gt; CAS[&quot;overwrite under version&lt;br/&gt;compare-and-set;&lt;br/&gt;owner checked only for visibility&quot;]
+    DEL[&quot;delete_context by ids or thread&quot;] --&gt; H[&quot;hard delete,&lt;br/&gt;no tombstone&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>app/server.py</code> builds a FastMCP server, initialises one
+storage backend and registers the tools
+(<code>app/server.py:346-379</code>, with the three search tools
+registered later on availability at <code>:611</code>, <code>:635</code>
+and <code>:668</code>). Every tool is subject to
+<code>DISABLED_TOOLS</code>, empty by default
+(<code>app/settings.py:97-103</code>), so an operator can strip
+<code>delete_context</code> and <code>update_context</code> from the
+surface.</p>
+<p>The backends are <code>app/backends/sqlite_backend.py</code> (WAL, a
+pool of readers and one serialised writer queue) and
+<code>app/backends/postgresql_backend.py</code> (asyncpg). Repositories
+under <code>app/repositories/</code> hold all SQL: context, tags,
+images, embeddings, FTS, index nodes, grants and statistics.</p>
+<p>The schema is four tables in the base scripts
+(<code>app/schemas/sqlite_schema.sql</code>) and the rest from
+migrations run at startup: <code>context_entries_fts</code> (FTS5 with
+insert, update and delete triggers), <code>vec_context_embeddings</code>
+(sqlite-vec <code>vec0</code>) or its pgvector twin,
+<code>embedding_chunks</code>,
+<code>vec_context_embeddings_compressed</code> with a singleton
+<code>compression_metadata</code> provenance row, and
+<code>context_index_nodes</code>.</p>
+<p>Generation is pluggable through LangChain: embeddings from Ollama
+(default <code>qwen3-embedding:0.6b</code>, 1,024 dimensions), OpenAI,
+Azure, HuggingFace or Voyage (<code>app/settings.py:364-372</code>);
+summaries from Ollama (default <code>qwen3:0.6b</code>), OpenAI or
+Anthropic; reranking from FlashRank. TurboQuant compression is vendored
+under <code>app/compression/providers/turboquant/</code> with its MIT
+notice, and its compressed read path decodes candidates in Python rather
+than through an ANN index.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The default is one process over stdio with a SQLite file and a local
+Ollama. With no embedding provider reachable, the semantic and
+hybrid-over-vectors tools skip registration and FTS still works; with no
+summary provider, entries store without summaries. No API key is
+required to store anything. Docker Compose files, a Helm chart and a
+Claude Code environment bootstrap live under <code>deploy/</code> and
+<code>agents/</code>.</p>
+<p>The store is SQL and inspectable by hand, but embeddings are
+bit-packed blobs tied to one seed and model, recorded in the provenance
+row, so a model change is a re-embedding migration run through
+<code>mcp-context-server-migrate</code>.</p>
+<p>The Claude Code environment files download the hooks from
+<code>raw.githubusercontent.com/alex-feel/mcp-context-server/main/…</code>
+(<code>agents/claude-code/environment-docker-ollama.yaml:23-33</code>,
+<code>:92-110</code>), so a hook installed on a given day runs whatever
+<code>main</code> held then rather than a tagged release.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Store.</strong> <code>store_context</code>
+(<code>app/tools/context.py:86-437</code>) validates input, resolves the
+principal and the effective visibility, and applies the publish gate
+(<code>:185-199</code>). It runs the dedup pre-check to skip generation
+for a likely retransmit, calls <code>run_generation</code>
+(<code>app/tools/_shared.py:1034</code>) to produce embeddings, summary
+and node summaries concurrently, then opens one transaction and calls
+<code>execute_store_in_transaction</code>
+(<code>_shared.py:1842</code>). That writes the row through
+<code>store_with_deduplication</code>
+(<code>context_repository.py:273-577</code>), then tags, images,
+author-group grants (<code>_shared.py:1991-1999</code>), embeddings and
+node rows. A connection error retries twice; a dedup divergence
+regenerates the skipped legs and retries once.</p>
+<p><strong>Search.</strong> <code>search_context</code>
+(<code>app/tools/search.py:855-1042</code>) passes filters to
+<code>ContextRepository.search_contexts</code>, whose filter builder
+appends <code>AND thread_id = ?</code> when a thread is supplied
+(<code>context_repository.py:821-824</code>).
+<code>semantic_search_context</code> embeds the query and calls
+<code>EmbeddingRepository.search</code>, which dispatches to
+<code>search_compressed</code> when compression is on
+(<code>embedding_repository.py:902-903</code>, <code>:1370</code>).
+<code>hybrid_search_context</code> runs the FTS and semantic legs in
+parallel with the same filters (<code>search.py:1993-2060</code>), fuses
+them with <code>reciprocal_rank_fusion</code>
+(<code>app/fusion.py:16-19</code>), and reranks.</p>
+<p><strong>Fetch and navigate.</strong> <code>get_context_by_ids</code>
+(<code>context.py:442-563</code>) resolves full ids or 8-to-31-character
+hex prefixes and reads <code>WHERE id IN (…)</code> through
+<code>get_by_ids</code> (<code>context_repository.py:1320</code>).
+<code>navigate_context</code> and <code>read_context_range</code> take
+one id (<code>app/tools/navigation.py:459-462</code>,
+<code>:594-597</code>). <code>grep_context</code> takes an optional
+thread (<code>navigation.py:175-178</code>).</p>
+<p><strong>Update.</strong> <code>update_context</code>
+(<code>context.py:697-1028</code>) probes existence, source, version and
+owner, checks ownership only when <code>visibility</code> is supplied
+(<code>:833-844</code>), regenerates for new text, and writes under
+<code>AND version = ?</code>
+(<code>context_repository.py:1572-1573</code>).</p>
+<p><strong>Delete.</strong> <code>delete_context</code>
+(<code>context.py:566-694</code>) takes ids or a thread, not both. On
+SQLite it snapshots the ids and deletes embeddings and rows in one
+transaction so no <code>vec0</code> vector is orphaned; on PostgreSQL it
+relies on <code>ON DELETE CASCADE</code>.</p>
+<p><strong>Hooks.</strong> <code>thread_id_context.py</code> writes
+Claude Code's <code>session_id</code> to
+<code>.context_server/.thread_id</code> and injects it on SessionStart
+and SubagentStart. <code>user_prompt_context_saver.py</code> calls
+<code>store_context</code> for each user prompt not matched by a skip
+pattern (<code>:664</code>).
+<code>subagent_context_protocol_injection.py</code> injects the
+retrieve-first, store-before-stopping protocol. No hook searches.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Key fields</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>context_entries</code></td>
+<td><code>id</code> (UUIDv7 hex), <code>thread_id</code>,
+<code>source</code>, <code>content_type</code>,
+<code>text_content</code>, <code>metadata</code> JSON,
+<code>summary</code>, <code>content_hash</code>, <code>version</code>,
+<code>owner_id</code>, <code>visibility</code>, <code>created_at</code>,
+<code>updated_at</code></td>
+<td>SQLite adds a private <code>rowid_int</code> for FTS5
+(<code>sqlite_schema.sql:14-41</code>)</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td><code>context_entry_id</code>, <code>tag</code></td>
+<td>unique per entry (<code>:59-72</code>)</td>
+</tr>
+<tr>
+<td><code>image_attachments</code></td>
+<td>blob, MIME type, position</td>
+<td>cascade on delete (<code>:74-85</code>)</td>
+</tr>
+<tr>
+<td><code>context_entry_grants</code></td>
+<td>entry, principal type and id, <code>read</code> or
+<code>write</code>, <code>granted_by</code></td>
+<td>written on insert under <code>author_groups</code>, read by nothing
+(<code>:91-105</code>)</td>
+</tr>
+<tr>
+<td><code>embedding_chunks</code>,
+<code>vec_context_embeddings[_compressed]</code></td>
+<td>per-chunk offsets and vectors</td>
+<td>chunk-level, aggregated to the entry on read</td>
+</tr>
+<tr>
+<td><code>context_index_nodes</code></td>
+<td>per-heading node summaries</td>
+<td>regenerated on text change</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scoping has two keys and one of them is live.</strong>
+<code>thread_id</code> is mandatory on every write and indexed with
+<code>source</code>. <code>owner_id</code> is stamped from the verified
+principal or <code>ACCESS_CONTROL_DEFAULT_PRINCIPAL</code> (default
+<code>local</code>) and is never a tool parameter
+(<code>app/auth/access.py:21-37</code>). <code>visibility</code> is
+<code>private</code>, <code>shared</code> or <code>public</code>,
+defaulting to <code>private</code>
+(<code>app/settings.py:225-265</code>). Both columns are left out of
+<code>CONTEXT_ENTRY_COLUMNS</code>, so no tool returns them
+(<code>context_repository.py:57</code>).</p>
+<p><strong>Metadata is free-form with indexed conventions.</strong>
+<code>status</code>, <code>agent_name</code>, <code>task_name</code>,
+<code>project</code> and <code>report_type</code> get expression indexes
+by default, and the instructions ask agents to link entries through
+<code>metadata.references.context_ids</code>. A <code>status</code>
+value is data the caller may filter on; nothing in the server interprets
+it.</p>
+<p><strong>Temporal fields</strong> are <code>created_at</code> and
+<code>updated_at</code>. There is no validity time, no expiry and no
+revision table.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>All retrieval is tool-mediated. The server instructions route
+thread-local loading to <code>search_context</code> and cross-thread
+discovery to <code>hybrid_search_context</code>, and say to omit
+<code>thread_id</code> for the second
+(<code>app/instructions.py:43</code>, <code>:54-55</code>).</p>
+<p><strong>Semantic search</strong> embeds the query, filters
+<code>context_entries</code> on every supplied predicate to a candidate
+set, scores each compressed chunk with TurboQuant's inner-product
+estimator or decoded L2, keeps the best chunk per entry, and sorts by
+distance then id (<code>embedding_repository.py:1370-1420</code>).
+Decoding moves to a worker thread above 2,048 chunk rows
+(<code>:46-55</code>). It is a linear scan over the filtered candidates;
+the project's compression guide plans ANN indexing for larger
+corpora.</p>
+<p><strong>Hybrid search</strong> over-fetches each leg at twice the
+limit (<code>HYBRID_RRF_OVERFETCH</code>), fuses by RRF with
+<code>k = 60</code> (<code>app/settings.py:1011-1025</code>), and
+reports a failed leg in <code>warnings</code> while serving the other.
+Neither leg drops the thread filter, and no search retries unscoped on
+an empty result.</p>
+<p><strong>Every search returns a preview.</strong>
+<code>text_content</code> is cut to
+<code>SEARCH_TRUNCATION_LENGTH</code> (default 300) and the summary is
+attached, so the agent triages on a summary written by a 0.6B model by
+default and then fetches full text by id. The two-step design keeps a
+search cheap and makes the by-id fetch the path that carries the
+substance.</p>
+<p><strong>Failure modes.</strong> A cross-thread search reaches every
+entry in the store, every principal's included. A reference chain
+followed through <code>get_context_by_ids</code> crosses threads without
+any filter. The dedup fold keys on the latest same-source row only, so
+an identical note stored twice with anything between them is two
+rows.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls, plus the prompt-saver hook when
+installed. No model extracts or consolidates. The entry is stored as
+given, trimmed, with lowercase tags.</p>
+<p><strong>Generation blocks the write and can veto it.</strong> The
+embedding-and-compression leg and the flat summary are
+<em>abort-mandatory</em>: <code>run_generation</code> awaits both and
+raises <code>ToolError</code> naming every failed leg, and the
+transaction never opens (<code>_shared.py:1034-1066</code>). Node
+summaries never raise. A summary timeout is derived from the retry
+settings (<code>_shared.py:692-756</code>). An Ollama outage therefore
+stops stores entirely unless the operator disables the summary
+provider.</p>
+<p><strong>Deduplication is narrow and careful.</strong> The
+in-transaction check reads the latest row for the thread and source,
+compares hashes, suppresses the fold if an opposite-source row followed,
+and updates with <code>AND content_hash IS ?</code>, so a concurrent
+text change turns the update into an insert
+(<code>context_repository.py:346-431</code>).</p>
+<p><strong>Agent-generated content is stored like a user's</strong>,
+distinguished only by the <code>source</code> the caller declares.
+Nothing filters content, and the tool accepts <code>source='user'</code>
+from an agent.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous. One embedding call per chunk, one summary call
+and one call per heading when node summaries are on, all before the
+transaction. Retrievable as soon as the call returns.</li>
+<li>Background: none. No pass re-reads the store; re-embedding and
+compression migrations are operator CLIs.</li>
+<li>Read: bounded by <code>limit</code> (at most 100) and the
+300-character preview per hit. Nothing is injected automatically, so the
+prompt prefix is untouched until the agent calls a tool.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds all sixteen tools unless <code>DISABLED_TOOLS</code>
+removes some, including thread-wide delete and batch update. Server
+instructions are sent in the MCP <code>instructions</code> field and can
+be replaced with <code>MCP_SERVER_INSTRUCTIONS</code>
+(<code>app/instructions.py:76-90</code>).</p>
+<p>The Claude Code bundle is the most opinionated part. The thread is
+the Claude Code session, set by a hook and injected into every subagent.
+Subagents are told to retrieve before working and to store a report
+before stopping. User prompts are captured automatically. Four skills —
+metadata schema, preservation, retrieval, issue tracking — define the
+conventions: which metadata fields to set, which searches to run in
+which order, and that substance comes only from full reads.</p>
+<p>Adapting it to another MCP client needs only the server; the hooks
+are Claude Code specific.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Ownership is recorded and not enforced.</strong> The
+principal resolution, the publish-role gate and the owner-only
+visibility change are correct as far as they go
+(<code>access.py:40-64</code>; <code>context.py:833-844</code>). The
+schema comment says visibility <em>"governs who may read the row once
+read scoping enforces it"</em> (<code>sqlite_schema.sql:34</code>), and
+a search of the repositories and read tools for a predicate on either
+column finds none. Under <code>jwt</code> this is a multi-principal
+server where every principal can list threads, read, rewrite and delete
+every other principal's entries.</p>
+<p><strong>Grants are write-only.</strong>
+<code>store_group_read_grants</code> writes one read grant per author
+group on insert when
+<code>ACCESS_CONTROL_DEFAULT_GROUP_GRANTS=author_groups</code>
+(<code>_shared.py:1991-1999</code>).
+<code>GrantRepository.get_grants_for_context</code> has no caller under
+<code>app/</code>, and no tool creates a grant.</p>
+<p><strong>Concurrency is handled deliberately.</strong> Version
+compare-and-set on update, hash re-assertion on the dedup update, a
+refusal of ambiguous id prefixes (<code>app/ids.py:183</code>), a single
+writer queue on SQLite, and one transaction for the embedding and row
+delete.</p>
+<p><strong>Prompt-injected memories</strong> enter as ordinary entries.
+The capture hook stores whatever the user typed that no skip pattern
+matches, and a store from an agent may declare
+<code>source='user'</code>, which the retrieval skill then tells other
+agents to treat as authoritative.</p>
+<p><strong>Privacy and deletion.</strong> Delete is hard and cascades to
+vectors on both backends. What the vector engines do below that is
+outside this reading.</p>
+<p><strong>Uncertainty is not representable</strong> beyond free-form
+metadata.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>scope_enforced</code> — withheld. <code>thread_id</code> is on
+every row and every search applies it when supplied, and omission is a
+stated cross-thread mode. But <code>get_context_by_ids</code>,
+<code>navigate_context</code> and <code>read_context_range</code> read
+the same store by id and cannot carry a thread. The first is mandatory
+in the shipped retrieval protocol. The principal key,
+<code>owner_id</code>, reaches no read at all.</li>
+<li><code>trust_state</code> — withheld. <code>source</code> is
+provenance the caller declares, and <code>metadata.status</code> is a
+filterable field with no meaning to the server. No read excludes an
+entry by default.</li>
+<li><code>tombstone</code> — withheld. Delete removes the row; a deleted
+text can be stored again at once.</li>
+<li><code>bitemporal</code> — withheld; <code>created_at</code> and
+<code>updated_at</code> only.</li>
+<li><code>audit_log</code> — withheld. No table records mutations.
+<code>version</code> counts updates and keeps nothing.</li>
+<li><code>human_review</code> — withheld. No state waits for anyone; the
+agent holds update and delete.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin. The suite is 241 Python files with
+4,105 test functions. CI runs it on pull requests with all extras,
+Ollama and <code>all-minilm</code>, and FTS, semantic and hybrid forced
+on (<code>.github/workflows/test.yml</code>). It does not run on push to
+<code>main</code>, which is where the sync commits land.</p>
+<p><strong>The negative case.</strong>
+<code>test_search_compressed_thread_filter</code>
+(<code>tests/repositories/test_search_compressed.py:284-330</code>)
+seeds three entries in thread <code>t-search</code>, then stores an
+entry in <code>other-thread</code> whose vector is the query plus 0.05
+Gaussian noise, so it would rank first without the filter. It asserts
+the other-thread id is absent and <code>cid_a</code> present, and that
+at least one filter was applied. The file carries no skip marker and the
+compressed path is the default.</p>
+<p><strong>A second, count-based.</strong>
+<code>test_thread_filter_returns_correct_count</code>
+(<code>tests/tools/test_semantic_search_filters.py:35-98</code>) stores
+two entries in one thread and five in others, and asserts exactly two
+results, each from the thread (<code>:96-98</code>). It skips when
+sqlite-vec or Ollama is missing, which CI provides.</p>
+<p><strong>Not covered.</strong> No test asserts that one principal
+cannot read another's private entry, which is consistent with a read
+path that does not try. No test was found asserting that a deleted or
+overwritten text stops appearing in FTS or semantic results; the delete
+tests read in this reading assert vector cleanup. No retrieval-quality
+evaluation or benchmark result is committed.</p>
+<p><strong>No paper describes the system.</strong>
+<code>CITATION.cff</code> cites the software. The one arXiv reference is
+the TurboQuant paper behind the vendored compressor, <a
+href="https://arxiv.org/abs/2504.19874">arXiv:2504.19874</a>, submitted
+28 April 2025, cited in <code>docs/embedding-compression.md:480</code>;
+its distortion and unbiasedness bounds have their own tests under
+<code>tests/compression/turboquant/</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Generate before the transaction, and make the expensive legs
+abort-mandatory.</strong> A failed embedding should store nothing rather
+than store a row that semantic search will never find.</li>
+<li><strong>Re-assert the dedup decision in the update's
+predicate.</strong> Matching on the hash the pre-check observed turns a
+lost race into an insert instead of a summary describing different
+text.</li>
+<li><strong>Suppress deduplication across a turn boundary.</strong> An
+identical message after an intervening reply is a new turn, not a
+retry.</li>
+<li><strong>Plant the near-duplicate in the other scope.</strong> A
+scope test whose foreign row sits next to the query in vector space
+fails when the filter is dropped, and a count assertion beside it
+catches a filter applied after the limit, the bug
+<code>test_thread_filter_returns_correct_count</code> was written
+for.</li>
+<li><strong>Write the unfinished part into the operator
+documentation.</strong> One sentence saying reads are not
+access-controlled is worth more than the columns.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Stamping an owner the reads never consult.</strong> A
+<code>private</code> default that does nothing on read is worse than no
+column: it reads as a guarantee in the schema, the settings and the tool
+descriptions.</li>
+<li><strong>Checking ownership on one mutation.</strong> Guarding the
+visibility change while text update and delete stay open protects the
+label and not the content.</li>
+<li><strong>A mandatory by-id step with no scope argument.</strong> If
+every search result must be fetched in full to be used, the fetch is the
+read path that needs the predicate.</li>
+<li><strong>Installing agent hooks from a branch head.</strong> Pin the
+hook source to a release.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer, or one trusted team on one server, running
+Claude Code with many subagents that hand work to each other within a
+session and search past sessions by project metadata. It assumes a local
+Ollama or a paid embedding and summary provider on every write, and it
+pays for that with fast, well-filtered search. Anyone who needs to host
+it for others, or to separate principals on one instance, should walk
+away: the licence forbids the first and the read path does not implement
+the second.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>When read-path visibility filtering lands, will it cover
+<code>get_context_by_ids</code>, the navigation tools,
+<code>list_threads</code> and <code>get_statistics</code>, or only the
+search tools?</li>
+<li>What does the source repository behind the sync commits hold that
+the public one does not — tests, CI on <code>main</code>, or
+history?</li>
+<li>How long does a store take on the default local models for a typical
+agent report with node summaries on?</li>
+<li>Is the dedup fold ever surprising in practice, given it keys on the
+latest same-source row only?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and storage:</strong>
+<code>app/schemas/sqlite_schema.sql</code>,
+<code>app/schemas/postgresql_schema.sql</code>,
+<code>app/migrations/</code>,
+<code>app/backends/sqlite_backend.py</code>,
+<code>app/backends/postgresql_backend.py</code>.</li>
+<li><strong>Write path:</strong> <code>app/tools/context.py</code>,
+<code>app/tools/batch.py</code>, <code>app/tools/_shared.py</code>,
+<code>app/repositories/context_repository.py</code>,
+<code>app/summary/instructions.py</code>.</li>
+<li><strong>Retrieval:</strong> <code>app/tools/search.py</code>,
+<code>app/tools/navigation.py</code>,
+<code>app/repositories/embedding_repository.py</code>,
+<code>app/repositories/fts_repository.py</code>,
+<code>app/fusion.py</code>,
+<code>app/reranking/providers/flashrank.py</code>.</li>
+<li><strong>Access control:</strong> <code>app/auth/access.py</code>,
+<code>app/auth/principal.py</code>,
+<code>app/repositories/grant_repository.py</code>,
+<code>app/settings.py:225-265</code>,
+<code>docs/environment-variables.md:54</code>.</li>
+<li><strong>Integration:</strong> <code>app/server.py</code>,
+<code>app/instructions.py</code>,
+<code>agents/claude-code/hooks/</code>,
+<code>agents/common/skills/</code>.</li>
+<li><strong>Tests:</strong>
+<code>tests/repositories/test_search_compressed.py</code>,
+<code>tests/tools/test_semantic_search_filters.py</code>,
+<code>tests/tools/test_deduplication.py</code>,
+<code>tests/tools/test_update_concurrency_version_guard.py</code>,
+<code>.github/workflows/test.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rnE 'owner_id|visibility' app/repositories app/backends app/query_builder.py app/services app/tools/search.py app/tools/navigation.py app/tools/discovery.py | grep -iE 'where|and '</code>
+— two docstring lines; no read predicate on either column.</li>
+<li><code>grep -rnE 'get_grants_for_context' app</code> — the definition
+only; no caller.</li>
+<li><code>grep -rn 'get_grants_for_context\|store_group_read_grants\|grants\.' app --include='*.py'</code>
+— one writer call, <code>_shared.py:1995</code>.</li>
+<li><code>grep -rniE 'audit|tombstone|superseded|valid_from|valid_to' app --include='*.py' --include='*.sql'</code>
+— one comment in <code>app/cli/migrate.py</code>; no audit table,
+tombstone or validity field.</li>
+<li><code>grep -n 'CREATE TABLE\|CREATE VIRTUAL TABLE' -r app</code> —
+the tables listed in sections 3 and 5.</li>
+<li><code>grep -n -i 'fallback\|fall back\|widen\|retry' app/tools/search.py</code>
+— reranking and legacy-boundary fallbacks and an FTS migration retry
+message; no unscoped retry.</li>
+<li><code>grep -rn "call_tool(" agents</code> — three
+<code>store_context</code> calls in the prompt-saver hook; no hook
+searches.</li>
+<li><code>grep -rnE "assert .* not in (ids|result_ids|returned_ids|found|texts|contents)" tests</code>
+— the compressed-search case and a write-queue rollback case.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— TurboQuant sources, tests and docs; <code>CITATION.cff</code> is
+<code>type: software</code>.</li>
+<li><code>grep -rn -i 'renamed\|formerly' --exclude-dir=.git .</code> —
+two test-file hits; no rename of the project.</li>
+<li><code>grep -rn -i 'read scoping\|not enforced' --exclude-dir=.git .</code>
+— the schema comments, <code>docs/environment-variables.md:54</code> and
+<code>CLAUDE.md:79</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/alex-feel/mcp-context-server/commit/ed6a24d8f40805fce43f019c1f6393bd515b93dc"><code class="commit-id" title="ed6a24d8f40805fce43f019c1f6393bd515b93dc">ed6a24d8…</code></a>
+— first reading, at the head of <code>main</code>, a sync commit dated
+30 September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: one auto-run surface (<code>server.json</code>, an MCP registry
+manifest naming the PyPI package), four build-time execution points
+(<code>conftest.py</code> files), no unpinned surface, and two
+dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip. <code>CLAUDE.md</code> was treated as data. Read with
+<code>grep</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

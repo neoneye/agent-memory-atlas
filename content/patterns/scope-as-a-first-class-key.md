@@ -885,6 +885,10 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[Claude Engram](../../systems/claude-engram/) partitions by file and then chooses the file by name.** Each registered project path has its own `memory.json` and no row carries a project key. When the current path is unregistered, both hook readers load the first registered project whose directory basename matches, and `load_project_memory` prefers that match over the path's own ancestors, so a new `backend` checkout is injected with another `backend`'s rules and mistakes. **A missed scope lookup should return nothing; a basename is not an identity.**
 
+**[MCP Context Server](../../systems/mcp-context-server/) has the principal key on every row and the predicate on no read.** `owner_id` is stamped from the verified token and never taken from a tool argument, and `visibility` defaults to `private`, yet no query filters on either, and the project's environment reference says all entries remain readable by any connected client. The live key is `thread_id`, which every search applies when supplied, while `get_context_by_ids` — the full read its own retrieval skill makes mandatory after every search — takes no thread. **A stamped owner with no read predicate is a promise in the schema; ship the filter with the column or leave the column out.**
+
+[Tree Ring Memory](../../systems/tree-ring-memory/) puts the key on the row and then gives its two read paths different owners. The automatic startup brief takes the project from the configured root and the agent, workflow and session from the harness hook payload, rejects a payload that tries to supply a root or store id, and compiles `project IN (?, ?)` plus an own-identity clause for private scopes into SQL before the candidate cap, pinned by a set-equality test and a 300-row starvation test. Explicit `recall` applies whichever keys the caller passes and none otherwise, and `export` takes no project at all; the README calls the fields partitions, not read ACLs.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

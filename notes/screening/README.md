@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 698 of 698 screened at the report's current pin.**
+**Progress: 700 of 700 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 325 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 378 |
-| Repositories with build-time execution (`EXEC`) | 506 |
+| Repositories with an auto-run surface (`RUNS`) | 327 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 379 |
+| Repositories with build-time execution (`EXEC`) | 507 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -186,6 +186,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`marsnme`](../../content/systems/marsnme.md) | `server.json` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
 | [`matrix-os`](../../content/systems/matrix-os.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json` |
+| [`mcp-context-server`](../../content/systems/mcp-context-server.md) | `server.json` |
 | [`mcp-memory-service`](../../content/systems/mcp-memory-service.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitattributes` |
 | [`mem0`](../../content/systems/mem0.md) | `.claude-plugin/`, `.gitmodules` |
 | [`mem9`](../../content/systems/mem9.md) | `.claude-plugin/` |
@@ -333,6 +334,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`token-savior`](../../content/systems/token-savior.md) | `hooks/`, `server.json` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`tracedecay`](../../content/systems/tracedecay.md) | `.githooks/`, `.gitmodules`, `server.json` |
+| [`tree-ring-memory`](../../content/systems/tree-ring-memory.md) | `.claude-plugin/` |
 | [`trilium`](../../content/systems/trilium.md) | `.envrc`, `.mcp.json`, `.vscode/settings.json` |
 | [`trueforge`](../../content/systems/trueforge.md) | `.cursor/rules/` |
 | [`ulpia`](../../content/systems/ulpia.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `.mcp.json` |

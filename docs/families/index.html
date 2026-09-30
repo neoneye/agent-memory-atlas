@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="The 698
+    <meta name="description" content="The 700
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -13,7 +13,7 @@ here.">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="System
 Families — Agent Memory Atlas">
-    <meta property="og:description" content="The 698
+    <meta property="og:description" content="The 700
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -22,7 +22,7 @@ here.">
     <meta name="twitter:title" content="System
 Families — Agent Memory Atlas">
     <meta name="twitter:description" content="The
-698 systems grouped by eight architectural
+700 systems grouped by eight architectural
 commitments, the categories almost nothing models, and the boundaries of
 what counts as memory here.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
@@ -46,7 +46,7 @@ what counts as memory here.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "System Families",
-      "description": "The 698 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
+      "description": "The 700 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -103,7 +103,7 @@ what counts as memory here.">
         <div class="document-hero-inner">
           <p class="eyebrow">Taxonomy</p>
           <h1>System Families</h1>
-          <p class="document-deck">The 698 systems
+          <p class="document-deck">The 700 systems
 grouped by eight architectural commitments, the categories almost
 nothing models, and the boundaries of what counts as memory here.</p>
                                                 </div>
@@ -120,7 +120,7 @@ nothing models, and the boundaries of what counts as memory here.</p>
           </div>
         </aside>
         <article class="prose" id="article">
-<p>698 systems do not fall into 182 categories. They
+<p>700 systems do not fall into 182 categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -3853,7 +3853,10 @@ href="../systems/claude-engram/"><code>claude-engram</code></a>, <a
 href="../systems/ctx-open/"><code>ctx-open</code></a>, <a
 href="../systems/roampal-core/"><code>roampal-core</code></a>, <a
 href="../systems/opencode-session-recall/"><code>opencode-session-recall</code></a>,
-<a href="../systems/aoci-code/"><code>aoci-code</code></a></p>
+<a href="../systems/aoci-code/"><code>aoci-code</code></a>, <a
+href="../systems/mcp-context-server/"><code>mcp-context-server</code></a>,
+<a
+href="../systems/tree-ring-memory/"><code>tree-ring-memory</code></a></p>
 <p><strong><a href="../systems/dsh-mneme/">dsh-mneme</a> makes
 background consolidation accountable rather than trusted.</strong> A
 DeepSeek Harness plugin on SQLite with Markdown mirrors, it writes a
@@ -7610,6 +7613,30 @@ preimage recovery. Against it: staleness is the only state an entry has,
 derived per call and delivered unmarked by the default per-object read,
 and <code>aoci_report</code>, the documented route for disputing a live
 entry, refuses in the default layout. No mark.</p>
+<p><strong><a href="../systems/mcp-context-server/">MCP Context
+Server</a> stamps an owner on every row and reads it nowhere.</strong> A
+FastMCP server over SQLite or PostgreSQL, it stores user prompts and
+agent reports as thread-keyed entries, generates an embedding and a
+local-model summary before each write commits, and serves filter, FTS,
+compressed-vector and RRF hybrid search. The write path is careful:
+nothing is stored if generation fails, updates are a version
+compare-and-set, and deduplication re-asserts the hash it observed. But
+<code>owner_id</code> and a default-<code>private</code>
+<code>visibility</code> reach no query, only a visibility change checks
+ownership, and the by-id fetch every search leads to takes no thread.
+The project's own docs say reads are not yet access-controlled.</p>
+<p><strong><a href="../systems/tree-ring-memory/">Tree Ring Memory</a>
+builds its startup brief's scope from the harness, not from the
+model.</strong> A Rust CLI over one SQLite FTS5 file, it injects at most
+eight lines at session start through Claude Code and Codex hooks,
+filtered in SQL on the project root's name and the caller's own agent,
+workflow and session before the candidate cap, and blocks each stop once
+to ask for up to three restricted <code>capture</code> writes. No LLM
+runs anywhere. Writes are idempotent on a hashed operation namespace
+that redaction cannot release. Correction is weak: <code>forget</code>
+requires a reason and discards it, explicit <code>recall</code> returns
+expired rows the brief hides, and the agent can write heartwood directly
+in the default open mode.</p>
 <h2 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
 symbolic memory</h2>
 <p><a href="../systems/holomem/"><code>holomem</code></a>, <a
