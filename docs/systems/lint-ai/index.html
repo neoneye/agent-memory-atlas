@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust memory layer for coding
+agents that captures session outcomes by hook and hides superseded
+evidence at query time, inferred from regex-extracted claims.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Lint-AI — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust memory layer for
+coding agents that captures session outcomes by hook and hides
+superseded evidence at query time, inferred from regex-extracted
+claims.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Lint-AI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust memory layer for
+coding agents that captures session outcomes by hook and hides
+superseded evidence at query time, inferred from regex-extracted
+claims.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Lint-AI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Lint-AI",
+      "description": "A Rust memory layer for coding agents that captures session outcomes by hook and hides superseded evidence at query time, inferred from regex-extracted claims.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Current-state retrieval over captured
+coding-agent sessions</p>
+          <h1>Lint-AI</h1>
+          <p class="document-deck">A Rust memory layer for coding agents
+that captures session outcomes by hook and hides superseded evidence at
+query time, inferred from regex-extracted claims.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/RooAGI/Lint-AI">
+              <span>Source</span>
+              <strong>RooAGI/Lint-AI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/RooAGI/Lint-AI/commit/a1919f1daac035068aa70311d091ad2a8286fd49" title="a1919f1daac035068aa70311d091ad2a8286fd49">
+              <span>Analyzed revision</span>
+              <code>a1919f1d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RooAGI--Lint-AI" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>RooAGI--Lint-AI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>53,420
+lines of Rust outside test modules, 8,908 of them benchmark and server
+binaries; about 9,600 lines of Python extractors and benchmark
+scripts</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>276
+commits on main by 7 contributors, 5 April – 30 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>641
+Rust test functions and 62 Python test functions</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Lint-AI is a Rust memory layer for coding agents. Lifecycle hooks in
+Claude Code, Codex, Gemini CLI, AGY and OpenClaw capture a short record
+of each turn into a project-local store and inject relevant records at
+the next prompt; MCP servers expose search over those records and the
+project's own files.</p>
+<p>What is notable is the current-state policy. At every refresh it
+extracts claims from each document, links claims on one subject into
+chains, and marks a document superseded when an explicit link, a
+correction word or a newer timestamp replaces its only claim. A
+superseded document leaves the candidate set before ranking, on every
+entry point, and a history query brings it back labelled.</p>
+<p>What is weak is where that policy reaches. It hides only documents
+holding a single claim; a captured session record holds several lines,
+so it is at most marked conflicted, and the hook that injects it drops
+the mark.</p>
+<p>The rest of the tree is lint for knowledge bases — orphan pages,
+missing cross-references, terminology drift (<code>src/review.rs</code>,
+<code>src/rules/</code>) — which is where the name comes from and is not
+memory. The memory surface is two stores per project:
+<code>.lint-ai/memory/</code> for captured sessions and
+<code>.lint-ai/workspace-memory/</code> for indexed project files.</p>
+<p>A second API, shaped like mem0's add and search, serves an HTTP
+server, Python bindings and a Hermes Agent plugin with per-user rows,
+explicit <code>supersedes_id</code>, expiry and delete. It is what the
+LongMemEval figures in the README exercise, and by default it does not
+open the store the hooks write.</p>
+<p>Two marks: <code>scope_enforced</code> on that API's
+<code>memory_user_id</code> filter, and <code>negative_eval</code> on
+committed cases asserting superseded material stays out of a populated
+result. Section 9 names the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <code>SourceDocument</code>: a captured turn, an API
+message, or a project file. It becomes retrievable the moment it is
+upserted; there is no candidate state and no extraction model. Belief is
+then decided at query time, per document, by a status the store derives
+and never stores as authored.</p>
+<p><strong>Claims are regex matches, and chains are keyed on subject and
+predicate.</strong> <code>extract_claims</code> splits content on
+newlines and sentence punctuation and tries four patterns: ownership
+(<em>"X owns Y"</em>), assignment, usage (<em>"use X for Y"</em>), and a
+scalar setting of the form <em>"name: 5"</em> or <em>"name = true"</em>
+(<code>src/semantic_relations.rs:993-1040</code>,
+<code>:1096-1163</code>). Claims sharing scope, subject and predicate
+form a chain in timestamp order.</p>
+<p><strong>Three things decide a relation between neighbours on a
+chain.</strong> An equal value is <code>Confirms</code>. A newer
+document containing <em>"instead of"</em>, <em>"no longer"</em>,
+<em>"previously"</em> or five other cue phrases anywhere is
+<code>Supersedes</code> at 0.95. A strictly newer date from the same
+source kind is <code>Supersedes</code> at 0.90. Anything else is
+<code>ConflictsWith</code> at 0.75 (<code>:624-681</code>,
+<code>:1297-1311</code>). An explicit <code>supersedes_id</code> filter,
+from Markdown frontmatter or the API, is <code>Supersedes</code> at 1.0
+when both documents share a semantic scope (<code>:601-619</code>).</p>
+<p><strong>Only a whole-document match hides anything.</strong>
+<code>document_state_for</code> marks the target <code>Superseded</code>
+only when the relation is explicit, or when the target's non-heading
+text is exactly the superseded claim; otherwise it becomes
+<code>Conflicted</code> and stays retrievable (<code>:827-883</code>).
+The design document says so in the same terms
+(<code>docs/semantic-supersession.md</code>).</p>
+<p><strong>The status is recomputed, not held.</strong> Nothing writes
+<code>Current</code> or <code>Conflicted</code> to a row;
+<code>SemanticRelationStore::update_documents</code> rebuilds the
+affected chains from content on every refresh. A document stops being
+believed when a newer document replaces it and comes back if that
+document is removed or edited. Deletion is the only permanent exit.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Lint-AI document becomes current, conflicted or superseded, and which read path shows which</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Lint-AI document becomes current, conflicted or superseded, and which read path shows which
+flowchart TD
+    H[&quot;hook capture: Stop, PreCompact,&lt;br/&gt;SessionEnd&quot;] --&gt; D[&quot;SourceDocument upserted&quot;]
+    A[&quot;add_memory, HTTP /add,&lt;br/&gt;Python Memory.add&quot;] --&gt; D
+    F[&quot;project file indexed&quot;] --&gt; D
+    D --&gt; X[&quot;refresh: regex claims per sentence,&lt;br/&gt;chains keyed on scope, subject, predicate&quot;]
+    X --&gt; R{&quot;relation to the previous&lt;br/&gt;claim on the chain&quot;}
+    R -- &quot;same value&quot; --&gt; CF[&quot;Confirms&quot;]
+    R -- &quot;explicit supersedes_id&quot; --&gt; SE[&quot;Supersedes 1.0&quot;]
+    R -- &quot;correction word, or newer&lt;br/&gt;date from same source kind&quot; --&gt; SI[&quot;Supersedes 0.90 or 0.95&quot;]
+    R -- &quot;otherwise&quot; --&gt; CW[&quot;ConflictsWith 0.75&quot;]
+    SI --&gt; O{&quot;target text is only&lt;br/&gt;the superseded claim?&quot;}
+    O -- &quot;yes: a one-line decision file&quot; --&gt; SUP[&quot;Superseded&quot;]
+    O -- &quot;no: a captured session record&quot; --&gt; CON[&quot;Conflicted, still retrievable&quot;]
+    SE --&gt; SUP
+    CW --&gt; CON
+    SUP --&gt; Q{&quot;query mentions history,&lt;br/&gt;previously, timeline?&quot;}
+    Q -- &quot;no&quot; --&gt; GONE[&quot;removed before ranking&quot;]
+    Q -- &quot;yes&quot; --&gt; HIST[&quot;returned as Historical&quot;]
+    CON --&gt; MCP[&quot;MCP search: status in payload&quot;]
+    CON --&gt; HOOK[&quot;hook injection: status dropped&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One crate, <code>lint_ai</code>, builds a CLI (<code>lint-ai</code>),
+an HTTP server (<code>src/bin/server.rs</code>), per-provider MCP
+servers and hook commands behind cargo features, and optional PyO3
+bindings. Every production path opens a <code>MemoryService</code> over
+an <code>IndexStore</code>; <code>tests/no_store_bypass.rs</code> fails
+the build if code outside the pipeline, the service, tests or benchmarks
+touches <code>IndexStore</code> directly.</p>
+<p><strong>Storage.</strong> An <code>IndexStore</code> directory holds
+<code>records.json</code> (pretty-printed, atomically replaced),
+<code>core.bin</code>, <code>segments.json</code>,
+<code>chunk_lifecycle.json</code> and Tantivy segments
+(<code>src/pipeline/store.rs:35-40</code>,
+<code>src/pipeline/persistence.rs:594-633</code>). Documents are grouped
+into segments by <code>group_id</code>, which for captured memory is one
+session.</p>
+<p><strong>Two stores per project.</strong> Hooks and MCP write tools go
+through <code>with_shared_memory_service</code>, which takes an advisory
+file lock on <code>.lint-ai/memory/</code> with a 10-second wait
+(<code>src/integrations/mcp_index.rs:116</code>, <code>:140-157</code>).
+MCP search composes that store with
+<code>.lint-ai/workspace-memory/</code>, a rebuild of the project's
+files that is cleared and reloaded whenever a filesystem fingerprint
+changes (<code>:337-375</code>). The HTTP server opens
+<code>workspace-memory</code> by default, or the first index it
+discovers (<code>src/bin/server.rs:238-259</code>).</p>
+<p><strong>Background work.</strong> A per-process thread extracts key
+phrases through a spaCy subprocess
+(<code>scripts/spacy_relations.py</code>); hook processes die before it
+finishes, so <code>search_with_filters</code> backfills one batch
+synchronously (<code>src/memory_api.rs:1286-1291</code>). Both fail open
+when Python is absent.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>cargo install --git</code> builds one binary; nothing else is
+required to store and retrieve. <code>Cargo.lock</code> is gitignored
+(<code>.gitignore:42</code>), so every install resolves the dependency
+graph afresh. spaCy is optional and improves key phrases and structured
+facts. No API key is needed. The HTTP server refuses any non-loopback
+bind (<code>src/bin/server.rs:1361-1375</code>).
+<code>records.json</code> is readable by hand.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture (hooks).</strong> <code>run_hook</code> records the
+raw event if recording is on, then runs <code>handle_hook</code> on a
+worker thread against a 2,000 ms budget
+(<code>src/integrations/claude_code/hooks/mod.rs:63-129</code>,
+<code>:139-163</code>). <code>Stop</code>, <code>PreCompact</code>,
+<code>SessionEnd</code> and <code>SubagentStop</code> call
+<code>capture</code>, which reads up to 4 MiB of transcript tail, keeps
+the last six messages, and writes <em>"Memory type, Request, Result,
+Affected paths"</em> with each field redacted and capped at 1,500 bytes
+(<code>:384-424</code>, <code>:470-501</code>, <code>:626-663</code>).
+The document id hashes the content, so every distinct turn is a new row
+(<code>:397-401</code>).</p>
+<p><strong>Capture (API).</strong>
+<code>MemoryService::add_unpublished</code> validates ids, rejects a
+reused <code>request_id</code> with different content, and writes one
+document per message with <code>memory_user_id</code>,
+<code>request_id</code>, a fingerprint, and optional
+<code>expires_at_ms</code> and <code>supersedes_id</code> filters
+(<code>src/memory_api.rs:1006-1088</code>). MCP <code>add_memory</code>
+calls it with the fixed user <code>"mcp"</code> and never passes
+<code>supersedes_id</code>
+(<code>src/integrations/mcp_tools.rs:554-638</code>).</p>
+<p><strong>Refresh.</strong>
+<code>IndexStore::prepare_pending_changes</code> rebuilds records for
+changed documents, drops removed ones, rebuilds the temporal fact table
+and updates semantic relations incrementally
+(<code>src/pipeline/store.rs:1266</code>, <code>:1310-1328</code>).</p>
+<p><strong>Retrieval.</strong> Hooks call
+<code>observe_plain_query</code>, which runs
+<code>IndexStore::query_prepared</code> with no filters
+(<code>src/memory_api.rs:2159-2180</code>). MCP search, the HTTP server
+and the benchmarks call <code>search_with_filters</code>, which adds
+query augmentation, conversational rerank, structured facts and a
+temporal scope boost (<code>:1278-1368</code>). Its doc comment says all
+retrieval converges there (<code>:1264-1277</code>); the hooks, which
+are the automatic path, do not. Both reach
+<code>execute_prepared_on_snapshot_parts</code>, where filters and
+semantic suppression are intersected before ranking
+(<code>src/pipeline/persistence.rs:23-98</code>).</p>
+<p><strong>Injection.</strong> <code>select_session_documents</code>
+keeps one hit per session and rewrites it to that session's preferred
+record — a session summary over an outcome over a checkpoint, then the
+latest (<code>src/memory_api.rs:2202-2264</code>). The hook formats up
+to five within 8,000 bytes, each with captured and current branch and
+revision and an ancestry verdict from <code>git merge-base</code>
+(<code>src/integrations/claude_code/hooks/mod.rs:317-367</code>,
+<code>:592-611</code>).</p>
+<p><strong>Correction.</strong> <code>delete</code>,
+<code>supersede</code> and <code>expire</code> exist on
+<code>MemoryService</code> (<code>src/memory_api.rs:2329-2400</code>)
+and are reachable over HTTP and Python.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>SourceDocument</code> carries <code>doc_id</code>,
+<code>source</code>, <code>content</code>, <code>concept</code>,
+<code>group_id</code>, <code>headings</code>, <code>links</code>,
+<code>timestamp</code>, <code>author_agent</code> and a string-to-string
+<code>filters</code> map. Everything memory-specific is a filter key:
+<code>provider</code>, <code>project_id</code>, <code>session_id</code>,
+<code>document_type</code>, <code>branch</code> and
+<code>revision</code> on captures
+(<code>src/integrations/claude_code/document.rs:41-79</code>);
+<code>memory_user_id</code>, <code>request_id</code>,
+<code>request_fingerprint</code>, <code>expires_at_ms</code> and
+<code>supersedes_id</code> on API rows.</p>
+<p><strong>Derived state.</strong> <code>SemanticClaim</code> holds
+subject, predicate, object, evidence sentence, <code>effective_at</code>
+(the document timestamp), scope and a fixed 0.85 confidence.
+<code>SemanticRelation</code> holds kind, both claim and document ids,
+confidence, method and evidence strings.
+<code>DocumentSemanticState</code> holds the status,
+<code>superseded_by</code>, confidence and evidence
+(<code>src/semantic_relations.rs:42-93</code>). None of it is authored;
+all of it is rebuilt from content.</p>
+<p><strong>Scope is a string derived three ways.</strong>
+<code>semantic_scope</code> is a <code>semantic_scope</code> filter if
+present, else <code>user:</code> plus <code>memory_user_id</code>, else
+<code>store</code> (<code>:1215-1225</code>). Captured memories have
+neither, so every captured ownership or usage claim in a project shares
+the <code>store</code> scope. Scalar settings are further scoped by
+<code>group_id</code> — for a capture, one session — or by parent
+directory and heading for a file (<code>:1227-1252</code>). Two sessions
+stating different values for the same setting therefore never meet on a
+chain.</p>
+<p><strong>Temporal facts.</strong> <code>TemporalFact</code> has
+<code>valid_from</code>, <code>valid_to</code> and
+<code>is_latest</code>, closed when a later fact on the same key changes
+value (<code>src/temporal_fact.rs:22-45</code>, <code>:206-258</code>).
+<code>valid_from</code> is the document timestamp; there is no separate
+record time.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical retrieval is Tantivy BM25 over sections and chunks, with
+sparse entity and term tables, query expansion from a thesaurus and
+WordNet seeds, and temporal scoring whose window depends on the query's
+inferred tense (<code>src/query_plan.rs:76-127</code>). The hooks and
+MCP use a segmented layout that routes each query to the three most
+distinctive segments
+(<code>src/integrations/mcp_index.rs:273-281</code>).</p>
+<p><strong>Suppression happens before ranking.</strong>
+<code>semantic_allowed_doc_ids</code> returns every document not
+<code>Superseded</code>, and it is intersected with the caller's filter
+set before the index is queried
+(<code>src/query_plan.rs:172-198</code>), so a superseded document never
+takes a top-k slot. The API's expiry check is the opposite: it runs in
+<code>format_search_response</code>, after ranking, so an expired row
+consumes a slot and the caller gets fewer results
+(<code>src/memory_api.rs:2306-2327</code>).</p>
+<p><strong>The history switch is a substring list.</strong> Any query
+containing <em>"history"</em>, <em>"previous"</em>,
+<em>"previously"</em>, <em>"timeline"</em> or ten other phrases disables
+suppression and relabels superseded hits <code>Historical</code>
+(<code>src/semantic_relations.rs:1320-1340</code>). <em>"What did we
+previously decide about retries"</em> gets both values.</p>
+<p><strong>What the agent sees differs by path.</strong> MCP
+<code>search_results</code> includes <code>semantic_status</code>,
+<code>superseded_by</code> and relation evidence per hit
+(<code>src/integrations/mcp_tools.rs:114-144</code>). The hook's
+injected block carries source, type, capture time, branch, revision and
+ancestry, and no status
+(<code>src/integrations/claude_code/hooks/mod.rs:340</code>), so a
+<code>Conflicted</code> record is injected as plainly as a current
+one.</p>
+<p><strong>Failure modes.</strong> Session collapse rewrites a matched
+checkpoint to the session's summary, which may not contain the matched
+text. Captured ownership claims from unrelated sessions share one scope
+and can chain.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Hook capture is automatic and model-free: the latest user message
+that is not a task notification and the latest assistant message that
+does not look like a tool trace become <em>Request</em> and
+<em>Result</em>. Tool blocks are dropped. A line containing one of
+eleven credential markers is replaced with <code>[REDACTED]</code>, and
+a private-key block is redacted whole
+(<code>src/integrations/claude_code/hooks/mod.rs:626-663</code>).
+Nothing extracts facts or deduplicates across turns; identical content
+in one session reuses its id.</p>
+<p>Explicit writes are <code>add_memory</code> (MCP), <code>/add</code>
+and <code>/add/batch</code> (HTTP) and <code>Memory.add</code> (Python).
+The HTTP routes take a single-writer gate and return 429 when it is held
+(<code>src/bin/server.rs:886-925</code>).</p>
+<p><strong>Updates and deletes.</strong> The API <code>update</code>
+replaces content under the same id and clears key phrases so they are
+re-extracted (<code>src/memory_api.rs:1189-1248</code>).
+<code>delete</code> removes the row. <code>supersede</code> sets
+<code>supersedes_id</code> on the replacement. <code>expire</code>
+removes the caller's expired rows. All four require the row's
+<code>memory_user_id</code> to equal a non-empty caller id
+(<code>:2329-2400</code>, <code>:2544-2555</code>). None is on the
+agent's MCP surface.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The hook blocks the client for at most 2,000 ms by default
+(<code>LINT_AI_HOOK_TIMEOUT_MS</code>, clamped to 100–30,000). Capture
+opens the store, waits for the write lock for up to 10 s, upserts and
+refreshes. When the budget expires, <code>run_hook</code> writes an
+empty response and returns, and the process exit ends the worker
+mid-capture (<code>:117-129</code>, <code>src/engine/run.rs:307</code>).
+A capture under lock contention is lost with one stderr warning.</p>
+<p>A completed capture is retrievable at the next hook, since the
+refresh runs inside the write. Every refresh rebuilds
+<code>TemporalFactStore</code> over every record
+(<code>src/pipeline/store.rs:1310-1311</code>). Injection is bounded at
+five records and 8,000 bytes and goes into the hook's
+<code>additionalContext</code>, after the cached prefix.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Installers write hooks and MCP entries per client
+(<code>--claude-code-install</code>, <code>--codex-install</code>, and
+equivalents). The MCP servers register <code>search</code>,
+<code>info</code>, <code>list_memories</code>, <code>add_memory</code>,
+<code>get_memory</code>, seven bulletin-board tools,
+<code>record_session</code> and enable/disable/status controls
+(<code>src/integrations/claude_code/mod.rs:677-736</code>,
+<code>src/integrations/mcp_tools.rs:195-317</code>,
+<code>:515-546</code>). A shipped skill tells the agent to call
+<code>mcp__lint-ai__search</code> first for any question about prior
+decisions (<code>.claude/skills/lint-ai-memory/SKILL.md</code>).</p>
+<p>In the Claude Code adapter, retrieval runs at
+<code>SessionStart</code> with a fixed query, <em>"decisions unresolved
+work failures implemented changes"</em>, and at every prompt, prompt
+expansion, tool call and subagent start
+(<code>src/integrations/claude_code/hooks/mod.rs:217-266</code>). All
+providers share one project store; provider is kept per row and can be
+passed to <code>search</code> as a filter. Muse Code's hooks only record
+raw events
+(<code>src/integrations/muse_code/hooks/mod.rs:89-117</code>). The
+Hermes plugin posts turns to the HTTP server's <code>/add/batch</code>
+and recalls through <code>/search</code> under a configured user id
+(<code>integrations/hermes-plugin-lintai/__init__.py</code>).</p>
+<p>The session pointer is per provider: MCP <code>search</code> and
+<code>add_memory</code> inherit the session that provider's hooks saw
+last when the agent omits <code>session_id</code>
+(<code>src/integrations/mcp_tools.rs:96-112</code>,
+<code>src/conversation_state.rs:184-230</code>). With two sessions of
+one client open on a project, the pointer belongs to whichever hook
+fired last.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Nothing corrects a hook-captured record.</strong> The agent
+can add and read, not delete or supersede. A person cannot delete one
+through the API either: these records carry no
+<code>memory_user_id</code>, and every API mutation requires the row's
+value to equal a non-empty caller id. Inferred supersession would retire
+a record only if it held a single claim, which a <em>Request/Result</em>
+record never does (<code>src/semantic_relations.rs:850-862</code>). What
+remains is editing the store on disk.</p>
+<p><strong>Scope.</strong> The API filter is enforced on search, get,
+list, update, delete and supersede. An empty <code>user_id</code> skips
+it on search, which
+<code>search_with_empty_user_id_skips_ownership_filter</code> pins as
+intended (<code>src/memory_api.rs:2777-2839</code>). Under JWT the
+body's <code>user_id</code> must equal <code>sub</code>; under a static
+token without <code>SERVER_TENANT_ID</code> any holder names any user,
+including the empty one (<code>src/bin/server.rs:386-438</code>,
+<code>:862-884</code>).</p>
+<p><strong>A deleted replacement keeps its predecessor hidden until
+restart.</strong> <code>supersede</code> adds
+<code>(user, old_id)</code> to the in-memory
+<code>superseded_ids</code>, and <code>delete</code> never removes it
+(<code>src/memory_api.rs:2329-2373</code>). <code>is_visible</code>
+keeps filtering the old row out of search, get and list in the running
+process; a restart rebuilds the set from stored filters and the row
+returns.</p>
+<p><strong>Loss paths.</strong> Capture abandoned at the hook budget
+(section 7). An HTTP server writing into <code>workspace-memory</code>
+shares it with MCP startup, which clears and reloads that store from
+project files when the fingerprint changes
+(<code>src/integrations/mcp_index.rs:350-366</code>); memories added
+over HTTP there would not survive it. That is a reading of both paths,
+not a run.</p>
+<p><strong>Provenance</strong> is strong for captures: provider,
+session, branch and revision travel with each row and reach the injected
+text with an ancestry check.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — awarded on the memory API; evidence in
+the frontmatter. Agent memory is a physical per-project partition with
+no key on the read.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>trust_state</code> — <code>SemanticStatus</code> has a state
+that withholds (<code>Superseded</code>), and it is derived from content
+at every refresh rather than held; nothing can set or retain it, and
+<code>Conflicted</code> withholds nothing.</li>
+<li><code>tombstone</code> — <code>IndexStore.tombstones</code> holds
+removed document ids for the incremental rebuild. Nothing is keyed on a
+rejected value; re-adding the text restores it.</li>
+<li><code>bitemporal</code> — <code>TemporalFact</code> has a validity
+interval but no record time, and none of its five accessors has a caller
+outside its own tests.</li>
+<li><code>audit_log</code> — telemetry records retrievals and lifecycle
+events (<code>src/telemetry.rs:85-204</code>); no mutation record
+exists.</li>
+<li><code>human_review</code> — writes are live on arrival and no state
+waits for anyone.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests and committed results at the pin. CI runs
+<code>cargo test --all-targets</code> with default features and again
+with <code>agent-integrations</code> on every push to <code>main</code>
+touching <code>src/</code> or <code>tests/</code>
+(<code>.github/workflows/full-test-matrix.yml:8-40</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>semantic_policy_hides_automatically_superseded_documents_and_exposes_history</code>
+asserts the newer ownership file is returned and the older is not, then
+that a <em>"what changed"</em> query returns the older one as
+<code>Historical</code> (<code>tests/integration.rs:55-101</code>).
+<code>cli_supersession.rs</code> runs the binary on the README's two
+retry-policy files, once with frontmatter and once with file mtimes, and
+asserts one result and no <code>--llm-context</code> chunk from the old
+file, beside one from the new
+(<code>tests/cli_supersession.rs:15-177</code>). The API case asserts
+exactly the replacement returns
+(<code>src/memory_api.rs:3102-3138</code>).</p>
+<p><strong>Guards on the mechanism's edges.</strong>
+<code>reveals_bug_superseded_claim_hides_unrelated_current_content</code>
+asserts a multi-claim document stays visible as <code>Conflicted</code>
+(<code>tests/integration.rs:103-149</code>). The relation store's
+incremental update is checked against a full rebuild over fixed and
+randomized mutation sequences
+(<code>src/semantic_relations.rs:1949-2570</code>).</p>
+<p><strong>Two cases that cannot fail as named.</strong>
+<code>search_cannot_cross_user_boundaries</code> ends in
+<code>.all(|m| m.content.contains("amber"))</code> with no assertion
+that anything was returned (<code>src/memory_api.rs:2738-2774</code>).
+<code>supersession_is_scoped_to_the_requesting_user</code> points user
+B's <code>supersedes_id</code> at
+<code>stable_doc_id_from_source("old:0")</code>, while user A's row id
+is derived from <code>"user-a:old:0"</code> (<code>:3143</code>,
+<code>:1057-1060</code>), so the link targets no row and the test passes
+whether or not supersession is scoped.</p>
+<p><strong>Benchmarks.</strong>
+<code>comparison/results/retrieval-longmemeval-current.json</code> holds
+the README's headline figures for the 500-question LongMemEval-S set, as
+a summary with the command that produced it. No per-question output is
+committed, so the numbers cannot be recomputed from the tree. They
+measure the API path over question-scoped haystacks, not hook capture.
+No paper or citation block is in the tree.</p>
+<p><strong>Not covered.</strong> No test exercises supersession or
+conflict status on a hook-captured record, the hook budget abandoning a
+capture, or MCP startup rebuilding a store holding HTTP writes.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Filter before ranking, and put the filter in the one
+executor every entry point reaches.</strong> Intersecting the
+current-state set with the caller's filters before the index is queried
+means a hidden document never takes a slot.</li>
+<li><strong>Invert the filter for history instead of deleting.</strong>
+A replaced value is still evidence for <em>what changed</em> questions,
+and a label says so.</li>
+<li><strong>Print the revision a memory was captured at, beside the
+current one and their ancestry.</strong> It lets the model discount a
+memory from a diverged branch.</li>
+<li><strong>Guard architecture with a test.</strong>
+<code>no_store_bypass.rs</code> makes the single service boundary a
+build failure rather than a convention.</li>
+<li><strong>Differential-test an incremental structure against its full
+rebuild</strong>, with randomized mutation sequences.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A correctness mark the injection path drops.</strong> A
+status computed for every hit and shown only on the path the agent must
+choose to call.</li>
+<li><strong>Whole-document suppression over records that are never one
+claim.</strong> Decide what unit a supersession retires, and make the
+capture format produce it.</li>
+<li><strong>A hook budget shorter than the lock wait it may sit
+behind</strong>, in a process whose exit ends the worker.</li>
+<li><strong>A filter applied after the top-k cut</strong> (expiry here),
+which silently shrinks results.</li>
+<li><strong>A derived table rebuilt on every write with no
+reader.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer using several coding agents on one repository
+who wants automatic, local, provenance-rich recall of recent turns and
+of the project's own decision files, with no model call and no service
+to run. The current-state machinery pays off on curated Markdown
+decision records, one claim per file, which is the README's example. It
+does not yet pay off on what the hooks capture. Anyone who needs an
+agent to correct its own memory, a review step, or per-user isolation in
+the agent path should look further; the memory API has the isolation and
+the correction verbs, on a separate store.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does the 2,000 ms budget abandon a capture in practice,
+and is the loss visible anywhere but stderr?</li>
+<li>Is the HTTP server meant to run alongside the MCP servers on the
+same <code>.lint-ai/</code> directory? The default index discovery
+suggests yes.</li>
+<li>Is <code>TemporalFactStore</code> intended for a query path that has
+not landed, and is its per-refresh rebuild measured?</li>
+<li>What share of captured records produce any regex claim at all?</li>
+<li>Does <code>BEHOOD_RELATIONS</code> point at an external extractor
+that changes the structured-fact results the benchmarks report?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong> <code>src/source.rs</code>,
+<code>src/pipeline/store.rs</code>,
+<code>src/pipeline/persistence.rs</code>,
+<code>src/pipeline/config.rs</code>.</li>
+<li><strong>Current-state policy:</strong>
+<code>src/semantic_relations.rs</code>, <code>src/query_plan.rs</code>,
+<code>src/temporal_fact.rs</code>,
+<code>docs/semantic-supersession.md</code>.</li>
+<li><strong>Memory API:</strong> <code>src/memory_api.rs</code>,
+<code>src/bin/server.rs</code>, <code>src/lib.rs</code> (PyO3).</li>
+<li><strong>Hooks:</strong>
+<code>src/integrations/claude_code/hooks/mod.rs</code>,
+<code>src/integrations/claude_code/document.rs</code>,
+<code>src/integrations/codex/hooks/mod.rs</code>,
+<code>src/integrations/gemini_cli/hooks.rs</code>,
+<code>src/integrations/agy/hooks.rs</code>,
+<code>src/integrations/openclaw/hooks.rs</code>.</li>
+<li><strong>MCP:</strong> <code>src/integrations/mcp_tools.rs</code>,
+<code>src/integrations/mcp_index.rs</code>,
+<code>src/integrations/claude_code/mod.rs</code>,
+<code>src/integrations/codex/mod.rs</code>,
+<code>src/conversation_state.rs</code>.</li>
+<li><strong>Recording:</strong>
+<code>src/integrations/session_recording.rs</code>,
+<code>src/telemetry.rs</code>.</li>
+<li><strong>Tests:</strong> <code>tests/integration.rs</code>,
+<code>tests/cli_supersession.rs</code>,
+<code>tests/no_store_bypass.rs</code>,
+<code>tests/query_path_consistency.rs</code>, test modules in
+<code>src/memory_api.rs</code> and
+<code>src/semantic_relations.rs</code>.</li>
+<li><strong>Benchmarks:</strong> <code>comparison/results/</code>,
+<code>benchmark/</code>, <code>src/bin/*benchmark*.rs</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'temporal_facts_as_of|temporal_timeline|temporal_events_between|temporal_adjacent_pairs_between|temporal_timeline_window_around|\.temporal_facts\(' . -g '*.rs' -g '*.py' | grep -v src/pipeline/store.rs</code>
+— no match: the temporal fact accessors have no caller.</li>
+<li><code>rg -n 'observe_plain_query|search_with_filters\(' src -g '!src/memory_api.rs'</code>
+— every hook module calls <code>observe_plain_query</code>; the MCP
+modules call <code>search_with_filters</code>.</li>
+<li><code>rg -n 'expires_at_ms' src -g '!src/memory_api.rs'</code> —
+only construction sites and PyO3 signatures; expiry never reaches the
+index filter.</li>
+<li><code>rg -n -i 'forget|delete_memory|\.delete\(|\.supersede\(|\.expire\(' src -g '!src/bin/**' -g '!src/memory_api.rs'</code>
+— only <code>src/lib.rs</code> (Python); no MCP or hook caller.</li>
+<li><code>rg -n 'semantic_status|superseded' src/integrations/*/hooks* src/integrations/*/hooks/*.rs</code>
+— no match: no hook reads the status.</li>
+<li><code>grep -nE '^\s*(pub )?(pub\(crate\) )?fn |"kind"' src/telemetry.rs</code>
+and
+<code>rg -n -i 'audit|mutation_log|event_log' src/pipeline src/memory_api.rs</code>
+— retrieval, lifecycle and query telemetry only; no mutation log.</li>
+<li><code>git ls-tree -r --name-only HEAD | grep -iE 'cargo.lock'</code>
+— no match; <code>.gitignore:42</code> lists it.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/RooAGI/Lint-AI/commit/a1919f1daac035068aa70311d091ad2a8286fd49"><code class="commit-id" title="a1919f1daac035068aa70311d091ad2a8286fd49">a1919f1d…</code></a>
+— first reading, at the head of <code>main</code>, a merge dated 30
+September 2026 UTC. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>. Screened before reading: no auto-run
+surface, 2 build-time execution points (both ordinary modules named
+<code>build.rs</code> under <code>src/</code>, not Cargo build scripts),
+5 dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip — and no unpinned surface reported, although
+<code>Cargo.lock</code> is gitignored.
+<code>.claude/skills/lint-ai-memory/SKILL.md</code> and
+<code>INSTALL_FOR_AGENTS.md</code> were read as data. Nothing installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

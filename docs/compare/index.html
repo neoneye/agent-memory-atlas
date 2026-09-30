@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-683, generated from each report's frontmatter —
+685, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-683, generated from each report's frontmatter —
+685, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-683, generated from each report's frontmatter —
+685, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 683, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 685, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-683, generated from each report's frontmatter —
+685, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 683 systems by the seven mechanisms
+filters all 685 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -12076,6 +12076,53 @@ non-numeric value; the API's update discards the row's history; every
 custom agent's facts flow up to the default agent</td>
 </tr>
 <tr>
+<td><a href="../systems/kimetsu/"><code>kimetsu</code></a></td>
+<td>One lesson string with scope, kind, confidence, usefulness score,
+validity bounds and a provenance snapshot; kinds are preference,
+convention, command, failure_pattern and fact</td>
+<td>One SQLite file per project at .kimetsu/brain.db plus a
+cross-project user brain at ~/.kimetsu/brain.db; an events table is the
+source of truth, and memories, FTS5, edges, facts and revisions are
+projections</td>
+<td>FTS5 BM25, optional BGE-small cosine with an ANN index, 2-hop graph
+expansion over memory_edges, composite score of relevance, confidence,
+freshness, scope weight and usefulness, provenance multiplier, MMR,
+abstention floors and a token budget; an optional cross-encoder
+rerank</td>
+<td>Explicit record and add tools, a SessionEnd distiller that asks a
+configured model for up to 3 lessons, a coding pipeline that proposes
+memories, and pack import; confidence 0.7 or more is accepted directly,
+lower confidence waits as a proposal</td>
+<td>Correction rewrites text in place and keeps each revision;
+invalidation, forgetting, supersession and expiry are events that remove
+the row from every read; compaction can purge invalidated rows from the
+projection while their events stay. No tombstone</td>
+<td>Physical: one database per project and one per user, and on the
+remote server one database per repository behind per-repo bearer tokens.
+The scope column is a ranking weight, not a filter</td>
+<td>Claude Code hooks on SessionStart, UserPromptSubmit, Stop,
+SessionEnd and optionally Bash tool use; an MCP server with memory
+curation tools; Codex, Cursor, Pi and OpenClaw wiring; a terminal chat;
+an HTTP MCP remote server</td>
+<td>No resident scheduler; session hooks spawn a detached maintain pass
+for reinforcement, digest, prune reporting and skill detection.
+Forgetting is opt-in and off by default; proposals expire after 30
+days</td>
+<td>Pending and rejected proposals are withheld; a provenance multiplier
+from 0.85 to 1.0 ranks and never filters; similar-but-different memories
+are queued as conflicts without changing either</td>
+<td>Event log with a replay that refuses to lose rows; corrections keep
+revisions and reset evidence; citations credit only the revision that
+was delivered; one status predicate repeated on every read path; URL
+packs quarantined by default; secret redaction before any event is
+stored</td>
+<td>The agent holds accept, reject, invalidate and conflict-resolve by
+default; the distiller and the agent choose their own confidence and so
+whether to bypass review; conflict decisions and validity stamps do not
+replicate through sync; the headline benchmark harnesses are in a
+private repository</td>
+</tr>
+<tr>
 <td><a href="../systems/kipi-system/"><code>kipi-system</code></a></td>
 <td>A markdown file with frontmatter — auto-memory notes carrying
 <code>confidence</code>, <code>provenance</code>, <code>status</code>,
@@ -13107,6 +13154,58 @@ caller</td>
 so a byte-identical re-statement of a merged-away fact is folded back
 into the archive and one person's identical write lands on another's
 row; no audit of mutations</td>
+</tr>
+<tr>
+<td><a href="../systems/lint-ai/"><code>lint-ai</code></a></td>
+<td>A SourceDocument: for hook capture, a short Request/Result/Affected
+paths record per Stop, PreCompact or SessionEnd; for the memory API, one
+message per row; for the workspace, one file. Claims are regex-extracted
+from its sentences at refresh</td>
+<td>Per-project directories under .lint-ai: memory for captured
+sessions, workspace-memory for indexed project files. Each holds
+pretty-printed records.json, a binary core, a segment manifest and
+Tantivy segments</td>
+<td>Tantivy BM25 over a query augmented with focus terms and entities,
+per-session segment routing, temporal scoring, optional conversational
+rerank and spaCy relation facts. Superseded documents are removed from
+the candidate set before ranking unless the query reads as
+historical</td>
+<td>Automatic: lifecycle hooks capture the last user request and
+assistant result, redacted and capped at 1,500 bytes per field.
+Explicit: MCP add_memory, HTTP /add, Python Memory.add. Key phrases are
+extracted in the background</td>
+<td>HTTP and Python update, delete, supersede and expire act on rows
+owned by a user id. The agent's MCP surface has add and get only, and
+hook-captured records carry no user id, so nothing deletes them.
+Supersession is also inferred at refresh from claim chains, correction
+words and timestamps</td>
+<td>Physical per project for agent memory, with provider as an optional
+filter. memory_user_id is a keyed filter on the memory API, skipped on
+search when empty</td>
+<td>Capture and recall hooks for Claude Code, Codex, Gemini CLI, AGY and
+OpenClaw, event recording only for Muse Code, a Hermes plugin over the
+HTTP API; per-provider MCP servers with search, list_memories,
+add_memory, get_memory, a bulletin board and recording controls; a
+loopback HTTP server; Python bindings</td>
+<td>A key-phrase worker per process, backfilled synchronously at query
+time for short-lived hook processes; incremental rebuild of claims,
+relations and a temporal fact table on every refresh</td>
+<td>A derived SemanticStatus of current, superseded, conflicted or
+historical per document, recomputed from content at refresh. Only
+superseded is filtered; conflicted is annotated on MCP search results
+and absent from hook-injected context</td>
+<td>One prepared-query executor reached by CLI, IndexStore, hook and MCP
+entries, so the supersession filter cannot be skipped by an entry point;
+history queries invert the filter; captured revision and ancestry status
+are printed beside each injected memory; an incremental relation store
+differential-tested against a full rebuild; a test that fails the build
+on a store bypass</td>
+<td>Inferred supersession suppresses only single-claim documents, so
+captured session memories are at most marked conflicted and the hook
+drops that mark; a capture that outlives the 2-second hook budget is
+abandoned; nothing can correct or delete a hook-captured record; expiry
+is filtered after ranking; the temporal fact table is rebuilt every
+refresh and read by nothing</td>
 </tr>
 <tr>
 <td><a
@@ -29725,7 +29824,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>62 of 683:</em> <a
+<p><em>62 of 685:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -29791,7 +29890,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>170 of 683:</em> <a
+<p><em>171 of 685:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -29860,6 +29959,7 @@ href="../systems/inspeximus/"><code>inspeximus</code></a>, <a
 href="../systems/invalidate/"><code>invalidate</code></a>, <a
 href="../systems/kage/"><code>kage</code></a>, <a
 href="../systems/kannaka-memory/"><code>kannaka-memory</code></a>, <a
+href="../systems/kimetsu/"><code>kimetsu</code></a>, <a
 href="../systems/kipi-system/"><code>kipi-system</code></a>, <a
 href="../systems/kirocrew/"><code>kirocrew</code></a>, <a
 href="../systems/kleos/"><code>kleos</code></a>, <a
@@ -29968,7 +30068,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>116 of 683:</em> <a
+<p><em>117 of 685:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -30013,6 +30113,7 @@ href="../systems/hexis/"><code>hexis</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/inite-brain/"><code>inite-brain</code></a>, <a
 href="../systems/janus-graph/"><code>janus-graph</code></a>, <a
+href="../systems/kimetsu/"><code>kimetsu</code></a>, <a
 href="../systems/knowl/"><code>knowl</code></a>, <a
 href="../systems/lerim/"><code>lerim</code></a>, <a
 href="../systems/linggen-memory/"><code>linggen-memory</code></a>, <a
@@ -30092,7 +30193,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>319 of 683:</em> <a
+<p><em>320 of 685:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -30232,6 +30333,7 @@ href="../systems/lerim/"><code>lerim</code></a>, <a
 href="../systems/letta/"><code>letta</code></a>, <a
 href="../systems/lindahaviv-second-brain/"><code>lindahaviv-second-brain</code></a>,
 <a href="../systems/linggen-memory/"><code>linggen-memory</code></a>, <a
+href="../systems/lint-ai/"><code>lint-ai</code></a>, <a
 href="../systems/livingfeed/"><code>livingfeed</code></a>, <a
 href="../systems/llm-wiki-memory/"><code>llm-wiki-memory</code></a>, <a
 href="../systems/lobu/"><code>lobu</code></a>, <a
@@ -30426,7 +30528,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>228 of 683:</em> <a
+<p><em>229 of 685:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -30515,7 +30617,8 @@ href="../systems/invalidate/"><code>invalidate</code></a>, <a
 href="../systems/jumbo/"><code>jumbo</code></a>, <a
 href="../systems/kaeru/"><code>kaeru</code></a>, <a
 href="../systems/kagura-memory-cloud/"><code>kagura-memory-cloud</code></a>,
-<a href="../systems/kirocrew/"><code>kirocrew</code></a>, <a
+<a href="../systems/kimetsu/"><code>kimetsu</code></a>, <a
+href="../systems/kirocrew/"><code>kirocrew</code></a>, <a
 href="../systems/kleos/"><code>kleos</code></a>, <a
 href="../systems/klypix-mcp/"><code>klypix-mcp</code></a>, <a
 href="../systems/knowl/"><code>knowl</code></a>, <a
@@ -30664,7 +30767,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>92 of 683:</em> <a
+<p><em>92 of 685:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
@@ -30760,7 +30863,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>397 of 683:</em> <a
+<p><em>399 of 685:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -30923,6 +31026,7 @@ href="../systems/kagura-memory-cloud/"><code>kagura-memory-cloud</code></a>,
 href="../systems/kept/"><code>kept</code></a>, <a
 href="../systems/kglite/"><code>kglite</code></a>, <a
 href="../systems/khoj/"><code>khoj</code></a>, <a
+href="../systems/kimetsu/"><code>kimetsu</code></a>, <a
 href="../systems/kipi-system/"><code>kipi-system</code></a>, <a
 href="../systems/kirocrew/"><code>kirocrew</code></a>, <a
 href="../systems/kleos/"><code>kleos</code></a>, <a
@@ -30937,6 +31041,7 @@ href="../systems/lethe/"><code>lethe</code></a>, <a
 href="../systems/letta/"><code>letta</code></a>, <a
 href="../systems/lindahaviv-second-brain/"><code>lindahaviv-second-brain</code></a>,
 <a href="../systems/linggen-memory/"><code>linggen-memory</code></a>, <a
+href="../systems/lint-ai/"><code>lint-ai</code></a>, <a
 href="../systems/llm-wiki-cli/"><code>llm-wiki-cli</code></a>, <a
 href="../systems/lobu/"><code>lobu</code></a>, <a
 href="../systems/loreai/"><code>loreai</code></a>, <a
@@ -31188,8 +31293,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-397 repositories of
-683 assert that particular material must
+399 repositories of
+685 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -31262,7 +31367,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 683 is the real figure for the second kind, and
+of 685 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

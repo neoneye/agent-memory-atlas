@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 683 reports.**
+**This page covers all 685 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6154,3 +6154,23 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, about 13,100 lines of Rust outside tests, 251 commits on master by 2 contributors since 24 January 2026, with the memory module about 4,800 lines. 118 Rust test functions, none of which opens the memory store; the scope tests assert predicate strings. A BEIR harness covers the knowledge index; no memory benchmark result is committed.
 - Study when: you want a compact local MCP memory with hybrid ranking, decay, soft supersession and git-aware upkeep, and want to see each of those done in a few hundred lines of Rust.
 - Do not copy when: global and project memories must stay where they were written, several clients share one server over HTTP, or the source tier must gate anything. The tier is the model's own claim and only reorders.
+
+### [`kimetsu`](../systems/kimetsu/)
+
+- Best idea: **make the log the store and refuse a rebuild that would lose a row.** Every memory mutation is an event inserted under `BEGIN IMMEDIATE` before it is projected, `reset_projection` wipes only derived tables, and `replay_locked` rolls back with an error if any memory that existed before replay is missing after it. Corrections ride the same log: the old text is frozen into `memory_revisions` with a known and an effective time, and a citation bound to a superseded revision earns nothing.
+- Biggest risk: **the review queue is guarded by the producer.** A lesson waits as a proposal only when its producer states confidence below 0.7, and the MCP record tool defaults to 0.8. `kimetsu_brain_memory_accept` sits in the same registry as the write tools, behind a privileged-write gate whose config field defaults to true on a local install, and the projector stamps `decided_by = 'cli'` as a literal.
+- Most reusable component: `crates/kimetsu-brain/src/projector.rs` — the write transaction with busy retry, the dispatch from event kind to projection, the replay that refuses to drop rows, and `apply_memory_corrected`, which freezes evidence on the retiring revision before resetting it.
+- Second risk: **sync replicates eight event kinds and a conflict decision is not one of them.** `SYNC_ALLOWED_KINDS` omits `conflict.resolved` and `memory.temporal`, and a `kept_new` or `kept_existing` decision invalidates the loser only through the `conflict.resolved` projection, so the rejected claim stays active on every peer.
+- Maturity impression: MIT or Apache-2.0, 78,053 lines of Rust outside tests, 384 commits on main from two contributor identities between 9 May and 10 September 2026, and 1,506 test functions that CI runs on lean and embeddings builds. Four marks: `trust_state`, `bitemporal`, `audit_log`, `negative_eval`. The README's LoCoMo, LongMemEval and BEAM figures have no harness in the tree; the ignored `./bench/` checkout is described as a private repository.
+- Study when: you are building local memory for a coding agent and want event sourcing, revision-bound usefulness credit and one status predicate repeated on every read path, all in a single SQLite file.
+- Do not copy when: a person must approve what the agent remembers, or several machines must agree on which of two conflicting memories was rejected.
+
+### [`lint-ai`](../systems/lint-ai/)
+
+- Best idea: **filter superseded evidence before ranking, in the one executor every entry point reaches, and invert it for history.** `semantic_allowed_doc_ids` intersects the current-state set with the caller's filters before the index is queried, so a replaced document never takes a top-k slot; a query containing *"history"*, *"previously"* or *"timeline"* keeps it and relabels it `Historical`. CLI, `IndexStore`, hooks and MCP all reach the same `execute_prepared_on_snapshot_parts`, and `no_store_bypass.rs` fails the build if new code goes around the service.
+- Biggest risk: **the headline mechanism does not reach what the hooks capture.** Inferred supersession marks a document `Superseded` only when its non-heading text is exactly the replaced claim; a captured turn is a multi-line *Request/Result* record, so it becomes `Conflicted` and stays retrievable. The MCP payload carries that status; the hook's injected block, which is the automatic path, does not.
+- Most reusable component: `src/query_plan.rs` — `PreparedQuery::semantic_allowed_doc_ids` and `annotate_semantic_results`, under 60 lines that turn a per-document status into a pre-ranking filter plus a history override, independent of how the status is derived.
+- Second risk: **captured memory has no correction path and can be lost at capture.** Hook records carry no `memory_user_id`, and every API mutation requires one, so nothing deletes or supersedes them; the agent's MCP surface has add and get only. A capture still waiting on the 10-second store lock when the 2-second hook budget expires is abandoned as the process exits.
+- Maturity impression: Apache-2.0, 53,420 lines of Rust outside test modules, 276 commits on main by 7 contributors between 5 April and 30 September 2026, 641 Rust test functions run in CI. Two marks: `scope_enforced` on the memory API's user filter and `negative_eval` on three committed cases that assert a superseded document stays out after a positive control. Two memory-API tests cannot fail as named.
+- Study when: you want current-state retrieval over curated decision files without a model call, or a worked example of revision-and-ancestry provenance printed beside each injected memory.
+- Do not copy when: your memories are multi-sentence session records, the agent must be able to retract what it stored, or the model needs to see which injected memories conflict.

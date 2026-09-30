@@ -572,6 +572,18 @@ search bumps the timestamp the ranker reads for recency, so exposure
 refreshes its own recency term. The counters then decide a ranking term,
 a <code>deprecated</code> flag that hides a document from the session
 brief, and which documents an LLM rewrites.</p>
+<p><strong><a href="../../systems/kimetsu/">Kimetsu</a> binds
+reinforcement to the revision the model was shown.</strong> A cited
+memory gains a full point of usefulness after a successful run and a
+retrieved-but-uncited one a tenth, decayed on a half-life from
+<code>last_useful_at</code>. The citation event carries the claim
+revision or exposure id, and <code>apply_memory_cited</code> credits
+nothing when that revision is no longer current
+(<code>projector.rs:375-420</code>). A text correction freezes the old
+revision's counts in <code>memory_revisions</code> and resets the live
+row's confidence, use count, citations and query routes, so a rewritten
+claim starts without the old one's reputation
+(<code>projector.rs:2748-2828</code>).</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

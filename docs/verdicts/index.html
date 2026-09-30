@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 683 reports.</strong></p>
+<p><strong>This page covers all 685 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28343,6 +28343,99 @@ those done in a few hundred lines of Rust.</li>
 were written, several clients share one server over HTTP, or the source
 tier must gate anything. The tier is the model's own claim and only
 reorders.</li>
+</ul>
+<h3 id="kimetsu"><a
+href="../systems/kimetsu/"><code>kimetsu</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the log the store and refuse a rebuild that
+would lose a row.</strong> Every memory mutation is an event inserted
+under <code>BEGIN IMMEDIATE</code> before it is projected,
+<code>reset_projection</code> wipes only derived tables, and
+<code>replay_locked</code> rolls back with an error if any memory that
+existed before replay is missing after it. Corrections ride the same
+log: the old text is frozen into <code>memory_revisions</code> with a
+known and an effective time, and a citation bound to a superseded
+revision earns nothing.</li>
+<li>Biggest risk: <strong>the review queue is guarded by the
+producer.</strong> A lesson waits as a proposal only when its producer
+states confidence below 0.7, and the MCP record tool defaults to 0.8.
+<code>kimetsu_brain_memory_accept</code> sits in the same registry as
+the write tools, behind a privileged-write gate whose config field
+defaults to true on a local install, and the projector stamps
+<code>decided_by = 'cli'</code> as a literal.</li>
+<li>Most reusable component:
+<code>crates/kimetsu-brain/src/projector.rs</code> — the write
+transaction with busy retry, the dispatch from event kind to projection,
+the replay that refuses to drop rows, and
+<code>apply_memory_corrected</code>, which freezes evidence on the
+retiring revision before resetting it.</li>
+<li>Second risk: <strong>sync replicates eight event kinds and a
+conflict decision is not one of them.</strong>
+<code>SYNC_ALLOWED_KINDS</code> omits <code>conflict.resolved</code> and
+<code>memory.temporal</code>, and a <code>kept_new</code> or
+<code>kept_existing</code> decision invalidates the loser only through
+the <code>conflict.resolved</code> projection, so the rejected claim
+stays active on every peer.</li>
+<li>Maturity impression: MIT or Apache-2.0, 78,053 lines of Rust outside
+tests, 384 commits on main from two contributor identities between 9 May
+and 10 September 2026, and 1,506 test functions that CI runs on lean and
+embeddings builds. Four marks: <code>trust_state</code>,
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>negative_eval</code>. The README's LoCoMo, LongMemEval and BEAM
+figures have no harness in the tree; the ignored <code>./bench/</code>
+checkout is described as a private repository.</li>
+<li>Study when: you are building local memory for a coding agent and
+want event sourcing, revision-bound usefulness credit and one status
+predicate repeated on every read path, all in a single SQLite file.</li>
+<li>Do not copy when: a person must approve what the agent remembers, or
+several machines must agree on which of two conflicting memories was
+rejected.</li>
+</ul>
+<h3 id="lint-ai"><a
+href="../systems/lint-ai/"><code>lint-ai</code></a></h3>
+<ul>
+<li>Best idea: <strong>filter superseded evidence before ranking, in the
+one executor every entry point reaches, and invert it for
+history.</strong> <code>semantic_allowed_doc_ids</code> intersects the
+current-state set with the caller's filters before the index is queried,
+so a replaced document never takes a top-k slot; a query containing
+<em>"history"</em>, <em>"previously"</em> or <em>"timeline"</em> keeps
+it and relabels it <code>Historical</code>. CLI,
+<code>IndexStore</code>, hooks and MCP all reach the same
+<code>execute_prepared_on_snapshot_parts</code>, and
+<code>no_store_bypass.rs</code> fails the build if new code goes around
+the service.</li>
+<li>Biggest risk: <strong>the headline mechanism does not reach what the
+hooks capture.</strong> Inferred supersession marks a document
+<code>Superseded</code> only when its non-heading text is exactly the
+replaced claim; a captured turn is a multi-line <em>Request/Result</em>
+record, so it becomes <code>Conflicted</code> and stays retrievable. The
+MCP payload carries that status; the hook's injected block, which is the
+automatic path, does not.</li>
+<li>Most reusable component: <code>src/query_plan.rs</code> —
+<code>PreparedQuery::semantic_allowed_doc_ids</code> and
+<code>annotate_semantic_results</code>, under 60 lines that turn a
+per-document status into a pre-ranking filter plus a history override,
+independent of how the status is derived.</li>
+<li>Second risk: <strong>captured memory has no correction path and can
+be lost at capture.</strong> Hook records carry no
+<code>memory_user_id</code>, and every API mutation requires one, so
+nothing deletes or supersedes them; the agent's MCP surface has add and
+get only. A capture still waiting on the 10-second store lock when the
+2-second hook budget expires is abandoned as the process exits.</li>
+<li>Maturity impression: Apache-2.0, 53,420 lines of Rust outside test
+modules, 276 commits on main by 7 contributors between 5 April and 30
+September 2026, 641 Rust test functions run in CI. Two marks:
+<code>scope_enforced</code> on the memory API's user filter and
+<code>negative_eval</code> on three committed cases that assert a
+superseded document stays out after a positive control. Two memory-API
+tests cannot fail as named.</li>
+<li>Study when: you want current-state retrieval over curated decision
+files without a model call, or a worked example of revision-and-ancestry
+provenance printed beside each injected memory.</li>
+<li>Do not copy when: your memories are multi-sentence session records,
+the agent must be able to retract what it stored, or the model needs to
+see which injected memories conflict.</li>
 </ul>
         </article>
       </div>

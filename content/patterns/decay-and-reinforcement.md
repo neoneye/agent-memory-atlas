@@ -362,6 +362,8 @@ rather than dead is deleted, and deletion is permanent."*
 
 **[Cortex Hub](../../systems/cortex-hub/) shows what reinforcement does when its credit is not attributed.** A quality-gate result from any agent increments completion or fallback on the ten active knowledge documents whose `updated_at` falls in the last hour, across every project (`apps/dashboard-api/src/routes/knowledge.ts:999-1023`), and every search sets `updated_at` on each over-fetched candidate, so the credited set is whatever anyone searched. The same search bumps the timestamp the ranker reads for recency, so exposure refreshes its own recency term. The counters then decide a ranking term, a `deprecated` flag that hides a document from the session brief, and which documents an LLM rewrites.
 
+**[Kimetsu](../../systems/kimetsu/) binds reinforcement to the revision the model was shown.** A cited memory gains a full point of usefulness after a successful run and a retrieved-but-uncited one a tenth, decayed on a half-life from `last_useful_at`. The citation event carries the claim revision or exposure id, and `apply_memory_cited` credits nothing when that revision is no longer current (`projector.rs:375-420`). A text correction freezes the old revision's counts in `memory_revisions` and resets the live row's confidence, use count, citations and query routes, so a rewritten claim starts without the old one's reputation (`projector.rs:2748-2828`).
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

@@ -273,6 +273,16 @@ reason, and a re-extracted old value is compared only with visible rows, so it
 returns as a new candidate. [breadcrumbs](../../systems/breadcrumbs/)'s
 forbidden-item check is the test that would catch the first of these.
 
+[Lint-AI](../../systems/lint-ai/) detects conflicts automatically and gives
+them nowhere to go. At every refresh a regex claim chain marks a document
+`Conflicted` when a newer claim on the same subject disagrees without a
+correction cue or a same-source date, and whenever an inferred replacement hits
+a document holding more than that one claim. The status is recomputed from
+content, so no actor can resolve it; it clears only when a later document or an
+explicit `supersedes_id` changes the chain. MCP search returns it per hit, while
+the hook that injects memories automatically drops it, so the flagged record
+reaches the model unmarked.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval
