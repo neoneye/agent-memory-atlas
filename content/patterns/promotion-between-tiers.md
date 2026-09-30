@@ -160,6 +160,8 @@ incremented for every hit the per-prompt prefetch returns, 128 of them with no
 floor, so being injected twice is being accessed twice and the profile tier fills
 with whatever lasted a week.
 
+[dsh-layered-memory](../../systems/dsh-layered-memory/) promotes L1 records into L2 scene files on a count, and hands the next tier the wrong set. The per-family counter `newMemoriesSinceL2` accumulates across extractions, but when it reaches five the scene pass receives only the records of the extraction that crossed it, and the counter resets to zero. Records from every turn that stayed under the threshold never reach a scene, nor the persona built from scenes, unless a rebuild runs; the rebuild's own comment names the gap. A count that decides promotion has to travel with the items it counted.
+
 Other systems tier with no rule over stored fields at all.
 [Letta](../../systems/letta/)'s core, archival and recall tiers are written by
 the agent's own tool calls, so the rule is whatever the model decides — the

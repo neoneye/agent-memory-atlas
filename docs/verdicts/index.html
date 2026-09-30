@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 679 reports.</strong></p>
+<p><strong>This page covers all 680 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28112,6 +28112,46 @@ implementation whose own benchmark reports where it fails.</li>
 <li>Do not copy when: memories must be deletable, a corrected value must
 stay out of the prompt, secrets must stay on the machine, or the code
 must be reused under a licence.</li>
+</ul>
+<h3 id="dsh-layered-memory"><a
+href="../systems/dsh-layered-memory/"><code>dsh-layered-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the plugin's own output
+uncapturable.</strong> Recall is injected as a message whose
+<code>source.kind</code> is <code>plugin</code>, capture keeps only
+<code>source.kind === 'user'</code>, and the sanitizer strips the
+injected tags as a second line, so a recalled memory cannot be
+re-extracted as a new one. An <code>off</code> session mode parks the
+pending slice instead of distilling it. One mark,
+<code>negative_eval</code>, on a tool test with a positive control in
+the same fixture.</li>
+<li>Biggest risk: <strong>correction exists only as
+re-distillation.</strong> No endpoint or tool edits or deletes a memory,
+L0 has no delete path, and rebuild re-derives every layer from L0, so
+what the dedup model removed can return and what a user regrets saying
+stays. The error for a failed L0 database write recommends a rebuild
+that snapshots L0 from that same database; the JSONL named as the fact
+source has no reader.</li>
+<li>Most reusable component: the capture-side source filter with tag
+stripping (<code>src/hooks/capture.ts</code>,
+<code>src/util/sanitize.ts</code>), and the slice threshold that starts
+at one message and doubles to the steady value.</li>
+<li>Second risk: <strong>L2 consolidates only the triggering
+turn.</strong> The per-family counter accumulates across turns, but when
+it reaches five the scene pass receives only that turn's records and the
+counter resets, so earlier records never reach a scene or the persona
+outside a rebuild. Separately, three content-level exclusion tests query
+words the excluded rows do not contain.</li>
+<li>Maturity impression: 225 commits by 2 contributors between 16 August
+and 7 September 2026; 14,318 lines of TypeScript in src outside a
+4,210-line smoke script with 713 assertions, run in CI. The committed
+benchmark raw files are a 0.8.0 run; the 0.8.5 headline has a report and
+no raw run.</li>
+<li>Study when: you are building automatic distilled memory inside a
+host with message provenance and want the capture hygiene, the mode
+switches and a bounded, fallback-routed LLM pipeline.</li>
+<li>Do not copy when: users must be able to delete or correct a memory,
+the store is shared, or you need to explain why a memory exists.</li>
 </ul>
         </article>
       </div>

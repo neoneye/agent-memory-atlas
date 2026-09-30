@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 679 reports.**
+**This page covers all 680 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6115,3 +6115,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no licence file, 4,285 lines of Python and a 389-line plugin, 28 commits on main from three contributor identities between 15 and 28 September 2026, labelled a research preview. 176 pytest functions pin the dynamics and the HTTP surface; no mark, and no case asserts that a superseded memory is absent from a populated retrieval. The committed TIDE run used a mock LLM and puts revision utility at −0.47 at a 64-token budget.
 - Study when: you are designing value-driven promotion, miss-driven repair, or conflict surfacing at retrieval time, and want an implementation whose own benchmark reports where it fails.
 - Do not copy when: memories must be deletable, a corrected value must stay out of the prompt, secrets must stay on the machine, or the code must be reused under a licence.
+
+### [`dsh-layered-memory`](../systems/dsh-layered-memory/)
+- Best idea: **make the plugin's own output uncapturable.** Recall is injected as a message whose `source.kind` is `plugin`, capture keeps only `source.kind === 'user'`, and the sanitizer strips the injected tags as a second line, so a recalled memory cannot be re-extracted as a new one. An `off` session mode parks the pending slice instead of distilling it. One mark, `negative_eval`, on a tool test with a positive control in the same fixture.
+- Biggest risk: **correction exists only as re-distillation.** No endpoint or tool edits or deletes a memory, L0 has no delete path, and rebuild re-derives every layer from L0, so what the dedup model removed can return and what a user regrets saying stays. The error for a failed L0 database write recommends a rebuild that snapshots L0 from that same database; the JSONL named as the fact source has no reader.
+- Most reusable component: the capture-side source filter with tag stripping (`src/hooks/capture.ts`, `src/util/sanitize.ts`), and the slice threshold that starts at one message and doubles to the steady value.
+- Second risk: **L2 consolidates only the triggering turn.** The per-family counter accumulates across turns, but when it reaches five the scene pass receives only that turn's records and the counter resets, so earlier records never reach a scene or the persona outside a rebuild. Separately, three content-level exclusion tests query words the excluded rows do not contain.
+- Maturity impression: 225 commits by 2 contributors between 16 August and 7 September 2026; 14,318 lines of TypeScript in src outside a 4,210-line smoke script with 713 assertions, run in CI. The committed benchmark raw files are a 0.8.0 run; the 0.8.5 headline has a report and no raw run.
+- Study when: you are building automatic distilled memory inside a host with message provenance and want the capture hygiene, the mode switches and a bounded, fallback-routed LLM pipeline.
+- Do not copy when: users must be able to delete or correct a memory, the store is shared, or you need to explain why a memory exists.

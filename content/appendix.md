@@ -380,6 +380,7 @@ page_kind: comparison
 - [`lindahaviv-second-brain`](../systems/lindahaviv-second-brain/)
 - [`rexleimo-aios`](../systems/rexleimo-aios/)
 - [`dynamics-memory`](../systems/dynamics-memory/)
+- [`dsh-layered-memory`](../systems/dsh-layered-memory/)
 
 ## Repos Inspected
 
@@ -1064,6 +1065,7 @@ page_kind: comparison
 - [LindaHaviv/second-brain](https://github.com/LindaHaviv/second-brain) at [`4890df9fe9e4ebbea8fc1ad34ec39c22594188f7`](https://github.com/LindaHaviv/second-brain/commit/4890df9fe9e4ebbea8fc1ad34ec39c22594188f7) — read only, at the head of `main`, a commit dated 20 September 2026. MIT. Screened before reading: 1 auto-run surface (`.claude/settings.json`, a PreToolUse hook blocking agent edits to `.env` files), no build-time execution point, nothing inside the cooldown and 1 unpinned surface (`oracle/agent/requirements.txt`); `AGENTS.md` and `CLAUDE.md` were treated as data. The default backend's `oracleagentmemory` package, which publishes wheels only, was not read. Nothing was installed, built or run.
 - [rexleimo/aios](https://github.com/rexleimo/aios) at [`6e2910a99ad51d7da30e7186c0f5dcb278be77ec`](https://github.com/rexleimo/aios/commit/6e2910a99ad51d7da30e7186c0f5dcb278be77ec) — read only, at the head of `main`, a commit dated 28 September 2026. MIT. Screened before reading: 1 auto-run surface (`.gitmodules`, pulling the `rex-harness` submodule, which was not cloned), no build-time execution, 14 dependency files inside the cooldown — every file in the depth-1 clone dating to the tip — and 6 unpinned surfaces; `AGENTS.md`, `CLAUDE.md` and `GEMINI.md` were treated as data. Only the memory subsystem was read. Nothing was installed, built or executed.
 - [1173591564/Dynamics-memory](https://github.com/1173591564/Dynamics-memory) at [`9ee06f66c0efe975856c82c51e3ce1090aff6533`](https://github.com/1173591564/Dynamics-memory/commit/9ee06f66c0efe975856c82c51e3ce1090aff6533) — read only, at the head of `main`, a commit dated 28 September 2026. No licence file, and GitHub reports none. Screened before reading: 1 auto-run surface (`.opencode/plugin/memory-bridge.ts`, which spawns the sidecar when opencode starts in the tree), no build-time execution point, 12 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 3 unpinned surfaces; ten `AGENTS.md` files inside the vendored opencode packages under `agent/` were treated as data. Nothing was installed, built or executed.
+- [JunNanLYS/dsh-layered-memory](https://github.com/JunNanLYS/dsh-layered-memory) at [`69028fbee43e9950fffecc578430909fc827527e`](https://github.com/JunNanLYS/dsh-layered-memory/commit/69028fbee43e9950fffecc578430909fc827527e) — read only; MIT; no auto-run surface, no build-time execution, nothing inside the cooldown, one floating surface (`package.json` ranges under a committed `pnpm-lock.yaml`), four subdirectory `AGENTS.md` files read as data; nothing installed, built or run, and the committed benchmark scores were summed from the result JSON with Python
 
 ## What the licences actually say
 
