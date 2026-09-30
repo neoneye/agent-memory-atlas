@@ -180,6 +180,8 @@ is committed. For Atomic Agent's rewriter heuristic and Gini's temporal parser,
 their reports record no accuracy measurement at all. The false-negative rate —
 the one that matters — is unknown in every case.
 
+[OpenCode Session Recall](../../systems/opencode-session-recall/) gates a read path rather than a write path, at three levels. A query ranks in-memory session cards and checks a slim FTS5 index before fetching anything, then drills only the top twelve sessions under per-session and per-query character budgets and reports in `coverage` what it skipped. The one path that sweeps tool outputs across sessions is refused in code unless the caller supplies a session list or a time bound with a project constraint, and its opt-in auto-recall fires only on a narrow set of history cues and stays silent when no card scores.
+
 ## Tests to require
 
 - Feed the gate turns that plainly need memory and turns that plainly do not,

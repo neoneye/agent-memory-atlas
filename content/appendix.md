@@ -397,6 +397,7 @@ page_kind: comparison
 - [`claude-engram`](../systems/claude-engram/)
 - [`ctx-open`](../systems/ctx-open/)
 - [`roampal-core`](../systems/roampal-core/)
+- [`opencode-session-recall`](../systems/opencode-session-recall/)
 
 ## Repos Inspected
 
@@ -1098,6 +1099,7 @@ page_kind: comparison
 - [20alexl/claude-engram](https://github.com/20alexl/claude-engram) at [`a7903274531c2ca00659b03e173f0f0f2079333a`](https://github.com/20alexl/claude-engram/commit/a7903274531c2ca00659b03e173f0f0f2079333a) — read only, at the head of `main`, the 0.8.61 commit dated 27 September 2026. MIT. Screened before reading: no auto-run surface, no build-time execution point, one dependency file inside the cooldown (`pyproject.toml`, every file in the depth-1 clone dating to the tip) and one unpinned surface (`pyproject.toml` without a lockfile); `CLAUDE.md` was treated as data. Nothing was installed, built or executed.
 - [diegoxtr/ctx-open](https://github.com/diegoxtr/ctx-open) at [`c31d84e07c830f2d126f780f65ad2b0228fe54eb`](https://github.com/diegoxtr/ctx-open/commit/c31d84e07c830f2d126f780f65ad2b0228fe54eb) — read only, at the head of `main`, a commit dated 21 September 2026. CTX Source-Available License v1.0: local, self-hosted and on-premise commercial use granted, hosted or competing services barred without a separate agreement. Screened before reading: 1 auto-run surface (`.devcontainer/devcontainer.json`, `postCreateCommand` and `postStartCommand`), no build-time execution point, no unpinned surface and nothing inside the cooldown across 14 files scanned; no agent-instruction files, and `prompts/` was treated as data. Nothing was installed, built or executed.
 - [roampal-ai/roampal-core](https://github.com/roampal-ai/roampal-core) at [`211e7e05bb1e364471d29dd98c45d8b3bb3f12b0`](https://github.com/roampal-ai/roampal-core/commit/211e7e05bb1e364471d29dd98c45d8b3bb3f12b0) — read only, at the head of `main`, a commit dated 26 September 2026. Apache-2.0. Screened before reading: no auto-run surface, 4 build-time execution points (three `conftest.py` files and `roampal/cli/setup.py`), 1 unpinned surface (`pyproject.toml` with no lockfile) and 1 file inside the cooldown, every file in the depth-1 clone dating to the tip; no agent instruction files were in the tree. The companion paper was read as `paper.md` in [roampal-ai/roampal-labs](https://github.com/roampal-ai/roampal-labs) at [`6b20c0d8f40c4f1eec0ccd0bb9e73cffea961ae7`](https://github.com/roampal-ai/roampal-labs/commit/6b20c0d8f40c4f1eec0ccd0bb9e73cffea961ae7). Nothing was installed, built or executed.
+- [rmk40/opencode-session-recall](https://github.com/rmk40/opencode-session-recall) at [`8a5ccd63a62e7af1de65fb70f43b6a66b2d485d2`](https://github.com/rmk40/opencode-session-recall/commit/8a5ccd63a62e7af1de65fb70f43b6a66b2d485d2) — read only; MIT; no auto-run surface, two build-time execution points in `package.json` (`prepare: husky`, `prepublishOnly`), no file inside the cooldown, one unpinned surface of fourteen floating ranges under a lockfile, two inert `.husky/` hook payloads, `AGENTS.md` read as data, and nothing was installed, built or run
 
 ## What the licences actually say
 

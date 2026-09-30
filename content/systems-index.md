@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **696 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **697 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -579,6 +579,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/openclaw/"><span class="az-id">OpenClaw</span><span class="az-what">A regex scorecard decides what you remember</span><code class="az-repo">openclaw/openclaw</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/opencode/"><span class="az-id">OpenCode</span><span class="az-what">Hooks, no contract</span><code class="az-repo">anomalyco/opencode</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/opencode-mem/"><span class="az-id">OpenCode Memory</span><span class="az-what">A path traversal it found in itself, with the payload printed</span><code class="az-repo">tickernelz/opencode-mem</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/opencode-session-recall/"><span class="az-id">OpenCode Session Recall</span><span class="az-what">A derived card index over OpenCode&#x27;s own session history</span><code class="az-repo">rmk40/opencode-session-recall</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/opencompany/"><span class="az-id">OpenCompany</span><span class="az-what">The model cannot name the namespace</span><code class="az-repo">zeenie-ai/OpenCompany</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/openconcho/"><span class="az-id">OpenConcho</span><span class="az-what">An unknown conclusion level renders as the most certain one</span><code class="az-repo">offendingcommit/openconcho</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/opencontext/"><span class="az-id">OpenContext</span><span class="az-what">The store owns the index, not the text</span><code class="az-repo">0xranx/OpenContext</code><span class="az-caps"></span></a></li>

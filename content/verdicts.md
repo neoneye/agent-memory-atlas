@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 696 reports.**
+**This page covers all 697 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6283,3 +6283,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 22,370 lines of Python outside tests plus a 2,541-line TypeScript plugin, 137 commits on main from 1 contributor between 15 December 2025 and 26 September 2026, with 1,090 pytest functions run in CI on Linux, macOS and Windows. One mark, `negative_eval`, on an archived fact asserted absent beside its re-added copy. The companion paper's headline figure was measured with the lifecycle off.
 - Study when: you want hook-injected local memory for Claude Code or OpenCode, or a worked example of outcome-rated tier promotion with the author's own ablations beside it.
 - Do not copy when: a stored fact must stay until a person removes it, or you need provenance, history or review. None exists, and the agent holds every write, edit, archive and rating verb.
+
+### [`opencode-session-recall`](../systems/opencode-session-recall/)
+- Best idea: **answer from a derived index before touching the source, and refuse the unbounded sweep in the tool schema.** One card per session plus a slim FTS5 index over the human layer picks a shortlist in milliseconds; only then are twelve sessions drilled under character budgets, and the one path that sweeps tool outputs returns an error unless it is given a session list or a time bound with a project constraint.
+- Biggest risk: **forgetting depends on which process hears the event.** `handleDeleted` and removal re-distills return early unless this process holds the distill lease, the cold pass never removes a card whose session is absent, and a not-found re-distill does nothing — so a session deleted unobserved keeps its first user line and its indexed text in a second file under the user's home.
+- Most reusable component: the removal flag in `runReDistill` — set by `message.removed`, a prune or a compaction, snapshotted before any await, and forcing a delete-and-reinsert instead of an append, with a test that asserts the removed marker is gone and its replacement present.
+- Second risk: **the scope switch is honoured by some read paths.** `recall` and `recall_sessions` check `global: false` and apply the project predicate on both arms; the opt-in auto-recall hook reads the same card store and FTS index with only a family exclusion, and `recall_get`, `recall_context` and `recall_messages` never see the option.
+- Maturity impression: MIT, 110 commits on main by three contributors between 13 April and 31 August 2026, 13,508 lines of TypeScript, 574 Vitest cases run in CI with a small labelled relevance eval; the performance figures come from the author's own store and are not reproduced by a committed test; one mark, `negative_eval`.
+- Study when: you are indexing an agent's own transcripts and want the bounded, coverage-reporting read path, the lease-fenced single writer over a shared SQLite file, and the three self-ingestion guards.
+- Do not copy when: the store must honour a deletion or a project boundary unconditionally — derive membership from the source on every pass, not from events one process may miss, and put the scope predicate in the store query rather than in each caller.

@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An OpenCode plugin that distills
+every past session into a card and a slim FTS5 index, so agents search
+their own history without fetching it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenCode Session
+Recall — Agent Memory Atlas">
+    <meta property="og:description" content="An OpenCode plugin that
+distills every past session into a card and a slim FTS5 index, so agents
+search their own history without fetching it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenCode Session
+Recall — Agent Memory Atlas">
+    <meta name="twitter:description" content="An OpenCode plugin that
+distills every past session into a card and a slim FTS5 index, so agents
+search their own history without fetching it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenCode Session Recall — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenCode Session Recall",
+      "description": "An OpenCode plugin that distills every past session into a card and a slim FTS5 index, so agents search their own history without fetching it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A derived card index over OpenCode's own
+session history</p>
+          <h1>OpenCode Session Recall</h1>
+          <p class="document-deck">An OpenCode plugin that distills
+every past session into a card and a slim FTS5 index, so agents search
+their own history without fetching it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/rmk40/opencode-session-recall">
+              <span>Source</span>
+              <strong>rmk40/opencode-session-recall</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/rmk40/opencode-session-recall/commit/8a5ccd63a62e7af1de65fb70f43b6a66b2d485d2" title="8a5ccd63a62e7af1de65fb70f43b6a66b2d485d2">
+              <span>Analyzed revision</span>
+              <code>8a5ccd63…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rmk40--opencode-session-recall" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>rmk40--opencode-session-recall</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>13,508
+lines of TypeScript in 37 files under src/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>110
+commits on main by three contributors, 13 April – 31 August
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>574
+Vitest cases in 27 files, 18,129 lines with fixtures and the eval
+harness; two suites skip without an environment flag</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenCode Session Recall is a plugin for the OpenCode coding agent
+that lets the model search every session OpenCode has stored, across
+projects, after compaction has hidden it. It does not store anything
+new. A background distiller reads each session once through the OpenCode
+SDK and derives a card and a set of slim full-text rows into a local
+SQLite file; queries rank the cards, check the FTS5 index for a rare
+identifier, and only then fetch the top dozen sessions in bounded
+pages.</p>
+<p>What is notable is the discipline of the read path. The expensive
+tier is gated at every level: a card lookup before any fetch, a
+per-query character budget, and a tool-output sweep that is refused
+outright without a scope. What is weak is forgetting. A deletion reaches
+the store only if the process holding the distill lease sees the event,
+and nothing sweeps a card whose session has gone.</p>
+<p><strong>The README says it is not a memory system; its derived store
+is one anyway.</strong> <em>"A memory system is selective and curated;
+recall just returns raw history verbatim."</em> The derived store
+persists across sessions and processes, is retrieved later by the agent,
+and is scoped by project. That is the shape of <a
+href="../continuity-v2/">continuity v2</a>, <a href="../deja-vu/">Deja
+Vu</a> and <a href="../pond/">pond</a>, which index the transcripts
+other coding agents already write. The <a
+href="../../appendix/#known-limitations">Aider</a> exclusion is the
+contrast: a transcript summarised back into the next session, with no
+index over it and no scope.</p>
+<p><strong>Its distinctive idea is honest coverage over exhaustive
+search.</strong> Version 2.0 replaced a fetch-everything scan, which the
+README says climbed into gigabytes of memory on a store of about 4,700
+sessions, with a bounded read that reports what it drilled and what it
+skipped. <code>coverage</code> carries <code>sessionsSearched</code>,
+<code>limitedBy</code> and <code>skippedByReason</code>, so a miss says
+which constraint caused it.</p>
+<p>One mark, <code>negative_eval</code>: committed cases assert that
+removed text and a deleted session drop out of a populated index, and
+that a project-scoped search leaves out another project's session, each
+after a positive control. Section 9 names the six withheld, including
+<code>scope_enforced</code>, which the <code>recall</code> tool earns
+and the opt-in auto-recall hook forfeits.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <strong>card</strong>: one row per OpenCode
+session, derived entirely from that session's messages. It holds
+identity and parentage, the directory and project id, the first line a
+user typed (<code>summary_head</code>), the last text line
+(<code>outcome_head</code>), an inventory of up to 200 distinctive
+identifiers, and capped lists of files, tools and error signatures
+(<code>src/distill.ts:502-545</code>). Beside it sit up to 5,000
+<strong>slim-index rows</strong> per session: human text, reasoning and
+tool inputs, never tool outputs
+(<code>src/distill.ts:264-300</code>).</p>
+<p><strong>Nothing becomes a belief.</strong> The card is an index entry
+pointing at evidence, and the evidence is the transcript. The one place
+card text reaches the model unasked, the auto-recall block, opens with
+<em>"Possibly relevant prior sessions (auto-recall; verify before
+relying on it)"</em> (<code>src/hooks/auto-recall.ts:124-150</code>).
+There is no candidate state, no status, no confidence and no operation
+that says a session was wrong.</p>
+<p><strong>A card changes only when its session changes.</strong> An
+idle event appends new rows and recomputes the card; a removal, prune or
+compaction forces a full replace so removed text leaves the index
+(<code>src/distill.ts:1428-1452</code>). Two fields survive a
+re-distill: the LLM summary and its hash, which only the summarizer
+writes (<code>src/store.ts:694-700</code>).</p>
+<p><strong>Cards and rows leave in three ways.</strong>
+<code>session.deleted</code> deletes a card and its rows, if this
+process holds the lease (<code>src/distill.ts:1290-1305</code>). The
+per-session cap evicts the oldest rows
+(<code>src/store.ts:718-759</code>). Deleting the file rebuilds
+everything. A session that disappears unobserved leaves its card
+behind.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an OpenCode session becomes a card and index rows, how they reach the model, and the paths by which they stop existing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an OpenCode session becomes a card and index rows, how they reach the model, and the paths by which they stop existing
+flowchart TD
+    OC[&quot;OpenCode database&lt;br/&gt;sole source of truth&quot;] --&gt; LEASE{&quot;this process holds&lt;br/&gt;the distill lease?&quot;}
+    EV[&quot;session.idle&quot;] --&gt; LEASE
+    RM[&quot;message.removed, part pruned,&lt;br/&gt;session.compacted&quot;] --&gt; LEASE
+    DEL[&quot;session.deleted&quot;] --&gt; LEASE
+    LEASE -- &quot;no&quot; --&gt; DROP[&quot;event dropped,&lt;br/&gt;nothing written&quot;]
+    LEASE -- &quot;yes: cold pass or removal&quot; --&gt; FULL[&quot;full replace:&lt;br/&gt;delete rows, derive card,&lt;br/&gt;insert rows and FTS mirror&quot;]
+    LEASE -- &quot;yes: idle, no removal&quot; --&gt; APP[&quot;append new rows,&lt;br/&gt;evict oldest over 5,000,&lt;br/&gt;recompute card&quot;]
+    LEASE -- &quot;yes: deleted&quot; --&gt; GONE[&quot;card, rows and FTS&lt;br/&gt;entries deleted&quot;]
+    FULL --&gt; ST[&quot;store-v1.db:&lt;br/&gt;card, part_text, part_fts&quot;]
+    APP --&gt; ST
+    SUM[&quot;opt-in summarizer&lt;br/&gt;worker session&quot;] --&gt;|&quot;nl_summary only&quot;| ST
+    ST --&gt; REC[&quot;recall tool: card BM25&lt;br/&gt;plus FTS needles,&lt;br/&gt;scope predicate if supplied&quot;]
+    REC --&gt; DR[&quot;drill top sessions&lt;br/&gt;through SDK pages&quot;]
+    ST --&gt; AUTO[&quot;opt-in autoRecall on a&lt;br/&gt;history cue: up to 3 cards,&lt;br/&gt;no scope predicate&quot;]
+    ST --&gt; CMP[&quot;opt-in compactionRecall:&lt;br/&gt;own card into summary prompt&quot;]
+    DR --&gt; M[&quot;model context&quot;]
+    AUTO --&gt; M
+    CMP --&gt; M
+    UNSEEN[&quot;session deleted while&lt;br/&gt;no holder saw the event&quot;] --&gt; STAY[&quot;card stays: cold pass&lt;br/&gt;never evicts it&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The plugin runs inside each OpenCode process as a server plugin
+(<code>src/opencode-session-recall.ts:115-548</code>). It holds two SDK
+clients, one scoped to the caller's directory and one unscoped for
+cross-project listing (<code>:210-214</code>), and opens the store at
+<code>~/.cache/opencode-session-recall/store-v1.db</code>
+(<code>src/store.ts:924-942</code>).</p>
+<p><strong>Storage is one SQLite file with three tables and a meta row
+set.</strong> <code>card</code> is keyed on <code>session_id</code> with
+indexes on <code>time_updated</code>, <code>root_id</code> and
+<code>project_id</code>; <code>part_text</code> holds the slim rows;
+<code>part_fts</code> is an external-content FTS5 table maintained by
+hand, tokenising <code>_-./</code> as word characters so paths and
+identifiers stay whole (<code>src/store.ts:57-95</code>). The schema is
+stamped at version 3; a newer stamp makes <code>openStore</code> return
+<code>null</code> and the plugin degrades to metadata-only cards rather
+than misread the file (<code>:570-597</code>).</p>
+<p><strong>One process writes.</strong> A lease row in <code>meta</code>
+is taken by a single conditional <code>UPDATE</code> whose
+<code>WHERE</code> admits the current holder or an expired heartbeat
+(<code>src/store.ts:863-881</code>), with a 30-second TTL and a
+10-second heartbeat (<code>src/distill.ts:45-46</code>). Every write
+re-checks ownership against the live row before touching the store
+(<code>:942-961</code>). Readers in every process read the same file in
+WAL mode.</p>
+<p><strong>Retrieval is three tiers.</strong> Cards are ranked in memory
+with MiniSearch; the FTS5 table answers needle lookups in SQLite; the
+drill fetches bounded pages through the SDK under per-session and
+per-query character budgets, shared with the distiller through one fetch
+gate (<code>src/fetch-gate.ts</code>, <code>src/drill.ts</code>).</p>
+<p>Two layers are opt-in. <code>semantic: true</code> downloads a static
+embedding model (<code>minishlab/potion-base-8M</code> by default) from
+Hugging Face and blends cosine into the card score
+(<code>src/semantic/embedder.ts:21</code>, <code>:398</code>).
+<code>summaries</code> drives a throwaway OpenCode session per batch to
+write two or three sentences per card
+(<code>src/summarize.ts:71-77</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run beyond OpenCode itself: the store uses the
+runtime's built-in SQLite driver and adds no npm dependency for it.
+Install is one line in <code>opencode.json</code>. It runs fully offline
+unless <code>semantic</code> is on, which fetches model files once, or
+<code>summaries</code> is on, which spends the operator's model tokens.
+No API key is needed to store anything. The store is disposable by
+design and rebuilds on deletion; it is readable with any SQLite client
+but not meant to be edited, since the next re-distill replaces a
+session's rows wholesale. <code>mode: "ephemeral"</code> opens no file
+and searches live.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>createDistiller</code>
+(<code>src/distill.ts:633</code>) acquires the lease and starts
+<code>runColdPass</code> (<code>:1056-1170</code>), which lists sessions
+— unscoped when <code>global</code> is true, directory-scoped otherwise
+(<code>src/opencode-session-recall.ts:245-253</code>) — and skips any
+card already <code>full</code> at the session's
+<code>time_updated</code>. <code>onEvent</code>
+(<code>src/distill.ts:1428-1452</code>) maps <code>session.idle</code>
+to a debounced re-distill, removal-shaped events to a forced full
+re-distill, and <code>session.deleted</code> to
+<code>handleDeleted</code>.</li>
+<li><strong>Extraction.</strong> <code>distillFields</code>
+(<code>src/distill.ts:264-300</code>) turns text and subtask parts into
+<code>human-text</code>, reasoning into <code>reasoning</code>, and tool
+parts into their <code>command</code>, <code>cwd</code> and capped JSON
+input. It skips the plugin's own tools and the synthetic
+<code>&lt;recall-auto&gt;</code> part (<code>:198-205</code>).
+<code>deriveCard</code> (<code>:502-545</code>) builds the card from the
+walked rows.</li>
+<li><strong>Write.</strong> <code>replaceSessionParts</code> deletes and
+reinserts in one transaction; <code>appendSessionParts</code> evicts the
+oldest rows over the cap, repoints the checkpoint's
+<code>next_message_id</code> and recomputes the card
+(<code>src/store.ts:710-759</code>).</li>
+<li><strong>Retrieval.</strong> The <code>recall</code> tool
+(<code>src/search.ts:1765</code>) parses the query, resolves scope
+(<code>:2019-2025</code>), ranks cards (<code>:2772-2776</code>),
+buckets them by directory relevance (<code>:2790-2838</code>), injects
+FTS-only sessions (<code>:2904-2960</code>), merges the shortlist and
+drills it.</li>
+<li><strong>Injection.</strong> <code>autoRecall</code>
+(<code>src/hooks/auto-recall.ts:160-191</code>) and
+<code>compactionRecall</code>
+(<code>src/hooks/compaction-recall.ts:58-72</code>) are card-tier reads
+with no message fetch; <code>systemNudge</code> pushes one line into the
+system prompt (<code>src/hooks/system-nudge.ts:18-38</code>).</li>
+<li><strong>Forget.</strong> <code>handleDeleted</code>
+(<code>src/distill.ts:1290-1305</code>) is the only caller of
+<code>Store.deleteSession</code>
+(<code>src/store.ts:702-708</code>).</li>
+<li><strong>Tests.</strong> <code>test/distill.test.ts</code>,
+<code>test/recall.test.ts</code>, <code>test/hooks.test.ts</code>,
+<code>test/store.test.ts</code>,
+<code>test/authorship-recall.test.ts</code> and the relevance eval under
+<code>test/eval/</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>card</code> row (<code>src/store.ts:60-77</code>) carries
+<code>session_id</code>, <code>parent_id</code>, <code>root_id</code>,
+<code>title</code>, <code>directory</code>, <code>project_id</code>,
+<code>agent</code>, <code>model</code>, <code>time_created</code>,
+<code>time_updated</code>, the derived heads and lists,
+<code>distill_state</code> (<code>metadata</code> or <code>full</code>),
+<code>distilled_through</code> (the newest message id covered), an
+<code>embedding</code> BLOB with its <code>embedding_gen</code>, and
+<code>nl_summary</code> with <code>summary_hash</code>.
+<code>distill_state</code> records how much of the session was read, not
+whether anything in it is true.</p>
+<p><code>part_text</code> (<code>:82-89</code>) keys each row on the
+OpenCode <code>part_id</code> and keeps <code>message_id</code>,
+<code>prev_message_id</code> and <code>next_message_id</code> so the
+drill can open the neighbourhood of a hit without a whole-session load.
+<code>class</code> is one of <code>human-text</code>,
+<code>reasoning</code> or <code>tool-input</code>.</p>
+<p><strong>Time is record time only.</strong> <code>time_created</code>
+and <code>time_updated</code> are copied from the OpenCode session;
+there is no validity interval and nothing about when a decision stopped
+holding.</p>
+<p><strong>Scope is a directory and a project id on the card.</strong>
+<code>classifyDirectoryRelevance</code> labels a card <code>exact</code>
+when its directory matches the caller's, <code>project</code> when it
+shares the worktree or project, and <code>global</code> otherwise
+(<code>src/search.ts:536-545</code>). <code>CardFilters</code> also
+accepts <code>scope</code>, <code>projectId</code> and
+<code>directoryFilter</code> for the card runtime
+(<code>src/cards.ts:85-106</code>, <code>:560-580</code>).</p>
+<p><strong>Authorship is computed, not stored.</strong> Each hit is
+classified <code>human</code>, <code>delegated</code>,
+<code>injected</code>, <code>model</code>, <code>title</code> or
+<code>unknown</code> from structural signals at query time
+(<code>src/authorship.ts</code>); unresolvable parentage is
+<code>unknown</code> and is withheld from an
+<code>authorship: "human"</code> filter.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Cards first, fetches last.</strong> <code>cards.rank</code>
+scores each card with MiniSearch BM25 over seven card fields, boosting
+the identifier inventory at 2.0 and the LLM summary at 1.8 above the
+title at 1.0, applies a code-token multiplier when an inventory contains
+an identifier from the query, and multiplies by a recency prior of at
+most 1.05 over seven days (<code>src/cards.ts:39-60</code>,
+<code>:640-660</code>; <code>src/bm25.ts:47</code>, <code>:73</code>,
+<code>:119-123</code>). With <code>semantic</code> on, cosine similarity
+is blended at weight 0.35 by default
+(<code>src/opencode-session-recall.ts:61</code>) and two drill slots are
+reserved for the top pure-semantic cards.</p>
+<p><strong>The FTS5 tier catches what a card dropped.</strong>
+<code>ftsSearch</code> builds a <code>MATCH</code> from quoted code
+tokens and phrases plus weak terms and returns up to 200 rows with their
+message neighbours (<code>src/store.ts:819-845</code>). The query takes
+no scope; the caller filters the returned sessions afterwards
+(<code>src/search.ts:2904-2960</code>), so a project-scoped query can
+lose needles to the global <code>LIMIT</code> but cannot gain foreign
+ones.</p>
+<p><strong>The drill re-ranks within the shortlist.</strong> Twelve
+sessions by default are fetched newest-first, 25 messages per page,
+under retained-character budgets: 1,500,000 characters per session and
+20,000,000 per query (<code>src/types.ts:65-69</code>). BM25 plus
+structural boosts and penalties order the hits, with a relative score
+floor. A ranked search that finds nothing retries as a literal scan of
+the same drilled pool, not a wider one
+(<code>src/search.ts:3648</code>).</p>
+<p><strong>Deep is gated by construction.</strong> The only path that
+sweeps tool outputs across sessions refuses to run without a
+<code>sessions</code> list, a single target, a cursor, or a lower time
+bound together with a project or directory constraint
+(<code>src/search.ts:2276-2316</code>). <em>"A global unscoped deep
+sweep is not allowed."</em></p>
+<p><strong>Failure modes are reported, not hidden.</strong> A response
+carries <code>coverage</code> with the drilled count, the constraints
+that limited it and a per-reason skip count; near-misses fall back to
+recency when nothing scores (<code>src/cards.ts:694-700</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The agent writes nothing. Every write is the distiller's, and every
+distiller write is gated on the lease. The cold pass visits discovered
+sessions newest-first with a concurrency of two and skips any card
+already <code>full</code> at the session's current
+<code>time_updated</code> (<code>src/distill.ts:1056-1100</code>). A
+session whose data fails to parse is quarantined, up to 1,000
+(<code>src/distill.ts:48</code>), and retried when its
+<code>time_updated</code> moves (<code>:1172-1185</code>).</p>
+<p><strong>Removal forces a replace.</strong>
+<code>message.removed</code>, <code>message.part.removed</code>,
+<code>session.compacted</code> and a part update that is a compaction or
+a prune add the session to <code>removalSince</code>, and
+<code>runReDistill</code> then refuses the append path
+(<code>src/distill.ts:1250-1289</code>, <code>:617-624</code>). The flag
+is snapshotted before any await, so a removal that lands mid-distill
+forces the coalesced rerun to replace too.</p>
+<p><strong>Self-ingestion is closed at three points.</strong> The
+plugin's own tool parts are excluded from indexing by a suffix match
+that survives host namespacing (<code>src/extract.ts:27-41</code>); the
+<code>&lt;recall-auto&gt;</code> block it injects is skipped by
+<code>isRecallAutoText</code> (<code>src/distill.ts:198-205</code>); and
+the summarizer's worker sessions, whose prompts embed card digests,
+carry a <code>[recall-summarizer]</code> title that every read path
+rejects (<code>src/extract.ts:43-56</code>).</p>
+<p><strong>The summarizer is bounded.</strong> It prompts with card
+fields only, never message bodies, asks for JSON, disables tools by map
+and by a deny-all permission ruleset, batches fifteen cards per prompt
+and stops after 200 prompts per pass
+(<code>src/summarize.ts:35-36</code>, <code>:60-77</code>). It writes
+through <code>writeSummary</code>, which also nulls the vector so the
+next load re-embeds (<code>src/store.ts:694-700</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks a turn on a model call. The cold pass runs once per
+lease acquisition; the README reports about eight minutes and a 526 MB
+file on a store of about 4,700 sessions, which this reading did not
+reproduce. After that, re-distills are debounced by two seconds after
+<code>session.idle</code>. The README puts the nudge at about 130 tokens
+per request. Auto-recall appends at most 900 characters to the new user
+message it fires on (<code>src/hooks/auto-recall.ts:22-23</code>), so it
+lands after any cached prefix; the nudge is a constant string guarded
+against double injection. Summaries cost one prompt per batch of about
+fifteen cards.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Five tools are registered and, by default, added to
+<code>primary_tools</code> so every agent sees them
+(<code>src/opencode-session-recall.ts:448-482</code>).
+<code>recall</code> searches; <code>recall_get</code> returns one
+message whole, including pruned tool output; <code>recall_context</code>
+returns a window around a message; <code>recall_messages</code> pages a
+session newest-first; <code>recall_sessions</code> lists sessions and,
+with <code>parentID</code>, lists a parent's live children to recover a
+cancelled subagent.</p>
+<p>The model's agency is read-only. It can search, filter by scope,
+time, directory, role, part type, tool name and authorship, and expand
+hits, but no tool writes, corrects or deletes. The nudge tells it to
+call <code>recall</code> when a user refers to earlier work. Auto-recall
+does it for the model on a narrow set of cue phrases — <em>"last
+time"</em>, <em>"what did we decide"</em>, <em>"same as before"</em> —
+deriving a query from the rest of the message and staying silent when no
+card scores (<code>src/hooks/auto-recall.ts:36-50</code>,
+<code>:88-101</code>).</p>
+<p><strong>Compaction is the one write into OpenCode's own
+memory.</strong> With <code>compactionRecall</code> on, the session's
+card is pushed onto the compaction prompt's <code>context</code> under
+<em>"preserve in the summary if still true"</em>
+(<code>src/hooks/compaction-recall.ts:48-51</code>), so the model
+writing the summary decides what survives.</p>
+<p>Adapting it to another agent means replacing the SDK: every read and
+fetch goes through OpenCode's client types, and the event names are
+OpenCode's.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is exact and structural.</strong> Every hit names
+its session, message and part, an evidence class — human text, tool
+input, tool output, reasoning, title, file read, web fetch or skill
+definition — and, on request, an authorship bucket. The README reports
+that about 51% of user-role text on the author's store was typed by a
+person, and commits the query behind that figure
+(<code>docs/surveys/user-role-authorship.sql</code>), which is why
+<code>role: "user"</code> is not used as a proxy.</p>
+<p><strong>Forgetting depends on which process sees the event.</strong>
+<code>handleDeleted</code> returns at once unless this process owns the
+lease (<code>src/distill.ts:1291</code>); <code>startReDistill</code>
+does the same for removal events (<code>:1237-1238</code>). The cold
+pass only replaces cards for sessions it discovers and has no branch
+that removes a card whose session is absent (<code>:1056-1170</code>).
+And <code>runReDistill</code> does nothing when the session lookup
+returns not-found (<code>:1257-1266</code>, <code>:764-782</code>). So a
+session deleted while no lease holder observed the event keeps its card,
+its first user line and its FTS rows of human text, reasoning and
+commands. Whether a holder receives events for sessions run in another
+OpenCode process is a property of OpenCode that this reading did not
+check.</p>
+<p><strong><code>global: false</code> is a default, not a
+boundary.</strong> It is checked by <code>recall</code> and
+<code>recall_sessions</code> (<code>src/search.ts:2249-2255</code>;
+<code>src/sessions.ts:118-126</code>), and <code>recall</code> skips the
+check when a <code>sessionID</code> is named. It is not passed to
+<code>recall_get</code>, <code>recall_context</code> or
+<code>recall_messages</code>
+(<code>src/opencode-session-recall.ts:450-454</code>), and auto-recall
+never consults it.</p>
+<p><strong>Withheld marks.</strong> <code>scope_enforced</code>: the key
+is on the card, and the <code>recall</code> tool applies it to the card
+arm, the FTS arm and the deep sweep whenever a scope or directory is
+supplied, as <code>test/recall.test.ts:84-107</code> shows. But
+auto-recall reads the same card store and FTS index with only a family
+exclusion (<code>src/hooks/auto-recall.ts:168-171</code>;
+<code>src/hooks/card-recall.ts:64-89</code>) — a prompt-bounded
+retriever over the whole store with no way to carry the predicate. With
+<code>autoRecall</code> off, the default, every search path the agent
+can call carries it. <code>trust_state</code>: no status field;
+<code>distill_state</code> records coverage and authorship is computed
+per query. <code>tombstone</code> and <code>audit_log</code>: none; the
+lease and vector-generation rows are coordination, not a mutation
+record. <code>bitemporal</code>: only the session's own created and
+updated times. <code>human_review</code>: no surface for a person to
+approve or reject a card.</p>
+<p><strong>Nothing is redacted.</strong> Tool-input commands are copied
+verbatim into a second file under the user's home with default
+permissions (<code>src/store.ts:933-942</code>). The only redaction in
+the tree hides recall's own prior output during inline expansion
+(<code>src/search.ts:626-640</code>).</p>
+<p><strong>The embedding model is unpinned.</strong> Files are fetched
+from <code>huggingface.co/&lt;model&gt;/resolve/main/</code> with no
+revision or hash check (<code>src/semantic/embedder.ts:398</code>), and
+the feature is off by default.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is 574 Vitest cases in 27 files and runs in CI through
+<code>npm run ci</code>, which also typechecks, lints and compiles
+(<code>.github/workflows/ci.yml:25</code>;
+<code>package.json:28-34</code>). I read it; I did not run it.</p>
+<p><strong>The negative cases that earn the mark.</strong> <em>"forces a
+full re-distill on a removal event, dropping stale FTS text"</em>
+asserts <code>stalemarker</code> is found, then absent after a removal
+while <code>freshmarker</code> is present
+(<code>test/distill.test.ts:1547-1586</code>). <em>"deletes the card and
+its rows and refreshes the root rollup"</em> asserts the child's card
+and its unique token are gone after <code>session.deleted</code>
+(<code>:1587-1620</code>). A project-scoped search returns nothing for a
+term a global search finds in another directory's session
+(<code>test/recall.test.ts:61-107</code>). Two more exclusions follow
+the same shape: recall's own output is never returned while an unrelated
+tool output is (<code>:1042-1061</code>), and auto-recall never cites
+the session it fires in (<code>test/hooks.test.ts:242-261</code>).</p>
+<p><strong>Retrieval quality has a small labelled eval.</strong>
+<code>test/eval/cases.ts</code> holds relevance cases over a synthetic
+corpus — rare terms, typos, phrase preference, old-strong against
+recent-weak — scored by <code>test/eval/harness.ts</code> against
+<code>test/eval/baseline.json</code>. The semantic suite and the
+performance gates skip unless <code>RECALL_EVAL_SEMANTIC</code> or
+<code>RECALL_PERF=1</code> is set
+(<code>test/eval/semantic.test.ts:57</code>, <code>:259</code>;
+<code>test/perf.test.ts:53</code>, <code>:321</code>).</p>
+<p><strong>Missing.</strong> A deletion or removal delivered to a
+process without the lease; a cold pass after a session vanished;
+auto-recall with <code>global: false</code> and a foreign card in the
+store; and any test of the performance numbers the README states from
+the author's store.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Answer from a derived index before touching the
+source.</strong> A card per session plus a slim FTS index over the human
+layer lets a query decide where to look in milliseconds, then fetch only
+the handful of sessions that matter.</li>
+<li><strong>Refuse the unbounded sweep in the schema, not in the
+prompt.</strong> The output-inclusive sweep takes a scope or it returns
+an error naming the missing argument.</li>
+<li><strong>Make a removal force a replace.</strong> An append path that
+cannot see deletions will keep removed text forever; a flag set by the
+removal event and read before any await closes that.</li>
+<li><strong>Close every self-ingestion loop you create.</strong> Each
+thing the plugin injects or spawns carries a sentinel the indexer
+skips.</li>
+<li><strong>Report coverage in the response.</strong>
+<code>limitedBy</code> and <code>skippedByReason</code> turn a miss from
+a mystery into a constraint the caller can relax.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deriving deletion from events alone.</strong> An index
+rebuilt from a source must also reconcile against the source's current
+membership, or anything deleted while the indexer was not listening
+survives in the copy.</li>
+<li><strong>A scope option honoured by some read paths.</strong> An
+operator switch that the search tool respects and an injection hook
+ignores is a boundary that holds until someone enables the hook.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a single developer on OpenCode who wants the model to stop
+re-deriving an earlier session's fix, this is a low-cost install with no
+service and no model spend by default. It is not a place to keep
+conclusions: nothing in it can be marked wrong, and the only ways to
+remove something are to delete it in OpenCode while the right process is
+listening, or to delete the whole store. Someone who needs curated,
+correctable memory should run a memory system beside it, which is what
+the README recommends.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does an OpenCode process receive <code>session.deleted</code> and
+<code>message.removed</code> events for sessions run in a different
+OpenCode process sharing the same database? If not, deletions made
+outside the lease holder never reach the store.</li>
+<li>Does OpenCode's server answer <code>session.message</code> for a
+session in another project through the directory-scoped client, which is
+what <code>recall_get</code> uses?</li>
+<li>Does the compaction summary written after
+<code>compactionRecall</code> re-enter the index as model-authored text
+on the next re-distill, and does that matter for ranking?</li>
+<li>How long do non-holder processes wait for their new sessions to be
+carded when another process holds the lease for days?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong> <code>src/store.ts</code>,
+<code>src/sqlite.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/distill.ts</code>,
+<code>src/digest.ts</code>, <code>src/summarize.ts</code>,
+<code>src/embedding-text.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/search.ts</code>,
+<code>src/cards.ts</code>, <code>src/bm25.ts</code>,
+<code>src/drill.ts</code>, <code>src/candidates.ts</code>,
+<code>src/rerank.ts</code>, <code>src/route.ts</code>,
+<code>src/query.ts</code>, <code>src/authorship.ts</code>,
+<code>src/semantic/embedder.ts</code>,
+<code>src/semantic/similarity.ts</code>.</li>
+<li><strong>Browse tools:</strong> <code>src/get.ts</code>,
+<code>src/context.ts</code>, <code>src/messages.ts</code>,
+<code>src/sessions.ts</code>.</li>
+<li><strong>Context injection:</strong>
+<code>src/hooks/auto-recall.ts</code>,
+<code>src/hooks/card-recall.ts</code>,
+<code>src/hooks/compaction-recall.ts</code>,
+<code>src/hooks/system-nudge.ts</code>.</li>
+<li><strong>Plugin entry:</strong>
+<code>src/opencode-session-recall.ts</code>,
+<code>src/extract.ts</code>, <code>src/fetch-gate.ts</code>,
+<code>src/lite-refresh.ts</code>.</li>
+<li><strong>Tests and evals:</strong> <code>test/distill.test.ts</code>,
+<code>test/recall.test.ts</code>, <code>test/hooks.test.ts</code>,
+<code>test/store.test.ts</code>,
+<code>test/authorship-recall.test.ts</code>,
+<code>test/helpers.ts</code>, <code>test/eval/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'deleteSession(' src</code> — the interface, the
+implementation and one caller, <code>handleDeleted</code> at
+<code>src/distill.ts:1293</code>; <code>runColdPass</code> has
+none.</li>
+<li><code>grep -rn 'ftsSearch' src</code> —
+<code>src/search.ts:2908</code> and
+<code>src/hooks/card-recall.ts:75</code>; the store method's signature
+takes no scope argument.</li>
+<li><code>grep -n 'cardRecall\|filters' src/hooks/auto-recall.ts</code>
+— one call, with
+<code>filters: { excludeFamilyOf: input.sessionID }</code> at line
+170.</li>
+<li><code>grep -n 'global' src/opencode-session-recall.ts</code> —
+passed to <code>sessions</code> and <code>search</code> at lines 450-451
+and to discovery at 249; not to <code>get</code>, <code>context</code>,
+<code>messages</code> or the hooks.</li>
+<li><code>grep -rnE 'tombstone|supersed|verified|rejected|audit' src</code>
+— lease ownership, vector-generation rejection and uncarded-probe
+verification only; no status column.</li>
+<li><code>grep -rniE 'redact|secret|api[_-]?key|password' src</code> —
+only <code>SELF_TOOL_REDACTED</code> in <code>src/search.ts</code>.</li>
+<li><code>grep -n 'huggingface\|resolve/\|revision\|sha256\|integrity' src/semantic/embedder.ts</code>
+— <code>resolve/main</code> at line 398; no hash or revision pin.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git --exclude=package-lock.json --exclude=bun.lock</code>
+— four files, each the word "citation" in prose; no paper and no
+<code>CITATION.cff</code>.</li>
+<li><code>grep -rniE 'renamed|formerly' README.md CHANGELOG.md CONTRIBUTING.md docs</code>
+— argument and enum renames only; no project rename.</li>
+<li><code>grep -rn 'describe.skip\|it.skip\|test.skip' test</code> and
+<code>grep -n skip</code> in the eval files — <code>skipIf</code> gates
+in <code>test/eval/semantic.test.ts</code> and
+<code>test/perf.test.ts</code> only.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/rmk40/opencode-session-recall/commit/8a5ccd63a62e7af1de65fb70f43b6a66b2d485d2"><code class="commit-id" title="8a5ccd63a62e7af1de65fb70f43b6a66b2d485d2">8a5ccd63…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 31
+August 2026. One mark, <code>negative_eval</code>. Screened before
+reading: no auto-run surface, two build-time execution points in
+<code>package.json</code> (<code>prepare: husky</code>,
+<code>prepublishOnly</code>), no file inside the cooldown, one unpinned
+surface of fourteen floating ranges under a lockfile, two inert
+<code>.husky/</code> hook payloads, and <code>AGENTS.md</code> recorded
+as data. Read with <code>grep</code> and <code>sed</code>; nothing
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
