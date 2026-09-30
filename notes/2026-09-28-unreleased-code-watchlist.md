@@ -293,11 +293,14 @@ edge (*IEEE Network*, early access; doi:10.1109/MNET.2026.3694694).
 ([arXiv:2606.23565](https://arxiv.org/abs/2606.23565), v1).
 - Examined 2026-09-05; bullet opening "Nine spatial-memory repositories for
   robots were examined in one round".
-- Missing: HoloAgent-0 code; the tree holds the earlier FSR-VLN stack.
+- Missing then: HoloAgent-0 code, as the exclusion read it.
 - Monitor: [HorizonRobotics/HoloAgent](https://github.com/HorizonRobotics/HoloAgent).
-- Status 2026-09-28: no commit since 2026-07-17; README line 15 still reads
-  "Code is under preparation and will be released soon". If released:
-  screened.
+- Status 2026-09-30: the code was already public. The release commit
+  [`ef14d3152ca6246d8ae64920694c6c74581d246c`](https://github.com/HorizonRobotics/HoloAgent/commit/ef14d3152ca6246d8ae64920694c6c74581d246c)
+  (2026-07-17) replaced the FSR-VLN layout with `agentic_robot/`, and README
+  line 15 is a dated news item. The spatial memory is a scene graph built
+  once, offline, from a mapping run, so the exclusion stands on that ground;
+  `content/appendix.md` carries the correction. Nothing left to monitor.
 
 **EvoMemNav** — self-evolving fine-grained memory for zero-shot navigation
 ([arXiv:2606.03509](https://arxiv.org/abs/2606.03509), v1).

@@ -5812,6 +5812,23 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The HoloAgent exclusion said its code was not yet released
+and that <code>agentic_robot/</code> held the earlier FSR-VLN stack;
+corrected 2026-09-30.</strong> At <a
+href="https://github.com/HorizonRobotics/HoloAgent/commit/ef14d3152ca6246d8ae64920694c6c74581d246c"><code class="commit-id" title="ef14d3152ca6246d8ae64920694c6c74581d246c">ef14d315…</code></a>,
+a commit titled <em>"feat: release Holoagent-0 code"</em>, the README
+line the exclusion quoted is a News entry dated <code>[2026.06]</code>,
+and line 29 checks off <em>HoloAgent-0 code update</em>. The parent, <a
+href="https://github.com/HorizonRobotics/HoloAgent/commit/e824d32ffb18c61d3f262a5774ec048386780cad"><code class="commit-id" title="e824d32ffb18c61d3f262a5774ec048386780cad">e824d32f…</code></a>,
+has no <code>agentic_robot/</code> directory and leaves that line
+unchecked; the release commit created it, adding the AgentOS skills and
+the OVO mapper that replaces HOV-SG. The exclusion stands on another
+ground: the scene graph the robot queries is built offline into a
+timestamped snapshot that the navigation node loads read-only from a
+hand-set path. The chatbot's <code>task_memory</code> YAML is written
+per session and read back only to rewrite its own index
+(<code>agentic_robot/chatbot/g1/g1chat_demo_multirobot_dag.py:352-364</code>).
+The published reason was wrong; the outcome is unchanged.</li>
 <li><strong>The Pydantic AI Harness report counted three bundled stores,
 said <code>_recover</code> rolls back and CAS exhaustion raises
 <code>MemoryConflictError</code>, cited a <code>negative_eval</code>
@@ -11608,16 +11625,24 @@ href="https://github.com/AdnanSattar/Spatial-RAG-Worldmodel/commit/6e8597dd7dd62
 stores latent world-model states in a Qdrant <code>latent_memory</code>
 collection with a spatial prefilter, <code>delete</code> and
 <code>clear</code> — states a model emits, not beliefs an agent could
-find false. <em>The code is not there yet:</em>
-<code>HorizonRobotics/HoloAgent</code> (<a
-href="https://arxiv.org/abs/2606.23565">arXiv:2606.23565</a>) at <a
+find false. <code>HorizonRobotics/HoloAgent</code> (<a
+href="https://arxiv.org/abs/2606.23565">arXiv:2606.23565</a>),
+Apache-2.0, at <a
 href="https://github.com/HorizonRobotics/HoloAgent/commit/ef14d3152ca6246d8ae64920694c6c74581d246c"><code class="commit-id" title="ef14d3152ca6246d8ae64920694c6c74581d246c">ef14d315…</code></a>
-says at README line 15 <em>"HoloAgent-0 is released. Code is under
-preparation and will be released soon"</em> and the tree holds the
-earlier FSR-VLN navigation stack (<a
-href="https://arxiv.org/abs/2509.13733">arXiv:2509.13733</a>) under
-<code>agentic_robot/</code>; and <code>caicaiya123/EvoMemNav</code> (<a
-href="https://arxiv.org/abs/2606.03509">arXiv:2606.03509</a>) at <a
+is the same case, and that commit is the HoloAgent-0 code release under
+<code>agentic_robot/</code>. The one caller of its graph writer
+(<code>agentic_robot/fsr_vln/ovo/integration/hmsg_bridge.py:248</code>)
+builds the FSR-VLN scene graph (<a
+href="https://arxiv.org/abs/2509.13733">arXiv:2509.13733</a>) offline
+from a mapping run's <code>ovo_map.ckpt</code>, into a new
+<code>graph_</code> directory stamped with the build time
+(<code>agentic_robot/fsr_vln/memory/hmsg/graph/graph.py:1926-1928</code>).
+The navigation node loads one such snapshot from a hand-set path
+(<code>agentic_robot/core/src/navigation/semantic_goal/config/visualize_query_graph_demo.yaml:7</code>)
+and never writes it, and the streaming mapper starts each run empty
+(<code>agentic_robot/fsr_vln/run_stream_mapping.py:171-177</code>).
+<em>The code is not there yet:</em> <code>caicaiya123/EvoMemNav</code>
+(<a href="https://arxiv.org/abs/2606.03509">arXiv:2606.03509</a>) at <a
 href="https://github.com/caicaiya123/EvoMemNav/commit/e85ee0e3d4b22a6023882eb00fa6252d7ec28a23"><code class="commit-id" title="e85ee0e3d4b22a6023882eb00fa6252d7ec28a23">e85ee0e3…</code></a>
 is one commit reading <em>"Code coming soon"</em>. <a
 href="../systems/tempomem/">Chronotope</a>, <a
