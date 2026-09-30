@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 691 reports.</strong></p>
+<p><strong>This page covers all 692 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28710,6 +28710,48 @@ enforced in SQL.</li>
 <li>Do not copy when: you want a light single-user store, or you need
 every accepted memory to have passed a person — the default
 configuration does not require it.</li>
+</ul>
+<h3 id="rightmemory"><a
+href="../systems/rightmemory/"><code>rightmemory</code></a></h3>
+<ul>
+<li>Best idea: <strong>let the model write, then decide in code whether
+the write lands.</strong> Update, Dreamer, Insight and the pruner run in
+temporary git worktrees, and <code>_validate_commits</code> refuses more
+than one update commit, any path outside the role's set, or an invalid
+graph before anything reaches the root. Codex runs those roles with full
+filesystem access and the Pursuit map still cannot be touched by an
+automatic write.</li>
+<li>Biggest risk: <strong>a question view is scoped by a
+prompt.</strong> <code>answer_question_view</code> prepends the
+provider's <code>retriever.md</code> to the consumer's question and runs
+the ordinary retrieve role, which can select anything in the provider's
+root, including its own imports, and returns rendered source text. Every
+consumer of the view shares one retrieve session, so one consumer's
+questions sit in the next one's history.</li>
+<li>Most reusable component:
+<code>rightmemory/update_queue_git.py</code> — a single-writer lease
+over plain git: <code>update_queue/lease.json</code> pushed by
+compare-and-swap with a random token and a six-hour expiry, and
+finalisation looked up by batch and token trailers so an expired holder
+cannot commit a stale result.</li>
+<li>Second risk: <strong>unjudged evidence and pruned memory both come
+back.</strong> Queued candidates are retrievable at once, labelled "not
+settled", in the embedding corpus and the agent retriever's context. A
+pruned item that is written back gets two prunes of grace rather than a
+refusal, and nothing value-keyed records why it was removed.</li>
+<li>Maturity impression: Apache-2.0, 43,765 lines of Python and 624
+commits by one contributor between 1 May and 30 September 2026,
+self-described Alpha. 1,557 test functions run on Ubuntu and Windows in
+CI. One mark, <code>negative_eval</code>, on the shared-view hub's
+refusal of another view's package; <code>scope_enforced</code> is
+withheld because question views bypass the view key; the retrieval
+experiment's labelled cases are not committed.</li>
+<li>Study when: you want memory curated by a model without trusting the
+model's writes — worktree isolation, runtime validation, exact-input
+records and fenced cross-device coordination are each separable.</li>
+<li>Do not copy when: memory must stay on one machine, transcripts must
+not be mined, or shared memory must be partitioned finer than a whole
+root. Every write, read and background loop spends model tokens.</li>
 </ul>
         </article>
       </div>

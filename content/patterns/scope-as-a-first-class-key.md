@@ -881,6 +881,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 [AutoBot](../../systems/autobot-ai/) has the key done three ways and missing from the one read that matters most. The SQLite store makes the owner a required argument that raises when blank, trajectory recall puts `user_id` and `tenant_id` in the vector `where` and re-checks every returned row, and the explicit knowledge-base search routes apply owner and visibility filters that fail closed. The always-loaded Essential Context block reads 200 facts through `get_all_facts` with none of them, and the chat RAG path passes only the research-quarantine filter, so the predicate exists on the search surface and not on the path that reaches every prompt.
 
+**[RightMemory](../../systems/rightmemory/) keys one sharing channel and prompts the other.** File views reach consumers through a hub whose connect tokens are minted with the invitation's `view_id`, and `download_package` answers 403 to a token bound to another view, a refusal the hub test asserts after a positive download. Question views skip the key: `answer_question_view` prepends the provider's `retriever.md` to the consumer's question and runs the ordinary retrieve role over the provider's whole root, in one session per view shared by every consumer. **When a store is shared two ways, put the same key on both; a prompt that describes the boundary is not one.**
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

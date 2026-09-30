@@ -392,6 +392,7 @@ page_kind: comparison
 - [`flowly`](../systems/flowly/)
 - [`global-agent-memory`](../systems/global-agent-memory/)
 - [`recollect`](../systems/recollect/)
+- [`rightmemory`](../systems/rightmemory/)
 
 ## Repos Inspected
 
@@ -1088,6 +1089,7 @@ page_kind: comparison
 - [Nocetic/flowly](https://github.com/Nocetic/flowly) at [`a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c`](https://github.com/Nocetic/flowly/commit/a5dc7c3045ec54bf0151fdba7b89f285b1ba8d9c) — read only, at the head of `main`, a commit dated 17 September 2026. Apache-2.0. Screened before reading: no auto-run surface, 5 build-time execution points (three `setup.py`, two `conftest.py`), 3 unpinned surfaces (two `package.json`, one skill `requirements.txt`) and nothing inside the cooldown; no agent-instruction file in the tree. Only the memory subsystem was read. Nothing was installed, built or executed.
 - [ozankasikci/global-agent-memory](https://github.com/ozankasikci/global-agent-memory) at [`53480fd2906b41c9921326f1c61e4c42fe8d5134`](https://github.com/ozankasikci/global-agent-memory/commit/53480fd2906b41c9921326f1c61e4c42fe8d5134) — read only, at the head of `main`, a commit dated 1 September 2026. MIT. Screened before reading: 1 auto-run surface (`server.json`, an MCP registry manifest naming the PyPI package), 1 build-time execution point (`Makefile`), 1 unpinned surface (`dashboard/package.json`, lockfile present) and nothing inside the cooldown; `dashboard/AGENTS.md` and the integration snippets were treated as data. Nothing was installed, built or executed.
 - [MikeK184/Recollect](https://github.com/MikeK184/Recollect) at [`6a85f6a1ec1e6ca69eb0ecf66aa73f781b30a75c`](https://github.com/MikeK184/Recollect/commit/6a85f6a1ec1e6ca69eb0ecf66aa73f781b30a75c) — read only, at the head of `main`, a commit dated 30 September 2026. Apache-2.0. Screened before reading: 1 auto-run surface (`.opencode/`, six agent prompt files), no build-time execution point, 10 dependency files inside the cooldown, every file in the depth-1 clone dating to the tip, and 1 unpinned surface (`web/package.json`, lockfile present); `opencode.json` and `.codex/config.toml` declare MCP servers launched with `npx -y`, which the screen does not flag; `AGENTS.md` was treated as data. Read with `grep`, `sed` and `awk`; nothing was installed, built or executed.
+- [RightL/RightMemory](https://github.com/RightL/RightMemory) at [`0cd5e8680a1196077c198be6ceefd4fc51c8825d`](https://github.com/RightL/RightMemory/commit/0cd5e8680a1196077c198be6ceefd4fc51c8825d) — read only, at the head of `main`, a commit dated 30 September 2026. Apache-2.0. Screened before reading: no auto-run surface, no build-time execution point, one unpinned surface (`pyproject.toml` has no lockfile) and three dependency files inside the cooldown, every file in the depth-1 clone dating to the tip; `AGENTS.md` was treated as data. Nothing was installed, built or executed.
 
 ## What the licences actually say
 

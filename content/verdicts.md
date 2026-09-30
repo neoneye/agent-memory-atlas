@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 691 reports.**
+**This page covers all 692 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6233,3 +6233,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 41,514 lines of Rust under crates/*/src, 30 commits on main by one contributor with author dates from 6 April to 30 September 2026 in a repository created on 16 September 2026, and 207 Rust test functions, 169 of them needing the project's PostgreSQL, with no CI workflow in the tree. Seven marks. The project's design documents name this atlas as an input.
 - Study when: you are building correctable, auditable memory for a team's coding agents with per-repository applicability, and want rejection rules, review authority and fact-time and knowledge-time reads enforced in SQL.
 - Do not copy when: you want a light single-user store, or you need every accepted memory to have passed a person — the default configuration does not require it.
+
+### [`rightmemory`](../systems/rightmemory/)
+
+- Best idea: **let the model write, then decide in code whether the write lands.** Update, Dreamer, Insight and the pruner run in temporary git worktrees, and `_validate_commits` refuses more than one update commit, any path outside the role's set, or an invalid graph before anything reaches the root. Codex runs those roles with full filesystem access and the Pursuit map still cannot be touched by an automatic write.
+- Biggest risk: **a question view is scoped by a prompt.** `answer_question_view` prepends the provider's `retriever.md` to the consumer's question and runs the ordinary retrieve role, which can select anything in the provider's root, including its own imports, and returns rendered source text. Every consumer of the view shares one retrieve session, so one consumer's questions sit in the next one's history.
+- Most reusable component: `rightmemory/update_queue_git.py` — a single-writer lease over plain git: `update_queue/lease.json` pushed by compare-and-swap with a random token and a six-hour expiry, and finalisation looked up by batch and token trailers so an expired holder cannot commit a stale result.
+- Second risk: **unjudged evidence and pruned memory both come back.** Queued candidates are retrievable at once, labelled "not settled", in the embedding corpus and the agent retriever's context. A pruned item that is written back gets two prunes of grace rather than a refusal, and nothing value-keyed records why it was removed.
+- Maturity impression: Apache-2.0, 43,765 lines of Python and 624 commits by one contributor between 1 May and 30 September 2026, self-described Alpha. 1,557 test functions run on Ubuntu and Windows in CI. One mark, `negative_eval`, on the shared-view hub's refusal of another view's package; `scope_enforced` is withheld because question views bypass the view key; the retrieval experiment's labelled cases are not committed.
+- Study when: you want memory curated by a model without trusting the model's writes — worktree isolation, runtime validation, exact-input records and fenced cross-device coordination are each separable.
+- Do not copy when: memory must stay on one machine, transcripts must not be mined, or shared memory must be partitioned finer than a whole root. Every write, read and background loop spends model tokens.

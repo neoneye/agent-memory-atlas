@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A git-backed Markdown memory for
+coding agents where a batched model updater decides what enters, and a
+token-scoped hub shares selected views.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="RightMemory — Agent Memory Atlas">
+    <meta property="og:description" content="A git-backed Markdown
+memory for coding agents where a batched model updater decides what
+enters, and a token-scoped hub shares selected views.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RightMemory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A git-backed Markdown
+memory for coding agents where a batched model updater decides what
+enters, and a token-scoped hub shares selected views.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>RightMemory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "RightMemory",
+      "description": "A git-backed Markdown memory for coding agents where a batched model updater decides what enters, and a token-scoped hub shares selected views.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Model-curated Markdown memory in git, with
+a shared-view hub</p>
+          <h1>RightMemory</h1>
+          <p class="document-deck">A git-backed Markdown memory for
+coding agents where a batched model updater decides what enters, and a
+token-scoped hub shares selected views.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/RightL/RightMemory">
+              <span>Source</span>
+              <strong>RightL/RightMemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/RightL/RightMemory/commit/0cd5e8680a1196077c198be6ceefd4fc51c8825d" title="0cd5e8680a1196077c198be6ceefd4fc51c8825d">
+              <span>Analyzed revision</span>
+              <code>0cd5e868…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RightL--RightMemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>RightL--RightMemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>43,765
+lines of Python in the package, plus about 4,700 lines of TypeScript
+source and configuration for the Pursuit map editor</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>624
+commits on main by one contributor, 1 May 2026 – 30 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,557
+Python test functions in 41,262 lines, run on Ubuntu and Windows in
+CI</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>RightMemory is a memory runtime for coding agents that stores durable
+context as Markdown trees in a git repository and keeps ordinary agent
+work from editing them directly. A coding agent submits evidence; a
+batched model updater decides what becomes Memory, in a throwaway git
+worktree, and the runtime lands the result only if the role's path set
+and the whole graph validate. A human-owned direction map, Pursuit, sits
+in the same graph, and a hub shares selected views between roots.</p>
+<p>What is notable is the machinery around the model rather than the
+model. Exact candidate batches are committed beside the diff they
+produced. Updaters on several devices coordinate through a git lease
+with a fencing token. The update role cannot land a write to Pursuit,
+even when Codex runs it with full filesystem access.</p>
+<p>What is weak is the trust boundary on reads. Raw submitted evidence
+is retrievable, labelled pending, before any judgement. The pruner
+protects a removed memory that is written back rather than refusing it.
+A question view lets a consumer's question reach a retriever with the
+provider's whole root in reach, scoped by a prompt file.</p>
+<p>The project is a single author's repository from 1 May 2026 to the
+pin, and describes itself as Alpha in <code>pyproject.toml</code>.</p>
+<p>One mark, <code>negative_eval</code>, on the committed hub test that
+refuses a consumer another view's package after a positive download.
+<code>scope_enforced</code> is withheld: the package route carries the
+view key, and the question path over the same view's data does not.
+Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory has three modules. <strong>Memory</strong> is durable context:
+an addressable node, <code>`id` statement → [edges]</code>, under
+anchored headings, with detail files behind <code>{F#id}</code>
+headings, free-form evidence behind <code>{M#id}</code> and instruction
+files behind <code>{S#id}</code>. <strong>Pursuit</strong> is the user's
+map of directions, in the same id namespace. <strong>Agent
+Corrections</strong> are two capped files of concrete redirection cases,
+at most ten entries each
+(<code>rightmemory/corrections.py:8-11</code>).</p>
+<p><strong>Nothing an agent says is Memory until the updater says
+so.</strong> The host agent's MCP tool
+<code>rightmemory_submit_update</code> writes a candidate to a queue
+(<code>rightmemory/mcp.py:297-311</code>). The updater prompt calls
+candidates <em>"evidence, not stored wording"</em> and tells the model
+to revalidate stale claims
+(<code>rightmemory/prompts/update.md:3</code>, <code>:15</code>). A
+queued candidate is already visible to retrieval, as <em>"pending
+updater submissions, not settled Memory"</em>
+(<code>rightmemory/recent_submitted.py:15-19</code>). That label is
+prose to a model; no read path drops pending material.</p>
+<p><strong>A memory stops being one in four ways.</strong> The updater
+rewrites or removes it while reconciling later evidence. Dreamer
+restructures the tree after enough landed updates. The pruner removes
+memory unchanged across a 70-commit generation
+(<code>rightmemory/config.py:47</code>). Or a person edits the Markdown
+through a maintenance skill. Git keeps every earlier text, and
+<code>rightmemory history</code> asks a historian model to search prune
+ledgers and old snapshots.</p>
+<p><strong>A pruned memory that comes back is protected, not
+refused.</strong> The pruner reads the previous <code>prune:</code>
+commit body. An item removed there and present again is kept for two
+further prunes, recorded as <code>grace K/N</code>
+(<code>rightmemory/prompts/pruner.md:24-28</code>;
+<code>rightmemory/prune.py:140-184</code>). The design reads a rewrite
+as a signal of use. It is also the opposite of a tombstone.</p>
+<p><strong>Uncertainty is a wording convention.</strong>
+<code>Uncertain:</code> prefixes and a global
+<code># Open Context Questions</code> heading are rules in
+<code>rightmemory/reference/MEMORY_RULES.md:21</code>; nothing parses
+them.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how evidence becomes RightMemory Memory, how it leaves, and the two ways shared memory reaches another root</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how evidence becomes RightMemory Memory, how it leaves, and the two ways shared memory reaches another root
+flowchart TD
+    A[&quot;host agent: rightmemory_submit_update&quot;] --&gt; Q[&quot;candidate in update queue&lt;br/&gt;(outbox JSON, per session)&quot;]
+    T[&quot;transcript review: idle Claude Code&lt;br/&gt;and Codex sessions&quot;] --&gt; Q
+    Q --&gt; R1[&quot;retrievable at once as&lt;br/&gt;&#39;Recent submitted, not settled&#39;&quot;]
+    Q --&gt; W{&quot;15 waiting, or quiet hour passed&lt;br/&gt;plus up to 24 h&quot;}
+    W --&gt; U[&quot;update model in isolated&lt;br/&gt;git worktree edits MEMORY*.md&quot;]
+    U --&gt; V{&quot;runtime: one commit,&lt;br/&gt;role path set, whole graph valid?&quot;}
+    V -- &quot;no&quot; --&gt; X[&quot;worktree discarded,&lt;br/&gt;batch kept for retry&quot;]
+    V -- &quot;yes&quot; --&gt; L[&quot;landed commit + update_records JSON&lt;br/&gt;+ RightMemory-Operation trailer&quot;]
+    L --&gt; M[&quot;active Memory node&quot;]
+    M --&gt; P{&quot;pruner every 70 commits:&lt;br/&gt;unchanged this generation?&quot;}
+    P -- &quot;yes&quot; --&gt; PR[&quot;removed; id listed in&lt;br/&gt;prune: commit body&quot;]
+    PR --&gt; RV[&quot;written back later:&lt;br/&gt;kept under grace 1/2, 2/2&quot;]
+    RV --&gt; M
+    M --&gt; MF[&quot;MF# file view: extractive or&lt;br/&gt;generative package&quot;]
+    MF --&gt; HUB{&quot;hub package route:&lt;br/&gt;token bound to this view?&quot;}
+    HUB -- &quot;no&quot; --&gt; D403[&quot;403&quot;]
+    HUB -- &quot;yes&quot; --&gt; C[&quot;consumer import,&lt;br/&gt;searched with local Memory&quot;]
+    M --&gt; MQ[&quot;MQ# question view: provider&#39;s retrieve&lt;br/&gt;role over whole root + retriever.md&quot;]
+    MQ --&gt; C2[&quot;consumer receives rendered&lt;br/&gt;provider source text&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A memory root is a git repository, <code>~/.rightmemory</code> by
+default, holding <code>MEMORY.md</code>, <code>PURSUITS.md</code>, their
+detail files, the correction collections, <code>update_records/</code>,
+<code>insight_logs/</code> and a machine-local <code>.runtime/</code>. A
+fresh-root install writes a tracked <code>.gitignore</code> allowlist so
+only those paths are committed. Profiles select a different root per
+project through <code>--profile</code> or a
+<code>.rightmemory-profile</code> file
+(<code>rightmemory/profiles.py:20</code>, <code>:117</code>).</p>
+<p>Every model role runs one of two ways: retrieve, update, reviewer,
+dreamer, insight, pruner, historian, sync-reconciler and
+shared-view-builder. In standalone mode a Pydantic AI agent gets bounded
+tools rooted at the memory root (<code>rightmemory/tools.py</code>). In
+CLI-agent mode the runtime shells out to the Codex SDK or
+<code>claude -p</code>. Read roles run Codex <code>read-only</code> or
+Claude <code>plan</code>, and write roles run Codex
+<code>full-access</code> or Claude <code>auto</code>
+(<code>rightmemory/agent_cli.py:822-835</code>).</p>
+<p>Writes are safe against that because the runtime, not the model,
+lands them. Automatic update, dreamer, insight and pruner turns run in
+<code>.runtime/worktrees/</code> on temporary branches.
+<code>_validate_commits</code> allows one commit for an update turn and
+rejects any changed path outside the role's set
+(<code>rightmemory/isolated_write.py:659-683</code>,
+<code>:860-879</code>). The whole graph must validate before
+landing.</p>
+<p>The optional hub is a FastAPI service over SQLite and a package
+directory (<code>rightmemory/hub/</code>). Providers publish versioned
+view packages with a publish token; consumers accept an invitation and
+download with a connect token. The optional embedding service is a
+separate process that loads the embedding and reranker models
+(<code>rightmemory/embedding_service.py</code>).</p>
+<p>Sync pushes the root to a private git remote. Incoming commits merge
+in a candidate worktree, a sync-reconciler model repairs conflicts
+there, and the active root fast-forwards only to a validated commit.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The minimum is Python 3.11, git, and either a model API key for
+standalone mode or an installed Codex or Claude Code CLI. Nothing else
+has to run. The watcher set (<code>rightmemory watch start</code>) adds
+background loops; the hub and the embedding service are separate
+opt-ins, the second run on a GPU in the maintainer's own experiments.
+Retrieval and writes both call a model, so nothing works offline without
+a local provider. The store is plain Markdown in git, readable and
+repairable by hand, and <code>rightmemory validate</code> checks it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Submit.</strong> <code>rightmemory_submit_update</code> →
+<code>DefaultMcpBackend.submit_update</code>
+(<code>rightmemory/mcp.py:175-192</code>) →
+<code>AsyncUpdateStore.submit</code>
+(<code>rightmemory/async_update.py:263-312</code>), which writes the
+candidate to an outbox and enqueues it under the session.
+<code>rightmemory update undo</code> cancels a still-pending candidate
+(<code>async_update.py:146</code>).</p>
+<p><strong>Batch selection.</strong> <code>_select_candidates</code>
+takes every waiting session at once when 15 candidates are waiting in
+aggregate. Otherwise it takes sessions whose one-hour quiet period has
+passed, once 24 hours have elapsed since the oldest became ready
+(<code>async_update.py:822-842</code>; constants at <code>:36</code> and
+<code>config.py:43-45</code>). Session queues are never split.</p>
+<p><strong>Claim across devices.</strong> With sync on,
+<code>UpdateQueueGit</code> writes <code>update_queue/lease.json</code>
+with a random token and a six-hour expiry and pushes it by
+compare-and-swap (<code>rightmemory/update_queue_git.py:47</code>,
+<code>:228-258</code>). Finalisation looks up both a batch and a token
+trailer, so an expired holder's result cannot land.</p>
+<p><strong>Update.</strong> The isolated writer runs the update role in
+a worktree, validates, then <code>_prepare_managed_artifacts</code> adds
+<code>update_records/&lt;batch&gt;.json</code> and amends the commit, or
+makes a record-only commit for a no-change batch, with a
+<code>RightMemory-Operation</code> trailer
+(<code>rightmemory/isolated_write.py:45</code>, <code>:714-769</code>).
+<code>UpdateRecord</code> refuses an operation id that does not hash its
+candidates (<code>rightmemory/update_record.py:29-58</code>).</p>
+<p><strong>Transcript review.</strong> <code>scan_once</code> normalises
+idle sessions from <code>~/.claude/projects</code> and
+<code>~/.codex/sessions</code>, runs the read-only reviewer role, and
+submits one candidate bundle
+(<code>rightmemory/review.py:249-413</code>). The reviewer is told never
+to edit or submit itself (<code>prompts/reviewer.md:8</code>).</p>
+<p><strong>Retrieve, agent backend.</strong> The retrieve role gets only
+typed readers — <code>read_detail</code>, <code>read_markdown</code>,
+<code>read_skill</code>, <code>read_mf</code>
+(<code>rightmemory/runtime.py:1861-1868</code>) — plus a snapshot of the
+root documents and diffs. It returns a strict JSON selector
+(<code>rightmemory/reference/RETRIEVE_CONTRACT.md</code>), and
+<code>RetrieveSelectionRenderer</code> renders source text with
+ancestors. Before reading, <code>_pull_file_views_for_retrieve</code>
+refreshes sync and pulls every accepted file view
+(<code>runtime.py:1715-1727</code>).</p>
+<p><strong>Retrieve, embedding backend.</strong>
+<code>build_retrieval_corpus</code> indexes every graph entry, backing
+passage, import entry, correction entry and pending candidate
+(<code>rightmemory/retrieval_index.py:60-105</code>).
+<code>EmbeddingRetriever._select</code> scores all passages by dot
+product, keeps 40, reranks and returns ten. The caller retries once if
+the corpus changed during scoring
+(<code>rightmemory/embedding_retrieval.py:121-154</code>).</p>
+<p><strong>Prune.</strong> <code>prune_due_status</code> counts commits
+since the last <code>prune:</code> commit;
+<code>build_pruner_message</code> hands the pruner the boundary, the
+head and the parsed previous ledger
+(<code>rightmemory/prune.py:68-121</code>, <code>:197-221</code>).</p>
+<p><strong>Guidance inbox.</strong>
+<code>rightmemory_capture_guidance</code> appends a <code>GI-</code>
+entry to <code>AGENT_GUIDANCE_INBOX.md</code> through a worktree commit
+(<code>rightmemory/guidance.py:94-141</code>). The
+<code>review-agent-guidance-inbox</code> skill curates it.</p>
+<p><strong>Sharing.</strong> File views render packages from a recipe
+(<code>rightmemory/shared_view_files.py</code>);
+<code>download_package</code> serves one to a connect token
+(<code>rightmemory/hub/app.py:415-427</code>). Question views are
+answered by <code>answer_question_view</code>
+(<code>rightmemory/shared_view_questions.py:284-325</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>heading</td>
+<td><code>#</code> to <code>###</code> in <code>MEMORY*.md</code>,
+<code>PURSUIT*.md</code></td>
+<td>optional <code>{#id}</code>, <code>{F#id}</code>,
+<code>{M#id}</code>, <code>{S#id}</code>, <code>{MF#id}</code> or
+<code>{MQ#id}</code> anchor; optional body and edge list</td>
+</tr>
+<tr>
+<td>node</td>
+<td><code>- `id` text → [edges]</code></td>
+<td>one statement; ids share one namespace across Memory and
+Pursuit</td>
+</tr>
+<tr>
+<td>edge</td>
+<td><code>dep:</code>, <code>ver:</code>, <code>doc:</code>,
+<code>todo:</code>, <code>rel:</code> and others</td>
+<td>typed, targets an id</td>
+</tr>
+<tr>
+<td>correction entry</td>
+<td><code>MEMORY_agent-corrections-writing.md</code>,
+<code>-design.md</code></td>
+<td>at most ten entries, 180 lines, 200 characters a line</td>
+</tr>
+<tr>
+<td>candidate</td>
+<td><code>update_queue/</code> or <code>.runtime/</code> JSON</td>
+<td>uid, session id, display id, message, submitted_at</td>
+</tr>
+<tr>
+<td>update record</td>
+<td><code>update_records/update-batch-*.json</code></td>
+<td>schema version, operation id, exact candidates</td>
+</tr>
+</tbody>
+</table></div>
+<p>The graph is parsed from Markdown on every operation and never
+persisted as a second index (<code>rightmemory/graph.py</code>). A node
+carries no author, time, source or status. Provenance is the git commit
+and, for queued updates, the record whose trailer links input to diff.
+Direct maintenance, Dreamer and the pruner produce no record.</p>
+<p><strong>Scope is placement.</strong> Project scope is a heading; the
+rules say to express narrower guidance <em>"through tree placement or
+explicit wording"</em>. The hard local boundary is the root: one git
+repository per profile.</p>
+<p><strong>Shared memory carries a view id.</strong> An imported file
+view lives under
+<code>.runtime/shared_views/imports/&lt;view&gt;/dist/</code> and its
+ids are addressed as <code>MF#view:id</code>. On the hub,
+<code>view_versions</code>, <code>invitations</code> and
+<code>connections</code> carry <code>view_id NOT NULL</code>, and
+<code>tokens</code> carries a nullable <code>view_id</code>
+(<code>rightmemory/hub/store.py:2006-2050</code>).</p>
+<p><code>corrections.md</code> is a separate collection:
+<em>"RightMemory Edit Feedback"</em>, each entry a candidate, a proposed
+edit and the accepted edit or <code>[no change]</code>, capped at ten
+(<code>rightmemory/reference/RIGHTMEMORY_EDIT_CORRECTION_RULES.md:31-32</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The default retriever is a model reading documents. It starts from a
+stable snapshot of <code>MEMORY.md</code>, <code>PURSUITS.md</code> and
+the correction collections, receives diffs as the root changes, and
+selects ids, line ranges and skills. There is no lexical index and no
+score. The runtime renders the selection with parent context and
+suppresses content already delivered unchanged in that session. Output
+is capped at 100,000 characters and fails rather than truncates.</p>
+<p>The embedding backend brute-forces a dot product over every cached
+passage vector, keeps the best passage per entry, and reranks 40. It has
+no score cutoff: the maintainer's experiment found a cutoff dropped
+required context, so a query with no stored answer still returns ten
+entries (<code>DESIGN_NOTES.md</code>). A service failure falls back to
+the agent retriever for that query.</p>
+<p><strong>Pending candidates compete with settled Memory.</strong> Both
+backends include queued evidence. The agent retriever sees it as a
+volatile block, and the embedding corpus adds each as a
+<code>pending:</code> entry
+(<code>rightmemory/retrieval_index.py:97-98</code>,
+<code>:224-230</code>). The retrieve prompt says to treat them as
+unsettled (<code>prompts/retrieve.md:11</code>). A candidate an agent
+submitted a minute ago can reach the next session's context before any
+updater has judged it, marked only by its source label.</p>
+<p><strong>Imports are searched with local Memory.</strong> Every
+accepted file view is pulled and indexed, and the retriever is not told
+which views a task may use. Root <code>corrections.md</code> and the
+guidance inbox are outside retrieval
+(<code>RETRIEVE_CONTRACT.md:13</code>; the inbox is read only by
+<code>sync.py</code>, <code>entrypoint.py</code> and
+<code>guidance.py</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are model-mediated and deferred. The host agent or the
+transcript reviewer submits free text. The updater reconciles a batch,
+forms a tentative edit, reads <code>corrections.md</code> <em>"as a late
+check"</em>, and makes the smallest coherent change
+(<code>prompts/update.md:21</code>). It may write Memory and the two
+correction collections. A commit touching Pursuit,
+<code>corrections.md</code> or anything else is rejected at landing.
+Tests cover a rename into Memory and a Pursuit write hidden before the
+squash
+(<code>tests/test_isolated_write_candidate_validation.py:206-273</code>).</p>
+<p><strong>Deduplication is the model's job.</strong> The prompt tells
+it to update a matching canonical item rather than append. Nothing in
+code compares new text to old.</p>
+<p><strong>Deletion is by rewrite and by pruning.</strong> The updater
+removes obsolete content. The pruner removes unchanged content every 70
+commits and records the ids in the <code>prune:</code> body; the memory
+files carry no lifecycle marker by design. Every removed text remains in
+git history and in the private remote.</p>
+<p><strong>Agent-generated and transcript-derived content is handled
+alike.</strong> Both become candidates and pass the same updater.
+Nothing filters content before the model; the admission bar is the rules
+document.</p>
+<p><strong>Privacy.</strong> The reviewer reads full Claude Code and
+Codex transcripts. Every candidate's exact text is committed to
+<code>update_records/</code> and pushed with sync, and the README says
+the remote must be private for that reason.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: submission is synchronous and cheap. Judgement is one updater
+model turn per batch, run at 15 waiting candidates, or one hour after a
+session goes quiet plus up to 24 hours when fewer are waiting. Settled
+Memory lags by that; the pending candidate is retrievable at once.</li>
+<li>Background: transcript review wakes every two hours over sessions
+idle six hours, three per batch. Dreamer runs after 50 landed updates
+and Insight after 150, each reading the active Memory. The pruner
+compares the root at two commits every 70 commits.</li>
+<li>Read: one retrieve model turn per query on the default backend. The
+snapshot is a stable prefix, forked per session in CLI-agent mode to
+keep the provider's cache warm. The embedding backend costs one query
+embedding and a rerank over 40 candidates, a 1,168.6 ms warm median in
+the maintainer's GPU-backed runs.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The installer writes five skills into <code>~/.codex/skills</code>
+and <code>~/.claude/skills</code>
+(<code>rightmemory/install_core.py:953-954</code>). The default,
+<code>rightmemory-auto-orchestrator</code>, retrieves when stored
+context could change the approach and submits qualifying evidence at a
+natural boundary. An approval-gated variant asks the user in chat before
+submitting. The MCP server registers three tools,
+<code>rightmemory_retrieve</code>,
+<code>rightmemory_submit_update</code> and
+<code>rightmemory_capture_guidance</code>
+(<code>rightmemory/mcp.py:277-325</code>); none edits, approves or
+deletes.</p>
+<p>The host agent still has a direct path. The
+<code>maintain-rightmemory</code> and <code>maintain-pursuit-map</code>
+skills edit the Markdown in a worktree when the user asks, and the host
+agent runs them with its own shell. The skill text is the boundary
+there.</p>
+<p>Session continuity is per logical session id. Standalone retrieve
+keeps exact message history, and CLI-agent retrieve keeps one provider
+fork per session. Every internal provider conversation gets an ownership
+record, so transcript review does not mine the memory system's own
+threads.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The write surface is enforced after the fact, where it
+holds.</strong> A Codex write role has full filesystem access, and the
+runtime still refuses to land a commit touching a path outside the
+role's set, more than one commit, or an invalid graph. The Pursuit map
+is the user's by code, not by prompt.</p>
+<p><strong>Cross-device updates are fenced.</strong> The lease is
+claimed by a compare-and-swap push, and a finalisation must carry the
+claim's token. A crashed holder delays takeover by up to six hours and
+cannot commit a stale result.</p>
+<p><strong>Question views are scoped by a prompt.</strong>
+<code>answer_question_view</code> checks the view is approved, prepends
+<code>retriever.md</code> to the consumer's question, and runs the
+provider's retrieve role
+(<code>shared_view_questions.py:284-325</code>). That role reads the
+whole provider root — Memory, Pursuit, corrections and the provider's
+own imports — and returns rendered source text. Every consumer of a view
+shares the session <code>shared-view-question-&lt;view&gt;</code>
+(<code>:347-355</code>). One consumer's questions are then in the
+history, and the delivery suppression, of the next. This was read, not
+reproduced.</p>
+<p><strong>Unjudged evidence is retrievable.</strong> Section 6 covers
+it. A prompt-injected transcript line becomes a candidate that reaches
+the next retrieval before the updater's revalidation instruction
+applies.</p>
+<p><strong>No provenance on a node.</strong> The link from a node back
+to the evidence that produced it is a git blame and a trailer, and only
+for queued updates.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — withheld, on the second way to consume
+a view. A package download needs a connect token minted with the view's
+id, and a token bound to another view gets 403
+(<code>rightmemory/hub/app.py:415-418</code>, <code>:492-499</code>;
+<code>rightmemory/hub/store.py:1458-1488</code>). A question view skips
+that key. <code>answer_question_view</code> prepends
+<code>retriever.md</code> and runs the provider's retrieve role over the
+whole root (<code>rightmemory/shared_view_questions.py:284-325</code>,
+<code>:347-355</code>), so a consumer's read over the view's data is
+bounded by a prompt. Locally, the root and the MF# namespace partition
+memory, and retrieval carries no predicate.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — none. The pruner's revival grace protects a
+memory written back. <code>corrections.md</code> holds rejected edit
+fragments for the updater model to read, capped at ten and evicted by
+priority. The update role cannot write it; among runtime roles only the
+sync-reconciler can (<code>rightmemory/tools.py:1425-1443</code>), and
+the maintenance skills edit it directly. No code refuses a value.</li>
+<li><code>trust_state</code> — no status field. Pending candidates are
+rendered with a label, not filtered. The guidance inbox holds unreviewed
+guidance in a file retrieval never reads, which is a location, not a
+state.</li>
+<li><code>bitemporal</code> — no validity time; git commit time
+only.</li>
+<li><code>audit_log</code> — the hub appends <code>audit_events</code>
+for token, invitation, connection and <code>view.version.created</code>
+events, with the actor token and package hash
+(<code>rightmemory/hub/store.py:1318-1325</code>,
+<code>:1490-1512</code>). Those record publication of a rendered
+package. The Memory it renders changes through git commits, with
+<code>update_records</code> holding inputs for queued updates only.</li>
+<li><code>human_review</code> — the updater admits memory with no
+approval state. Guidance inbox entries wait for review, but the host
+agent that captured them applies the approved proposals itself.
+<code>share approve</code> and <code>approve_question_view</code> flip
+an <code>approved</code> flag from a CLI with no actor check. They gate
+disclosure of a view, not admission.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report. The suite is 1,557 test
+functions, and CI runs all of it with <code>python -m tests</code> on
+Ubuntu and Windows. On Linux it also runs the frontend's typecheck and
+tests and a byte check of the committed bundle
+(<code>.github/workflows/tests.yml</code>).</p>
+<p><strong>The negative case.</strong>
+<code>test_publish_invite_accept_pull_interact_and_inbox_flow</code>
+(<code>tests/test_http_hub.py:797-905</code>) downloads a view's package
+with a connect token and asserts the current version's text. It then
+publishes a second view for the same provider and asserts that token
+gets 403. The retrieval-side case
+<code>test_mf_ids_are_scoped_and_metadata_is_not_exposed</code>
+(<code>tests/test_retrieve_selection.py:217-228</code>) asserts the
+selected imported content, then that the provider's
+<code>recipe.toml</code>, fixture line <code>secret = true</code>, is
+absent from the rendered result.</p>
+<p><strong>Projections, not retrieval.</strong>
+<code>test_exact_node_preserves_ancestor_bodies_without_sibling_leaks</code>
+(<code>tests/test_shared_views.py:343-384</code>) renders an extractive
+view whose recipe includes a node under an excluded heading. It asserts
+the export keeps the included context and drops the excluded node, its
+siblings and the unrelated section. That tests what leaves the provider,
+not what a reader retrieves.</p>
+<p><strong>Writes and coordination.</strong> The isolated-write suites
+assert every forbidden-path shape at landing. The queue suites cover
+one-claimant leases, takeover fencing of an old token, and exact trailer
+lookup (<code>tests/test_update_queue_git_claims.py:75-272</code>).
+<code>tests/test_update_record.py</code> covers the record's immutable
+format.</p>
+<p><strong>Retrieval quality.</strong>
+<code>experiments/README.md</code> reports 32 frozen labelled cases, 28
+with a required answer, on which the embedding backend kept every
+required id in the top ten across three passes. The cases and corpus
+live under an ignored <code>tmp/</code> directory and are not committed,
+so the figures cannot be recomputed from the tree.
+<code>tests/test_retrieval_experiment.py</code> tests the metric code,
+not a result.</p>
+<p><strong>Not covered.</strong> No committed case asserts that a
+pruned, rewritten or pending memory stays out of retrieval, or that a
+question view keeps anything out. There is no paper: the experiments
+README cites related retrieval work on arXiv, and the tree has no
+citation block for the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let the model write anywhere and validate the
+result.</strong> Run write roles in a throwaway worktree, then refuse
+the commit if it touches a path outside the role's set or leaves the
+graph invalid. The agent CLI's permission model then stops
+mattering.</li>
+<li><strong>Commit the exact input beside the diff.</strong> A per-batch
+record whose id is the hash of its candidates, in the same commit, with
+a trailer, turns "why did this change" into two file reads.</li>
+<li><strong>Coordinate devices through the store you already
+sync.</strong> A lease file pushed by compare-and-swap, plus a fencing
+token on finalisation, gives single-writer updates over plain git
+without a server.</li>
+<li><strong>Bind the consumer credential to the thing it may
+read.</strong> A token minted with a view id, checked on every fetch, is
+a scope key a caller cannot widen.</li>
+<li><strong>Keep human-owned structure out of the agent's write surface
+in code.</strong> Pursuit is readable by every role and writable by none
+of the automatic ones.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Serving unjudged evidence through the same read path as
+memory.</strong> A label asking the model to be careful is not a filter.
+Keep candidates out of retrieval, or behind an explicit flag.</li>
+<li><strong>Scoping a sharing channel with a prompt.</strong> If a
+remote question can reach a retriever over the whole store, the prompt
+is the boundary. Give the question path the same key the package path
+has.</li>
+<li><strong>One session per shared endpoint.</strong> History and
+delivery state keyed by the view mix consumers; key them by
+connection.</li>
+<li><strong>Protecting what comes back after a prune without recording
+why it left.</strong> Grace for a rewrite is reasonable only when a
+rejection cannot look the same.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who works across Codex and Claude Code on
+several machines, wants memory curated rather than accumulated, and
+accepts model tokens on every write, every read and several background
+loops. The Markdown-in-git store is inspectable and repairable, and the
+write discipline is strict. Walk away if memory must stay on one
+machine, if transcripts must not be mined, or if one root must hold
+memory for several parties. The hub is well built for file views; do not
+enable question views for a consumer you would not show the whole root
+to.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does a question-view answer in practice reach content outside what
+<code>retriever.md</code> describes? Settling it needs a provider run
+with a deliberately narrow prompt.</li>
+<li>How often do pending candidates reach a session's context before
+judgement, and do agents act on them?</li>
+<li>What share of updater batches end in no change, and how often does
+the pruner's grace keep a memory an updater had removed?</li>
+<li>Are question-view sessions meant to be shared across consumers?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and rules:</strong>
+<code>rightmemory/reference/rightmemory-schema.md</code>,
+<code>MEMORY_RULES.md</code>, <code>RETRIEVE_CONTRACT.md</code>,
+<code>RIGHTMEMORY_EDIT_CORRECTION_RULES.md</code>,
+<code>rightmemory/graph.py</code>,
+<code>rightmemory/corrections.py</code>.</li>
+<li><strong>Write path:</strong> <code>rightmemory/mcp.py</code>,
+<code>rightmemory/async_update.py</code>,
+<code>rightmemory/update_queue.py</code>,
+<code>rightmemory/update_queue_git.py</code>,
+<code>rightmemory/isolated_write.py</code>,
+<code>rightmemory/update_record.py</code>,
+<code>rightmemory/tools.py</code>,
+<code>rightmemory/prompts/update.md</code>.</li>
+<li><strong>Capture:</strong> <code>rightmemory/review.py</code>,
+<code>rightmemory/transcripts/</code>,
+<code>rightmemory/guidance.py</code>,
+<code>rightmemory/prompts/reviewer.md</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>rightmemory/runtime.py:1567-1727, 1861-1868</code>,
+<code>rightmemory/retrieve_selection.py</code>,
+<code>rightmemory/retrieve_context.py</code>,
+<code>rightmemory/recent_submitted.py</code>,
+<code>rightmemory/retrieval_index.py</code>,
+<code>rightmemory/embedding_retrieval.py</code>.</li>
+<li><strong>Background:</strong> <code>rightmemory/prune.py</code>,
+<code>rightmemory/prompts/pruner.md</code>,
+<code>rightmemory/dreamer_trigger.py</code>,
+<code>rightmemory/insight_trigger.py</code>,
+<code>rightmemory/sync.py</code>,
+<code>rightmemory/watch.py</code>.</li>
+<li><strong>Sharing:</strong> <code>rightmemory/hub/app.py</code>,
+<code>rightmemory/hub/store.py</code>,
+<code>rightmemory/shared_view_files.py</code>,
+<code>rightmemory/shared_view_questions.py</code>,
+<code>rightmemory/web/app.py:442-465</code>.</li>
+<li><strong>Agent CLI:</strong> <code>rightmemory/agent_cli.py</code>,
+<code>rightmemory/codex_sdk.py</code>,
+<code>rightmemory/install_core.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_http_hub.py</code>,
+<code>tests/test_retrieve_selection.py</code>,
+<code>tests/test_shared_views.py</code>,
+<code>tests/test_isolated_write_candidate_validation.py</code>,
+<code>tests/test_update_queue_git_claims.py</code>,
+<code>tests/test_embedding_retrieval.py</code>,
+<code>tests/test_update_record.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rniE 'tombstone|blocklist|denylist|deny_list|never re-?add|forbidden_values' --include='*.py' --include='*.md' .</code>
+— no match.</li>
+<li><code>grep -rniE 'valid_from|valid_to|valid_at|effective_at|as_of' --include='*.py' rightmemory</code>
+— no match.</li>
+<li><code>grep -rniE 'verified|unverified|trust_state|status *=' rightmemory/graph.py</code>
+— no match; the node grammar has no status.</li>
+<li><code>grep -rn 'isatty' --include='*.py' .</code> — no match; no
+approval verb checks for a terminal.</li>
+<li><code>grep -rn 'GUIDANCE_INBOX\|AGENT_GUIDANCE_INBOX' --include='*.py' rightmemory</code>
+— <code>guidance.py</code>, <code>sync.py</code>,
+<code>entrypoint.py</code>; no retrieval reader.</li>
+<li><code>grep -rn 'corrections\.md' --include='*.py' rightmemory</code>
+— sync, install, validation, prompt assembly and the role write policy;
+<code>tools.py:62</code> grants read access to <code>update</code> and
+<code>sync-reconciler</code> only.</li>
+<li><code>grep -n 'pending' rightmemory/retrieval_index.py rightmemory/embedding_retrieval.py</code>
+— set at <code>retrieval_index.py:26</code> and <code>:229</code>; never
+read to exclude an entry.</li>
+<li><code>grep -n 'UPDATE \|DELETE FROM' rightmemory/hub/store.py</code>
+— no statement names <code>audit_events</code>.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git</code>
+— <code>experiments/README.md</code>, citing other work, and one skill
+using the word "citations"; no <code>CITATION.cff</code>.</li>
+<li><code>grep -rniE 'renamed|formerly' README.md docs DESIGN_NOTES.md AGENTS.md</code>
+— no match. The first commit is titled "rightmem memory system"; no
+atlas page names either spelling.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/RightL/RightMemory/commit/0cd5e8680a1196077c198be6ceefd4fc51c8825d"><code class="commit-id" title="0cd5e8680a1196077c198be6ceefd4fc51c8825d">0cd5e868…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 30
+September 2026. One mark, <code>negative_eval</code>, on the shared-view
+hub; section 9 names the six withheld, <code>scope_enforced</code> among
+them because question views reach the whole provider root under a
+prompt. Screened before reading: no auto-run surface, no build-time
+execution point, one unpinned surface (<code>pyproject.toml</code> has
+no lockfile), and three dependency files inside the cooldown, every file
+in the depth-1 clone dating to the tip. <code>AGENTS.md</code> was
+recorded as data. Read with <code>grep</code>, <code>sed</code> and
+<code>awk</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
