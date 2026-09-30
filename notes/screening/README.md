@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 685 of 685 screened at the report's current pin.**
+**Progress: 687 of 687 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 319 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 370 |
-| Repositories with build-time execution (`EXEC`) | 498 |
+| Repositories with an auto-run surface (`RUNS`) | 321 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 371 |
+| Repositories with build-time execution (`EXEC`) | 500 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -61,6 +61,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`athena`](../../content/systems/athena.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
 | [`aurora`](../../content/systems/aurora.md) | `.mcp.json` |
 | [`auto-company`](../../content/systems/auto-company.md) | `.claude/settings.json` |
+| [`autobot-ai`](../../content/systems/autobot-ai.md) | `.claude/hooks/`, `.claude/settings.json`, `.vscode/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
 | [`autoharness`](../../content/systems/autoharness.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`basic-memory`](../../content/systems/basic-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `server.json`, `smithery.yaml` |
@@ -231,6 +232,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`muninn`](../../content/systems/muninn.md) | `.claude/settings.json` |
 | [`muninndb`](../../content/systems/muninndb.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`mushroomdb`](../../content/systems/mushroomdb.md) | `.claude-plugin/`, `server.json` |
+| [`nano-brain`](../../content/systems/nano-brain.md) | `.claude/hooks/`, `.claude/settings.json`, `.opencode/` |
 | [`nanoclaw`](../../content/systems/nanoclaw.md) | `.claude/settings.json`, `.mcp.json` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
 | [`neurakeep`](../../content/systems/neurakeep.md) | `server.json` |

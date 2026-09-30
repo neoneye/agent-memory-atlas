@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted AI platform whose
+knowledge-base facts and chat trajectories feed every prompt, with owner
+and quarantine filters on some read paths but not others.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AutoBot — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted AI platform
+whose knowledge-base facts and chat trajectories feed every prompt, with
+owner and quarantine filters on some read paths but not others.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AutoBot — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted AI platform
+whose knowledge-base facts and chat trajectories feed every prompt, with
+owner and quarantine filters on some read paths but not others.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AutoBot — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AutoBot",
+      "description": "A self-hosted AI platform whose knowledge-base facts and chat trajectories feed every prompt, with owner and quarantine filters on some read paths but not others.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Six memory stores inside a self-hosted AI
+platform</p>
+          <h1>AutoBot</h1>
+          <p class="document-deck">A self-hosted AI platform whose
+knowledge-base facts and chat trajectories feed every prompt, with owner
+and quarantine filters on some read paths but not others.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mrveiss/AutoBot-AI">
+              <span>Source</span>
+              <strong>mrveiss/AutoBot-AI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mrveiss/AutoBot-AI/commit/2b88c1c2e590b7a534574a6de72b8dcc1de6c92f" title="2b88c1c2e590b7a534574a6de72b8dcc1de6c92f">
+              <span>Analyzed revision</span>
+              <code>2b88c1c2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mrveiss--AutoBot-AI" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mrveiss--AutoBot-AI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>1,046,750
+lines of Python outside tests across the monorepo; the memory stores,
+routes and tasks read here are about 16,200 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>14,324
+commits to the pin by eight contributors, three of them bots, 26 June
+2025 – 30 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>34,983
+Python test functions in 2,865 files</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AutoBot is a self-hosted AI platform — chat, a RAG knowledge base, a
+fleet manager and installable modules — whose memory is spread over six
+stores. The knowledge-base fact store feeds an always-loaded
+<em>Essential Context</em> block and the chat RAG search. A trajectory
+store recalls similar high-reward past turns. Verbatim turns, a Redis
+memory graph, working memory and a SQLite store sit beside them. This
+report covers what stores, retrieves and corrects memory, and leaves the
+rest of the platform out.</p>
+<p>What is notable is the per-store engineering. The fact row lives in
+Postgres and Redis and ChromaDB are projections. The SQLite store cannot
+be queried without an owner. Trajectories are filtered by user and
+tenant with a client-side backstop. Web-research claims sit in a
+quarantine that only a corroboration gate lifts.</p>
+<p>What is weak is the composition. The Essential Context block reads
+200 arbitrary facts with no owner, visibility or quarantine filter and
+prepends them to every chat turn. The chat RAG path excludes quarantine
+and nothing else. The per-turn fact extraction calls a method that no
+class defines. The user-facing forget spans six stores and omits the
+fact store.</p>
+<p>The six stores were built under separate issues and are exposed
+together by the transparency engine in
+<code>memory/transparency.py</code>, which lists, forgets and exports
+per user. That engine's store map is the clearest account of what the
+project treats as memory, and its omissions are the clearest account of
+where the stores disagree. The project's own audit of 8 August 2026
+(<code>docs/research/layered-agent-memory-and-context-offload.md</code>)
+found the SQLite store untenanted; the required owner argument is the
+fix, issue #13688.</p>
+<p>Four marks: <code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code>. Section 9 names
+the three withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is whichever row a store holds, and the stores give
+different answers about how it becomes believed. A knowledge-base fact
+is believed on write: <code>_apply_provenance_defaults</code> stamps
+<code>verification_status: unverified</code> and
+<code>quality_score: 0.0</code>, and nothing reads the status to
+withhold the fact (<code>knowledge/facts.py:383-411</code>). The
+exception is a web-research claim, which is written into the
+<code>research</code> collection and withheld from general reads until
+promoted.</p>
+<p>The research path is the one state machine with a gate.
+<code>POST /research</code> fetches sources, extracts claims and stores
+each one quarantined
+(<code>services/research/orchestrator.py:104-126</code>). Only claims
+the synthesiser cited are corroborated.
+<code>ClaimVerifier.corroborate</code> either returns verified, and
+<code>_promote_fact</code> moves the fact to the <code>general</code>
+collection, or asks for human review, and
+<code>_flag_contradiction</code> writes <code>contradicts</code>
+relations and marks it <code>disputed</code> in quarantine
+(<code>orchestrator.py:153-199, 302-324</code>). Nothing drains
+<code>disputed</code>.</p>
+<p>A trajectory becomes recallable when a judge scores it. After each
+chat turn <code>capture_chat_trajectory</code> asks
+<code>TaskOutcomeJudge</code> for a score in <code>[0, 1]</code> and
+stores the turn with that reward. Retrieval admits only rewards of at
+least 0.7
+(<code>chat_workflow/trajectory_context.py:38, 133-189</code>). A
+nightly pass collapses duplicates and prunes rows below a 0.4 reward
+floor or past 30 days
+(<code>memory/trajectory_store.py:75-76</code>).</p>
+<p>A memory-graph entity is valid from creation until
+<code>invalidate_entity</code> sets <code>valid_to</code>, and
+invalidated entities drop out of search by default
+(<code>autobot_memory_graph/entities.py:348-383</code>,
+<code>queries.py:27-37, 242</code>). Facts, trajectories and verbatim
+chunks die by hard delete, whether through a route, retention or the
+privacy API. No store keeps a record of a rejected value.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — AutoBot's writers feed one fact store and a scoped trajectory store; research claims wait in a quarantine collection until corroborated, per-turn fact extraction fails and stores nothing, and the Essential Context block reads facts with no owner or quarantine filter</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: AutoBot&#39;s writers feed one fact store and a scoped trajectory store; research claims wait in a quarantine collection until corroborated, per-turn fact extraction fails and stores nothing, and the Essential Context block reads facts with no owner or quarantine filter
+flowchart TB
+    subgraph WRITE[&quot;Writers&quot;]
+        R[&quot;POST /research: claims stored with collection=research&quot;]
+        U[&quot;Uploads, connectors, diaries, agent store_fact&quot;]
+        T[&quot;Chat turn complete&quot;]
+    end
+    R --&gt; Q{&quot;ClaimVerifier.corroborate&quot;}
+    Q --&gt;|&quot;verified&quot;| P[&quot;collection=general, verification_status=verified&quot;]
+    Q --&gt;|&quot;needs review&quot;| D[&quot;disputed, stays in research&quot;]
+    U --&gt; F[(&quot;knowledge_facts row, Redis fact hash, Chroma vector&quot;)]
+    P --&gt; F
+    D --&gt; F
+    T --&gt; X[&quot;memory.extract_facts task: AttributeError, retried, nothing stored&quot;]
+    T --&gt; TR[(&quot;trajectory: reward, user_id, tenant_id, agent_id=chat&quot;)]
+    T --&gt; V[(&quot;verbatim chunk with user_id&quot;)]
+    F --&gt; ES[&quot;Essential Context: first 200 SCAN keys, no owner or quarantine filter&quot;]
+    F --&gt; RAG[&quot;Chat RAG: quarantine filter only&quot;]
+    F --&gt; API[&quot;Explicit search APIs: owner, visibility and quarantine filters&quot;]
+    TR --&gt; TC[&quot;Trajectory recall: user and tenant where, reward at least 0.7&quot;]
+    ES --&gt; PR[&quot;Every non-lightweight chat prompt&quot;]
+    RAG --&gt; PR
+    TC --&gt; PR
+    FG[&quot;DELETE /memory/privacy/forget-everywhere&quot;] --&gt;|&quot;six stores&quot;| TR
+    FG -.-&gt;|&quot;not covered&quot;| F
+    FG -.-&gt;|&quot;matches agent_id == user&quot;| TR</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory code lives in the FastAPI backend,
+<code>autobot-backend/</code>. The fact store is
+<code>knowledge/facts.py</code>, one of thirteen mixins composed with a
+core class into <code>KnowledgeBase</code>
+(<code>knowledge/_composed.py:36-51</code>). Its system of record is the
+Postgres table <code>knowledge_facts</code>, declared in
+<code>knowledge/fact_store.py:1-38</code>. The Redis
+<code>fact:&lt;id&gt;</code> hash and the ChromaDB vector are
+projections that a reconciler repairs, and every write reaches the row
+first and raises if it cannot (<code>facts.py:770-805</code>).</p>
+<p>The other stores are smaller. <code>memory/trajectory_store.py</code>
+and <code>memory/verbatim_store.py</code> are ChromaDB collections.
+<code>autobot_memory_graph/</code> keeps RedisJSON documents under
+<code>memory:entity:&lt;id&gt;</code> in Redis database 0.
+<code>memory/working_memory.py</code> keeps session keys in the
+<code>knowledge</code> Redis database.
+<code>memory/storage/general_storage.py</code> is an SQLite table,
+<code>memory_entries</code>, behind the <code>MemoryManager</code>
+facade.</p>
+<p>Background work runs on Celery. The chat workflow's stop hook
+enqueues <code>memory.write_verbatim</code> twice and
+<code>memory.extract_facts</code> once per turn, then captures the
+trajectory in process (<code>chat_workflow/stop_hook.py:61-105</code>).
+Beat schedules <code>memory.consolidate_trajectories</code> at 04:00 UTC
+and <code>memory.consolidate_facts</code> at 04:20 UTC
+(<code>celery_app.py:245-252</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The memory cannot run alone: it needs Postgres, Redis with RediSearch
+and RedisJSON, ChromaDB, a Celery worker and beat, and an embedding
+model, plus an LLM for the trajectory judge and research corroboration.
+The documented install is a one-line script that deploys the Service
+Lifecycle Manager, or a Docker Compose file for evaluation. It can run
+fully local with Ollama. The Postgres row is repairable by hand; the
+Redis and ChromaDB copies are meant to be rebuilt, not edited.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Always-loaded context.</strong>
+<code>_prepare_llm_request_params</code> checks
+<code>TIERED_CONTEXT_ENABLED</code>, which defaults to false
+(<code>autobot_shared/ssot_config.py:2136</code>), and on that default
+calls <code>EssentialStoryGenerator().generate()</code> and prepends the
+result to the system prompt
+(<code>chat_workflow/llm_handler.py:873-929</code>).
+<code>_fetch_top_facts</code> calls
+<code>kb.get_all_facts(limit=200)</code>. It sorts by
+<code>quality_score</code> plus a bounded usage and recency boost, fills
+a 300 to 800 token budget and bumps <code>access_count</code> on what it
+surfaced (<code>memory/essential_story.py:102-125, 212-255</code>).</p>
+<p><strong>Chat RAG.</strong>
+<code>ChatKnowledgeService.conversation_aware_retrieve</code> runs
+intent detection, query enhancement and
+<code>RAGService.advanced_search</code>, then the RAG firewall
+(<code>services/knowledge/service.py:683-760</code>). The semantic arm
+is
+<code>kb.search(query, top_k=limit, filters=RESEARCH_QUARANTINE_FILTER)</code>
+(<code>advanced_rag_optimizer.py:391-399</code>).</p>
+<p><strong>Trajectory recall and capture.</strong>
+<code>retrieve_trajectory_context</code> calls
+<code>find_similar_trajectories</code> under a 0.15-second timeout with
+the session's user and tenant
+(<code>trajectory_context.py:87-130</code>;
+<code>llm_handler.py:952-963</code>).
+<code>capture_chat_trajectory</code> scores the turn and stores it with
+<code>agent_id="chat"</code>
+(<code>trajectory_context.py:133-189</code>), gated by
+<code>SELF_IMPROVEMENT_ENABLED</code>, on by default
+(<code>autobot_shared/ssot_config.py:110</code>).</p>
+<p><strong>Per-turn extraction.</strong>
+<code>_async_extract_facts</code> constructs
+<code>KnowledgeExtractionAgent</code> and awaits
+<code>agent.extract_facts_from_messages(...)</code>
+(<code>tasks/memory_tasks.py:63-74</code>). No class in the tree defines
+that method. The Celery task retries three times at 60-second intervals
+and then fails (<code>memory_tasks.py:226-266</code>).</p>
+<p><strong>Research quarantine.</strong> <code>POST /research</code> in
+<code>services/research/routes.py:39-55</code> reaches
+<code>ResearchOrchestrator.research</code>, which plans, fetches, stores
+quarantined claims, synthesises an answer and corroborates the cited
+claims (<code>orchestrator.py:326-357</code>).</p>
+<p><strong>Correction.</strong> <code>update_fact</code> merges metadata
+and overwrites content, row first, then Redis and ChromaDB
+(<code>facts.py:1158-1224</code>). <code>delete_fact</code> removes the
+row, then the mappings and the vector (<code>facts.py:1263-1305</code>).
+The privacy routes in <code>api/memory_privacy.py</code> dispatch to
+<code>memory/transparency.py</code>. <code>invalidate_entity</code> sets
+<code>valid_to</code> on a graph entity
+(<code>autobot_memory_graph/entities.py:348-383</code>).</p>
+<p><strong>Integration.</strong>
+<code>mcp_server/autobot_server.py</code> registers
+<code>kb.search</code>, <code>kb.get_document</code>,
+<code>kb.list_categories</code>, <code>kb.list_tags</code> and the
+memory tools <code>memory.entity_lookup</code>,
+<code>memory.timeline</code>, <code>memory.related</code>,
+<code>memory.path</code> and <code>memory.verbatim_search</code>, all
+reads (<code>autobot_server.py:169-285</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The fact row has <code>id</code>, <code>content</code>,
+<code>metadata_json</code>, <code>content_hash</code>,
+<code>unique_key</code>, <code>owner_id</code>,
+<code>source_session_id</code>, vector bookkeeping and source-liveness
+columns (<code>models/knowledge_fact.py:34-98</code>). Most of the
+semantics sit in the metadata JSON: <code>owner_id</code>,
+<code>visibility</code>, <code>organization_id</code>,
+<code>group_ids</code>, <code>shared_with</code>,
+<code>collection</code>, <code>category</code>, the provenance defaults
+and the injection-sanitising flags. Usage counters live as top-level
+Redis hash fields so an access bump is one atomic <code>HINCRBY</code>
+(<code>facts.py:339-352</code>).</p>
+<p>Visibility is a designed model. <code>ingestion_visibility.py</code>
+stamps <code>system</code> only on facts from trusted ingestion sites
+and keeps chat, diary, extraction and transcript facts private
+(<code>knowledge/ingestion_visibility.py:5-21</code>).
+<code>build_chromadb_permission_filter</code> and
+<code>filter_search_results_by_permission</code> turn that into a read
+filter, and fail closed with no ownership manager
+(<code>knowledge/search_filters.py:26-155</code>).</p>
+<p>A trajectory carries <code>task_text</code>, <code>reward</code>,
+<code>outcome</code>, <code>agent_id</code>, <code>plan_id</code>,
+<code>strategy</code>, <code>tenant_id</code>, <code>user_id</code> and
+a timestamp (<code>trajectory_store.py:301-385</code>). A graph entity
+carries <code>type</code>, <code>name</code>, <code>observations</code>,
+and metadata with <code>created_at</code>, <code>status</code>,
+<code>version</code>, <code>valid_from</code> and <code>valid_to</code>
+(<code>entities.py:34-65</code>). <code>valid_from</code> is always the
+creation instant; <code>_prepare_entity_metadata</code> overwrites any
+value a caller supplies.</p>
+<p>Time is single-axis everywhere except the graph. A fact has a
+<code>timestamp</code> and an <code>updated_at</code> that overwrites.
+The source-liveness columns record probe observations and a
+<code>source_gone_at</code> event, and nothing on a read path consults
+them (<code>knowledge/source_liveness.py:1-35</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The Essential Context block is the one read that runs on every
+non-lightweight turn, and its candidate set is not ranked.
+<code>get_all_facts</code> scans <code>fact:*</code>, keeps keys in SCAN
+order and slices the first 200 before any sort
+(<code>facts.py:1019-1066</code>;
+<code>knowledge/base.py:626-648</code>). Documents are facts too,
+because <code>add_document</code> calls <code>store_fact</code>
+(<code>knowledge/documents.py:92</code>), so the 200 are drawn from
+every upload, connector ingest, diary entry and research claim in the
+deployment. The ranking then selects inside that sample.</p>
+<p>The reinforcement is bounded by construction.
+<code>_effective_score</code> is
+<code>quality + weight * (usage_boost + recency)</code>, with usage
+normalised against the busiest candidate and recency halving every 30
+days, so the boost is at most twice the weight of 0.3
+(<code>essential_story.py:61-125</code>). A deterministic
+<code>fact_id</code> tiebreak keeps the order-sensitive cache
+fingerprint stable.</p>
+<p>The chat RAG path is hybrid. The optimiser runs semantic and keyword
+arms, fuses them, reranks with a cross-encoder and drops results below
+0.3 (<code>services/knowledge/service.py:244-360</code>).
+<code>advanced_search</code> also consults semantic and topic caches
+keyed on the query and a per-user retrieval-pattern learner, and merges
+the indexed documentation
+(<code>services/rag_service.py:700-800</code>).</p>
+<p>Trajectory recall is scoped vector search: four times
+<code>top_k</code> candidates, the <code>where</code> predicate, the
+backstop, then the reward floor
+(<code>trajectory_store.py:420-500</code>). The result is framed as
+reference, not instructions, and given the lowest priority and a 20 per
+cent share in prompt allocation
+(<code>llm_handler.py:728-769</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every fact write goes through one chokepoint. <code>store_fact</code>
+runs <code>sanitize_fact_content</code>, which neutralises injection
+patterns, redacts credentials and records what it did in metadata
+(<code>knowledge/ingest_sanitize.py:96-131</code>). It then deduplicates
+on a unique key, a hash of the raw submission and a vector-similarity
+check at 0.92 by default, and writes the row
+(<code>facts.py:458-563, 807-836</code>). The sanitiser strips no
+metadata keys, so a caller can supply <code>collection</code>,
+<code>visibility</code>, <code>quality_score</code> or
+<code>verification_status</code>.</p>
+<p>Writes from chat are background. The verbatim chunks and the
+extraction are Celery tasks; the trajectory capture is an awaited judge
+call inside a task the turn does not wait on
+(<code>chat_workflow/manager.py:3580-3612</code>). Extraction stores
+nothing, as section 4 shows. <code>memory.update_graph</code> is
+registered and routed to a queue, and no code enqueues it, so the graph
+grows only from conversation entities, security events and the admin
+API.</p>
+<p>Fact consolidation is designed not to lose data. A fact is prunable
+only when unprotected, low quality, never recalled, created after a
+configured epoch and older than 180 days. An unset epoch makes the pass
+inert, and a circuit breaker refuses a run that would prune more than
+100 (<code>facts.py:293-326</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No write blocks the reply. A verbatim chunk is retrievable once its
+Celery task runs, usually seconds; a trajectory once the judge returns.
+The per-turn read cost is one essential-story build — a Redis SCAN of
+the whole <code>fact:*</code> keyspace and a 200-key pipeline — plus one
+hybrid RAG search and one trajectory query. The five-minute cache is
+keyed on a fingerprint of the ranked selection, so the scan runs on
+every turn and the cache saves only the render. The block is prepended
+ahead of the static system prompt, and each build bumps the access
+counts that rank the next one, so the prompt prefix can change turn to
+turn. Nightly passes read up to 50,000 trajectories and 5,000 facts.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent does not manage memory; the platform does. Context is
+injected automatically, capture happens after the turn, and the model
+sees memory as prompt text. The MCP server gives external agents
+read-only access: <code>kb.search</code> under
+<code>non_private_where</code>, which admits a fact outside quarantine
+only when its visibility is <code>system</code> or <code>public</code>
+or its access level is <code>general</code> or <code>autobot</code>
+(<code>knowledge/search_filters.py:224-254</code>), and the graph and
+verbatim tools.</p>
+<p><code>ToolRegistry.store_fact</code> passes the caller's metadata
+straight into <code>kb.store_fact</code> with
+<code>ingest_route: agent_tool</code> added
+(<code>tools/tool_registry.py:485-497</code>). This reading did not
+establish which runtime dispatches that registry to a model.</p>
+<p>A compaction hook enqueues a pre-compaction snapshot of the session
+into the verbatim store when context use reaches 85 per cent, with turn
+<code>-1</code> as the sentinel
+(<code>chat_workflow/compact_hook.py:30</code>;
+<code>tasks/memory_tasks.py:128-143</code>).</p>
+<p>Adapting this memory to another agent means adopting the platform.
+The stores are importable modules, but each reaches for the platform's
+Redis databases, settings and knowledge-base singleton.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The always-loaded block has no scope.</strong> The Essential
+Context path passes no owner, visibility or collection to
+<code>get_all_facts</code>, and the block is cached per model rather
+than per user (<code>essential_story.py:34, 212-220</code>). In a
+multi-user deployment one user's private facts, an agent's diary entry
+or a quarantined research claim can be prepended to another user's
+system prompt. The search filters in
+<code>knowledge/search_filters.py</code> exist and are not on this
+path.</p>
+<p><strong>Chat grounding is quarantine-scoped, not
+owner-scoped.</strong> The optimiser's semantic arm and the chat API's
+citation step both pass only <code>RESEARCH_QUARANTINE_FILTER</code>
+(<code>advanced_rag_optimizer.py:399</code>;
+<code>api/chat.py:870-878</code>). The permission filters run on the
+explicit search routes — <code>api/knowledge_search.py</code>,
+<code>api/knowledge_search_aggregator.py</code>,
+<code>api/knowledge_search_scoped.py</code>,
+<code>api/ai_stack_integration.py</code> — and not on the path that
+grounds every chat turn.</p>
+<p><strong>Forget-everywhere misses two things.</strong> Its store map
+is verbatim, trajectory, working, graph, retrieval-learner and general
+(<code>memory/transparency.py:12-19</code>). Knowledge-base facts are
+absent, and they are what the Essential Context block injects. The
+trajectory branch lists and forgets by <code>agent_id == user_id</code>
+(<code>transparency.py:130-144, 529-541</code>), while chat capture
+writes <code>agent_id="chat"</code> and workflow capture writes the
+plan's assigned agent (<code>trajectory_context.py:178</code>;
+<code>orchestration/workflow_runner.py:406</code>). A user's
+trajectories never appear in their list and a forget of one is
+refused.</p>
+<p><strong>The extraction pipeline stores nothing.</strong> The per-turn
+extraction's only test replaces <code>KnowledgeExtractionAgent</code> in
+<code>sys.modules</code> with a mock carrying the missing method
+(<code>tasks/memory_tasks_test.py:95-106</code>). The suite passes and
+the task raises in production.</p>
+<p><strong>Trust.</strong> The research quarantine is the one state that
+withholds, and it earns <code>trust_state</code> for that reason. It is
+overloaded on a field named <code>collection</code> whose default
+quarantine value is <code>research</code>, and any writer that sets it
+hides its own fact. <code>verification_status</code> is written by
+research promotion, connectors, the verification routes and any caller
+of <code>store_fact</code>, and read by <code>_fact_is_protected</code>
+only (<code>facts.py:309-326</code>).</p>
+<p><strong>Withheld marks.</strong></p>
+<ul>
+<li><em><code>human_review</code> — withheld; the queue has no
+producer.</em> <code>GET /verification/pending</code> lists facts whose
+status is <code>pending_review</code>
+(<code>api/knowledge_verification.py:61-63, 103-117</code>), and no
+production code writes that value. Connectors write their
+<code>verification_mode</code>, <code>collaborative</code> or
+<code>autonomous</code>, into the field instead
+(<code>knowledge/connectors/base.py:601</code>). Approve and reject are
+admin-only routes acting on any fact id, <code>verified_by</code> is a
+request-body string, and no read filters on the result
+(<code>knowledge_verification.py:42-45, 140-260</code>). The research
+path's <code>disputed</code> status and
+<code>requires_human_review</code> flag are written into fact metadata
+and read back by nothing (<code>orchestrator.py:189</code>).</li>
+<li><em><code>tombstone</code> — withheld.</em> Reject either deletes
+the fact or sets a status no read consults, and delete removes the
+content-hash mapping with the row (<code>facts.py:1226-1249</code>).
+Nothing keyed on a rejected value survives to stop a later writer.</li>
+<li><em><code>bitemporal</code> — withheld.</em> Graph entities carry
+<code>valid_from</code> and <code>valid_to</code>, and
+<code>invalidate_entity</code> accepts a caller's <code>ended_at</code>.
+But <code>valid_from</code> is always the creation instant, the time an
+invalidation was recorded survives only in an <code>updated_at</code>
+the next write overwrites, and <code>get_entities_as_of</code> has no
+caller outside tests (<code>queries.py:328-361</code>). Facts carry one
+timestamp.</li>
+</ul>
+<p><strong>Smaller defects.</strong> <code>add_observations</code> wraps
+its own "Entity not found" in
+<code>RuntimeError("Add observations failed")</code>. The session save's
+fallback checks the message for "Entity not found" and so never creates
+the missing conversation entity (<code>entities.py:344-346</code>;
+<code>chat_history/session.py:626-640</code>).
+<code>revert_to_version</code> writes the Redis hash only, and
+<code>create_version</code> has no caller but revert itself, so a fact
+has no versions to revert to
+(<code>knowledge/versioning.py:202-248</code>). Trajectory recall fails
+open when the session carries no <code>user_id</code>.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The tree is heavily tested and the memory tests are specific. I did
+not run them. <code>memory/general_storage_tenancy_test.py</code> stores
+two owners' rows in a real SQLite file and asserts search, retrieve and
+delete stay inside the owner. It also covers the migration's parking of
+unowned rows and a race between two initialisers.
+<code>tests/memory/test_trajectory_user_scoping.py</code> asserts the
+<code>where</code> clause and the backstop.
+<code>knowledge/quarantine_test.py</code> drives the quarantine filter
+through a real in-memory collection, excluding a fact before promotion
+and including it after.</p>
+<p>Other suites cover the essential-story reinforcement, the verbatim
+store's recency and symbolic index, fuzzy name resolution in the graph,
+temporal validity, the privacy API's cross-user rejection, IDOR
+regressions and the fact store's durable-row ordering.</p>
+<p><strong>Where the suite cannot fail.</strong>
+<code>tasks/memory_tasks_test.py:86-125</code> tests the extraction
+helper against a mock of the method that does not exist.
+<code>memory/memory_privacy_test.py</code> patches
+<code>_list_trajectory</code> to return canned items
+(<code>:114, 134-137</code>), so the <code>agent_id</code> mismatch is
+never exercised. No test asserts that the Essential Context block or the
+chat RAG path excludes another owner's fact.</p>
+<p><strong>Benchmarks.</strong> <code>knowledge/rag_benchmarks.py</code>
+exists, and the project's own audit describes it as a fake embedding
+over 20 synthetic documents. The tiered-context A/B is recorded in
+<code>docs/research/tiered-context-ab-13689.md</code>, and the flag was
+reverted to off on 10 August 2026 because the comparison had run against
+test doubles (<code>llm_handler.py:873-881</code>). No paper describes
+this memory. A search for <code>arxiv</code>, <code>bibtex</code>,
+<code>@article</code>, <code>@misc</code> and <code>doi.org</code> finds
+only research-agent allowlists, unrelated research notes and test
+fixtures, and there is no <code>CITATION.cff</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the owner a required argument, not a filter someone
+remembers.</strong> <code>_require_user_id</code> raises on a blank
+scope, strips whitespace so two spellings cannot split a tenant, and
+parks pre-migration rows under a reserved owner no write may use.</li>
+<li><strong>Give the deliberately unscoped caller a sentinel
+type.</strong> <code>UNSCOPED_ALL_USERS</code> is a singleton compared
+by identity, so no username can spell it — the string version it
+replaced was a valid username.</li>
+<li><strong>Quarantine by a filter defined once.</strong> One constant,
+passed at every general read, excluded before promotion and included
+after, with a test of each.</li>
+<li><strong>Refuse fuzzy writes.</strong> A near-miss name may answer a
+read with a warning; it must never receive another entity's
+observations.</li>
+<li><strong>Keep the row authoritative and the indexes
+rebuildable.</strong> Write the durable row first and let it raise;
+repair projections afterwards.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An always-loaded block that bypasses the filters the search
+path uses.</strong> The session-start assembler is the read most likely
+to be written first and scoped last; give it the same predicate, and
+test it.</li>
+<li><strong>Taking a limit before the sort.</strong> A top-N over the
+first N keys of a SCAN is a random sample, then a ranking of the
+sample.</li>
+<li><strong>A forget that enumerates stores by hand.</strong> Derive the
+list from the writers, and match ownership on the field the writer
+sets.</li>
+<li><strong>Mocking the method under test into existence.</strong> A
+<code>sys.modules</code> patch that supplies the missing attribute
+certifies the call shape, not the callee.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an operator who wants a whole self-hosted AI platform and
+accepts its memory as a component: single-tenant, or multi-user where
+every user may see every fact. A multi-tenant deployment should treat
+the Essential Context block and chat grounding as shared until they
+carry an owner predicate. A reader who wants a memory library to embed
+will not find one here. The best ideas — required owner scope,
+sentinel-typed exceptions, a quarantine gate — are a few hundred lines
+each and transfer without the rest.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any deployment run with more than one user in the knowledge
+base, and is the unscoped Essential Context block known and accepted
+there?</li>
+<li>Which runtime, if any, dispatches
+<code>tools/tool_registry.py</code>'s <code>store_fact</code> to a
+model, and with what metadata?</li>
+<li>Is <code>extract_facts_from_messages</code> a rename that missed its
+caller, and on what date did the per-turn extraction last store a
+fact?</li>
+<li>Does the conversation-entity writer receive a <code>user_id</code>
+through the session metadata, so the transparency engine's graph listing
+can find it?</li>
+<li>How many trajectories carry an empty <code>user_id</code>, and so
+reach every unscoped recall?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Fact store and schema:</strong>
+<code>knowledge/facts.py</code>, <code>knowledge/fact_store.py</code>,
+<code>models/knowledge_fact.py</code>,
+<code>knowledge/_composed.py</code>, <code>knowledge/base.py</code>,
+<code>knowledge/documents.py</code>,
+<code>knowledge/versioning.py</code>,
+<code>knowledge/ingest_sanitize.py</code>,
+<code>knowledge/ingestion_visibility.py</code>.</li>
+<li><strong>Scope and trust filters:</strong>
+<code>knowledge/search_filters.py</code>,
+<code>knowledge/quarantine.py</code>,
+<code>knowledge/ownership.py</code>,
+<code>api/knowledge_verification.py</code>,
+<code>services/research/orchestrator.py</code>,
+<code>services/research/routes.py</code>.</li>
+<li><strong>Context injection:</strong>
+<code>chat_workflow/llm_handler.py</code>,
+<code>memory/essential_story.py</code>,
+<code>chat_workflow/trajectory_context.py</code>,
+<code>services/knowledge/service.py</code>,
+<code>services/rag_service.py</code>,
+<code>advanced_rag_optimizer.py</code>, <code>api/chat.py</code>.</li>
+<li><strong>Other stores:</strong>
+<code>memory/trajectory_store.py</code>,
+<code>memory/verbatim_store.py</code>,
+<code>memory/storage/general_storage.py</code>,
+<code>memory/manager.py</code>, <code>memory/working_memory.py</code>,
+<code>autobot_memory_graph/entities.py</code>,
+<code>autobot_memory_graph/queries.py</code>.</li>
+<li><strong>Write path and workers:</strong>
+<code>chat_workflow/stop_hook.py</code>,
+<code>chat_workflow/manager.py</code>,
+<code>tasks/memory_tasks.py</code>, <code>celery_app.py</code>,
+<code>tools/tool_registry.py</code>.</li>
+<li><strong>Correction and audit:</strong>
+<code>memory/transparency.py</code>, <code>api/memory_privacy.py</code>,
+<code>services/audit_logger.py</code>, <code>api/memory.py</code>.</li>
+<li><strong>Integration:</strong>
+<code>mcp_server/autobot_server.py</code>.</li>
+<li><strong>Tests:</strong>
+<code>memory/general_storage_tenancy_test.py</code>,
+<code>tests/memory/test_trajectory_user_scoping.py</code>,
+<code>knowledge/quarantine_test.py</code>,
+<code>tasks/memory_tasks_test.py</code>,
+<code>memory/memory_privacy_test.py</code>,
+<code>tests/memory_graph/test_temporal_validity.py</code>.</li>
+</ul>
+<p>Paths are relative to <code>autobot-backend/</code> except
+<code>autobot_shared/</code>.</p>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the
+repository root.</p>
+<ul>
+<li><code>grep -rnE 'extract_facts_from_messages' --include='*.py' .</code>
+— the caller at <code>tasks/memory_tasks.py:69</code> and two mocks in
+its test; the only definition is the differently named private
+<code>_extract_facts_from_messages</code> in
+<code>agents/graph_entity_extractor.py:692</code>.</li>
+<li><code>grep -rnE 'PENDING_REVIEW|"pending_review"' --include='*.py' autobot-backend | grep -vE '_test\.py|/tests/'</code>
+— the verification reader, a grounding conflict enum, a skill-proposer
+response check and a docstring example; no writer of
+<code>verification_status</code>.</li>
+<li><code>grep -rnE 'update_graph_task|memory\.update_graph' --include='*.py' . | grep -vE '_test\.py|/tests/'</code>
+— the definition, its export, a queue route and log strings; no
+<code>.delay</code> or <code>.apply_async</code>.</li>
+<li><code>grep -nE 'collection|QUARANTINE|owner|visibility|user_id' autobot-backend/memory/essential_story.py</code>
+— no match.</li>
+<li><code>grep -nE 'owner|visibility|user_id|permission|check_access' autobot-backend/advanced_rag_optimizer.py autobot-backend/services/knowledge/service.py</code>
+— no match.</li>
+<li><code>grep -nE 'fact:|knowledge_facts|get_knowledge_base' autobot-backend/memory/transparency.py</code>
+— no match.</li>
+<li><code>grep -rnE 'agent_id=' autobot-backend/chat_workflow/trajectory_context.py autobot-backend/orchestration/workflow_runner.py</code>
+— <code>_CHAT_STRATEGY</code> and the plan's
+<code>assigned_agent</code>, the two production captures.</li>
+<li><code>grep -rnE 'get_entities_as_of|\.create_version\(' --include='*.py' . | grep -vE '_test\.py|/tests/'</code>
+— the as-of method's own definition and error log, and one
+<code>create_version</code> call inside
+<code>revert_to_version</code>.</li>
+<li><code>grep -rniE 'tombstone|rejected_value|do_not_remember' --include='*.py' autobot-backend autobot_shared | grep -vE '_test\.py|/tests/'</code>
+— no match.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' --exclude-dir=.git --exclude-dir=node_modules .</code>
+— research-agent code, domain allowlists, two research notes and test
+fixtures; <code>git ls-files | grep -i citation</code> finds no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/mrveiss/AutoBot-AI/commit/2b88c1c2e590b7a534574a6de72b8dcc1de6c92f"><code class="commit-id" title="2b88c1c2e590b7a534574a6de72b8dcc1de6c92f">2b88c1c2…</code></a>
+— first reading, at the head of <code>main</code>, a commit from the
+same day. Four marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>. Screened before reading: three auto-run
+surfaces (<code>.claude/hooks/</code>,
+<code>.claude/settings.json</code>, <code>.vscode/settings.json</code>),
+30 build-time execution points, 39 unpinned dependency surfaces and 50
+dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip — with <code>CLAUDE.md</code> recorded as data. Read
+with <code>grep</code> and <code>sed</code>; nothing installed, built or
+run. The platform outside its memory stores is not covered.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

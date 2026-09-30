@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **685 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **687 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -86,6 +86,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/auraos/"><span class="az-id">AuraOS</span><span class="az-what">The whole transcript, every turn</span><code class="az-repo">AdultSwimmer/AuraOS</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/aurora/"><span class="az-id">AURORA</span><span class="az-what">Adversarial self-verification of a query plan</span><code class="az-repo">hamr0/aurora</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/auto-company/"><span class="az-id">Auto Company</span><span class="az-what">The half of the baton the agent may not write</span><code class="az-repo">MaxMiksa/Auto-Company</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/autobot-ai/"><span class="az-id">AutoBot</span><span class="az-what">Six memory stores inside a self-hosted AI platform</span><code class="az-repo">mrveiss/AutoBot-AI</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/autogen/"><span class="az-id">AutoGen</span><span class="az-what">Memory without identity</span><code class="az-repo">microsoft/autogen</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/autoharness/"><span class="az-id">autoharness</span><span class="az-what">A self-maintaining skill library for Claude Code</span><code class="az-repo">tigerless-labs/autoharness</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/automem/"><span class="az-id">AutoMem</span><span class="az-what">Current-state recall over a graph and a vector store</span><code class="az-repo">verygoodplugins/automem</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Negative evals</span></span></a></li>
@@ -516,6 +517,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## N
 
 <ul class="az">
+<li><a class="az-row" href="../systems/nano-brain/"><span class="az-id">nano-brain</span><span class="az-what">Postgres document memory beside a code graph</span><code class="az-repo">nano-step/nano-brain</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/nanobot/"><span class="az-id">nanobot</span><span class="az-what">Dual-cursor file memory</span><code class="az-repo">HKUDS/nanobot</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/nanoclaw/"><span class="az-id">NanoClaw</span><span class="az-what">Container-isolated agent host</span><code class="az-repo">nanocoai/nanoclaw</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/nemoclaw/"><span class="az-id">NemoClaw</span><span class="az-what">Memory as an operand</span><code class="az-repo">NVIDIA/NemoClaw</code><span class="az-caps"></span></a></li>

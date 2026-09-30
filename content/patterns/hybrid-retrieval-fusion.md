@@ -248,6 +248,8 @@ between a retriever that degrades and one that degrades silently.
 
 [Graft](../../systems/graft/) fuses a title-embedding vector list with BM25 over title and over body by reciprocal rank, and its lexical arms are narrower than they look. `build_scoped_fts_query` quotes each whitespace token and joins them with a space, which FTS5 reads as AND, so a sentence-length query matches only rows containing every word and the fusion quietly becomes the vector list alone. [Heimdall](../../systems/heimdall/), which vendors the same C, located this join as one cause of its measured recall.
 
+[nano-brain](../../systems/nano-brain/) shows what a relaxation step does to the predicates around it. Its `HybridSearch` retries an empty AND lexical leg with a separate OR query that keeps the workspace predicate and has no time-range or tag parameters, so a time-filtered `memory_query` can fuse out-of-window lexical hits with an in-window vector leg. The same server's `memory_search` runs the same fallback and refuses it whenever a time filter or tags are set, with the reason in a comment. Build the fallback by changing only the match clause, or test every relaxed path with a filter the first query applied.
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.

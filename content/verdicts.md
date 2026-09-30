@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 685 reports.**
+**This page covers all 687 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6174,3 +6174,22 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 53,420 lines of Rust outside test modules, 276 commits on main by 7 contributors between 5 April and 30 September 2026, 641 Rust test functions run in CI. Two marks: `scope_enforced` on the memory API's user filter and `negative_eval` on three committed cases that assert a superseded document stays out after a positive control. Two memory-API tests cannot fail as named.
 - Study when: you want current-state retrieval over curated decision files without a model call, or a worked example of revision-and-ancestry provenance printed beside each injected memory.
 - Do not copy when: your memories are multi-sentence session records, the agent must be able to retract what it stored, or the model needs to see which injected memories conflict.
+
+### [`autobot-ai`](../systems/autobot-ai/)
+- Best idea: **an owner scope that cannot be omitted, with a typed exception for the one caller allowed to omit it.** `GeneralStorage` raises `OwnerScopeError` on a blank `user_id`, strips whitespace so two spellings cannot split a tenant, and parks pre-migration rows under a reserved owner no write may use; the verbatim store's single unscoped caller must pass `UNSCOPED_ALL_USERS`, a singleton compared by identity that no username can spell.
+- Biggest risk: **the block injected into every chat prompt has no scope at all.** `EssentialStoryGenerator` calls `get_all_facts(limit=200)`, which slices the first 200 keys of a Redis SCAN before ranking, applies no owner, visibility or quarantine filter, caches per model rather than per user, and prepends the result to the system prompt on every non-lightweight turn.
+- Most reusable component: the research quarantine — one filter constant passed at every general read, a promotion that flips it only on corroboration, and a test driving a real in-memory collection before and after the flip.
+- Second risk: **the correction surface and the writers disagree.** Forget-everywhere spans six stores and not the knowledge-base facts, and its trajectory branch matches `agent_id == user_id` while chat capture writes `agent_id="chat"`; the per-turn fact extraction calls `extract_facts_from_messages`, which exists only on the mock in its own test.
+- Maturity impression: Apache-2.0, 14,324 commits by eight contributors, three of them bots, 26 June 2025 – 30 September 2026; 1,046,750 lines of Python outside tests, about 16,200 of them in the memory stores and routes read here, under 34,983 test functions. Four of seven capability marks.
+- Study when: you run several memory stores behind one product and want to see per-store scoping done carefully — required owner arguments, a backstop behind a vector `where`, a quarantine with a promotion gate — and what happens when the always-loaded context assembler is written without them.
+- Do not copy when: you need a user's forget to reach everything the model is shown, or a context block that respects the same permissions as search.
+
+### [`nano-brain`](../systems/nano-brain/)
+
+- Best idea: **put the scope key on every derived row and test the boundary with controls.** `workspace_hash` sits on documents, chunks and embeddings, so each query filters the table it reads, and `internal/search/isolation_test.go` asserts that each workspace's keyword returns its own rows before asserting the other workspace's keyword returns none, across BM25, vector, hybrid and every ordered pair of five workspaces.
+- Biggest risk: **the default search's OR fallback forgets two predicates.** When the AND leg of `HybridSearch` returns nothing for a query of more than two words, it retries with `BM25SearchOR`, which keeps the workspace but has no time-range or tag parameters. `memory_query` passes the caller's time window in, so the lexical leg can return chunks outside it; `memory_search` guards its own copy of the fallback with a comment naming this exact gap.
+- Most reusable component: `internal/search/service.go`'s `HybridSearch` shape — parallel lexical and vector legs in an errgroup that each log and return nothing on failure, so lexical recall survives an embedding outage — once the fallback carries the first query's predicates.
+- Second risk: **presence is the only record of a derived summary.** A harvester skips a session whenever `summary://<source>/<id>` exists, so `memory_delete` on a summary is undone by the next tick while the transcript is on disk, and the Claude Code and Pi harvesters, which lack the OpenCode harvester's 10-minute active check, freeze a mid-session summary for good.
+- Maturity impression: MIT, 59,869 lines of Go outside tests, 1,032 commits on master from eight contributor entries between 16 February and 7 September 2026, 1,688 Go test functions. One mark, `negative_eval`, on the workspace-isolation suite, which sits among the 148 integration-tagged test functions the CI workflow does not compile. An LLM consolidator and a decision/lesson extractor are written, unit-tested over fakes and never constructed.
+- Study when: you want a self-hosted memory server that shares one retrieval pipeline between agent notes, session summaries and code, and want to see where a copied fallback query loses its predicates.
+- Do not copy when: memory must be corrected rather than accumulated. Nothing demotes a superseded note, deletion of harvested material does not stick, and `memory_ticket` returns session snippets from every workspace with no argument that can scope it.

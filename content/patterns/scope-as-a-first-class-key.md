@@ -879,6 +879,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[Octobrain](../../systems/octobrain/) enforces the key on every read and overwrites it on every rewrite.** One `build_scalar_predicate` puts `(scope = 'X' OR scope = '')` on the vector, hybrid and filter-only searches, and `get_memory` carries the same clause. The upsert writes the store's own scope rather than the row's, so a global memory that a project session updates, tags or penalises moves into that project, while `forget` of the same row matches nothing and reports success. **Take the scope of a rewrite from the row being rewritten, and make read and delete predicates agree.**
 
+[AutoBot](../../systems/autobot-ai/) has the key done three ways and missing from the one read that matters most. The SQLite store makes the owner a required argument that raises when blank, trajectory recall puts `user_id` and `tenant_id` in the vector `where` and re-checks every returned row, and the explicit knowledge-base search routes apply owner and visibility filters that fail closed. The always-loaded Essential Context block reads 200 facts through `get_all_facts` with none of them, and the chat RAG path passes only the research-quarantine filter, so the predicate exists on the search surface and not on the path that reaches every prompt.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

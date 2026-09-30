@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 685 reports.</strong></p>
+<p><strong>This page covers all 687 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28436,6 +28436,93 @@ provenance printed beside each injected memory.</li>
 <li>Do not copy when: your memories are multi-sentence session records,
 the agent must be able to retract what it stored, or the model needs to
 see which injected memories conflict.</li>
+</ul>
+<h3 id="autobot-ai"><a
+href="../systems/autobot-ai/"><code>autobot-ai</code></a></h3>
+<ul>
+<li>Best idea: <strong>an owner scope that cannot be omitted, with a
+typed exception for the one caller allowed to omit it.</strong>
+<code>GeneralStorage</code> raises <code>OwnerScopeError</code> on a
+blank <code>user_id</code>, strips whitespace so two spellings cannot
+split a tenant, and parks pre-migration rows under a reserved owner no
+write may use; the verbatim store's single unscoped caller must pass
+<code>UNSCOPED_ALL_USERS</code>, a singleton compared by identity that
+no username can spell.</li>
+<li>Biggest risk: <strong>the block injected into every chat prompt has
+no scope at all.</strong> <code>EssentialStoryGenerator</code> calls
+<code>get_all_facts(limit=200)</code>, which slices the first 200 keys
+of a Redis SCAN before ranking, applies no owner, visibility or
+quarantine filter, caches per model rather than per user, and prepends
+the result to the system prompt on every non-lightweight turn.</li>
+<li>Most reusable component: the research quarantine — one filter
+constant passed at every general read, a promotion that flips it only on
+corroboration, and a test driving a real in-memory collection before and
+after the flip.</li>
+<li>Second risk: <strong>the correction surface and the writers
+disagree.</strong> Forget-everywhere spans six stores and not the
+knowledge-base facts, and its trajectory branch matches
+<code>agent_id == user_id</code> while chat capture writes
+<code>agent_id="chat"</code>; the per-turn fact extraction calls
+<code>extract_facts_from_messages</code>, which exists only on the mock
+in its own test.</li>
+<li>Maturity impression: Apache-2.0, 14,324 commits by eight
+contributors, three of them bots, 26 June 2025 – 30 September 2026;
+1,046,750 lines of Python outside tests, about 16,200 of them in the
+memory stores and routes read here, under 34,983 test functions. Four of
+seven capability marks.</li>
+<li>Study when: you run several memory stores behind one product and
+want to see per-store scoping done carefully — required owner arguments,
+a backstop behind a vector <code>where</code>, a quarantine with a
+promotion gate — and what happens when the always-loaded context
+assembler is written without them.</li>
+<li>Do not copy when: you need a user's forget to reach everything the
+model is shown, or a context block that respects the same permissions as
+search.</li>
+</ul>
+<h3 id="nano-brain"><a
+href="../systems/nano-brain/"><code>nano-brain</code></a></h3>
+<ul>
+<li>Best idea: <strong>put the scope key on every derived row and test
+the boundary with controls.</strong> <code>workspace_hash</code> sits on
+documents, chunks and embeddings, so each query filters the table it
+reads, and <code>internal/search/isolation_test.go</code> asserts that
+each workspace's keyword returns its own rows before asserting the other
+workspace's keyword returns none, across BM25, vector, hybrid and every
+ordered pair of five workspaces.</li>
+<li>Biggest risk: <strong>the default search's OR fallback forgets two
+predicates.</strong> When the AND leg of <code>HybridSearch</code>
+returns nothing for a query of more than two words, it retries with
+<code>BM25SearchOR</code>, which keeps the workspace but has no
+time-range or tag parameters. <code>memory_query</code> passes the
+caller's time window in, so the lexical leg can return chunks outside
+it; <code>memory_search</code> guards its own copy of the fallback with
+a comment naming this exact gap.</li>
+<li>Most reusable component: <code>internal/search/service.go</code>'s
+<code>HybridSearch</code> shape — parallel lexical and vector legs in an
+errgroup that each log and return nothing on failure, so lexical recall
+survives an embedding outage — once the fallback carries the first
+query's predicates.</li>
+<li>Second risk: <strong>presence is the only record of a derived
+summary.</strong> A harvester skips a session whenever
+<code>summary://&lt;source&gt;/&lt;id&gt;</code> exists, so
+<code>memory_delete</code> on a summary is undone by the next tick while
+the transcript is on disk, and the Claude Code and Pi harvesters, which
+lack the OpenCode harvester's 10-minute active check, freeze a
+mid-session summary for good.</li>
+<li>Maturity impression: MIT, 59,869 lines of Go outside tests, 1,032
+commits on master from eight contributor entries between 16 February and
+7 September 2026, 1,688 Go test functions. One mark,
+<code>negative_eval</code>, on the workspace-isolation suite, which sits
+among the 148 integration-tagged test functions the CI workflow does not
+compile. An LLM consolidator and a decision/lesson extractor are
+written, unit-tested over fakes and never constructed.</li>
+<li>Study when: you want a self-hosted memory server that shares one
+retrieval pipeline between agent notes, session summaries and code, and
+want to see where a copied fallback query loses its predicates.</li>
+<li>Do not copy when: memory must be corrected rather than accumulated.
+Nothing demotes a superseded note, deletion of harvested material does
+not stick, and <code>memory_ticket</code> returns session snippets from
+every workspace with no argument that can scope it.</li>
 </ul>
         </article>
       </div>
