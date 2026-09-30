@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go MCP server that governs a
+Git-versioned, model-written index of a codebase, one FRAS line per file
+bound to the source's SHA-256.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AOCI-CODE — Agent Memory Atlas">
+    <meta property="og:description" content="A Go MCP server that
+governs a Git-versioned, model-written index of a codebase, one FRAS
+line per file bound to the source's SHA-256.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AOCI-CODE — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go MCP server that
+governs a Git-versioned, model-written index of a codebase, one FRAS
+line per file bound to the source's SHA-256.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AOCI-CODE — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AOCI-CODE",
+      "description": "A Go MCP server that governs a Git-versioned, model-written index of a codebase, one FRAS line per file bound to the source's SHA-256.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A governed, source-bound code index as
+agent memory</p>
+          <h1>AOCI-CODE</h1>
+          <p class="document-deck">A Go MCP server that governs a
+Git-versioned, model-written index of a codebase, one FRAS line per file
+bound to the source's SHA-256.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/aoci-spec/aoci-code">
+              <span>Source</span>
+              <strong>aoci-spec/aoci-code</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/aoci-spec/aoci-code/commit/fdb4cb9bf54d14bbe87002b58c6d72aefb706617" title="fdb4cb9bf54d14bbe87002b58c6d72aefb706617">
+              <span>Analyzed revision</span>
+              <code>fdb4cb9b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aoci-spec--aoci-code" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>aoci-spec--aoci-code</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>FSL-1.1-MIT
+(source-available; each version converts to MIT two years after
+release)</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>89,669
+lines of Go outside tests in internal/, cmd/ and textassets/; the MCP
+tool layer is 14,603 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>193
+commits on main by six contributor identities, 8 August – 29 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,774
+Go test functions in 91,232 lines, plus four Python black-box suites
+over the built binary</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AOCI-CODE is a Go CLI and stdio MCP server that keeps a persistent
+index of a codebase in the repository itself: one line per file, written
+by the coding agent from the source, describing what the file does, what
+must be read with it, what it exposes and what must not be broken. The
+index is read whole at the start of a session and maintained as files
+change.</p>
+<p>What is notable is the binding between a claim and its evidence.
+Every Code entry the agent writes must carry the SHA-256 of the file it
+describes, the server re-hashes the file at commit, and the write is
+refused if the bytes moved. Batches commit all-or-nothing, with a
+preimage recovery path that fails closed on a third-party edit.</p>
+<p>What is weak is that the only state an entry has is whether its file
+changed. Nothing records whether the text is right, stale entries are
+delivered, and the tool the rules name for disputing a live entry
+refuses in the default layout.</p>
+<p>The licence is FSL-1.1-MIT: source-available, with a competing-use
+exclusion, converting each version to MIT two years after release
+(<code>LICENSE</code>, <code>NOTICE</code>).</p>
+<p>The system is in scope because an entry is a model-authored claim
+that outlives the session, is read back by later sessions and other
+agents, and can be wrong. Its <code>S</code> field, <em>"what you cannot
+infer from the code but must not get wrong"</em> in the README's words,
+is the part most like memory and the part least checkable by the server.
+The machinery around it governs <em>transport</em>: which bytes were
+delivered, which source a line was bound to, whether a write completed.
+The README states the limit itself: all-green results <em>"do not mean
+that every statement the model wrote is correct"</em>.</p>
+<p>No mark is awarded. Section 9 names each of the seven and why.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>A memory is an entry about one object.</strong> For code the
+object is a managed file; for a database it is a table. An entry is a
+single line, <code>atomic.go[CG9L]: F:… | R:… | A:… | S:…</code>, where
+the tag places the file by layer, domain, importance and size, and the
+four fields are prose written by the host model. The server validates
+structure, tag dictionary, budgets and relation identities, and never
+authors text (<code>internal/codebatch/types.go:1-5</code>).</p>
+<p><strong>An entry becomes a belief when a batch commits.</strong>
+<code>aoci_maintain</code> issues targets, files that are Missing an
+entry or whose entry is Stale, each with the source digest the server
+saw. The agent reads the file, writes the line, and submits it with that
+digest. The commit re-hashes the source and refuses on mismatch
+(<code>internal/mcptools/tools_write_volume_commit.go:246-250</code>).
+No candidate state is stored on the entry; a candidate that fails
+validation is not written.</p>
+<p><strong>An entry stops being current when its file changes, and stops
+existing when its file does.</strong> Staleness is not stored.
+<code>baseline.Detect</code> compares the file's current hash with the
+one recorded at alignment and returns Missing, Orphan, Stale or
+Unbaselined on each call
+(<code>internal/baseline/detect.go:1-11</code>). A stale entry stays in
+the index and is still delivered. An entry is removed only when its file
+is gone, proven from governance facts
+(<code>internal/mcptools/tools_remove_volumes.go:211-230</code>), or
+when a scope change takes the file out of management.</p>
+<p><strong>A wrong entry about an unchanged file has no state at
+all.</strong> It is aligned, because its source hash matches, and it is
+delivered as settled. Correction is an overwrite by the agent, bound to
+the same unchanged digest.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an AOCI entry is admitted, how it goes stale, and the two ways it leaves the index</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an AOCI entry is admitted, how it goes stale, and the two ways it leaves the index
+stateDiagram-v2
+    [*] --&gt; Missing: file enters Managed Scope
+    Missing --&gt; Aligned: batch commits, source hash matches
+    Aligned --&gt; Stale: file bytes change
+    Stale --&gt; Aligned: agent rewrites entry bound to new hash
+    Aligned --&gt; Aligned: agent overwrites text, same hash
+    Aligned --&gt; Orphan: file deleted
+    Stale --&gt; Orphan: file deleted
+    Orphan --&gt; [*]: aoci_remove_entry, orphan proven
+    Aligned --&gt; [*]: scope change excludes the file
+    note right of Aligned
+        aligned means the source is unchanged,
+        not that F, R, A or S is true
+    end note
+    note right of Stale
+        derived per call from hashes,
+        still delivered by overview and get_entries
+    end note</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>aoci</code> is one Go binary. <code>aoci mcp</code> runs a
+stdio MCP server that re-reads the index, baseline and configuration on
+every tool call and caches nothing, on the stated rule that a cached
+view would break <em>"a stale index is more dangerous than none"</em>
+(<code>internal/mcptools/server.go:1-15</code>). It registers exactly
+nine tools (<code>server.go:292-298</code>). No daemon runs;
+<code>aoci ui</code> is a separate loopback-only, GET-only status
+panel.</p>
+<p><strong>Two layouts.</strong> The Legacy layout is one monolithic
+<code>aoci.txt</code>. The Volumes v1 layout, which
+<code>aoci init</code> writes, splits it: <code>aoci.txt</code> is a
+Root manifest listing participating Volumes, <code>aoci.meta.txt</code>
+holds the tag dictionary, FRAS rules and quotas,
+<code>aoci.code.txt</code> holds Code entries, and an optional
+<code>aoci.database.txt</code> holds table entries bound to accepted
+schema evidence. Entries sit in <code>===&lt;directory&gt;/===</code>
+sections keyed by basename.</p>
+<p><strong>Local state under <code>.aoci/</code>.</strong>
+<code>baseline.json</code> (per-file fingerprints and roles),
+<code>config.json</code> and <code>curation.json</code> are committed;
+the template <code>.aoci/.gitignore</code> denies everything else by
+default (<code>textassets/en-US/templates/aoci-gitignore.txt</code>).
+That covers the ledger, drafts, transactions, governance receipts and
+verify history, so each clone keeps its own.</p>
+<p><strong>Writes</strong> take a cross-process index lock, compare the
+index hash read at plan time, write each Volume with an atomic CAS,
+advance the baseline, and keep a recovery record carrying the preimage
+until the baseline completes
+(<code>internal/mcptools/tools_write_batch.go:381-686</code>). Database
+Cognition connects read-only to PostgreSQL, MySQL or openGauss for
+catalog metadata, with the DSN referenced by environment-variable
+name.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run but the binary and an MCP host. It is fully local,
+and no API key is needed because the host's model does the writing
+through its own channel. Install is a signed release archive or
+<code>make build</code>, then <code>aoci init --agent</code> for the
+host, <code>aoci scan</code>, and a host restart. The store is plain
+text in the repository, diffable and repairable by hand, though a hand
+edit shows up as index drift that the governance gate reports. The first
+index costs about an hour per 200,000 lines by the README's estimate,
+spent in the host model's tokens.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Target issue.</strong> <code>aoci_maintain</code> →
+<code>handleVolumeMaintain</code>
+(<code>internal/mcptools/tools_maintain_volumes.go:110</code>) assesses
+drift, builds a Code batch of up to 200 candidates with
+<code>candidate_id</code>, <code>batch_id</code>,
+<code>source_sha256</code> and the existing entry
+(<code>internal/codebatch/types.go:9-16</code>), and adds objects
+related through <code>R</code> to a changed entry to the review set
+(<code>reviewClosure</code>,
+<code>tools_maintain_volumes.go:431-452</code>).</p>
+<p><strong>Write.</strong> <code>aoci_update_entry</code> →
+<code>handleMCPUpdateBatch</code>
+(<code>internal/mcptools/tools_write_api.go:574</code>) refuses any item
+carrying neither an issued candidate binding nor a 64-hex source digest
+(<code>:598-612</code>). <code>planCognitionVolumeUpdates</code>
+validates candidate and batch identity against the issued receipt
+(<code>tools_write_volume_commit.go:68-140</code>), requires a digest in
+non-receipt mode (<code>:184-186</code>), re-hashes the source
+(<code>:246-250</code>), and runs <code>prepareUpdateEntry</code> for
+budget, tag and S-quota checks
+(<code>internal/mcptools/tools_write.go:123-200</code>). The commit is
+<code>commitAtomicBatch</code> (<code>tools_write_batch.go:381</code>),
+which re-checks the bound sources after the write and marks the baseline
+incomplete on drift (<code>:105-132</code>, <code>:600-606</code>).</p>
+<p><strong>Read.</strong> <code>aoci_overview</code> delivers the formal
+index verbatim between markers, chunked at
+<code>overview_delivery.chunk_tokens</code> (default 7,000), and asks
+for an attestation. <code>aoci_get_entries</code> looks up by path,
+directory (at most 50) or object ref
+(<code>internal/mcptools/tools_read.go:544-623</code>).
+<code>aoci_search</code> runs <code>index.Search</code>
+(<code>internal/index/query.go:145-205</code>). All three refuse while a
+write transaction is pending
+(<code>internal/mcptools/transaction_guard.go:13-45</code>).</p>
+<p><strong>Delete.</strong> <code>aoci_remove_entry</code> calls
+<code>ApplyRemoveEntry(root, path, "agent", true, false)</code>
+(<code>internal/mcptools/tools_remove.go:161</code>). A
+<code>code:</code> identity goes to <code>planVolumeRemoveEntry</code>,
+which ignores the <code>orphanOnly</code> argument and calls
+<code>proveVolumeOrphan</code> for every caller
+(<code>tools_remove_volumes.go:27</code>, <code>:125-128</code>).</p>
+<p><strong>Pre-edit hook.</strong> <code>HandlePreTool</code>
+(<code>internal/hooks/pretool.go:42-146</code>) injects the target
+file's entry before an Edit or Write, headed by a STALE warning when the
+source moved, and blocks the write when <code>hook_strict</code> is
+on.</p>
+<p><strong>Tests.</strong> Section 10.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>object</td>
+<td>section path plus basename, or a <code>database://</code>
+identity</td>
+<td>canonical identity <code>code:</code> plus the path</td>
+</tr>
+<tr>
+<td>tag</td>
+<td>bracketed after the name</td>
+<td>layer, module, importance 1–9, optional characteristics, size
+band</td>
+</tr>
+<tr>
+<td>F, R, A, S</td>
+<td>the entry line</td>
+<td>model prose; <code>R</code> names other objects by identity</td>
+</tr>
+<tr>
+<td>source fingerprint</td>
+<td><code>.aoci/baseline.json</code></td>
+<td>SHA-256 per managed file at alignment</td>
+</tr>
+<tr>
+<td>role</td>
+<td>baseline and curation</td>
+<td><code>index</code>, <code>observe</code> or <code>exclude</code> per
+file</td>
+</tr>
+</tbody>
+</table></div>
+<p>There is no author, timestamp, status, confidence or version on an
+entry. Its history is the Git history of the Volume file, which is
+committed. The only per-object fact the server holds beside the text is
+the source digest in the baseline, so the only question it can answer
+about an entry is whether its file has changed since.</p>
+<p><strong>Scope is the repository.</strong> One index per repository;
+Code and Database entries live in separate Volume files with separate
+ownership, and each object has exactly one owning Volume. The
+<code>scope</code> argument to <code>aoci_search</code> selects which
+Volumes to read
+(<code>internal/mcptools/tools_read_search.go:65-73</code>); it is a
+partition selector, not a key on an entry.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The primary read is everything.</strong> A new session loads
+the whole index through <code>aoci_overview</code>, following
+<code>next_cursor</code> to the last chunk. The model then answers a
+ten-ordinal challenge (object identity, tag and core <code>F</code> for
+stratified positions), passed at 80% correct with at most one identity
+miss and a Jaccard floor of 0.6 on <code>F</code> tokens
+(<code>internal/mcptools/overview_attestation_v1.go:18-51</code>). A
+pass marks the session's cognition reliable. The index is not
+re-injected per turn; the model reloads after a declared compaction or
+past its refresh threshold, 30 distinct semantic paths by default.</p>
+<p><strong>Freshness is reported for the set, not the entry.</strong>
+The Overview metadata carries
+<code>cognition_currency: dirty_or_stale</code> and guidance to read
+current source whenever governance is not aligned
+(<code>overview_delivery_v1.go:298-303</code>); the entries themselves
+are delivered unmarked. The Legacy <code>get_entries</code> prefixes
+each stale entry with a warning (<code>tools_read.go:389-404</code>).
+The Volumes handler, used by default, prints every entry the same way
+(<code>:611-620</code>).</p>
+<p><strong>Search is substring and tags.</strong>
+<code>index.Search</code> keeps an entry when the lowercase keyword
+occurs in its full line and, if given, its tags satisfy a filter such as
+<code>C&gt;=5</code>; results cap at 30. Nothing ranks.</p>
+<p><strong>The hook is the targeted read.</strong> Before an edit, the
+PreToolUse hook puts the file's own entry and its <code>S</code>
+constraints into context with a staleness check
+(<code>pretool.go:94-129</code>). It is the one read that marks a stale
+entry per file in the default layout.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls by the agent. The runtime rules and
+the managed <code>AGENTS.md</code> block tell it to close each task by
+calling <code>aoci_maintain</code> and writing the entries it issues. No
+model runs inside the server.</p>
+<p><strong>Validation is structural.</strong>
+<code>prepareUpdateEntry</code> enforces per-field token budgets, the
+tag dictionary, relation identity and the S quota per importance band; a
+budget overage returns a repairable finding with the exact token counts
+(<code>tools_write.go:141-166</code>). What the fields claim is not
+checked against the source.</p>
+<p><strong>Every Code write is bound to evidence bytes.</strong> The
+batch identity hashes object, path, new text, source digest, candidate
+and batch ids
+(<code>internal/mcptools/tools_write_batch_recovery.go:67-91</code>). A
+submission whose digest differs from the issued one is refused with the
+expected value, and the repair action tells the model never to compute
+the hash itself.</p>
+<p><strong>Update is overwrite; delete is orphan-only.</strong> In the
+Volumes layout, <code>planVolumeRemoveEntry</code> requires a proven
+orphan or a machine ownership finding whoever calls, and a dangling
+<code>R</code> in another entry is left for the model
+(<code>tools_remove_volumes.go:139-141</code>). The Legacy CLI passes
+<code>orphanOnly=false</code> with source <code>"human"</code>
+(<code>internal/cli/remove_entry.go:37</code>), so only there can a
+person delete a live entry.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, one lock and one CAS per batch of up to 200
+entries; the cost is the host model reading each file and writing its
+line.</li>
+<li>Background: none. Drift is recomputed on each call by hashing
+managed files.</li>
+<li>Read: the whole index once per session and after compaction, in
+7,000-token chunks by default; the README cites a 480-object index
+delivered in three 24,000-token chunks. Stable across turns, so it does
+not disturb a prefix cache.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>aoci init --agent</code> with <code>codex</code>,
+<code>claude</code>, <code>opencode</code> or <code>cursor</code> writes
+project MCP configuration with absolute paths and a managed
+<code>AGENTS.md</code> rules block; Cursor gets a snippet instead.
+<code>--hooks</code> adds the Claude Code PreToolUse guard, or for Codex
+a compaction handoff limited to receipt identity, unfinished write state
+and a reload instruction.</p>
+<p>The agent holds read, write and orphan-remove verbs and nothing that
+approves. <code>aoci_report</code> records a follow-up note when
+evidence is insufficient, and its own description ends <em>"Volumes v1
+returns volume_read_only"</em>: the handler calls
+<code>loadRepoCtx</code>, which refuses the Volumes layout
+(<code>internal/mcptools/tools_report.go:70</code>,
+<code>server.go:217-224</code>). The <code>aoci_remove_entry</code>
+description meanwhile says <em>"Removing a non-orphan requires a
+maintainer decision recorded with aoci_report"</em>
+(<code>textassets/en-US/contracts/mcp/tools/remove-entry-description.txt:1</code>).
+In the default layout that path does not exist.</p>
+<p>Adapting it to another host needs a stdio MCP client that follows a
+chunk cursor and submits an attestation. The design assumes the agent
+reads the rules and complies; the server enforces transport and
+structure, not the order of work.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Concurrency and crash safety are the strongest part.</strong>
+Writes take a lock, compare the index hash, write atomically, and keep a
+recovery record with the preimage. A retry either rolls forward to a
+provable postimage or restores the exact preimage, and a third-party
+byte change fails closed. A read during a half-committed cross-volume
+write refuses with <code>cognition_snapshot_unavailable</code> rather
+than returning a mixed set
+(<code>transaction_guard.go:13-45</code>).</p>
+<p><strong>Provenance is the source digest and nothing else.</strong> An
+entry cannot say who wrote it, when, or on what reasoning.
+Prompt-injected text in a source file the agent reads can become an
+<code>S</code> constraint that later sessions are told to obey before
+editing; the server validates its length, not its truth.</p>
+<p><strong>Privacy.</strong> The server reads schema metadata, never
+rows, stores no credentials and opens no connection beyond the declared
+database and its own loopback panel.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — no. Removal deletes the line; nothing keyed
+on the removed text refuses it later. Curation exclusions are keyed on
+paths.</li>
+<li><code>trust_state</code> — no. Missing, Orphan, Stale and
+Unbaselined are derived from hashes on every call and never stored on
+the entry. No read filters on them: Overview and Volumes
+<code>get_entries</code> deliver stale entries.</li>
+<li><code>bitemporal</code> — no time field on an entry.</li>
+<li><code>scope_enforced</code> — no. The index is per repository and
+Volumes are separate files; no scope key sits on an entry.</li>
+<li><code>audit_log</code> — withheld, and the near-miss is close. Two
+append-only records exist. <code>.aoci/ledger.jsonl</code> records every
+update batch and removal as telemetry, with op, <code>source</code>,
+counts and result, and never the object; its header calls it telemetry,
+and <code>ledger_enabled</code> switches it off
+(<code>internal/ledger/ledger.go:1-10</code>, <code>:182</code>).
+Governance receipts under <code>.aoci/governance/</code> are write-once,
+content-addressed and chained by pre- and post-index digest, and a
+reader proves supersession through them
+(<code>tools_write_governance_receipt.go:148-224</code>,
+<code>:276-339</code>). In the Volumes layout a receipt's
+<code>paths</code> are the Volume files, not the entries
+(<code>:166-168</code>). Removals write no receipt, and both records are
+git-ignored. Neither can say which entry changed or from what; the
+committed Volume's Git history can.</li>
+<li><code>human_review</code> — no. The agent's
+<code>aoci_update_entry</code> overwrites any Code entry it can bind to
+the current source digest, with no queue. The one verb held back from
+the agent, deleting a live entry, is held back from everyone in the
+Volumes layout. Scope-change approvals govern which files are managed,
+not what an entry says.</li>
+<li><code>negative_eval</code> — no. Section 10 names the two
+near-misses.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; this section is from
+reading the tests at the pin.</p>
+<p><strong>Transaction safety is tested heavily.</strong> The
+<code>tools_write_*</code> and <code>tools_remove_*</code> tests cover
+CAS conflicts, postimage recovery, stale receipts and budget repairs.
+<code>TestEntriesRecoverClosesStageOnlyRunAfterProvenLaterGovernance</code>
+deletes a stored governance receipt and asserts the run returns to
+pending
+(<code>internal/cli/index_entries_recover_test.go:298-359</code>), so
+the receipts are load-bearing.</p>
+<p><strong>Two near-misses for a negative case.</strong>
+<code>TestVolumeHeaderSearchAndGetEntries</code> searches
+<code>canonical user</code> in the database scope and asserts that the
+table is returned and <code>main.go</code> is not
+(<code>internal/mcptools/tools_read_volumes_test.go:445-448</code>). The
+fixture's <code>main.go</code> entry does not contain the keyword
+(<code>:69</code>), so the exclusion holds whether or not the scope
+argument works.
+<code>TestCrossVolumeIntermediatePostimageIsHiddenFromOrdinaryReads</code>
+asserts that a search during a half-committed write fails with
+<code>cognition_snapshot_unavailable</code>
+(<code>internal/mcptools/tools_write_cross_volume_test.go:186-210</code>).
+That is a refusal, with no positive control and no populated result from
+which material is shown absent.</p>
+<p><strong>Black-box suites.</strong> <code>scripts/blackbox/</code>
+holds a protocol conformance script, 64 fault-injection scenarios, a
+lifecycle suite over three committed fixture projects with an optional
+model track, and an upgrade axis across released versions. CI runs
+conformance and scenarios on every push
+(<code>.github/workflows/ci.yml:125-133</code>) and the lifecycle and
+upgrade suites in <code>full-confidence.yml</code>.</p>
+<p><strong>Not covered.</strong> Nothing measures whether entries are
+correct, or whether an agent with the index does better than one
+without. The changelog reports that 78 percent of one real build's
+entries had <code>S:-</code> and that a source audit found most were
+misses. No paper or citation block is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Bind every stored claim to the digest of the evidence it was
+written from, and re-check the digest at commit.</strong> The server
+issues the digest, the model echoes it, and a mismatch is refused with
+the expected value.</li>
+<li><strong>Make "stale" computable.</strong> A per-object source
+fingerprint recorded at alignment turns "is this memory about a thing
+that changed?" into a hash comparison any process can run.</li>
+<li><strong>Show a memory at the moment it matters.</strong> The
+pre-edit hook injects the file's constraints just before the write, with
+a staleness warning.</li>
+<li><strong>Check that delivery happened.</strong> A recall challenge
+over sampled positions separates "the tool returned the bytes" from "the
+model holds them".</li>
+<li><strong>Fail reads closed during a partial write</strong> instead of
+serving a mixed set.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Treating source-unchanged as correct.</strong> A digest
+match proves the evidence did not move; it says nothing about the claim,
+and an index with no per-entry status cannot hold "on record but
+disputed".</li>
+<li><strong>Documenting a dispute path through a tool the default layout
+disables.</strong> The remove description sends the agent to
+<code>aoci_report</code>, which refuses.</li>
+<li><strong>Audit records that name the container rather than the
+item.</strong> A receipt chain over whole-file digests proves continuity
+for recovery and cannot say what changed.</li>
+<li><strong>Delivering stale entries unmarked on the per-object
+read</strong> while the set-level flag says the index is dirty.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team whose agents do sustained work on one large
+repository and whose failure is re-reading the codebase each session.
+The cost is real: the host model writes every entry, the first build is
+hours of tokens, and the rules expect the agent to maintain the index at
+the end of every task. The governance machinery is far larger than the
+memory it governs, and it protects the index from torn writes and drift,
+not from a plausible wrong sentence. Anyone who wants memory of
+decisions, preferences or conversations should look at another design;
+this one remembers what files are.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does an aligned entry misstate its file? The changelog's
+<code>S:-</code> audit is the only measurement, and it is not
+committed.</li>
+<li>What does <code>cognitionStatusLine</code> append to a Volumes
+<code>get_entries</code> result, and does it ever carry per-object
+drift?</li>
+<li>Is the Legacy <code>aoci_report</code> queue read by anything, or
+only by a person?</li>
+<li>Does the attestation challenge change model behaviour, or only the
+recorded cognition state?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>internal/cognition/</code>, <code>internal/index/parser.go</code>,
+<code>internal/index/validator.go</code>,
+<code>internal/baseline/baseline.go</code>,
+<code>internal/baseline/detect.go</code>,
+<code>textassets/en-US/templates/volume-meta.txt.tmpl</code>.</li>
+<li><strong>Write path:</strong>
+<code>internal/mcptools/tools_write_api.go</code>,
+<code>tools_write_batch.go</code>,
+<code>tools_write_volume_commit.go</code>,
+<code>tools_write_batch_recovery.go</code>, <code>tools_write.go</code>,
+<code>internal/codebatch/types.go</code>.</li>
+<li><strong>Delete path:</strong>
+<code>internal/mcptools/tools_remove.go</code>,
+<code>tools_remove_volumes.go</code>,
+<code>internal/cli/remove_entry.go</code>.</li>
+<li><strong>Retrieval and delivery:</strong>
+<code>internal/mcptools/tools_read.go</code>,
+<code>tools_read_search.go</code>, <code>overview_delivery_v1.go</code>,
+<code>overview_attestation_v1.go</code>,
+<code>transaction_guard.go</code>,
+<code>internal/index/query.go</code>.</li>
+<li><strong>Maintenance:</strong>
+<code>internal/mcptools/tools_maintain.go</code>,
+<code>tools_maintain_volumes.go</code>.</li>
+<li><strong>Records:</strong> <code>internal/ledger/ledger.go</code>,
+<code>internal/mcptools/tools_write_governance_receipt.go</code>,
+<code>internal/cognitiontxn/transaction.go</code>.</li>
+<li><strong>Integration:</strong>
+<code>internal/mcptools/server.go</code>,
+<code>internal/hooks/pretool.go</code>,
+<code>internal/cli/init.go</code>,
+<code>textassets/en-US/contracts/mcp/tools/</code>.</li>
+<li><strong>Tests:</strong>
+<code>internal/mcptools/tools_read_volumes_test.go</code>,
+<code>tools_write_cross_volume_test.go</code>,
+<code>internal/cli/index_entries_recover_test.go</code>,
+<code>scripts/blackbox/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' . --exclude-dir=.git</code>
+— no match; no <code>CITATION.cff</code>.</li>
+<li><code>grep -niE 'renamed|formerly' CHANGELOG.md README.md</code> —
+no match.</li>
+<li><code>grep -rn 'saveCompletedEntriesGovernanceReceipt\|saveVolumeGovernanceReceipt' --include='*.go' internal</code>,
+non-test — callers only in <code>tools_write_batch.go</code> and
+<code>tools_write_volume_commit.go</code>; none on a remove path.</li>
+<li><code>grep -rn '"governance"' --include='*.go' internal</code>,
+non-test — the receipt writer and <code>runmanifest.go</code>; no
+deleter.</li>
+<li><code>grep -rn 'ApplyUpdateEntry(' --include='*.go' internal</code>
+— test files only; the single-entry pipeline has no live caller.</li>
+<li><code>grep -rnE 'isatty|IsTerminal|term\.Is' --include='*.go' internal cmd</code>,
+non-test — no match.</li>
+<li><code>grep -rln 'handleSearch\|handleGetEntries' --include='*_test.go' .</code>
+— four files; none asserts an exclusion that the keyword alone would not
+produce.</li>
+<li><code>grep -n 'stale\|Stale' internal/mcptools/tools_read.go</code>
+— only the Legacy handler, <code>:390-400</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/aoci-spec/aoci-code/commit/fdb4cb9bf54d14bbe87002b58c6d72aefb706617"><code class="commit-id" title="fdb4cb9bf54d14bbe87002b58c6d72aefb706617">fdb4cb9b…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 29
+September 2026. No mark awarded; section 9 names each near-miss.
+Screened before reading: no auto-run surface, two build-time execution
+points (<code>Makefile</code>, the vendored openGauss connector's
+<code>Makefile</code>), nine dependency files inside the cooldown —
+every file in a depth-1 clone dates to the tip — two unpinned surfaces
+in black-box fixtures, and <code>AGENTS.md</code> recorded as data. Read
+with <code>grep</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

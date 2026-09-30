@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 697 reports.</strong></p>
+<p><strong>This page covers all 698 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -28962,6 +28962,45 @@ over a shared SQLite file, and the three self-ingestion guards.</li>
 boundary unconditionally — derive membership from the source on every
 pass, not from events one process may miss, and put the scope predicate
 in the store query rather than in each caller.</li>
+</ul>
+<h3 id="aoci-code"><a
+href="../systems/aoci-code/"><code>aoci-code</code></a></h3>
+<ul>
+<li>Best idea: <strong>bind each stored claim to the digest of the
+evidence it was written from.</strong> <code>aoci_maintain</code> issues
+each target with the server's SHA-256 of the source file, the agent
+echoes it with the entry, and the commit re-hashes the file and refuses
+a mismatch with the expected value, so no entry can be admitted against
+bytes the model did not read.</li>
+<li>Biggest risk: <strong>aligned means unchanged, not correct.</strong>
+An entry's only state is whether its file moved since alignment, derived
+from hashes on every call; a wrong line about an unchanged file is
+delivered as settled, and stale entries are delivered too, flagged only
+at set level in the Overview and not at all by Volumes
+<code>get_entries</code>.</li>
+<li>Most reusable component: <code>internal/hooks/pretool.go</code> — a
+PreToolUse hook that injects the target file's entry and its
+<code>S</code> constraints just before an edit, with a STALE header when
+the source moved and an optional strict mode that blocks the write.</li>
+<li>Second risk: <strong>the dispute path is dark in the default
+layout.</strong> The remove tool tells the agent that a non-orphan needs
+a maintainer decision recorded with <code>aoci_report</code>, which
+returns <code>volume_read_only</code> under Volumes v1; there, removal
+is orphan-only for every caller, and the ledger and governance receipts
+name whole Volume files and counts rather than the entry that
+changed.</li>
+<li>Maturity impression: FSL-1.1-MIT, 89,669 lines of Go outside tests
+and 193 commits on main from six contributor identities between 8 August
+and 29 September 2026, with 1,774 Go test functions and four Python
+black-box suites. No mark: two negative-case near-misses, one satisfied
+by the keyword alone and one a fail-closed refusal with no positive
+control.</li>
+<li>Study when: you want a code-structure memory whose freshness is a
+hash comparison, or a crash-safe, CAS-guarded batch write for
+file-backed memory.</li>
+<li>Do not copy when: memory must record decisions or preferences, or an
+entry must be able to say it is disputed while its source is
+unchanged.</li>
 </ul>
         </article>
       </div>

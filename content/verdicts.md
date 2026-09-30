@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 697 reports.**
+**This page covers all 698 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6292,3 +6292,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 110 commits on main by three contributors between 13 April and 31 August 2026, 13,508 lines of TypeScript, 574 Vitest cases run in CI with a small labelled relevance eval; the performance figures come from the author's own store and are not reproduced by a committed test; one mark, `negative_eval`.
 - Study when: you are indexing an agent's own transcripts and want the bounded, coverage-reporting read path, the lease-fenced single writer over a shared SQLite file, and the three self-ingestion guards.
 - Do not copy when: the store must honour a deletion or a project boundary unconditionally — derive membership from the source on every pass, not from events one process may miss, and put the scope predicate in the store query rather than in each caller.
+
+### [`aoci-code`](../systems/aoci-code/)
+
+- Best idea: **bind each stored claim to the digest of the evidence it was written from.** `aoci_maintain` issues each target with the server's SHA-256 of the source file, the agent echoes it with the entry, and the commit re-hashes the file and refuses a mismatch with the expected value, so no entry can be admitted against bytes the model did not read.
+- Biggest risk: **aligned means unchanged, not correct.** An entry's only state is whether its file moved since alignment, derived from hashes on every call; a wrong line about an unchanged file is delivered as settled, and stale entries are delivered too, flagged only at set level in the Overview and not at all by Volumes `get_entries`.
+- Most reusable component: `internal/hooks/pretool.go` — a PreToolUse hook that injects the target file's entry and its `S` constraints just before an edit, with a STALE header when the source moved and an optional strict mode that blocks the write.
+- Second risk: **the dispute path is dark in the default layout.** The remove tool tells the agent that a non-orphan needs a maintainer decision recorded with `aoci_report`, which returns `volume_read_only` under Volumes v1; there, removal is orphan-only for every caller, and the ledger and governance receipts name whole Volume files and counts rather than the entry that changed.
+- Maturity impression: FSL-1.1-MIT, 89,669 lines of Go outside tests and 193 commits on main from six contributor identities between 8 August and 29 September 2026, with 1,774 Go test functions and four Python black-box suites. No mark: two negative-case near-misses, one satisfied by the keyword alone and one a fail-closed refusal with no positive control.
+- Study when: you want a code-structure memory whose freshness is a hash comparison, or a crash-safe, CAS-guarded batch write for file-backed memory.
+- Do not copy when: memory must record decisions or preferences, or an entry must be able to say it is disputed while its source is unchanged.
