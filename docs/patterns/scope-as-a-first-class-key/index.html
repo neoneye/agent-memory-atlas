@@ -1221,6 +1221,18 @@ that mentions the same entity, on nodes that carry no user field, and
 archives exact-text duplicates across the result. <strong>A scope that
 is not on the graph node cannot be applied by a background job that
 walks the graph.</strong></p>
+<p><strong><a href="../../systems/neo-agent-brain/">Neo Agent Brain</a>
+puts the tenant key on every row from the transport and applies it
+unevenly by read.</strong> <code>add_memory</code> stamps
+<code>userId</code> from the OIDC token or the stdio identity, never
+from a tool argument; <code>query_recent_turns</code> puts
+<code>userId = ?</code> into its SQL and returns nothing when no tenant
+resolves, while the semantic and session reads apply the key only under
+the <code>private</code> policy, and the shipped default is
+<code>team</code>. A caller-supplied <code>memorySharing</code> is
+clamped so it can narrow and never widen. <strong>Clamp the request to
+the configured scope, and write down which reads the default leaves
+unfiltered.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

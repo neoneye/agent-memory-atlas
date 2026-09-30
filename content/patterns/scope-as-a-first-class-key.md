@@ -875,6 +875,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[MindMemOS](../../systems/mindmemos/) is the consolidation case this page's forces paragraph warns about.** Its project key is exemplary — taken from the credential, forced first into every Qdrant filter, and re-checked on reads by id — and its user key is a request field. The dreaming pass seeds from one user's recent writes, then expands through Neo4j to every active memory in the project that mentions the same entity, on nodes that carry no user field, and archives exact-text duplicates across the result. **A scope that is not on the graph node cannot be applied by a background job that walks the graph.**
 
+**[Neo Agent Brain](../../systems/neo-agent-brain/) puts the tenant key on every row from the transport and applies it unevenly by read.** `add_memory` stamps `userId` from the OIDC token or the stdio identity, never from a tool argument; `query_recent_turns` puts `userId = ?` into its SQL and returns nothing when no tenant resolves, while the semantic and session reads apply the key only under the `private` policy, and the shipped default is `team`. A caller-supplied `memorySharing` is clamped so it can narrow and never widen. **Clamp the request to the configured scope, and write down which reads the default leaves unfiltered.**
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

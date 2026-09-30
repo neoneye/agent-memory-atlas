@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 681 reports.</strong></p>
+<p><strong>This page covers all 682 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -7929,11 +7929,15 @@ the bloat"</strong>. The ranking rule is value density rather than size
 — filenames go first because one Glob rebuilds them; identity, personal
 context and correctness guards carry no fallback and are never traded
 for plumbing.</li>
-<li>Biggest risk: no staleness story. A vault accumulating "Key
-Decisions" and "Gotchas" for a year holds reversed decisions and fixed
-gotchas, and nothing distinguishes them from the live ones — the design
-controls how <em>much</em> gets injected with real rigour and not
-whether it is still true.</li>
+<li>Biggest risk: correction in <code>brain/</code> is a sweep someone
+runs. A vault accumulating "Key Decisions" and "Gotchas" for a year
+holds reversed decisions and fixed gotchas, and neither the eager layer
+nor QMD search consults a status, so they are served like live ones
+until <code>/om-correct</code> rewrites the restatements. Cross-repo
+captures fare better, because a correction supersedes the original and
+<code>recall</code> sinks or withholds it. The <code>reason</code>
+tool's scope boundary is a prompt, which its own docstring says the
+filesystem does not enforce.</li>
 <li>Most reusable component: the argument against the obvious
 alternative — "line-based caps cannot do this job: shortening entries
 under a line cap just slides the window deeper and refills it" —
@@ -7947,9 +7951,10 @@ reason, and a path check that unifies separators before normalising
 because POSIX <code>normalize()</code> will not collapse a
 backslash-spelled <code>..</code>. Behind the notes sits a TypeScript
 system with 1,425 tests over 17,029 lines, which is where its three
-marks live: a default-deny scope facet on recall, an append-only MCP
-call log that records refusals as well as successes, and recall tests
-that pin scope non-leakage from three directions.</li>
+marks live: a default-deny scope facet on the <code>recall</code> tool,
+an append-only MCP call log that rotates at 5 MB and records both write
+tools and four refusal kinds, and recall tests that assert the exact
+visible set per caller.</li>
 <li>Study when: you inject context at session start and have never
 measured what it costs.</li>
 <li>Do not copy when: you want a component — the vault <em>is</em> the
@@ -28202,6 +28207,55 @@ index.</li>
 be correctable by one. The profile store has no scope and channel
 senders write into it, episodes cannot be deleted in the app, and
 conflicts marked for clarification reach nobody.</li>
+</ul>
+<h3 id="neo-agent-brain"><a
+href="../systems/neo-agent-brain/"><code>neo-agent-brain</code></a></h3>
+<ul>
+<li>Best idea: <strong>acceptance and searchability are different
+answers, and the write says both.</strong> <code>add_memory</code> is
+durable at the WAL append, <code>query_recent_turns</code> sees the turn
+at once through a pending-row overlay, and semantic recall waits for the
+embed drain; the response carries <code>recencyQueryable</code>,
+<code>semanticQueryable</code> and the drain depth, declines to predict
+an ETA, and tells the agent that a retry only stores a second copy.</li>
+<li>Biggest risk: <strong>a purge that knows two stores out of
+three.</strong> <code>purge_session</code> tombstones pending WAL
+records and deletes the session's Chroma rows and summary, and never
+touches the <code>AGENT_MEMORY</code> graph nodes. A turn summarised
+before the purge keeps its <code>miniSummary</code>, and the default
+compact <code>query_recent_turns</code> read returns it; the
+<code>summary_&lt;sessionId&gt;</code> graph node keeps the summary's
+title.</li>
+<li>Most reusable component: <code>resolveSharingPolicy</code> in
+<code>helpers/resolveSharingPolicy.mjs</code> — a pure function that
+ranks <code>private &lt; legacy &lt; team</code> and clamps any
+caller-requested policy to the configured default, so a public
+<code>memorySharing</code> argument can narrow a read and never widen
+it. The <code>clamped</code> flag it returns is discarded by all three
+callers.</li>
+<li>Second risk: <strong>the private field is private on one
+read.</strong> <code>query_recent_turns</code> forces the public
+projection for a peer and a canary test with a positive control proves
+it; <code>query_raw_memories</code> and
+<code>get_session_memories</code> return <code>thought</code> on every
+admitted row, and under the shipped <code>team</code> default that is
+every maintainer's.</li>
+<li>Maturity impression: MIT, 311,039 lines of JavaScript outside tests
+of which the Memory Core services and MCP server are 50,373, 623 commits
+on <code>dev</code> from 11 contributors between 23 August and 29
+September 2026, and 12,175 Playwright cases in 814 spec files. Two
+marks: <code>scope_enforced</code> on a transport-derived
+<code>userId</code>, and <code>negative_eval</code> on a Dockerised
+cross-tenant sentinel case. Trust is a per-author tier from a hardcoded
+table, not a per-memory state.</li>
+<li>Study when: you are building shared memory for several long-running
+agents and want a write path that cannot be failed by the embedder, a
+read-after-write overlay, and tests that carry their own positive
+controls against vacuity.</li>
+<li>Do not copy when: you need a delete that removes a turn from every
+surface, a privacy field enforced on every read, or a memory small
+enough to lift out of its platform — the Memory Core needs the
+orchestrator, a Chroma server and local models to run.</li>
 </ul>
         </article>
       </div>

@@ -152,12 +152,14 @@ beneath a reported system.
 material.
 - Examined 2026-07-27; bullet opening "Five further repositories examined in
   this round have no reports: `he-yufeng/CoreCoder`".
-- Missing: any implementation; the documents describe it.
+- Missing then: any implementation, as the exclusion read it.
 - Monitor: [neomjs/neo](https://github.com/neomjs/neo).
-- Status 2026-09-28: default branch `dev`, pushed today; the untruncated
-  tree (27,974 paths) still has exactly three paths matching `memory`:
-  `learn/agentos/SeatMemoryLayer.md`, `resources/content/concepts/memory-core.md`
-  and a Playwright memory-leak spec. Nothing under `src/`.
+- Status 2026-09-30: the implementation was in neo's own tree when the bullet
+  was written (223 `memory-core` paths on 2026-07-27), moved to
+  [neomjs/neo-agent-brain](https://github.com/neomjs/neo-agent-brain), created
+  2026-08-23, and was removed from neo on 2026-08-26. It has a report,
+  [Neo Agent Brain](../content/systems/neo-agent-brain.md), and
+  `content/appendix.md` carries the correction. Nothing left to monitor.
 
 **Mi-Memory** — a lifecycle memory framework for personal AI
 ([arXiv:2607.18975](https://arxiv.org/abs/2607.18975), v1).

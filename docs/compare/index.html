@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-681, generated from each report's frontmatter —
+682, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-681, generated from each report's frontmatter —
+682, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-681, generated from each report's frontmatter —
+682, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 681, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 682, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-681, generated from each report's frontmatter —
+682, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 681 systems by the seven mechanisms
+filters all 682 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -18578,6 +18578,55 @@ reinstate deleted memories</td>
 </tr>
 <tr>
 <td><a
+href="../systems/neo-agent-brain/"><code>neo-agent-brain</code></a></td>
+<td>One agent turn: prompt, thought and response verbatim, with
+sessionId, userId, agentIdentity, agent, model and tool-call counts. A
+per-turn miniSummary is added later on the graph node; sessions get an
+LLM summary with scores</td>
+<td>A daily JSONL write-ahead log on local disk, a Chroma memory
+collection and a session-summary collection, and AGENT_MEMORY nodes in a
+SQLite graph (better-sqlite3), all under one plane data root</td>
+<td>Three read families: vector similarity over Chroma
+(query_raw_memories, with an opt-in concept-graph walk),
+reverse-chronological SQL over graph nodes plus WAL-pending rows
+(query_recent_turns), and a full session listing (get_session_memories).
+No lexical arm</td>
+<td>Agent-called add_memory at the end of every turn, as the tool
+description instructs. The WAL append is the acceptance point; graph
+projection and the embed drain follow asynchronously, and a mini-summary
+backfill runs under the orchestrator</td>
+<td>No edit. purge_session hard-deletes a session's Chroma rows and
+summary; archivedAt hides a row from every read and is set by the
+no-content and generation-timeout backfill exits. A by-identity archive
+exists with no production caller</td>
+<td>userId and agentIdentity on every row from the transport's resolved
+identity. Policy team (default) reads deployment-wide, private filters
+by userId, legacy admits own, shared and untagged; a caller may narrow
+and not widen. Recency is always tenant-filtered</td>
+<td>Streamable HTTP or stdio MCP server with 52 operations; memory,
+summaries, graph, mailbox and presence share it. Harness hooks record
+turn presence and lane state and inject no memory</td>
+<td>Embed daemon drains the WAL into Chroma; a graph-projection drain
+loop; mini-summary backfill; session summarization on close and by drift
+sweep; REM graph extraction; integrity diagnosis with a heal-event
+ledger</td>
+<td>A provenance tier resolved at read time from a hardcoded author
+table (owner, peer-trusted, unclassified and five more). Opt-in
+minTrustTier filter; a ranking weight on the context frontier. No
+per-memory state</td>
+<td>Acceptance and searchability reported separately on every write;
+WAL-first durability so an embed outage never loses a turn; a sharing
+policy that clamps widening; the recency read fails closed with no
+tenant; tests that name their own vacuity hazards and carry positive
+controls</td>
+<td>purge_session leaves the graph node and its miniSummary, which
+query_recent_turns keeps returning; thought is withheld from peers on
+the recency read only; the team default returns every maintainer's
+turns; with no resolved identity the agent argument sets the author and
+so the trust tier</td>
+</tr>
+<tr>
+<td><a
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a></td>
 <td>Conversation turn, extracted entity, preference, and reasoning trace
 with tool calls</td>
@@ -19413,26 +19462,28 @@ words; deletion nominations have no decision writer</td>
 <tr>
 <td><a
 href="../systems/obsidian-mind/"><code>obsidian-mind</code></a></td>
-<td>A markdown note with frontmatter and wikilinks, in a topic
-folder</td>
+<td>A markdown note in a topic folder; a cross-repo capture with scope,
+confidence and superseded_by frontmatter</td>
 <td>An Obsidian vault on disk, with .base database views and a QMD
-semantic index</td>
-<td>QMD semantic search before file reads, plus a budgeted eager layer
-at session start</td>
-<td>Agent-written notes validated by a PostToolUse hook for frontmatter
-and wikilinks</td>
-<td>Editing the markdown; open-loop directories and sections are
-configured</td>
-<td>mcp_exposed_roots and mcp_never_expose gate what the MCP server
-serves; both ship empty</td>
-<td>Claude Code, Codex and Gemini, with lifecycle hooks and
-slash-command skills</td>
-<td>A QMD refresh riding the validation hook; a pre-compact script</td>
-<td>Nothing — notes are notes</td>
-<td>An enforced, measured, self-reporting injection budget with the
-reasoning written down</td>
-<td>No mechanism marks a note stale or wrong; correction is editing the
-file</td>
+hybrid index in a local SQLite file</td>
+<td>A budgeted eager layer at session start; QMD hybrid search; an MCP
+recall tool filtered by scope and supersession</td>
+<td>Agent-written notes checked by a PostToolUse hook; MCP remember and
+record_work tools with a write-time contract</td>
+<td>Editing the markdown; a capture is corrected by a new one naming it
+in supersedes, and nothing is deleted</td>
+<td>Captures carry scope, projects and platforms, filtered on recall;
+exposed roots and never-expose gate other surfaces</td>
+<td>Claude Code, Codex and Gemini, with lifecycle hooks, slash-command
+skills and an MCP server for other repos</td>
+<td>A QMD refresh riding the validation hook; a pre-compact script; no
+scheduled pass</td>
+<td>A caller-declared confidence of verified, inferred or unverified,
+capped by contract flags, displayed and never filtered</td>
+<td>An enforced, measured, self-reporting injection budget; a
+default-deny recall predicate with supersession that follows reach</td>
+<td>brain notes carry no status a read path consults; the reason spawn's
+scope boundary is a prompt</td>
 </tr>
 <tr>
 <td><a
@@ -29557,7 +29608,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>62 of 681:</em> <a
+<p><em>62 of 682:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -29623,7 +29674,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>170 of 681:</em> <a
+<p><em>170 of 682:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -29800,7 +29851,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>117 of 681:</em> <a
+<p><em>117 of 682:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -29925,7 +29976,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>317 of 681:</em> <a
+<p><em>318 of 682:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -30134,6 +30185,7 @@ href="../systems/muse-brain/"><code>muse-brain</code></a>, <a
 href="../systems/mushroomdb/"><code>mushroomdb</code></a>, <a
 href="../systems/nanoclaw/"><code>nanoclaw</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
+href="../systems/neo-agent-brain/"><code>neo-agent-brain</code></a>, <a
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <a href="../systems/neurakeep/"><code>neurakeep</code></a>, <a
 href="../systems/neuron/"><code>neuron</code></a>, <a
@@ -30257,7 +30309,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>229 of 681:</em> <a
+<p><em>229 of 682:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -30496,7 +30548,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>92 of 681:</em> <a
+<p><em>92 of 682:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
@@ -30592,7 +30644,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>394 of 681:</em> <a
+<p><em>395 of 682:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -30850,6 +30902,7 @@ href="../systems/muse-brain/"><code>muse-brain</code></a>, <a
 href="../systems/mushroomdb/"><code>mushroomdb</code></a>, <a
 href="../systems/nanoclaw/"><code>nanoclaw</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
+href="../systems/neo-agent-brain/"><code>neo-agent-brain</code></a>, <a
 href="../systems/neurakeep/"><code>neurakeep</code></a>, <a
 href="../systems/neuron/"><code>neuron</code></a>, <a
 href="../systems/neurostack/"><code>neurostack</code></a>, <a
@@ -31017,8 +31070,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-394 repositories of
-681 assert that particular material must
+395 repositories of
+682 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -31091,7 +31144,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 681 is the real figure for the second kind, and
+of 682 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not
