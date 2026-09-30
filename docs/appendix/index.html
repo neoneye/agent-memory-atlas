@@ -605,7 +605,14 @@ temporal, gated on telemetry that defaults on</li>
 <li><a
 href="https://github.com/langchain-ai/langmem">langchain-ai/langmem</a>
 at <a
-href="https://github.com/langchain-ai/langmem/commit/9d033b47d9ce53e37e92c92241b0496c0278932e"><code class="commit-id" title="9d033b47d9ce53e37e92c92241b0496c0278932e">9d033b47…</code></a></li>
+href="https://github.com/langchain-ai/langmem/commit/9d033b47d9ce53e37e92c92241b0496c0278932e"><code class="commit-id" title="9d033b47d9ce53e37e92c92241b0496c0278932e">9d033b47…</code></a>
+— read at the second pin and audited there on 2026-09-30, which is
+upstream HEAD, with the store read in langchain-ai/langgraph at
+<code>checkpoint==4.2.0</code> and
+<code>checkpointpostgres==3.1.2</code>; no auto-run surface and two
+build-time execution points, read rather than executed; nothing
+installed, built or run. <code>scope_enforced</code> holds; no committed
+test asserts it.</li>
 <li><a
 href="https://github.com/plastic-labs/honcho">plastic-labs/honcho</a> at
 <a
@@ -5843,6 +5850,26 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The LangMem report said a background extraction could
+restate what the agent deleted through its tool, listed
+<code>graph_rag.py</code> as a Graph/RAG extra, cited paths under a
+<code>langmem/</code> prefix, and its <code>scope_enforced</code> record
+said tests cover namespace substitution; corrected 2026-09-30.</strong>
+At <a
+href="https://github.com/langchain-ai/langmem/commit/9d033b47d9ce53e37e92c92241b0496c0278932e"><code class="commit-id" title="9d033b47d9ce53e37e92c92241b0496c0278932e">9d033b47…</code></a>,
+which is upstream HEAD, <code>MemoryStoreManager.ainvoke</code> reads
+<code>item.value["kind"]</code>, which tool-written items lack
+(<code>extraction.py:1066</code>), so the <a
+href="../systems/langmem/">LangMem</a> report's two writers sharing
+items raise <code>KeyError</code>. <code>graph_rag.py</code> is comments
+only. Paths are <code>src/langmem/…</code> from the repository root. No
+test names the template, and the docstring harness asserts only that
+examples do not raise, which overstated the coverage. The report also
+missed that the manager's default query is the last message alone, that
+remote reflection forwards only <code>thread_id</code> and a
+<code>namespace</code> key that no imported module reads, and that
+PostgresStore's prefix predicate was unanchored before 30 July 2026. No
+mark moved.</li>
 <li><strong>The DiffMem report said git's subcommand allowlist held six
 read-only subcommands, that its basename check kept path-prefixed
 binaries out, that every segment of a chain is validated, that

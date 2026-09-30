@@ -12554,18 +12554,27 @@ before deduplicating</td>
 </tr>
 <tr>
 <td><a href="../systems/langmem/"><code>langmem</code></a></td>
-<td>Store item, usually JSON memory</td>
-<td>LangGraph <code>BaseStore</code></td>
-<td><code>store.search/asearch</code> delegated to backend</td>
-<td>Tools call create/update/delete/search; extraction via
-Trustcall</td>
-<td>Tool-level CRUD</td>
-<td>Namespace templates</td>
-<td>LangChain/LangGraph tools</td>
-<td>Reflection executor local/remote</td>
-<td>Mostly application-defined</td>
-<td>Clean primitives, schema-driven extraction</td>
-<td>Too low-level to solve memory quality alone</td>
+<td>A BaseStore item; tools write content only, the manager writes kind
+and content</td>
+<td>LangGraph BaseStore, bound by the application</td>
+<td>Store search under a namespace prefix; the manager queries with the
+last message or model-written queries</td>
+<td>Agent tool create, update or delete by id; background Trustcall
+extraction that inserts, patches or removes</td>
+<td>In-place overwrite and hard delete through the store; no history or
+tombstone</td>
+<td>Namespace tuple templated from run config, matched as a prefix by
+the store</td>
+<td>LangChain and LangGraph tools, runnables and a reflection
+executor</td>
+<td>In-process debounced queue per thread, or a remote LangGraph
+Platform run</td>
+<td>None in data; confidence is asked for in the extraction prompt
+text</td>
+<td>Small tool surface; a missing scope key fails instead of
+widening</td>
+<td>Tool and manager items are incompatible in one namespace; nothing
+tests memory behaviour</td>
 </tr>
 <tr>
 <td><a href="../systems/leankg/"><code>leankg</code></a></td>

@@ -81,9 +81,9 @@ and the two should not be read with the same confidence.
 
 ### [`langmem`](../systems/langmem/)
 - Best idea: memory as LangGraph store tools with schema-driven extraction.
-- Biggest risk: it is a primitive layer, not a full memory policy.
+- Biggest risk: it is a primitive layer, not a full memory policy — overwrites and hard deletes with no history, and a background manager that raises on items the agent's own tool wrote.
 - Most reusable component: `create_manage_memory_tool()` and namespace templates.
-- Maturity impression: clean and framework-native.
+- Maturity impression: a small, framework-native tool surface with no committed test of any memory behaviour; the store-manager docstring promises a versioned history the code does not keep.
 - Study when: already building on LangGraph.
 - Do not copy when: you need a standalone memory service with built-in quality controls.
 
