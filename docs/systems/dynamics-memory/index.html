@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A sidecar memory for opencode that
+distils each turn into candidate memories, promotes them by decayed use,
+and repairs misses with a log-reading investigator.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Dynamics-memory — Agent Memory Atlas">
+    <meta property="og:description" content="A sidecar memory for
+opencode that distils each turn into candidate memories, promotes them
+by decayed use, and repairs misses with a log-reading investigator.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dynamics-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A sidecar memory for
+opencode that distils each turn into candidate memories, promotes them
+by decayed use, and repairs misses with a log-reading investigator.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Dynamics-memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Dynamics-memory",
+      "description": "A sidecar memory for opencode that distils each turn into candidate memories, promotes them by decayed use, and repairs misses with a log-reading investigator.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A value-dynamics memory sidecar for
+opencode</p>
+          <h1>Dynamics-memory</h1>
+          <p class="document-deck">A sidecar memory for opencode that
+distils each turn into candidate memories, promotes them by decayed use,
+and repairs misses with a log-reading investigator.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/1173591564/Dynamics-memory">
+              <span>Source</span>
+              <strong>1173591564/Dynamics-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/1173591564/Dynamics-memory/commit/9ee06f66c0efe975856c82c51e3ce1090aff6533" title="9ee06f66c0efe975856c82c51e3ce1090aff6533">
+              <span>Analyzed revision</span>
+              <code>9ee06f66…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/1173591564--Dynamics-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>1173591564--Dynamics-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>None:
+no LICENSE file, no licence named in the README or eval/pyproject.toml,
+and GitHub reports none; the vendored opencode packages under agent/
+declare MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>4,285
+lines of Python in hybrid_memory/ and a 389-line opencode plugin; agent/
+adds about 295,000 lines of vendored opencode TypeScript the memory does
+not use</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>28
+commits on main by three contributor identities, 15 – 28 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>176
+pytest functions in tests/ (3,568 lines) and 8 in eval/tests/; a
+committed TIDE benchmark report run against a mock LLM</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Dynamics-memory is a Python sidecar that gives the opencode coding
+agent a project memory. Each finished turn is written to a raw log,
+distilled by one LLM call into sentences, and those sentences enter a
+candidate pool where a decaying value, raised when an answer used them,
+decides promotion to a small capped pool. A background investigator
+reads the raw log when the memory misses, and proposes what it
+finds.</p>
+<p>What is notable is the second loop. A user correction, or the main
+agent reaching for a log tool, is treated as evidence the memory failed,
+and becomes a queued repair job with a tool budget and a causal bound. A
+failed extraction leaves the turn in the log with a job to re-extract
+it.</p>
+<p>What is weak is correction. There is no delete, a superseded value
+stays retrievable at a score penalty, and the verdict tool sits on the
+agent's own tool surface.</p>
+<p>The repository carries no licence file, and GitHub reports none, so
+by default all rights are reserved; <code>agent/</code> holds a copy of
+opencode 1.18.11's core packages, MIT-licensed upstream, which the
+memory neither imports nor needs.</p>
+<p>No capability mark is awarded. Section 9 names all seven and why each
+is withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a sentence the candidate generator or an agent wrote
+about the project. It becomes a belief the moment it is ingested: it
+enters the candidate pool <code>C</code> and is retrievable at once.
+Nothing stands between ingestion and injection except a cosine quality
+gate.</p>
+<p><strong>Value, not truth, moves a memory between pools.</strong> Each
+maintenance step applies <code>V ← V·e^(−λ) + η·hit + η_s·shadow</code>
+(<code>hybrid_memory/core/maintenance.py:32-39</code>). A candidate
+crossing <code>θ_p = 1.5</code> is promoted to <code>M</code>; a member
+of <code>M</code> falling below <code>θ_d = 0.8</code> is demoted back;
+<code>M</code> is capped, and the weakest is evicted to <code>C</code>;
+a candidate idle for 50 turns is archived to <code>A</code>
+(<code>:41-63</code>, <code>hybrid_memory/config.py:21-29</code>). Hits
+come from an LLM recognizer asked which injected memories the answer
+actually used (<code>hybrid_memory/semantics/llm.py:28-33</code>). The
+pools change a prior, not eligibility: <code>M</code> adds 0.05,
+<code>C</code> adds nothing, and <code>A</code> subtracts 0.30
+(<code>hybrid_memory/core/retrieval.py:63-68</code>).</p>
+<p><strong>Conflict is detected at write and at read, and decided
+later.</strong> A new sentence whose cosine to a visible memory exceeds
+<code>τ_dup</code> becomes its own candidate plus a tension pair
+(<code>hybrid_memory/core/ingest.py:65-66</code>). A retrieval that
+suppresses one near-duplicate in favour of another adds the pair too
+(<code>retrieval.py:93-117</code>). Pairs older than 20 turns go to an
+LLM judge that answers <code>synonym</code>, <code>update</code>,
+<code>contradiction</code> or <code>collision</code>
+(<code>hybrid_memory/core/maintenance.py:69-88</code>;
+<code>hybrid_memory/worker.py:83-116</code>). Until then, a selected
+memory's rival is injected beside it as an unresolved conflict line
+(<code>retrieval.py:165-175</code>;
+<code>hybrid_memory/server.py:305-308</code>).</p>
+<p><strong>A verdict hides one side, or wraps both.</strong>
+<code>synonym</code> keeps the higher-valued memory and
+<code>update</code> keeps the newer; the loser gets
+<code>superseded_by</code> and moves to <code>A</code>
+(<code>maintenance.py:115-139</code>). <code>contradiction</code> wraps
+both in an aggregate memory whose text lists the two versions with their
+turn numbers, hides the members, and halves their value; because the
+shipped semantics has no scope, every contradiction takes the
+<code>pending_review=True</code> branch (<code>:140-160</code>;
+<code>hybrid_memory/semantics/real.py:67-68</code>).
+<code>collision</code> changes nothing.</p>
+<p><strong>Death is only ever archival.</strong> No code path removes a
+memory from the store, and the archive is scored on every query.
+<code>is_visible</code> excludes archived and superseded rows
+(<code>hybrid_memory/core/types.py:17-25</code>), but the retrieval loop
+admits any row in <code>A</code> when <code>archive_retrieval</code> is
+true, its default (<code>retrieval.py:77-80</code>;
+<code>config.py:65</code>). A superseded value therefore competes again
+at the archive penalty.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a sentence becomes a Dynamics-memory belief, and why supersession does not remove it from retrieval</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a sentence becomes a Dynamics-memory belief, and why supersession does not remove it from retrieval
+flowchart TD
+    T[&quot;finished turn&quot;] --&gt; L0[&quot;raw log unit,&lt;br/&gt;FTS5 and vector&quot;]
+    T --&gt; CG[&quot;candgen: one LLM call&quot;]
+    CG -- &quot;fails&quot; --&gt; ED[&quot;extract_due signal&lt;br/&gt;for the investigator&quot;]
+    CG --&gt; D{&quot;nearest visible memory:&lt;br/&gt;cosine above tau_dup?&quot;}
+    INV[&quot;investigator or main agent:&lt;br/&gt;propose, citing log units&quot;] --&gt; D
+    D -- &quot;same normalised text&quot; --&gt; EV[&quot;evid + 1, no new row&quot;]
+    D -- &quot;similar, different text&quot; --&gt; TEN[&quot;new candidate&lt;br/&gt;plus tension pair&quot;]
+    D -- &quot;no&quot; --&gt; C[&quot;pool C, V = 0.5,&lt;br/&gt;served at once&quot;]
+    TEN --&gt; C
+    C -- &quot;V above 1.5&quot; --&gt; M[&quot;pool M, capped,&lt;br/&gt;prior + 0.05&quot;]
+    M -- &quot;V below 0.8, or evicted&quot; --&gt; C
+    C -- &quot;idle 50 turns&quot; --&gt; A[&quot;pool A, prior - 0.30,&lt;br/&gt;still scored&quot;]
+    TEN -- &quot;after 20 turns&quot; --&gt; J{&quot;LLM judge,&lt;br/&gt;or agent memory_resolve&quot;}
+    J -- &quot;synonym or update&quot; --&gt; SUP[&quot;loser: superseded_by set,&lt;br/&gt;moved to pool A&quot;]
+    SUP --&gt; A
+    J -- &quot;contradiction&quot; --&gt; AGG[&quot;aggregate row listing both,&lt;br/&gt;pending_review = true,&lt;br/&gt;never cleared&quot;]
+    J -- &quot;collision&quot; --&gt; KEEP[&quot;both kept&quot;]
+    A -- &quot;cosine at least 0.65&quot; --&gt; Q[&quot;eligible for top 5&quot;]
+    C --&gt; Q
+    M --&gt; Q
+    AGG --&gt; Q</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The runtime is two processes. The opencode plugin
+<code>.opencode/plugin/memory-bridge.ts</code> runs inside the upstream
+opencode CLI and spawns <code>python -m hybrid_memory.server</code> on
+port 17872 if nothing answers <code>/health</code> there
+(<code>:99-125</code>). The sidecar is a
+<code>ThreadingHTTPServer</code> on 127.0.0.1 behind a bearer token
+stored at <code>.opencode/memory/.memory-token</code> with mode 0600
+(<code>hybrid_memory/server.py:213-231</code>, <code>:744-747</code>,
+<code>:944-948</code>).</p>
+<p><code>MemoryService</code> holds the engine in memory under one
+<code>RLock</code>. The engine is a dict of <code>Memory</code>
+dataclasses and a dict of tension pairs; persistence is a pickle of
+both, written on <code>/save</code> and on SIGTERM and loaded through
+<code>_RestrictedUnpickler</code>, whose allowlist admits only builtin
+and <code>collections</code> containers, the engine's dataclasses and
+numpy's array reconstructors (<code>:109-141</code>,
+<code>:642-694</code>). A corrupt state file is renamed aside and the
+service starts empty (<code>:183-196</code>).</p>
+<p>Beside it, <code>LogStore</code> keeps every turn in SQLite with an
+FTS5 trigram index, an entity-mention table fed by regular expressions,
+and optional unit embeddings
+(<code>hybrid_memory/logstore.py:89-119</code>). The write lands on the
+log before the extraction runs.</p>
+<p>Every model call goes to one OpenAI-compatible endpoint, Zhipu's by
+default and overridable with <code>ZAI_BASE_URL</code>: the candidate
+generator, the judge, the recognizer, the investigator, and
+<code>embedding-3</code> for both memories and log units
+(<code>hybrid_memory/llm.py:17-18</code>;
+<code>hybrid_memory/embed/zhipu.py:24</code>). Chat responses are cached
+on disk by a SHA-256 of model, prompts and temperature
+(<code>llm.py:82-109</code>).</p>
+<p><code>agent/</code> holds opencode's core packages at version
+1.18.11. No file under it names the sidecar, the plugin or a memory
+tool, and the plugin loads into the upstream CLI installed from npm.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>It needs Python with numpy, the opencode CLI, and an API key: the
+embedder raises at construction when <code>ZAI_API_KEY</code> is unset,
+so the sidecar will not start without one or without a compatible
+endpoint (<code>embed/zhipu.py:60-63</code>;
+<code>server.py:997-998</code>). The plugin spawns <code>python</code>,
+not <code>python3</code> (<code>memory-bridge.ts:106-107</code>). The
+store is not readable by hand: memories live in a pickle, and repair
+means <code>/resolve</code> or <code>/propose</code> over HTTP. The raw
+log is ordinary SQLite. The sidecar writes a <code>*</code>
+<code>.gitignore</code> into its state directory so a project commit
+does not pick up the token, state or log
+(<code>server.py:984-990</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> On <code>session.idle</code>, the plugin
+joins the assistant text of the session and posts <code>/observe</code>
+with the user text it saved at <code>chat.message</code>, then
+<code>/feedback</code> with the retrieval id it saved at injection
+(<code>memory-bridge.ts:306-312</code>, <code>:333-380</code>).
+<code>MemoryService.observe</code> allocates a unit id and turn number,
+writes the unit to the log, and runs the zero-LLM trigger scan for
+corrections, decisions, quantities, new entities and long replies
+(<code>server.py:234-253</code>;
+<code>hybrid_memory/triggers.py:45-64</code>). A correction opener also
+files a <code>recall_miss</code> against the previous turn's
+question.</p>
+<p><strong>Extraction.</strong> Outside the lock,
+<code>ChatGenerator.generate</code> sends one unit to the LLM with the
+instruction in <code>hybrid_memory/candgen/prompt.py:15-47</code>, which
+asks for self-contained sentences, a type, a salience and source unit
+ids. Output passes <code>redact_secrets</code> (<code>:49-64</code>). A
+failure appends <code>candgen_failed</code> to the unit's reasons
+(<code>server.py:262-271</code>). Back under the lock, each candidate
+becomes an <code>Event</code> with a CRC32 fingerprint of its normalised
+text as <code>belief_id</code>, and the engine ingests, steps
+maintenance and advances the turn (<code>:273-289</code>). The
+candidate's <code>type</code> is parsed and then dropped: every event
+takes the default kind <code>fact</code>.</p>
+<p><strong>Ingest and dedup.</strong> <code>run_ingest</code> embeds the
+batch and compares each sentence with its nearest visible memory. Same
+fingerprint and same normalised value above <code>τ_dup</code> counts as
+a confirmation; anything else is a new candidate, plus a tension pair
+when above <code>τ_dup</code> (<code>ingest.py:15-66</code>). The
+shipped configuration sets <code>τ_dup = 0.85</code>,
+<code>cap_m = 8</code> and <code>k = 5</code>
+(<code>server.py:1000-1001</code>).</p>
+<p><strong>Retrieval and injection.</strong> Before each model call, the
+plugin posts <code>/search</code> with the user's text and pushes the
+returned context onto the system prompt as a
+<code>relevant-memories</code> block labelled as reference, not task
+state (<code>memory-bridge.ts:314-331</code>). <code>run_retrieve</code>
+scores every eligible row, applies the gate and suppression, and emits
+<code>thin_recall</code> when fewer than <code>k</code> survive
+(<code>retrieval.py:71-186</code>). <code>_context_lines</code> prefixes
+provisional rows and reflections, then appends a conflict line for every
+contested rival (<code>server.py:297-309</code>).</p>
+<p><strong>Adjudication.</strong> <code>SignalWorker.process</code> runs
+inside the <code>/observe</code> and <code>/feedback</code> requests: it
+resolves each aged tension through <code>judge</code>, credits the
+memories the recognizer names, and drops <code>thin_recall</code> after
+counting it (<code>worker.py:50-81</code>). <code>submit_verdicts</code>
+then calls <code>apply_resolution</code>
+(<code>hybrid_memory/core/engine.py:156-182</code>). The same verdict
+reaches the engine through <code>/resolve</code> from the main agent's
+<code>memory_resolve</code> tool, with <code>ensure_tension</code>
+creating a pair that detection never flagged
+(<code>server.py:419-434</code>;
+<code>memory-bridge.ts:161-180</code>).</p>
+<p><strong>Repair.</strong> <code>AgentWorker</code> takes
+<code>recall_miss</code> and <code>extract_due</code> signals, opens a
+per-signal budget of 8 tool calls and 4,000 revealed characters bounded
+to turns before the signal, and runs <code>InlineInvestigator</code>, a
+function-calling loop inside the sidecar
+(<code>hybrid_memory/agent/loop.py:110-214</code>;
+<code>hybrid_memory/agent/inline.py:136-185</code>). Its final JSON is
+parsed by <code>parse_investigation</code>, and proposals go through
+<code>MemoryService.propose</code>, which requires non-empty text under
+1,200 characters, rejects self-referential text, and requires source
+unit ids that exist before the bound
+(<code>hybrid_memory/agent/investigator.py:139-186</code>;
+<code>server.py:525-603</code>). A proposal's <code>supersedes</code>
+list is applied as an <code>update</code> verdict against each named id
+(<code>:594-599</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Memory</code> carries the text, its embedding,
+<code>belief_id</code> and <code>value</code> (the fingerprint and
+normalised text), the pool, <code>v</code>, lifetime counters,
+<code>evid</code>, <code>birth</code>, <code>last_hit</code>,
+<code>last_seen</code>, <code>suppressed_by</code>,
+<code>superseded_by</code>, <code>niche_pair</code>,
+<code>aggregated_into</code>, <code>agg_members</code>,
+<code>pending_review</code>, <code>src</code>, Beta-count confidence
+fields, <code>salience</code>, <code>novelty</code>, <code>kind</code>,
+<code>derived_from</code>, <code>scene</code>, <code>origin</code> and
+<code>entity</code> (<code>types.py:28-69</code>).</p>
+<p>Time is a turn counter. <code>birth</code> is the turn a row was
+ingested, and there is no wall-clock time on a memory; the log unit
+carries <code>ts</code> (<code>logstore.py:90-98</code>).</p>
+<p>Provenance is the set of source unit ids. The proposal check confirms
+they exist and precede the bound; it does not check that the text came
+from them (<code>server.py:541-546</code>).</p>
+<p><code>origin</code> records the channel — <code>passive</code>,
+<code>repair</code>, <code>extract</code>, <code>mining</code>,
+<code>agent</code>, <code>user_confirmed</code> — and the comment on the
+field says it does not enter <code>V</code>
+(<code>types.py:64-68</code>). An HTTP caller may send
+<code>user_confirmed</code>; the plugin always sends <code>agent</code>,
+and a signal context overrides whatever a caller sends
+(<code>server.py:574-577</code>).</p>
+<p><strong>Scope is the directory.</strong> State, log, caches and token
+live under <code>&lt;project&gt;/.opencode/memory/</code>
+(<code>server.py:984</code>). <code>scene</code> is an LLM-named
+situation label stored on each memory. The log search filters on it when
+a caller passes one; memory retrieval never does.</p>
+<p>Types beyond <code>fact</code> exist in the code:
+<code>reflection</code>, produced by consolidation when
+<code>consolidation_on</code> is set, which the shipped configuration
+leaves off.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The score is <code>cos(q, m) + π_pool + α·e^(−λ(t−birth))</code>, the
+gate is applied to <code>cos + π_pool</code> without the freshness term,
+and the shortlist is the top 30 by score
+(<code>retrieval.py:76-89</code>, <code>:125-130</code>). With the
+shipped <code>θ = 0.35</code>, a row in <code>A</code> passes the gate
+when its cosine to the query reaches 0.65. That covers superseded and
+merged losers, because both are moved to <code>A</code>
+(<code>maintenance.py:126-138</code>).</p>
+<p><strong>What keeps a superseded value out, when anything does, is
+suppression.</strong> <code>_try_select</code> rejects a candidate whose
+cosine to an already selected memory exceeds <code>τ_sim = 0.78</code>,
+and the newer version ranks first because it carries no archive penalty
+(<code>retrieval.py:93-117</code>). If the new sentence and the old one
+sit below 0.78 of each other — "the port is 8080" against "the port
+moved to 9090" may — both are served. This is read, not run.</p>
+<p>A lexical channel exists: IDF-weighted query-term coverage over
+visible memories, gated off unless the query holds a rare term
+(<code>retrieval.py:31-60</code>). <code>lex_weight</code> defaults to
+0.0 and the shipped configuration does not set it, so memory retrieval
+is vector-only.</p>
+<p>A confidence gate also exists: with <code>confidence_on</code>, rows
+below a projected Beta mean of 0.62 enter only as <code>[未确认]</code>
+provisional rows, at most one per query
+(<code>retrieval.py:119-149</code>). <code>confidence_on</code> defaults
+to false and the shipped configuration does not set it.</p>
+<p>The injected block is <code>k</code> memory lines plus one line per
+contested rival, and the rival count has no cap
+(<code>retrieval.py:165-175</code>). A <code>budget_tokens</code>
+parameter truncates whole lines, but the plugin never sends it
+(<code>memory-bridge.ts:318-320</code>). The sidecar smoke report
+<code>eval/BASELINE.md</code>, written against an earlier commit dated
+27 September 2026, records five selected memories arriving with eleven
+conflict lines (item 3).</p>
+<p>Retrieval is not a pure read. A non-passive query increments
+shortlist counters, sets <code>suppressed_by</code>, adds tension pairs,
+queues shadow credit and emits <code>thin_recall</code>. The
+investigator's <code>memory_search</code> tool calls the non-passive
+path (<code>inline.py:124-128</code>), so its searches change the store
+it is investigating.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every turn is captured; the agent does not choose. The candidate
+prompt asks the model to prefer over-recording, because a lost fact
+costs more than an extra row (<code>candgen/prompt.py:25-27</code>). The
+model's own wrong answers are distilled like its right ones, and a later
+user correction raises a repair signal without lowering the wrong
+memory, as the smoke report records against an earlier commit
+(<code>eval/BASELINE.md</code>, item 6).</p>
+<p>Dedup is exact-after-normalisation only. A paraphrase becomes a
+second candidate and a tension pair, and waits 20 turns for the judge,
+during which both are injected with a conflict line between them.</p>
+<p>Correction is by verdict. The judge sees two texts with no provenance
+and answers one word (<code>semantics/llm.py:17-26</code>,
+<code>:86-93</code>). <code>update</code> always keeps the row with the
+later <code>(birth, id)</code>, whichever text is right
+(<code>maintenance.py:129-133</code>). A re-extracted old value is
+compared only against visible rows (<code>ingest.py:21</code>), so it
+re-enters as a fresh candidate beside the superseded original.</p>
+<p>The second self-reference gate, <code>_SELF_REF_RE</code>, runs on
+proposals only (<code>server.py:83-89</code>, <code>:532-533</code>).
+The passive path relies on the candgen prompt's instruction not to
+record the memory system's own operations.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: the plugin does not await its idle handler, so the agent's
+next turn is not blocked; the <code>/observe</code> request itself runs
+embedding calls, one candgen chat call and any pending judge and
+recognizer calls before replying. A memory is retrievable once that
+request returns; I estimate that is usually before the next user
+message, and nothing in the tree measures it.</li>
+<li>Background: the investigator runs one signal at a time, capped at
+200 runs a day by default (<code>server.py:1021-1022</code>).
+Maintenance walks every row on each turn with no model call; no pass
+rewrites the store.</li>
+<li>Read: one embedding call per turn, blocking the system-prompt hook.
+The block is bounded at five memories plus unbounded conflict lines, and
+it is pushed onto the system prompt, so it changes the prompt prefix on
+every turn.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The plugin registers nine tools on the main agent:
+<code>memory_search</code>, <code>memory_conflicts</code>,
+<code>memory_resolve</code>, <code>memory_propose</code>,
+<code>memory_diagnose</code>, and four log tools
+(<code>memory-bridge.ts:141-296</code>). The system-prompt block tells
+the agent to search the log when memory falls short and to store what it
+finds with <code>memory_propose</code>.</p>
+<p>Two log tools report a miss as a side effect: <code>log_search</code>
+and <code>log_timeline</code> post <code>/miss</code> with the query
+before running it (<code>:133-139</code>, <code>:191</code>,
+<code>:209</code>). Consumption steers production; the design document
+calls the loop an ouroboros.</p>
+<p>The investigator is not an opencode session. It holds six tools, four
+over the log and two over memory, and writes only through its final JSON
+(<code>inline.py:31-57</code>). Its log reads are charged against the
+signal's budget and bounded to earlier turns by <code>_bound</code>
+(<code>server.py:437-456</code>). Because it never calls
+<code>observe</code>, its own reasoning is not captured.</p>
+<p>The plugin binds one fixed port. A second project opened while the
+first sidecar runs finds <code>/health</code> answering, reuses it,
+receives 401 because the token file differs, and stops sending with one
+stderr line (<code>memory-bridge.ts:45-62</code>,
+<code>:101-104</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Loss.</strong> Queued signals and pending shadow credit are
+not in the snapshot (<code>server.py:646-659</code>), and the plugin
+kills the sidecar it spawned on every opencode exit
+(<code>memory-bridge.ts:383-387</code>). Repair jobs queued at exit are
+dropped; a unit whose extraction failed is not re-extracted after a
+restart.</p>
+<p><strong>Secrets.</strong> Memory text is scrubbed by
+<code>redact_secrets</code>; the raw log is not.
+<code>LogStore.add_unit</code> stores both texts as received
+(<code>logstore.py:170-183</code>), so <code>log_window</code> returns a
+key typed into a turn to the main agent and the investigator, and
+<code>_embed</code> sends it to the remote embedding API
+(<code>:209-221</code>). The chat cache writes each raw model response
+to disk before redaction, keyed by a hash of the prompt
+(<code>hybrid_memory/llm.py:91-108</code>).</p>
+<p><strong>Injection.</strong> Stored text passes
+<code>_safe_mem_text</code>, which removes every variant of the block's
+own delimiter before the text enters the system prompt
+(<code>server.py:78-102</code>), and a test covers four variants.</p>
+<p><strong>Agent power.</strong> The main agent can supersede or
+aggregate any two memories through <code>memory_resolve</code>, and
+archive any memory by naming it in a proposal's <code>supersedes</code>.
+Neither records who decided or why.</p>
+<p>Capability marks, none awarded:</p>
+<ul>
+<li><code>tombstone</code> — supersession is keyed on a row; a
+re-extracted old value is compared only with visible rows and re-enters
+as a new candidate.</li>
+<li><code>trust_state</code> — pools and <code>superseded_by</code>
+change a prior or visibility for ranking and dedup, and the archive is
+still scored. The confidence gate is a float and is off.
+<code>pending_review</code> is read by consolidation only
+(<code>worker.py:152</code>;
+<code>hybrid_memory/core/consolidation.py:26</code>), never by
+retrieval, and nothing clears it.</li>
+<li><code>bitemporal</code> — one turn counter per row; no validity
+time.</li>
+<li><code>scope_enforced</code> — the partition is the project
+directory. <code>scene</code> is stored on each memory and filtered on
+the log search only.</li>
+<li><code>audit_log</code> — <code>diagnoses.jsonl</code> is append-only
+and records investigator diagnoses, not memory mutations
+(<code>server.py:605-625</code>). The raw log records turns, not changes
+to memory. Engine counters are totals.</li>
+<li><code>human_review</code> — the aggregate's field comment says it
+awaits a human or LLM ruling (<code>types.py:50</code>), and no path
+clears it. The one verdict verb, <code>memory_resolve</code>, is on the
+agent's tool surface. A human-labelled verdict file is consulted by
+<code>RealChatSemantics.judge</code>
+(<code>semantics/real.py:31-56</code>), and the sidecar constructs its
+semantics with no file (<code>server.py:999</code>).</li>
+<li><code>negative_eval</code> — section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is read from the tree.</p>
+<p><strong>Unit tests.</strong> <code>tests/test_smoke.py</code> pins
+the dynamics: promotion, demotion, eviction, archival and revival, each
+verdict's effect, contested co-serving, the confidence and salience
+options, consolidation and the lexical channel.
+<code>tests/test_server.py</code> covers the HTTP surface, auth, the
+restricted unpickler, the passive probe (asserting an engine fingerprint
+is unchanged, with a non-passive control that changes it), budget
+truncation and the proposal checks. <code>tests/test_ouroboros.py</code>
+drives <code>AgentWorker</code> with a fake investigator.
+<code>tests/fakes.py</code> supplies a synthetic world and embedder; the
+README says 187 tests pass at this commit, and I count 176 test
+functions, three of them parametrised.</p>
+<p><strong>Near-misses for <code>negative_eval</code>.</strong>
+<code>test_archive_retrieval_can_be_disabled</code> asserts one archived
+memory is not selected, under a non-default configuration, with no
+positive control in the case (<code>tests/test_smoke.py:239-247</code>).
+<code>test_lex_scores_skip_hidden_members</code> has a positive control
+and asserts a hidden member gets no lexical score, which is a statistic
+in a channel the shipped configuration disables
+(<code>:1262-1273</code>).
+<code>test_search_before_is_strict_and_scene_filters</code> excludes
+later units with controls, over the raw log, which records turns rather
+than claims (<code>tests/test_logstore.py:63-69</code>). No case asserts
+that a superseded memory is absent from a populated retrieval.</p>
+<p><strong>TIDE.</strong> <code>eval/</code> is a separate benchmark
+that speaks to the sidecar only over HTTP and scores retrieved context
+by exact token match against a ledger
+(<code>eval/tide/adapters/dynamics_memory.py</code>;
+<code>eval/tide/score.py</code>). Its committed report puts revision
+utility at −0.47 at a 64-token budget and 0.00 at 256
+(<code>eval/results/v0.1-dm-mock-report.md</code>). The results README
+attributes it to the old value still being injected as a conflict line:
+the probe arrives ten turns after an update and the judge waits twenty.
+It states the run used a rule-based mock LLM, <code>--no-agent</code>
+and a <code>tide-eval</code> branch, and reads it as structural only.
+The archive path in section 6 is a second route to the same failure,
+read in the code and not isolated by that run. A committed
+meta-evaluation checks the benchmark's own anchors and fault specificity
+(<code>eval/results/v0.1-meta.md</code>).</p>
+<p><strong>Stale scripts.</strong> The three files in
+<code>eval/checks/</code> import <code>experiments.run</code>,
+<code>hybrid_memory.sim.world</code> and
+<code>hybrid_memory.embed.synthetic</code>, none of which exist at this
+commit.</p>
+<p>No paper describes the system. <code>docs/benchmark-design.md</code>
+cites other work; nothing in the tree cites a paper of this project's
+own.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Log first, extract second, and turn an extraction failure
+into a job.</strong> A turn that failed extraction stays searchable and
+queues its own retry.</li>
+<li><strong>Treat a correction or a log search as a memory
+miss.</strong> The agent reaching past the memory is the cheapest
+recall-failure signal there is.</li>
+<li><strong>Budget the repair agent on the server, per job, with a
+causal bound.</strong> Tool calls, revealed characters and the latest
+readable turn are enforced by the service, not requested of the
+model.</li>
+<li><strong>Require a proposal to cite existing, earlier evidence
+units.</strong> It will not prove the claim, and it removes the easiest
+fabrications.</li>
+<li><strong>Load persisted state through an allowlisting Unpickler, and
+quarantine a file that fails.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Archiving a loser into a pool that retrieval still
+scores.</strong> Supersession that only lowers a prior leaves the old
+value to beat the new one on cosine.</li>
+<li><strong>Unbounded conflict lines.</strong> Showing a rival is right;
+showing every rival lets conflicts crowd out the memories.</li>
+<li><strong>A "pending review" flag with no reader and no writer to
+clear it.</strong> It documents a gate that does not exist.</li>
+<li><strong>Redacting the derived text and keeping the raw
+text.</strong> The raw log is the larger leak, and here it is what the
+agent tools return.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a research preview built by a small team inside two weeks,
+with a serious benchmark attached and a candid account of its own
+failures. It suits a reader studying value dynamics, miss-driven repair
+or retrieval-time conflict surfacing, and willing to run a Python
+sidecar beside opencode on Zhipu or a compatible endpoint. It does not
+suit anyone who needs to delete a memory, keep a superseded value out of
+the prompt, keep secrets off a remote embedding API, or reuse the code
+under a licence.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does an archived superseded value clear the 0.65 cosine
+bar and the suppression check with the real embedder? The committed TIDE
+run used a mock extractor.</li>
+<li>Does <code>M</code> ever fill in practice? The smoke report, at an
+earlier commit, records an empty <code>M</code> after 36 turns, with
+every injection from <code>C</code>.</li>
+<li>Is <code>agent/</code> meant to be modified? The sidecar and plugin
+do not reference it.</li>
+<li>What is intended to clear <code>pending_review</code>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Engine:</strong> <code>hybrid_memory/core/types.py</code>,
+<code>engine.py</code>, <code>ingest.py</code>,
+<code>retrieval.py</code>, <code>maintenance.py</code>,
+<code>consolidation.py</code>, <code>confidence.py</code>,
+<code>signals.py</code>; <code>hybrid_memory/config.py</code>.</li>
+<li><strong>Semantics and extraction:</strong>
+<code>hybrid_memory/semantics/real.py</code>,
+<code>hybrid_memory/semantics/llm.py</code>,
+<code>hybrid_memory/candgen/prompt.py</code>,
+<code>hybrid_memory/candgen/chat.py</code>,
+<code>hybrid_memory/llm.py</code>.</li>
+<li><strong>Service and log:</strong>
+<code>hybrid_memory/server.py</code>,
+<code>hybrid_memory/logstore.py</code>,
+<code>hybrid_memory/triggers.py</code>,
+<code>hybrid_memory/worker.py</code>.</li>
+<li><strong>Investigator:</strong>
+<code>hybrid_memory/agent/investigator.py</code>,
+<code>inline.py</code>, <code>loop.py</code>.</li>
+<li><strong>Integration:</strong>
+<code>.opencode/plugin/memory-bridge.ts</code>,
+<code>opencode.json</code>.</li>
+<li><strong>Tests and evals:</strong> <code>tests/test_smoke.py</code>,
+<code>tests/test_server.py</code>, <code>tests/test_ouroboros.py</code>,
+<code>tests/test_logstore.py</code>, <code>eval/tide/</code>,
+<code>eval/results/</code>, <code>eval/BASELINE.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rnE 'mems\.pop|del (self\.)?(eng|engine)\.mems|del self\.mems|forget|/delete|DELETE FROM' hybrid_memory .opencode tests</code>
+— no match; no delete path.</li>
+<li><code>grep -rnE 'pending_review\s*=' hybrid_memory</code> — one
+writer, <code>maintenance.py:177</code>, at creation.</li>
+<li><code>grep -rn 'pending_review\|confidence_on\|defer_credit\|lex_weight\|consolidation_on\|salience_on\|Cfg(' --include='*.py' hybrid_memory tests eval</code>
+— the only non-test <code>Cfg(</code> is <code>server.py:1000</code>;
+the only non-engine reader of <code>pending_review</code> is
+<code>worker.py:152</code>.</li>
+<li><code>grep -rnE 'superseded' tests/*.py | grep -iE 'retriev|recall|selected'</code>
+— no match.</li>
+<li><code>grep -rlE 'hybrid_memory|memory-bridge|17872|relevant-memories' agent</code>
+— no match.</li>
+<li><code>grep -n '^from\|^import' eval/checks/*.py</code> — each
+imports <code>experiments.run</code>, absent from the tree.</li>
+<li><code>grep -rniE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION|renamed|formerly' --include='*.md' --include='*.py' --include='*.toml' .</code>
+outside <code>agent/</code> — citations of other work in
+<code>docs/benchmark-design.md</code> only; no
+<code>CITATION.cff</code>.</li>
+<li><code>find . -iname 'LICENSE*' -not -path './.git/*'</code> — no
+match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/1173591564/Dynamics-memory/commit/9ee06f66c0efe975856c82c51e3ce1090aff6533"><code class="commit-id" title="9ee06f66c0efe975856c82c51e3ce1090aff6533">9ee06f66…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 28
+September 2026. No mark. Screened before reading: 1 auto-run surface
+(<code>.opencode/plugin/memory-bridge.ts</code>, which spawns the
+sidecar when opencode starts in the tree), no build-time execution
+point, 12 dependency files inside the cooldown, every file in the
+depth-1 clone dating to the tip, and 3 unpinned surfaces. The screen
+reported no agent-instruction file; ten <code>AGENTS.md</code> files
+inside the vendored opencode packages under <code>agent/</code> were
+treated as data. Read with <code>grep</code> and <code>sed</code>;
+nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

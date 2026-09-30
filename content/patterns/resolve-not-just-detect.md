@@ -261,6 +261,18 @@ non-blocked same-key answer rather than needing a human to remember it exists.
 
 [Octop Memory](../../systems/octop-memory/) is the counterexample for having a disposition in three places. Its rule-only promotion worker parks a candidate whose negation polarity flips against a live atom as `conflict`, and three surfaces resolve the queue: the JSON-RPC approve supersedes the contradicted atom, the CLI approve writes the new atom and leaves the old one live, and the source dashboard's approve sets the status column and writes no atom at all. A separate fallback pass promotes anything left in `needs_review` for seven days, including values it re-queued because they had been rejected twice. One resolver function called by every surface would have closed all three gaps.
 
+[Dynamics-memory](../../systems/dynamics-memory/) meets requirements 1 and 3
+and shows a disposition that does not reach the read path. Near-duplicates at
+write and suppressed pairs at read enter a tension backlog that an LLM judge
+resolves after 20 turns as `synonym`, `update`, `contradiction` or `collision`;
+until then the rival is injected beside the selected memory as a conflict line.
+But an `update` only moves the loser to an archive pool that retrieval still
+scores at a penalty, every contradiction becomes an aggregate flagged
+`pending_review` that no code path clears, no verdict records an actor or a
+reason, and a re-extracted old value is compared only with visible rows, so it
+returns as a new candidate. [breadcrumbs](../../systems/breadcrumbs/)'s
+forbidden-item check is the test that would catch the first of these.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

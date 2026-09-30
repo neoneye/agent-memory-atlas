@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 677 reports.**
+**This page covers all 679 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6095,3 +6095,23 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 12,304 lines of Python outside tests and 368 of SQL, 331 commits on main by one contributor from 14 June to 20 September 2026, 177 test functions and five eval scripts. Two marks: `scope_enforced` on the sensitivity key, and `negative_eval` on privacy tests with positive controls, which need a live Oracle container and have no CI workflow in the tree.
 - Study when: you want a personal knowledge base reachable from several assistants, and want to see sensitivity enforced in SQL on every read with the tag set by a deterministic check rather than a prompt.
 - Do not copy when: facts must be correctable, attributed or stable across runs, or more than one person shares the store. The distilled layer is a nightly snapshot without provenance, and the default backend cannot be inspected.
+
+### [`rexleimo-aios`](../systems/rexleimo-aios/)
+
+- Best idea: **decide the claim status inside the append, never from the payload.** `createMemoEvent` honours a supplied `claimStatus` only on trusted provenance and otherwise takes `buildMemoAuthority`'s verdict, so a forged `verified` degrades to `candidate`; a test poisons every `AIOS_RUNTIME_*` variable and asserts the verdict does not move. Supersession is an appended event checked by an ACL that fails closed on unknown targets.
+- Biggest risk: **the agent-facing write tools skip the gate and are attributed to a person.** MCP `memory_write`, the Pi `aios_memory_write` tool and `aios memo add` pass no runtime identity, so their memos land `verified` with principal `local-user`. The memo skill tells the model the opposite, and the project's own test asserts the code's behaviour.
+- Most reusable component: `scripts/lib/memo/storage/temporal.mjs` — 220 lines holding the supersede ACL, the write-time partition into allowed and denied links, the read-time fold that derives `invalidAt`, and the as-of filter, with no storage dependency.
+- Second risk: **a review queue that cannot be drained, and a second arm that ignores it.** `authorize` returns DENY for promote, reject and expire, so every automatic shared memory stays a candidate forever. The same turn text sits in ContextDB, whose arm of unified search has no status filter and applies no agent filter when none is passed.
+- Maturity impression: MIT, 122,233 lines of JavaScript and TypeScript outside tests and 1,036 commits on main from 5 contributor identities since 1 March 2026, of which the memory is about 14,600 lines. Five marks: `trust_state`, `bitemporal`, `scope_enforced`, `audit_log`, `negative_eval`. The memo and dream suites hold 228 test cases, with negative cases that assert against a positive control.
+- Study when: you want an event-sourced memo store with valid-time reads and a supersede ACL, or a worked specification of candidate governance with receipts, safety scans and a planning contract.
+- Do not copy when: you need the candidate gate to hold against the model today. Every write surface the model holds lands verified, and no command can promote or reject what the gate withholds.
+
+### [`dynamics-memory`](../systems/dynamics-memory/)
+
+- Best idea: **a miss is a signal, and the agent's own behaviour produces it.** A user turn that opens with a correction files `recall_miss` against the previous question, and the plugin's `log_search` and `log_timeline` tools post `/miss` before they run, so an agent that goes past the injected memory to the raw log has already reported the memory's failure. A failed extraction leaves the turn in the log and queues `extract_due` for it.
+- Biggest risk: **supersession does not take the old value out of retrieval.** An `update` or `synonym` verdict sets `superseded_by` and moves the loser to the archive pool, and `run_retrieve` scores archive rows whenever `archive_retrieval` is true, its default, at a 0.30 penalty. A superseded value close enough to the query clears the gate and is kept out only if its replacement is selected and near enough to suppress it.
+- Most reusable component: `hybrid_memory/agent/loop.py` with the budget methods in `hybrid_memory/server.py` — a repair worker whose tool calls, revealed characters and latest readable turn are metered by the service per signal id, with a daily cap, TTL dedupe and bounded retries, independent of the memory engine.
+- Second risk: **the raw log is where the secrets are.** Memory text passes `redact_secrets`; `LogStore.add_unit` stores turns as received, `log_window` hands them to the main agent and the investigator, and each unit is embedded through the remote API. Queued signals are not in the snapshot, and the plugin kills its sidecar on every exit.
+- Maturity impression: no licence file, 4,285 lines of Python and a 389-line plugin, 28 commits on main from three contributor identities between 15 and 28 September 2026, labelled a research preview. 176 pytest functions pin the dynamics and the HTTP surface; no mark, and no case asserts that a superseded memory is absent from a populated retrieval. The committed TIDE run used a mock LLM and puts revision utility at −0.47 at a 64-token budget.
+- Study when: you are designing value-driven promotion, miss-driven repair, or conflict surfacing at retrieval time, and want an implementation whose own benchmark reports where it fails.
+- Do not copy when: memories must be deletable, a corrected value must stay out of the prompt, secrets must stay on the machine, or the code must be reused under a licence.

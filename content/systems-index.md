@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **677 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **679 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -59,6 +59,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/aidememo/"><span class="az-id">AideMemo</span><span class="az-what">The client says which project it wants; the type refuses to carry that claim into the store</span><code class="az-repo">taeyun16/aidememo</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/aimaos/"><span class="az-id">AIMAOS</span><span class="az-what">Contradictions embeddings place far apart</span><code class="az-repo">munch2u-a11y/AIMAOS</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/aimee/"><span class="az-id">aimee</span><span class="az-what">Authority caps the actor</span><code class="az-repo">RakuenSoftware/aimee</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/rexleimo-aios/"><span class="az-id">aios (rexleimo)</span><span class="az-what">A governed memo log inside a coding-agent control plane</span><code class="az-repo">rexleimo/aios</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/aipass/"><span class="az-id">AIPass</span><span class="az-what">A budget on how often memory may speak</span><code class="az-repo">AIOSAI/AIPass</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/akb/"><span class="az-id">AKB</span><span class="az-what">The database enforces it, on the surface that runs your SQL</span><code class="az-repo">dnotitia/akb</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/all-agentic-architectures/"><span class="az-id">All Agentic Architectures</span><span class="az-what">A teaching catalog&#x27;s memory floor</span><code class="az-repo">FareedKhan-dev/all-agentic-architectures</code><span class="az-caps"></span></a></li>
@@ -193,6 +194,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/dsh-ai-memory/"><span class="az-id">dsh-ai-memory</span><span class="az-what">Budgeted project memory for DeepSeek Harness</span><code class="az-repo">zzjzzb/ai-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/dsh-mneme/"><span class="az-id">dsh-mneme</span><span class="az-what">Consolidation with receipts</span><code class="az-repo">modusensus/dsh-mneme</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/dsh-mnemon/"><span class="az-id">dsh-mnemon</span><span class="az-what">Three tiers composed per turn</span><code class="az-repo">omdsh-dev/dsh-mnemon</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/dynamics-memory/"><span class="az-id">Dynamics-memory</span><span class="az-what">A value-dynamics memory sidecar for opencode</span><code class="az-repo">1173591564/Dynamics-memory</code><span class="az-caps"></span></a></li>
 </ul>
 
 ## E

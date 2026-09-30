@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 677 of 677 screened at the report's current pin.**
+**Progress: 679 of 679 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 315 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 366 |
+| Repositories with an auto-run surface (`RUNS`) | 317 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 368 |
 | Repositories with build-time execution (`EXEC`) | 494 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
@@ -111,6 +111,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`deus`](../../content/systems/deus.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
 | [`dovsg`](../../content/systems/dovsg.md) | `.gitmodules` |
+| [`dynamics-memory`](../../content/systems/dynamics-memory.md) | `.opencode/` |
 | [`ecc`](../../content/systems/ecc.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`egc`](../../content/systems/egc.md) | `.cursor/rules/`, `.githooks/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `hooks/`, `hooks/hooks.json` |
 | [`elizaos`](../../content/systems/elizaos.md) | `.gitmodules` |
@@ -292,6 +293,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`rememora`](../../content/systems/rememora.md) | `.claude-plugin/` |
 | [`reporecall`](../../content/systems/reporecall.md) | `.claude/settings.json`, `.mcp.json` |
 | [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `server.json` |
+| [`rexleimo-aios`](../../content/systems/rexleimo-aios.md) | `.gitmodules` |
 | [`ripwire`](../../content/systems/ripwire.md) | `.mcp.json`, `hooks/` |
 | [`ruflo`](../../content/systems/ruflo.md) | `.claude-plugin/`, `.claude/settings.json`, `.githooks/` |
 | [`rushdb`](../../content/systems/rushdb.md) | `.claude/settings.json` |

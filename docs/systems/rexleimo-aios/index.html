@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An append-only memo log inside a
+local coding-agent control plane, where automatic writes wait as
+candidates for a promotion hard-wired to refuse.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="aios
+(rexleimo) — Agent Memory Atlas">
+    <meta property="og:description" content="An append-only memo log
+inside a local coding-agent control plane, where automatic writes wait
+as candidates for a promotion hard-wired to refuse.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="aios
+(rexleimo) — Agent Memory Atlas">
+    <meta name="twitter:description" content="An append-only memo log
+inside a local coding-agent control plane, where automatic writes wait
+as candidates for a promotion hard-wired to refuse.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>aios (rexleimo) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "aios (rexleimo)",
+      "description": "An append-only memo log inside a local coding-agent control plane, where automatic writes wait as candidates for a promotion hard-wired to refuse.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A governed memo log inside a coding-agent
+control plane</p>
+          <h1>aios (rexleimo)</h1>
+          <p class="document-deck">An append-only memo log inside a
+local coding-agent control plane, where automatic writes wait as
+candidates for a promotion hard-wired to refuse.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/rexleimo/aios">
+              <span>Source</span>
+              <strong>rexleimo/aios</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/rexleimo/aios/commit/6e2910a99ad51d7da30e7186c0f5dcb278be77ec" title="6e2910a99ad51d7da30e7186c0f5dcb278be77ec">
+              <span>Analyzed revision</span>
+              <code>6e2910a9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rexleimo--aios" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>rexleimo--aios</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>122,233
+lines of JavaScript and TypeScript outside tests; the memo layer, dream
+lane and ContextDB are about 14,600 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,036
+commits on main from 5 contributor identities, 1 March 2026 – 28
+September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,486
+test cases in 292 files; 228 in the 32 memo and dream
+files</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>aios (rexleimo) is a local control plane that wraps coding-agent CLIs
+— Codex, Claude Code, Gemini, OpenCode and others — with hooks, a
+planning runtime and a project memory. It is not <a
+href="https://github.com/agiresearch/AIOS">agiresearch/AIOS</a>. This
+report reads only the memory: the <code>memo</code> event log, its
+governance and dream lanes, and the ContextDB session store that unified
+search reads beside it.</p>
+<p>What is notable is the belief model. A memo is an append-only event
+with a provenance block, a <code>claimStatus</code>, a
+<code>validAt</code> and optional <code>supersedes</code> links.
+Correction is an appended event, checked against an ACL on which scope
+and agent may retire what. An automatic write from a model's
+<code>verified=yes</code> declaration lands as <code>candidate</code>,
+which every memo read drops.</p>
+<p>What is weak is that the governance is sealed at both ends. The
+promote, reject and expire verbs are hard-wired to deny, so no candidate
+is ever promoted. Every agent-facing explicit write — MCP
+<code>memory_write</code>, the Pi tool, <code>aios memo add</code> —
+carries no identity and lands <code>verified</code> as
+<code>local-user</code>.</p>
+<p>The agent-facing memo skill contradicts the code on exactly this. It
+tells the model that <code>memo add</code> <em>"proposes — the entry
+lands as <code>candidate</code>"</em>
+(<code>skill-sources/memo/SKILL.md:92-94</code>). The project's own test
+asserts the opposite: a CLI <code>memo add</code> is
+<code>verified</code> with <code>trust: local_manual</code>
+(<code>scripts/tests/memo-provenance.test.mjs:196-225</code>).</p>
+<p>Five marks: <code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>. Section 9 names the two withheld,
+<code>tombstone</code> and <code>human_review</code>, and why.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a memo event: text, refs, a space, a scope, an agent, a
+claim status, a provenance block and a validity start. It becomes a
+belief in one of two ways. A write with no runtime identity is
+<code>verified</code> with provenance <code>local_manual</code>,
+principal <code>local-user</code>
+(<code>scripts/lib/memo/storage/provenance.mjs:47-68</code>). A write
+with a runtime identity is <code>verified</code> only if the identity is
+<code>human</code> or carries a publish capability; otherwise a
+shared-scope write is <code>candidate</code> (<code>:71-75</code>).</p>
+<p><strong>A caller cannot declare its own status.</strong>
+<code>createMemoEvent</code> honours a supplied <code>claimStatus</code>
+only when it rides on trusted provenance, which only migration passes.
+Anything else takes the authority verdict, so a forged
+<code>verified</code> degrades
+(<code>scripts/lib/memo/storage/events-write.mjs:62-75</code>).
+Environment variables do not count as identity; a test poisons
+<code>AIOS_RUNTIME_*</code> and asserts the verdict is unchanged
+(<code>scripts/tests/memo-authority-env.test.mjs:40-59</code>).</p>
+<p><strong>Who passes an identity decides everything.</strong> The
+automatic write after a one-shot turn builds a bare runtime identity
+with <code>shared: false</code>
+(<code>scripts/lib/memo/autopilot.mjs:228-235</code>), and
+<code>aios import</code> does the same
+(<code>scripts/lib/memo/import-external.mjs:96-106</code>). Those land
+as candidates. The MCP <code>memory_write</code> handler, the Pi tool
+and the CLI pass none, so their writes land verified
+(<code>scripts/memory-mcp-server.mjs:96-115</code>,
+<code>packages/aios-pi/lib/aios-cli.mjs:87</code>,
+<code>scripts/lib/cli/dispatch.mjs:398-400</code>).</p>
+<p><strong>A belief stops being live by supersession or by age.</strong>
+A later event whose <code>supersedes</code> names it sets
+<code>invalidAt</code> to its own <code>validAt</code> at read time
+(<code>scripts/lib/memo/storage/temporal.mjs:112-139</code>). Shared
+events may retire shared events; private events may retire only the same
+agent's private events; a shared event retires a private one only when
+it is a verified promotion (<code>:69-88</code>). Unknown targets are
+denied at write time and recorded in <code>supersedeDenied</code>
+(<code>:90-108</code>). Private rows older than 30 days are hidden from
+recall without deletion
+(<code>scripts/lib/memo/storage/query.mjs:35-60</code>).</p>
+<p><strong>A candidate never becomes a belief.</strong> The governance
+module lists candidates, scans a promoted text for injection, and would
+append a verified event carrying <code>promotionOf</code>. But
+<code>authorize</code> returns <code>allowed: false</code> with
+<code>trusted_authority_unavailable</code> for every action, and
+<code>hasBrokerReviewAuthority</code> returns <code>false</code>
+(<code>scripts/lib/memo/storage/candidates.mjs:181-183</code>,
+<code>:230-237</code>). Each attempt writes a DENY receipt. The comment
+calls it a broker-reserved seam
+(<code>scripts/lib/memo/cli/run.mjs:46</code>); no broker exists in the
+tree.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a memo becomes a belief in aios, the two write authorities, and the promotion that always refuses</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a memo becomes a belief in aios, the two write authorities, and the promotion that always refuses
+flowchart TD
+    A[&quot;aios memo add / MCP memory_write / Pi aios_memory_write&quot;] --&gt;|&quot;no runtime identity&quot;| V[&quot;verified, trust local_manual, principal local-user&quot;]
+    T[&quot;one-shot turn declares verified=yes&quot;] --&gt;|&quot;bare runtime identity, shared scope&quot;| C[&quot;candidate&quot;]
+    T2[&quot;one-shot turn failed or not shared&quot;] --&gt; P[&quot;agent_private, verified&quot;]
+    I[&quot;aios import&quot;] --&gt;|&quot;tool identity, no capability&quot;| C
+    C --&gt;|&quot;memo reads filter claimStatus&quot;| H[&quot;hidden from memo list, search, recall&quot;]
+    C --&gt;|&quot;memo candidate promote / reject / expire&quot;| D{&quot;authorize()&quot;}
+    D --&gt;|&quot;always allowed: false&quot;| R[&quot;DENY receipt appended, candidate stays pending&quot;]
+    V --&gt;|&quot;later event with supersedes, same space and scope&quot;| S[&quot;invalidAt = successor validAt&quot;]
+    S --&gt;|&quot;default read&quot;| X[&quot;hidden; --include-invalid or --as-of shows it&quot;]
+    P --&gt;|&quot;older than 30 days&quot;| X2[&quot;hidden from recall, still on disk&quot;]
+    T -.-&gt;|&quot;response text also appended&quot;| CDB[&quot;ContextDB session events, no status&quot;]
+    CDB -.-&gt;|&quot;unified search contextdb arm&quot;| U[&quot;recallable in later sessions&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory is Node.js modules invoked by the <code>aios</code> CLI,
+by client hooks and by two stdio MCP servers. There is no daemon.
+Everything lives under the workspace's <code>.aios/</code> state root
+(<code>scripts/lib/aios/state-root.mjs:42-56</code>).</p>
+<ul>
+<li><strong>Memo store</strong> (<code>scripts/lib/memo/storage/</code>,
+about 3,000 lines): events in <code>.aios/memo/file/events.jsonl</code>,
+or one <code>NNNNNNNNNNNN.json</code> per sequence under
+<code>split/events/</code>. Pinned Markdown per space under
+<code>file/pinned/</code>. A lockfile serialises writers
+(<code>lock.mjs</code>).</li>
+<li><strong>ContextDB</strong> (<code>mcp-server/src/contextdb/</code>,
+TypeScript, about 5,800 lines): per-session <code>l2-events.jsonl</code>
+and checkpoints, index JSONL files, and a SQLite FTS5 sidecar marked
+rebuildable (<code>sqlite/schema.ts:75-140</code>).</li>
+<li><strong>Governance and telemetry</strong>: candidate receipts, dream
+receipts, recall feedback and automatic-write receipts, each an
+append-only JSONL.</li>
+<li><strong>Unified search</strong>
+(<code>scripts/lib/search/unified-search.mjs</code>) merges memo,
+pinned, ContextDB, plans, docs and code for the CLI, the MCP recall tool
+and per-turn recall.</li>
+<li><strong>rex-harness</strong> is a git submodule at
+<code class="commit-id" title="869b87fee3283cbfcca61d86dbf537e44c5ba202">869b87fe…</code> holding the
+planning runtime; its tree has no path naming memory or recall, and it
+was not read.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Node 24 and a local filesystem are all it needs; nothing calls a
+model or a network service to store or recall. No API key is required.
+The install path is a <code>curl | bash</code> release installer
+followed by <code>aios init --all</code>, which writes hooks and MCP
+entries into each detected client. The memo store is JSONL a person can
+read and repair by hand, and the SQLite sidecar is rebuilt from the
+JSONL on demand.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Explicit write.</strong> <code>aios memo add</code> →
+<code>handleMemoAddCommand</code>
+(<code>scripts/lib/memo/cli/commands/events.mjs:53-122</code>) → safety
+and length checks → <code>appendMemoEvent</code>
+(<code>scripts/lib/memo/storage/events-write.mjs:159-216</code>), which
+partitions <code>supersedes</code> against the space's events under the
+lock. A verified add is also mirrored into a legacy ContextDB
+workspace-memory session (<code>events.mjs:100-102</code>,
+<code>scripts/lib/memo/cli/legacy.mjs:87-111</code>).</li>
+<li><strong>Automatic write.</strong> The shell bridge routes a
+print-mode client call to the one-shot flow
+(<code>scripts/lib/contextdb/shell-bridge/main.mjs:52-55</code>). After
+the response, <code>parseMemoryDeclaration</code> reads a trailing
+<code>&lt;!--memory: verified=yes|no, ...--&gt;</code> block, and only
+<code>verified=yes</code> calls <code>recordAutomaticMemory</code>
+(<code>scripts/lib/ctx-agent-core/run.mjs:409-438</code>). That function
+redacts secrets, runs the content-safety scan, dedups by source ref and
+appends (<code>scripts/lib/memo/autopilot.mjs:163-282</code>).</li>
+<li><strong>Session close.</strong> <code>autoMemoSessionClose</code>
+writes a <code>session-close-memory-candidate.json</code> sidecar beside
+the ContextDB session, never into the memo log
+(<code>scripts/lib/lifecycle/session-hooks/close.mjs:69-123</code>).</li>
+<li><strong>Retrieval.</strong> <code>searchMemoEvents</code> reads the
+whole space, drops dream-archived ids, applies temporal, candidate,
+scope and TTL filters, token-matches, scores and slices
+(<code>scripts/lib/memo/storage/query.mjs:304-358</code>).</li>
+<li><strong>Context assembly.</strong> The UserPromptSubmit hook calls
+<code>collectTurnRecall</code>
+(<code>scripts/lib/planning/user-prompt-submit.mjs:34-45</code>), which
+queries memory, ContextDB and plans with six hits and 2,000 characters
+(<code>scripts/lib/planning/turn-recall.mjs:17-20</code>,
+<code>:218-228</code>), then appends the declaration instruction.</li>
+<li><strong>Correction.</strong> <code>memo add --supersedes</code>, or
+<code>memo supersede --apply</code>, which re-asserts the winning text
+as a new event retiring every revision at similarity 0.82
+(<code>scripts/lib/memo/cli/commands/supersede.mjs:74-86</code>,
+<code>temporal.mjs:15</code>, <code>:160-195</code>).</li>
+<li><strong>Governance.</strong>
+<code>memo candidate list|inspect|promote|reject|expire</code> →
+<code>decideCandidate</code>
+(<code>scripts/lib/memo/storage/candidates.mjs:283-406</code>);
+<code>dream</code> approve, archive, restore and GC → the same shape in
+<code>scripts/lib/lifecycle/dream/governance.mjs:187-214</code>.</li>
+<li><strong>MCP.</strong> <code>aios-memory</code> exposes
+<code>memory_recall</code>, <code>memory_write</code> and
+<code>memory_checkpoint</code>
+(<code>scripts/memory-mcp-server.mjs:26-62</code>), registered for Codex
+(<code>scripts/lib/native/emitters/codex-config.mjs:91-100</code>) and
+Pi (<code>scripts/lib/components/pi/mcp-adapter.mjs:66-71</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memo event carries <code>schemaVersion</code>, <code>eventId</code>
+(<code>memo:&lt;space&gt;:&lt;timestamp&gt;-&lt;uuid8&gt;</code>),
+<code>storage</code>, <code>space</code>, <code>spaceKey</code>,
+<code>seq</code>, <code>ts</code>, <code>role</code>, <code>kind</code>,
+<code>text</code>, <code>refs</code>, <code>scope</code>,
+<code>agent</code>, <code>claimStatus</code>, <code>provenance</code>,
+<code>validAt</code>, and optionally <code>supersedes</code>,
+<code>supersedeDenied</code>, <code>promotionOf</code>,
+<code>entities</code>, <code>confidence</code>, <code>evidenceRef</code>
+and <code>turn</code>
+(<code>scripts/lib/memo/storage/events-write.mjs:80-107</code>).
+<code>invalidAt</code> and <code>supersededBy</code> are never stored;
+they are derived per read.</p>
+<p>Provenance is a fixed record: <code>trust</code> in
+<code>runtime_attested</code>, <code>local_manual</code> or
+<code>legacy_unknown</code>; <code>producerType</code>;
+<code>principalId</code>; <code>agentId</code>; session, run and
+activation ids; <code>policyRevision</code>; <code>sourceRef</code>; a
+sha256 <code>sourceHash</code>; and capabilities
+(<code>scripts/lib/memo/storage/provenance.mjs:97-134</code>). Rows
+written before provenance read back as <code>legacy_unknown</code>.</p>
+<p>Scopes are <code>project_shared</code>, <code>agent_private</code>
+and <code>agent_ephemeral</code>, with <code>project</code>,
+<code>shared</code> and <code>global</code> folded into the first
+(<code>scripts/lib/memo/storage/normalizers.mjs:46-52</code>). The space
+is a second key, filtered in <code>collectEvents</code>; in split mode
+it is also a directory.</p>
+<p>ContextDB is a different kind of record. Its events are session
+transcript lines — prompt, response, error — keyed by
+<code>sessionId#seq</code> with <code>project</code> and
+<code>agent</code> from the session, and checkpoints carry a status,
+summary, next actions and telemetry
+(<code>mcp-server/src/contextdb/sqlite/schema.ts:78-131</code>). Nothing
+in it has a claim status or a supersede link.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Memo retrieval is lexical and computed per query. A row matches when
+the lowercased query is a substring, or when enough query tokens hit:
+all of two, half of up to six, a third beyond
+(<code>scripts/lib/memo/storage/query.mjs:94-123</code>). Tokens are
+Latin or identifier runs kept whole, ICU word segments, and CJK
+character bigrams as a fallback (<code>:74-92</code>).</p>
+<p>Ranking adds 2 for a text substring hit, 1 for a refs hit, four times
+a BM25 score normalised by its best case, and an entity score
+(<code>:188-199</code>). BM25's IDF is computed over the matched set
+rather than the whole store (<code>:161-186</code>). The entity layer
+boosts rows whose declared entities hit the query and spreads half of
+that one hop to rows sharing an entity (<code>:216-274</code>). Recall
+feedback adds up to 4.5 for rows marked useful and multiplies by 0.6
+after five impressions with no use
+(<code>scripts/lib/memo/storage/feedback.mjs:83-88</code>). Ties inside
+0.2 fall to recency.</p>
+<p>The optional embedder is a 256-bucket signed hash of the same tokens,
+not a model (<code>scripts/lib/memo/storage/embedding.mjs:16-45</code>).
+It can only add rows to the matched set, and a comment in unified search
+states there is no vector backend.</p>
+<p><strong>The trust filter covers one arm of a merged result.</strong>
+Unified search puts ContextDB transcript events beside memo rows
+(<code>scripts/lib/search/unified-search.mjs:263-321</code>). The
+one-shot flow appends the full response, up to 8,000 characters, as a
+ContextDB event before the automatic memo write
+(<code>scripts/lib/ctx-agent-core/run.mjs:80-88</code>). So the text a
+candidate holds is recallable in a later session through the ContextDB
+arm while the memo arm hides it.</p>
+<p>Per-turn injection is bounded: six hits, 320 characters per memory,
+2,000 in total, placed in the hook's <code>additionalContext</code>
+after the cached system prefix.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are deterministic; no model extracts or consolidates anything.
+The model contributes only its declaration block: whether the turn is
+verified, which recalled ids it used, and a one-line conclusion
+(<code>scripts/lib/memo/declaration.mjs:1-57</code>). The automatic memo
+text is assembled from changed files, the declared conclusion, the task,
+a clipped result and the outcome
+(<code>scripts/lib/memo/autopilot.mjs:103-132</code>).</p>
+<p>A failed, errored or blocked turn is filed <code>agent_private</code>
+even when the model declared success
+(<code>autopilot.mjs:220-223</code>). A duplicate is detected by source
+ref, not by text. <code>aios import</code> skips facts whose normalised
+text already exists. Content matching the workspace-memory safety scan
+is refused on the explicit and automatic paths and at promotion.</p>
+<p>Supersession is the only correction. <code>memo add</code> prints a
+hint when a live fact scores 0.7 or more against the new text and writes
+nothing (<code>scripts/lib/memo/storage/temporal.mjs:197-220</code>);
+the writer then passes <code>--supersedes</code>. The memo CLI's verbs
+are <code>use</code>, <code>gui</code>, <code>storage</code>,
+<code>space</code>, <code>persona</code>, <code>pin</code>,
+<code>checkpoint</code>, <code>useful</code>, <code>add</code>,
+<code>recall</code>, <code>list</code>, <code>search</code>,
+<code>supersede</code>, <code>candidate</code>, <code>hygiene</code> and
+<code>report</code>; none deletes an event
+(<code>scripts/lib/memo/cli/run.mjs:57-189</code>).</p>
+<p>The pinned block is the exception to append-only.
+<code>writePinnedMemo</code> and <code>appendPinnedMemo</code> rewrite
+<code>file/pinned/&lt;space&gt;.md</code> under the lock, with an
+optional hash guard against a stale read
+(<code>scripts/lib/memo/storage/pinned.mjs:89-126</code>). It has no
+provenance and no status, and MCP <code>memory_checkpoint</code> appends
+to it.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The explicit write is a synchronous append under a file lock; the
+automatic write runs after the response is printed, so the turn does not
+wait on it and a memo is retrievable on the next read. Every search
+reads the space's whole event file (an in-process parse cache exists)
+and scores the matched set in JavaScript, so cost grows with the store.
+The optional embedder hashes every row's tokens per query. Nothing
+rewrites the store in the background: autodream is opt-in through
+<code>AIOS_AUTODREAM_AUTO=1</code>, runs preview only, and writes a
+proposal file
+(<code>scripts/lib/memo/autodream-auto.mjs:1-30</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three surfaces reach the model. The UserPromptSubmit hooks for Claude
+Code, Codex and Grok inject recall and the declaration instruction each
+turn. The <code>aios-memory</code> MCP server gives Codex and Pi recall,
+write and checkpoint tools. The Pi extension adds
+<code>aios_memory_useful</code> and maps each tool to an
+<code>aios memo</code> command
+(<code>packages/aios-pi/lib/tools.mjs:25-70</code>).</p>
+<p>The model's agency is uneven by surface. Through MCP it writes
+verified shared memory; through the CLI it can also supersede any shared
+fact in the space. Through the one-shot wrapper its declaration yields a
+candidate it cannot promote. The declaration block is requested on every
+hooked turn, but only the one-shot flow parses it for a write
+(<code>run.mjs:412</code>); in an interactive native session it is read
+only for useful-feedback ids
+(<code>scripts/lib/planning/turn-recall.mjs:178</code>).</p>
+<p>Adapting the store to another agent is cheap:
+<code>appendMemoEvent</code> and <code>searchMemoEvents</code> are plain
+async functions over files.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The candidate queue is sealed.</strong> Promotion, rejection
+and expiry all return DENY with
+<code>trusted_authority_unavailable</code>, and candidate text cannot be
+listed or inspected
+(<code>scripts/lib/memo/storage/candidates.mjs:181-237</code>). The
+suite asserts the denial against a spoofed human identity, eight
+concurrent promotions and the CLI
+(<code>scripts/tests/memo-candidate-governance.test.mjs:143-183</code>,
+<code>:221-236</code>). The result is a write-only queue: every
+automatic memory from a verified shared turn is withheld forever.</p>
+<p><strong>The explicit write surfaces bypass it.</strong>
+<code>handleMemoryWrite</code> calls <code>appendMemoEvent</code> with
+scope <code>project_shared</code> and no <code>runtimeIdentity</code>
+(<code>scripts/memory-mcp-server.mjs:96-115</code>). The authority falls
+to the manual branch: <code>verified</code>, <code>local_manual</code>,
+principal <code>local-user</code>, capability
+<code>memo:publish-shared</code>
+(<code>scripts/lib/memo/storage/provenance.mjs:49-68</code>). The
+model-written memo is recorded as a person's. The project's own backlog
+states the rule the MCP server breaks: any non-manual writer must carry
+a runtime identity
+(<code>docs/plans/2026-09-08-memo-optimization-backlog.md:126</code>).</p>
+<p><strong>The skill misdescribes the gate to the model.</strong>
+<code>skill-sources/memo/SKILL.md:90-98</code> says
+<code>memo add</code> lands as <code>candidate</code> and a self-awarded
+<code>verified</code> is demoted. The code does the reverse for
+<code>memo add</code>, and
+<code>scripts/tests/memo-provenance.test.mjs:196-225</code> asserts
+it.</p>
+<p><strong>Scope is a label, not an identity.</strong>
+<code>--agent</code> and <code>AIOS_AGENT_ID</code> name the reader; any
+process naming an agent reads its private rows. Supersession is better
+guarded: the ACL denies cross-scope and cross-agent retirement and fails
+closed on unknown ids
+(<code>scripts/lib/memo/storage/temporal.mjs:69-108</code>).</p>
+<p><strong>Withheld marks.</strong> <code>tombstone</code>: nothing
+records a rejected value. Supersession is keyed on event ids, the dream
+lane's <code>tombstone</code> actions are keyed on event ids and never
+applied (<code>scripts/lib/lifecycle/dream/index.mjs:115-131</code>),
+and the reject verb is denied. <code>human_review</code>: a queue
+exists, but no actor can resolve it; a queue nothing drains fails the
+mark.</p>
+<p><strong>Data loss and concurrency.</strong> Writers take a lockfile;
+tests cover concurrent appends
+(<code>scripts/tests/memo-storage-locking.test.mjs</code>). Nothing
+deletes a memo event. The ContextDB mirror of a verified add is a second
+copy that supersession does not reach.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The memo and dream suites hold 228 test cases in 32 files; ContextDB
+adds 46 in three TypeScript files. CI runs the scripts regression suite
+(<code>.github/workflows/ci-main.yml:77-98</code>). I read the tests and
+ran none.</p>
+<p>The negative cases are the strongest part. The scope case asserts
+exact equality to the shared row for another agent
+(<code>scripts/tests/memo-scope.test.mjs:38-54</code>). The provenance
+case asserts the active fact is present and the candidate absent
+(<code>scripts/tests/memo-provenance.test.mjs:106-126</code>). The
+temporal CLI case matches the new value before asserting the superseded
+line is gone
+(<code>scripts/tests/memo-temporal.test.mjs:197-221</code>).</p>
+<p><code>scripts/lib/memo/eval/recall-ab.mjs</code> is a deterministic
+A/B over synthetic fact chains, with arms for no links, explicit links,
+auto-detected links, entity boost and the embedder. Its test asserts the
+baseline's stale rate exceeds 0.4 and the explicit arm's is zero. It
+also asserts the automatic detector covers fewer than half the chains,
+labelled <em>"Recorded as a measurement, not an aspiration"</em>
+(<code>scripts/tests/memo-ab-eval.test.mjs:43-71</code>).</p>
+<p>Two gaps matter. No test exercises MCP <code>memory_write</code> and
+asserts its claim status. No test asserts that candidate text stays out
+of unified search.</p>
+<p>The project has no paper. A design report in the tree cites
+<em>Agentic Context Management</em> (<a
+href="https://arxiv.org/abs/2607.21503">arXiv:2607.21503</a>, 23 July
+2026) as an input and states its mechanisms were not reproduced
+(<code>docs/reports/2026-07-28-context-lifecycle-competitor-analysis-and-plan.md:6</code>,
+<code>:48</code>).</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the status verdict in the write function, not the
+caller.</strong> Derive <code>candidate</code> or <code>verified</code>
+from the identity and scope inside the append, and ignore any status the
+payload claims. Then test it with a poisoned environment.</li>
+<li><strong>Make supersession an appended event with an ACL.</strong>
+Store only the forward link, derive <code>invalidAt</code> at read, let
+the earliest supersede win, and deny unknown targets at write time so a
+dangling id cannot later retire a fact in another space.</li>
+<li><strong>Record the denial, not only the grant.</strong> A governance
+receipt for every DENY, with the reason code and the content-safety
+verdict, makes a sealed gate auditable.</li>
+<li><strong>Assert the limits of your own detector.</strong> An eval
+that fails if automatic supersede detection starts claiming full
+coverage keeps a heuristic honest.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A fallback identity that is the most trusted one.</strong>
+When the no-identity branch is <code>verified</code> as
+<code>local-user</code>, every new integration that forgets the identity
+argument inherits publish authority. Make the absent identity the least
+trusted.</li>
+<li><strong>A trust filter on one arm of a merged search.</strong> If
+transcripts and beliefs share a result list, the status gate has to hold
+on both, or the transcript arm returns what the belief arm
+withholds.</li>
+<li><strong>A review queue with no reviewer.</strong> Shipping the
+deny-all seam before the broker turns every automatic memory into a
+permanent orphan.</li>
+<li><strong>Agent guidance that describes intended behaviour.</strong> A
+skill that tells the model its writes are candidates, when they are not,
+trains it to trust a gate that is absent.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a single developer who writes memos by hand and uses the one-shot
+wrapper little, this is a sound local store: append-only, repairable by
+hand, with real supersession and time travel, no model and no service.
+For anyone relying on the candidate gate to keep model-authored claims
+out of shared memory, it does not yet do that job. The MCP and Pi tools
+let the model publish verified facts under a human principal, and the
+only path that produces candidates leads to a queue no command can
+empty. Adopt the storage and supersession design; treat the governance
+as a specification awaiting its broker.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is a broker planned that would supply
+<code>hasBrokerReviewAuthority</code>, and would it also sign the MCP
+server's writes?</li>
+<li>Does a rebuilt ContextDB index pick up the legacy workspace-memory
+mirror, making superseded memo text searchable through the ContextDB
+arm?</li>
+<li>How large does <code>events.jsonl</code> grow in practice before
+per-query full reads and scoring become noticeable?</li>
+<li>Is <code>observed</code> produced anywhere, or is it reserved?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>scripts/lib/memo/storage/events-write.mjs</code>,
+<code>events-read.mjs</code>, <code>normalizers.mjs</code>,
+<code>provenance.mjs</code>, <code>temporal.mjs</code>,
+<code>pinned.mjs</code>, <code>lock.mjs</code>, <code>paths.mjs</code>;
+<code>scripts/lib/aios/state-root.mjs</code>;
+<code>mcp-server/src/contextdb/sqlite/schema.ts</code>,
+<code>mcp-server/src/contextdb/core.ts</code>.</li>
+<li><strong>Write path:</strong>
+<code>scripts/lib/memo/cli/commands/events.mjs</code>,
+<code>scripts/lib/memo/autopilot.mjs</code>,
+<code>scripts/lib/memo/declaration.mjs</code>,
+<code>scripts/lib/memo/import-external.mjs</code>,
+<code>scripts/lib/memo/cli/legacy.mjs</code>,
+<code>scripts/lib/ctx-agent-core/run.mjs</code>,
+<code>scripts/lib/lifecycle/session-hooks/close.mjs</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>scripts/lib/memo/storage/query.mjs</code>,
+<code>feedback.mjs</code>, <code>embedding.mjs</code>;
+<code>scripts/lib/search/unified-search.mjs</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>scripts/lib/planning/turn-recall.mjs</code>,
+<code>scripts/lib/planning/user-prompt-submit.mjs</code>.</li>
+<li><strong>Governance and background:</strong>
+<code>scripts/lib/memo/storage/candidates.mjs</code>,
+<code>scripts/lib/lifecycle/dream/governance.mjs</code>,
+<code>index.mjs</code>,
+<code>scripts/lib/memo/autodream-auto.mjs</code>.</li>
+<li><strong>MCP and integration:</strong>
+<code>scripts/memory-mcp-server.mjs</code>,
+<code>scripts/lib/native/emitters/codex-config.mjs</code>,
+<code>scripts/lib/components/pi/mcp-adapter.mjs</code>,
+<code>packages/aios-pi/lib/tools.mjs</code>,
+<code>packages/aios-pi/lib/aios-cli.mjs</code>,
+<code>skill-sources/memo/SKILL.md</code>.</li>
+<li><strong>Tests and evals:</strong>
+<code>scripts/tests/memo-scope.test.mjs</code>,
+<code>memo-provenance.test.mjs</code>,
+<code>memo-temporal.test.mjs</code>,
+<code>memo-candidate-governance.test.mjs</code>,
+<code>memo-authority-env.test.mjs</code>,
+<code>memo-ab-eval.test.mjs</code>,
+<code>dream-governance.test.mjs</code>;
+<code>scripts/lib/memo/eval/recall-ab.mjs</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'runtimeIdentity' -g '!scripts/tests/**' -g '!**/*.test.*'</code>
+— callers passing an identity are <code>autopilot.mjs</code>,
+<code>import-external.mjs</code>, the candidate and dream CLIs and a
+benchmark; <code>memory-mcp-server.mjs</code> and
+<code>cli/dispatch.mjs:400</code> pass none.</li>
+<li><code>rg -n 'recordAutomaticMemory|promoteMemoryCandidate|hasBrokerReviewAuthority|trusted_authority_unavailable' -g '!docs/**'</code>
+— one automatic-write caller (<code>ctx-agent-core/run.mjs:424</code>);
+both <code>hasBrokerReviewAuthority</code> definitions return
+<code>false</code>.</li>
+<li><code>rg -n 'parseMemoryDeclaration\(' -g '!scripts/tests/**' scripts packages</code>
+— <code>ctx-agent-core/run.mjs:412</code> and
+<code>planning/turn-recall.mjs:178</code> only.</li>
+<li><code>rg -n 'memory_write|handleMemoryWrite' scripts/tests</code> —
+no match; the Pi test names <code>aios_memory_write</code> only.</li>
+<li><code>rg -n -i "forget|'delete'|'remove'|'rm'" scripts/lib/memo scripts/lib/cli/parse-args/memo.mjs scripts/memory-mcp-server.mjs</code>
+— no match.</li>
+<li><code>rg -n -i 'tombstone' -g '*.{mjs,ts,js}' .</code> — dream
+proposal actions keyed on <code>eventId</code> and capability names in
+tests; no value-keyed record.</li>
+<li><code>gh api repos/rexleimo/rex-harness/git/trees/869b87fee3283cbfcca61d86dbf537e44c5ba202?recursive=1 --jq '.tree[].path' | grep -i -E 'memo|memory|recall'</code>
+— no match over the untruncated 217-entry tree.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— two design reports citing other work; no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/rexleimo/aios/commit/6e2910a99ad51d7da30e7186c0f5dcb278be77ec"><code class="commit-id" title="6e2910a99ad51d7da30e7186c0f5dcb278be77ec">6e2910a9…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 28
+September 2026. Five marks: <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>. Screened before
+reading: 1 auto-run surface (<code>.gitmodules</code>), no build-time
+execution, 14 dependency files inside the cooldown — every file in a
+depth-1 clone dates to the tip — and 6 unpinned surfaces;
+<code>AGENTS.md</code>, <code>CLAUDE.md</code> and
+<code>GEMINI.md</code> recorded as data. The <code>rex-harness</code>
+submodule was not cloned. Read with <code>grep</code> and
+<code>sed</code>; nothing installed, built or run. Only the memory
+subsystem is covered.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
