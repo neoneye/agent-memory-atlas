@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 700 reports.**
+**This page covers all 702 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6322,3 +6322,22 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 20,423 lines of Rust outside tests, 534 commits on main by two contributor identities between 4 July and 17 September 2026, 606 Rust test functions run by `cargo test` in CI. Two marks, `scope_enforced` and `negative_eval`. The committed recall-quality fixtures feed an example binary that no test runs.
 - Study when: you are wiring hook-injected memory into Claude Code or Codex and want the brief's boundary out of the model's reach, or idempotent multi-worker writes on one SQLite file.
 - Do not copy when: a correction must stick or be reviewable. Nothing is keyed on a rejected value, no read filters on the review flag, and the agent holds every write verb and `forget`.
+
+### [`engram-mcp`](../systems/engram-mcp/)
+
+- Best idea: **a superseded hit returns its successor at the same rank, and says so.** `CurationView::resolve` follows `supersedes` edges up to five hops with a cycle guard and emits the successor with `matched_via: {superseded_id, superseded_preview}`, so a query in the old wording still reaches the current answer; a separate `dead` flag covers a subject with nothing to point at.
+- Biggest risk: **the unattended dedup does not know about corrections.** `dedup_within_clusters` in `src/main.rs` merges any same-type pair at cosine 0.90 inside a cluster, keeping whichever member the table lists first; it checks no `supersedes` edge, no dead flag and no composite, and the edge cascades on delete. The MCP `memory_dedup` tool skips exactly those pairs, and the server's instructions describe that tool's behaviour.
+- Most reusable component: `src/tools/curation.rs` with `src/db/status.rs`, a small per-call view that turns stored edges and a dead set into Keep, Redirect or Drop before pagination.
+- Second risk: **the status filter is missing from two context builders and one partition edge.** The `recall_context` prompt and `handoff_resume`'s linked and backfilled memories apply no curation, and the view is loaded per project while the vector arms admit other projects' global rows, so another project's dead global memory returns.
+- Maturity impression: Apache-2.0 by its LICENSE file, MIT by `Cargo.toml`; 21,725 lines of Rust outside test modules, 106 commits by one contributor from 3 February 2026 to 23 September 2026. 413 test functions run by `cargo test` in CI and fail rather than skip without the embedding model; a LongMemEval result over a 30-question sample is committed as a table without its run artifacts.
+- Study when: you want correction semantics a coding agent can drive itself, replacement versus retirement versus merge, with every destructive step recoverable and returned in the tool result.
+- Do not copy when: the memory must be isolated between users or projects, since the model can name any project; or when a background merge must never touch a corrected pair.
+
+### [`dsh-continual-harness`](../systems/dsh-continual-harness/)
+- Best idea: **make every write declare its reach and check it against the layer it lands in.** Each edit carries `general`, `project` or `session`; `general` cannot be stored in the session layer and `session` cannot be stored in the global one, so a promotion of a session fact is refused rather than widened. Beside it, a fingerprint of the target entry taken at planning time refuses an edit whose entry moved before commit, and the journal keeps full before and after snapshots. Two marks, `audit_log` and `negative_eval`.
+- Biggest risk: **the default injection carries ids, not content.** In `stable` mode, the default, the block ranks every active entry and prints the top 15 as `kind/id vN` lines with no body, and tells the model to read entries on demand; the plugin registers no tool that returns an entry. Skill content reaches the model through dsh's skill provider, and prompt, memory and subagent content does not reach the main loop through the plugin.
+- Most reusable component: `applyRefinementProposal`, `validateEdit` and `entryFingerprint` in `src/refine.ts`, with the snapshot-replaying rollback builder in `src/rollback.ts`.
+- Second risk: **the approval gate guards one door of three.** `requireGlobalApproval` is off by default and, when on, asks only for a global plan from `harness_refine`; a global rollback and `harness_wrapup` promotion reach the global store without it. Planner JSON also passes `sourceSession`, `protection` and lifecycle metadata through unchecked, and a skill committed to a session layer is materialized into the shared skills directory.
+- Maturity impression: 61 commits by 1 contributor between 17 August and 30 September 2026; 8,665 lines of TypeScript in 39 source files; 631 Vitest cases in 37 spec files, run in CI with coverage floors. No test uses a real model, and the ranking and cache measurements quoted in comments come from a local corpus the tree excludes.
+- Study when: you want an agent that edits its own harness with reversible, reason-carrying writes, or an injection block that keeps a provider's prefix cache warm.
+- Do not copy when: recalled content must actually reach the model each turn, several processes share one harness root, or a person must approve what enters the shared layer.

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="The 700
+    <meta name="description" content="The 702
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -13,7 +13,7 @@ here.">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="System
 Families — Agent Memory Atlas">
-    <meta property="og:description" content="The 700
+    <meta property="og:description" content="The 702
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -22,7 +22,7 @@ here.">
     <meta name="twitter:title" content="System
 Families — Agent Memory Atlas">
     <meta name="twitter:description" content="The
-700 systems grouped by eight architectural
+702 systems grouped by eight architectural
 commitments, the categories almost nothing models, and the boundaries of
 what counts as memory here.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
@@ -46,7 +46,7 @@ what counts as memory here.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "System Families",
-      "description": "The 700 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
+      "description": "The 702 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -103,7 +103,7 @@ what counts as memory here.">
         <div class="document-hero-inner">
           <p class="eyebrow">Taxonomy</p>
           <h1>System Families</h1>
-          <p class="document-deck">The 700 systems
+          <p class="document-deck">The 702 systems
 grouped by eight architectural commitments, the categories almost
 nothing models, and the boundaries of what counts as memory here.</p>
                                                 </div>
@@ -120,7 +120,7 @@ nothing models, and the boundaries of what counts as memory here.</p>
           </div>
         </aside>
         <article class="prose" id="article">
-<p>700 systems do not fall into 182 categories. They
+<p>702 systems do not fall into 182 categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -2860,7 +2860,9 @@ href="../systems/scope-recall-hermes/"><code>scope-recall-hermes</code></a>,
 <a href="../systems/dsh-ai-memory/"><code>dsh-ai-memory</code></a>, <a
 href="../systems/skillcorpus/"><code>skillcorpus</code></a>, plus hosted
 providers, <a
-href="../systems/dsh-layered-memory/"><code>dsh-layered-memory</code></a></p>
+href="../systems/dsh-layered-memory/"><code>dsh-layered-memory</code></a>,
+<a
+href="../systems/dsh-continual-harness/"><code>dsh-continual-harness</code></a></p>
 <p>The runtime ships an interface, not a memory model.
 <strong>Hermes</strong> bounds its own curated Markdown hard and freezes
 it into the prompt at session start while mounting one external
@@ -3653,6 +3655,19 @@ by a <code>chat</code>/<code>work</code> family that one tool of three
 honours. No surface deletes a memory, L0 is never deleted, and the
 rebuild that the error log recommends reads L0 from the database whose
 write failed.</p>
+<p><strong><a
+href="../systems/dsh-continual-harness/">dsh-continual-harness</a> ports
+<a href="../systems/prime-agent/">Prime Agent</a>'s continual harness
+onto <a href="../systems/deepseek-harness/">DeepSeek Harness</a> and
+keeps the careful half.</strong> An LLM planner rewrites the agent's
+prompt notes, memories, skills and subagent specs from its own
+trajectory. Every edit is validated, checked against a fingerprint taken
+at planning time, made to declare a reach the destination layer can
+hold, and journaled with before and after snapshots so it rolls back by
+id. The read half is thin: the default stable block lists entry ids, and
+no plugin tool reads one back. The optional global-write approval guards
+one verb while promotion and rollback reach the same store, and
+session-local skills are written into the shared skills directory.</p>
 <h2 id="local-coding-agent-memory">Local coding-agent memory</h2>
 <p><a href="../systems/rekal/"><code>rekal</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
@@ -3856,7 +3871,8 @@ href="../systems/opencode-session-recall/"><code>opencode-session-recall</code><
 <a href="../systems/aoci-code/"><code>aoci-code</code></a>, <a
 href="../systems/mcp-context-server/"><code>mcp-context-server</code></a>,
 <a
-href="../systems/tree-ring-memory/"><code>tree-ring-memory</code></a></p>
+href="../systems/tree-ring-memory/"><code>tree-ring-memory</code></a>,
+<a href="../systems/engram-mcp/"><code>engram-mcp</code></a></p>
 <p><strong><a href="../systems/dsh-mneme/">dsh-mneme</a> makes
 background consolidation accountable rather than trusted.</strong> A
 DeepSeek Harness plugin on SQLite with Markdown mirrors, it writes a
@@ -7637,6 +7653,20 @@ that redaction cannot release. Correction is weak: <code>forget</code>
 requires a reason and discards it, explicit <code>recall</code> returns
 expired rows the brief hides, and the agent can write heartwood directly
 in the default open mode.</p>
+<p><strong><a href="../systems/engram-mcp/">Engram MCP (edg-l)</a>
+retires a memory by redirecting to its successor, and its own
+housekeeping can undo the redirect.</strong> A Rust MCP server over one
+SQLite file, with typed memories, branch-chained handoffs, ADRs and
+todos. A <code>supersedes</code> edge makes retrieval return the
+successor at the old memory's rank with a <code>matched_via</code> note,
+a <code>dead</code> flag drops a memory whose subject is gone, and every
+destructive path snapshots row, edges and embedding to a trash. Decay
+counts days of curated activity rather than the calendar. The 6-hourly
+and CLI dedup passes merge across supersedes edges and dead flags, and
+<code>handoff_resume</code> and the <code>recall_context</code> prompt
+skip the status filter. Two marks: <code>trust_state</code>,
+<code>negative_eval</code>; <code>scope_enforced</code> is withheld
+because <code>memory_graph</code> reads across projects.</p>
 <h2 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
 symbolic memory</h2>
 <p><a href="../systems/holomem/"><code>holomem</code></a>, <a

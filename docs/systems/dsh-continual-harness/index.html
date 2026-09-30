@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A DeepSeek Harness port of Prime
+Agent's continual harness: the model rewrites its own prompts, memories,
+skills and subagent specs, journaled for rollback.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="dsh-continual-harness — Agent Memory Atlas">
+    <meta property="og:description" content="A DeepSeek Harness port of
+Prime Agent's continual harness: the model rewrites its own prompts,
+memories, skills and subagent specs, journaled for rollback.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="dsh-continual-harness — Agent Memory Atlas">
+    <meta name="twitter:description" content="A DeepSeek Harness port of
+Prime Agent's continual harness: the model rewrites its own prompts,
+memories, skills and subagent specs, journaled for rollback.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>dsh-continual-harness — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "dsh-continual-harness",
+      "description": "A DeepSeek Harness port of Prime Agent's continual harness: the model rewrites its own prompts, memories, skills and subagent specs, journaled for rollback.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Self-refining harness state for DeepSeek
+Harness</p>
+          <h1>dsh-continual-harness</h1>
+          <p class="document-deck">A DeepSeek Harness port of Prime
+Agent's continual harness: the model rewrites its own prompts, memories,
+skills and subagent specs, journaled for rollback.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jasen215/dsh-continual-harness">
+              <span>Source</span>
+              <strong>jasen215/dsh-continual-harness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jasen215/dsh-continual-harness/commit/403451a215740275780436fe16f739ecd95e8958" title="403451a215740275780436fe16f739ecd95e8958">
+              <span>Analyzed revision</span>
+              <code>403451a2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jasen215--dsh-continual-harness" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jasen215--dsh-continual-harness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,665
+lines of TypeScript in 39 source files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>61
+commits on main by 1 contributor, 17 August 2026 – 30 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>631
+Vitest cases and three it.each tables in 37 spec files, 11,949 lines
+with two fakes; CI runs typecheck, lint, tests with coverage floors, and
+build</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>dsh-continual-harness is a <a href="../deepseek-harness/">DeepSeek
+Harness</a> plugin in which the agent's durable memory is its own
+supplemental harness: prompt notes, memories, skills and subagent specs
+that an LLM planner writes from the session trajectory and the plugin
+injects back into later steps. It ports the design of <a
+href="../prime-agent/">Prime Agent</a>, which the README names as the
+inspiration, and much of that system's vocabulary, down to
+<code>applyRefinementProposal</code> and
+<code>appendGlobalRefinement</code>.</p>
+<p>What is notable is the write discipline. Every edit is validated,
+checked against a fingerprint of the entry taken at planning time,
+journaled with full before and after snapshots, and reversible by id.
+Each edit must declare how far it reaches, and that declaration is
+checked against the layer it is written to.</p>
+<p>What is weak is the read side and the gate. In the default
+<code>stable</code> mode the injected block lists entry ids and versions
+only, and no tool reads an entry back. The optional global-write
+approval covers one verb, while two others reach the same store without
+it.</p>
+<p><strong>Two layers, one per session and one shared.</strong> A
+session's local store lives in <code>sessions/&lt;id&gt;/</code> under
+the harness root and the global store at the root; a render merges them,
+local shadowing global (<code>src/storage.ts:195-214</code>). The
+automatic gate may only write the local layer
+(<code>src/coordinator.ts:52-54</code>), while the model-facing
+<code>harness_refine</code> tool writes global unless told otherwise
+(<code>src/index.ts:187</code>).</p>
+<p><strong>A validation layer beside the memory.</strong>
+<code>harness_benchmark</code> freezes cases, captures a reference
+snapshot, and runs paired reference and candidate cells through the
+model, returning <code>ACCEPTED</code>, <code>REJECTED</code> or
+<code>INCONCLUSIVE</code> from a 95% t-interval computed in
+<code>src/score.ts</code>. It never commits or rolls back.</p>
+<p>Two marks: <code>audit_log</code>, on the refinement journal, and
+<code>negative_eval</code>, on a unit case that keeps a session-radius
+entry from the global layer out of injection. Section 9 names the five
+withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>A memory is a harness entry.</strong>
+<code>HarnessEntry</code> is one of four kinds — <code>prompt</code>,
+<code>memory</code>, <code>skill</code>, <code>subagent</code> — with an
+id unique within scope and kind, a <code>version</code> bumped on every
+applied edit, <code>content</code>, <code>updatedAt</code>, and optional
+<code>title</code>, <code>blastRadius</code>, <code>projects</code>,
+<code>protection</code> and <code>metadata</code>
+(<code>src/types.ts:20-61</code>). The planner prompt defines a memory
+as <em>"durable facts, decisions, failures, preferences, and
+outcomes"</em> (<code>src/planner.ts:74</code>).</p>
+<p><strong>An entry becomes a belief when the planner proposes it and
+the rules let it through.</strong> Three writers start a plan: the
+<code>harness_refine</code> tool, the <code>/refine</code> command, and
+the automatic driver. The driver first asks the model whether a
+refinement is warranted and records the verdict
+(<code>src/driver.ts:204-260</code>). The planner returns JSON edits;
+<code>validateEdit</code> requires a <code>reason</code> on update and
+delete and a <code>blastRadius</code> on every edit that is neither a
+delete nor a rollback replay (<code>src/refine.ts:53-103</code>).</p>
+<p><strong>The rules are deterministic.</strong>
+<code>applyRefinementProposal</code> rejects an edit per entry, not per
+plan (<code>src/refine.ts:140-406</code>):</p>
+<ul>
+<li><strong>Protected kinds</strong> — <code>skill</code> by default —
+are immutable on the automatic path (<code>:193-202</code>).</li>
+<li><strong>The global layer is read-only</strong> during a local
+refinement (<code>:203-215</code>).</li>
+<li><strong>A protected entry</strong> refuses automatic update and
+delete (<code>:225-235</code>).</li>
+<li><strong>An update may not grow</strong> content by more than half
+under the plugin's default <code>maxEntryGrowth</code>
+(<code>:236-248</code>).</li>
+<li><strong>The baseline check</strong> compares an entry fingerprint
+taken at planning time with the commit-time entry
+(<code>:249-259</code>).</li>
+</ul>
+<p>A refused edit stays in the record with its error.</p>
+<p><strong>An entry stops being injected in four ways.</strong>
+<code>delete</code> removes it (<code>src/refine.ts:260-264</code>). An
+<code>archive</code> update sets <code>metadata.lifecycleState</code> to
+<code>archived</code>, which the renderer skips (<code>:266-292</code>,
+<code>src/render.ts:240-248</code>). A same-id local entry shadows a
+global one. Rollback replays the recorded <code>beforeEntry</code>
+snapshots in reverse (<code>src/rollback.ts:11-46</code>). Nothing is
+remembered about a deleted value, so the next plan can recreate it.</p>
+<p><strong>The model is the only judge.</strong> The review gate and the
+planner are both calls to the agent's own provider and model
+(<code>src/complete.ts:110-130</code>). The entry carries no candidate
+or verified state; it is injected as soon as it is committed.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a trajectory becomes a harness entry, which read paths see it, and the ways it stops being injected</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a trajectory becomes a harness entry, which read paths see it, and the ways it stops being injected
+flowchart TD
+    T[&quot;session trajectory&quot;] --&gt; G{&quot;automatic gate: 25 turns or compaction end, model reviews itself&quot;}
+    G -- &quot;declined&quot; --&gt; RV[&quot;reviews.jsonl verdict line&quot;]
+    G -- &quot;approved&quot; --&gt; PA[&quot;planner call, scope forced to local&quot;]
+    TOOL[&quot;harness_refine tool, global by default&quot;] --&gt; AP{&quot;global and requireGlobalApproval on?&quot;}
+    CMD[&quot;/refine --local or --global&quot;] --&gt; PB[&quot;planner call&quot;]
+    AP -- &quot;yes: ask the user&quot; --&gt; PB
+    AP -- &quot;no, the default&quot; --&gt; PB
+    PA --&gt; V{&quot;validateEdit and rules: reason, blastRadius layer, protected, growth cap, baseline fingerprint&quot;}
+    PB --&gt; V
+    V -- &quot;refused&quot; --&gt; J[&quot;refinements.jsonl record, applied false&quot;]
+    V -- &quot;applied&quot; --&gt; S[&quot;harness_state.json, global root or sessions dir&quot;]
+    S --&gt; J2[&quot;refinements.jsonl: before and after snapshots&quot;]
+    WR[&quot;harness_wrapup promote&quot;] -- &quot;no approval check&quot; --&gt; S
+    J2 --&gt; RB[&quot;rollback by id, once&quot;]
+    RB --&gt; S
+    S --&gt; R{&quot;pre-step render: archived, shadowed, or session-radius from global?&quot;}
+    R -- &quot;yes&quot; --&gt; X[&quot;not injected&quot;]
+    R -- &quot;no&quot; --&gt; IDX[&quot;stable default: top 15 ids and versions, no content&quot;]
+    S -- &quot;skill kind, either layer&quot; --&gt; SK[&quot;SKILL.md in the shared dsh skills directory&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single npm package mounted as a Cordis plugin in a dsh profile,
+through <code>dsh plugin --profile &lt;name&gt; add</code> or the
+shipped <code>cordis.patch.yml</code>. <code>apply</code> builds a
+<code>HarnessStore</code>, one <code>RefineCoordinator</code> shared by
+every writer, the three tools, the optional command, the projection and
+the driver (<code>src/index.ts:245-378</code>).</p>
+<ul>
+<li><strong><code>HarnessStore</code></strong> reads both layers from
+disk on every call — no cache — and owns commit, promote,
+materialization and rollback (<code>src/store.ts:68-400</code>).</li>
+<li><strong><code>RefineCoordinator</code></strong> validates the
+request, plans through the model, applies the approval gate, and
+serializes commits with a keyed in-process mutex per scope
+(<code>src/coordinator.ts:112-128</code>, <code>:190-418</code>).</li>
+<li><strong>Projection</strong> hooks <code>agent/pre-step</code> and
+injects or replaces one block
+(<code>src/projection.ts:81-140</code>).</li>
+<li><strong>Driver</strong> counts <code>turn/end</code> events per
+session and listens for <code>compaction/end</code>
+(<code>src/driver.ts:96-115</code>).</li>
+<li><strong>Skill materialization</strong> reconciles
+<code>&lt;skillsDir&gt;/&lt;id&gt;/SKILL.md</code> bundles, touching
+only bundles it owns (<code>src/skills-fs.ts:126-166</code>).</li>
+</ul>
+<p>The data layout under the harness root, <code>~/.dsh/harness/</code>
+by default, is <code>harness_state.json</code>,
+<code>refinements.jsonl</code>, <code>reviews.jsonl</code>,
+<code>usage.events.jsonl</code> with epoch-stamped rotations, a
+<code>benchmark/</code> store, a rotated plugin log, and
+<code>sessions/&lt;id&gt;/</code> holding the two session files
+(<code>src/storage.ts:36-44</code>, <code>:288-334</code>,
+<code>src/audit.ts:14</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing runs beside dsh: no database, no embedding model, no service.
+The store is pretty-printed JSON and JSONL, readable and repairable by
+hand. A corrupt state file is copied once to <code>.corrupt.bak</code>
+and read as empty (<code>src/storage.ts:153-187</code>). Planning and
+the gate need the agent's configured provider and model and throw
+without one (<code>src/complete.ts:117-121</code>). The approval gate
+needs a <code>userQuestions</code> service the plugin does not ship; its
+contract is written locally <em>"aligning with the real service once it
+lands"</em> (<code>src/approval.ts:1-7</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Tool write.</strong> <code>harness_refine</code> takes
+<code>instructions</code>, <code>global</code> and
+<code>rollback_id</code> (<code>src/tool.ts:214-248</code>). The
+coordinator reads both layers, renders an overview, the history and a
+trajectory, and calls the planner
+(<code>src/coordinator.ts:252-368</code>). Route A reuses the host's
+warm request prefix; Route B sends a two-layer trajectory of at most
+12,000 characters (<code>src/store.ts:426-482</code>). Every edit is
+pre-validated and a malformed one fails the whole plan
+(<code>src/coordinator.ts:370-378</code>). The approval check follows
+(<code>:382-394</code>), then <code>applyRefinement</code> under the
+mutex (<code>:397-415</code>).</p>
+<p><strong>Commit.</strong> <code>applyRefinement</code> reads the
+target layer, applies the proposal with the planning baseline, saves the
+state file by tmp-and-rename, appends the full record to the layer's
+journal, materializes touched skills, and emits
+<code>harness/refined</code> (<code>src/store.ts:278-321</code>,
+<code>src/storage.ts:216-229</code>). The state file keeps a copy of
+each record stripped of snapshot bodies
+(<code>src/refine.ts:404-425</code>).</p>
+<p><strong>Automatic path.</strong> <code>turn/end</code> increments a
+per-session counter; at 25, or on <code>compaction/end</code>, a gate is
+scheduled and run without blocking the loop
+(<code>src/driver.ts:96-144</code>). <code>runGate</code> asks the
+review prompt, records a declined verdict, or submits a local plan with
+the gate's rationale as instructions (<code>:204-260</code>). Every
+outcome lands in <code>reviews.jsonl</code>.</p>
+<p><strong>Injection.</strong> On each pre-step the projection calls
+<code>store.render</code>, hashes the overview, and republishes only on
+a first injection, a new refinement, an emptied store, or a new matched
+key (<code>src/projection.ts:90-102</code>). An existing block is
+shadowed in place by a surface <code>replace</code>; the first lands at
+the tail of the step's messages (<code>:116-139</code>).</p>
+<p><strong>Rollback.</strong> <code>rollback_id</code> or
+<code>/refine rollback &lt;id&gt;</code> resolves the target from the
+merged history, refuses a scope mismatch or a second rollback, and
+applies the reversed proposal as a replay
+(<code>src/coordinator.ts:98-110</code>, <code>:226-250</code>).</p>
+<p><strong>Promotion.</strong> <code>harness_wrapup</code> classifies
+local entries by injection count — never injected, suggest archive;
+injected and no global twin, suggest promote
+(<code>src/wrapup.ts:21-42</code>). Its <code>promote</code> argument
+copies one local entry into the global layer through
+<code>promoteEntry</code>, which calls <code>applyRefinement</code>
+directly (<code>src/tool.ts:188-190</code>,
+<code>src/store.ts:325-350</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Entries are keyed by (layer, kind, id).</strong>
+<code>HarnessState</code> holds
+<code>entries: Record&lt;RefinementKind, Record&lt;string, HarnessEntry&gt;&gt;</code>
+plus the conclusion-only refinement list, at <code>schemaVersion</code>
+2 (<code>src/types.ts:174-178</code>, <code>src/domain.ts:52</code>). A
+merge renames a shadowed global entry to <code>local:&lt;id&gt;</code>,
+and the renderer skips that prefix (<code>src/storage.ts:195-214</code>,
+<code>src/render.ts:242</code>).</p>
+<p><strong>Three fields describe reach and ownership, and they do
+different jobs.</strong></p>
+<ul>
+<li><strong><code>blastRadius</code></strong> — <code>general</code>,
+<code>project</code> or <code>session</code> — is declared by the model
+on each edit (<code>src/types.ts:43-49</code>). <code>general</code> may
+not be stored locally and <code>session</code> may not be stored
+globally (<code>src/refine.ts:76-90</code>).</li>
+<li><strong><code>projects</code></strong> is stamped from the Workspace
+directory or the nearest <code>.git</code> ancestor of the session cwd,
+and unioned on update (<code>src/project.ts:47-57</code>,
+<code>src/refine.ts:381</code>). It is read in one place, as a
+rank.</li>
+<li><strong><code>metadata.sourceSession</code></strong> is stamped on
+create and update (<code>src/refine.ts:319-323</code>,
+<code>:357-362</code>). Nothing outside validation reads it.</li>
+</ul>
+<p><strong>Lifecycle and governance fields.</strong>
+<code>metadata.lifecycleState</code> is <code>active</code> or
+<code>archived</code>; <code>metadata.pinned</code> is stored and read
+by nothing, which its own comment calls <em>"field only, no automatic GC
+in MVP"</em>; <code>protection</code> is <code>bundled</code>,
+<code>pinned</code> or <code>user-owned</code>
+(<code>src/types.ts:17-18</code>, <code>:50-60</code>). The only writer
+of <code>protection</code> is an edit carrying the field.</p>
+<p><strong>The journal record is the richer object.</strong> A
+<code>RefinementResult</code> holds id, summary,
+<code>rollbackOf</code>, <code>committedAt</code>, scope and every edit
+with its <code>beforeEntry</code> and <code>afterEntry</code>
+(<code>src/types.ts:134-171</code>). It carries no field for which
+writer — tool, command or driver — produced it.</p>
+<p><strong>Time.</strong> One <code>updatedAt</code> per entry and one
+<code>committedAt</code> per refinement. Nothing records when a fact was
+true.</p>
+<p><strong>Skills have a second home.</strong> Every applied skill edit
+materializes the effective merged entry as
+<code>&lt;skillsDir&gt;/&lt;id&gt;/SKILL.md</code> with
+<code>scripts/</code> and <code>references/</code> files and provenance
+frontmatter; archived or deleted skills have their owned bundle removed
+(<code>src/store.ts:359-382</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>There is no query tool.</strong> The plugin registers
+<code>harness_refine</code>, <code>harness_wrapup</code> and
+<code>harness_benchmark</code> (<code>src/tool.ts:168</code>,
+<code>:216</code>, <code>src/tool-benchmark.ts:141</code>), and none
+returns an entry's content. Retrieval is the injected block.</p>
+<p><strong>The anchor.</strong> In the default <code>stable</code> mode
+the block is ranked against the session cwd plus the first effective
+user message, capped at 400 characters; <code>query</code> mode uses the
+latest effective user message instead
+(<code>src/render.ts:90-112</code>). Acknowledgements such as
+<code>ok</code> or <code>好的</code> are skipped (<code>:59</code>).</p>
+<p><strong>Scoring.</strong> The anchor is split into Latin runs of two
+or more characters and CJK bigrams (<code>src/render.ts:149-160</code>).
+A term found in more than a tenth of the kind's active entries is
+dropped unless every term would be; the rest are weighted by inverse
+document frequency, doubled on a title hit (<code>:168-203</code>). The
+comments cite measurements over a live 73-entry state that the tree does
+not contain.</p>
+<p><strong>The filter.</strong> Before scoring, each kind drops archived
+entries, <code>local:</code> shadows, and session-radius entries that do
+not come from the session's own layer
+(<code>src/render.ts:240-248</code>).</p>
+<p><strong>Stable mode injects ids.</strong> Per-kind sections shrink to
+counts, and one index ranks every active entry by project ownership —
+working project first, untagged next, others last, session-radius
+entries flat — then score, recency and id
+(<code>src/render.ts:253-311</code>). The top 15 lines read
+<code>- &lt;kind&gt;/&lt;id&gt; v&lt;n&gt;</code> with no content; a
+case in the suite pins that bodies are absent
+(<code>tests/rank.spec.ts:87-105</code>). The header tells the model to
+<em>"read entries on demand"</em> (<code>src/render.ts:19</code>), and
+no plugin tool can. Skill content reaches the model through dsh's own
+skill provider; through this plugin, prompt, memory and subagent content
+does not reach the main loop in this mode. The suite's own store helper
+calls the default <em>"index-only"</em>
+(<code>tests/store.spec.ts:66-67</code>).</p>
+<p><strong>Query mode injects content.</strong> Six entries per kind,
+each its description or content truncated at 180 characters, then five
+recent refinements (<code>src/render.ts:259-274</code>,
+<code>:312-318</code>).</p>
+<p><strong>Why stable is the default.</strong> The config comment
+reports a 95.4% against 81.2% cache-read hit rate over one six-message
+session (<code>src/index.ts:209-216</code>). The block stays
+byte-identical until the state changes. That buys the provider prefix
+cache at the price of the content.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Every write is a model plan.</strong> The planner prompt asks
+for small, evidence-backed edits, prefers updating an umbrella entry
+over creating a new one, and forbids capturing environment failures or
+negative assertions about tools (<code>src/planner.ts:67-89</code>).
+Those are instructions to the model; the code checks shape, not
+content.</p>
+<p><strong>The JSON passes through unfiltered.</strong>
+<code>parseProposal</code> checks only that <code>id</code> is a string
+and <code>edits</code> an array (<code>src/planner.ts:110-116</code>).
+An edit's <code>metadata</code>, <code>protection</code>,
+<code>archive</code>, <code>pin</code> and <code>title</code> reach
+<code>applyRefinementProposal</code> as the model wrote them. A
+model-supplied <code>metadata.sourceSession</code> overrides the stamped
+session (<code>src/refine.ts:319</code>, <code>:357</code>), and a
+model-supplied <code>protection</code> makes an entry immune to the
+automatic path.</p>
+<p><strong>Archive has no documented producer.</strong> The planner
+prompt's schema does not mention <code>archive</code>
+(<code>grep -n archive src/planner.ts</code> returns nothing), and
+<code>harness_wrapup</code> suggests archiving without offering the
+verb. An entry is archived when the model emits an undocumented field,
+or a <code>lifecycleState</code> of <code>archived</code> inside
+<code>metadata</code> on create.</p>
+<p><strong>Correction is overwrite plus journal.</strong> Update
+replaces content and bumps the version; the old content survives only in
+the journal. Rollback restores it once per refinement and refuses to
+roll back a rollback (<code>src/coordinator.ts:106-108</code>).</p>
+<p><strong>Dedup is the model's.</strong> Create refuses an existing id;
+nothing compares content across ids.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The automatic gate is asynchronous: <code>scheduleGate</code> fires
+<code>attemptGate</code> without awaiting it
+(<code>src/driver.ts:144</code>). A gate costs one review call and, if
+approved, one planner call of up to 32,000 output tokens
+(<code>src/index.ts:189</code>). A new local entry is visible on the
+next pre-step after commit. The tool path is synchronous for the calling
+turn. Nothing rewrites the whole store in the background. Injection is
+bounded at 15 index lines or six entries per kind, and the stable block
+is built to survive the provider's prefix cache.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds three tools. <code>harness_refine</code> plans or
+rolls back and defaults to the global layer; the description steers the
+model to it whenever a user asks to <em>"turn what we just did into a
+reusable skill"</em> (<code>src/tool.ts:22</code>).
+<code>harness_wrapup</code> suggests and promotes.
+<code>harness_benchmark</code> runs the validation workflow and omits
+<code>reset</code> from its action enum so the model cannot call it
+(<code>src/tool-benchmark.ts:133-147</code>).</p>
+<p>Injection is automatic, as a user message wrapping
+<code>&lt;system-reminder&gt;&lt;harness_state digest=…&gt;</code> with
+a plugin-declared source kind that survives dsh's session format
+migrations (<code>src/projection.ts:37-45</code>,
+<code>src/domain.ts:48</code>, <code>:104-113</code>,
+<code>:126-135</code>). A compaction end also schedules a gate, which
+reads the derived history as it stands after the compaction
+(<code>src/driver.ts:112</code>, <code>src/store.ts:428</code>).</p>
+<p>Adapting it to another host means replacing the Cordis events and the
+dsh session API; the store, rules and renderer are plain functions over
+JSON.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The approval gate covers one door.</strong>
+<code>requireGlobalApproval</code> is off by default
+(<code>src/index.ts:207</code>). When on, the coordinator asks only for
+a global <code>plan</code> from the tool
+(<code>src/coordinator.ts:382</code>). A global rollback returns before
+that check (<code>:226-250</code>). <code>harness_wrapup</code> promotes
+through <code>promoteEntry</code> with no approval call at all
+(<code>src/store.ts:325-343</code>). With the gate on, the model can
+plan locally without approval and then promote the entry into the global
+layer.</p>
+<p><strong>Session-local skills are published to every session.</strong>
+<code>materializeSkills</code> reads the merged view and writes touched
+skills into one skills directory, whichever layer committed them
+(<code>src/store.ts:359-371</code>). A suite case creates a skill
+through a local commit and asserts the bundle exists under the shared
+directory (<code>tests/store.spec.ts:334-351</code>). The renderer's
+session-radius filter never sees this path, so a <code>session</code>
+skill is loaded by dsh everywhere.</p>
+<p><strong>Provenance is forgeable from the plan.</strong>
+<code>sourceSession</code>, <code>protection</code> and lifecycle
+metadata come through unvalidated (section 7). Project tags come from
+the filesystem, not the model, and cannot be forged that way.</p>
+<p><strong>Prompt injection lands globally by default.</strong> A
+poisoned trajectory reaches a planner and a gate that are the same
+model. The tool writes global by default, and a skill becomes a
+<code>SKILL.md</code> bundle, with any <code>scripts/</code> files, in
+the directory dsh's skill provider scans. The credential scan is off by
+default (<code>src/index.ts:235</code>); <code>protectedKinds</code>
+keeps skills off the automatic path only.</p>
+<p><strong>Concurrency.</strong> The mutex is in-process; the README
+states that concurrent processes are last-writer-wins. The baseline
+fingerprint catches an entry changed between planning and commit, not
+two commits racing.</p>
+<p><strong>Uncertainty is not representable.</strong> Every committed
+entry is injected with equal standing.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>audit_log</code> — <strong>awarded.</strong>
+<code>refinements.jsonl</code> is appended on every commit path, carries
+per-edit before and after snapshots including refused edits, and is
+consumed by rollback. <code>reviews.jsonl</code> beside it records gate
+verdicts, and <code>usage.events.jsonl</code> records injections;
+neither is a mutation record.</li>
+<li><code>negative_eval</code> — <strong>awarded</strong>, on
+<code>tests/rank.spec.ts:312-320</code> with its positive control at
+<code>:322-331</code>. The archived-exclusion case at
+<code>:169-173</code> does not earn it: removing the archived filter or
+the shadow filter leaves its result unchanged.</li>
+<li><code>tombstone</code> — <strong>withheld.</strong> Delete removes
+the row and archive is archival. A refused edit's journal record is
+keyed on the entry id and no write path consults it.</li>
+<li><code>trust_state</code> — <strong>withheld.</strong>
+<code>active</code> and <code>archived</code> are lifecycle positions
+with no candidate state, and the review gate judges whether to plan, not
+an entry.</li>
+<li><code>bitemporal</code> — <strong>withheld.</strong> One
+<code>updatedAt</code> per entry.</li>
+<li><code>scope_enforced</code> — <strong>withheld.</strong> The session
+boundary is a directory per session id. <code>projects</code> is a rank
+that its own comment calls <em>"never a filter"</em>
+(<code>src/render.ts:226</code>). <code>blastRadius</code> is a reach
+class, not an owner key, and the skill materialization path carries no
+predicate.</li>
+<li><code>human_review</code> — <strong>withheld.</strong> The approval
+is an optional synchronous question, not a state an entry waits in. The
+agent can reach the global layer through two verbs it does not
+guard.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I did not install, build or run anything; the counts below are from
+reading the tree. There are 631 <code>it</code> cases and three
+<code>it.each</code> tables in 37 spec files, and no skipped or focused
+case. CI installs with a frozen lockfile and runs typecheck, lint, tests
+with 80% line and 75% function coverage floors, and build. The README
+counts 23 test files and 287 cases, which describes an earlier tree.</p>
+<p><strong>What is covered well.</strong> <code>refine.spec.ts</code>,
+<code>store.spec.ts</code> and <code>rules.spec.ts</code> exercise
+validation, the baseline check, rollback fidelity, promotion refusal of
+a session-radius entry, and skill materialization.
+<code>rank.spec.ts</code> covers tokenization, IDF weighting, the index
+and the session-radius filter. <code>plugin.spec.ts</code> mounts the
+plugin on a real Cordis context with the published dsh tool and agent
+packages and a stubbed <code>llm</code> service.</p>
+<p><strong>What cannot fail.</strong> The archived-exclusion case caps
+injection at one entry and gives only the kept entry a query match. The
+archived and shadowed rows lose on score and cap whether or not they are
+filtered (<code>tests/rank.spec.ts:169-173</code>).</p>
+<p><strong>No real model.</strong> The README says so: planning and
+review run against a stub <code>Complete</code>.</p>
+<p><strong>Measurements the tree cannot reproduce.</strong> The ranking
+and cache figures in comments come from a live state and a local corpus
+under <code>verify/</code>, which <code>.gitignore</code> excludes
+because it is <em>"real cross-project work data"</em>.
+<code>scripts/verify-baseline.mts</code> exits with an error without
+that corpus.</p>
+<p><strong>The benchmark tool has drifted from its README.</strong> The
+code decides <code>INCONCLUSIVE</code> as well as <code>ACCEPTED</code>
+and <code>REJECTED</code>, on a 95% t-interval of paired differences
+(<code>src/score.ts:135-157</code>, <code>:219</code>), and defaults to
+three runs capped at 30 (<code>src/index.ts:165-177</code>). The README
+documents two outcomes, one run and a cap of three. No benchmark result
+is committed.</p>
+<p>No paper is cited in the tree; the README credits Prime Agent, whose
+papers are covered in <a href="../prime-agent/">its report</a>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Compare-and-swap on the planned entry.</strong> Fingerprint
+every field of the target entry when the plan is built and refuse the
+edit if it moved by commit time. It costs one serialization and removes
+the planner-latency race.</li>
+<li><strong>Declared reach, checked against the destination.</strong>
+Make each write declare whether it is general, project or session
+knowledge, and refuse the combinations that cannot hold in the layer
+being written.</li>
+<li><strong>Journal the full entry, keep the state file lean.</strong>
+Full before and after snapshots in an append-only journal make rollback
+exact; the live file keeps only conclusions.</li>
+<li><strong>A block that only changes when the state does.</strong>
+Anchor injection on something session-stable and republish on a state
+stamp, if the provider's prefix cache matters more than per-turn
+relevance.</li>
+<li><strong>A code-owned benchmark verdict with an inconclusive
+outcome.</strong> Paired cells and a noise floor keep a model from
+grading its own refinement.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An index with no reader.</strong> Injecting ids and telling
+the model to read on demand needs a read verb; without one the content
+never arrives.</li>
+<li><strong>A gate on one verb of several.</strong> An approval that
+guards <code>plan</code> and not <code>promote</code> or
+<code>rollback</code> on the same store is a gate the agent walks
+around.</li>
+<li><strong>Passing model JSON straight into the entry.</strong>
+Allowlist the fields a model may set; provenance and protection should
+be server-owned.</li>
+<li><strong>Publishing scoped entries into an unscoped
+directory.</strong> A materialized copy loses the predicate the renderer
+applies to the original.</li>
+<li><strong>A negative case the cap already satisfies.</strong> Give the
+excluded row the query match, or raise the cap, so removing the filter
+fails the test.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person running DeepSeek Harness who wants the agent to
+curate its own prompt notes and skills, and who will read
+<code>continual-harness.log</code> and the journal. The write path is
+the careful half and the read path is the thin half, so a reader wanting
+facts recalled into context should run <code>query</code> mode or look
+at <a href="../dsh-ai-memory/">dsh-ai-memory</a> or <a
+href="../dsh-mnemon/">dsh-mnemon</a>. It is not built for more than one
+process per harness root, and the plugin enforces no boundary a
+multi-user deployment could rely on.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any shipped dsh composition provide
+<code>ctx.userQuestions</code>? If not, turning on
+<code>requireGlobalApproval</code> fails every global tool plan with
+<code>approval-unavailable</code>.</li>
+<li>Does the dsh skill provider read <code>$DSH_HOME/skills</code> for
+every session and profile, which would make a local skill global in
+practice?</li>
+<li>In <code>stable</code> mode, does the model open
+<code>harness_state.json</code> with a general file tool when it wants
+an entry? Only running the system would show it.</li>
+<li>How often does the planner emit <code>archive</code>, given the
+prompt never names it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong> <code>src/types.ts</code>,
+<code>src/domain.ts</code>, <code>src/storage.ts</code>,
+<code>src/fs-safe.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/coordinator.ts</code>,
+<code>src/planner.ts</code>, <code>src/refine.ts</code>,
+<code>src/rollback.ts</code>, <code>src/store.ts</code>,
+<code>src/approval.ts</code>, <code>src/complete.ts</code>.</li>
+<li><strong>Retrieval and injection:</strong>
+<code>src/render.ts</code>, <code>src/projection.ts</code>,
+<code>src/session-state.ts</code>, <code>src/project.ts</code>,
+<code>src/usage.ts</code>.</li>
+<li><strong>Background:</strong> <code>src/driver.ts</code>,
+<code>src/audit.ts</code>, <code>src/wrapup.ts</code>.</li>
+<li><strong>Skills:</strong> <code>src/skills.ts</code>,
+<code>src/skills-fs.ts</code>, <code>src/diagnostics.ts</code>,
+<code>src/scan.ts</code>.</li>
+<li><strong>Plugin surface:</strong> <code>src/index.ts</code>,
+<code>src/tool.ts</code>, <code>src/command.ts</code>,
+<code>src/tool-benchmark.ts</code>, <code>src/invariant.ts</code>.</li>
+<li><strong>Benchmark:</strong> <code>src/benchmark.ts</code>,
+<code>src/benchmark-store.ts</code>, <code>src/evaluate.ts</code>,
+<code>src/score.ts</code>.</li>
+<li><strong>Tests:</strong> <code>tests/rank.spec.ts</code>,
+<code>tests/refine.spec.ts</code>, <code>tests/store.spec.ts</code>,
+<code>tests/archive.spec.ts</code>, <code>tests/plugin.spec.ts</code>,
+<code>tests/audit.spec.ts</code>.</li>
+<li><strong>Scripts:</strong>
+<code>scripts/backfill-project-tags.mjs</code>,
+<code>scripts/repair-harness-state-logs.mjs</code>,
+<code>scripts/verify-baseline.mts</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>grep -rnE "refinements\.jsonl|REFINEMENT_HISTORY_FILE_NAME|writeFileSync|renameSync|unlinkSync|rmSync" src scripts</code>
+— the journal's only writer is <code>appendFileSync</code> at
+<code>src/storage.ts:228</code>;
+<code>scripts/backfill-project-tags.mjs:124-125</code> rewrites the
+state file.</li>
+<li><code>grep -rn "sourceSession" src</code> — writers in
+<code>src/refine.ts</code> and <code>src/store.ts</code>, one shape
+check in <code>src/storage.ts:407</code>; no reader.</li>
+<li><code>grep -rn "\.projects\b" src</code> — one read,
+<code>src/render.ts:284</code>, inside the index rank.</li>
+<li><code>grep -rn "name: 'harness_" src</code> — three tools:
+<code>harness_wrapup</code>, <code>harness_refine</code>,
+<code>harness_benchmark</code>.</li>
+<li><code>grep -rniE "on.demand|read entries" src README.md</code> — the
+stable-anchor note and two comments; no read tool.</li>
+<li><code>grep -n archive src/planner.ts</code> — no match.</li>
+<li><code>grep -rn "requireGlobalApproval" src</code> — consulted only
+at <code>src/coordinator.ts:382-388</code>.</li>
+<li><code>grep -rn "promoteEntry\|rollbackRefinement" src</code> —
+<code>promoteEntry</code> called from <code>src/tool.ts:189</code>.</li>
+<li><code>grep -rn "protection\|pinned" src</code> —
+<code>protection</code> set only from an edit field; <code>pinned</code>
+read by nothing.</li>
+<li><code>grep -rniE "tombstone|denylist|blocklist|suppress" src</code>
+— no match.</li>
+<li><code>grep -rniE "validFrom|valid_from|validUntil|valid_to|observedAt|effectiveAt" src</code>
+— no match.</li>
+<li><code>grep -rnE "it\.skip|describe\.skip|it\.todo|skipIf|\.only\(" tests</code>
+— no match.</li>
+<li><code>grep -rniE "arxiv|bibtex|@article|@misc|doi\.org|CITATION" . --exclude-dir=.git --exclude=pnpm-lock.yaml</code>
+— no match.</li>
+<li><code>grep -rniE "renamed|formerly" . --exclude-dir=.git --exclude=pnpm-lock.yaml</code>
+— two code comments, neither about the project's name.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/jasen215/dsh-continual-harness/commit/403451a215740275780436fe16f739ecd95e8958"><code class="commit-id" title="403451a215740275780436fe16f739ecd95e8958">403451a2…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 30
+September 2026. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>; section 9 names the five withheld. Screened
+before reading: no auto-run surface, no build-time execution point, one
+unpinned surface (<code>package.json</code> ranges under a lockfile),
+two dependency files inside the cooldown, every file in the depth-1
+clone dating to the tip, and an uninstalled git hook payload in
+<code>scripts/githooks/</code>. No agent-instruction file in the tree.
+Read with <code>grep</code>, <code>sed</code> and <code>awk</code>;
+nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

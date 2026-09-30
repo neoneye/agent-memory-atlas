@@ -584,6 +584,18 @@ revision's counts in <code>memory_revisions</code> and resets the live
 row's confidence, use count, citations and query routes, so a rewritten
 claim starts without the old one's reputation
 (<code>projector.rs:2748-2828</code>).</p>
+<p><strong><a href="../../systems/engram-mcp/">Engram MCP (edg-l)</a>
+decays on a clock of project activity rather than the calendar.</strong>
+<code>elapsed</code> is the number of distinct days on which the
+memory's project received a store after the memory was last accessed,
+derived from <code>created_at</code> in the <code>UPDATE</code> itself
+rather than kept as a counter (<code>src/db/memories.rs:826-860</code>;
+<code>src/db/activity.rs</code>). Rows tagged <code>hook</code> do not
+advance it, so a session of automatic capture ages nothing, and a
+project nobody stores into does not decay however long it sits. The
+ranking scorers read the same store-day axis, and the usage boost is
+capped at 0.1 under a 1.0 ceiling, the value a pinned memory holds
+(<code>src/decay.rs:18-69</code>).</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Rust MCP server for coding
+agents: SQLite memories and branch-chained handoffs, with supersession
+redirects, a dead flag, trash snapshots and store-day decay.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Engram MCP
+(edg-l) — Agent Memory Atlas">
+    <meta property="og:description" content="A local Rust MCP server for
+coding agents: SQLite memories and branch-chained handoffs, with
+supersession redirects, a dead flag, trash snapshots and store-day
+decay.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Engram MCP
+(edg-l) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Rust MCP server
+for coding agents: SQLite memories and branch-chained handoffs, with
+supersession redirects, a dead flag, trash snapshots and store-day
+decay.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Engram MCP (edg-l) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Engram MCP (edg-l)",
+      "description": "A local Rust MCP server for coding agents: SQLite memories and branch-chained handoffs, with supersession redirects, a dead flag, trash snapshots and store-day decay.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Branch-scoped coding memory whose
+corrections redirect rather than disappear</p>
+          <h1>Engram MCP (edg-l)</h1>
+          <p class="document-deck">A local Rust MCP server for coding
+agents: SQLite memories and branch-chained handoffs, with supersession
+redirects, a dead flag, trash snapshots and store-day decay.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/edg-l/engram-mcp">
+              <span>Source</span>
+              <strong>edg-l/engram-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/edg-l/engram-mcp/commit/71d945d85c2137ae8261722dbe178ddf9cc5cc52" title="71d945d85c2137ae8261722dbe178ddf9cc5cc52">
+              <span>Analyzed revision</span>
+              <code>71d945d8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-30</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/edg-l--engram-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>edg-l--engram-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+per the LICENSE file; Cargo.toml declares MIT and the README MIT OR
+Apache-2.0, with no MIT text in the tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>21,725
+lines of Rust in src/ outside test modules, plus 1,803 in the criterion
+benches and the LongMemEval harness</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>106
+commits on master by 1 contributor, 3 February 2026 – 23 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>413
+Rust test functions in about 17,400 lines, 154 of them in 29 integration
+files under tests/</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Engram MCP is a local memory server for coding agents, written in
+Rust over one SQLite file: typed memories, per-branch handoff chains,
+ADRs and a durable todo list, all reached through an MCP server and
+<code>engram-cli</code>. It is not related to <a
+href="../engram/">Engram</a>, <a href="../engram-alpha/">Engram
+Alpha</a> (whose own <code>engram-mcp</code> crate is a different
+project), <a href="../engram-nickcirv/">engram (NickCirv)</a> or <a
+href="../claude-engram/">Claude Engram</a>; it wraps no engine of
+theirs.</p>
+<p>What is notable is how it retires a memory. A <code>supersedes</code>
+edge makes retrieval return the successor at the old memory's rank,
+annotated with what it replaced. A <code>dead</code> flag drops a memory
+whose subject is gone. Every destructive path snapshots the row, its
+edges and its embedding to a trash a person or the agent can restore
+from. Decay runs on a clock of days on which the project received a
+curated store, so a dormant project does not age.</p>
+<p>What is weak is that the correction machinery has two writers that do
+not know about it. The 6-hourly background dedup and
+<code>engram-cli dedup --confirm</code> merge same-type pairs at cosine
+0.90 without consulting supersedes edges or the dead flag, although the
+MCP <code>memory_dedup</code> tool does. Two context builders, the
+<code>recall_context</code> prompt and <code>handoff_resume</code>'s
+linked memories, never apply the status filter.</p>
+<p>The server's own instructions to the model
+(<code>src/instructions.md</code>) are the design document for curation,
+and they are specific: supersede rather than append a contradiction,
+mark dead only when there is nothing to point at, and read
+<code>possible_supersedes</code> on every store result.</p>
+<p>Two marks: <code>trust_state</code> and <code>negative_eval</code>.
+The licence is inconsistent across files; section 9 states it, and names
+the five withheld marks, among them <code>scope_enforced</code>, which
+fails on one graph tool.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a typed claim the agent chose to store, or one a Claude
+Code hook captured. It is believed from the moment it is written.
+Nothing extracts or verifies it, and no model is called on any write
+path.</p>
+<p>It stops being the answer in one of four ways, and the design keeps
+them apart:</p>
+<ul>
+<li><strong>Superseded.</strong> A newer memory carries a
+<code>supersedes</code> edge to it. Retrieval replaces a hit on the old
+memory with its terminal successor, following the chain up to five hops
+with a cycle guard, and annotates the result with
+<code>matched_via</code> (<code>src/db/status.rs:30-72</code>;
+<code>src/tools/curation.rs:77-99</code>).</li>
+<li><strong>Dead.</strong> <code>memory_status.dead</code> is set with a
+reason, and retrieval drops the memory outright; a chain ending in a
+dead memory is dropped too.</li>
+<li><strong>Merged.</strong> A near-duplicate of the same type is
+absorbed into a survivor, whose <code>merged_from</code> keeps the
+consumed text in full (<code>src/db/memories.rs:872-946</code>).</li>
+<li><strong>Deleted or pruned.</strong> The row goes, and a snapshot
+goes to <code>memory_trash</code>.</li>
+</ul>
+<p>The source says why supersession redirects instead of dropping:
+returning nothing <em>"reads as 'nobody looked into this', which invites
+the same wrong conclusion to be reached again"</em>
+(<code>src/instructions.md</code>). Only the agent, or a person through
+the same CLI, moves a memory between these states. No background process
+marks anything dead or superseded.</p>
+<p><code>possible_supersedes</code> is the one place similarity touches
+correction. Every store reports existing same-type memories at cosine
+0.88 or above as candidates, and never applies one, because <em>"cosine
+cannot separate 'contradicts' from 'elaborates'"</em>
+(<code>src/tools/curation.rs:107-143</code>).</p>
+<p>The background dedup pass does not respect those states. A successor
+and the memory it superseded usually sit near 0.90 and in the same
+cluster; the pass merges them whichever way round the cluster table
+lists them.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an Engram MCP memory stops being the answer, and the two unattended merge paths that bypass the curation state</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an Engram MCP memory stops being the answer, and the two unattended merge paths that bypass the curation state
+flowchart TD
+    S[&quot;memory_store / CLI store / hook capture&quot;] --&gt; D{&quot;same type, cosine &gt;= 0.90,&lt;br/&gt;not a composite,&lt;br/&gt;not named in supersedes?&quot;}
+    D -- &quot;yes&quot; --&gt; M[&quot;merge: new survives,&lt;br/&gt;old text into merged_from,&lt;br/&gt;old row to trash&quot;]
+    D -- &quot;no&quot; --&gt; L[&quot;live memory&quot;]
+    M --&gt; L
+    L -- &quot;memory_store supersedes: [id]&lt;br/&gt;or memory_link supersedes&quot; --&gt; SUP[&quot;superseded:&lt;br/&gt;edge new -&gt; old&quot;]
+    L -- &quot;memory_update dead: true&lt;br/&gt;or todo done / dropped&quot; --&gt; DEAD[&quot;dead:&lt;br/&gt;memory_status row&quot;]
+    L -- &quot;delete, prune, wipe&quot; --&gt; TR[&quot;memory_trash snapshot,&lt;br/&gt;30-day retention&quot;]
+    SUP --&gt; Q{&quot;memory_query, memory_context,&lt;br/&gt;memory_list, CLI context&quot;}
+    DEAD --&gt; Q
+    Q -- &quot;superseded&quot; --&gt; RED[&quot;successor returned at&lt;br/&gt;the old rank, matched_via&quot;]
+    Q -- &quot;dead&quot; --&gt; DROP[&quot;dropped&quot;]
+    SUP -. &quot;6-hourly cluster dedup&lt;br/&gt;or engram-cli dedup --confirm&quot; .-&gt; BM[&quot;pair merged anyway:&lt;br/&gt;edge cascades, either&lt;br/&gt;side may survive&quot;]
+    DEAD -. &quot;same passes, or store-time&lt;br/&gt;merge with a restatement&quot; .-&gt; BM
+    SUP -. &quot;recall_context prompt,&lt;br/&gt;handoff_resume links&quot; .-&gt; RAW[&quot;returned unfiltered&quot;]
+    DEAD -. &quot;same two paths&quot; .-&gt; RAW
+    TR -- &quot;memory_restore&quot; --&gt; L</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two binaries from one crate. <code>engram</code> is an MCP server
+over stdio built on <code>rmcp</code>; it refuses to run with a terminal
+on stdin and points at <code>engram-cli</code>, which carries every
+interactive and maintenance command. Both open the same SQLite file,
+<code>~/.local/share/engram/memories.db</code> by default
+(<code>ENGRAM_DB</code>).</p>
+<p>The store is a <code>memories</code> table with an external-content
+FTS5 index kept by insert, update and delete triggers, a separate
+<code>embeddings</code> table holding 256-float blobs, a
+<code>relationships</code> graph with cascade deletes, and sidecars
+added by twelve migrations: <code>handoff_sections</code>,
+<code>adr_sections</code>, <code>memory_status</code>,
+<code>memory_trash</code>, <code>todo_items</code>,
+<code>memory_clusters</code>, <code>sync_state</code> and
+<code>memory_origin</code> (<code>src/db/mod.rs:43-146</code>;
+<code>src/db/migrations.rs</code>). Foreign keys are switched on per
+connection (<code>src/db/mod.rs:208</code>).</p>
+<p>Embeddings come from <code>mdbr-leaf-ir</code> quantized ONNX through
+<code>fastembed</code>, truncated to 256 dimensions. The model files are
+downloaded from Hugging Face on first use by <code>hf-hub</code>, from
+the repository's default revision
+(<code>src/embedding.rs:41-73</code>).</p>
+<p>The server spawns two tokio loops, each of which sleeps one interval
+before its first pass (<code>src/main.rs:59-181</code>). The hourly loop
+recomputes relevance, prunes and sweeps the trash. The 6-hourly loop
+re-clusters and dedups. Both act only on the project the server was
+started in.</p>
+<p><code>engram-cli sync user@host</code> replicates the whole store
+both ways over <code>ssh</code>, by per-remote watermarks on
+<code>updated_at</code>, with last-write-wins on content. Deletions
+never propagate (<code>src/cli.rs:242</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>cargo install engram_mcp</code>, then
+<code>claude mcp add</code>. Nothing else has to run, no API key is
+needed, and after the first model download it works offline. The store
+is plain SQLite and readable with the CLI's <code>--json</code> output.
+A wrong memory is repaired with <code>memory_update</code>,
+<code>--supersedes</code> or <code>--dead</code> without touching SQL.
+The first run needs network access to Hugging Face.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Store.</strong> <code>ToolHandler::memory_store</code>
+(<code>src/tools/handler.rs:382-612</code>) resolves the project,
+resolves every <code>related_to</code> and <code>supersedes</code> id
+through <code>resolve_link_target</code>, which follows a merged-away id
+to its survivor (<code>src/tools/links.rs:41-75</code>), and embeds the
+content. It then calls <code>store_with_dedup_exempting</code>
+(<code>src/tools/store.rs:110-199</code>). That function compares
+against every project and global embedding, and
+<code>find_duplicates</code> refuses the caller's exemptions and any
+composite (<code>store.rs:37-63</code>). The new memory survives a merge
+unless the existing one is global and the new one is not. Edges are then
+written, <code>possible_supersedes</code> is computed, the memory is
+assigned to a cluster at centroid cosine 0.75, and relevance is
+recomputed for the project.</p>
+<p><strong>Query.</strong> <code>memory_query</code>
+(<code>handler.rs:613-893</code>) takes an empty-query branch through
+<code>query_memories_with_branch</code>. Otherwise it runs a cosine arm
+over <code>get_all_embeddings_for_project_and_global</code>
+(<code>:682</code>) and an FTS5 arm over
+<code>keyword_search_with_branch</code> (<code>:703</code>). It fuses
+them by RRF at k=60, filters by branch, type, tag and stored relevance,
+and multiplies by relevance. Curation is applied before pagination
+(<code>:864</code>).</p>
+<p><strong>Context.</strong> <code>memory_context</code>
+(<code>handler.rs:1825-2329</code>) loads the curation view first. With
+clusters present and at least ten memories it scores cluster centroids,
+then members; otherwise it scores a flat set. Both draw candidates from
+<code>get_prefiltered_embeddings</code>, the 500 project or global rows
+with the latest <code>last_accessed_at</code>, plus every pinned one
+(<code>src/db/embeddings.rs:94-127</code>). Each hit goes through
+<code>resolve_context_hit</code> (<code>handler.rs:972-1005</code>).</p>
+<p><strong>Handoff.</strong> <code>create_handoff</code> stores a pinned
+<code>handoff</code> memory, a <code>handoff_sections</code> row with
+one embedding per section and a <code>continues_from</code> pointer, and
+links each section to <code>decision</code>, <code>pattern</code> and
+<code>debug</code> memories at cosine 0.75 with
+<code>derived_from</code> edges. <code>resume_handoff_with_vec</code>
+(<code>src/tools/handoff.rs:479-724</code>) walks the chain to depth
+five, ranks sections, lifts open todos and the newest blockers outside
+the ranking, and attaches linked memories.</p>
+<p><strong>Correct.</strong> <code>update_memory</code>
+(<code>src/tools/update.rs:50-199</code>) snapshots replaced content to
+the trash, re-embeds, and writes <code>memory_status</code> when
+<code>dead</code> is passed. <code>memory_delete</code> returns the
+deleted memory. <code>restore_trash_entry</code>
+(<code>src/db/trash.rs:229-355</code>) reinstates the row, the embedding
+and every edge whose other end still exists, and deletes the trash
+entry.</p>
+<p><strong>Background.</strong> <code>run_decay_job</code> and
+<code>run_recluster_job</code> in <code>src/main.rs</code>;
+<code>dedup_within_clusters</code> is at
+<code>src/main.rs:283-351</code>.</p>
+<p><strong>Hooks.</strong>
+<code>engram-cli hook-event &lt;Event&gt;</code> reads the Claude Code
+payload from stdin and runs <code>hooks::dispatch</code>
+(<code>src/hooks/dispatch.rs:30-239</code>), which redacts secrets and
+stores through <code>store_with_dedup</code> with a skip threshold.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memories</code></td>
+<td>id, project_id, memory_type, content, summary, tags, importance,
+relevance_score, access_count, three timestamps, branch, merged_from,
+pinned, global, external_artifacts</td>
+<td><code>branch</code> NULL means project-wide; <code>global = 1</code>
+means every project</td>
+</tr>
+<tr>
+<td><code>embeddings</code></td>
+<td>256-float vector and model version per memory</td>
+<td>cascade on delete</td>
+</tr>
+<tr>
+<td><code>relationships</code></td>
+<td><code>relates_to</code>, <code>supersedes</code>,
+<code>derived_from</code> with strength</td>
+<td>unique per pair and type</td>
+</tr>
+<tr>
+<td><code>memory_status</code></td>
+<td>dead flag, reason, marked_at</td>
+<td>upserted, never deleted on revival, so a revival converges through
+sync</td>
+</tr>
+<tr>
+<td><code>memory_trash</code></td>
+<td>op, full memory JSON with its edges, embedding blob</td>
+<td>no foreign key, so it outlives the row</td>
+</tr>
+<tr>
+<td><code>todo_items</code></td>
+<td>open, done or dropped, reason, closed_at</td>
+<td><code>drop</code> requires a reason</td>
+</tr>
+<tr>
+<td><code>adr_sections</code></td>
+<td>number, title, status, context, decision, consequences</td>
+<td>status transitions checked in the tool, not the schema</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scope has two words for "global".</strong>
+<code>global = 1</code> puts a row in every project's vector arm.
+<code>branch = NULL</code> makes a row project-wide within its own
+project, and <code>memory_promote</code> sets only that column while
+reporting <em>"promoted from branch … to global"</em>
+(<code>handler.rs:2571-2612</code>;
+<code>src/db/memories.rs:444-452</code>). A <code>memory_store</code>
+with <code>branch</code> omitted is branch-global, so branch scoping
+applies only to memories stored with <code>branch: "auto"</code> or a
+name.</p>
+<p><strong>Provenance is thin.</strong> No row records an author or a
+source. Hook captures are tagged <code>hook</code> plus the event, and
+the tag is what keeps them off the decay clock and out of handoff
+backfill. <code>merged_from</code> holds the full content of every
+memory a survivor absorbed, with its id and merge time.</p>
+<p><strong>Time.</strong> <code>created_at</code>,
+<code>updated_at</code> and <code>last_accessed_at</code> are record
+times. Nothing records when a claim became or stopped being true.
+<code>memory_status.marked_at</code> is when the flag was set.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three read tools rank differently. <code>memory_query</code>
+multiplies an RRF score by the stored relevance, so decay is a direct
+ranking factor. <code>memory_context</code> uses
+<code>0.6 * cosine + 0.2 * recency + 0.2 * importance</code> in vector
+mode and a multiplicative form in hybrid mode, and uses relevance only
+as a gate. Recency in both is measured in store-days.</p>
+<p><strong>The candidate cap decides what memory_context can
+find.</strong> Its candidates are the 500 rows with the latest
+<code>last_accessed_at</code>, project and global together, plus pinned
+rows (<code>src/db/embeddings.rs:94-127</code>). Every returned memory
+has its access recorded. A relevant memory that has not been read in a
+long time, in a store past the cap, is outside the scored set, and the
+cap is shared with other projects' global memories.
+<code>memory_query</code> has no cap. The README and CLAUDE.md both give
+the default as 200; the code uses 500
+(<code>handler.rs:1844-1849</code>).</p>
+<p><strong>The FTS5 arm joins tokens with OR</strong>, which the
+benchmark notes say inflates BM25 recall
+(<code>benchmarks/longmemeval/RESULTS.md</code>).</p>
+<p><strong>Handoff resume is a separate reader.</strong> Sections are
+ranked by per-section cosine and recency along the chain. Linked
+memories are the latest handoff's <code>derived_from</code> targets.
+When the chain has one handoff, a backfill adds the closest
+<code>decision</code>, <code>pattern</code> and <code>debug</code>
+memories on the branch (<code>src/tools/handoff.rs:603-691</code>).
+Neither list consults the curation view.</p>
+<p><strong>Injection.</strong> The SessionStart script runs
+<code>engram-cli context</code> with a query built from the project
+name, the branch and the last five commit subjects, and prints up to ten
+memories (<code>scripts/engram-hook.sh</code>). The CLI context path is
+a second implementation of context retrieval: a flat cosine scan over
+the project's own embeddings and every global one, with curation applied
+(<code>src/cli.rs:3081-3212</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Explicit writes</strong> come from <code>memory_store</code>,
+<code>memory_store_batch</code> (up to 100 in one transaction),
+<code>handoff_create</code>, <code>adr_create</code>,
+<code>todo_write</code> and their CLI twins. <strong>Captured
+writes</strong> come from Claude Code hook events.
+<code>SessionEnd</code> is on by default and stores the transcript's
+last assistant message as a <code>session_summary</code> fact.
+<code>UserPromptSubmit</code> (a prompt containing
+<code>#remember</code> or matching a cue regex) and
+<code>SubagentStop</code> are off unless their environment flags are set
+(<code>src/hooks/filter.rs:13-20</code>). Each capture is redacted,
+capped at importance 0.5, skipped above cosine 0.95 to an existing
+memory, and limited to 50 per project per UTC day
+(<code>src/hooks/dispatch.rs</code>).</p>
+<p><strong>Dedup is new-over-old.</strong> A store at cosine 0.90 or
+above to a same-type, non-composite memory keeps the new row and
+consumes the old. The candidate set does not exclude dead or superseded
+memories (<code>src/tools/store.rs:141-157</code>). Restating a dead
+claim therefore consumes the dead row, whose status cascades away, and
+leaves the restatement live, reported as a merge. This was read, not
+reproduced.</p>
+<p><strong>Three dedup scans, one of them careful.</strong>
+<code>memory_dedup</code> over MCP skips pairs joined by
+<code>supersedes</code> or <code>derived_from</code>
+(<code>handler.rs:2631-2651</code>). The CLI
+<code>engram-cli dedup --confirm</code> keeps the newest by
+<code>updated_at</code> and has no such check
+(<code>src/cli.rs:2968-3078</code>). The background
+<code>dedup_within_clusters</code> keeps whichever member the cluster
+table lists first, and checks neither edges, nor composites, nor status
+(<code>src/main.rs:283-351</code>). Supersession edges cascade on
+delete, so a background merge of a successor with its predecessor
+removes the redirect. If the predecessor survives, the old claim is live
+again with the correction inside <code>merged_from</code>. The server
+tells the model that memories joined by <code>derived_from</code>
+<em>"are never auto-merged"</em> (<code>src/instructions.md</code>),
+which holds for store-time dedup and the MCP tool only.</p>
+<p><strong>Update replaces content wholesale</strong> after snapshotting
+it. The steps are not one transaction: the trash write, the embedding
+write, the status upsert and the row update each commit separately
+(<code>src/tools/update.rs:101-192</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous; one local embedding per memory, one per handoff
+section, and a full scan of the project's and global embeddings for
+dedup and for <code>possible_supersedes</code> on every store. No model
+call.</li>
+<li>Lag: none. A stored memory is searchable on return; the per-project
+search cache is invalidated on each write.</li>
+<li>Background: the hourly decay recomputes the project in one SQL
+statement; the 6-hourly pass compares every same-cluster pair. Neither
+runs if the server lives less than one interval. Decay also runs on
+every store.</li>
+<li>Read: <code>memory_context</code> defaults to ten results; the
+SessionStart hook injects up to ten, placed by the harness at session
+start.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Up to 29 MCP tools, advertised by
+<code>ENGRAM_MCP_TOOL_PROFILE</code> as <code>full</code>,
+<code>core</code> or <code>minimal</code>. Dispatch stays permissive, so
+a non-advertised tool still runs with a one-time warning. Every tool
+takes an optional <code>project</code> argument. Two prompts ship,
+<code>handoff</code> and <code>resume</code>, beside
+<code>recall_context</code>, and memories are exposed as
+<code>memory://{project}/{id}</code> resources.</p>
+<p>The agent holds every verb: store, update, delete, mark dead,
+supersede, restore, prune, dedup, import in replace mode, and advance an
+ADR's status. The server's instructions ask it to call
+<code>memory_context</code> before any work and
+<code>handoff_create</code> at session end. Two skills under
+<code>skills/</code> wrap the handoff tools and install into
+<code>~/.claude/skills</code>; they, <code>CLAUDE.md</code> and
+<code>src/instructions.md</code> were read as data.</p>
+<p><code>engram-cli hooks install</code> writes three hook registrations
+into Claude Code's settings and detects its own blocks by marker or by
+command. The SessionStart context hook is a separate shell script copied
+by hand.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Correction is recoverable, and mostly visible.</strong> Tool
+results return what they replaced or destroyed, the trash keeps the row,
+its edges and its embedding, and
+<code>memory_list status=superseded|dead</code> shows what retrieval
+hides. The trash is swept after 30 days across every project
+(<code>src/db/trash.rs:360-370</code>), and a restore deletes the entry.
+A trash snapshot carries no <code>memory_status</code> row, so restoring
+a dead memory brings it back live.</p>
+<p><strong>The status filter has gaps on three reads.</strong> The
+<code>recall_context</code> prompt scores the project's embeddings by
+cosine and injects the top five with no status check and no branch
+filter (<code>src/main.rs:678-747</code>). <code>handoff_resume</code>
+returns <code>derived_from</code> targets and backfilled memories with
+no status check (<code>src/tools/handoff.rs:603-691</code>), and that
+tool runs at every resume. The curation view is loaded per project
+(<code>src/tools/curation.rs:51-57</code>), while the query and context
+vector arms admit other projects' global rows. A dead global memory
+owned by project B is not in project A's dead set and returns from A.
+All three were read, not reproduced.</p>
+<p><strong>Scope is organisational, not a boundary.</strong> The server
+is single-user with no authentication. The model may name any project in
+any call, and the id-addressed verbs ignore the <code>project</code>
+argument after validating it. <code>memory_graph</code> returns a root
+and its neighbours from any project.</p>
+<p><strong>Supply chain at run time.</strong> The embedding model is
+fetched from the repository's default revision on Hugging Face with no
+pinned hash, so an upstream change alters every embedding the next fresh
+install computes. <code>model_version</code> is recorded per row.</p>
+<p><strong>Licence.</strong> The only licence text in the tree is
+Apache-2.0. <code>Cargo.toml</code> declares <code>MIT</code>, and the
+README says <code>MIT OR Apache-2.0</code>.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded. <code>dead</code> and
+<code>superseded</code> are stored states, set by the agent or a person
+through a verb, and the query, context and list reads drop or redirect
+on them. The gaps above are the limits.</li>
+<li><code>scope_enforced</code> — withheld, narrowly.
+<code>project_id</code> is on every row
+(<code>src/db/mod.rs:45-58</code>), <code>resolve_project</code> rejects
+an unknown value (<code>src/tools/handler.rs:273-292</code>), and the
+vector arm (<code>project_id = ?1 OR global = 1</code>), the FTS5 arm,
+and the list, handoff, todo, ADR, trash and export reads all bind it
+(<code>src/db/embeddings.rs:94-155, 254-327</code>;
+<code>src/db/memories.rs:348-372</code>). The resource read refuses a
+URI whose project is not the memory's owner
+(<code>src/main.rs:599-609</code>). <code>memory_graph</code>, an agent
+tool, validates the <code>project</code> argument and discards it, then
+fetches the root by id and walks relationships with no project predicate
+(<code>handler.rs:1133-1158</code>). <code>memory_link</code> joins ids
+from any project (<code>src/tools/links.rs:41-75</code>), so a graph
+read returns another project's memories. The update, delete and promote
+verbs are id-addressed the same way. <code>global = 1</code> crossing
+projects is by design and is not the reason.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — withheld. The dead flag and the supersedes
+edge are keyed on the record. A restatement of a dead claim is admitted
+and, at 0.90, consumes the dead row. The hook path's 0.95 skip turns
+away a near-verbatim restatement of any memory, dead or live, which is
+dedup rather than a rejection record.</li>
+<li><code>audit_log</code> — withheld. <code>memory_trash</code>
+snapshots destructive operations only, is swept after 30 days and loses
+an entry on restore; a status toggle overwrites its row.</li>
+<li><code>bitemporal</code> — withheld; no validity time.</li>
+<li><code>human_review</code> — withheld. ADR status and todo status are
+workflow states, and <code>adr_update_status</code>,
+<code>todo_write</code> and every curation verb are on the agent's tool
+surface.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests at the pin and ran none of them.</p>
+<p><strong>The negative cases.</strong>
+<code>superseded_memory_is_replaced_by_its_successor_in_query</code>
+(<code>src/tools/handler.rs:3224-3302</code>) stores a decision and a
+successor that supersedes it. It asserts the query is not empty, that
+the old id is absent, that the successor appears exactly once, and that
+<code>include_superseded: true</code> returns the old id.
+<code>store_and_query_target_another_project</code>
+(<code>tests/project_scope.rs:39-70</code>) stores into OTHER, asserts
+one hit with OTHER's project id there, and zero from HOME. Both populate
+the store and assert the positive side, so an empty result fails.</p>
+<p><code>dead_memory_is_excluded_from_query</code>
+(<code>handler.rs:3356-3406</code>) asserts a hit before marking the
+memory dead and only absence after, so its negative half alone would
+pass on an empty result. <code>tests/todo_list.rs</code> asserts a
+closed todo is in the dead set curation reads.</p>
+<p><strong>They run.</strong> Tests that need embeddings call
+<code>EmbeddingService::new()</code> and unwrap, so a missing model
+fails the run rather than skipping it. CI runs
+<code>cargo fmt --check</code>, <code>cargo clippy -- -D warnings</code>
+and <code>cargo test</code> on push and pull request
+(<code>.github/workflows/ci.yml</code>).</p>
+<p><strong>Not covered.</strong> No test merges a superseded pair or a
+dead memory through any dedup path, calls <code>handoff_resume</code> or
+<code>recall_context</code> against a dead or superseded memory, or
+queries across projects with a dead global row.
+<code>bench_retrieval_quality</code>
+(<code>tests/retrieval_quality.rs:360-547</code>) prints MRR and fails
+only when <code>ENGRAM_BENCH_MIN_MRR</code> is set, which CI does not
+do.</p>
+<p><strong>LongMemEval.</strong> <code>benchmarks/longmemeval/</code>
+holds a runner and <code>RESULTS.md</code>: a 30-question seeded sample
+from the 500-question LongMemEval-S set, where BM25 reaches MRR 0.883,
+hybrid 0.828 and vector 0.326. Per-run artifacts are gitignored, so the
+table does not recompute from the tree. The ingest bypasses dedup on
+purpose, and <code>tests/longmemeval_ingest_bypass.rs</code> pins that.
+The README's claim of store-time contradiction detection describes a
+feature the 0.6.0 changelog entry removed. No paper or citation block is
+in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Redirect a superseded hit to its successor at the same rank,
+and say so.</strong> A query phrased in the old wording still reaches
+the current answer, and the <code>matched_via</code> note tells the
+model what changed.</li>
+<li><strong>Separate "replaced" from "gone".</strong> A successor to
+point at and a subject that no longer exists are different retrieval
+outcomes; one flag for both forces a choice between silence and
+staleness.</li>
+<li><strong>Snapshot before every destruction, edges and vector
+included,</strong> and return the destroyed content in the tool result
+so the caller can see what it lost.</li>
+<li><strong>Decay on a clock of activity, not the calendar.</strong>
+Count days on which the project received a curated write, and leave
+automatic captures off the clock, so returning to a dormant project does
+not find its knowledge at the floor.</li>
+<li><strong>Report likely supersessions on every store and never apply
+them.</strong> The similarities are already computed for dedup; handing
+the top few back is the only way the writer learns an old contradicting
+memory exists.</li>
+<li><strong>Refuse an unknown scope value with the known ones
+listed</strong>, instead of returning an empty result that reads as
+"nothing here".</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A second maintenance writer that re-implements the
+exemptions.</strong> A careful interactive dedup beside an unattended
+one that skips the same checks is worse than one pass, because the
+documentation describes the careful one.</li>
+<li><strong>Loading curation state for the caller's partition while
+ranking over rows from other partitions.</strong> The status filter has
+to be computed over the same set the ranker can return.</li>
+<li><strong>Letting a status row cascade on merge or be left out of a
+snapshot.</strong> If a dead claim can come back through dedup or
+restore, the flag protects only until the next housekeeping.</li>
+<li><strong>A recency-ordered candidate cap in front of semantic
+ranking</strong>, fed by the access counter the same reads bump.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer running Claude Code across several
+repositories who wants branch-aware handoffs and a curated set of
+decisions, on a laptop, with no service to run. The curation model is
+thought through and the tool results are unusually honest about what
+they did. Anyone who keeps the MCP server running for hours should know
+the 6-hourly pass can undo a supersession, and should turn the interval
+up or read <code>memory_list status=superseded</code> after it runs. It
+is not for multi-user or shared deployments, and the model can read and
+rewrite every project in the store.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>In practice, which member does <code>dedup_within_clusters</code>
+keep? It follows <code>SELECT memory_id FROM cluster_members</code> row
+order, which re-clustering changes.</li>
+<li>How often does the 6-hourly pass run at all, given MCP servers are
+usually started per editor session and the loop sleeps first?</li>
+<li>Does the MCP <code>memory_import</code> path diverge from
+<code>cmd_import</code> on dead status and last-write-wins?
+<code>docs/WORKING-NOTES.md</code> says it likely does, and the README
+points at a CLAUDE.md Sync section that the file at this pin does not
+contain.</li>
+<li>How large do real stores get relative to the 500-row context
+cap?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong> <code>src/db/mod.rs</code>,
+<code>src/db/migrations.rs</code>, <code>src/memory.rs</code>.</li>
+<li><strong>Curation:</strong> <code>src/db/status.rs</code>,
+<code>src/tools/curation.rs</code>, <code>src/db/trash.rs</code>,
+<code>src/db/todos.rs</code>, <code>src/tools/update.rs</code>,
+<code>src/tools/links.rs</code>.</li>
+<li><strong>Write and dedup:</strong>
+<code>src/tools/handler.rs:382-612</code>,
+<code>src/tools/store.rs</code>,
+<code>src/db/memories.rs:872-980</code>,
+<code>src/tools/cluster.rs</code>, <code>src/hooks/dispatch.rs</code>,
+<code>src/hooks/redact.rs</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>src/tools/handler.rs:613-1022, 1825-2410</code>,
+<code>src/db/embeddings.rs</code>, <code>src/tools/scoring.rs</code>,
+<code>src/tools/handoff.rs</code>, <code>src/decay.rs</code>,
+<code>src/db/activity.rs</code>.</li>
+<li><strong>Server and background:</strong> <code>src/main.rs</code>,
+<code>src/instructions.md</code>, <code>src/prompts/</code>,
+<code>scripts/engram-hook.sh</code>.</li>
+<li><strong>CLI and sync:</strong> <code>src/cli.rs</code>,
+<code>src/db/sync.rs</code>, <code>src/export.rs</code>.</li>
+<li><strong>Tests:</strong> <code>tests/project_scope.rs</code>,
+<code>tests/todo_list.rs</code>,
+<code>tests/retrieval_quality.rs</code>,
+<code>tests/integration.rs</code>, <code>src/tools/handler.rs</code>
+test module, <code>src/db/tests.rs</code>,
+<code>.github/workflows/ci.yml</code>.</li>
+<li><strong>Benchmark:</strong>
+<code>benchmarks/longmemeval/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'curation_view\|CurationView\|get_dead_ids\|is_superseded\|get_supersession_map' src</code>
+— consumers in <code>handler.rs</code> (query, context, list) and
+<code>cli.rs</code> (query, list, context) only; none in
+<code>handoff.rs</code> or <code>main.rs</code>.</li>
+<li><code>grep -n 'curation\|dead\|supersed' src/tools/handoff.rs</code>
+— no match.</li>
+<li><code>grep -n 'deliberate' src/cli.rs src/main.rs src/tools/handler.rs</code>
+— <code>handler.rs:2631-2679</code> only; the CLI and background dedup
+have no edge check.</li>
+<li><code>grep -n 'memory_status\|dead' src/db/trash.rs</code> — one
+match, an <code>allow(dead_code)</code> attribute; the snapshot holds no
+status.</li>
+<li><code>grep -rn 'CREATE TABLE' src | grep -i 'audit\|event\|history\|log'</code>
+— no match.</li>
+<li><code>grep -rniE 'valid_from|valid_to|valid_at|invalid_at|valid_until' src</code>
+— no match.</li>
+<li><code>grep -rn -i 'contradict' src</code> — prose in
+<code>instructions.md</code>, <code>prompts/handoff.md</code>,
+<code>schemas.rs</code> and a comment in <code>curation.rs</code>; no
+detector.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' --exclude-dir=.git .</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+<li><code>grep -rniE 'renamed|formerly' --exclude-dir=.git .</code> —
+one match, a migration comment about project paths.</li>
+<li><code>git ls-files | grep -iE 'plugin|\.claude|settings|\.mcp|devcontainer|envrc|vscode|build\.rs'</code>
+— no match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-30</strong> — <a
+href="https://github.com/edg-l/engram-mcp/commit/71d945d85c2137ae8261722dbe178ddf9cc5cc52"><code class="commit-id" title="71d945d85c2137ae8261722dbe178ddf9cc5cc52">71d945d8…</code></a>
+— first reading, at the head of <code>master</code>, a commit dated 23
+September 2026. Two marks: <code>trust_state</code>,
+<code>negative_eval</code>. Screened before reading: one auto-run
+surface (<code>hooks/</code>, a README and five JSON payload fixtures,
+nothing executable), no build-time execution, nothing inside the
+cooldown, no unpinned surface, <code>Cargo.lock</code> present;
+<code>CLAUDE.md</code> and the two skills recorded as data. Read with
+<code>grep</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

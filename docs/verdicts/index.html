@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 700 reports.</strong></p>
+<p><strong>This page covers all 702 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -29084,6 +29084,93 @@ idempotent multi-worker writes on one SQLite file.</li>
 <li>Do not copy when: a correction must stick or be reviewable. Nothing
 is keyed on a rejected value, no read filters on the review flag, and
 the agent holds every write verb and <code>forget</code>.</li>
+</ul>
+<h3 id="engram-mcp"><a
+href="../systems/engram-mcp/"><code>engram-mcp</code></a></h3>
+<ul>
+<li>Best idea: <strong>a superseded hit returns its successor at the
+same rank, and says so.</strong> <code>CurationView::resolve</code>
+follows <code>supersedes</code> edges up to five hops with a cycle guard
+and emits the successor with
+<code>matched_via: {superseded_id, superseded_preview}</code>, so a
+query in the old wording still reaches the current answer; a separate
+<code>dead</code> flag covers a subject with nothing to point at.</li>
+<li>Biggest risk: <strong>the unattended dedup does not know about
+corrections.</strong> <code>dedup_within_clusters</code> in
+<code>src/main.rs</code> merges any same-type pair at cosine 0.90 inside
+a cluster, keeping whichever member the table lists first; it checks no
+<code>supersedes</code> edge, no dead flag and no composite, and the
+edge cascades on delete. The MCP <code>memory_dedup</code> tool skips
+exactly those pairs, and the server's instructions describe that tool's
+behaviour.</li>
+<li>Most reusable component: <code>src/tools/curation.rs</code> with
+<code>src/db/status.rs</code>, a small per-call view that turns stored
+edges and a dead set into Keep, Redirect or Drop before pagination.</li>
+<li>Second risk: <strong>the status filter is missing from two context
+builders and one partition edge.</strong> The
+<code>recall_context</code> prompt and <code>handoff_resume</code>'s
+linked and backfilled memories apply no curation, and the view is loaded
+per project while the vector arms admit other projects' global rows, so
+another project's dead global memory returns.</li>
+<li>Maturity impression: Apache-2.0 by its LICENSE file, MIT by
+<code>Cargo.toml</code>; 21,725 lines of Rust outside test modules, 106
+commits by one contributor from 3 February 2026 to 23 September 2026.
+413 test functions run by <code>cargo test</code> in CI and fail rather
+than skip without the embedding model; a LongMemEval result over a
+30-question sample is committed as a table without its run
+artifacts.</li>
+<li>Study when: you want correction semantics a coding agent can drive
+itself, replacement versus retirement versus merge, with every
+destructive step recoverable and returned in the tool result.</li>
+<li>Do not copy when: the memory must be isolated between users or
+projects, since the model can name any project; or when a background
+merge must never touch a corrected pair.</li>
+</ul>
+<h3 id="dsh-continual-harness"><a
+href="../systems/dsh-continual-harness/"><code>dsh-continual-harness</code></a></h3>
+<ul>
+<li>Best idea: <strong>make every write declare its reach and check it
+against the layer it lands in.</strong> Each edit carries
+<code>general</code>, <code>project</code> or <code>session</code>;
+<code>general</code> cannot be stored in the session layer and
+<code>session</code> cannot be stored in the global one, so a promotion
+of a session fact is refused rather than widened. Beside it, a
+fingerprint of the target entry taken at planning time refuses an edit
+whose entry moved before commit, and the journal keeps full before and
+after snapshots. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the default injection carries ids, not
+content.</strong> In <code>stable</code> mode, the default, the block
+ranks every active entry and prints the top 15 as
+<code>kind/id vN</code> lines with no body, and tells the model to read
+entries on demand; the plugin registers no tool that returns an entry.
+Skill content reaches the model through dsh's skill provider, and
+prompt, memory and subagent content does not reach the main loop through
+the plugin.</li>
+<li>Most reusable component: <code>applyRefinementProposal</code>,
+<code>validateEdit</code> and <code>entryFingerprint</code> in
+<code>src/refine.ts</code>, with the snapshot-replaying rollback builder
+in <code>src/rollback.ts</code>.</li>
+<li>Second risk: <strong>the approval gate guards one door of
+three.</strong> <code>requireGlobalApproval</code> is off by default
+and, when on, asks only for a global plan from
+<code>harness_refine</code>; a global rollback and
+<code>harness_wrapup</code> promotion reach the global store without it.
+Planner JSON also passes <code>sourceSession</code>,
+<code>protection</code> and lifecycle metadata through unchecked, and a
+skill committed to a session layer is materialized into the shared
+skills directory.</li>
+<li>Maturity impression: 61 commits by 1 contributor between 17 August
+and 30 September 2026; 8,665 lines of TypeScript in 39 source files; 631
+Vitest cases in 37 spec files, run in CI with coverage floors. No test
+uses a real model, and the ranking and cache measurements quoted in
+comments come from a local corpus the tree excludes.</li>
+<li>Study when: you want an agent that edits its own harness with
+reversible, reason-carrying writes, or an injection block that keeps a
+provider's prefix cache warm.</li>
+<li>Do not copy when: recalled content must actually reach the model
+each turn, several processes share one harness root, or a person must
+approve what enters the shared layer.</li>
 </ul>
         </article>
       </div>

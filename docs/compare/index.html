@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-700, generated from each report's frontmatter —
+702, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-700, generated from each report's frontmatter —
+702, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-700, generated from each report's frontmatter —
+702, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 700, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 702, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-700, generated from each report's frontmatter —
+702, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 700 systems by the seven mechanisms
+filters all 702 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -7292,6 +7292,54 @@ the untimed profile tier</td>
 </tr>
 <tr>
 <td><a
+href="../systems/dsh-continual-harness/"><code>dsh-continual-harness</code></a></td>
+<td>A versioned entry of kind prompt, memory, skill or subagent: id,
+content, version, updatedAt, optional title, blastRadius, projects tags,
+protection and lifecycle metadata</td>
+<td>harness_state.json under the harness root for the global layer and
+one per session directory, written by tmp-and-rename; refinements.jsonl
+journals beside each; skill entries also materialize as SKILL.md bundles
+in the dsh skills directory</td>
+<td>No search tool. A pre-step block is injected as a user message: by
+default a stable index of the top 15 entry ids ranked by project
+ownership then IDF-weighted term overlap with the session's opening
+request and cwd, no content; query mode shows six entries per kind at
+180 characters</td>
+<td>An LLM planner proposes create, update and delete edits from a
+tail-biased trajectory; triggered by the harness_refine tool (global by
+default), the /refine command, or an automatic gate every 25 turns or on
+compaction that writes session-local only</td>
+<td>Validated edits with a required reason and blastRadius, a baseline
+fingerprint check, a growth cap and protected-entry rules; delete
+removes the entry; any committed refinement rolls back once by id from
+its before snapshots; archive hides an entry</td>
+<td>Physical: a global store and one store per session id, local
+shadowing global on merge. Project tags rank the index and never filter.
+A session-radius entry is skipped only when it comes from the global
+layer. Skills of either scope materialize into one shared directory</td>
+<td>A Cordis plugin for DeepSeek Harness: agent/pre-step projection,
+session/event driver, harness_refine, harness_wrapup and
+harness_benchmark tools, an optional /refine slash command, and an
+invariant companion</td>
+<td>Automatic gate on turn interval or compaction end with a 20-minute
+cooldown: one model review call, then a planner call if approved,
+fire-and-forget; each verdict appended to reviews.jsonl</td>
+<td>None as a state. active or archived lifecycle, pinned and protection
+flags; the review gate and the planner are the agent's own model; global
+approval is an optional prompt to the user on one tool path</td>
+<td>Compare-and-swap on an entry fingerprint between planning and
+commit; blastRadius legality checked against the destination layer; full
+before and after snapshots make every commit reversible; a
+session-stable injection block that keeps the provider prefix cache
+warm; a paired A/B benchmark whose verdict is computed in code</td>
+<td>The default injection carries ids only while no tool reads an entry;
+the approval gate covers one verb while harness_wrapup promote and
+rollback reach the global store without it; planner JSON passes
+provenance, protection and lifecycle fields through unchecked;
+session-local skills land in the shared skills directory</td>
+</tr>
+<tr>
+<td><a
 href="../systems/dsh-layered-memory/"><code>dsh-layered-memory</code></a></td>
 <td>An L1 atomic memory row (content, type, priority, scene_name,
 version, family), distilled by LLM from captured L0 turns; above it
@@ -8269,6 +8317,54 @@ record; <code>purge_by_criteria</code> builds SQL from criteria names;
 strongest rows only; the specification's header lags the code by a
 schema version and the README by a crate version; three commits and one
 author, with the product's behaviour unverifiable from here</td>
+</tr>
+<tr>
+<td><a href="../systems/engram-mcp/"><code>engram-mcp</code></a></td>
+<td>A typed memory row (fact, decision, preference, pattern, debug,
+entity, handoff, adr, todo) with tags, importance, branch, pinned and
+global flags, external artifact pointers and merge provenance; handoffs,
+ADRs and todos add sidecar tables</td>
+<td>One SQLite file for every project, default under the user data
+directory, with an FTS5 index kept by triggers and 256-dimension
+embeddings from a local quantized ONNX model</td>
+<td>memory_query fuses cosine over project plus global embeddings with
+FTS5 BM25 by RRF k=60; memory_context scores cluster centroids first,
+over a 500-row recency-capped candidate set; handoff_resume ranks
+per-section embeddings along a branch chain</td>
+<td>Explicit MCP or CLI store; same-type memories at cosine 0.90 or
+above auto-merge on store, new over old; Claude Code hooks capture a
+session-end summary by default, and #remember prompts and subagent
+results when enabled, under a daily cap</td>
+<td>Content replaced wholesale with the old version snapshotted;
+supersedes edges redirect retrieval to the successor; a dead flag drops
+a memory; deletes, merges, prunes and wipes snapshot to a 30-day trash
+with memory_restore</td>
+<td>project_id key on the row, from the git remote or path, filtered on
+the search, list, handoff, todo, ADR, trash and export reads and
+overridable per call by a model-supplied project argument; memory_graph
+reads by id and traverses edges with no project predicate; a branch
+column filtered by branch mode; a global flag that crosses projects</td>
+<td>MCP stdio server with up to 29 tools behind three advertised
+profiles, two MCP prompts and memory resources; engram-cli with JSON
+output; a SessionStart shell hook; lifecycle hooks installed into Claude
+Code settings</td>
+<td>An hourly pass recomputes decay, prunes never-accessed
+floor-relevance memories older than 30 days and sweeps the trash; a
+6-hourly pass re-clusters and merges same-type pairs at 0.90 inside each
+cluster; both sleep one interval before the first run</td>
+<td>Stored dead flag and supersedes edges filtered by query, context and
+list; ADR status and todo status are workflow states; no provenance of
+author or source beyond hook tags</td>
+<td>Supersession returns the successor at the superseded memory's rank
+with a matched_via note; every destructive path snapshots to a trash
+with edges and embedding; decay counts days of curated activity, not
+calendar days; tool results return what they replaced or destroyed</td>
+<td>The 6-hourly and CLI dedup passes ignore supersedes edges and dead
+flags, so a correction can be merged away; recall_context and
+handoff_resume skip the status filter; the memory_context candidate cap
+favours the latest-accessed rows; memory_graph returns other projects'
+memories through cross-project links; deletes do not sync between
+machines</td>
 </tr>
 <tr>
 <td><a
@@ -30573,7 +30669,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>64 of 700:</em> <a
+<p><em>64 of 702:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -30641,7 +30737,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>177 of 700:</em> <a
+<p><em>178 of 702:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -30686,6 +30782,7 @@ href="../systems/elizaos/"><code>elizaos</code></a>, <a
 href="../systems/empirica/"><code>empirica</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-format/"><code>engram-format</code></a>, <a
+href="../systems/engram-mcp/"><code>engram-mcp</code></a>, <a
 href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
 href="../systems/engraphis/"><code>engraphis</code></a>, <a
 href="../systems/fava-trails/"><code>fava-trails</code></a>, <a
@@ -30825,7 +30922,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>119 of 700:</em> <a
+<p><em>119 of 702:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -30952,7 +31049,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>323 of 700:</em> <a
+<p><em>323 of 702:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -31290,7 +31387,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>235 of 700:</em> <a
+<p><em>236 of 702:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -31349,7 +31446,8 @@ href="../systems/deepcode/"><code>deepcode</code></a>, <a
 href="../systems/demarkus/"><code>demarkus</code></a>, <a
 href="../systems/dense-mem/"><code>dense-mem</code></a>, <a
 href="../systems/dreamgraph/"><code>dreamgraph</code></a>, <a
-href="../systems/dsh-mneme/"><code>dsh-mneme</code></a>, <a
+href="../systems/dsh-continual-harness/"><code>dsh-continual-harness</code></a>,
+<a href="../systems/dsh-mneme/"><code>dsh-mneme</code></a>, <a
 href="../systems/echo-agent/"><code>echo-agent</code></a>, <a
 href="../systems/edda/"><code>edda</code></a>, <a
 href="../systems/elai/"><code>elai</code></a>, <a
@@ -31535,7 +31633,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>94 of 700:</em> <a
+<p><em>94 of 702:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
@@ -31633,7 +31731,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>412 of 700:</em> <a
+<p><em>414 of 702:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -31728,6 +31826,8 @@ href="../systems/dense-mem/"><code>dense-mem</code></a>, <a
 href="../systems/diffmem/"><code>diffmem</code></a>, <a
 href="../systems/distill-kura/"><code>distill-kura</code></a>, <a
 href="../systems/dsh-ai-memory/"><code>dsh-ai-memory</code></a>, <a
+href="../systems/dsh-continual-harness/"><code>dsh-continual-harness</code></a>,
+<a
 href="../systems/dsh-layered-memory/"><code>dsh-layered-memory</code></a>,
 <a href="../systems/dsh-mneme/"><code>dsh-mneme</code></a>, <a
 href="../systems/dsh-mnemon/"><code>dsh-mnemon</code></a>, <a
@@ -31740,8 +31840,9 @@ href="../systems/elizaos/"><code>elizaos</code></a>, <a
 href="../systems/emem/"><code>emem</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-cognitive/"><code>engram-cognitive</code></a>,
-<a href="../systems/engram-nickcirv/"><code>engram-nickcirv</code></a>,
-<a href="../systems/engraphis/"><code>engraphis</code></a>, <a
+<a href="../systems/engram-mcp/"><code>engram-mcp</code></a>, <a
+href="../systems/engram-nickcirv/"><code>engram-nickcirv</code></a>, <a
+href="../systems/engraphis/"><code>engraphis</code></a>, <a
 href="../systems/enquire-mcp/"><code>enquire-mcp</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/exomem/"><code>exomem</code></a>, <a
@@ -32077,8 +32178,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-412 repositories of
-700 assert that particular material must
+414 repositories of
+702 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -32151,7 +32252,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 700 is the real figure for the second kind, and
+of 702 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

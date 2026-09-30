@@ -227,6 +227,7 @@ on how to write one.
   keys transient context per message rather than per turn for exactly this
   reason, naming *"a prompt-cache prefix that changes on each call"* as the
   failure.
+- **[dsh-continual-harness](../../systems/dsh-continual-harness/)** — the session-stable anchor as the default, with a measured reason and a visible price. The block is ranked against the session's opening request and cwd, republished only when a refinement lands or the store empties, and replaced in place; the config comment reports a 95.4% against 81.2% cache-read hit rate over one six-message session. To stay byte-stable the default block drops entry content and lists 15 ids, telling the model to read entries on demand when no plugin tool can.
 
 Note that [MemOS](../../systems/memos/)'s "activation memory: KV/prefix cache" is
 a *different* mechanism — reusing model state rather than positioning text — and

@@ -364,6 +364,8 @@ rather than dead is deleted, and deletion is permanent."*
 
 **[Kimetsu](../../systems/kimetsu/) binds reinforcement to the revision the model was shown.** A cited memory gains a full point of usefulness after a successful run and a retrieved-but-uncited one a tenth, decayed on a half-life from `last_useful_at`. The citation event carries the claim revision or exposure id, and `apply_memory_cited` credits nothing when that revision is no longer current (`projector.rs:375-420`). A text correction freezes the old revision's counts in `memory_revisions` and resets the live row's confidence, use count, citations and query routes, so a rewritten claim starts without the old one's reputation (`projector.rs:2748-2828`).
 
+**[Engram MCP (edg-l)](../../systems/engram-mcp/) decays on a clock of project activity rather than the calendar.** `elapsed` is the number of distinct days on which the memory's project received a store after the memory was last accessed, derived from `created_at` in the `UPDATE` itself rather than kept as a counter (`src/db/memories.rs:826-860`; `src/db/activity.rs`). Rows tagged `hook` do not advance it, so a session of automatic capture ages nothing, and a project nobody stores into does not decay however long it sits. The ranking scorers read the same store-day axis, and the usage boost is capped at 0.1 under a 1.0 ceiling, the value a pinned memory holds (`src/decay.rs:18-69`).
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.
