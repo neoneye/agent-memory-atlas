@@ -103,7 +103,7 @@ carries no rubric mechanism in this atlas, and that is the design rather than a
 gap: hand-authoring means the memory is exactly what the person decided.
 
 **[RisuAI](../../systems/risuai/)**'s HypaV3 modal is the most complete editor
-over *machine-written* memory here, and carries all five verbs: edit text,
+over *machine-written* memory on this page, and carries all five verbs: edit text,
 delete-from-here, merge with a union of source ids, pin via `isImportant`, and
 bulk re-summarise **with the result previewed before it is accepted**. That last
 one is the same operation its 2023 generation performed silently on a threshold,

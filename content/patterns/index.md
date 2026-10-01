@@ -343,7 +343,7 @@ Filter the [homepage](../#systems) by tombstone and scope to see how quickly the
 **And be clear about what that thinning means.** PLACEHOLDER_PATTERN_TOMBSTONE_COUNT of PLACEHOLDER_TOTAL_COUNT systems carry a tombstone, so this stack describes almost nobody. Two readings are available and
 this atlas cannot settle between them: either the field has not yet paid for a
 failure it will pay for later, or the cost genuinely exceeds the benefit for most
-products and the three holders are unusual rather than ahead. The
+products and the holders are unusual rather than ahead. The
 [establishment section](#how-established-is-any-of-this) says which patterns rest
 on how many instances; take the deferrals above seriously, and if none of the
 failure modes here is the one that would hurt you, build the smaller stack.

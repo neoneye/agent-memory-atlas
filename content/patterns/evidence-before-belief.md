@@ -156,7 +156,7 @@ the link never breaks, it just stops being a pointer and becomes a bibliography.
 If you adopt this, keep the pre-merge rows or record which input contributed
 which clause.
 
-[Daimon](../../systems/daimon/) is the atlas's counter-example to that failure,
+[Daimon](../../systems/daimon/) is a counter-example to that failure,
 and it gets there without storing the evidence at all. It keeps no copy of the
 transcript: a checkpoint carries a hash of the source bytes, and each verbatim
 item carries the quote plus the id of the host message it came from. The link is
@@ -177,7 +177,7 @@ evidence you do not.
 
 [MIRIX](../../systems/mirix/) is a cheap instance to copy: one `raw_memory`
 table holding the unprocessed context string, embedded and searchable in its own
-right, beside six typed derived tables. No versioning, no lineage graph — just the
+right, beside six typed derived tables. No lineage graph — just the
 source kept where a bad extraction cannot destroy it. What it does not do is link
 the derived rows back to it, so the evidence is searchable but not attributable.
 
@@ -203,32 +203,32 @@ actual-versus-required for all five gates, so a promotion report explains its ow
 refusals; and a candidate with any contradiction returns `needs_review` rather
 than a silent skip.
 
-Three things blunt it at the pinned commit. The engine ships **disabled and
+Two things blunt it at the pinned commit. The engine ships **disabled and
 dry-run by default**, and `minSessions` defaults to `1`, which makes the gate
 that distinguishes this implementation a no-op until an operator raises it. A
 threshold whose default value disables it is a design that has been thought
 through and then not committed to — and the number to ship is the one that makes
 the mechanism do something.
 
-The third is worse and generalizes further. The parallel belief store this feeds
+Worse, and more general: the parallel belief store, which the engine never writes,
 declares `candidate | promoted | rejected | stale`, the injected beliefs layer
-admits only `promoted`, and **no code path writes `promoted`** — so the evidence
-chain is built, maintained, decayed and contradicted, and terminates in a state
+admits only `promoted`, and **no code path writes `promoted`** — so the store
+is built, maintained, decayed and contradicted, and terminates in a state
 nothing can enter. Evidence-before-belief has a last mile that is easy to leave
 unbuilt precisely because the interesting work is upstream of it: if you build
 the ladder, commit a test that something can climb it.
 
-**[Claude Self-Reflect](../../systems/claude-self-reflect/) keeps the evidence in a form a later pass can re-check rather than re-derive.** Its `witness_ledger` is insert-and-query only by module contract — *"a witness that no longer holds is superseded by inserting a NEW row … never by mutating or removing the old one"* — and each row is a BLAKE3 stamp of a symbol span anchored to a commit oid. The belief layered on top, a `witness_verdicts` event saying an anchor is obsolete, superseded or reinstated, is a pure function of those stamps and git commit-graph ancestry, so any reader can recompute it, and the verdict carries the commit that proves it into the search-facing annotation. The raw material is never consumed either: the transcripts stay where the harness wrote them and a lost database is rebuilt by re-import. What it does not keep is the other direction — a `<private>` tag applied after the fact cannot reach a chunk already stored, because nothing in the tree deletes one.
+**[Claude Self-Reflect](../../systems/claude-self-reflect/) keeps the evidence in a form a later pass can re-check rather than re-derive.** Its `witness_ledger` is insert-and-query only by module contract — *"a witness that no longer holds is superseded by inserting a NEW row … never by mutating the old one"* — and each row is a BLAKE3 stamp of a symbol span anchored to a commit oid. The belief layered on top, a `witness_verdicts` event saying an anchor is obsolete, superseded or reinstated, is a pure function of those stamps and git commit-graph ancestry, so any reader can recompute it, and the verdict carries the commit that proves it into the search-facing annotation. The raw material is never consumed either: the transcripts stay where the harness wrote them and a lost database is rebuilt by re-import. What it does not keep is the other direction — a `<private>` tag applied after the fact cannot reach a chunk already stored, because no user-reachable path deletes one.
 
 [Signet AI](../../systems/signetai/) enforces the separation in the schema and then again at the write gate. A migration splits rows into episodic evidence — anything not produced by the daemon's own derived source types — and derived state, stating that saves are *"immutable EPISODIC evidence"* and that *"Only Dreaming derives semantic state from episodic rows"*. The MCP store tool's own description repeats it to the model, adding that a structured payload is *"retained alongside the content as evidence but is not applied to the graph from this tool"*. The gate is in code, not the prompt: `citeEvidence` resolves each operation's quote and source ref against the episodic store, scoped by agent, and requires the stored content to contain the quote; `validateRequestBeforeWrites` refuses the whole batch on the first citation that does not resolve. What distinguishes it from the other instances here is the refusal ledger — the exclusion row records the failure with a class of `quote_mismatch`, `scope_mismatch`, `source_projection` or `incomplete_transcript`, a retry count and a requeue timestamp, so an ungrounded belief is a work item rather than a silence.
 
-[elizaOS](../../systems/elizaos/) carries the strongest version of the backward
+[elizaOS](../../systems/elizaos/) carries the backward
 link this page asks for, and closes the loop the others leave open. Every
 extracted fact stores `extractionEvidenceIds` — which messages produced it — and
 `extractionSourceRevisions`, a map from source message id to **the revision that
 was read**. That second field is what turns provenance into a mechanism rather
-than a record: `reviewChangedExtractionSources` compares each fact's stored
-revisions against the current ones and marks any fact whose sources were edited
+than a record: `reviewChangedExtractionSources` compares each unconfirmed, non-`MEMORY` fact's stored
+revisions against the current ones and marks any whose sources were edited
 or removed `extractionReviewRequired: true`, then a reconciliation pass sets
 `extractionStatus: "source_invalidated"`, stamps the reconciliation id and the
 changed source ids, and adds those sources to a reprocess queue. A read-side
@@ -251,7 +251,7 @@ dedupe opens its loop with `if (!isActiveMemoryEvidence(candidate)) continue;`,
 so a retired claim does not block the identical text being written again as a
 new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 
-[Emulo](../../systems/emulo/) retains evidence more strictly than most, and shows the same gap. Every rule reaches verbatim quotes bound to the dated message they came from, and the profile is rebuilt from cached, content-addressed worker reports. There is no correction in the retained layer: a hand edit to the active profile fails its hash, and re-mining over unchanged reports reactivates the same version. The rebuild also consumes the host's log retention, so evidence that rolls off disk takes its rules with it at the next update — deletion upstream acts as a forgetting policy nobody chose.
+[Emulo](../../systems/emulo/) retains evidence strictly, and shows the same gap. Every rule reaches verbatim quotes bound to the dated message they came from, and the profile is rebuilt from cached, content-addressed worker reports. There is no correction in the retained layer: a hand edit to the active profile fails its hash, and re-mining over unchanged reports reactivates the same version. The rebuild also consumes the host's log retention, so evidence that rolls off disk takes its rules with it at the next update — deletion upstream acts as a forgetting policy nobody chose.
 
 [Memseek](../../systems/memseek/) enforces the pattern at the write boundary. `compile_candidate_set` rejects any citation outside the rows a derivation was shown, and the commit refuses the write if a shown source has gone. Every derived row carries `derived_from = (run_id, *citations)`, the graph erasure walks. The limit: its agent-memory catalog records supersession only as an id array on the newer row, so the stale belief stays in recall.
 

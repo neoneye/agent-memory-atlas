@@ -77,8 +77,8 @@ work that happens away from the user.
 
 ## Seen in the atlas
 
-[nanobot](../../systems/nanobot/) contributes the cheapest correct mechanism in
-the atlas, and it is worth trying before any retry queue. Its `Dream`
+[nanobot](../../systems/nanobot/) contributes the cheapest correct mechanism on
+this page, and it is worth trying before any retry queue. Its `Dream`
 consolidation runs against an append-only archive tracked by a **consumption
 cursor**, and `MemoryStore.dream_run_completed` advances that cursor only when
 the run's stop reason is `completed`. A run that ends on `error`, `tool_error`,

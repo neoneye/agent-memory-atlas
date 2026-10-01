@@ -134,8 +134,8 @@ partial unique index, and the legacy retrofit is documented
 (`valid_from = legacy.updated_at`). All three are written with the same `now` on
 every insert, and the code says so — `updatedAt` is *"identical to `validFrom`
 because every write creates a fresh row"*, and `created_at` is *"copied from
-`valid_from` on a fresh row"*, kept so a later phase has somewhere to hang vote
-scores. No read in `src/` takes a time argument. That is version history on one
+`valid_from` on a fresh row"*, kept so a later phase can stamp vote timestamps
+without another migration. No read in `src/` takes a time argument. That is version history on one
 clock: it answers *what did this key hold before*, and not *what did this store
 believe on a given date*, which is what makes the pair of columns a plan rather
 than a second axis.
@@ -190,8 +190,8 @@ description is "what was true about X on date Y?". The uneven coverage is the
 sentence worth carrying: validity is tracked for the triples extracted from
 documents and not for the documents themselves.
 
-[memory-lancedb-pro](../../systems/memory-lancedb-pro/) separates two things most
-systems merge — `invalidated_at`, set when another fact supersedes this one, and
+[memory-lancedb-pro](../../systems/memory-lancedb-pro/) separates two things that are
+easy to merge — `invalidated_at`, set when another fact supersedes this one, and
 `valid_until`, an expiry the fact carried from the start — with
 `isMemoryExpired` documented as "separate from `isMemoryActiveAt` (which checks
 `invalidated_at` from superseding)". It also refuses to store an incoherent
@@ -212,9 +212,9 @@ wrong then or the retrieval was. The single-axis version is genuinely useful and
 much cheaper; the distinction is worth drawing explicitly, because a reader
 comparing feature lists will see `as_of` and `valid_to` and assume the pair.
 
-[Uteke](../../systems/uteke/) ships `valid_from`, `valid_until` and `recall --at`, and all three are record time. `valid_from` equals `created_at` on every path, and `valid_until` is set only by a deprecation, to the moment it happened. Point-in-time recall draws candidates from a vector index that drops a row when it is deprecated, and `list --at` filters `deprecated = 0` in SQL, so a memory retired after the requested time is missing from the answer about that time. The predicate that would keep it is correct and never receives such a row.
+[Uteke](../../systems/uteke/) ships `valid_from`, `valid_until` and `recall --at`, and all three are record time. `valid_from` equals `created_at` on every path, and outside import and restore `valid_until` is written only by a deprecation, to the moment it happened, or by its undo. Point-in-time recall draws candidates from a vector index that drops a row when it is deprecated, and `list --at` filters `deprecated = 0` in SQL, so a memory retired after the requested time is missing from the answer about that time. The predicate that would keep it is correct and never receives such a row.
 
-[Janus-Graph](../../systems/janus-graph/) is Graphiti seen from a caller, and both of its temporal defects live in the wrapper rather than the engine. It dates every episode by the sweep that processed it — the worker's `reference_time` falls back to now because it reads a `created_at` the queue's claim never sets — so relative dates in a delayed or dead-letter-replayed episode resolve against the wrong day, and no caller can supply the time. And its recall filter is `invalid_at IS NULL`, which keeps closed facts out but also hides a fact whose extracted end date lies in the future; comparing against the query instant is the correct predicate. It still earns the mark, because the engine's edges carry a model-extracted validity that can precede their row, and the wrapper reads that axis on every search.
+[Janus-Graph](../../systems/janus-graph/) is Graphiti seen from a caller, and both of its temporal defects live in the wrapper rather than the engine. It dates every episode by the sweep that processed it — the worker's `reference_time` falls back to now because it reads a `created_at` the queue's claim never sets — so relative dates in a delayed or dead-letter-replayed episode resolve against the wrong day, and no caller can supply the time. And its recall filter is `invalid_at IS NULL`, which keeps closed facts out but also hides a fact whose extracted end date lies in the future; comparing against the query instant is the correct predicate. It still earns the mark, because the engine's edges carry a model-extracted validity that can precede their row, and the wrapper reads that axis on every `search_memory` call.
 
 [Utopia](../../systems/utopia/) puts its discipline on the read side. `valid_from`/`valid_to` carry a precision column *per endpoint*, replacing a single default that made a fact with no date at all look measured to the day, and the end precision admits `unknown`, so *"former CEO"* — an ending stated without a date — is distinguishable from *still holding*. Every read predicate for both axes is assembled in two modules, `world_axis.rs` and `record_axis.rs`, on the stated argument that a defence spread across fifty read sites fails silently when one is missed; both take an instant, and the record axis is reversed for chunks, documents and entity merges as well, so a replay at a past date sees the graph as it stood, merges undone and deleted documents back. The textbook indeterminate-instant trick is explicitly refused: filling `valid_to` with the document's date would put a confident-looking timestamp in a column every reader would have to check the precision of first.
 

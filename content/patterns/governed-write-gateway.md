@@ -115,14 +115,13 @@ what makes the committed negative cases possible.
 
 [PLUR1BUS](../../systems/plur1bus/) shows what a gate can demand of a correction,
 and which caller should be allowed past it. `lib/safe-update.js` refuses a content
-change with no `updateSource` and no `updateEvidence`, refuses new text with no
+change missing either `updateSource` or `updateEvidence`, refuses new text with no
 new embedding, deduplicates on a hash of the change rather than of the row, and
 appends the outcome to a reconsolidation event log — five checks in one function,
 each of which a caller cannot skip. The sixth is a **semantic drift gate**: the
 correction is rejected outright if the new embedding sits more than 0.45 cosine
 from the old, on the reasoning that a replacement meaning something else is
-corruption rather than correction. It is the only instance of that check in this
-atlas, and the two callers in the tree take opposite sides of it. The automated
+corruption rather than correction. The two callers in the tree take opposite sides of it. The automated
 conflict apply, behind a `confirm === true` check, calls `safeUpdate` with the
 gate on and turns a drift refusal into `review_only` instead of a write. The
 user's `/correct` command passes `skipDriftGate: true`, with the reasoning at the
@@ -137,7 +136,7 @@ chose.
 [Memory Palace](../../systems/memory-palace/) shows the write-side version with a
 degradation rule most gateways lack. `write_guard` runs a semantic and a lexical
 search before a write and returns `ADD`, `UPDATE` or `NOOP` — and when the
-embedding provider has degraded to a hash fallback, it returns `NOOP` with the
+embedding provider has degraded to a hash fallback and fail-open is not explicitly enabled, it returns `NOOP` with the
 reason instead of a decision. A duplicate gate that falls through to "not a
 duplicate" whenever its evidence is bad is the failure this avoids.
 
@@ -150,7 +149,7 @@ reason — "an unaudited heuristic whose number-mismatch score sits exactly at t
 default action threshold must never select deactivation".
 
 [Hermes Agent](../../systems/hermes-agent/) routes memory mutations through a
-staged write-approval gate that can allow, block, or hold a write for human
+staged write-approval gate, per subsystem and off unless configured, that can allow, block, or hold a write for human
 approval — but the gate **fails open** if its module cannot be imported, which is
 documented in the code and worth noticing: a gateway's failure mode is part of
 its design.
@@ -191,7 +190,7 @@ The gateway exists, and only the untrusted caller is routed through it.
 
 [Flowly](../../systems/flowly/) has the governance and puts it on the wrong side of the write. Its `GovernanceStore` enforces a transition table and audits every move, but the live hook runs after `memory_append` has appended to `MEMORY.md` and after `knowledge_graph add` has written its triple — the two stores the prompt injects whole. A `needs_review` automation write is therefore in context on the next turn, and `reject` changes the wrapper row while the line and the open triple stay. The gate is real for the dreamer, the importers and Obsidian ingest, whose text exists only inside the governance store.
 
-[Global Agent Memory](../../systems/global-agent-memory/) converges every adapter — MCP tool, CLI, dashboard — on one `MemoryService` over one `VaultRepository`, and that gateway enforces idempotency by request id, compare-and-set on `updated_at`, a pure lifecycle transition table and an append-only audit line. It enforces no actor. The same `approve` is reached from the agent's tool list and the owner's dashboard, and `supersede` activates a candidate replacement without passing the transition table. It is the clearest case of a gateway whose invariants are all about consistency and none about authority.
+[Global Agent Memory](../../systems/global-agent-memory/) converges every adapter — MCP tool, CLI, dashboard — on one `MemoryService` over one `VaultRepository`, and that gateway enforces idempotency by request id, compare-and-set on `updated_at`, a pure lifecycle transition table and an append-only audit line. It enforces no actor. The same `approve` is reached from the agent's tool list and the owner's dashboard, and `supersede` activates a candidate replacement without passing the transition table. Its invariants are all about consistency and none about authority.
 
 ### Gates on something other than a write
 
@@ -224,7 +223,9 @@ register rather than running without it.
 [Memora](../../systems/memora/) applies the idea to a bulk mutation rather than a
 single write: its supersession sweep takes `dry_run: bool = True`, so the pass
 that would hide superseded memories reports its proposals by default and mutates
-only when explicitly asked. A gateway concentrates writes so they can be
+only when explicitly asked. The flag is a parameter of an MCP tool the model
+calls, so the default invites a preview without requiring a person. A gateway
+concentrates writes so they can be
 governed; a dry-run default lets them be *reviewed* first, which is the one
 control this pattern otherwise lacks for operations whose blast radius is
 unknowable in advance.
@@ -277,7 +278,7 @@ want an external policy layer to be able to protect your memory, name your write
 tool the boring, guessable thing.
 
 [ruflo](../../systems/ruflo/) is the read-side half of the same idea and the one
-that does have a report: `agentdb-retrieval-guard.ts` screens chunks *coming out*
+that does have a report: `agentdb-retrieval-guard.ts`, off unless an environment variable turns it on, screens chunks *coming out*
 of the store before they are assembled into context. Write-side screening catches
 the payload as it lands; read-side screening also catches whatever was already in
 the store when you turned the guard on. They are not substitutes, and a system

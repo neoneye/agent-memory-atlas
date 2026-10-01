@@ -270,23 +270,22 @@ explicitly: an overturned item is still evidence, so it <em>"ranks down
 and renders flagged rather than disappearing."</em> No read withholds an
 item on either field, which is why the report carries no
 <code>trust_state</code>.</p>
-<p>Its second state machine answers a different question, and the answer
-is the best one in this atlas to <em>how do you know a human approved
-it</em>. A refutation — an approach recorded as having lost under cited
-evidence — folds to <code>candidate</code>, <code>active</code> or
-<code>overturned</code>, and the transition to <code>active</code>
-requires human authority. What makes it worth copying is that authority
-is not a field the caller sets: every row stamps the <strong>channel the
-write actually arrived through</strong> (<code>cli-agent</code>,
-<code>cli-tty</code>, <code>ui</code>, <code>signed</code>,
-<code>mechanical</code>), and a table maps channel to authority. A
-<code>--by human</code> flag was deleted for being <em>"a flag whose
-only function was to let the caller assert its own authority… an actor
-acting as witness for its own claim"</em>; what survives is
-<code>--by agent</code>, which can only narrow. The human path is the
-absence of that flag plus an interactive terminal, and the two strongest
-channels are unreachable from the CLI entirely, <em>"because a channel
-an agent can reach by shelling out is the deleted
+<p>Its second state machine answers a different question: <em>how do you
+know a human approved it</em>. A refutation — an approach recorded as
+having lost under cited evidence — folds to <code>candidate</code>,
+<code>active</code> or <code>overturned</code>, and the transition to
+<code>active</code> requires human authority. What makes it worth
+copying is that authority is not a field the caller sets: every row
+stamps the <strong>channel the write actually arrived through</strong>
+(<code>cli-agent</code>, <code>cli-tty</code>, <code>ui</code>,
+<code>signed</code>, <code>mechanical</code>), and a table maps channel
+to authority. A <code>--by human</code> flag was deleted for being
+<em>"a flag whose only function was to let the caller assert its own
+authority… an actor acting as witness for its own claim"</em>; what
+survives is <code>--by agent</code>, which can only narrow. The human
+path is the absence of that flag plus an interactive terminal, and the
+two strongest channels are unreachable from the CLI entirely,
+<em>"because a channel an agent can reach by shelling out is the deleted
 <code>--by human</code> renamed."</em> A hand-edited
 <code>ratified: true</code> on an agent row changes nothing, because the
 fold re-derives authority from the channel — there is a test for exactly
@@ -316,10 +315,11 @@ href="../../systems/holographic/">Holographic</a> collapses truth and
 reachability into one <code>trust_score</code> that feedback mutates
 directly. <a href="../../systems/mercury-agent/">Mercury</a> grades
 confidence, importance, and durability separately — good — but assigns
-all three once at extraction, so they are estimates rather than states
-that change with evidence. <a href="../../systems/cognee/">Cognee</a>
-has rich provenance and ontology validity with no factual promotion
-state; <a href="../../systems/claude-mem/">Claude-Mem</a> and <a
+all three at extraction, and a merge only ratchets each upward with
+<code>Math.max</code>, so they are estimates rather than states that
+change with evidence. <a href="../../systems/cognee/">Cognee</a> has
+rich provenance and ontology validity with no factual promotion state;
+<a href="../../systems/claude-mem/">Claude-Mem</a> and <a
 href="../../systems/a-mem/">A-MEM</a> activate generated content with
 none at all.</p>
 <p><a href="../../systems/graphify/">Graphify</a> is the label without
@@ -387,9 +387,9 @@ identity must come from the runtime, not from a default and not from a
 caller-supplied argument. And <strong>a silent fallback converts missing
 configuration into a policy change</strong> — <code>// 'unknown'</code>
 is a defect for every caller that does not set the variables.</p>
-<p><a href="../../systems/memory-palace/">Memory Palace</a> is the
-atlas's clearest <em>procedural</em> instance and the one where the
-state reaches the read path hardest. <code>review_state</code> is
+<p><a href="../../systems/memory-palace/">Memory Palace</a> is a
+<em>procedural</em> instance, and its state reaches the read path
+directly. <code>review_state</code> is
 <code>draft | human_reviewed | rejected</code>, validated on
 construction, and <code>recommend_for_trigger</code> returns only
 <code>human_reviewed</code> rows — the docstring calls this "the
@@ -422,8 +422,8 @@ records where a memory came from, not what anyone believes about it.
 Separating <em>authority</em> from <em>credence</em> turns out to be the
 more useful axis for gating actions, and conflating the two because the
 field is an enum is the easy mistake.</p>
-<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> is the smallest
-instance that still does the job, and the interesting part is
+<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> is the promotion
+half of this pattern on its own, and the interesting part is
 <em>where</em> it puts the refusal. Its semantic tier carries two states
 — <code>asserted</code> and <code>verified</code> — and
 <code>store_fact()</code> writes <code>asserted</code> unconditionally,
@@ -435,11 +435,13 @@ handed an empty oracle:</p>
 human ruling); an agent may not mark its own claim verified with nothing
 behind it"</p>
 </blockquote>
-<p>Twelve lines, and it converts "the model said so" from a default into
+<p>The refusal converts "the model said so" from a default into
 something a caller has to lie about deliberately. The context block then
 renders the oracle inline beside the value, so a reader of the
-<em>prompt</em> can see which claims nobody checked. Its correction
-ledger sharpens the same idea into an admission rule — only
+<em>prompt</em> can see which claims nobody checked — and that label is
+all the state does: <code>build_context</code> emits every fact whatever
+its status, and no read withholds an <code>asserted</code> one. Its
+correction ledger sharpens the same idea into an admission rule — only
 <code>ci_failure</code>, <code>data_assertion</code>,
 <code>operator_ruling</code> or <code>reverted_pr</code> count — with
 one exclusion worth copying verbatim: <em>"Model-vs-model disagreement
@@ -515,20 +517,22 @@ decision had been indistinguishable from a user-confirmed one, so
 degraded specifications executed silently — the failure this page's
 confidence-versus-status split exists to prevent, found one level up.
 Only the two model-derived provenances face a clarity gate before the
-state may execute; the three grounded ones pass unconditionally, which
-is a machine rather than a vocabulary because the gate is where the
-states are read. Its pre-commit form repeats the split under different
-names: <code>CandidateContentSource</code> for where content came from,
+state may execute; the other three pass unconditionally, which is a
+machine rather than a vocabulary because the gate is where the states
+are read. <code>USER_CONFIRMED</code> comes from a regex over transcript
+section labels: where text sat, not who wrote it.</p>
+<p>Its pre-commit form repeats the split under different names:
+<code>CandidateContentSource</code> for where content came from,
 <code>ConfirmationAuthority</code> for who signed off, and
 <code>CandidateResolution</code> for where it stands, so "why do you
 believe that" and "who approved it" have separate answers and both are
 stored.</p>
 <p><strong><a href="../../systems/one-agent-many-hats/">Hats</a> puts a
-staging arm between <code>draft</code> and <code>active</code>, which no
-other system on this page has.</strong> A lesson distilled from a failed
-run enters at <code>draft</code> with confidence 0.5, becomes
-<code>canary</code> on first injection, and while it is unproven
-<code>inCanarySlice</code> — an FNV-1a hash of
+canary arm between <code>draft</code> and <code>active</code>, with a
+control group no other system on this page keeps.</strong> A lesson
+distilled from a failed run enters at <code>draft</code> with confidence
+0.5, becomes <code>canary</code> on first injection, and while it is
+unproven <code>inCanarySlice</code> — an FNV-1a hash of
 <code>runId:lessonId</code> against a 0.5 share
 (<code>src/memory/lessons.ts</code>) — decides whether this run sees it
 at all. The runs that do not are a control group, deterministically so:
@@ -645,10 +649,10 @@ under a positive minimum.</p>
 filtering half and seals the transition. Its <code>claimStatus</code> is
 decided inside the append from the writer's runtime identity, a shared
 write without a publish capability lands <code>candidate</code>, and
-every memo read drops candidates. But <code>authorize</code> denies
-promote, reject and expire unconditionally, so the state has an entry
-and no exit. The writers that pass no identity — the MCP and Pi write
-tools the model holds — land <code>verified</code> as
+every default memo read drops candidates. But <code>authorize</code>
+denies promote, reject and expire unconditionally, so the state has an
+entry and no exit. The writers that pass no identity — the MCP and Pi
+write tools the model holds — land <code>verified</code> as
 <code>local-user</code>, which is the case this page's question about
 who may set the state exists to catch.</p>
 <h2 id="tests-to-require">Tests to require</h2>

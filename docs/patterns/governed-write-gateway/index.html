@@ -232,17 +232,16 @@ it is deterministic and testable, which is what makes the committed
 negative cases possible.</p>
 <p><a href="../../systems/plur1bus/">PLUR1BUS</a> shows what a gate can
 demand of a correction, and which caller should be allowed past it.
-<code>lib/safe-update.js</code> refuses a content change with no
-<code>updateSource</code> and no <code>updateEvidence</code>, refuses
-new text with no new embedding, deduplicates on a hash of the change
-rather than of the row, and appends the outcome to a reconsolidation
-event log — five checks in one function, each of which a caller cannot
-skip. The sixth is a <strong>semantic drift gate</strong>: the
-correction is rejected outright if the new embedding sits more than 0.45
-cosine from the old, on the reasoning that a replacement meaning
-something else is corruption rather than correction. It is the only
-instance of that check in this atlas, and the two callers in the tree
-take opposite sides of it. The automated conflict apply, behind a
+<code>lib/safe-update.js</code> refuses a content change missing either
+<code>updateSource</code> or <code>updateEvidence</code>, refuses new
+text with no new embedding, deduplicates on a hash of the change rather
+than of the row, and appends the outcome to a reconsolidation event log
+— five checks in one function, each of which a caller cannot skip. The
+sixth is a <strong>semantic drift gate</strong>: the correction is
+rejected outright if the new embedding sits more than 0.45 cosine from
+the old, on the reasoning that a replacement meaning something else is
+corruption rather than correction. The two callers in the tree take
+opposite sides of it. The automated conflict apply, behind a
 <code>confirm === true</code> check, calls <code>safeUpdate</code> with
 the gate on and turns a drift refusal into <code>review_only</code>
 instead of a write. The user's <code>/correct</code> command passes
@@ -259,9 +258,10 @@ write-side version with a degradation rule most gateways lack.
 <code>write_guard</code> runs a semantic and a lexical search before a
 write and returns <code>ADD</code>, <code>UPDATE</code> or
 <code>NOOP</code> — and when the embedding provider has degraded to a
-hash fallback, it returns <code>NOOP</code> with the reason instead of a
-decision. A duplicate gate that falls through to "not a duplicate"
-whenever its evidence is bad is the failure this avoids.</p>
+hash fallback and fail-open is not explicitly enabled, it returns
+<code>NOOP</code> with the reason instead of a decision. A duplicate
+gate that falls through to "not a duplicate" whenever its evidence is
+bad is the failure this avoids.</p>
 <p><a href="../../systems/clawmem/">ClawMem</a> gates the
 <em>destructive</em> branch on the quality of the classifier that would
 select it: <code>resolveEffectiveContradictionPolicy</code> downgrades a
@@ -272,11 +272,11 @@ event per occurrence. The comment gives the reason — "an unaudited
 heuristic whose number-mismatch score sits exactly at the default action
 threshold must never select deactivation".</p>
 <p><a href="../../systems/hermes-agent/">Hermes Agent</a> routes memory
-mutations through a staged write-approval gate that can allow, block, or
-hold a write for human approval — but the gate <strong>fails
-open</strong> if its module cannot be imported, which is documented in
-the code and worth noticing: a gateway's failure mode is part of its
-design.</p>
+mutations through a staged write-approval gate, per subsystem and off
+unless configured, that can allow, block, or hold a write for human
+approval — but the gate <strong>fails open</strong> if its module cannot
+be imported, which is documented in the code and worth noticing: a
+gateway's failure mode is part of its design.</p>
 <p><a href="../../systems/hestia/">Hestia</a> declines the gateway for
 one adapter on purpose. The diagram above routes background extraction
 into the same governed command as every other caller; Hestia routes it
@@ -373,9 +373,8 @@ that gateway enforces idempotency by request id, compare-and-set on
 append-only audit line. It enforces no actor. The same
 <code>approve</code> is reached from the agent's tool list and the
 owner's dashboard, and <code>supersede</code> activates a candidate
-replacement without passing the transition table. It is the clearest
-case of a gateway whose invariants are all about consistency and none
-about authority.</p>
+replacement without passing the transition table. Its invariants are all
+about consistency and none about authority.</p>
 <h3 id="gates-on-something-other-than-a-write">Gates on something other
 than a write</h3>
 <p>These are analogies rather than instances. Each puts one gate, or one
@@ -410,10 +409,12 @@ it.</p>
 mutation rather than a single write: its supersession sweep takes
 <code>dry_run: bool = True</code>, so the pass that would hide
 superseded memories reports its proposals by default and mutates only
-when explicitly asked. A gateway concentrates writes so they can be
-governed; a dry-run default lets them be <em>reviewed</em> first, which
-is the one control this pattern otherwise lacks for operations whose
-blast radius is unknowable in advance.</p>
+when explicitly asked. The flag is a parameter of an MCP tool the model
+calls, so the default invites a preview without requiring a person. A
+gateway concentrates writes so they can be governed; a dry-run default
+lets them be <em>reviewed</em> first, which is the one control this
+pattern otherwise lacks for operations whose blast radius is unknowable
+in advance.</p>
 <p><a href="../../systems/midas/">Midas</a> applies the same idea one
 step later — a gateway on <em>use</em> rather than on write.
 <code>decide_memory_use</code> crosses a four-value provenance
@@ -468,13 +469,14 @@ layer to be able to protect your memory, name your write tool the
 boring, guessable thing.</p>
 <p><a href="../../systems/ruflo/">ruflo</a> is the read-side half of the
 same idea and the one that does have a report:
-<code>agentdb-retrieval-guard.ts</code> screens chunks <em>coming
-out</em> of the store before they are assembled into context. Write-side
-screening catches the payload as it lands; read-side screening also
-catches whatever was already in the store when you turned the guard on.
-They are not substitutes, and a system with a governed write gateway of
-its own has the better version of the first half — because it knows
-which writes are writes.</p>
+<code>agentdb-retrieval-guard.ts</code>, off unless an environment
+variable turns it on, screens chunks <em>coming out</em> of the store
+before they are assembled into context. Write-side screening catches the
+payload as it lands; read-side screening also catches whatever was
+already in the store when you turned the guard on. They are not
+substitutes, and a system with a governed write gateway of its own has
+the better version of the first half — because it knows which writes are
+writes.</p>
 <p><a href="../../systems/mama/">MAMA</a> has the gate and shows where
 its policy stops. Every <code>decisions</code> mutation outside
 migrations runs inside <code>appendJudgmentOnAdapter</code>, which

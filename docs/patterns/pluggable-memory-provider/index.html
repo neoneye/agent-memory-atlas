@@ -255,13 +255,14 @@ hook and no per-call tenant scope</strong>:
 <code>session_id</code>, so a provider learns its user once at startup
 rather than on each read or write.</p>
 <p><a href="../../systems/openclaw/">OpenClaw</a> reaches the same shape
-from the other direction: <code>memory-core</code> defines the plugin
-contract and CLI while <code>memory-lancedb</code> is merely the
-reference backend, with third-party Redis, Mem0, and Supermemory plugins
-implementing the same surface. Its store layer shows the discipline the
+from the other direction: the memory system is itself a plugin,
+<code>memory-core</code>, holding the index, the consolidation pass and
+the deletion path, and <code>memory-lancedb</code> is one optional
+vector backend beside it. The contract covers capture and injection but
+not inspection or repair. Its LanceDB store shows the discipline the
 interface itself lacks — <code>scopedPredicate</code> composes agent
-scope and user filter into one predicate "so scope cannot be lost", and
-deletes are scoped too.</p>
+scope and operator filter into one predicate "so scope cannot be lost",
+and deletes are scoped too.</p>
 <p><a href="../../systems/holographic/">Holographic</a> demonstrates the
 mirroring hazard concretely. Its <code>on_memory_write</code> copies the
 host's built-in memory additions into its own SQLite store, but
@@ -317,26 +318,28 @@ deletion</strong> — the Pydantic AI Harness, whose Protocol is
 <code>delete</code>, <code>list_paths</code>. Everything else offers
 <code>clear()</code>, or nothing.</p>
 <p><a href="../../systems/agno/">Agno</a> separates two things the other
-contracts conflate. Its <code>LearningStore</code> Protocol declares six
-methods — <code>recall</code>, <code>process</code>,
-<code>build_context</code>, <code>instructions</code>,
-<code>get_tools</code>, <code>learning_type</code> — and every one of
-them takes <code>**kwargs</code>. So the contract expresses
-<strong>neither scope nor deletion</strong>, and both exist anyway:
-<code>recall(user_id)</code> returns <code>None</code> when the key is
-missing, <code>retire_fact</code> keeps a superseded row,
-<code>forget</code> archives an entity. The reason is that Agno writes
-the contract <em>and</em> six implementations behind it, so what the
-interface fails to require, the same team supplies. That is worth naming
-because it inverts the finding above — the contract is the limiting
-factor when the contract author is not the implementer, and a permissive
-interface is survivable exactly when they are the same people. It is
-also fragile in the predictable way: a third-party store satisfying that
-Protocol can ignore <code>user_id</code> entirely and nothing detects
-it. Agno's own <code>_filter_store_kwargs</code> exists to keep narrow
-third-party stores working when the framework adds context kwargs, which
-is thoughtful, and which also means a store that quietly drops the scope
-key is indistinguishable from one that never wanted it.</p>
+contracts conflate. Its <code>LearningStore</code> Protocol declares
+<code>recall</code>, <code>process</code>, <code>build_context</code>,
+<code>instructions</code> and <code>get_tools</code> beside a
+<code>learning_type</code> property, and the three that receive the
+caller's context — <code>recall</code>, <code>process</code> and
+<code>get_tools</code> — take it only as <code>**kwargs</code>. So the
+contract expresses <strong>neither scope nor deletion</strong>, and both
+exist anyway: <code>recall(user_id)</code> returns <code>None</code>
+when the key is missing, <code>retire_fact</code> keeps a superseded
+row, <code>forget</code> archives an entity. The reason is that Agno
+writes the contract <em>and</em> six implementations behind it, so what
+the interface fails to require, the same team supplies. That is worth
+naming because it inverts the finding above — the contract is the
+limiting factor when the contract author is not the implementer, and a
+permissive interface is survivable exactly when they are the same
+people. It is also fragile in the predictable way: a third-party store
+satisfying that Protocol can ignore <code>user_id</code> entirely and
+nothing detects it. Agno's own <code>_filter_store_kwargs</code> exists
+to keep narrow third-party stores working when the framework adds
+context kwargs, which is thoughtful, and which also means a store that
+quietly drops the scope key is indistinguishable from one that never
+wanted it.</p>
 <p><strong><a href="../../systems/cosmonapse/">Cosmonapse</a>'s
 <code>Engram</code> is the only contract here with a failure vocabulary,
 and the omission is glaring once you have seen one.</strong> Every other
@@ -349,8 +352,8 @@ load</strong>, and <code>EngramError</code> above them — and two methods
 that follow from taking failure seriously.
 <code>can_serve(query) -&gt; bool</code> lets a backend decline (the
 docstring's example is a BM25 engram asked for vector search, and the
-hosting Dendrite then skips responding), which is the only place in this
-atlas where "retrieval can return nothing" is a capability the contract
+hosting Dendrite then skips responding), which is the only place on this
+page where "retrieval can return nothing" is a capability the contract
 can express. <code>compensate(trace_id)</code> reverses every journaled
 write for a trace, replaying inverses LIFO so nested overwrites unwind,
 with <code>commit(trace_id)</code> discarding the journal at the

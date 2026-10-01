@@ -128,8 +128,8 @@ rule out the filter explicitly: an overturned item is still evidence, so it
 *"ranks down and renders flagged rather than disappearing."* No read withholds
 an item on either field, which is why the report carries no `trust_state`.
 
-Its second state machine answers a different question, and the answer is the
-best one in this atlas to *how do you know a human approved it*. A refutation —
+Its second state machine answers a different question: *how do you know a
+human approved it*. A refutation —
 an approach recorded as having lost under cited evidence — folds to `candidate`,
 `active` or `overturned`, and the transition to `active` requires human
 authority. What makes it worth copying is that authority is not a field the
@@ -166,8 +166,9 @@ detection without a path to resolution, both leave the operator holding a list.
 Counterexamples remain instructive. [Holographic](../../systems/holographic/)
 collapses truth and reachability into one `trust_score` that feedback mutates
 directly. [Mercury](../../systems/mercury-agent/) grades confidence, importance,
-and durability separately — good — but assigns all three once at extraction, so
-they are estimates rather than states that change with evidence.
+and durability separately — good — but assigns all three at extraction, and a
+merge only ratchets each upward with `Math.max`, so they are estimates rather
+than states that change with evidence.
 [Cognee](../../systems/cognee/) has rich provenance and ontology validity with no
 factual promotion state; [Claude-Mem](../../systems/claude-mem/) and
 [A-MEM](../../systems/a-mem/) activate generated content with none at all.
@@ -229,8 +230,8 @@ runtime, not from a default and not from a caller-supplied argument. And **a
 silent fallback converts missing configuration into a policy change** —
 `// 'unknown'` is a defect for every caller that does not set the variables.
 
-[Memory Palace](../../systems/memory-palace/) is the atlas's clearest *procedural*
-instance and the one where the state reaches the read path hardest.
+[Memory Palace](../../systems/memory-palace/) is a *procedural* instance, and
+its state reaches the read path directly.
 `review_state` is `draft | human_reviewed | rejected`, validated on construction,
 and `recommend_for_trigger` returns only `human_reviewed` rows — the docstring
 calls this "the read-side enforcement of the draft-by-default invariant".
@@ -258,8 +259,8 @@ anyone believes about it. Separating *authority* from *credence* turns out to be
 the more useful axis for gating actions, and conflating the two because the field
 is an enum is the easy mistake.
 
-[breadcrumbs](../../systems/breadcrumbs/) is the smallest instance that still
-does the job, and the interesting part is *where* it puts the refusal. Its
+[breadcrumbs](../../systems/breadcrumbs/) is the promotion half of this pattern
+on its own, and the interesting part is *where* it puts the refusal. Its
 semantic tier carries two states — `asserted` and `verified` — and
 `store_fact()` writes `asserted` unconditionally, on a stated rule: *"Nothing an
 agent stores starts verified."* Promotion goes through one function that raises
@@ -268,10 +269,11 @@ rather than writes when handed an empty oracle:
 > "verified requires naming the oracle (a CI run, a data assertion, a human
 > ruling); an agent may not mark its own claim verified with nothing behind it"
 
-Twelve lines, and it converts "the model said so" from a default into something
+The refusal converts "the model said so" from a default into something
 a caller has to lie about deliberately. The context block then renders the
 oracle inline beside the value, so a reader of the *prompt* can see which claims
-nobody checked. Its correction ledger sharpens the same idea into an admission
+nobody checked — and that label is all the state does: `build_context` emits
+every fact whatever its status, and no read withholds an `asserted` one. Its correction ledger sharpens the same idea into an admission
 rule — only `ci_failure`, `data_assertion`, `operator_ruling` or `reverted_pr`
 count — with one exclusion worth copying verbatim: *"Model-vs-model disagreement
 is never a correction."* A stronger model disagreeing with a cheaper one has no
@@ -333,15 +335,18 @@ timeout-defaulted decision had been indistinguishable from a user-confirmed one,
 so degraded specifications executed silently — the failure this page's
 confidence-versus-status split exists to prevent, found one level up. Only the
 two model-derived provenances face a clarity gate before the state may execute;
-the three grounded ones pass unconditionally, which is a machine rather than a
-vocabulary because the gate is where the states are read. Its pre-commit form
-repeats the split under different names: `CandidateContentSource` for where
+the other three pass unconditionally, which is a machine rather than a
+vocabulary because the gate is where the states are read. `USER_CONFIRMED`
+comes from a regex over transcript section labels: where text sat, not who
+wrote it.
+
+Its pre-commit form repeats the split under different names: `CandidateContentSource` for where
 content came from, `ConfirmationAuthority` for who signed off, and
 `CandidateResolution` for where it stands, so "why do you believe that" and "who
 approved it" have separate answers and both are stored.
 
-**[Hats](../../systems/one-agent-many-hats/) puts a staging arm between `draft`
-and `active`, which no other system on this page has.** A lesson
+**[Hats](../../systems/one-agent-many-hats/) puts a canary arm between `draft`
+and `active`, with a control group no other system on this page keeps.** A lesson
 distilled from a failed run enters at `draft` with confidence 0.5, becomes
 `canary` on first injection, and while it is unproven `inCanarySlice` — an FNV-1a
 hash of `runId:lessonId` against a 0.5 share (`src/memory/lessons.ts`) — decides
@@ -393,7 +398,7 @@ visible only in the data.
 
 **[Membrane](../../systems/membrane/) has the enum and not the predicate, which is the failure this page exists to name.** Its revision status is `active · contested · retracted`, declared with per-value doc comments citing the specification, and four code paths write it: contest, retract, supersede and a semantic re-activation. A search for reads of that field at the tree root returns those writes, one erasure in the audit path and the copy into the gRPC response — no filter and no ranking term, so a retracted record comes back labelled `retracted` and only a caller who reads the label knows. What retrieval sees instead is the salience of zero that retraction and merge set at the same moment, and that only excludes anything when the caller passes a positive minimum, which both SDKs default to zero and the project's own lifecycle eval raises so its retraction scenario passes. Contest sets the state and leaves salience alone, so the one status that means *withhold this pending resolution* changes nothing about what retrieval returns. The repair is a status predicate on the root query and on graph-neighbour hydration, which applies no salience floor at all, so a superseded record can return beside its replacement even under a positive minimum.
 
-[aios (rexleimo)](../../systems/rexleimo-aios/) earns the filtering half and seals the transition. Its `claimStatus` is decided inside the append from the writer's runtime identity, a shared write without a publish capability lands `candidate`, and every memo read drops candidates. But `authorize` denies promote, reject and expire unconditionally, so the state has an entry and no exit. The writers that pass no identity — the MCP and Pi write tools the model holds — land `verified` as `local-user`, which is the case this page's question about who may set the state exists to catch.
+[aios (rexleimo)](../../systems/rexleimo-aios/) earns the filtering half and seals the transition. Its `claimStatus` is decided inside the append from the writer's runtime identity, a shared write without a publish capability lands `candidate`, and every default memo read drops candidates. But `authorize` denies promote, reject and expire unconditionally, so the state has an entry and no exit. The writers that pass no identity — the MCP and Pi write tools the model holds — land `verified` as `local-user`, which is the case this page's question about who may set the state exists to catch.
 
 ## Tests to require
 

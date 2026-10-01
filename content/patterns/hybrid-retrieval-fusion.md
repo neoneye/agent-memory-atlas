@@ -83,7 +83,7 @@ Boring FTS over a few thousand records outperforms an untuned hybrid stack.
 
 ## Seen in the atlas
 
-[Gini](../../systems/gini-agent/) is the most legible implementation, because it
+[Gini](../../systems/gini-agent/) is a legible implementation, because it
 documents its channels and their provenance in a header comment: semantic cosine,
 BM25 over FTS5, graph spreading activation seeded from the top semantic hits with
 decay δ=0.5, and a temporal range match — fused with reciprocal rank fusion and
@@ -128,7 +128,7 @@ where [Moltis](../../systems/moltis/) makes the same situation explicit with a
 `keyword_only()` constructor and a `has_embeddings()` predicate callers can
 branch on.
 
-[Cortexes](../../systems/cortexes/) adds a third caution: **a filter is only as strict as its weakest arm.** Its vector stream hands the `--repo` clause to Chroma, while BM25 and the wikilink graph evaluate it in Python, and until `cortex-vec` 0.9.0 the nested `$or` was ignored by one arm and never passed to the other. The repair keeps field names and comparisons in one table that raises on anything unmodelled, and a test fails when the clause producer emits a field that table lacks. Its degradation is explicit where [Holographic](../../systems/holographic/)'s is not: without a key the vector stream is skipped by name and the weight redistributed, though the same key gates writes to the lexical index.
+[Cortexes](../../systems/cortexes/) adds a third caution: **a filter is only as strict as its weakest arm.** Its vector stream hands the `--repo` clause to Chroma, while BM25 and the wikilink graph evaluate it in Python, and until `cortex-vec` 0.9.0 the nested `$or` was ignored by one arm and never passed to the other. The repair keeps field names and comparisons in one table that raises on anything unmodelled, and a test fails when the clause producer emits a field that table lacks. Its degradation is explicit in code where [Holographic](../../systems/holographic/)'s is not — without a key the vector stream is skipped and the weights renormalized over the streams that answered — but not in the result: the cosine `score` the agent reads is `0.0` alike for no key, a failed backfill and a real zero. The same key gates writes to the lexical index.
 
 Few systems defend their weights. [MetaClaw](../../systems/metaclaw/) replays
 candidate policies against past turns and promotes one only on non-regression
@@ -141,21 +141,21 @@ Most others, [Generative Agents](../../systems/generative-agents/) with its
 hand-tuned `gw = [0.5, 3, 2]` among them, ship constants nobody has defended,
 most often RRF's `k = 60`.
 
-[Helm](../../systems/helm/) is the smallest correct instance — both arms and the
-fusion are about sixty lines of JavaScript over rows already in memory, with no
+[Helm](../../systems/helm/) is a small correct instance — both arms and the
+fusion are about 120 lines of JavaScript over rows already in memory, with no
 FTS extension and no vector store — and it is a clear place to see that **fusion quality is bounded by candidate generation, not by the fusion
 rule.** Its RRF is textbook (k=60, no score normalization, which is the right
 refusal when you have no relevance data to calibrate against), and its belief
 weight is applied as a multiplier rather than a filter so a low-confidence row is
 penalized instead of excluded. Then every arm runs over
-`SELECT … WHERE expired_at IS NULL ORDER BY updated DESC LIMIT 500` — a hard
+`SELECT … WHERE expired_at IS NULL ORDER BY updated DESC, confidence DESC LIMIT 500` — a hard
 window ordered by **recency**. Past a few hundred active facts, the memories that
 stop being candidates are the ones nothing has touched lately, which is precisely
 the set of long-lived preferences the store worked hardest to establish. A
 perfect ranker over the wrong 500 rows is still wrong, and no amount of fusion
 tuning recovers a candidate that was never scored.
 
-Helm is also the atlas's plainest example of **silent tier degradation**. The
+Helm is also a plain example of **silent tier degradation**. The
 semantic arm is a cached MiniLM embedding if the model is on disk, and TF-IDF
 cosine if it is not or if the import throws, because the TF-IDF scores are
 computed first and an empty `catch {}` keeps them; with no model and fewer than
@@ -171,8 +171,8 @@ and both are fused by RRF in the usual way. What is uncommon is
 `check_dimension_compatibility`, which compares the stored matrix's width against
 the embedding backend now answering queries and raises with a message naming the
 likely cause — a memory "built with a different model than the current query
-backend". Every system on this page persists an index and embeds queries at read
-time, and in every one of them those are two artifacts that can drift apart with
+backend". A system that persists a dense index and embeds queries at read time
+holds two artifacts that can drift apart with
 no exception, no crash and no empty result: the dense arm keeps returning
 neighbours, they are simply neighbours in a space the query never entered, and
 RRF dutifully fuses that garbage with a sparse arm that is working correctly.
@@ -235,7 +235,7 @@ each call site, an override for slow disks, and an unusable override that warns
 and keeps the default *"rather than disabling the leg"*.
 
 **Test that an arm's failure is distinguishable from an arm's empty result.** No
-fused implementation in this atlas has that fixture, and it is the difference
+fused implementation on this page has that fixture, and it is the difference
 between a retriever that degrades and one that degrades silently.
 
 [Forgetful](../../systems/forgetful/) is the counterexample to keep beside these. Its README, the four-stage docstring on `search` in both of its repositories, and the recall skill the agent loads all describe *dense → sparse → reciprocal rank fusion → cross-encoder*, and the tree implements dense → cross-encoder: no FTS table, no `tsvector`, no fusion function. The identifiers the skill says are matched *"literally"* are matched by cosine over a 384-dimension embedding. A fusion that is documented and not built is worse than one never mentioned, because the query-shaping advice — put the exact error code and config key in the query — is written for the arm that is missing.

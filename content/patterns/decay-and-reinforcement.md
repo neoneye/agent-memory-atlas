@@ -60,7 +60,7 @@ distinction maps onto code exactly: a filter on reads is a retrieval failure,
 and a delete is forgetting. The two need different guarantees. A retrieval
 failure should be reversible and readable by id; forgetting should be a
 deliberate act with a record. [Counterparts](../../systems/counterparts/) keeps
-them apart. Its nightly prune archives a row below strength 0.02 after 90 lived
+them apart. Its nightly prune archives an episodic row below strength 0.02 after 90 lived
 days of dwell, and an archived row leaves every recall read but stays readable
 by its own id. Removal is a separate owner verb with its own append-only
 `removal_record`. [roampal-core](../../systems/roampal-core/) shows the
@@ -158,7 +158,7 @@ survives its nominal age **unless** it exceeds a hard-age multiple (default
 12×), honours pinning and per-type allowlists, and prunes to a budget using a
 recency composite with **two half-lives** — 7 days on last access, 30 on
 creation. Separating "recently used" decay from "recently learned" decay is the
-refinement most systems miss. The periodic job that runs it returns without
+refinement to take from it. The periodic job that runs it returns without
 scanning unless `forgetting_enabled` is set, and that setting defaults to
 `False`, with the age, inactivity and budget thresholds all defaulting to `None`
 (`V0/agent_memory_server/config.py:485-490`).
@@ -182,11 +182,12 @@ half-life applies to every memory kind.
 studying because each piece looks reasonable alone. `fact_feedback` moves a single
 `trust_score` by +0.05 or −0.10; that same score is multiplied into relevance
 *and* gates retrieval at a `min_trust` floor of 0.3. From a default of 0.5, three
-unhelpful ratings put a fact below every default retrieval path — permanently,
-with no tombstone and no record that suppression occurred. Reinforcement became
-deletion because reachability and belief were the same number.
+unhelpful ratings put a fact below every default retrieval path, with no
+tombstone, no record that suppression occurred, and nothing that surfaces the
+fact for the rating that would bring it back. Feedback became suppression
+because reachability and belief were the same number.
 
-[Helix AGI](../../systems/helix-agi/) documents finding this loop in its own running store and cutting it. A belief's mass
+[Helix AGI](../../systems/helix-agi/) documents finding this loop and cutting it. A belief's mass
 originally included its relation count; related beliefs get co-injected, and
 co-injection creates more relations, so the comment in `memory/belief_store.py`
 records the cycle it produced — *"relations → mass ↑ → gravity ↑ → co-injection →
@@ -203,7 +204,7 @@ irreversibly into a column. [Atomic Agent](../../systems/atomic-agent/) writes
 the events and stops short of the derivation: `applyVote` stores the clamped new
 score in the target row's `vote_score` column in the same transaction that
 inserts the `vote_events` row, the consolidator multiplies every stored score by
-a decay factor in place, and `vote_events` is an audit log FIFO-capped at
+a decay factor in place, and `vote_events` is a feedback log FIFO-capped at
 `eventLogMaxRows`, 50,000 by default (`src/memory/voting/vote-store.ts`). The
 score cannot be rebuilt from the log.
 
@@ -270,7 +271,7 @@ or "even". So a fresh dead end outweighs a months-old success without any
 conflict-resolution logic existing at all: the half-life *is* the resolution
 rule.
 
-The reason it stays honest is that decay here never touches epistemic standing.
+The reason it stays honest is that decay here never touches the corroboration band.
 A decayed score cannot demote `preferred` to `tentative`, because that
 classification comes from a count of distinct results, not from the score. Age
 changes which contested source sorts first; it cannot make a corroborated source
@@ -348,7 +349,7 @@ the fade itself is wired to the platform's store alone, so the per-agent stores
 it was built for never run it. Archive on fade is done right: every removed row
 is appended to `.faded/faded.jsonl` with a timestamp before the delete.
 
-**[Claude Self-Reflect](../../systems/claude-self-reflect/) reinforces on one clock and ages on two.** Its base curve is conservative by construction — `score * ((1 - 0.3) + 0.3 * 2^(-age_days / 90))`, so at most 30% of a search score is time-dependent and a year-old perfect match still scores above 0.7. Reinforcement moves the half-life rather than the score: `effective_half_life = base * 2^reinforcement`, where reinforcement is a recency-weighted sum of session outcomes over a 30-day window clamped to ±2, swinging the half-life between roughly 22 and 360 days. The second axis is the unusual one: an hourly pass labels each conversation `shipped` or `unreleased` with a `releases_behind` count walked from git tags, and retrieval multiplies effective age by 25% per release behind, floored at a quarter of the half-life — so a memory ages by how much has shipped since, not only by how long ago it was. Git is consulted only by the refresh; the read path does an indexed lookup and fails open to neutral.
+**[Claude Self-Reflect](../../systems/claude-self-reflect/) reinforces on one clock and ages on two.** Its base curve is conservative by construction — `score * ((1 - 0.3) + 0.3 * 2^(-age_days / 90))`, so at most 30% of a search score is time-dependent and a year-old perfect match still scores above 0.7. Reinforcement moves the half-life rather than the score: `effective_half_life = base * 2^reinforcement`, where reinforcement is a sum of session outcomes, each weighted by a 30-day half-life, clamped to ±2, swinging the half-life between roughly 22 and 360 days. The second axis is the unusual one: an hourly pass labels each conversation `shipped` or `unreleased` with a `releases_behind` count walked from git tags, and retrieval multiplies effective age by 25% per release behind, floored at a quarter of the half-life — so a memory ages by how much has shipped since, not only by how long ago it was. Git is consulted only by the refresh; the read path does an indexed lookup and fails open to neutral.
 
 **[Membrane](../../systems/membrane/) is where the sweep and the marker collide.** Its decay is exponential per type — one hour for episodic, thirty days for a captured semantic observation, one day for the facts capture and consolidation derive — with a reinforcement gain field, a pinned flag and a three-value deletion policy, and the shape is right. The gain is zero on every record the tree creates, so reinforcing resets the decay clock and restores no salience. But the decay pass computes elapsed time from a timestamp only reinforcement advances, and applies the result to the *already decayed* stored salience, so after repeated sweeps the exponent grows with the square of the sweep count; at the shipped defaults an episodic record sits at 0.00098 after four hourly sweeps instead of 0.0625, and the half-life constant stops meaning what it says. No test applies the decay pass twice to the same record, which is why the suite reports green. The second collision is worse: retraction marks a record by setting salience to zero, and the prune pass deletes any unpinned auto-prune record at or below its floor — default zero — so the retraction marker is also the deletion trigger, and the audit rows cascade away with the record. If you drive pruning off a numeric floor, retraction has to set something else.
 

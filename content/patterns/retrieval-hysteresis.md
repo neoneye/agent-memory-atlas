@@ -142,7 +142,9 @@ its test of that dedup asserts only that the third result is no larger than the
 second, so it passes when the dedup does nothing.
 **[Deja-vu](../../systems/deja-vu/)** runs a novelty tracker that remembers which
 ids were already injected, so the same memory is not served twice into one
-session. All three are a cooldown whose span is the rest of the session.
+session. All three are a cooldown lasting at least the rest of the session;
+Deja-vu keys its record on the project, and its report found nothing that
+expires it.
 
 **[Project N.E.K.O.](../../systems/neko/)** arrives at suppression from the
 correction side rather than the authoring side: a ban-topic directive keyed on
@@ -202,7 +204,7 @@ fixture that would pin any of it.
   states — in SillyTavern, cooldown starts when sticky ends.
 - Reload the session and assert cooldowns survive, or document that they do not.
 
-Both are cheap fixtures, and SillyTavern has neither.
+Each is a cheap fixture, and SillyTavern has none of them.
 
 ## Related
 

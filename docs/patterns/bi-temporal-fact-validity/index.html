@@ -245,10 +245,10 @@ with the same <code>now</code> on every insert, and the code says so —
 <code>updatedAt</code> is <em>"identical to <code>validFrom</code>
 because every write creates a fresh row"</em>, and
 <code>created_at</code> is <em>"copied from <code>valid_from</code> on a
-fresh row"</em>, kept so a later phase has somewhere to hang vote
-scores. No read in <code>src/</code> takes a time argument. That is
-version history on one clock: it answers <em>what did this key hold
-before</em>, and not <em>what did this store believe on a given
+fresh row"</em>, kept so a later phase can stamp vote timestamps without
+another migration. No read in <code>src/</code> takes a time argument.
+That is version history on one clock: it answers <em>what did this key
+hold before</em>, and not <em>what did this store believe on a given
 date</em>, which is what makes the pair of columns a plan rather than a
 second axis.</p>
 <p><a href="../../systems/magicore/">MagiCore</a> puts the instant form
@@ -310,10 +310,10 @@ description is "what was true about X on date Y?". The uneven coverage
 is the sentence worth carrying: validity is tracked for the triples
 extracted from documents and not for the documents themselves.</p>
 <p><a href="../../systems/memory-lancedb-pro/">memory-lancedb-pro</a>
-separates two things most systems merge — <code>invalidated_at</code>,
-set when another fact supersedes this one, and <code>valid_until</code>,
-an expiry the fact carried from the start — with
-<code>isMemoryExpired</code> documented as "separate from
+separates two things that are easy to merge —
+<code>invalidated_at</code>, set when another fact supersedes this one,
+and <code>valid_until</code>, an expiry the fact carried from the start
+— with <code>isMemoryExpired</code> documented as "separate from
 <code>isMemoryActiveAt</code> (which checks <code>invalidated_at</code>
 from superseding)". It also refuses to store an incoherent interval: an
 <code>invalidated_at</code> earlier than <code>valid_from</code> is
@@ -340,13 +340,13 @@ assume the pair.</p>
 <code>valid_from</code>, <code>valid_until</code> and
 <code>recall --at</code>, and all three are record time.
 <code>valid_from</code> equals <code>created_at</code> on every path,
-and <code>valid_until</code> is set only by a deprecation, to the moment
-it happened. Point-in-time recall draws candidates from a vector index
-that drops a row when it is deprecated, and <code>list --at</code>
-filters <code>deprecated = 0</code> in SQL, so a memory retired after
-the requested time is missing from the answer about that time. The
-predicate that would keep it is correct and never receives such a
-row.</p>
+and outside import and restore <code>valid_until</code> is written only
+by a deprecation, to the moment it happened, or by its undo.
+Point-in-time recall draws candidates from a vector index that drops a
+row when it is deprecated, and <code>list --at</code> filters
+<code>deprecated = 0</code> in SQL, so a memory retired after the
+requested time is missing from the answer about that time. The predicate
+that would keep it is correct and never receives such a row.</p>
 <p><a href="../../systems/janus-graph/">Janus-Graph</a> is Graphiti seen
 from a caller, and both of its temporal defects live in the wrapper
 rather than the engine. It dates every episode by the sweep that
@@ -359,7 +359,7 @@ facts out but also hides a fact whose extracted end date lies in the
 future; comparing against the query instant is the correct predicate. It
 still earns the mark, because the engine's edges carry a model-extracted
 validity that can precede their row, and the wrapper reads that axis on
-every search.</p>
+every <code>search_memory</code> call.</p>
 <p><a href="../../systems/utopia/">Utopia</a> puts its discipline on the
 read side. <code>valid_from</code>/<code>valid_to</code> carry a
 precision column <em>per endpoint</em>, replacing a single default that
