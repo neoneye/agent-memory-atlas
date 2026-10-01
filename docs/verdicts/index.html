@@ -536,8 +536,11 @@ href="../systems/agentmemory/"><code>agentmemory</code></a></h3>
 <li>Best idea: zero-LLM hook capture plus compact-first hybrid search
 and explicit expansion.</li>
 <li>Biggest risk: a large optional surface, similarity-based
-supersession without an epistemic review state, and scope filters a
-caller can omit or widen — agent isolation is opt-in and an explicit or
+supersession without an epistemic review state, and on-demand recall
+that reads every project — <code>memory_recall</code> and
+<code>memory_smart_search</code> take no project argument, and
+<code>mem::smart-search</code> applies the <code>project</code> it
+accepts to lessons only. Agent isolation is opt-in, and an explicit or
 wildcard <code>agentId</code> overrides it.</li>
 <li>Most reusable component: <code>mem::observe</code>,
 <code>HybridSearch</code>, and <code>mem::smart-search</code>.</li>
@@ -2799,10 +2802,11 @@ wrong immediately after that.</li>
 <h3 id="agent-framework"><a
 href="../systems/agent-framework/"><code>agent-framework</code></a></h3>
 <ul>
-<li>Best idea: fail-closed owner scoping checked three ways, with a
-post-resolve containment assertion — the best filesystem scoping in this
-atlas — and <code>session_ids</code> provenance recorded on every
-topic.</li>
+<li>Best idea: a fail-closed owner directory checked three ways, with a
+post-resolve containment assertion, and <code>session_ids</code>
+provenance recorded on every topic; the <code>scope_enforced</code> mark
+rests on the Redis provider, whose documents carry the scope ids its
+search filters on.</li>
 <li>Biggest risk: the provider contract declares neither deletion nor
 scope, so a third-party provider inherits AutoGen's gap, and compression
 is the only correction path.</li>
@@ -4450,9 +4454,12 @@ is no tenancy, no verified identity and no default scope.</li>
 <code>seq</code>, <code>content_hash</code>, <code>prev_hash</code>,
 <code>entry_hash</code> — so deletion shows up as a sequence gap and
 insertion as a broken link, and verification re-hashes the on-disk
-bodies. Every other append-only audit here would read clean after being
-rewritten. I ran <code>tests/test_audit_chain.py</code>: 16 passed,
-including the modified-body, broken-link and deleted-entry cases.</li>
+bodies. An audit that is append-only by file handle would read clean
+after being rewritten; this one would not.
+<code>tests/test_audit_chain.py</code> gave 16 passed when run at the
+first pin, <code>e8866f4</code>, including the modified-body,
+broken-link and deleted-entry cases; the file is unchanged at the
+current pin, and the module it tests has changed.</li>
 <li>Biggest risk: the belief machine that would use all this is a plain
 dictionary. <code>active | trusted | contested</code>, a resolution API,
 a rule that a trusted belief cannot be contradicted, and a gate that
@@ -4464,7 +4471,7 @@ nothing.</li>
 <li>Most reusable component: <code>core/runtime/audit_chain.py</code>,
 and the write gateway's two fail-closed branches — no authority wired,
 and the authority call raising.</li>
-<li>Maturity impression: 44,104 test functions across 3,606 files, a
+<li>Maturity impression: 46,060 test functions across 4,077 files, a
 claims matrix pairing each claim with a reproduce command and a
 falsifier, and a <code>CLAIMS_NOT_SUPPORTED.md</code> that puts
 recursive self-improvement in the unsupported column while reporting its
@@ -8546,7 +8553,7 @@ systems here fail exactly that way on their main retrieval path, and
 neither has a test that would have caught it.</li>
 <li>Second idea: <strong>two clocks that compose, and a replay that
 stays honest about trust.</strong>
-<code>compose_context(as_of=…, valid_at=…)</code> filters the learned-at
+<code>build_context(as_of=…, valid_at=…)</code> filters the learned-at
 and valid-at axes independently — <em>"as_of + valid_at asks 'what did
 we believe at T about what was true at T2', the stale-belief postmortem
 query"</em> — and a fact whose <code>verified_at</code> is absent or
@@ -8580,15 +8587,15 @@ repository's markdown, computes link distance from
 prints what every session pays in bytes before any work happens, and
 names the orphan — the document nothing links, which a session never
 opens on its own.</li>
-<li>Maturity impression: 34 commits, 202 files, no package manifest and
-a stated case against one, MIT. Six <code>--selftest</code> entry points
-and a subprocess-driven unittest suite totalling 115 offline checks, all
-of which pass, and <code>.github/workflows/ci.yml</code> runs every one
-of them under a step arguing that the memory tools <em>"cannot live
-outside the gate that guards everything else"</em>. What CI does not run
-is the forbidden-hit check against a ledger, because the only
-conclusions ledger in the tree is a fixture engineered to produce a
-hit.</li>
+<li>Maturity impression: 125 commits, 287 tracked files, no package
+manifest and a stated case against one, MIT. Six <code>--selftest</code>
+entry points and a subprocess-driven unittest suite totalling 115
+offline checks, all of which pass, and
+<code>.github/workflows/ci.yml</code> runs every one of them under a
+step arguing that the memory tools <em>"cannot live outside the gate
+that guards everything else"</em>. What CI does not run is the
+forbidden-hit check against a ledger, because the only conclusions
+ledger in the tree is a fixture engineered to produce a hit.</li>
 <li>Study when: you already have a rules file and a pile of markdown,
 and you have never checked whether any of it reaches a session.</li>
 <li>Do not copy when: you need semantic recall, a scope boundary, or
@@ -8603,11 +8610,14 @@ store is a git repository with one branch per trust level —
 <code>merged</code>, <code>approved</code>, <code>unapproved</code>,
 <code>none</code> — and
 <code>actions/setup/sh/setup_cache_memory_git.sh</code> checks out the
-branch for the run's own level, then merges <em>down</em> from strictly
-higher levels only: <em>"lower-integrity runs see higher-integrity data
-via merge, but higher-integrity runs never see lower-integrity
-data."</em> A fork PR can read what a merged run remembered and cannot
-write into it.</li>
+branch for the workflow's own level, then merges <em>down</em> from
+strictly higher levels only: <em>"lower-integrity runs see
+higher-integrity data via merge, but higher-integrity runs never see
+lower-integrity data."</em> The level is the workflow's compile-time
+<code>min-integrity</code> guard setting and also prefixes the cache
+key, so a cache-memory store never crosses levels and the merge does
+work only on a drive two levels share. It is a partition chosen by name,
+not a predicate on a stored key, so it earns no scope mark.</li>
 <li>Biggest risk: the trust label describes the run that wrote the file,
 never the claim inside it. Nothing here can mark a memory wrong, and no
 file ever moves between levels, so a poisoned note written by one
@@ -13954,17 +13964,19 @@ same situation with the relevant active lessons in the prompt and a
 second call judges PASS or FAIL, so <em>"no longer repeated"</em> is
 measured per correction with a streak rather than asserted.</li>
 <li>Biggest risk: <strong>the memory is per agent and the learning is
-not.</strong> <code>remember</code> and recall are keyed on a
-context-variable scope and a committed test proves one agent cannot read
-another's store; but a direct chat with a roster agent goes
-<code>Swarm.ask</code> → <code>_speak</code> → the model and never
-through <code>Agent.run</code>, so the user-correction hook
-<code>_record_learning_signal</code> fires only for the platform's own
-chat and writes to the platform's unscoped <code>LearningLoop</code>. A
-per-agent mirror therefore replays only corrections the agent recorded
-about itself with <code>learning_feedback</code>, and
-<code>_relevant_lessons</code> reads <code>memory/lessons/</code>, the
-platform's directory, whatever the scope.</li>
+not.</strong> <code>remember</code> and recall open a per-agent
+directory chosen from a context-variable scope and a committed test
+proves one agent cannot read another's store; but a direct chat with a
+roster agent goes <code>Swarm.ask</code> → <code>_speak</code> → the
+model and never through <code>Agent.run</code>, so the user-correction
+hook <code>_record_learning_signal</code> fires only for the platform's
+own chat and writes to the platform's unscoped
+<code>LearningLoop</code>. A correction typed to the agent reaches no
+learning log at all. A per-agent mirror therefore replays only
+corrections the agent recorded about itself with
+<code>learning_feedback</code>, and <code>_relevant_lessons</code> reads
+<code>memory/lessons/</code>, the platform's directory, whatever the
+scope.</li>
 <li>Most reusable component: <code>verify_candidate</code> — a promotion
 gate that refuses a lesson under 0.6 confidence or two pieces of
 evidence, over 4,000 characters, containing anything the secret redactor
@@ -13972,17 +13984,17 @@ would rewrite, or whose slug already exists, and writes the provenance
 line into the lesson header; beside it, a <code>contextvars</code> scope
 so parallel agents in a thread pool cannot overwrite each other's
 identity.</li>
-<li>Maturity impression: MIT, 34,897 lines of Python outside tests and
-594 test functions across 69 files run on Python 3.10 and 3.12 in CI
-with no model key, 32 commits from two authors since 30 June 2026 with
-fourteen of them on 2 and 3 September. Four of seven capability marks,
-re-verified at the same pin on 2026-09-19. The seams show elsewhere too:
-<code>/mode</code> is advertised in the help panel, has no handler, and
-<code>set_approval_mode</code> has no caller, so the <code>auto</code>
-mode that would skip the approval gate can only be set by hand-editing a
-runtime JSON file. The per-agent scoping landed on 2 September 2026 and
-its seams show: the nightly fade is wired to <code>agent.memory</code>
-only, <code>VectorMemory.forget</code> and
+<li>Maturity impression: MIT, 46,580 lines of Python in 176 files,
+11,560 of them in 71 test files run on Python 3.10 and 3.12 in CI with
+no model key, 35 commits from two authors since 30 June 2026 with
+fifteen of them on 2 and 3 September. Three of seven capability marks;
+the per-agent directory is a partition, not a scope key on a row. The
+seams show elsewhere too: <code>/mode</code> is advertised in the help
+panel, has no handler, and <code>set_approval_mode</code> has no caller,
+so the <code>auto</code> mode that would skip the approval gate can only
+be set by hand-editing a runtime JSON file. The per-agent scoping landed
+on 2 September 2026 and its seams show: the nightly fade is wired to
+<code>agent.memory</code> only, <code>VectorMemory.forget</code> and
 <code>MemoryManager.forget</code> have no caller,
 <code>memory_consolidate</code> is named in seven lists and registered
 nowhere, and <code>pyproject.toml</code> still describes <em>"a personal
@@ -16435,13 +16447,13 @@ writes follow the configured group id; under
 <code>janus_graph/pipeline/queue.py</code> — WAL mode, an atomic batch
 claim, and a reaper that requeues or dead-letters stuck rows by attempt
 count.</li>
-<li>Maturity impression: 25 commits between 28 August and 7 September
-2026, 6,416 lines of Python with 2,705 of tests and CI; every test that
-reaches Graphiti mocks it. Dream mode's clustering, deduplication and
-pruning phases set "DONE" without running and the committed test asserts
-the strings; the README's exponential backoff has no caller; the
-dream-run and entity-merge undo tables are declared and never
-written.</li>
+<li>Maturity impression: 42 commits between 28 August and 17 September
+2026, 8,325 lines of Python in the package with 4,869 of tests and CI;
+every test that reaches Graphiti mocks it. Dream mode's clustering,
+deduplication and pruning phases set "DONE" without running and the
+committed test asserts the strings; the README's exponential backoff has
+no caller; the dream-run and entity-merge undo tables are declared and
+never written.</li>
 <li>Study when: you run Graphiti for one agent and want a queue and
 dead-letter path in front of its ingest.</li>
 <li>Do not copy when: you need to know an extraction failed, need
@@ -16856,10 +16868,11 @@ keeps each connector's cursor tentative through the run and commits it
 only when nothing failed, appends every individual failure to a JSONL
 deadletter, and renames that file aside before a retry replays it.
 Beside it, a parity test that drives two deliberately duplicated write
-paths against one fixture and diffs the captured call sequences. Two
-marks, <code>scope_enforced</code> and <code>negative_eval</code>, on a
-domain key filtered in nine REST read paths and a document-listing
-exclusion test with a positive control.</li>
+paths against one fixture and diffs the captured call sequences. One
+mark, <code>negative_eval</code>, on a document-listing exclusion test
+with a positive control. <code>scope_enforced</code> is withheld: nine
+REST read paths filter a seeded domain key, and the agent's tools read
+the same graph with no domain predicate.</li>
 <li>Biggest risk: <strong>on the default backend the graph has no edges
 anything reads.</strong> Every relationship is appended to the source
 entity's description as a fenced block; no parser exists in the front
@@ -27446,9 +27459,9 @@ no audit row.</li>
 href="../systems/prismer-cloud/"><code>prismer-cloud</code></a></h3>
 <ul>
 <li>Best idea: <strong>the acting identity comes from a token the daemon
-minted, and one visibility function serves every read.</strong> A
-per-boot HMAC key signs a cap naming one agent and one workspace;
-<code>handleWrite</code> overwrites any body actor with
+minted, and one visibility function serves every search, list and recall
+read.</strong> A per-boot HMAC key signs a cap naming one agent and one
+workspace; <code>handleWrite</code> overwrites any body actor with
 <code>cap.sub</code>, and <code>canReaderReadVisibility</code> —
 workspace, agent, private, role, council, task — is called from search,
 list, load, browse, the 422 placement hint and the automatic
@@ -27470,16 +27483,19 @@ dispatch path, so the two cannot drift.</li>
 <li>Second risk: <strong>the digest forgets the predicate its neighbour
 applies.</strong> <code>assemblePlaceContext</code> filters hubs through
 <code>canSee</code>; <code>buildMemoryDigest</code>, injected into every
-system prompt, lists up to 1,000 hubs and skips only encrypted ones.
-Beside it, <code>/local/memory/mirror</code> writes each Hermes
+system prompt by default, writes the path and description or first body
+line of up to 1,000 hubs from the same <code>memory.db</code>, skipping
+only encrypted ones, through a provider that takes no reader. That
+withholds <code>scope_enforced</code>. Beside it,
+<code>/local/memory/mirror</code> writes each Hermes
 <code>MEMORY.md</code> edit into <code>_shared.db</code>, which no
 recall path opens.</li>
 <li>Maturity impression: MIT for the SDK, with the server closed;
 227,801 lines outside tests, of which the daemon memory module is
 20,513, and 1,414 commits on main from 4 contributors between March and
-September 2026. Two marks, <code>scope_enforced</code> and
-<code>negative_eval</code>, the second from a three-page recall test
-with member controls. No public workflow runs the suite; the closed
+September 2026. One mark, <code>negative_eval</code>, from a three-page
+recall test with member controls; <code>scope_enforced</code> is
+withheld on the digest. No public workflow runs the suite; the closed
 repository does.</li>
 <li>Study when: you are putting several agents on one local memory
 process and need per-agent capabilities, a shared visibility matrix, and
@@ -28286,9 +28302,10 @@ of which the Memory Core services and MCP server are 50,373, 623 commits
 on <code>dev</code> from 11 contributors between 23 August and 29
 September 2026, and 12,175 Playwright cases in 814 spec files. Two
 marks: <code>scope_enforced</code> on a transport-derived
-<code>userId</code>, and <code>negative_eval</code> on a Dockerised
-cross-tenant sentinel case. Trust is a per-author tier from a hardcoded
-table, not a per-memory state.</li>
+<code>userId</code>, applied by the semantic and session reads only
+under the <code>private</code> policy, and <code>negative_eval</code> on
+a Dockerised cross-tenant sentinel case. Trust is a per-author tier from
+a hardcoded table, not a per-memory state.</li>
 <li>Study when: you are building shared memory for several long-running
 agents and want a write path that cannot be failed by the embedder, a
 read-after-write overlay, and tests that carry their own positive

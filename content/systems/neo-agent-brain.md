@@ -1,7 +1,7 @@
 ---
 title: "Neo Agent Brain (Memory Core)"
 eyebrow: "Turn-level memory for a multi-model maintainer team"
-description: "The Agent OS behind Neo.mjs's AI maintainers: every turn lands in a write-ahead log, then Chroma and a SQLite graph, with tenant-scoped reads."
+description: "Agent OS for Neo.mjs's AI maintainers: every turn enters a write-ahead log, then Chroma and a SQLite graph, read team-wide unless the policy is private."
 root: ../..
 page_kind: system
 source_name: "neomjs/neo-agent-brain"
@@ -9,14 +9,14 @@ source_url: https://github.com/neomjs/neo-agent-brain
 archive_name: "neomjs--neo-agent-brain"
 revision: 83c0e09eaffd0474664e846f684ef9d18beb67cb
 revision_url: https://github.com/neomjs/neo-agent-brain/commit/83c0e09eaffd0474664e846f684ef9d18beb67cb
-analyzed_at: 2026-09-30
+analyzed_at: 2026-10-01
 licence: "MIT"
 size: "311,039 lines of JavaScript outside tests; the Memory Core services and MCP server are 50,373 of them"
 activity: "623 commits on dev by 11 contributors, 23 August 2026 – 29 September 2026"
 tests: "12,175 Playwright test cases in 814 spec files, 323,364 lines"
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
-  scope_enforced: "raw turn memory, recency and semantic reads | ai/services/memory-core/MemoryService.mjs:599-602, 1684-1686, 1733-1736, 2480-2513 | add_memory stamps userId from the request context, never from a tool argument. query_recent_turns returns nothing without a resolved userId and puts userId = ? into the SQL beside agentIdentity; query_raw_memories and get_session_memories put where {userId} on the Chroma query under the private policy, and resolveSharingPolicy lets a caller narrow the policy and never widen it | the shipped default policy is team, under which the semantic and session reads carry no userId predicate and return every maintainer's turns; only the recency read filters by tenant unconditionally"
+  scope_enforced: "raw turn memory, recency and semantic reads | ai/services/memory-core/MemoryService.mjs:599-602, 1344-1363, 1684-1686, 1733-1736, 2480-2513; ai/mcp/server/memory-core/configBase.mjs:894-906 | add_memory stamps userId from the request context, never from a tool argument. query_recent_turns returns nothing without a resolved userId and puts userId = ? into the SQL beside agentIdentity; query_raw_memories and get_session_memories put where {userId} on the Chroma query under the private policy, and resolveSharingPolicy lets a caller narrow the policy and never widen it. The team default is a declared boundary, not a missing predicate: the config names the Chroma collection as the deployment boundary and requires private for deployments that co-locate organisations | the mark rests on the private configuration and the always-on recency predicate. Under the shipped team default the semantic and session reads return every maintainer's turns, thought included; query_raw_memories can be narrowed per call, and get_session_memories cannot, because its memorySharing argument is deliberately undeclared on the tool (lint-openapi-service-parity.mjs:171)"
   negative_eval: "tenant boundary on semantic recall, plus a purged session on session listing | test/playwright/integration/CrossTenantIsolation.integration.spec.mjs:44-95; test/playwright/unit/ai/services/memory-core/SessionService.spec.mjs:169-225 | two identities write sentinel turns into one session; under private each query_raw_memories result must contain its own sentinel and must not contain the other's (lines 92-95). The unit case purges one of two sessions and asserts the purged session lists zero memories while the other still lists one | the integration case skips when Docker is unavailable, and CI runs it in brain-integration.yml. No case asserts that a purged turn stays out of query_recent_turns, which section 9 shows it does not"
 stack_storage: "chroma, sqlite, files"
 stack_retrieval: "vector, graph"
@@ -64,7 +64,9 @@ memory-specific.
 
 Two marks. `scope_enforced`: every row carries a `userId` taken from the
 transport, the recency read always filters on it, and the semantic and session
-reads filter on it under the `private` policy. `negative_eval`: a Dockerised
+reads filter on it under the `private` policy. The shipped `team` default is a
+declared deployment-wide scope, so a default deployment shares every turn
+across its maintainers. `negative_eval`: a Dockerised
 integration case asserts that one identity's sentinel stays out of another's
 private semantic recall. Section 9 names the five withheld.
 
@@ -318,6 +320,19 @@ asks for something wider (`helpers/resolveSharingPolicy.mjs:57-76`). The
 helper returns a `clamped` flag for a caller-visible surface; all three call
 sites destructure only `policy`, so a clamped caller is not told.
 
+**The `team` default is a declared boundary, and the mark is kept on that
+reading.** The configuration names the Chroma collection as the deployment
+boundary and says a deployment co-locating organisations must set `private`
+(`configBase.mjs:894-906`); the read path repeats it
+(`MemoryService.mjs:2489-2495`). Under `private`, `query_raw_memories` and
+`get_session_memories` put `{userId}` into the Chroma `where`
+(`:1344-1363`, `:2486-2513`), and the concept walk applies the same rule per
+record (`conceptWalkMemoryGate.mjs:89-97`). No read is structurally unable to
+carry the key. The limit is who chooses: `query_raw_memories` can be narrowed
+per call, while `get_session_memories` leaves `memorySharing` undeclared on
+purpose, so on a default plane only the operator can scope the session listing
+(`ai/scripts/lint/lint-openapi-service-parity.mjs:171`).
+
 **Policy semantics differ by collection.** For raw turns, `team` drops the
 predicate entirely (`MemoryService.mjs:2489-2495`). For summaries, `team` runs
 the additive post-filter — own, `shared` and untagged
@@ -454,5 +469,7 @@ Checked against the checkout at the pinned revision.
 - `grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules` — no match, and no `CITATION.cff`.
 
 ## History
+
+**2026-10-01** — [`83c0e09eaffd0474664e846f684ef9d18beb67cb`](https://github.com/neomjs/neo-agent-brain/commit/83c0e09eaffd0474664e846f684ef9d18beb67cb) — audited at the same commit; `scope_enforced` kept. The shipped `team` policy is a declared deployment-wide scope: the configuration names the Chroma collection as the boundary and requires `private` for co-located organisations (`configBase.mjs:894-906`). Under `private`, the semantic and session reads put `{userId}` into the Chroma query (`MemoryService.mjs:1344-1363, 2486-2513`), and the recency read always does, so no read is unable to carry the key. The evidence record now states the limit: on a default plane every maintainer's turns are readable, and only the operator can scope `get_session_memories`.
 
 **2026-09-30** — [`83c0e09eaffd0474664e846f684ef9d18beb67cb`](https://github.com/neomjs/neo-agent-brain/commit/83c0e09eaffd0474664e846f684ef9d18beb67cb) — first reading, at the head of `dev`, a commit dated 29 September 2026. Two marks, `scope_enforced` and `negative_eval`. Screened before reading: no auto-run surface, one build-time execution point (the npm `prepare` script), eight dependency files inside the cooldown — every file in a depth-1 clone dates to the tip — and five unpinned surfaces, including `neo.mjs` from a GitHub archive; no agent-instruction file in the tree. Read with `grep`, `sed` and `rg`; nothing installed, built or run.

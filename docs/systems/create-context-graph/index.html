@@ -116,7 +116,7 @@ connectors importing SaaS and session history into it.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-26</strong>
+              <strong>2026-10-01</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/neo4j-labs--create-context-graph" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -136,7 +136,7 @@ September 2026</strong></div>
 pytest functions in 28 files (19,839 lines), 41
 parametrized</strong></div>
           </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -228,7 +228,10 @@ is called on message content, tool output, error messages and document
 bodies rather than at one chokepoint. <strong>Weakest:</strong> the
 agent's own read path has no scope predicate in any of the twenty-seven
 bundled domains, and the test that was written to catch that asserts
-<code>len(domain_scoped_tools) &gt;= 0</code>.</p>
+<code>len(domain_scoped_tools) &gt;= 0</code>. One mark,
+<code>negative_eval</code>. <code>scope_enforced</code> is withheld:
+those tools query the same graph as the nine REST routes that filter on
+the domain, and their Cypher cannot carry the predicate.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory here is whatever a connector or a chat turn hands to
 <code>neo4j-agent-memory</code>, and the system's own epistemics are
@@ -558,10 +561,24 @@ handed by <code>elementId</code>. The front end's schema-node click
 sends <code>MATCH (n:&lt;label&gt;)-[r]-(m)</code> through
 <code>POST /cypher</code> with no predicate
 (<code>ContextGraphView.tsx.j2:238-243</code>).</p>
-<p>None of the 193 agent tools across the bundled domains names it; the
-search is in the appendix. On the hosted backend the property is never
-written, so the boundary there is the workspace behind the API key — a
-physical partition, which is a real boundary and a different mark.</p>
+<p>The agent reads the same graph, and only its schema tool, which calls
+the scoped <code>get_schema</code>, applies the key. Each domain tool's
+body is a fixed Cypher string run through <code>execute_cypher</code>,
+the function the nine paths call
+(<code>agents/pydanticai/agent.py.j2:63-76</code>,
+<code>context_graph_client.py.j2:253-287</code>). None of the 193 bodies
+across the bundled domains names <code>$domain</code>, nor do the
+connector tools <code>renderer.py</code> appends; the searches are in
+the appendix. <code>run_cypher</code> defaults a <code>domain</code>
+parameter in all eight templates
+(<code>pydanticai/agent.py.j2:86</code>), so the predicate applies only
+when the model writes it into its query.</p>
+<p><code>scope_enforced</code> is withheld on that: an agent-reachable
+read over the same store that cannot carry the predicate, beside a
+free-form one bounded by the prompt. The nine REST routes are the
+near-miss. On the hosted backend the property is never written, so the
+boundary there is the workspace behind the API key — a physical
+partition, which is a real boundary and not the mark.</p>
 <p><strong>Provenance</strong> is by convention rather than field. A
 <code>metadata</code> dict with <code>kind: "document"</code> or
 <code>kind: "entity-body"</code> and the entity name rides along on
@@ -816,6 +833,10 @@ hash rather than on the value, so re-extraction of the same rejected
 approach creates a new node and nothing consults the old one.</li>
 <li><code>trust_state</code> — confidence floats only, and nothing
 filters on them.</li>
+<li><code>scope_enforced</code> — the near-miss is nine REST read paths
+filtering the seeded <code>domain</code> key, null-permissively; the
+agent's tools read the same graph with no predicate (<a
+href="#5-memory-data-model">section 5</a>).</li>
 <li><code>bitemporal</code> — no
 <code>valid_from</code>/<code>valid_until</code>/<code>as_of</code>
 field exists anywhere; searches in the appendix.</li>
@@ -867,7 +888,7 @@ contains either substring; the parse is in the appendix. The whole class
 of "at minimum, the domain should have some tools with domain scoping"
 is unverified at this commit for every domain, and the repair is one
 character.</p>
-<p><strong>What backs the marks.</strong> <code>negative_eval</code>
+<p><strong>What backs the mark.</strong> <code>negative_eval</code>
 rests on <code>tests/test_memory_adapter.py:135-149</code>, which is the
 shape the mark asks for: three records in, PERSON and ORGANIZATION named
 as excluded, and the kept <code>DocA</code> asserted by set equality, so
@@ -1084,6 +1105,8 @@ grep -rniE &#39;arxiv|bibtex|@article|@misc|doi\.org&#39; --include=&#39;*.md&#3
 grep -rniE &#39;detach|forbid|blocklist|denylist|_WRITE_|write_keyword|is_read_only&#39; src/create_context_graph/templates/backend/shared/routes.py.j2 src/create_context_graph/templates/backend/shared/context_graph_client.py.j2 src/create_context_graph/templates/backend/agents/*/agent.py.j2   # 2: a docstring and reset_database&#39;s DETACH DELETE, no write guard
 grep -rn &#39;read-only Cypher&#39; src/create_context_graph/templates/backend/agents/                                                                  # 9 lines across all 8 templates
 grep -rn &#39;domain IS NULL OR&#39; src/create_context_graph/templates/                                                                                # 16: 9 in five client helpers, 6 in four route handlers, 1 in the seeder&#39;s MENTIONS link
+grep -c -F &#39;$domain&#39; src/create_context_graph/renderer.py                                                                                        # 0: the Google Workspace and Claude Code connector tools carry no domain predicate either
+grep -rn &#39;setdefault(&quot;domain&quot;&#39; src/create_context_graph/templates/backend/agents/                                                                # 9: run_cypher in all 8 templates, plus the domain tools in claude_agent_sdk; no fixed body reads it
 grep -n &#39;MERGE (n:\|MERGE (d:Document&#39; src/create_context_graph/templates/backend/connectors/import_data.py.j2                                   # :485 on {name}, :547 on {title}: make import stamps no domain
 grep -n &#39;query.cypher&#39; tests/test_memory_adapter.py                                                                                             # 0: the document tests never configure the Cypher branch
 grep -rn &#39;confidence&#39; src/create_context_graph/domains/ | grep -vE &#39;name: confidence|_template|action:|Cover known|confidence scores&#39;           # 0: no tool Cypher names confidence
@@ -1100,6 +1123,20 @@ for p in glob.glob(&#39;src/create_context_graph/domains/*.yaml&#39;):
 print(sum(c.values()), c)
 PY</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-10-01</strong> — <a
+href="https://github.com/neo4j-labs/create-context-graph/commit/707b168d9509cbf1b919b82940285d1df4c6810d"><code class="commit-id" title="707b168d9509cbf1b919b82940285d1df4c6810d">707b168d…</code></a>
+— audited at the same commit; <code>scope_enforced</code> withdrawn. The
+mark rested on nine REST read paths, while the agent's domain tools run
+fixed Cypher with no domain predicate through the same
+<code>execute_cypher</code> against the same graph
+(<code>agents/pydanticai/agent.py.j2:63-76</code>), and
+<code>run_cypher</code> applies one only when the model writes it. An
+agent-reachable read over the same store that cannot carry the predicate
+withholds the mark; the routes become the near-miss (<a
+href="#5-memory-data-model">section 5</a>). The connector tools
+<code>renderer.py</code> appends were checked too and carry none. One
+mark remains, <code>negative_eval</code>. Nothing installed, built or
+run.</p>
 <p><strong>2026-09-26</strong> — <a
 href="https://github.com/neo4j-labs/create-context-graph/commit/707b168d9509cbf1b919b82940285d1df4c6810d"><code class="commit-id" title="707b168d9509cbf1b919b82940285d1df4c6810d">707b168d…</code></a>
 — audit at an unchanged pin; upstream <code>main</code> has not moved.

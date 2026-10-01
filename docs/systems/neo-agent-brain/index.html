@@ -4,24 +4,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="The Agent OS behind Neo.mjs's AI
-maintainers: every turn lands in a write-ahead log, then Chroma and a
-SQLite graph, with tenant-scoped reads.">
+    <meta name="description" content="Agent OS for Neo.mjs's AI
+maintainers: every turn enters a write-ahead log, then Chroma and a
+SQLite graph, read team-wide unless the policy is private.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Neo Agent Brain (Memory
 Core) — Agent Memory Atlas">
-    <meta property="og:description" content="The Agent OS behind
-Neo.mjs's AI maintainers: every turn lands in a write-ahead log, then
-Chroma and a SQLite graph, with tenant-scoped reads.">
+    <meta property="og:description" content="Agent OS for Neo.mjs's AI
+maintainers: every turn enters a write-ahead log, then Chroma and a
+SQLite graph, read team-wide unless the policy is private.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Neo Agent Brain (Memory
 Core) — Agent Memory Atlas">
-    <meta name="twitter:description" content="The Agent OS behind
-Neo.mjs's AI maintainers: every turn lands in a write-ahead log, then
-Chroma and a SQLite graph, with tenant-scoped reads.">
+    <meta name="twitter:description" content="Agent OS for Neo.mjs's AI
+maintainers: every turn enters a write-ahead log, then Chroma and a
+SQLite graph, read team-wide unless the policy is private.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Neo Agent Brain (Memory Core) — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -43,7 +43,7 @@ Chroma and a SQLite graph, with tenant-scoped reads.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Neo Agent Brain (Memory Core)",
-      "description": "The Agent OS behind Neo.mjs's AI maintainers: every turn lands in a write-ahead log, then Chroma and a SQLite graph, with tenant-scoped reads.",
+      "description": "Agent OS for Neo.mjs's AI maintainers: every turn enters a write-ahead log, then Chroma and a SQLite graph, read team-wide unless the policy is private.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -101,9 +101,9 @@ Chroma and a SQLite graph, with tenant-scoped reads.">
           <p class="eyebrow">Turn-level memory for a multi-model
 maintainer team</p>
           <h1>Neo Agent Brain (Memory Core)</h1>
-          <p class="document-deck">The Agent OS behind Neo.mjs's AI
-maintainers: every turn lands in a write-ahead log, then Chroma and a
-SQLite graph, with tenant-scoped reads.</p>
+          <p class="document-deck">Agent OS for Neo.mjs's AI
+maintainers: every turn enters a write-ahead log, then Chroma and a
+SQLite graph, read team-wide unless the policy is private.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/neomjs/neo-agent-brain">
               <span>Source</span>
@@ -117,7 +117,7 @@ SQLite graph, with tenant-scoped reads.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-30</strong>
+              <strong>2026-10-01</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/neomjs--neo-agent-brain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -178,7 +178,9 @@ class system and utilities; the memory services import
 <p>Two marks. <code>scope_enforced</code>: every row carries a
 <code>userId</code> taken from the transport, the recency read always
 filters on it, and the semantic and session reads filter on it under the
-<code>private</code> policy. <code>negative_eval</code>: a Dockerised
+<code>private</code> policy. The shipped <code>team</code> default is a
+declared deployment-wide scope, so a default deployment shares every
+turn across its maintainers. <code>negative_eval</code>: a Dockerised
 integration case asserts that one identity's sentinel stays out of
 another's private semantic recall. Section 9 names the five
 withheld.</p>
@@ -454,6 +456,23 @@ default when a caller asks for something wider
 returns a <code>clamped</code> flag for a caller-visible surface; all
 three call sites destructure only <code>policy</code>, so a clamped
 caller is not told.</p>
+<p><strong>The <code>team</code> default is a declared boundary, and the
+mark is kept on that reading.</strong> The configuration names the
+Chroma collection as the deployment boundary and says a deployment
+co-locating organisations must set <code>private</code>
+(<code>configBase.mjs:894-906</code>); the read path repeats it
+(<code>MemoryService.mjs:2489-2495</code>). Under <code>private</code>,
+<code>query_raw_memories</code> and <code>get_session_memories</code>
+put <code>{userId}</code> into the Chroma <code>where</code>
+(<code>:1344-1363</code>, <code>:2486-2513</code>), and the concept walk
+applies the same rule per record
+(<code>conceptWalkMemoryGate.mjs:89-97</code>). No read is structurally
+unable to carry the key. The limit is who chooses:
+<code>query_raw_memories</code> can be narrowed per call, while
+<code>get_session_memories</code> leaves <code>memorySharing</code>
+undeclared on purpose, so on a default plane only the operator can scope
+the session listing
+(<code>ai/scripts/lint/lint-openapi-service-parity.mjs:171</code>).</p>
 <p><strong>Policy semantics differ by collection.</strong> For raw
 turns, <code>team</code> drops the predicate entirely
 (<code>MemoryService.mjs:2489-2495</code>). For summaries,
@@ -621,6 +640,19 @@ call sites, each destructuring <code>{policy}</code> only.</li>
 — no match, and no <code>CITATION.cff</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-10-01</strong> — <a
+href="https://github.com/neomjs/neo-agent-brain/commit/83c0e09eaffd0474664e846f684ef9d18beb67cb"><code class="commit-id" title="83c0e09eaffd0474664e846f684ef9d18beb67cb">83c0e09e…</code></a>
+— audited at the same commit; <code>scope_enforced</code> kept. The
+shipped <code>team</code> policy is a declared deployment-wide scope:
+the configuration names the Chroma collection as the boundary and
+requires <code>private</code> for co-located organisations
+(<code>configBase.mjs:894-906</code>). Under <code>private</code>, the
+semantic and session reads put <code>{userId}</code> into the Chroma
+query (<code>MemoryService.mjs:1344-1363, 2486-2513</code>), and the
+recency read always does, so no read is unable to carry the key. The
+evidence record now states the limit: on a default plane every
+maintainer's turns are readable, and only the operator can scope
+<code>get_session_memories</code>.</p>
 <p><strong>2026-09-30</strong> — <a
 href="https://github.com/neomjs/neo-agent-brain/commit/83c0e09eaffd0474664e846f684ef9d18beb67cb"><code class="commit-id" title="83c0e09eaffd0474664e846f684ef9d18beb67cb">83c0e09e…</code></a>
 — first reading, at the head of <code>dev</code>, a commit dated 29

@@ -1,7 +1,7 @@
 ---
 title: Mercury Agent
 eyebrow: Graded personal memory
-description: A second-brain memory that grades every record on confidence, importance, and durability, keeps a subconscious tier below active recall, and lets the user pause learning entirely.
+description: A second-brain memory that grades every record on confidence, importance, and durability, keeps a subconscious tier below active recall, and lets the user pause learning.
 root: ../..
 page_kind: system
 source_name: cosmicstack-labs/mercury-agent
@@ -9,7 +9,10 @@ source_url: https://github.com/cosmicstack-labs/mercury-agent
 archive_name: "cosmicstack-labs--mercury-agent"
 revision: 781daac263507ed28800f380242507364137caec
 revision_url: https://github.com/cosmicstack-labs/mercury-agent/commit/781daac263507ed28800f380242507364137caec
-analyzed_at: 2026-09-18
+analyzed_at: 2026-10-01
+licence: "MIT"
+size: "80,579 lines of TypeScript in 341 files, 7,772 of them in 79 test files; the memory subsystem in src/memory is 2,172 lines outside its test, and the brain/Memory.tsx review page 1,197"
+activity: "309 commits on main by 16 author identities, 20 April – 16 September 2026"
 capabilities: ""
 capability_evidence:
 stack_storage: "sqlite"
@@ -23,15 +26,15 @@ matrix:
   update_delete: "`dismissed` boolean and `supersededBy`; no tombstone"
   scoping: "`durable`, `active`, `subconscious` tiers; single user"
   integration: "Internal, with a `brain/Memory.tsx` page offering per-record edit and delete, and a `/memory` chat menu carrying the shared-learning toggle"
-  background: "A cloud pull — an incremental fetch of `shareable=1`, non-dismissed rows newer than a cursor"
+  background: "A heartbeat that consolidates reflections and prunes — demoting rows unseen for 30 days to `subconscious`, promoting corroborated `active` rows to `durable`, hard-deleting dismissed rows — and a cloud pull, an incremental fetch of `shareable=1`, non-dismissed rows newer than a cursor"
   trust: "Four-way `evidenceKind`, corroboration counts, free-text provenance"
   strengths: "Durability separated from importance; a subconscious tier; a learning-pause switch"
-  risks: "Scores estimated once at write time; dismissal is not durable; and `shareable` only ever ratchets upward automatically — a merge promotes a private record, nothing demotes one"
+  risks: "Stored scores only ratchet upward — a merge keeps the larger of each, and no automatic path lowers one; dismissal is not durable; and `shareable` ratchets the same way — a merge promotes a private record, nothing demotes one"
 ---
 
 ## 1. Executive Summary
 
-Mercury is an MIT-licensed personal agent with a ~2,400-line memory subsystem — `user-memory.ts` (1,052 lines), `second-brain-db.ts`, `store.ts` — and a `brain/Memory.tsx` review page in its UI.
+Mercury is a personal agent; its memory lives in `src/memory/` — `user-memory.ts`, `second-brain-db.ts`, `store.ts` — with a `brain/Memory.tsx` review page in its UI.
 
 It is the smallest system in this batch and has the most opinionated record model. `UserMemoryRecord` carries **three independent graded scores** where most systems have one:
 
@@ -106,7 +109,7 @@ conversation
 
 ## 3. Architecture
 
-- `src/memory/user-memory.ts` (1,052 lines) — `UserMemoryStore` and the record model.
+- `src/memory/user-memory.ts` (1,119 lines) — `UserMemoryStore` and the record model.
 - `src/memory/second-brain-db.ts` — persistence.
 - `src/memory/store.ts`, `index.ts` — surface.
 - `src/memory/user-memory.test.ts` — tests.
@@ -138,6 +141,10 @@ Whether Mercury actually uses all three independently was not traced end to end;
 ### The subconscious tier
 
 A memory in `subconscious` scope is retained but below active recall, and `UserMemorySummary` reports its count separately from the total. This gives the system a graceful middle path: rather than deleting a memory that has stopped being useful, demote it, and keep the option of promotion if it becomes relevant again.
+
+Both directions are implemented. The agent's heartbeat calls `prune()` (`src/core/agent.ts:4291`), and `prune` (`src/memory/user-memory.ts:409-420`) calls `moveToSubconscious` (:411), which sets `scope = 'subconscious'` on every non-dismissed `active` or `durable` row whose `last_seen_at` is more than 30 days old (`src/memory/second-brain-db.ts:480-493`). Ordinary recall searches only `active` and `durable` (:398, :405). The way back is recall: when fewer than three conscious matches score above `SUBCONSCIOUS_RECALL_THRESHOLD` (`user-memory.ts:233-235`), `retrieveRelevant` searches the subconscious tier and calls `promoteToConscious` on each row it selects (:248; `second-brain-db.ts:495-502`), which restores the scope and resets `last_seen_at`.
+
+The clock is `last_seen_at`, not use. `markUsed` (`user-memory.ts:557-567`) writes `last_used_at`, `last_used_query` and `updated_at`, never `last_seen_at`, so a memory recalled every day still drops after 30 days unless a merge or a promotion has touched it.
 
 It also gives the user something honest to look at — "you have 412 memories, 180 of them subconscious" describes the store's real shape in a way a single total does not.
 
@@ -172,7 +179,9 @@ Gaps:
 
 Candidates enter with `confidence`, `importance`, and `durability` already estimated, then become records. `evidenceCount` increments on corroboration rather than creating duplicates. `learningPaused` gates the whole path.
 
-No verification tier was found — a candidate with high enough confidence appears to become a record without a separate promotion step, so the three scores are estimates made at extraction time rather than judgments earned over time.
+No verification tier was found — a candidate with high enough confidence appears to become a record without a separate promotion step.
+
+The scores are revised after the write, but only upward. `mergeRecord` (`src/memory/user-memory.ts:505-507`) stores `Math.max` of the existing and incoming value for each of the three, and consolidation does the same for reflections (:379-381). No automatic path writes a lower score. The downward adjustment is computed at read time: `effectiveConfidence` (:923-942) discounts an `inferred` or `active` record by age without storing the result. A person can lower confidence and importance, not durability, through `PUT /api/brain/memory/:id` (`src/web/api/brain.ts:173-174`). What accrues by corroboration is `evidence_count`, which `promoteToDurable` reads to move an `active` record to `durable` (`src/memory/second-brain-db.ts:470-477`).
 
 ## 8. Agent Integration
 
@@ -234,7 +243,7 @@ The measurement this design invites is whether its three scores are independentl
 ### Avoid
 
 - **Dismissal without a tombstone**, in a system that extracts automatically.
-- **Scores assigned once at extraction** with no path to revision.
+- **Scores that only ratchet upward.** A merge keeps the larger of each stored score and nothing automatic lowers one; age discounts confidence at read time, never in the row.
 - **Free-text provenance** that cannot be followed programmatically.
 - **No conflict representation.**
 
@@ -251,12 +260,12 @@ Borrow:
 Do not copy:
 
 - `dismissed` as a boolean if automatic extraction can regenerate the memory.
-- Write-time score estimates as if they were earned confidence.
+- `Math.max` on merge as the only automatic revision, so a once-overestimated score stays high.
 
 ## 12. Open Questions
 
 - Are the three scores used independently, or does ranking collapse them?
-- What promotes or demotes a memory between `active` and `subconscious`, and is it reversible on use?
+- Should use hold a memory in the conscious tier? Demotion reads `last_seen_at`, which recall does not update.
 - Should dismissal write a value-level tombstone?
 - Does `durability` estimated at extraction predict actual useful lifetime? The recorded usage data could answer this.
 - How do person and relation records participate in retrieval?
@@ -271,6 +280,8 @@ Do not copy:
 - Tests: `src/memory/user-memory.test.ts`.
 
 ## History
+
+**2026-10-01** — [`781daac263507ed28800f380242507364137caec`](https://github.com/cosmicstack-labs/mercury-agent/commit/781daac263507ed28800f380242507364137caec) — read again at the same commit; no mark moved. The page said scores were assigned once with no path to revision; `mergeRecord` (`src/memory/user-memory.ts:505-507`) and reflection consolidation (:379-381) raise them with `Math.max`, nothing automatic lowers them, and the brain page's `PUT` sets confidence and importance. The page also left open what moves a memory into or out of `subconscious`. The heartbeat's `prune` demotes rows unseen for 30 days (`src/memory/second-brain-db.ts:480-493`, called from `src/core/agent.ts:4291`), and recall promotes them back (`user-memory.ts:248`). §4, §7, §11, §12 and the risks and background fields now say so.
 
 **2026-09-18** — [`781daac263507ed28800f380242507364137caec`](https://github.com/cosmicstack-labs/mercury-agent/commit/781daac263507ed28800f380242507364137caec) — re-pinned from `31013b0`; 80 files and +493 lines, re-screened at the new pin. **Human review withdrawn**, leaving no capability mark. The edit and delete controls on the brain memory page are real and they reach the same better-sqlite3 database the agent reads — and they act on memories that are already stored and already retrievable. The [narrowed rubric](../../methodology/atlas-rubric/#human-review-surface) counts that as curation: the write has landed, and a person changing it afterwards is authoring rather than adjudicating.
 

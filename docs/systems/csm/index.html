@@ -114,7 +114,7 @@ re-reads files to check which of its edits survived.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-28</strong>
+              <strong>2026-10-01</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NovasPlace--CSM" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -135,7 +135,7 @@ test() and it() call sites in 212 files under test/; the committed
 full-test-output.txt of 8 July 2026 records 808 passing in 172 suites;
 not run</strong></div>
           </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -203,7 +203,9 @@ list, cascade and the evidence block. One reader was left out. The
 lesson-trigger cache selects up to 50 lessons with neither those
 predicates nor a project filter and injects all of them on every turn
 (<code>src/lesson-trigger-cache.ts:74-80</code>), beside a lessons query
-in the same stage that carries both.</p>
+in the same stage that carries both. That reader is why
+<code>scope_enforced</code> is withheld; <code>audit_log</code> and
+<code>negative_eval</code> are the two marks.</p>
 <p>The more expensive disconnect is in the belief tier.
 <code>buildBeliefsLayer</code>
 (<code>src/reentry-layers-secondary.ts:42</code>) — the layer that puts
@@ -555,11 +557,12 @@ capture lease, re-reads the file, and calls
 a <code>tags</code> array, <code>linked_memory_ids</code>, a JSONB
 <code>metadata</code>, four timestamps, <code>access_count</code>, five
 archive columns and a self-referencing <code>superseded_by</code>.</p>
-<p><strong>Scoping is single-axis and strict.</strong> Everything hangs
-off <code>project_id</code>, which is the workspace directory. There is
-no user, tenant, agent or team axis — CSM assumes one operator. What it
-does with that axis is careful: <code>saveMemory</code> refuses a write
-whose declared project disagrees with the session's recorded project
+<p><strong>Scoping is single-axis, and strict on the search
+path.</strong> Everything hangs off <code>project_id</code>, which is
+the workspace directory. There is no user, tenant, agent or team axis —
+CSM assumes one operator. What it does with that axis is careful:
+<code>saveMemory</code> refuses a write whose declared project disagrees
+with the session's recorded project
 (<code>src/memory-manager-base.ts:215-218</code>), and every public tool
 is constructed with its <code>projectId</code> bound at registration so
 the agent cannot pass one (<code>src/tools.ts:71</code>).</p>
@@ -593,7 +596,9 @@ for operations, <code>work_ledger_changes</code> for physical edits,
 <code>memory_quality_scores</code> for a scored band per memory. That
 separation is the main reason 46 tables is legible rather than
 sprawling.</p>
-<p>One table breaks the scoping model:
+<p>Two readers break the scoping model. The lesson-trigger cache reads
+<code>memories</code> itself with no project predicate and injects what
+it finds (<a href="#2-mental-model">section 2</a>). And
 <code>self_model_capabilities</code> has <strong>no
 <code>project_id</code></strong>, and
 <code>SelfModelUpdater.loadPackets</code>
@@ -886,6 +891,28 @@ writer of either is exact-content deduplication or junk archival
 <code>src/archive-tiny-junk.ts:239</code>). A superseded row says the
 same thing as its survivor, so the filter withholds a duplicate, not a
 claim held to be false.</p>
+<p><strong><code>scope_enforced</code> is withheld, with a strong
+near-miss.</strong> The search path fails closed to <code>1=0</code> in
+<code>project</code> mode, and every public tool binds
+<code>projectId</code> at registration so the model cannot name another
+project (<code>src/hybrid-search-sources.ts:39-57</code>,
+<code>src/tools.ts:71</code>). But
+<code>LessonTriggerCache.refresh</code> reads the same
+<code>memories</code> table with no <code>project_id</code> predicate
+(<code>src/lesson-trigger-cache.ts:74-80</code>), and
+<code>runSystemTransform</code> injects the result into the system
+prompt on every turn (<code>src/hooks/system-transform.ts:40</code>).
+The key is on those rows — the lesson promoter writes
+<code>projectId: ctx.directory</code>
+(<code>src/lesson-auto-promotion.ts:148</code>) — and the default store
+is one Postgres database at a fixed URL for every workspace
+(<code>src/config-provider.ts:10-11</code>, <code>:71</code>). So an
+injection hook over the same store carries no predicate at all.</p>
+<p>A second, weaker point sits beside it. A <code>project</code> search
+that returns zero rows is retried as <code>legacy</code>, which admits
+rows with no project, and the widened mode is passed into the cascade
+(<code>src/bridge-ops.ts:55-68</code>). That widening reaches unscoped
+memories rather than another project's.</p>
 <p><strong>Audit</strong> is broad, with one gap.
 <code>memory_events</code> records creation, deletion and retention
 cleanup (<code>src/memory-manager-base.ts:377</code>, <code>:500</code>,
@@ -1219,6 +1246,15 @@ project</td>
 <td>Nothing</td>
 </tr>
 <tr>
+<td>The cache is read by the per-turn system transform, which injects
+it, and by the tool hook, which only logs</td>
+<td><code>git grep -n -E "injectLessonTriggers\(|lessonTriggers\.refresh\(" -- src</code></td>
+<td><code>hooks/system-transform.ts:40</code>,
+<code>hooks/system-transform-live-evidence.ts:169</code>,
+<code>hooks/tool-execute.ts:219</code>, and the definition at
+<code>system-transform-live-evidence.ts:164</code></td>
+</tr>
+<tr>
 <td>No test exercises the lesson-trigger cache</td>
 <td><code>git grep -l -E "LessonTriggerCache|lesson-trigger-cache" -- test</code></td>
 <td>Nothing</td>
@@ -1305,6 +1341,20 @@ the same list piped through <code>xargs cat | wc -l</code>;
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-10-01</strong> — <a
+href="https://github.com/NovasPlace/CSM/commit/9c7cfb22e525eb9210c3048cb0d44544b09b95d0"><code class="commit-id" title="9c7cfb22e525eb9210c3048cb0d44544b09b95d0">9c7cfb22…</code></a>
+— audited at the same commit; <code>scope_enforced</code> withdrawn. The
+mark rested on the search path, which fails closed.
+<code>LessonTriggerCache.refresh</code> reads the same
+<code>memories</code> table with no <code>project_id</code> predicate
+(<code>src/lesson-trigger-cache.ts:74-80</code>), and the
+system-transform hook injects the result on every turn
+(<code>src/hooks/system-transform.ts:40</code>), so an injection read
+over the same store cannot carry the predicate. The search path is the
+near-miss (<a href="#9-reliability-safety-and-trust">section 9</a>). The
+zero-row retry to <code>legacy</code> is recorded beside it as a weaker
+point. Two marks remain, <code>audit_log</code> and
+<code>negative_eval</code>. Nothing installed, built or run.</p>
 <p><strong>2026-09-28</strong> — <a
 href="https://github.com/NovasPlace/CSM/commit/9c7cfb22e525eb9210c3048cb0d44544b09b95d0"><code class="commit-id" title="9c7cfb22e525eb9210c3048cb0d44544b09b95d0">9c7cfb22…</code></a>
 — audit at an unchanged pin; <code>master</code> had not moved. The

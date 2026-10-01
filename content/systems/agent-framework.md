@@ -1,7 +1,7 @@
 ---
 title: "Microsoft Agent Framework"
 eyebrow: "The contract AutoGen became"
-description: "AutoGen's successor replaces a five-method Memory protocol with a two-method ContextProvider that still declares no delete and no scope — and ships a harness memory beside it whose owner id is mandatory, path-traversal-checked, and verified to stay inside its base."
+description: "AutoGen's successor: a ContextProvider contract still declaring no delete or scope, beside a harness memory whose mandatory owner id cannot escape its base directory."
 root: ../..
 page_kind: system
 source_name: "microsoft/agent-framework"
@@ -9,24 +9,27 @@ source_url: https://github.com/microsoft/agent-framework
 archive_name: "microsoft--agent-framework"
 revision: c030fa3582b1d2971488645fa03ec65bffab8617
 revision_url: https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617
-analyzed_at: 2026-09-17
+analyzed_at: 2026-10-01
+licence: "MIT"
+size: "539,100 lines of Python in 1,247 files and 377,615 of C# in 2,151, tests included (284,777 and 205,265 under tests/); the harness memory is 2,287 lines in two modules"
+activity: "3,156 commits on main by 259 author identities, 28 April 2025 – 16 September 2026"
 capabilities: "scope_enforced"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
 capability_evidence:
-  scope_enforced: "harness memory, not the ContextProvider contract | python/packages/core/agent_framework/_harness/_memory.py:697, :717, :758-759 | owner-scoped root resolution, traversal rejection, post-resolve containment assertion | test_harness_memory.py, test_harness_file_memory.py"
+  scope_enforced: "RedisContextProvider's search index, not the harness memory and not the ContextProvider contract | python/packages/redis/agent_framework_redis/_context_provider.py:194-202, :319-322, :363-371, :409-412 | every stored document carries `application_id`, `agent_id` and `user_id` as tag fields, and the search `before_run` issues ANDs a tag equality for each configured id into the text or hybrid query; a provider with none of the three raises before any read or write. Limits: the ids are fixed per provider instance, an omitted id is not filtered, so a provider holding only `application_id` reads every user's documents in that application, and `search_all` pages the whole index under a `*` filter on no agent path. The harness `MemoryFileStore` is a directory per owner with no owner on `MemoryTopicRecord`, a physical partition that does not earn the mark | python/packages/redis/tests/test_providers.py (test_no_filters_raises, test_stores_partition_fields, test_before_run_searches_without_session_id), python/packages/redis/tests/test_context_provider_edges.py::test_build_filter_from_dict_combines_multiple_tags, all against a mocked index"
 matrix:
   memory_unit: "A `MemoryTopicRecord` — topic, slug, summary, a list of memory bullets, `updated_at`, and the `session_ids` that contributed to it — serialised as one Markdown file per topic"
   storage: "A `MemoryStore` ABC with a file-backed implementation: per-owner, per-source directory trees holding topic files, an index, state, and a transcript archive. Separate packages back Azure Cosmos DB and the hosted Foundry service"
   retrieval: "An index of one-line topic pointers injected per turn, with keyword extraction from the current messages selecting which topic files to expand"
   write: "Model tools plus a consolidation pass tracked by `last_consolidated_at` and `sessions_since_consolidation`"
   update_delete: "`write_topic` and `delete_topic` on the store; consolidation rewrites a topic file into a tighter form. No record of a deleted or rejected value"
-  scoping: "The owner id is read from session state and **required** — a missing one raises, `..` and absolute paths raise, and the resolved root is asserted to be inside the base path"
+  scoping: "Harness memory: the owner id is read from session state and **required** — a missing one raises, `..` and absolute paths raise, and the resolved root is asserted to be inside the base path — and selects a directory; no record names its owner. The Redis provider stores application, agent and user ids on each document and filters its search on them"
   integration: "A `ContextProvider` contract of `before_run`/`after_run` plus a `source_id`, consumed by the Agent runtime; .NET and Python; DevUI; a hosted Foundry provider"
   background: "Consolidation of a topic file via an LLM prompt, scheduled by sessions-since-last-run"
   trust: "None. A topic memory is a bullet list; there is no status, confidence or verification anywhere on it"
-  strengths: "Fail-closed owner scoping with a post-resolve containment assertion; `session_ids` provenance on every topic; ~1,357 lines of tests on the harness memory alone"
+  strengths: "Fail-closed owner directory resolution with a post-resolve containment assertion; `session_ids` provenance on every topic; ~1,357 lines of tests on the harness memory alone"
   risks: "The provider contract still declares neither deletion nor scope, so a third-party provider inherits AutoGen's gap; nothing records that a value was removed"
 ---
 
@@ -59,8 +62,8 @@ list of durable bullets, an `updated_at`, and — the good part —
 by default, which is rare in this corpus and free here because the consolidation
 pass already knows which sessions it read.
 
-Its scoping is the strongest thing in the report and one of the better examples
-in the atlas. `MemoryFileStore._get_owner_id` reads the owner from
+Its owner boundary is the most carefully built thing in the report.
+`MemoryFileStore._get_owner_id` reads the owner from
 `session.state` and **raises if it is missing** — no default, no fallback, no
 anonymous bucket. It then rejects an owner id that is absolute or contains `..`.
 Owner and source are base64url-encoded into path components, and after resolving
@@ -70,6 +73,12 @@ defence in depth, and a post-hoc containment check — the same instinct as the
 [Pydantic AI Harness](../pydantic-ai-harness/)'s scope re-verification, arrived
 at independently and applied to the filesystem rather than to a store's return
 value.
+
+The boundary is a directory, though. `MemoryTopicRecord` carries no owner, so
+the isolation is a physical partition, which the atlas does not count as
+`scope_enforced`. The report's one mark rests instead on the in-tree Redis
+provider, whose documents carry the scope ids and whose search filters on them
+(section 9).
 
 ## 2. Mental Model
 
@@ -115,6 +124,13 @@ client for the hosted Foundry memory service — which is closed, and therefore
 reviewable here only as a client, exactly as
 [Vertex Memory Bank is inside adk-python](../adk-python/).
 
+`agent-framework-redis` ships `RedisContextProvider` (434 lines), re-exported
+from `agent_framework.redis`. `after_run` stores each user, assistant and system
+message of a run as a document in a RediSearch index; `before_run` runs a
+full-text or hybrid vector search over it with the turn's input and injects the
+hits under a `## Memories` heading. It has no tools, no delete verb and no
+consolidation: it is retrieval over a transcript, scoped by tags.
+
 That Foundry client requires a `scope` at construction and raises
 `ValueError("scope is required")` on an empty one, then at three call sites
 passes `self.scope or context.session_id`. The fallback cannot fire given the
@@ -133,6 +149,8 @@ substitute a session id for a user id if the invariant ever moved.
   Cosmos provider.
 - `python/packages/foundry/agent_framework_foundry/_memory_provider.py` (279) —
   the hosted client.
+- `python/packages/redis/agent_framework_redis/_context_provider.py` (434) — the
+  tag-scoped Redis provider.
 
 ## 5. Memory Data Model
 
@@ -164,7 +182,8 @@ tens of topics that is proportionate, and it fails in the ordinary way — a
 question phrased without the topic's vocabulary does not reach the file.
 
 Scope applies underneath all of it: every path resolves through the owner-scoped
-root described above, so retrieval cannot address another owner's topics.
+root described above, so retrieval cannot address another owner's topics. It
+does so by path alone; no topic file records whose it is.
 
 ## 7. Write Mechanics
 
@@ -193,10 +212,27 @@ expects several providers at once. DevUI provides an inspection surface, and the
 
 ## 9. Reliability, Safety, and Trust
 
-`scope_enforced` is earned three times over: mandatory owner, traversal
-rejection, and a post-resolve containment assertion. It is one of the few places
-in this atlas where the *failure* of scoping is treated as a thing to detect
-rather than as something that cannot happen.
+**`scope_enforced` rests on the Redis provider, not on the harness memory.**
+`MemoryFileStore`'s three checks — mandatory owner, traversal rejection, and a
+post-resolve containment assertion (`_memory.py:708-718`, `:755-760`) — guard
+which directory is opened. `MemoryTopicRecord` (`:351-360`) has no owner field
+and no read filters on one, so the isolation is a physical partition, which the
+mark excludes. It is still one of the few places in this atlas where the
+*failure* of scoping is treated as a thing to detect rather than as something
+that cannot happen.
+
+`RedisContextProvider` puts the key on the row. `_add` sets `application_id`,
+`agent_id` and `user_id` on every document from the provider's configuration
+(`_context_provider.py:319-322`), and `_redis_search` ANDs a tag equality for
+each configured id into the text or hybrid query (`:363-371`), so `before_run`
+reads only matching documents. With none of the three set, `_validate_filters`
+raises before any read or write (`:409-412`). The limits are the provider's
+shape. The ids are fixed per instance rather than read from the session, and an
+omitted id is not filtered, so a provider holding only `application_id` reads
+every user's documents in that application. `search_all` (`:414-424`) pages the
+whole index under a `*` filter, named only in a commented debugging hint in two
+samples. The tests mock the index, so they pin the stored fields and the
+filter's construction rather than a cross-user retrieval.
 
 Everything else is absent. **No tombstone** — `delete_topic` removes the file
 and consolidation rewrites bullets away, with nothing keyed on the value, so a
@@ -265,7 +301,11 @@ good edge. Cosmos partitions on `/workflow_name` and `list_checkpoints` filters
 by `checkpoint_id` alone is unscoped, and when that matches in more than one
 workflow the store **raises rather than returning one of them**, naming the
 colliding workflows and telling the caller to scope the query. Returning an
-arbitrary winner is the more common choice and the wrong one.
+arbitrary winner is the more common choice and the wrong one. The refusal is on
+`load` alone: `delete(checkpoint_id)` runs the same unscoped query and deletes
+the first document it yields (`_checkpoint_storage.py:311-343`), so on the
+collision `load` refuses, a delete removes whichever workflow's checkpoint the
+query returns first.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -338,8 +378,10 @@ that wants to.
 - **What does consolidation drop?** The prompt asks for a tighter durable form
   and nothing measures fidelity. This is the same unmeasured-compression
   question the atlas records for Magic Context's verification precision.
-- **Does the Cosmos provider enforce scope in the query, or by container?** The
-  505-line provider was not traced in full here.
+- **Does `azure-cosmos-agent-memory` filter on the `user_id` it is handed?** The
+  in-tree Cosmos provider passes one to `search_cosmos` and `get_user_summary`,
+  falling back to the session id and then `"default"` (`_context_provider.py:257`);
+  the query itself lives in that out-of-tree package.
 - **How does the hosted Foundry memory service handle deletion and tenancy?**
   Not reviewable — the client is in-tree and the service is not, which is the
   same limit this atlas records for Vertex Memory Bank.
@@ -354,6 +396,8 @@ that wants to.
 | `python/packages/core/agent_framework/_harness/_file_memory.py` | 531 | File-level tools and traversal handling |
 | `python/packages/azure-cosmos-memory/.../_context_provider.py` | 505 | Cosmos DB context provider |
 | `python/packages/foundry/agent_framework_foundry/_memory_provider.py` | 279 | Client for the hosted Foundry memory service |
+| `python/packages/redis/agent_framework_redis/_context_provider.py` | 434 | `RedisContextProvider`: tag-scoped documents and the filtered search |
+| `python/packages/redis/tests/test_providers.py` | 883 | Filter validation, stored scope fields, cross-session retrieval |
 | `python/packages/core/agent_framework/_sessions.py` | — | `ContextProvider`, `AgentSession`, state registration |
 | `python/packages/core/tests/core/test_harness_memory.py` | 877 | State, parsing, consolidation, the traversal boundary |
 | `python/packages/core/tests/core/test_harness_file_memory.py` | 480 | File tools, traversal reported as tool messages |
@@ -363,6 +407,8 @@ that wants to.
 | `python/packages/core/tests/workflow/test_checkpoint_unrestricted_pickle.py` | — | The did-not-execute assertions |
 
 ## History
+
+**2026-10-01** — [`c030fa3582b1d2971488645fa03ec65bffab8617`](https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617) — audited at the same commit; **`scope_enforced` re-grounded.** The record credited the harness memory's owner root. `MemoryTopicRecord` carries no owner and no read filters on one, so that is a directory per owner — a physical partition the mark excludes — and the record no longer cites it. The mark holds on `RedisContextProvider`, which this report had not read: every document carries `application_id`, `agent_id` and `user_id` as tags, and its search ANDs a tag equality for each configured id (`_context_provider.py:319-322`, `:363-371`). Section 9 states the limits. Also corrected: the Cosmos checkpoint store's collision refusal is on `load` only, and `delete` removes the first match. The Cosmos memory provider's open question now names where the query lives. Nothing was installed, built or run.
 
 **2026-09-17** — [`c030fa3582b1d2971488645fa03ec65bffab8617`](https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617) — re-read after 276 commits. `_harness/_memory.py` and both cited test files moved, and the three claims in the evidence record were re-derived rather than assumed: the base root is resolved once, an owner id containing a traversal segment is rejected outright, and the composed memory root is asserted `is_relative_to` the base after resolution — the post-resolve containment check the record names, now at `:697`, `:717` and `:758-759`. The mark holds. Nothing was installed, built or run.
 

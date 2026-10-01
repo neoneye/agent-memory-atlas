@@ -260,20 +260,25 @@ the more useful axis for gating actions, and conflating the two because the fiel
 is an enum is the easy mistake.
 
 [breadcrumbs](../../systems/breadcrumbs/) is the promotion half of this pattern
-on its own, and the interesting part is *where* it puts the refusal. Its
-semantic tier carries two states — `asserted` and `verified` — and
+on its own, without the mark, and the interesting part is *where* it puts the
+refusal. Its semantic tier carries two states — `asserted` and `verified` — and
 `store_fact()` writes `asserted` unconditionally, on a stated rule: *"Nothing an
-agent stores starts verified."* Promotion goes through one function that raises
-rather than writes when handed an empty oracle:
+agent stores starts verified."* Promotion goes through one function,
+`verify_fact()`, which raises before it writes on empty evidence, an unnamed
+verifier, an unknown authority class, `agent` authority, and a verifier equal
+to the asserting actor. The first refusal states the rule:
 
 > "verified requires naming the oracle (a CI run, a data assertion, a human
 > ruling); an agent may not mark its own claim verified with nothing behind it"
 
-The refusal converts "the model said so" from a default into something
-a caller has to lie about deliberately. The context block then renders the
-oracle inline beside the value, so a reader of the *prompt* can see which claims
-nobody checked — and that label is all the state does: `build_context` emits
-every fact whatever its status, and no read withholds an `asserted` one. Its correction ledger sharpens the same idea into an admission
+The refusals convert "the model said so" from a default into something a
+caller has to lie about deliberately, and the authority class and both names
+are caller-supplied strings, so the lie is a renamed argument. The context
+block renders the oracle inline beside the value, so a reader of the *prompt*
+can see which claims nobody checked. That label is all the state does:
+`build_context` emits every fact that passes its time and scope masks whatever
+its status, no read withholds an `asserted` one, and the mark is withheld.
+Its correction ledger sharpens the same idea into an admission
 rule — only `ci_failure`, `data_assertion`, `operator_ruling` or `reverted_pr`
 count — with one exclusion worth copying verbatim: *"Model-vs-model disagreement
 is never a correction."* A stronger model disagreeing with a cheaper one has no

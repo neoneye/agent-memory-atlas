@@ -1,7 +1,7 @@
 ---
 title: "OpenSRE"
 eyebrow: "Grounding as the write gate"
-description: "An SRE agent whose automatic memory refuses to store an infrastructure fact unless the words in it also appear in something the user typed — and redacts the transcript before the extractor ever sees it."
+description: "An SRE agent whose automatic memory refuses an infrastructure fact unless its words appear in what the user typed, and redacts the transcript before extraction."
 root: ../..
 page_kind: system
 source_name: "Tracer-Cloud/opensre"
@@ -9,21 +9,23 @@ source_url: https://github.com/Tracer-Cloud/opensre
 archive_name: "Tracer-Cloud--opensre"
 revision: 730ebc1ad151389393ece55051049d7a0af15864
 revision_url: https://github.com/Tracer-Cloud/opensre/commit/730ebc1ad151389393ece55051049d7a0af15864
-analyzed_at: 2026-09-18
-capabilities: "scope_enforced, negative_eval"
+analyzed_at: 2026-10-01
+licence: "Apache-2.0"
+size: "524,977 lines of Python in 3,355 files, 246,779 of them under tests/; the memory store is 871 lines in core/domain/memory/, with 415 lines of session-end extraction, 188 of agent tools and 147 of slash commands"
+activity: "3,956 commits on main, 13 January – 18 September 2026"
+capabilities: "negative_eval"
 stack_storage: ""
 stack_retrieval: "lexical"
 stack_source: "seeded"
 capability_evidence:
-  scope_enforced: "long-term memory store, read and write | config/constants/paths.py | session_home() resolves <org root>/users/<actor id> from a ContextVar, and memory_dir() is the only path every read goes through | tests/core/agent_harness/session/test_memory_extraction.py::test_scheduled_extraction_thread_inherits_storage_scope"
   negative_eval: "the write decision, and the prompt sent to the extraction provider — not a read path | tests/core/agent_harness/session/test_memory_extraction.py | secret-like, assistant-only and sample-scenario items asserted not to be saved; a provider token asserted absent from the extraction prompt | same file"
 matrix:
-  memory_unit: "One markdown file with YAML frontmatter — slug, a four-value type, a 200-character description, created and updated timestamps — beside a generated `MEMORY.md` index"
+  memory_unit: "One markdown file with YAML frontmatter — slug, a five-value type, a 200-character description, created and updated timestamps — beside a generated `MEMORY.md` index"
   storage: "A per-principal directory of files at `<org root>/users/<actor id>/memory/`, mode 0700 with 0600 files, written atomically under a directory `FileLock`"
   retrieval: "Mostly none: the whole store, newest first, is rendered into every prompt within an 8,000-character budget. `memory_recall` adds case-insensitive substring search over slug, description and body"
   write: "An agent tool the model is told to call unprompted, plus an LLM extraction pass after every recorded turn and again synchronously at process exit"
   update_delete: "Reusing a slug updates in place and preserves `created_at`; `memory_forget` and `/memory forget` unlink the file. Nothing records that a value was rejected"
-  scoping: "A `ContextVar` storage scope resolved per turn, inherited by the extraction thread through `contextvars.copy_context()`; memory is off by default on shared Slack and Telegram hosts"
+  scoping: "A `ContextVar` storage scope resolved per turn selects a directory per actor, inherited by the extraction thread through `contextvars.copy_context()`; no record carries an owner, and `OPENSRE_MEMORY_DIR` puts every actor in one directory. Memory is off by default on shared Slack and Telegram hosts"
   integration: "Three tools — `memory_remember`, `memory_forget`, `memory_recall` — gated by `is_available`, plus `/memory` slash commands in the interactive shell"
   background: "One coalescing daemon thread carrying the latest transcript snapshot, so rapid turns share a single provider call; the process-exit pass runs synchronously"
   trust: "None as a field. Trust is enforced at the gate instead: an infrastructure or incident memory is refused unless its distinctive tokens appear in the user's own messages"
@@ -33,12 +35,11 @@ matrix:
 
 ## 1. Executive Summary
 
-OpenSRE is an Apache-2.0 framework for AI SRE agents — investigate an incident,
-call the observability tools you already run, answer in Slack or a terminal. It
-is a large repository in public alpha, and its long-term memory is a small,
-carefully-bounded corner of it: about 870 lines under `core/domain/memory/` for
-the store, 415 lines of session-end extraction, 188 lines of agent tools, and
-147 lines of slash commands.
+OpenSRE is a framework for AI SRE agents — investigate an incident, call the
+observability tools you already run, answer in Slack or a terminal. It is a
+large repository in public alpha, and its long-term memory is a small,
+carefully-bounded corner of it: a file store under `core/domain/memory/`, a
+session-end extraction pass, three agent tools and a set of slash commands.
 
 The memory is markdown files, which is not novel. What is worth the report is
 **where this system decided to put its rigour**, because it is not where most
@@ -48,7 +49,7 @@ gate, and it is unusually specific about one failure: **the agent's own output
 becoming the user's memory.**
 
 `_extracted_item_is_user_grounded` refuses to save a memory typed
-`infrastructure` or `investigation_learning` unless its distinctive tokens
+`infrastructure`, `repository` or `investigation_learning` unless its distinctive tokens
 overlap with text the *user* wrote in the transcript — a set intersection over
 stop-listed words, with no model in the loop. A second regex refuses anything
 extracted from a transcript containing built-in sample, demo, synthetic or
@@ -74,6 +75,10 @@ unlinks the file, nothing records that the value was rejected, and extraction
 runs over the last thirty turns after *every* recorded turn — so the statement
 that produced a memory is still in the window the next pass reads.
 
+It carries one mark, `negative_eval`. Per-user isolation is real but physical —
+one directory per actor, chosen by path, with no owner on the record — and the
+atlas does not count that as `scope_enforced` (section 9).
+
 ## 2. Mental Model
 
 Think of it as **a notebook the agent writes in without asking, behind a
@@ -84,9 +89,10 @@ only one link in it is a language model:
 
 1. The model proposes — either as a `memory_remember` tool call mid-turn, or as
    a JSON item from the post-turn extraction pass.
-2. The type must be one of four (`user`, `infrastructure`, `preference`,
-   `investigation_learning`); anything else is dropped without comment.
-3. For the two high-impact types, the **grounding check** runs: no model, just a
+2. The type must be one of five (`user`, `infrastructure`, `repository`,
+   `preference`, `investigation_learning`); anything else is dropped without
+   comment.
+3. For the three high-impact types, the **grounding check** runs: no model, just a
    token-set intersection against what the user actually typed.
 4. The **safety check** runs: five regex families, and a rejection names the
    rule rather than echoing the value.
@@ -105,9 +111,9 @@ needs no recall call at all.
 flowchart TD
     T["Session transcript<br/>last 30 turns"] --> RED["redact_memory_unsafe_text<br/>before anything leaves the machine"]
     RED --> LLM["Classification model<br/>returns a JSON array, max 5"]
-    LLM --> TY{"type in the four?"}
+    LLM --> TY{"type in the five?"}
     TY -- "no" --> DROP1["dropped"]
-    TY -- "yes" --> GR{"infrastructure or<br/>investigation_learning?"}
+    TY -- "yes" --> GR{"infrastructure, repository<br/>or investigation_learning?"}
     GR -- "no" --> SAFE
     GR -- "yes" --> UG{"distinctive tokens shared<br/>with the user's own messages?"}
     UG -- "no" --> DROP2["dropped, logged at debug"]
@@ -148,7 +154,8 @@ gates.
 `<org root>/users/<actor id>` for an org principal, or the org root when nothing
 is bound — so a laptop run stays flat and a Slack silo separates members without
 either code path knowing about the other. `memory_dir()` is the single funnel,
-so every read and every write inherits the boundary by construction.
+so every read and every write lands in the actor's directory by construction —
+a boundary drawn by path, which section 9 prices.
 
 That design has one classic hazard, and the repository knows it: a background
 thread does not inherit a `ContextVar` unless the context is copied.
@@ -198,7 +205,7 @@ One record, one file:
 
 ```text
 slug          kebab-case, validated, max 64 chars — also the filename
-memory_type   user | infrastructure | preference | investigation_learning
+memory_type   user | infrastructure | repository | preference | investigation_learning
 description   single line, max 200 chars, shown in the index
 created_at    ISO-8601 UTC, preserved across updates
 updated_at    ISO-8601 UTC
@@ -211,6 +218,7 @@ it enters by — a small thing that removes a class of "it worked from the tool
 but not from the file" bug.
 
 **What the record does not carry is the more interesting list.** There is no
+owner field — the directory is the only place the actor appears. There is no
 provenance field, so a memory the user dictated, one a tool produced and one the
 extraction pass inferred are indistinguishable once written — the grounding
 check that separated them at the gate leaves no trace in the row. There is no
@@ -269,8 +277,8 @@ released, so nothing is lost to process exit.
 
 Then the gates, in order, and only the first is a model:
 
-- **Type must be known.** A `type` outside the four is dropped silently.
-- **Grounding.** For `infrastructure` and `investigation_learning`,
+- **Type must be known.** A `type` outside the five is dropped silently.
+- **Grounding.** For `infrastructure`, `repository` and `investigation_learning`,
   `_distinctive_tokens` lowercases, splits on `[-_.]`, drops tokens under four
   characters and drops a 36-word stop list of SRE filler (`alert`, `incident`,
   `production`, `service`, `root`, `cluster`, …) — then requires a non-empty
@@ -342,7 +350,7 @@ readable in another's export.
 ## 9. Reliability, Safety, and Trust
 
 **The grounding gate is the strongest idea here and its limits are legible.** It
-applies to two of four types by design — `user` and `preference` memories are
+applies to three of five types by design — `user` and `preference` memories are
 still *"mostly LLM-classified"*, which the docstring says outright. Token
 overlap is a proxy for authorship, not a proof: an assistant that echoes the
 user's cluster name back inside an invented claim carries the tokens the check
@@ -377,6 +385,21 @@ per-turn timer.
 it prevents (*"parallel writers to the same slug cannot both report
 `created=True` or discard each other's content"*), and writes land through a
 temp file and `Path.replace`. A lock timeout returns `None` rather than raising.
+
+**Scope is a path, not a predicate, so `scope_enforced` is withheld.**
+`MemoryRecord` is slug, type, description, two timestamps and body
+(`core/domain/memory/models.py:29-37`); `parse_memory_file` reads no owner;
+`list_memories` returns whatever parses under the directory `memory_dir()`
+names (`store.py:197-208`). The actor appears only in
+`session_home()`'s path, `<org root>/users/<actor id>` (`config/constants/paths.py:169-180`).
+That is a physical partition, the shape the mark excludes. The near-miss is
+a good one: the parse cache is keyed on the directory so two users' stores
+are never served from one entry, and a regression test pins the
+`ContextVar` copy into the extraction thread. One limit follows from the
+shape: `OPENSRE_MEMORY_DIR` short-circuits `get_memory_dir()` before
+`session_home()` is consulted (`config/constants/paths.py:212-216`), so a
+gateway that sets it files every member in one directory and nothing on the
+record can tell them apart.
 
 **No audit.** Nothing records that a memory was created, updated or deleted, by
 whom, or from which turn. On a per-user laptop store that is a defensible
@@ -421,7 +444,7 @@ the closed-loop miss export exists to grow it. Nothing there measures memory.
   model-free test for the failure every extraction pipeline has: the agent's own
   output re-entering as evidence. It generalises where a stop list does not,
   because it does not need to know what the agent will say next.
-- **Applying it selectively.** Only the two high-impact types pay the cost, and
+- **Applying it selectively.** Only the three high-impact types pay the cost, and
   the code says why. A blanket version would reject legitimate profile facts the
   user never restated.
 - **The sample-scenario refusal.** Any product shipping demo data needs this,
@@ -494,12 +517,14 @@ something, and to make a correction that holds.
 | `core/domain/memory/files.py` | 84 | Paths, permissions, atomic write |
 | `core/domain/memory/settings.py` | 59 | The three environment gates and the shared-surface rule |
 | `core/domain/memory/models.py` | 52 | `MemoryRecord`, `MemoryType`, the size limits |
-| `config/constants/paths.py` | — | `session_home()` and `get_memory_dir()`, lines 130-170 |
+| `config/constants/paths.py` | — | `session_home()` at line 169 and `get_memory_dir()` at 212 |
 | `config/scope_context.py` | 42 | The storage-scope `ContextVar` |
 | `core/domain/feedback/misses/store.py` | 161 | The org-scoped miss ledger behind closed-loop learning |
 | `tools/system/agent_memory/_evidence.py` | 41 | Maps a `memory_recall` result into the investigation report's citation list |
 
 ## History
+
+**2026-10-01** — [`730ebc1ad151389393ece55051049d7a0af15864`](https://github.com/Tracer-Cloud/opensre/commit/730ebc1ad151389393ece55051049d7a0af15864) — audited at the same commit; **`scope_enforced` withdrawn.** The record credited a per-actor directory. `MemoryRecord` carries no owner, `parse_memory_file` reads none, and every read globs the directory `memory_dir()` resolves, so isolation is a physical partition selected by path with no key on the row and no predicate on a read — the shape the mark excludes. Section 9 carries the near-miss and the `OPENSRE_MEMORY_DIR` limit. A second correction at the same pin: `MemoryType` has five values, `repository` among them, and `_USER_GROUNDED_TYPES` grounds it beside `infrastructure` and `investigation_learning` (`memory_extraction.py:52`); the report said four types and two grounded. One mark remains, `negative_eval`. Nothing was installed, built or run.
 
 **2026-09-18** — [`730ebc1ad151389393ece55051049d7a0af15864`](https://github.com/Tracer-Cloud/opensre/commit/730ebc1ad151389393ece55051049d7a0af15864) — re-pinned from `f18c59a`; 343 files and +18,159 lines, re-screened at the new pin. **Human review withdrawn.** The record said what the surface does and the [narrowed rubric](../../methodology/atlas-rubric/#human-review-surface) no longer counts it: `/memory list`, `show` and `forget` act *"after the fact"*, and printing the store path so the files can be edited directly is authoring. The commands themselves are the good shape — typed by a person into the interactive shell, not tool calls — but there is nothing for them to adjudicate: `save_memory` writes the record and rebuilds the `MEMORY.md` index under a directory lock, with no pending state between the write and the read.
 

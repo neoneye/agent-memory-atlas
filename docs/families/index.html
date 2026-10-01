@@ -1768,20 +1768,21 @@ records the deletion perfectly, keyed on the value, terminal in a
 validated state machine, and the one query that could act on it is
 written to skip it. <strong>Aura is the family's extreme case in both
 directions.</strong> A 1.1-million-line self-hosted runtime whose memory
-package alone is 26,600 lines across eighty modules, it carries the only
-hash-chained audit in this atlas — receipts linked by
-<code>prev_hash</code>, verification that re-hashes the bodies, and
-sixteen passing tests for detecting modification, insertion and
-deletion. It also carries the most complete belief-status machine here
-(<code>active | trusted | contested</code>, with a resolution API and a
-refusal to overwrite a trusted belief) in a dictionary that is empty
-again after a restart, beside a second belief store that persists and
-has no status field at all. See <a href="../systems/aura/">Aura</a>.
-<strong>Helix AGI is the family's clearest case of a log that records
-everything except forgetting.</strong> Every belief write appends a full
-snapshot — content, 8-D position, a 384-float embedding — to a journal
-its own docstring calls <em>"the single source of truth"</em>, and the
-two functions that remove a belief write nothing to it:
+package alone is 26,600 lines across eighty modules, it carries a
+hash-chained audit — receipts linked by <code>prev_hash</code>,
+verification that re-hashes the bodies, and sixteen tests for detecting
+modification, insertion and deletion that passed when run at the
+report's first pin. It also carries the most complete belief-status
+machine here (<code>active | trusted | contested</code>, with a
+resolution API and a refusal to overwrite a trusted belief) in a
+dictionary that is empty again after a restart, beside a second belief
+store that persists and has no status field at all. See <a
+href="../systems/aura/">Aura</a>. <strong>Helix AGI is the family's
+clearest case of a log that records everything except
+forgetting.</strong> Every belief write appends a full snapshot —
+content, 8-D position, a 384-float embedding — to a journal its own
+docstring calls <em>"the single source of truth"</em>, and the two
+functions that remove a belief write nothing to it:
 <code>remove_belief</code> rewrites a category file and clears both
 runtime indexes, <code>archive_belief</code> sets mass to
 <code>0.01</code>. The consequence is not theoretical, because
@@ -1953,15 +1954,15 @@ compaction summaries, <a href="../systems/helm/">Helm</a> stop-lists its
 own supersession log. All three subtract — they name the strings to
 remove, and go stale when the harness learns a new phrasing. OpenSRE
 requires the opposite: an extracted memory typed
-<code>infrastructure</code> or <code>investigation_learning</code> is
-refused unless its distinctive tokens intersect with text <strong>the
-user actually typed</strong>, computed as a set intersection over a
-36-word stop list with no model in the loop. A second regex refuses
-anything extracted from a transcript containing the product's own
-sample, demo or benchmark scenarios, so shipped example incidents cannot
-become a customer's incident history. Both are asserted by committed
-tests, from both sides — assistant-only infrastructure skipped,
-user-grounded infrastructure saved.</p>
+<code>infrastructure</code>, <code>repository</code> or
+<code>investigation_learning</code> is refused unless its distinctive
+tokens intersect with text <strong>the user actually typed</strong>,
+computed as a set intersection over a 36-word stop list with no model in
+the loop. A second regex refuses anything extracted from a transcript
+containing the product's own sample, demo or benchmark scenarios, so
+shipped example incidents cannot become a customer's incident history.
+Both are asserted by committed tests, from both sides — assistant-only
+infrastructure skipped, user-grounded infrastructure saved.</p>
 <p>Two more decisions are worth lifting. One regex module does two jobs:
 the same patterns that refuse a credential entry to the store also
 <strong>redact the transcript before it reaches the classification
@@ -2757,8 +2758,9 @@ daemon-signed capability fixes the acting agent and workspace, and one
 visibility function gates search, list, load, browse and injected
 recall. It stops short twice. The hook intake takes the agent's identity
 from the request body with no capability, and the turn-start digest
-lists every hub unfiltered. Supersede, merge, delete and consolidation
-forward to the server, which is not in the tree.</p>
+writes every hub's path and summary into each system prompt unfiltered,
+which withholds the scope mark. Supersede, merge, delete and
+consolidation forward to the server, which is not in the tree.</p>
 <p><strong><a href="../systems/octop-memory/">Octop Memory</a> is a
 candidate-gated fact store whose review queue has three resolvers that
 disagree.</strong> A Python runtime for OpenClaw and Hermes, on SQLite
@@ -2926,13 +2928,14 @@ wrote the file</em>. The cache-memory store is a git repository with one
 branch per integrity level — <code>merged</code>, <code>approved</code>,
 <code>unapproved</code>, <code>none</code> — and
 <code>actions/setup/sh/setup_cache_memory_git.sh</code> checks out the
-branch for this run's level and then merges down from strictly higher
-levels only, so a fork PR reads what a merged run remembered and cannot
-write into it. An information-flow lattice over memory is rare enough
-here to be worth the whole report, and the same script's restore gate is
-the transferable half: hook files deleted, <code>core.hooksPath</code>
-set to <code>/dev/null</code>, symlinks deleted, execute bits stripped,
-and disallowed extensions removed <em>before the agent can read
+branch for the workflow's level and then merges down from strictly
+higher levels only, so a workflow never reads what one under a looser
+guard wrote; the level is a branch and a cache-key prefix, not a field
+on a file. An information-flow lattice over memory is rare enough here
+to be worth the whole report, and the same script's restore gate is the
+transferable half: hook files deleted, <code>core.hooksPath</code> set
+to <code>/dev/null</code>, symlinks deleted, execute bits stripped, and
+disallowed extensions removed <em>before the agent can read
 anything</em>, because <a
 href="https://github.com/github/gh-aw/blob/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d/docs/adr/26587-pre-agent-cache-memory-working-tree-sanitization.md">ADR-26587</a>
 reasons that a compromised prior run could have planted an executable.
@@ -3059,15 +3062,18 @@ query, no delete and no scope. That is a more honest position than
 AutoGen's, which promised a <code>Memory</code> protocol and could not
 express a targeted removal; it also means deletion and tenancy are
 reinvented per provider. The in-tree harness memory then supplies what
-the contract declines, and its scoping is among the best in the atlas:
-the owner id is read from session state and <strong>raises when
-missing</strong>, <code>..</code> and absolute segments raise, and after
-resolving the per-owner root the store asserts it is still inside the
-base path and raises <em>"Memory storage path escaped base_path"</em> if
-not. Three checks for one boundary, in a framework whose contract asks
-for none — and its correction path is an LLM rewriting the durable topic
-file into "a tighter durable form", with no diff and no previous version
-kept.</p>
+the contract declines, and its correction path is an LLM rewriting the
+durable topic file into "a tighter durable form", with no diff and no
+previous version kept.</p>
+<p>Its owner boundary is a directory guarded three ways, in a framework
+whose contract asks for none: the owner id is read from session state
+and <strong>raises when missing</strong>, <code>..</code> and absolute
+segments raise, and after resolving the per-owner root the store asserts
+it is still inside the base path and raises <em>"Memory storage path
+escaped base_path"</em> if not. No topic records its owner, so the
+boundary is the path. The framework's <code>scope_enforced</code> mark
+rests on its Redis provider instead, whose documents carry application,
+agent and user ids that its search filters on.</p>
 <p><strong>Agno is the third framework contract and the one that answers
 the question instead of deferring it.</strong> Its
 <code>LearningStore</code> Protocol is six methods —
@@ -4568,8 +4574,9 @@ move applied to the agent's own output rather than to a document. The
 disconnect is in the plumbing: search and the evidence block exclude
 superseded and archived rows, and the lesson-trigger cache that injects
 up to 50 lessons on every turn checks neither column nor the project, so
-a lesson retired in one repository keeps instructing the agent in every
-other. And the belief tier below it never arrives at all: the injected
+a lesson retired in one project keeps instructing the agent in every
+other, and <code>scope_enforced</code> is withheld on that read. And the
+belief tier below it never arrives at all: the injected
 <code>beliefs</code> layer admits only
 <code>status === 'promoted'</code>, and no code path in the repository
 writes <code>promoted</code>, so a consolidator that runs every two
@@ -8149,12 +8156,13 @@ splits the same way: on the self-hosted path the generated seeder puts a
 domain key in the node key and nine REST read paths filter on it, while
 neither the CLI's library ingest nor the generated importer writes it
 and not one of the bundled agent tools' queries names it, under a test
-whose assertion is that a list has at least zero members. On that path
-the agent's free-form query tool is described to the model as read-only
-and executes writes. The reusable third is the ingest machinery —
-per-connector watermarks that advance only after a clean batch, a
-drainable failure log, and redaction wired into four separate content
-paths of the session connector.</p>
+whose assertion is that a list has at least zero members. Those tools
+read the same graph, so <code>scope_enforced</code> is withheld. On that
+path the agent's free-form query tool is described to the model as
+read-only and executes writes. The reusable third is the ingest
+machinery — per-connector watermarks that advance only after a clean
+batch, a drainable failure log, and redaction wired into four separate
+content paths of the session connector.</p>
 <p><strong><a href="../systems/semantica/">Semantica</a> has two memory
 stores under one façade and governs only one of them.</strong> Its
 <code>ContextGraph</code> carries the temporal model <a

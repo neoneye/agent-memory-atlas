@@ -170,7 +170,7 @@ inspected code at the pinned commit*. The default method is static
 review: code read at a pinned commit, not run. Where a suite *was* executed the
 report says so in the first person and names what passed — CLIO's
 `test_ltm_corroboration.pl` (92 assertions) and Aura's `tests/test_audit_chain.py`
-(16 tests) are the current cases — and where it was not, the report says that
+(16 tests, run at the report's first pin and read since) are the current cases — and where it was not, the report says that
 too rather than leaving the reader to guess. **A report that does not claim a run
 did not do one.** The reports are opinionated by design. Where the code is
 partly closed, or a capability is documented but managed-platform-only, the
@@ -1285,7 +1285,7 @@ the same shape, and nothing in this corpus has one.
 - [`openclaw`](../systems/openclaw/): `searchVector()`, `searchKeyword()` and `searchPathKeyword()` in `extensions/memory-core/src/memory/manager-search.ts`, merged in `manager-search-orchestration.ts`; `scopedPredicate()` in `extensions/memory-lancedb/lancedb-store.ts`.
 - [`daimon`](../systems/daimon/): `search()` and `suggest()` in `plugin/daimon_briefing/recall.py`; ranking in `scoring.py`.
 - [`helm`](../systems/helm/): one function, `workspace/memory/memory.mjs:164-326` — a 500-row recency-ordered candidate window, hand-written BM25, a semantic arm that is MiniLM if cached and TF-IDF cosine otherwise, RRF at k=60, a confidence weight and a key-match boost, and a separate episode scorer with a 30-day recency term.
-- [`csm`](../systems/csm/): `hybridSearch()` in `src/hybrid-search.ts:26` over `src/hybrid-search-sources.ts` and `src/hybrid-search-ranking.ts`; the three fallback tiers and the fail-closed scope branch in `src/memory-manager.ts:512`.
+- [`csm`](../systems/csm/): `hybridSearch()` in `src/hybrid-search.ts:26` over `src/hybrid-search-sources.ts` and `src/hybrid-search-ranking.ts`; the three fallback tiers in `searchMemories` at `src/memory-manager-base.ts:510`, and the fail-closed scope branch in `src/hybrid-search-sources.ts:52-55`.
 - [`graphify`](../systems/graphify/): `aggregate_lessons()` and `_finalize_sources()` in `graphify/reflect.py`; the read-side annotation and preferred-first reordering in `graphify/serve.py:927` and `:1128`.
 - [`lorekit`](../systems/lorekit/): `packages/mcp-core/src/tools/read.ts`, `list.ts` and `search.ts` — exact scope equality plus `websearch_to_tsquery`, each applying the archive and expiry filters.
 - [`clio`](../systems/clio/): per-request keyword overlap in `ContextBuilder::score_ltm` (`ContextBuilder.pm:326`), threshold 5 and at most five entries, with no tier term; substring matching in `search_entries` (`LongTerm.pm:810`) behind the tool's `search`.

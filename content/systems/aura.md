@@ -1,7 +1,7 @@
 ---
 title: "Aura"
 eyebrow: "Receipts that chain, beliefs that don't survive"
-description: "A million-line Python runtime carrying the only hash-chained audit in this atlas and the most complete belief-status machine in it — the second one held in a dictionary that is empty again after a restart."
+description: "A self-hosted Python cognitive runtime with a hash-chained receipt audit and a four-state belief-status machine held in a dictionary a restart empties."
 root: ../..
 page_kind: system
 source_name: "youngbryan97/aura"
@@ -9,7 +9,11 @@ source_url: https://github.com/youngbryan97/aura
 archive_name: "youngbryan97--aura"
 revision: cf84a733c4bcf174646bc2a955d996ed170b990e
 revision_url: https://github.com/youngbryan97/aura/commit/cf84a733c4bcf174646bc2a955d996ed170b990e
-analyzed_at: 2026-09-19
+analyzed_at: 2026-10-01
+licence: "All rights reserved; the LICENSE grants reading and learning only, no copying, derivative works or use."
+size: "3,006,498 lines of Python in 9,051 files, 1,010,315 of them under tests/, archive/ and scratch/ included; core/memory/ is 35,346 lines in 116 files"
+activity: "9,802 commits on main by 7 author identities, 23 February – 19 September 2026"
+tests: "46,060 test functions across 4,077 files under tests/; the 16 audit-chain tests ran at the first pin, not this one"
 capabilities: "trust_state, audit_log"
 capability_evidence:
   trust_state: "the autonomous write path — a contested belief defers an intent that touches its key | core/constitution.py:115, :171-249, :321-345, core/executive/executive_core.py:858-871, :1510-1565 | `BeliefMutationRecord.status` is `tentative` on the dataclass and takes `active`, `trusted` or `contested` as the evaluator assigns them — four values, not three, and the default is the one the 2026-09-19 re-read added to this record, set on the record when a contradiction arrives against a belief that has not earned trust. `BeliefAuthority.summary()` partitions on it (`status == 'contested'`, `status == 'trusted'`) and exposes `fresh_contested_keys`; `_get_epistemic_state()` reads that and the gate defers any non-user `WRITE_MEMORY` or `UPDATE_BELIEF` intent whose topic matches a contested key, with `_intent_touches_contested_topic` failing closed to the global block when no keys are available. The status filters writes, not reads, and it does not survive a restart | tests/test_contested_belief_gate_is_relevant.py:82, tests/test_reliability_hardening.py:1528"
@@ -27,21 +31,21 @@ matrix:
   integration: "A self-hosted daemon with a desktop app, tools, skills, sensors and an autonomy engine — memory is internal, not an exposed service"
   background: "Consolidation, synthesis, defragmentation, scar healing and pruning, all inside the running process"
   trust: "`active | trusted | contested` on a belief record, gating autonomous writes that touch a contested key, with a resolution API and a six-hour freshness window — none of it persisted"
-  strengths: "A tamper-evident receipt chain that detects modification, insertion and deletion, with sixteen passing tests; and a claims ledger that names what the project cannot prove"
+  strengths: "A tamper-evident receipt chain that detects modification, insertion and deletion, with sixteen tests that passed when run at the first pin; and a claims ledger that names what the project cannot prove"
   risks: "The belief ledger is a process-lifetime dictionary, so every trust state resets on restart, and the `contested` flag that is persisted on memory records is read by nothing"
 ---
 
 ## 1. Executive Summary
 
-Aura is a self-hosted cognitive runtime: 1.1 million lines of Python across
-8,658 files, of which `core/memory/` is about 34,800 lines in 115 modules.
-The test tree holds 44,104 test functions across 3,606 files — the largest suite
-in this atlas by an order of magnitude. Development is active, at 9,305 commits
-since February 2026 with the memory package touched the day before this pin.
+Aura is a self-hosted cognitive runtime in Python, and two of its mechanisms
+point in opposite directions: a receipt chain that a rewritten audit trail
+cannot pass, and a belief-status machine held in a dictionary that a restart
+empties.
 
 **Almost none of it was written by a person, and the repository says so in its
-own metadata.** Of those 9,305 commits, 3,980 are authored `Codex`, 3,623
-`Zenflow`, 1,624 `Claude` and 63 `ChatGPT`; eleven carry the owner's name. Run
+own metadata.** Of the 9,802 commits reachable from this pin, 4,074 are
+authored `Codex`, 3,623 `Zenflow`, 2,027 `Claude` and 63 `ChatGPT`; fifteen
+carry the owner's name or handle. Run
 `git log --format='%an' | sort | uniq -c | sort -rn` and that is the whole
 table. This bears on how the report reads the tree rather than on whether the
 design is good: a mechanism here can be elaborate, tested and documented and
@@ -58,26 +62,30 @@ a design you may study and may not adopt. The atlas records the same position
 for [OptMem](../optmem/) and treats it as a caveat rather than a reason not to
 read — see also [Empryo](../empryo/) under BSL and [Dexto](../dexto/) under ELv2.
 
-Two mechanisms make it worth the read, and they point in opposite directions.
+Both mechanisms are worth the read.
 
-**The receipt chain is the strongest audit in this atlas.** Every receipt the
+**The receipt chain is tamper-evident.** Every receipt the
 runtime emits gets a link in `root/_chain.jsonl` carrying `seq`, `receipt_id`,
 `content_hash`, `prev_hash` and `entry_hash`, where the entry hash covers the
 previous one. The module docstring states the properties it buys: *"Deletion
 shows up as a seq gap; insertion shows up as a broken link because entry_hash is
-over prev_hash."* Every other append-only audit in the corpus is append-only by
-file handle — [Palazzo](../palazzo/)'s WAL is opened `O_APPEND` and nothing
-would notice an edit. This one re-hashes the on-disk receipt bodies during
-verification, so an audit trail that has been rewritten fails a check rather
+over prev_hash."* An audit that is append-only by file handle cannot see an
+edit — [Palazzo](../palazzo/)'s WAL is opened `O_APPEND` and nothing would
+notice one. Aura's, like [aimee](../aimee/)'s and [Midas](../midas/)'s, is a
+chain, and it re-hashes the on-disk receipt bodies during verification, so an audit trail that has been rewritten fails a check rather
 than reading clean.
 
-I ran it. `python -m pytest tests/test_audit_chain.py` gives **16 passed** on
-Python 3.14 with `pydantic`, `pydantic-settings` and `psutil` installed. The
-passing cases include `test_detects_modified_receipt_body`,
+I ran it at the first pin, [`e8866f43c54677d3f2877820cd74cf915af6fbb7`](https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7):
+`python -m pytest tests/test_audit_chain.py` gave **16 passed** on Python 3.14
+with `pydantic`, `pydantic-settings` and `psutil` installed. The passing cases
+include `test_detects_modified_receipt_body`,
 `test_detects_modified_chain_entry`, `test_detects_broken_link`,
 `test_detects_deleted_entry`, `test_chain_persists_across_restart` and
-`test_exported_chain_can_be_independently_verified`. The tamper-evidence is
-tested, not merely claimed.
+`test_exported_chain_can_be_independently_verified`. The tamper-evidence is tested, not merely claimed. The later
+readings read the suite and did not run it. At this pin the test file is
+byte-identical to the one that ran, while `core/runtime/audit_chain.py` has grown
+from 611 to 692 lines, adding `refresh_from_disk` among other changes, so the
+passing run predates the module as it stands.
 
 **The belief machine is the most complete in this atlas and it does not survive
 a restart.** `BeliefAuthority` in `core/constitution.py` runs a real epistemic
@@ -464,17 +472,19 @@ plausible source.
 
 ## 10. Tests, Evals, and Benchmarks
 
-21,206 test functions across 1,740 files, and the naming is a map of the
+46,060 test functions across 4,077 files under `tests/`, and the naming is a map of the
 project's concerns: `test_epistemic_firewall.py`,
 `test_retrieval_and_lease_integrity.py`, `test_bypass_proof.py`,
 `test_authorization_receipts_fail_closed.py`,
 `test_closed_loop_receipt_failures_are_visible.py`,
 `test_episodic_memory_runtime_hardening.py`.
 
-I ran one file. `tests/test_audit_chain.py` gives **16 passed** in about a
-second, on Python 3.14 with `pydantic`, `pydantic-settings` and `psutil` added
-to a clean virtualenv — the suite needs those three before it will import. I did
-not run the rest: at this scale, and with several suites gated behind model
+I ran one file, at the first pin, [`e8866f43c54677d3f2877820cd74cf915af6fbb7`](https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7). `tests/test_audit_chain.py` gave
+**16 passed** in about a second, on Python 3.14 with `pydantic`,
+`pydantic-settings` and `psutil` added to a clean virtualenv — the suite needs
+those three before it will import. The later readings, including this pin's, ran
+nothing; they read the file, which is byte-identical here, against a module that
+has changed. I did not run the rest: at this scale, and with several suites gated behind model
 weights and artifact directories, a full run is a research project rather than a
 smoke test.
 
@@ -504,8 +514,8 @@ about output channels rather than recall, so `negative_eval` is withheld.
 **Chain your audit entries.** `seq`, `content_hash`, `prev_hash`, `entry_hash`,
 one line of JSONL per entry, verification that re-hashes the bodies. It is a few
 hundred lines and it converts an append-only log — which detects nothing — into
-one where deletion is a gap and insertion is a broken link. Every other audit in
-this atlas would pass verification after being rewritten.
+one where deletion is a gap and insertion is a broken link. An unchained log
+would pass verification after being rewritten.
 
 **Fail closed on the exception, not just on the absence.** The write gateway
 denies when no authority is wired *and* when the authority call raises. The
@@ -577,7 +587,7 @@ admission-control mechanisms — the chain, the fail-closed gateway, the
 firewall's independent-source counting. Those three are the transferable parts
 and each is small enough to lift on its own.
 
-Do not treat it as a memory system you can evaluate quickly. A million lines with
+Do not treat it as a memory system you can evaluate quickly. Three million lines with
 eighty memory modules, heavily metaphorical naming, and mechanisms that are
 individually strong but not converged on one representation of trust is a lot of
 surface to hold. The claims matrix is the right entry point, because it tells you
@@ -661,7 +671,18 @@ the store: [Core Memory](../core-memory/) and [Daimon](../daimon/) both do.
 | `CLAIMS_MATRIX.md`, `CLAIMS_NOT_SUPPORTED.md` | Claims with falsifiers, and the disclaimers |
 | `HUMAN_OVERRIDE_POLICY.md`, `KNOWN_FAILURE_MODES.md` | Operator control and stated failure modes |
 
+### Recorded searches
+
+Run once each against a depth-1 fetch of the pinned commit. A test function is a
+line opening `def test_` or `async def test_` in a tracked `.py` file under
+`tests/`; a file counts when it holds at least one.
+
+- `git grep -c -E '^[[:space:]]*(async[[:space:]]+)?def test_' cf84a733c4bcf174646bc2a955d996ed170b990e -- 'tests/*.py' | awk -F: '{n++; s+=$NF} END {print n, s}'` — 4,077 files, 46,060 functions.
+- `git show <commit>:tests/test_audit_chain.py`, compared at `e8866f4` and this pin — byte-identical, 16 `def test_` lines at each.
+
 ## History
+
+**2026-10-01** — [`cf84a733c4bcf174646bc2a955d996ed170b990e`](https://github.com/youngbryan97/aura/commit/cf84a733c4bcf174646bc2a955d996ed170b990e) — read again at the same commit; no mark moved. Sections 1 and 10 said *"I ran it"* without naming the commit: the 16 audit-chain tests ran at the first pin, `e8866f4`, and later readings ran nothing. The test file is byte-identical here, while `core/runtime/audit_chain.py` grew from 611 to 692 lines, so the run predates the module. The page called this the only hash-chained audit in the atlas; [aimee](../aimee/) and [Midas](../midas/) carry chains too, and the claim is now scoped to Aura. Section 1 and section 10 gave two different test censuses, neither from this pin; both now give 46,060 functions in 4,077 files, by the method under Recorded searches.
 
 **2026-09-19** — re-pinned to [`cf84a733c4bcf174646bc2a955d996ed170b990e`](https://github.com/youngbryan97/aura/commit/cf84a733c4bcf174646bc2a955d996ed170b990e), read as part of a corpus re-test of `trust_state` against the filtering-versus-ranking line. **The mark holds, and the vocabulary was under-reported.** The gate itself is where it was and still fails closed: an autonomous `WRITE_MEMORY` or `UPDATE_BELIEF` intent below priority 0.9 whose topic matches a contested key is deferred (`core/executive/executive_core.py:858-871`), and `_intent_touches_contested_topic` returns true — the global block — when contests exist but no keys or no comparable text are available. What the previous record missed is that `BeliefMutationRecord.status` defaults to `tentative` (`core/constitution.py:115`, assigned at `:171`), so the vocabulary is four values rather than the three the record named; `trusted`, `active` and `contested` are then assigned by the evaluator at `:190-249`. The two qualifications already on the record were re-checked and stand: the status filters writes rather than reads, and it does not survive a restart. Every cited line was re-mapped. Screened again first; nothing installed or run.
 

@@ -167,8 +167,11 @@ Other systems tier with no rule over stored fields at all.
 the agent's own tool calls, so the rule is whatever the model decides — the
 rule-inside-a-prompt shape. [LoongFlow](../../systems/loongflow/)'s stm, mtm and
 ltm pass material through a `Compressor`. [Mercury](../../systems/mercury-agent/)
-keeps a `subconscious` tier below active recall, and its report found nothing that
-states what moves a memory into or out of it.
+is not one of them: its heartbeat moves `active` and `durable` rows unseen for
+30 days into a `subconscious` tier ordinary recall does
+not search, and recall promotes a row back when fewer than three conscious
+matches clear a health threshold — but `last_seen_at` moves on a merge or a
+promotion, not on retrieval, so a memory in daily use still demotes.
 [Redis Agent Memory Server](../../systems/redis-agent-memory-server/) works the
 other end of the lifecycle: its forgetting policy combines TTL, inactivity,
 pinning, per-type allowlists and budget pruning, and what it selects is deleted

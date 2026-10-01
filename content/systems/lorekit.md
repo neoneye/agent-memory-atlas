@@ -1,7 +1,7 @@
 ---
 title: "LoreKit"
 eyebrow: "Multi-tenant lesson store"
-description: "Key-addressed lessons in Postgres behind row-level security, an append-only audit log that records every mutation and preserves none of the overwritten values, and an entrenchment doctrine that lives entirely in a skill file."
+description: "Key-addressed lessons for coding agents in Postgres behind row-level security; its append-only audit log keeps no overwritten value, and its entrenchment doctrine is skill-file prose."
 root: ../..
 page_kind: system
 source_name: "mthines/lorekit"
@@ -9,10 +9,13 @@ source_url: https://github.com/mthines/lorekit
 archive_name: "mthines--lorekit"
 revision: 07d2ce84baf6b6ba01b1424cc1253a4de4ee144d
 revision_url: https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d
-analyzed_at: 2026-09-19
+analyzed_at: 2026-10-01
+licence: "MIT"
+size: "142,450 lines of TypeScript in 860 files, 64,550 of JavaScript in 216 and 31,968 of SQL in 110; the MCP core in packages/mcp-core is 23,415 lines of TypeScript in 131 files"
+activity: "2,050 commits on main, 23 July – 18 September 2026; one human author under four identities, plus Agent0, Claude and four bot accounts"
 capabilities: "scope_enforced, audit_log"
 capability_evidence:
-  scope_enforced: "the scope key is an equality predicate on every read, and the wider tenant-visibility filter is one module that mirrors a single SQL source of truth under a parity test | packages/mcp-core/src/tools/read.ts:8-16, :67, packages/mcp-core/src/scope/scope-precedence.ts, packages/mcp-core/src/auth/tenant-scope.ts:1-18, supabase/functions/_shared/auth/tenant-scope.ts | `read` validates the scope against `ScopeSchema` and, when one is supplied, applies `.eq('scope', input.scope)` to the query, so the stored key reaches the statement rather than trimming its result. The scope argument became optional in this window and an omitted one now resolves the key across every scope the caller can already see, picking one winner by scope type — project, branch, repo, global — then most-recently-updated, then scope ascending; the widening is over the scope-type dimension only and sits inside the tenant predicate, not around it. Above it the tenant predicate — a caller sees their own rows or any row owned by an org they belong to — is deliberately a filter-shaper only: it *never re-derives membership itself*, taking an already-resolved org-id list so *the predicate can never drift from the SQL side*, whose sole source of truth is `lorekit_member_org_ids()`. The copy the Deno edge functions import is a second file by necessity and the duplication is named rather than accidental, with a parity spec guarding the pair. The known duplication with a test asserting the mirror is the safer of the two answers this corpus keeps finding | packages/mcp-core/src/auth/tenant-scope.spec.ts, tenant-scope-usage.spec.ts"
+  scope_enforced: "a supplied scope is an SQL predicate on every agent-reachable read of the hosted store, and a scoped API key's allowlist is applied inside the one tenant filter every read funnels through | packages/mcp-core/src/tools/read.ts:8-16, :67, packages/mcp-core/src/tools/list.ts:16, :106, supabase/functions/mcp/tools.ts:347, :570, :648, :791-813, :924, supabase/functions/_shared/auth/tenant-scope.ts:150-198, packages/mcp-core/src/scope/scope-precedence.ts | `memory.read`, `memory.list` and `memory.list_archived` validate a supplied scope and apply `.eq('scope', …)`; `memory.search` applies `scope.in`/`scope.like` over its `scopes`; the batch `refs` read groups by scope and applies `.eq('scope', s)` per group. The scope argument is optional, and an omitted one is the stated limit: `memory.read` resolves the key across every scope the caller can see and returns one winner by scope type — project, branch, repo, global — then most-recently-updated, then scope ascending, naming the scope that answered, while `memory.list` returns every visible scope unmerged. That widening sits inside the tenant predicate, not around it. `applyTenantScope` also ANDs the calling key's scope allowlist (migration 00068) onto every read, so *a scoped key must not see an out-of-allowlist row even on a read that names no scope at all*; `GET /memories/:id`, the one read with no scope argument, carries it too. Two limits: the edge `memory.search` skips an invalid exact scope instead of rejecting it (`tools.ts:807`), so a call whose every scope is malformed searches all visible scopes; and the CLI's local store is a directory per scope with no predicate, a separate store the mark does not rest on. The tenant predicate is a filter-shaper that *never re-derives membership itself*, mirroring `lorekit_member_org_ids()`, with the Deno copy guarded by a parity spec | packages/mcp-core/src/auth/tenant-scope.spec.ts, tenant-scope-usage.spec.ts, packages/mcp-core/src/edge/edge-parity.spec.ts"
   audit_log: "an append-only table with no update or delete policy, a closed action vocabulary, and a committed test that fails when the vocabulary and the schema disagree | supabase/migrations/00010_audit_log.sql:30-75, 00089_audit_log_groom_actions.sql, packages/mcp-core/src/audit/audit-vocabulary.spec.ts | `audit_log` records a user, an action from a `CHECK`-constrained list, a resource type and id, a target and a metadata blob, with RLS granting select only on one's own rows and *deliberately NO update or delete policy — the log is append-only / immutable via the API surface*. Widening the vocabulary is forward-only, a drop and re-add of the CHECK, and the reason is stated: `recordAudit` never throws on a rejected action, so a call whose action the CHECK refuses *is swallowed and logged to the server console only, leaving a silent, permanent hole* — which is why `audit-vocabulary.spec.ts` parses the newest action-CHECK migration and fails when it differs from the TypeScript `AUDIT_ACTIONS` set. The limit belongs with the mark: an update's row carries `metadata: { scope, key }` and not the value that changed | packages/mcp-core/src/audit/audit.spec.ts, packages/mcp-core/src/tools/write.spec.ts:169"
 stack_storage: "postgres, files"
 stack_retrieval: "lexical"
@@ -56,9 +59,10 @@ it is stronger than most systems in this atlas manage:
   rarer than the count suggests.
 - **The audit log is append-only by construction.** `audit_log` has a SELECT
   policy and an INSERT policy and **deliberately no UPDATE or DELETE policy** —
-  the migration says so, numbered as Decision D5. Eleven actions are enumerated
-  in a CHECK constraint, including `memory.create`, `memory.update`,
-  `memory.archive`, `memory.restore` and `memory.delete`.
+  the migration says so, numbered as Decision D5. A CHECK constraint
+  enumerates 29 actions (`00089_audit_log_groom_actions.sql`, the newest of the
+  migrations that redefine it), including `memory.create`, `memory.update`,
+  `memory.archive`, `memory.restore`, `memory.delete` and `memory.protect`.
 - **The migrations are written like design documents.** The audit-log migration
   spends 25 comment lines explaining why capture is app-layer rather than a
   trigger, names the single deliberate exception, and tells a future maintainer
@@ -627,6 +631,8 @@ and `retrospective.md`;
 `org-permissions.spec.ts`.
 
 ## History
+
+**2026-10-01** — [`07d2ce84baf6b6ba01b1424cc1253a4de4ee144d`](https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d) — read again at the same commit; no mark moved. Section 1 said eleven actions were enumerated in the audit CHECK; that was the count in `00010_audit_log.sql`, and the newest redefinition, `00089_audit_log_groom_actions.sql`, lists 29. `scope_enforced` was re-tested against the optional scope argument and holds: every agent-reachable read applies a supplied scope (`supabase/functions/mcp/tools.ts:347, :648, :791-813`), an omitted one is the stated limit, and `applyTenantScope` ANDs a scoped key's allowlist onto every read (`supabase/functions/_shared/auth/tenant-scope.ts:181-198`). Its evidence record now cites the edge tools and states two limits: the edge search skips a malformed scope rather than rejecting it, and the local CLI store is a directory partition.
 
 **2026-09-25** — [`07d2ce84baf6b6ba01b1424cc1253a4de4ee144d`](https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d) — census re-measured at the same commit, read and never run. The trees API gives 106 `.sql` files under `supabase/migrations/`, the last `00111`, and 298 `*.spec.*` or `*.test.*` files; the same counts at `08e3065` give 37 and 90, the first reading's figures. `.mjs` under `packages/cli/`, tests included, counts 40,594 lines from a depth-1 fetch, against 13,377 at `08e3065`. The 1,184 cases did not reproduce: a static count of `it` and `test` calls gives 1,144 at `08e3065`, so the figure is dropped rather than re-measured by a different method. No mark moved.
 

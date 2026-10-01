@@ -1,7 +1,7 @@
 ---
 title: "gh-aw"
 eyebrow: "Memory in CI, on an integrity lattice"
-description: "GitHub's agentic-workflows compiler gives a workflow three cross-run memory backends — Actions cache, a git branch, and an issue comment — plus an experimental GitHub Drive, and treats every one of them as a hostile artifact written by a previous run of itself."
+description: "GitHub's agentic-workflows compiler, with cross-run memory in Actions cache, a git branch or an issue comment, each restored as hostile input from a previous run."
 root: ../..
 page_kind: system
 source_name: "github/gh-aw"
@@ -9,13 +9,15 @@ source_url: https://github.com/github/gh-aw
 archive_name: "github--gh-aw"
 revision: 9259aea14a8d0d6f423fb5813b2675b3e81c8398
 revision_url: https://github.com/github/gh-aw/commit/9259aea14a8d0d6f423fb5813b2675b3e81c8398
-analyzed_at: 2026-09-15
-capabilities: "scope_enforced, negative_eval"
+analyzed_at: 2026-10-01
+licence: "MIT"
+size: "894,727 lines of Go in 3,176 files, 586,736 of them in _test.go files, and 349,585 lines of CommonJS in 861 files; the memory subsystem is 5,774 lines in 23 Go, CommonJS and shell files, with 10,834 lines of tests beside it"
+activity: "17,775 commits on main, 12 August 2025 – 15 September 2026"
+capabilities: "negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
 capability_evidence:
-  scope_enforced: "cache-memory store, and drive memory through the same script | actions/setup/sh/setup_cache_memory_git.sh:258-282 | the run checks out the branch named for its own integrity level, then the merge loop walks `LEVELS` from `merged` down and breaks at the run's own level, so only strictly-higher branches are merged in, under the comment `lower-integrity runs see higher-integrity data via merge, but higher-integrity runs never see lower-integrity data`. `generateDriveMemoryGitSetupStep` in pkg/workflow/drive_memory.go runs the same script with the same `GH_AW_MIN_INTEGRITY`. The read-down property itself is asserted by no test | pkg/workflow/cache_integrity_test.go, the env-var emission contract for GH_AW_MIN_INTEGRITY"
   negative_eval: "the pre-agent restore — named material must not reach the directory the agent reads | actions/setup/sh/setup_cache_memory_git.sh:286-296 and the extension loop after it | after the lattice merge the script deletes every working-tree symlink, strips execute bits, and removes any file whose extension is not in `GH_AW_ALLOWED_EXTENSIONS`. Test 4 restores `data.json`, `notes.md`, `helper.sh` and `archive.zip` under `.json:.md` and asserts `helper.sh removed` and `archive.zip removed` beside `data.json kept` and `notes.md kept`; Test 3 is the unfiltered control in which all four survive; Test 10 plants `evil-link -> /etc/passwd` and asserts it is gone while `real.json` stays. These predate the 2026-08-09 pin. Tests 2b and 2c, added since, assert that planted `credential`, `alias`, `filter`, `merge` and `include` config sections and symlinked `.git` metadata do not survive the restore | actions/setup/sh/setup_cache_memory_git_test.sh:103, :181, :200, :211, :274"
 matrix:
   memory_unit: "A file the agent wrote in a previous run — JSON, JSONL, Markdown, CSV — with no schema the system imposes or reads"
@@ -23,12 +25,12 @@ matrix:
   retrieval: "None. The whole store is mounted as a directory and the agent reads it with its own file tools; a generated prompt section names the path"
   write: "The agent edits files in place during the run; a post-agent step commits and pushes or upserts, gated by size, count, glob and extension limits and an optional author-supplied validation script"
   update_delete: "Overwrite in place. Cache memory expires at 7 days and by LRU; repo memory is unbounded and versioned in git; nothing is ever marked wrong"
-  scoping: "Integrity level (merged/approved/unapproved/none) as a git branch, plus branch-scoped cache keys and per-id directories; the level is enforced on the read path"
+  scoping: "Integrity level (merged/approved/unapproved/none), a constant per compiled workflow, carried as a git branch and as the cache key prefix, plus branch-scoped cache keys and per-id directories; a partition chosen by name, with no level on a file and no predicate on a read"
   integration: "A YAML frontmatter key in a Markdown workflow file that a Go compiler expands into GitHub Actions steps; no MCP tool and no API"
   background: "Nothing between runs. A scheduled maintenance workflow prunes stale cache entries by key prefix"
   trust: "Memory from a previous run is treated as attacker-controlled: hooks deleted, symlinks deleted, execute bits stripped, disallowed extensions removed, all before the agent can read it"
-  strengths: "An information-flow lattice over memory that a low-trust run cannot write upward into, and a read path that assumes its own store is hostile"
-  risks: "No retrieval, no correction, no notion of a fact; the whole store is injected as a directory, and the trust label describes the writer rather than the belief"
+  strengths: "Memory partitioned by the guard policy that produced it, with a read-down merge for stores two levels share, and a read path that assumes its own store is hostile"
+  risks: "No retrieval, no correction, no notion of a fact; the whole store is mounted as a directory, the trust label describes the writer rather than the belief, and comment memory is read from every comment on the thread with no author or provenance check"
 ---
 
 ## 1. Executive Summary
@@ -53,14 +55,25 @@ the agent never calls.
 The genuinely interesting part is what happens at restore. `cache-memory` is not
 a directory of files; it is a **git repository with one branch per trust level** —
 `merged`, `approved`, `unapproved`, `none` — and a run checks out the branch
-matching its own integrity level and then merges *down* from strictly higher
-levels only. The comment in
+matching its workflow's integrity level and then merges *down* from strictly
+higher levels only. The comment in
 [`setup_cache_memory_git.sh`](https://github.com/github/gh-aw/blob/9259aea14a8d0d6f423fb5813b2675b3e81c8398/actions/setup/sh/setup_cache_memory_git.sh)
 states the rule directly: *"lower-integrity runs see higher-integrity data via
-merge, but higher-integrity runs never see lower-integrity data."* A run
-triggered by an unapproved fork PR can read what a merged run remembered and
-cannot contaminate it. That is an information-flow lattice applied to agent
-memory, and this atlas has very little of it.
+merge, but higher-integrity runs never see lower-integrity data."* The level is
+the workflow's own `tools.github.min-integrity` guard setting, fixed at compile
+time, so it records how much untrusted GitHub content the writing agent was
+allowed to read. That is an information-flow lattice applied to agent memory,
+and this atlas has very little of it.
+
+Two things narrow it. The level is also the prefix of the cache key, and the
+restore keys keep that prefix, so a cache-memory store is only ever restored at
+the level that wrote it and the merge has nothing above it to bring in; the
+lattice does work only on a store two levels share, which at this pin is a
+named drive. And a level is a branch name and a key prefix, never a field on a
+file, so the boundary is a partition chosen by name rather than a predicate on
+a read. One mark, `negative_eval`, on shell tests that assert planted material
+is gone after restore; `scope_enforced` is withheld for that reason, and the
+near-miss is in section 9.
 
 The second interesting part follows from the first. Before the agent is allowed
 near the restored tree, the same script deletes every non-sample file under
@@ -106,7 +119,8 @@ independent coordinates:
   Drive memory is durable without git-branch commits, one active writer per
   drive, and its ADR-54662 is a `Draft` written by an ADR-writer agent.
 - **Which integrity branch**, for cache memory and drive memory: `merged` > `approved` >
-  `unapproved` > `none`. This is assigned by the trigger, not by the content, and
+  `unapproved` > `none`. This is assigned by the workflow's guard setting at
+  compile time, not by the trigger and not by the content, and
   **nothing ever moves a file between branches**. There is no promotion path and
   no adjudication. The lattice governs who may *read* what, and that is all it
   does.
@@ -206,9 +220,11 @@ memory emits the same script against its mount.
 template file, substituting `GH_AW_MEMORY_DIR`, `GH_AW_MEMORY_DESCRIPTION`,
 `GH_AW_MEMORY_BRANCH_NAME` and a `**Constraints:**` block listing the allowed
 globs and the size, count and patch-size caps. This is the whole of retrieval:
-the agent is told a path and the rules, and goes looking. Comment memory differs
-— ADR-27479 records that its content *is* injected into the prompt and into the
-threat-detection context, so a small memory arrives read rather than referenced.
+the agent is told a path and the rules, and goes looking. Comment memory is
+referenced the same way. ADR-27479 says its content is injected into the prompt,
+but `injectCommentMemoryPrompt` writes only a list of file paths
+(`actions/setup/js/setup_comment_memory_files.cjs:177-192`), and the
+threat-detection prompt receives each file's path and size.
 
 **Write and persist.** The agent edits files in the mounted directory with
 whatever editing tools its engine has. Afterwards
@@ -229,10 +245,18 @@ the Actions cache's own 7-day retention and LRU; the scheduled *Agentic
 Maintenance* workflow groups cache entries by key prefix (everything before the
 run ID) and keeps only the newest per group.
 
-**Scope enforcement.** Two layers. The integrity branch, above. And the cache key
-itself: when `tools.github.min-integrity` is set, the key incorporates the
-integrity level and a hash of the guard policy, so editing any policy field forces
-a miss rather than silently reusing memory gathered under the old policy.
+**Scope.** Two layers, and both select a whole store by name. The integrity
+branch, above. And the cache key: `computeIntegrityCacheKey` prefixes every key
+with `memory-{level}-{policyHash}-` (`pkg/workflow/cache_integrity.go:163-179`),
+and `buildCacheRestoreKeys` strips only the run id, plus the workflow id for
+`scope: repo`, so the prefix survives into every restore key
+(`pkg/workflow/cache_steps.go:111-133`). Editing any policy field forces a miss
+rather than reusing memory gathered under the old policy. The level is the
+frontmatter enum `tools.github.min-integrity`, defaulting to `none`
+(`pkg/workflow/tools_parser.go:312-313`, `cache_integrity.go:141-146`), emitted
+as a literal `GH_AW_MIN_INTEGRITY` (`pkg/workflow/cache_memory.go:120`). A drive
+is mounted by `drive-name` alone (`pkg/workflow/drive_memory.go:33`), so it is
+the one store where two levels meet and the merge-down has work to do.
 
 ## 5. Memory Data Model
 
@@ -242,7 +266,9 @@ There is no schema. The unit is a file; the system's model of it is
 Scoping is real and multi-axis, which is unusual for a system with no data model
 at all:
 
-- **Integrity level** — a git branch, read-down only.
+- **Integrity level** — a git branch and a cache-key prefix: read-down across
+  the branches of one repository, no sharing at all across cache keys, and no
+  field on any file.
 - **Repository and branch** — Actions cache scoping is branch-local with fallback
   to the default branch, which the documentation calls out as a behaviour to plan
   around: on a non-default branch the first restore usually comes from the default
@@ -282,10 +308,13 @@ The consequences are the ones you would predict, plus one you might not:
   read path, and it filters by file extension.
 
 The one non-obvious consequence is that **the restore gate is the retrieval
-policy**. What a run can see is decided entirely by branch checkout and merge
-direction, before the agent runs. That is a coarse filter, but it is enforced by
-the filesystem rather than by a query the agent could phrase differently, which
-is a stronger guarantee than most retrieval-side scoping in this atlas.
+policy**. What a run can see is decided entirely by which cache key restores,
+which branch is checked out and which way the merge runs, before the agent runs.
+That is a partition, not a filter: no file carries a level and no read consults
+one. The agent cannot phrase its way around it, and the price is that it moves
+only whole stores. The `.git` directory sits inside the mounted tree with every
+branch's objects, so on a drive holding several levels a general shell can read
+a lower branch; the rubric does not count a general shell against a scope.
 
 ## 7. Write Mechanics
 
@@ -337,9 +366,8 @@ On the read side there is no per-turn injection to bound, which sidesteps
 [cache-preserving injection](../../patterns/cache-preserving-injection/) entirely
 rather than solving it: the prompt carries a path and a constraints block, both
 fixed for the run, and the volatile material arrives as tool results. Comment
-memory is the exception — its content is inlined into the prompt, and for a
-workflow that grows its comment memory over time that is a growing fixed cost per
-run.
+memory adds one path per memory id to that block, not the content, so its fixed
+cost grows with the number of ids rather than their size.
 
 ## 8. Agent Integration
 
@@ -413,6 +441,33 @@ What is not defended, and this is where the shape of the thing shows:
 - **Secrets.** The repo-memory documentation says not to store sensitive data and
   offers `target-repo` for isolation; nothing enforces it, and a memory branch on
   a public repository is public.
+- **Who wrote a comment memory.** The restore lists every comment on the target
+  thread and turns each fenced `gh-aw-comment-memory:<id>` block into a file,
+  a later comment overriding an earlier one with the same id
+  (`actions/setup/js/setup_comment_memory_files.cjs:101-124`). The writer
+  updates a comment only if it carries the `<!-- gh-aw-agentic-workflow:`
+  provenance marker (`actions/setup/js/comment_memory.cjs:109-117`); this read
+  checks neither that marker nor the comment's author, and comment memory has
+  no integrity level at all.
+
+Capability marks:
+
+- `negative_eval` — awarded; section 10.
+- `scope_enforced` — withheld. The level is a branch name and a cache-key
+  prefix taken from the workflow's compile-time guard setting; the run checks
+  out its branch and merges higher ones
+  (`actions/setup/sh/setup_cache_memory_git.sh:241`, `:262-283`), and no file
+  carries a level that a read applies as a predicate. That is a physical
+  partition selected by name, which the rubric does not count.
+- `tombstone`, `trust_state` — nothing can mark a file wrong; the integrity
+  level describes the writer's guard policy and no read filters a file on a
+  status.
+- `bitemporal` — no temporal field; `cache-hit-history.json` is a restore
+  receipt.
+- `audit_log` — one commit per run on the store's git log is history, not a
+  record of memory mutations.
+- `human_review` — nothing waits; repo memory can be corrected by a pull
+  request after the push has landed.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -466,6 +521,8 @@ I ran nothing. Every claim here comes from reading the tree at
   one — then a lattice where low reads high and high never reads low is a
   containment property you can implement with a scope column and one filter. It
   is much weaker than verifying content and much cheaper, and the two compose.
+  `gh-aw` partitions by branch and cache key instead, which moves whole stores
+  and gives a single store holding two levels nothing to filter on.
 - **Treat your own store as an untrusted input at load.** The question "what could
   a compromised earlier session have written here, and what would happen when I
   load it" has an answer for most memory systems, and the answer is rarely
@@ -573,6 +630,8 @@ for memory that happens to ship with a filesystem attached.
 `actions/setup/sh/clone_repo_memory_branch_test.sh`
 
 ## History
+
+**2026-10-01** — [`9259aea14a8d0d6f423fb5813b2675b3e81c8398`](https://github.com/github/gh-aw/commit/9259aea14a8d0d6f423fb5813b2675b3e81c8398) — audited at the same commit; `scope_enforced` withdrawn. The integrity level is a git branch and a cache-key prefix, taken from the workflow's compile-time `min-integrity` setting; no memory file carries it and no read applies it as a predicate, so the boundary is a physical partition, which the rubric does not count. Two claims were also wrong. The level is fixed per workflow, not set by the trigger, and the restore keys keep the level prefix, so a cache-memory store is never shared across levels and the read-down merge works only on a drive two levels share. Comment memory reaches the prompt as file paths, not content. Newly recorded in section 9: the comment-memory restore reads every comment on the thread with no author or provenance check. One mark.
 
 **2026-09-15** — [`9259aea14a8d0d6f423fb5813b2675b3e81c8398`](https://github.com/github/gh-aw/commit/9259aea14a8d0d6f423fb5813b2675b3e81c8398) — 1,565 commits on, 2026-09-14, read from a depth-1 clone of each commit. Screened before reading: 3 auto-run surfaces, 1 build-time execution point, 6 unpinned surfaces and 13 dependency surfaces inside the seven-day cooldown; nothing was executed or installed. `negative_eval` is added, and it was missed rather than new: `setup_cache_memory_git_test.sh` at the previous pin already asserted that a disallowed `helper.sh` and a planted symlink are removed from the restored tree beside kept files and an unfiltered control. Since the pin: an experimental `drive-memory` backend on the GitHub Drives preview that reuses the cache-memory git script and integrity branches; an author-supplied `validation.script` that can reject a save on content; git-config and `.git/info` scrubbing and symlinked-metadata rejection on restore and clone; a repo-memory clone that no longer writes `x-access-token:${GH_TOKEN}@` into the memory directory's `.git/config`, which it did at the previous pin; a JSONL union merge on concurrent repo-memory conflicts; and a reversal of the slashless `file-glob` rule from depth 1 to depth 0, with non-matching files ignored instead of failing the run. `cache.go` became `cache_memory.go`. The read-down property of the lattice is still asserted by no test, and `scope_enforced` stands on the merge loop as before.
 

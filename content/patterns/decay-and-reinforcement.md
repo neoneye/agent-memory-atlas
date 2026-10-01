@@ -166,10 +166,13 @@ scanning unless `forgetting_enabled` is set, and that setting defaults to
 [Mercury](../../systems/mercury-agent/) makes the same distinction in the schema
 rather than the policy: `confidence`, `importance`, and `durability` are three
 independent fields. How much a memory matters and how long it should last are
-different questions, and one column cannot answer both. Mercury's schema also
-declares a `subconscious` scope below active recall; what moves a memory into or
-out of it is an open question in the report, so the tier is a place demotion
-could go, not a demotion path the code is known to take.
+different questions, and one column cannot answer both. Mercury also demotes on
+a clock: the heartbeat's `prune` moves every `active` or `durable` memory whose
+`last_seen_at` is more than 30 days old into a `subconscious` scope that ordinary
+recall does not search, and recall promotes one back when too few conscious
+matches clear a health threshold. The clock is not use — retrieval stamps
+`last_used_at`, and only a merge or a promotion resets `last_seen_at` — so a
+memory recalled every day still demotes on schedule.
 
 [OpenViking](../../systems/openviking/) computes hotness as
 `sigmoid(log1p(active_count)) * exp(-ln2 · age / half_life)` and states plainly

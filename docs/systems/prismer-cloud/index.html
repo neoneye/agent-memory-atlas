@@ -117,7 +117,7 @@ filtered per reader by visibility.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-30</strong>
+              <strong>2026-10-01</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Prismer-AI--PrismerCloud" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -139,7 +139,7 @@ sdk/ is an rsync mirror of a closed repository</strong></div>
 test files in 122,984 lines; 78 of them cover the daemon memory
 module</strong></div>
           </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -174,8 +174,11 @@ recall filter both excludes and admits.</p>
 <p>The weak part is that the predicate does not reach two paths. The
 hook intake at <code>/v1/hooks/*</code> carries no capability and, on
 the branch the Hermes plugin uses, takes the agent and workspace from
-the request body. The turn-start digest lists every hub page with no
-visibility check at all.</p>
+the request body. The turn-start digest, on by default, writes every
+hub's path and one-line summary from the same <code>memory.db</code>
+into every agent's system prompt with no visibility check. That digest
+is why the report carries one mark, <code>negative_eval</code>, and
+withholds <code>scope_enforced</code>.</p>
 <p>Three more findings shape the rest of this report.</p>
 <ul>
 <li><strong>Correction lives in code this report cannot read.</strong>
@@ -544,15 +547,42 @@ the reason the capability exists. In pod mode the bind is
 <code>0.0.0.0</code> (<code>local-server.ts:468-477</code>).</p>
 <p><strong>The digest forgets the predicate its neighbour
 applies.</strong> <code>assemblePlaceContext</code> filters hubs through
-<code>canSee</code> before they reach browse, extraction or a 422 hint
-(<code>hook-server.ts:1561-1590</code>). <code>buildMemoryDigest</code>
-lists hubs with
+<code>canSee</code> before they reach browse, extraction or a 422 hint,
+and its own comment calls <code>store.list</code> raw, "every
+visibility" (<code>hook-server.ts:1561-1590</code>).
+<code>buildMemoryDigest</code> lists hubs with
 <code>store.list({ pageType: 'hub', limit: 1000 })</code> and skips only
-encrypted ones (<code>digest.ts:188-203</code>). A role-, council- or
-agent-scoped hub contributes its path and one-line summary to every
-agent's system prompt in the workspace.</p>
+encrypted ones (<code>digest.ts:188-203</code>). Each line is the hub's
+path and its description, or else the first non-heading line of its
+body, up to 160 characters (<code>digest.ts:97-107, 206-207</code>); the
+INDEX page's table of contents goes in whole
+(<code>digest.ts:179-186</code>).</p>
+<p>The store is the one search reads. The runner's provider calls
+<code>buildMemoryDigest(slot.store)</code> on the workspace's
+<code>memory.db</code> slot (<code>runner-wiring.ts:114-125</code>), the
+slot <code>runWorkspaceSearch</code> filters
+(<code>rpc.ts:711-739</code>). The provider takes a workspace id and
+nothing else (<code>digest.ts:118-120</code>), so no reader reaches it.
+The Hermes adapter appends the block to every dispatch
+(<code>adapters/persistence/hermes/index.ts:1143-1157</code>), and
+<code>FF_MEMORY_INDEX_INJECT_ENABLED</code> unset means on
+(<code>index-toc-inject.ts:38-42</code>). A role-, council- or
+agent-scoped hub therefore puts its path and summary into every agent's
+system prompt in the workspace.</p>
 <p><strong>Withheld marks.</strong></p>
 <ul>
+<li><strong><code>scope_enforced</code> — withheld.</strong> The key is
+on the row and the predicate is applied per hit on RPC search, list and
+load and on <code>pre_llm_call</code> recall
+(<code>store.ts:156-176</code>; <code>rpc.ts:404-407, 727-739</code>;
+<code>hook-server.ts:489-511</code>). The turn-start digest reads the
+same <code>memory.db</code> through an injection path whose signature
+cannot carry a reader (<code>digest.ts:118-120, 190-207</code>;
+<code>runner-wiring.ts:114-118</code>), and it injects hub content, not
+names alone. That is the near-miss: one unfiltered assembler beside a
+filtered one. The body-supplied identity on <code>/v1/hooks/*</code> is
+a separate limit; the predicate runs there, on a reader the caller
+names.</li>
 <li><strong><code>trust_state</code> — withheld.</strong>
 <code>stale</code> does withhold a page from recall, but it is a boolean
 the cloud sets, not a status this tree produces, and there is no
@@ -625,10 +655,11 @@ write read back by some recall path.</p>
 not from the request.</strong> A per-boot key, one workspace per agent
 cap, and a handler that overwrites any body actor field make
 impersonation a forgery problem rather than a typo.</li>
-<li><strong>One visibility function, called from every read
+<li><strong>One visibility function, called from every filtered read
 surface.</strong> Search, list, load, browse, recall and the 422 hint
 share <code>canReaderReadVisibility</code>, which keeps the matrix from
-drifting. See <a href="../../patterns/scope-as-a-first-class-key/">scope
+drifting — and the digest shows the cost of one assembler that does not
+call it. See <a href="../../patterns/scope-as-a-first-class-key/">scope
 as a first-class key</a>.</li>
 <li><strong>Close recall when the authority behind the replica goes
 stale.</strong> A lease and a pinned subject hash turn "offline for a
@@ -744,6 +775,12 @@ no match.</li>
 — no match; <code>rpc.ts:226</code> reads the header for the RPC.</li>
 <li><code>grep -nE 'visib|canReader|canSee' sdk/prismer/src/daemon/memory/digest.ts</code>
 — no match.</li>
+<li><code>grep -rn "\.list({" sdk/prismer/src/daemon/memory | grep -v test</code>
+— five callers: <code>rpc.ts:404</code> (filtered at 407),
+<code>hook-server.ts:1590</code> and <code>hook-server.ts:1632</code>
+(both filtered by <code>canSee</code>), <code>search.ts:595</code>
+(navigation seeds, filtered at <code>rpc.ts:746-753</code>), and
+<code>digest.ts:191</code>, unfiltered.</li>
 <li><code>grep -rnE 'searchForAgent|\.shared\(\)|_shared\.db' sdk/prismer/src sdk/prismer/plugins | grep -v scoped-store.ts</code>
 — one comment at <code>hook-server.ts:1960</code>; no reader of
 <code>_shared.db</code> outside <code>scoped-store.ts</code>.</li>
@@ -776,6 +813,17 @@ and <code>test/memory-digest-verified.test.ts</code>; no
 no match.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-10-01</strong> — <a
+href="https://github.com/Prismer-AI/PrismerCloud/commit/5337ca14c0e03e99446aff43bcbf1a2ad18f7205"><code class="commit-id" title="5337ca14c0e03e99446aff43bcbf1a2ad18f7205">5337ca14…</code></a>
+— audited at the same commit; <code>scope_enforced</code> withdrawn. The
+turn-start digest, on by default, injects every hub's path and its
+description or first body line, plus the whole INDEX table of contents,
+from the same <code>memory.db</code> that search filters, through a
+provider that takes only a workspace id
+(<code>digest.ts:97-107, 118-120, 190-207</code>;
+<code>runner-wiring.ts:114-118</code>). An injection path over the
+scoped store that cannot carry the predicate withholds the mark. One
+mark remains, <code>negative_eval</code>.</p>
 <p><strong>2026-09-30</strong> — <a
 href="https://github.com/Prismer-AI/PrismerCloud/commit/5337ca14c0e03e99446aff43bcbf1a2ad18f7205"><code class="commit-id" title="5337ca14c0e03e99446aff43bcbf1a2ad18f7205">5337ca14…</code></a>
 — first reading, at the head of <code>main</code>, a commit dated 29

@@ -369,7 +369,7 @@ scope into a table scan.
 
 The warning is about **derived** state. CSM's `memories` table is scoped on
 every search path, though the per-turn lesson-trigger cache reads it with no
-project filter; its `self_model_capabilities` table has no `project_id` at all, and
+project filter and injects the result, which is why `scope_enforced` is withheld; its `self_model_capabilities` table has no `project_id` at all, and
 the updater that fills it reads `experience_packets` with no project filter. So
 capability confidence learned in one repository is computed from every
 repository and injected into all of them. Scoping the store is the visible half
@@ -399,8 +399,10 @@ silently staying private.
 [OpenSRE](../../systems/opensre/) contributes the failure mode nobody else on
 this page has hit, because it is the one an *ambient* scope key creates. The
 scope is a `ContextVar` bound for the duration of a turn, and every path to the
-store funnels through one `memory_dir()`, so no call site can forget to pass a
-key — which is the strongest form of this pattern and its own trap. **A
+store funnels through one `memory_dir()` that turns it into a directory, so no
+call site can forget to pass a key. The key never reaches the record — the
+directory is the boundary, a physical partition that does not earn
+`scope_enforced` — and the ambient binding is its own trap. **A
 background thread does not inherit a `ContextVar`.** The session-end extractor
 runs on a daemon worker, and without `contextvars.copy_context()` the worker
 sees no scope and resolves to the org root, filing one user's extracted facts
@@ -427,31 +429,34 @@ only in prose is a good reminder that a scope *format* and a scope *resolution
 order* are different pieces of work, and the second one is easy to assume you
 have done.
 
-**[gh-aw](../../systems/gh-aw/) has a directional scope, enforced by a git
-branch checkout rather than a query.** Its
-cache-memory store is a git repository with one branch per integrity level —
-`merged`, `approved`, `unapproved`, `none` — and the pre-agent step checks out the
-branch matching this run's level, then merges *down* from strictly higher levels
-only. The comment says what the shape is for: *"lower-integrity runs see
-higher-integrity data via merge, but higher-integrity runs never see
-lower-integrity data."* Legacy files of unknown provenance are committed to
-`none` alone, explicitly to prevent trust escalation.
+**[gh-aw](../../systems/gh-aw/) orders its partitions, and an ordered
+partition is still not the key.** Its cache-memory store is a git repository
+with one branch per integrity level — `merged`, `approved`, `unapproved`,
+`none` — and the pre-agent step checks out the branch for the workflow's level,
+then merges *down* from strictly higher levels only. The comment says what the
+shape is for: *"lower-integrity runs see higher-integrity data via merge, but
+higher-integrity runs never see lower-integrity data."* Legacy files of unknown
+provenance are committed to `none` alone, explicitly to prevent trust
+escalation.
 
-Two things generalise from it. The first is that **a scope need not be a
-partition.** Most entries on this page divide memory into disjoint boxes and ask
-which box you are in; this one orders the boxes and allows reads in one
-direction, which is the right shape whenever some of your sessions are less
-trusted than others rather than merely different from them — a public demo beside
-an authenticated user, a fork PR beside a merged commit.
+The level is the workflow's compile-time `min-integrity` guard setting, and it
+also prefixes the cache key, which every restore key keeps. So a cache-memory
+store is only ever restored at the level that wrote it, and the read-down merge
+does work only on a drive that two levels share. No file carries a level and no
+read applies one: branch, cache key and drive are each a store chosen by name,
+which is why the report withholds `scope_enforced`. What the shape buys is that
+the agent has no query to widen.
 
-The second is that the filter runs *before the reader exists*. What a run can see
-is decided by a branch checkout in a shell script, so there is no query to phrase
-differently, no argument to widen, and no post-filter to forget — the failure
-modes CSM and Pydantic AI close with a bound parameter and a returned-path check
-are not expressible here. The price is that it is coarse: the whole store moves
-together, nothing within a level is separated, and the level describes the run
-that wrote a file rather than anything about the file. Read it as a containment
-boundary, not as tenancy.
+What generalises is the direction. Most entries on this page divide memory into
+disjoint boxes and ask which box you are in; this one orders the boxes and
+allows reads in one direction, which is the right shape whenever some sessions
+are less trusted than others rather than merely different from them — a public
+demo beside an authenticated user, a fork PR beside a merged commit. Carried as
+a level on each row with a predicate on the read, the same order would hold
+inside one store, which branches cannot do. The branch form is coarse: the
+whole store moves together, nothing within a level is separated, and the level
+describes the guard policy of the run that wrote a file rather than anything
+about the file. Read it as a containment boundary, not as tenancy.
 
 **[Context Mode](../../systems/context-mode/) arrives at CSM's conclusion by a
 different route and adds the test.** Its `ctx_search` input schema is *built*
@@ -772,14 +777,19 @@ workflow the store raises, naming the colliding workflows and telling the caller
 to use `list_checkpoints(workflow_name=...)` instead. Returning the first match
 is the ordinary choice, and it is how a scoped store quietly serves one tenant's
 row to another. A key that is optional on one read path is worth exactly this
-much: a refusal when the ambiguity it was meant to prevent actually occurs.
+much: a refusal when the ambiguity it was meant to prevent actually occurs. The
+refusal is on `load` alone — `delete(checkpoint_id)` runs the same unscoped
+query and removes the first document it yields — so the ambiguity a read
+refuses, a delete resolves arbitrarily.
 
 [openvurp](../../systems/openvurp/) is the case for enumerating the writers
-before declaring the key done. Its scope is an agent id held in a
+before declaring a boundary done. Its scope is an agent id held in a
 `contextvars.ContextVar`, set around every tool a roster agent runs and used as
-a directory — `memory/agents/<id>/` — so `remember` and recall cannot name
-another agent's rows, and a committed case proves that what one agent remembers
-the other does not find. Three writers run outside a tool and missed the key:
+a directory — `memory/agents/<id>/` — so `remember` and recall open only that
+agent's file, and a committed case proves that what one agent remembers the
+other does not find. No row carries the id and no read filters on it, so the
+report withholds the mark: the boundary is a partition, not a key. The lesson
+holds either way. Three writers run outside a tool and missed the boundary:
 the hook that turns an owner's *"hai sbagliato"* into a learning event lives
 in the platform's own turn loop, which a direct chat with an agent never enters,
 so a correction typed to an agent is never logged, and one typed to the
@@ -787,7 +797,7 @@ platform lands in its unscoped log; the daily note each feedback
 appends goes to the top-level memory directory, where the platform's retrieval
 reads it; and the nightly Mirror scores the *platform's* lessons into an agent's
 probe. A test that reads the scoped store passes on all three, because the leak
-is in the paths the store's key does not govern.
+is in the paths the directory does not govern.
 
 [Forgetful](../../systems/forgetful/) is the plain WHERE-clause instance across two hand-mirrored backends: every repository method takes `user_id`, every statement carries it, and the project filter is an `EXISTS` over an association table that reaches the one-hop walk only when the caller passes `strict_project_filter`. Its Postgres adapter also runs `set_config('app.current_user_id', …)` on every session *"with RLS context"*, and no policy in the tree reads the variable — the second layer the comment promises is the first layer restated. The key is real; the belt-and-braces is one belt.
 
@@ -799,7 +809,9 @@ is in the paths the store's key does not govern.
 
 [Lobu](../../systems/lobu/) is the version of this pattern where the key is not one column but a compiled expression, and where the compiler is the artefact. An authorization scope of organisation, principal and agent is built once from the tool context, and three functions turn it into SQL that every content-recall seam splices in: one binds the tenant, one admits a connection-sourced row only when the connection is org-visible or the principal created it, and one requires a membership edge from the principal's member entity to a resource entity named in the row. The third is what the pattern does not usually reach: the scope key is not Lobu's own invention but GitHub's collaborator list and Slack's channel membership, synced into entities and joined at read time, so a leak requires the upstream to be wrong. The enforcement state is deliberately three-valued rather than two — never graphed, enforced, or graphed-but-stale — because a negated set membership silently makes the stale case permissive; the stale case matches neither branch and its rows are dropped, with the reason in the module comment: *"a stalled sync hides data, it does not leak it."* The limit worth naming beside it is that the per-entity-type read policy is a post-fetch filter in application code, so an agent's page can come back short with the total computed before the filter ran.
 
-[create-context-graph](../../systems/create-context-graph/) shows how a scope key can be real on one read path and absent from the one that matters. On the self-hosted backend the generated seeder merges every node on name and domain, and nine REST read paths carry a null-permissive domain predicate — enough to earn the mark on those routes, though the front end's schema view also sends one unscoped query through the free-form route. The agent's own retrieval is a different path entirely: a search for the domain parameter across all twenty-seven bundled ontologies returns zero, so not one of the tool queries the model actually calls carries the predicate, and the free-form query tool only sets the value as a default parameter its query may ignore. Two further weakenings follow. The predicate is null-permissive, and the CLI's library ingest packs the key into a serialized metadata string while the generated importer writes none, so every entity those paths write is visible from every domain. And on the default hosted backend entities are created with no attributes at all, so the key is never written and the boundary falls back to the API key's workspace — a physical partition, which is a different mechanism. The test that would have caught the first of these asserts that a list has at least zero members, parametrized over every domain and unable to fail.
+[create-context-graph](../../systems/create-context-graph/) shows how a scope key can be real on one read path and absent from the one that matters. On the self-hosted backend the generated seeder merges every node on name and domain, and nine REST read paths carry a null-permissive domain predicate, though the front end's schema view also sends one unscoped query through the free-form route. The agent's query tools read the same graph through the same query function and never apply the key: a search for the domain parameter across all twenty-seven bundled ontologies returns zero, so not one of the tool queries the model actually calls carries the predicate, and the free-form query tool only sets the value as a default parameter its query may ignore. That is why `scope_enforced` is withheld, with the nine routes as the near-miss.
+
+Two further weakenings follow. The predicate is null-permissive, and the CLI's library ingest packs the key into a serialized metadata string while the generated importer writes none, so every entity those paths write is visible from every domain. And on the default hosted backend entities are created with no attributes at all, so the key is never written and the boundary falls back to the API key's workspace — a physical partition, which is a different mechanism. The test that would have caught the first of these asserts that a list has at least zero members, parametrized over every domain and unable to fail.
 
 [Open WebUI](../../systems/open-webui/) is the instance where half the key is not
 a predicate at all. The SQL side is ordinary — `select(Memory).filter_by(user_id=user_id)`
@@ -869,7 +881,7 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 [Paperclip](../../systems/paperclip/)'s LLM Wiki plugin puts `company_id` and `space_id` on every row and in every metadata query, and takes both from the tool's own arguments while the SDK hands each handler a run context carrying the caller's company, which no wiki handler reads. The host then binds half the plugin: its local-folder calls are checked against the invoking run's company, and its SQL, whose parameters carry no company field, is not. So a page body is refused across companies and the page's path and title are returned. The key reaching the query is necessary; which of the plugin's I/O channels the host binds to the caller is a separate question, and here the answer differs by channel.
 
-**[Prismer Cloud](../../systems/prismer-cloud/) shares one predicate across every read and still leaks on two paths the predicate never reaches.** Its daemon calls a single `canReaderReadVisibility` from search, list, load, browse and injected recall, behind a daemon-signed capability that fixes the acting agent. The hook intake at `/v1/hooks/*` reads no capability and takes the agent's identity from the request body, and the turn-start digest lists every hub without calling the predicate at all — while `assemblePlaceContext` beside it filters the same hubs. **A shared predicate protects only the callers that call it; enumerate every route and every prompt assembler, not every search.**
+**[Prismer Cloud](../../systems/prismer-cloud/) shares one predicate across its search and recall reads and still leaks on two paths the predicate never reaches.** Its daemon calls a single `canReaderReadVisibility` from search, list, load, browse and injected recall, behind a daemon-signed capability that fixes the acting agent. The hook intake at `/v1/hooks/*` reads no capability and takes the agent's identity from the request body, and the turn-start digest writes every hub's path and summary into the system prompt without calling the predicate at all — while `assemblePlaceContext` beside it filters the same hubs. That digest withholds `scope_enforced`. **A shared predicate protects only the callers that call it; enumerate every route and every prompt assembler, not every search.**
 
 [Exomem](../../systems/exomem/) runs its scope predicate after the shared result cache rather than folding scope into the cache key. `op_find` caches principal-free candidates and then decides each hit for the bound principal, and the comment at the call warns that anything principal-dependent run earlier would cache one principal's decisions for the next. Membership reads the page's own `projects`, `tags` and `types`, and an unbound principal resolves to the most restrictive audience rather than the owner. The limit is who it binds: local stdio, the CLI and the shared REST key are all the owner, so the predicate separates remote audiences and never the owner's own agent.
 

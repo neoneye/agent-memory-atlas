@@ -1,7 +1,7 @@
 ---
 title: "Helm"
 eyebrow: "Confidence-ratcheted SQLite memory"
-description: "A single-owner personal agent whose SQLite fact store caps a first observation at 0.7 confidence and lets it ratchet up only on repeats of the same value, then injects the surviving facts into the turn with the confidence stripped off."
+description: "A single-owner personal agent whose SQLite store caps a first observation at 0.7 confidence, raises it only on repeats, and strips it before injection."
 root: ../..
 page_kind: system
 source_name: "GOODMAN-PRO/helm"
@@ -9,7 +9,10 @@ source_url: https://github.com/GOODMAN-PRO/helm
 archive_name: "GOODMAN-PRO--helm"
 revision: f453eaa9683ea0a66b45c76275cb6576bcf14f73
 revision_url: https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73
-analyzed_at: 2026-09-17
+analyzed_at: 2026-10-01
+licence: "MIT"
+size: "38,753 lines of JavaScript in 188 files, 2,707 of them under workspace/tests/, and 1,627 lines of Swift; the memory store under workspace/memory/ is 846 lines in five files"
+activity: "330 commits on main by four author identities, 30 May – 5 June 2026"
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the recall path over a superseded value, plus the episode-noise gates | workspace/tests/smoke.mjs:1293, :1953, :1975, :892 | the supersession case writes a value, supersedes it, and asserts that `recall` returns **exactly one** active row and that it is the new value while `history` returns both — a must-not on the corrected value, keyed on its content, through the real CLI. The noise gates assert a `__smoke` supersede emits *zero* episode rows, and that four rapid supersedes of one key collapse to one | the positive control is in the same case (the new value must be the one returned, and `history` must still hold the old), and the ranking case at :892 proves the recall path returns rows at all by inserting two facts with identical text and differing confidence and asserting the order. Both cases clean up their fixtures with a `DELETE` before and after"
@@ -48,8 +51,8 @@ tracked in `evidence_count` — and any write of the same kind, key and value is
 repeat, since nothing checks that it is independent (`memory.mjs:104-117`). A first observation is therefore structurally incapable of
 being stored as certain. That is the [evidence before
 belief](../../patterns/evidence-before-belief/) pattern implemented in about
-fifteen lines of SQL and arithmetic, in a project whose whole memory layer is
-401 lines.
+fifteen lines of SQL and arithmetic, in a store module of
+401 lines (`memory.mjs`; the memory directory is 846).
 
 The apparatus around it is unusually complete for its size. Supersession expires
 the old row and keeps it (`expired_at`), so `history <key>` returns the chain.
@@ -454,7 +457,10 @@ is no warning and no test at that boundary.
 
 **Query processing.** Lowercase, `[a-z0-9]+` tokens longer than one character, a
 26-word stop list, and a three-rule suffix stemmer (`ies→y`, strip `ing|ed|s`).
-An empty query after stopping returns the most recently updated rows.
+An empty query after stopping returns the most recently updated rows (lines
+183-186), before either arm runs and without the access-count write below. The
+stemmer falls back to the token when stripping would empty it (line 178), so a
+query that reaches the arms always has as many stems as tokens.
 
 **Two arms, fused by rank.**
 
@@ -493,8 +499,8 @@ owner.
 
 **Failure modes.** Over-recall is bounded at eight facts on the hot path. The
 real exposures are the 500-row window above; silent degradation from MiniLM to
-TF-IDF, and to an all-zero semantic arm when the query has no stems or fewer
-than three facts exist (lines 237-243) — three quality tiers, one output shape,
+TF-IDF, and to an all-zero semantic arm when fewer than three facts exist and
+MiniLM is not loaded (lines 237-243) — three quality tiers, one output shape,
 no signal to the caller; the 240-character query truncation, which for a long message searches
 only its opening; and distillation artefacts polluting results — a `learned` row
 reading `mentioned in 4 episodes (last: "…")` is a high-BM25 match for common
@@ -882,7 +888,7 @@ none of them crash.
 This is a design for **one person, one machine, a few thousand facts**, and
 inside those bounds the economics are hard to beat: no service to run, no key
 required to store anything, a store you can repair with `sqlite3`, and a genuine
-epistemic model in 401 lines. If you are building a personal assistant that lives
+epistemic model in a 401-line store module. If you are building a personal assistant that lives
 on your own hardware and you want memory that is more than a JSON blob, this is a
 better starting point than most of the larger systems here, and `workspace/memory/`
 lifts out cleanly.
@@ -1014,6 +1020,8 @@ the smoke tests cannot see is free to rot.
   test numbers.
 
 ## History
+
+**2026-10-01** — [`f453eaa9683ea0a66b45c76275cb6576bcf14f73`](https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73) — audited at the same commit; no mark moved. Section 6 and the 2026-09-25 entry gave two triggers for the all-zero semantic arm, a query with no stems and fewer than three facts. Only the second is reachable: an empty token list returns the newest rows at `memory.mjs:183-186` before either arm runs, and `stem` falls back to the token rather than returning an empty string (`:178`), so the stem list is never empty past that return. The arm also stays zero only when MiniLM is not loaded, since a loaded pipeline overwrites the scores (`:246-259`). Section 6 now says so.
 
 **2026-09-25** — [`f453eaa9683ea0a66b45c76275cb6576bcf14f73`](https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73) — same commit. Two corrections. The confidence ratchet was described as rising on *independent* repeats; `memory.mjs:104-117` increments `evidence_count` on any write of the same kind, key and value, with no independence check, so the description, the trust field and the evidence-gate section now say so. And the failure-mode list said retrieval degrades from MiniLM to TF-IDF "to nothing", contradicting the retrieval section: a failed import or pipeline keeps the TF-IDF scores (`:246-259`), and the zero tier is an all-zero semantic arm when the query has no stems or fewer than three facts exist (`:237-243`). No mark moved.
 

@@ -9,11 +9,14 @@ source_url: https://github.com/rohitg00/agentmemory
 archive_name: "rohitg00--agentmemory"
 revision: e04ba88819c365c9acf9d6661ea802143e728bd6
 revision_url: https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6
-analyzed_at: 2026-09-19
+analyzed_at: 2026-10-01
+licence: "Apache-2.0"
+size: "84,531 lines of TypeScript in 379 files, 36,232 of them under test/, plus 2,469 lines of TSX for the website"
+activity: "482 commits on main by 47 author identities, 25 February – 23 August 2026"
 capabilities: "audit_log, negative_eval"
 capability_evidence:
   audit_log: "the governance and deletion paths | src/functions/audit.ts:8, :34 recordAudit; src/functions/governance.ts:11 mem::governance-delete | a written policy that every structural deletion of a memory, observation, session or semantic row calls recordAudit before the delete, and recordAudit inserts an AuditEntry — id, timestamp, operation, user, function, target ids, details — under a fresh id in its own KV.audit keyspace; governance deletion records the reason | none"
-  negative_eval: "agent isolation on search and project scope on export | src/functions/search.ts:369-430, src/functions/export-import.ts | with isolated scope and AGENT_ID agent_a, a search for a marker both agents' observations contain returns results and none of them is agent_b's; a wildcard call returns both, and isolated scope with no agent id throws; a project-scoped mesh export excludes another project's memories | test/agent-isolation-search.test.ts:149 (positive control :165), test/mesh-export-project-scope.test.ts:75"
+  negative_eval: "agent isolation on search and project scope on export | src/functions/search.ts:369-430, src/triggers/api.ts:2770, :2789-2791 api::mesh-export | with isolated scope and AGENT_ID agent_a, a search for a marker both agents' observations contain returns results and none of them is agent_b's; a wildcard call returns both, and isolated scope with no agent id throws; a project-scoped mesh export excludes another project's memories | test/agent-isolation-search.test.ts:149 (positive control :165), test/mesh-export-project-scope.test.ts:75"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -23,12 +26,12 @@ matrix:
   retrieval: "BM25 + optional vector + graph arms, weighted RRF, query expansion, rerank, source diversity"
   write: "Hooks call `mem::observe`; explicit `mem::remember`; optional compression and consolidation"
   update_delete: "Delete/TTL; similarity-based version supersession; rebuildable indexes"
-  scoping: "Optional project and working-directory filters; agent isolation opt-in, and a caller's explicit or wildcard agentId overrides it"
+  scoping: "Project and working-directory filters on `mem::search` when passed; the MCP recall and smart-search tools take no project, and smart-search drops the one its function accepts; agent isolation opt-in"
   integration: "Hooks, MCP, HTTP, CLI, iii functions"
   background: "Optional compression, graph extraction, consolidation, decay, repair"
   trust: "Source observation IDs, versions, audit; no candidate/verified/rejected state"
   strengths: "Cheap synchronous capture and compact-first hybrid search"
-  risks: "Very broad surface; every scope filter is optional or caller-liftable — shared agent scope by default, an explicit or wildcard agentId overrides isolation, and project and cwd filters apply only when passed; fuzzy supersession can hide conflicts"
+  risks: "Very broad surface; the agent's MCP recall reads every project, because `memory_recall` and `memory_smart_search` carry no project and smart-search filters its observation hits by agent alone; shared agent scope by default; fuzzy supersession can hide conflicts"
 ---
 
 ## 1. Executive Summary
@@ -55,6 +58,10 @@ heuristic can silently supersede an existing memory.
 This is an operational memory system, not a verified knowledge system. Memories
 have provenance and version fields, but no first-class candidate, rejected, or
 verified state.
+
+It carries `audit_log` and `negative_eval`. `scope_enforced` is withheld because
+the agent's own recall tools cannot carry the project key: section 6 has the
+anchors.
 
 The inspected package version is `0.9.29` (2026-08-16), at a commit of 23 August 2026.
 
@@ -193,14 +200,33 @@ claim.
 ## 6. Retrieval Mechanics
 
 The basic `mem::search` path is BM25. Results are filtered by project, working
-directory, and agent scope after retrieval, and each filter is the caller's to
-set. `project` and `cwd` apply only when passed. Agent scope applies only when
-`AGENTMEMORY_AGENT_SCOPE=isolated`; even then an explicit `agentId` in the call
-pins the filter to that agent and `agentId: "*"` removes it
-(`src/functions/search.ts:397-430`), and only a call with neither and no
-`AGENT_ID` in the environment fails closed. That is a real boundary against an
-agent that does not know to widen it, and not one against a caller that does, so
-`scope_enforced` is not carried.
+directory, and agent scope after retrieval. The project key lives on the
+`Session` row (`src/types.ts:3`) and on `Memory` (`:123`), and `mem::search`
+applies it whenever a caller passes one (`src/functions/search.ts:395`, `:543`,
+`:562`). An omitted key reads every project. A memory or observation whose
+project cannot be resolved passes a project filter as unscoped
+(`search.ts:546-562`). Agent scope applies only when
+`AGENTMEMORY_AGENT_SCOPE=isolated`; an explicit `agentId` then pins the filter
+and `agentId: "*"` removes it (`search.ts:397-430`). A call with neither and no
+`AGENT_ID` in the environment fails closed. Those optional keys are stated
+limits, and the mark would survive them.
+
+`scope_enforced` is withheld because the agent's main recall reads cannot carry
+the project predicate at all. The MCP `memory_recall` and `memory_smart_search`
+schemas declare no project or cwd argument (`src/mcp/tools-registry.ts:13-37`,
+`:128-142`). Their handlers forward none: `memory_recall` sends `mem::search`
+only query, limit, format, budget and agent id (`src/mcp/server.ts:124-130`), and
+`memory_smart_search` sends query, expand ids and limit (`:281-288`).
+`mem::smart-search` itself accepts `project` (`src/functions/smart-search.ts:85`)
+and hands it only to lesson recall (`:202`). Its observation hits come from
+`HybridSearch.search(query, limit)`, bound at `src/index.ts:384-386`, which
+takes no scope (`src/state/hybrid-search.ts:38`), and are filtered by agent id alone
+(`smart-search.ts:206-210`). Its expand-by-id branch checks agent, not project.
+`memory_export` returns the whole store with no scope argument
+(`src/mcp/server.ts:369-370`, `src/functions/export-import.ts:62-74`). The
+session-start assembler `mem::context` does select sessions by project
+(`src/functions/context.ts:169-174`), so injection is the scoped path and
+on-demand recall is not.
 
 The graph carries a second clock in one module. `temporal-graph.ts` stamps
 edges with `tcommit`, `tvalid` and `tvalidEnd`, closes a superseded edge's
@@ -318,6 +344,9 @@ Limitations:
 
 - API authentication is optional when no secret is configured.
 - Shared agent scope is the default, and a caller can widen an isolated one.
+- The MCP recall and smart-search tools read across every project: neither takes
+  a project argument, and smart-search drops the one its function accepts for
+  everything except lessons.
 - Redaction is regex-based and cannot guarantee secret removal.
 - Similarity-based supersession lacks a candidate/rejected review state.
 - Retrieved memory is wrapped for context, but remembered content is still
@@ -367,6 +396,9 @@ benchmark-harness CI as future work.
   policy surface.
 - Defaulting multi-agent installations to shared memory, and letting a call
   argument lift the isolation that replaces it.
+- Accepting a scope argument and applying it to one arm of the result. A
+  `project` that reaches lessons and not observations is worse than no argument,
+  because the caller believes the read was scoped.
 - Presenting retrieval metrics as if they measured end-to-end memory quality.
 - Accumulating many derived stores without explicit consistency contracts.
 - Encoding confidence without a first-class verification or rejection state.
@@ -420,6 +452,8 @@ rather than relying on the shared default.
 - `docs/benchmarks/2026-05-20-coding-agent-life-v1.md`: small synthetic eval.
 
 ## History
+
+**2026-10-01** — audited at the unchanged pin [`e04ba88819c365c9acf9d6661ea802143e728bd6`](https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6); no mark moved, and the reason `scope_enforced` is withheld is corrected. The 2026-09-15 entry withdrew it because the project and cwd filters are optional. An optional key honoured when supplied is a stated limit, and `mem::search` honours it. The mark fails on the agent's recall tools instead: `memory_recall` and `memory_smart_search` declare and forward no project (`src/mcp/server.ts:124-130`, `:281-288`), and `mem::smart-search` passes its `project` only to lesson recall (`src/functions/smart-search.ts:202`) while filtering observation hits by agent alone (`:206-210`). Section 6, a new section 9 limitation, and the scoping and risk fields carry the anchors. The `negative_eval` export anchor now names `api::mesh-export` in `src/triggers/api.ts`, where the tested filter is. Nothing was installed or run.
 
 **2026-09-19** — audited at the unchanged pin [`e04ba88819c365c9acf9d6661ea802143e728bd6`](https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6); nothing upstream moved. `human_review` is **withdrawn**, one reading after it was added, and the record itself contained the reason: *"the surface adjudicates by removal only, with no approve or reject state."* Under the question the mark now asks — does a memory wait in a state until an actor the producing agent cannot be resolves it — a delete button over live rows is a correction surface, not a gate. The `Checkpoint` type was tested as the alternative and fails on three counts at once: it gates actions rather than memory content, `memory_checkpoint` is declared to the model as creating *or resolving* one, and `resolvedBy` is copied from the request without verification. `audit_log` and `negative_eval` both stand with their anchors re-verified — the written policy at `src/functions/audit.ts:5-12` that every structural deletion calls `recordAudit` before `kv.delete`, and the isolated-search exclusion at `test/agent-isolation-search.test.ts:149` with its wildcard positive control at `:165`. Screened again first; nothing was installed and no suite was run.
 

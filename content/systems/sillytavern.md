@@ -9,7 +9,10 @@ source_url: https://github.com/SillyTavern/SillyTavern
 archive_name: "SillyTavern--SillyTavern"
 revision: 06bde939fb1e9c4c8d8641d810f0a916b5bce127
 revision_url: https://github.com/SillyTavern/SillyTavern/commit/06bde939fb1e9c4c8d8641d810f0a916b5bce127
-analyzed_at: 2026-09-17
+analyzed_at: 2026-10-01
+licence: "AGPL-3.0"
+size: "193,038 lines of JavaScript in 341 files, excluding `lib/` directories and minified files; `public/scripts/world-info.js`, the lorebook engine, is 6,408 of them"
+activity: "11,805 commits reachable from the pin on the `staging` branch, the latest on 14 September 2026"
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -174,6 +177,17 @@ runs for `'sticky'` and `'cooldown'` at `:684-685`, `#checkDelayEffect` at
 `:687`, and `#setTimedEffectOfType` at `:733-734` after an entry fires.
 `isEffectActive('sticky', entry)` gates activation at `:4845`.
 
+**Sticky, then cooldown.** An entry with both set records both when it fires
+(`:733-734`), and sticky wins while it lasts: the gate suppresses only on
+`isCooldown && !isSticky` (`:4854`). When the sticky interval passes,
+`#onEnded.sticky` (`:518-529`) writes a fresh cooldown starting at the current
+message, marked `protected`, and pushes the entry into the cooldown buffer for
+the same evaluation, so cooldown counts from the end of sticky rather than from
+activation. The state lives in `chat_metadata.timedWorldInfo` (`:560-576`),
+which `saveChat` writes into the chat file's header (`public/script.js:7406`,
+`:7428-7429`) and the loader restores (`:7657`), so a running cooldown survives
+a reload.
+
 **Decorators.** `:4875` — `@@activate`, logging *"activated by @@activate
 decorator"*; `:4769` — `@@dont_activate`, logging *"suppressed by
 @@dont_activate decorator"*.
@@ -220,7 +234,8 @@ top hit every turn while the topic persists, and the model repeats itself.
 `cooldown` says: having fired, be quiet for N messages. `sticky` says the
 opposite — having fired, stay in context so a thread is not dropped mid-scene.
 Together they are a hysteresis band around activation, and nothing else in this
-atlas has one. [Project N.E.K.O.](../neko/) attacks the same repetition problem
+atlas has one. They run in sequence: an entry with both stays in for its sticky
+span, then falls quiet for its cooldown span counted from there. [Project N.E.K.O.](../neko/) attacks the same repetition problem
 from the generation side with a BM25 corpus over its own output; this attacks it
 from the retrieval side with per-entry state.
 
@@ -403,12 +418,6 @@ mostly express as tuning constants, if at all.
 
 ## 12. Open Questions
 
-- **How do `sticky` and `cooldown` interact when both are set on one entry?** The
-  buffers are checked separately at `:684-685`; the precedence when an entry is
-  simultaneously sticky and cooling was not traced.
-- **Is timed-effect state persisted across a reload?** The class holds chat and
-  entries in memory; whether the buffers survive a restart determines whether a
-  cooldown outlives the browser tab.
 - **What proportion of users rely on the summarize extension** versus authored
   lorebooks? It decides which of the two mechanisms is the real memory system for
   most people, and nothing in the repository answers it.
@@ -426,9 +435,10 @@ mostly express as tuning constants, if at all.
 - `public/scripts/world-info.js` — insertion strategy (27), logic modes (33),
   `scan_state` (43–59), budget (73), cap and recursion steps (81–82), depth
   constants (96–98), `KNOWN_DECORATORS` (100), recurse-buffer gate (323),
-  `WorldInfoTimedEffects` (479), effect checks (684–687), effect setting
-  (733–734), `delayUntilRecursion` default (4104), recursion-delayed filter
-  (4755), sticky gate (4845), decorator handling (4875–4882)
+  `WorldInfoTimedEffects` (479), sticky-end cooldown (518–529), effect checks
+  (684–687), effect setting (733–734), `delayUntilRecursion` default (4104), recursion-delayed filter
+  (4755), sticky gate (4845), cooldown-unless-sticky (4854), decorator handling
+  (4875–4882)
 - `src/endpoints/worldinfo.js` — per-user `worlds/` JSON storage
 
 **Summarisation**
@@ -438,6 +448,8 @@ mostly express as tuning constants, if at all.
 - `public/scripts/extensions/memory/settings.html`
 
 ## History
+
+**2026-10-01** — [`06bde939fb1e9c4c8d8641d810f0a916b5bce127`](https://github.com/SillyTavern/SillyTavern/commit/06bde939fb1e9c4c8d8641d810f0a916b5bce127) — audited at the same commit; no mark moved. Two open questions are answered by the code and moved into section 4. Sticky and cooldown run in sequence: the activation gate suppresses only on cooldown without sticky (`public/scripts/world-info.js:4854`), and `#onEnded.sticky` (`:518-529`) starts a fresh, protected cooldown when the sticky interval passes. Timed-effect state is kept in `chat_metadata.timedWorldInfo`, which `saveChat` writes into the chat file's header (`public/script.js:7428-7429`), so it survives a reload.
 
 **2026-09-17** — [`06bde939fb1e9c4c8d8641d810f0a916b5bce127`](https://github.com/SillyTavern/SillyTavern/commit/06bde939fb1e9c4c8d8641d810f0a916b5bce127) — re-read 86 commits past the previous pin. The memory mechanism is unchanged and every finding holds. Of the three files this report rests on, `src/endpoints/worldinfo.js` and the summarize extension's `index.js` are byte-identical by blob sha; `public/scripts/world-info.js` took +147/-28 across four commits — two lorebook-rename fixes, a lorebook sorting control, and an O(n²) fix to entry sorting whose own message states *"Sort order is unchanged"*, which the diff bears out: it replaces two `sortedEntries.indexOf()` calls per comparison with a prebuilt index Map and touches no activation rule. Sixteen of the twenty-one line anchors in the appendix still name the same code; five moved with the insertions and are corrected here — `delayUntilRecursion` 4024→4104, the recursion-delayed filter 4643→4755, the sticky gate 4733→4845 (the first of the file's two, matched by indentation), and decorator handling 4763–4770→4875–4882. One published claim is corrected: World Info now has two committed tests, `WorldInfoRenameChatLore.e2e.js` and `WorldInfoRenamePersonaLore.e2e.js`, so “no memory-specific test suite was found” no longer describes the tree — but they assert that a rename retargets the binding, not that a chat and a lorebook produce an activation set, so the gap the criticism names is open and `negative_eval` stays withheld; `grep -rn "NOT_ANY\|NOT_ALL" tests/` still returns nothing. Marks unchanged at none. Screened again before reading: one auto-run surface, three unpinned surfaces, two dependency files inside the seven-day cooldown. Nothing was installed and nothing was run.
 

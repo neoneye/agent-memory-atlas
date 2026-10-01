@@ -514,10 +514,12 @@ expand</td>
 <td><code>write_topic</code> and <code>delete_topic</code> on the store;
 consolidation rewrites a topic file into a tighter form. No record of a
 deleted or rejected value</td>
-<td>The owner id is read from session state and
+<td>Harness memory: the owner id is read from session state and
 <strong>required</strong> — a missing one raises, <code>..</code> and
 absolute paths raise, and the resolved root is asserted to be inside the
-base path</td>
+base path — and selects a directory; no record names its owner. The
+Redis provider stores application, agent and user ids on each document
+and filters its search on them</td>
 <td>A <code>ContextProvider</code> contract of
 <code>before_run</code>/<code>after_run</code> plus a
 <code>source_id</code>, consumed by the Agent runtime; .NET and Python;
@@ -526,9 +528,9 @@ DevUI; a hosted Foundry provider</td>
 sessions-since-last-run</td>
 <td>None. A topic memory is a bullet list; there is no status,
 confidence or verification anywhere on it</td>
-<td>Fail-closed owner scoping with a post-resolve containment assertion;
-<code>session_ids</code> provenance on every topic; ~1,357 lines of
-tests on the harness memory alone</td>
+<td>Fail-closed owner directory resolution with a post-resolve
+containment assertion; <code>session_ids</code> provenance on every
+topic; ~1,357 lines of tests on the harness memory alone</td>
 <td>The provider contract still declares neither deletion nor scope, so
 a third-party provider inherits AutoGen's gap; nothing records that a
 value was removed</td>
@@ -1164,18 +1166,21 @@ rerank, source diversity</td>
 <code>mem::remember</code>; optional compression and consolidation</td>
 <td>Delete/TTL; similarity-based version supersession; rebuildable
 indexes</td>
-<td>Optional project and working-directory filters; agent isolation
-opt-in, and a caller's explicit or wildcard agentId overrides it</td>
+<td>Project and working-directory filters on <code>mem::search</code>
+when passed; the MCP recall and smart-search tools take no project, and
+smart-search drops the one its function accepts; agent isolation
+opt-in</td>
 <td>Hooks, MCP, HTTP, CLI, iii functions</td>
 <td>Optional compression, graph extraction, consolidation, decay,
 repair</td>
 <td>Source observation IDs, versions, audit; no
 candidate/verified/rejected state</td>
 <td>Cheap synchronous capture and compact-first hybrid search</td>
-<td>Very broad surface; every scope filter is optional or
-caller-liftable — shared agent scope by default, an explicit or wildcard
-agentId overrides isolation, and project and cwd filters apply only when
-passed; fuzzy supersession can hide conflicts</td>
+<td>Very broad surface; the agent's MCP recall reads every project,
+because <code>memory_recall</code> and <code>memory_smart_search</code>
+carry no project and smart-search filters its observation hits by agent
+alone; shared agent scope by default; fuzzy supersession can hide
+conflicts</td>
 </tr>
 <tr>
 <td><a
@@ -2852,8 +2857,8 @@ all inside the running process</td>
 autonomous writes that touch a contested key, with a resolution API and
 a six-hour freshness window — none of it persisted</td>
 <td>A tamper-evident receipt chain that detects modification, insertion
-and deletion, with sixteen passing tests; and a claims ledger that names
-what the project cannot prove</td>
+and deletion, with sixteen tests that passed when run at the first pin;
+and a claims ledger that names what the project cannot prove</td>
 <td>The belief ledger is a process-lifetime dictionary, so every trust
 state resets on restart, and the <code>contested</code> flag that is
 persisted on memory records is read by nothing</td>
@@ -3689,8 +3694,10 @@ because episodes carry no scope</td>
 fact index and a stdlib library for a loop you write yourself</td>
 <td>Nothing in this tree runs on its own; the sweeps are report-only and
 the weekly gardener trigger ships as a template</td>
-<td>asserted vs verified, where verified refuses to be set without a
-named oracle and a rejected value refuses to be re-asserted</td>
+<td>asserted vs verified as a rendered label that no read filters on;
+verified refuses a missing oracle, a missing verifier, agent authority
+and self-verification, and a rejected value refuses to be
+re-asserted</td>
 <td>Committed cases asserting a superseded entry must not win the
 injection lane, gated in CI</td>
 <td>The fleet architecture the docs describe is not in the tree, and one
@@ -6487,7 +6494,8 @@ designed anywhere in the tree</td>
 generated seeder on bolt and filtered as
 <code>n.domain IS NULL OR n.domain = $domain</code> in nine REST read
 paths. The CLI's library ingest and the generated importer write no
-node-level domain, no bundled agent tool's Cypher names it, and on the
+node-level domain, no bundled agent tool's Cypher names it although
+every tool reads the same graph through the same function, and on the
 hosted backend no domain property is written at all, so the boundary
 there is the API key's workspace</td>
 <td>Eight agent frameworks from one template set behind a shared FastAPI
@@ -6560,8 +6568,10 @@ embedding call</td>
 TTL delete, and a lesson promoter that marks its source candidate
 applied; search, list, cascade and evidence injection exclude superseded
 and archived rows, the per-turn lesson-trigger cache does not</td>
-<td>project_id bound at tool registration and applied on the read path,
-failing closed to <code>1=0</code> when absent</td>
+<td>project_id bound at tool registration and applied on the search
+path, failing closed to <code>1=0</code> when absent; the per-turn
+lesson-trigger cache reads every project's lessons from the same table
+and injects them</td>
 <td>OpenCode plugin over eleven hooks, four of them experimental; plus a
 stdio Codex MCP bridge</td>
 <td>In-process timers — distiller flush, belief consolidation,
@@ -9695,9 +9705,10 @@ limits and an optional author-supplied validation script</td>
 <td>Overwrite in place. Cache memory expires at 7 days and by LRU; repo
 memory is unbounded and versioned in git; nothing is ever marked
 wrong</td>
-<td>Integrity level (merged/approved/unapproved/none) as a git branch,
-plus branch-scoped cache keys and per-id directories; the level is
-enforced on the read path</td>
+<td>Integrity level (merged/approved/unapproved/none), a constant per
+compiled workflow, carried as a git branch and as the cache key prefix,
+plus branch-scoped cache keys and per-id directories; a partition chosen
+by name, with no level on a file and no predicate on a read</td>
 <td>A YAML frontmatter key in a Markdown workflow file that a Go
 compiler expands into GitHub Actions steps; no MCP tool and no API</td>
 <td>Nothing between runs. A scheduled maintenance workflow prunes stale
@@ -9705,12 +9716,13 @@ cache entries by key prefix</td>
 <td>Memory from a previous run is treated as attacker-controlled: hooks
 deleted, symlinks deleted, execute bits stripped, disallowed extensions
 removed, all before the agent can read it</td>
-<td>An information-flow lattice over memory that a low-trust run cannot
-write upward into, and a read path that assumes its own store is
-hostile</td>
+<td>Memory partitioned by the guard policy that produced it, with a
+read-down merge for stores two levels share, and a read path that
+assumes its own store is hostile</td>
 <td>No retrieval, no correction, no notion of a fact; the whole store is
-injected as a directory, and the trust label describes the writer rather
-than the belief</td>
+mounted as a directory, the trust label describes the writer rather than
+the belief, and comment memory is read from every comment on the thread
+with no author or provenance check</td>
 </tr>
 <tr>
 <td><a href="../systems/gini-agent/"><code>gini-agent</code></a></td>
@@ -11996,10 +12008,12 @@ and <code>expired_at</code></td>
 <td>A SQLite WAL queue with a dead-letter table, and FalkorDB (a Redis
 module) holding one graph per group id; the graph schema is Graphiti
 0.29.3's</td>
-<td><code>search_memory</code>: Graphiti BM25 plus cosine over fact
-edges, MMR-reranked, restricted to <code>invalid_at IS NULL</code>; a
-daemon <code>/search/graph</code> BFS from named seeds scored by cosine;
-entity lookup by name substring; read-only Cypher</td>
+<td><code>search_memory</code>, over MCP and the daemon's
+<code>/search/memory</code>: Graphiti BM25 plus cosine over fact edges,
+MMR-reranked, restricted to <code>invalid_at IS NULL</code>; a daemon
+<code>/search/graph</code> BFS from named seeds scored by cosine, with
+no validity filter; entity lookup by name substring; read-only
+Cypher</td>
 <td><code>add_episode</code> enqueues with one SQLite insert; a sweep
 run by cron or the daemon hands each episode to
 <code>Graphiti.add_episode</code>, whose model calls pass through a
@@ -12012,7 +12026,8 @@ id is its own graph, so the boundary is a partition — and
 <code>search_memory</code> reads the graph a different setting
 names</td>
 <td>A stdio MCP server with eleven tools, a CLI, and an aiohttp daemon
-with <code>/episodes</code> and <code>/search/graph</code></td>
+with <code>/episodes</code>, <code>/search/memory</code> and
+<code>/search/graph</code></td>
 <td>A sweep every five to ten minutes, and a nightly run whose only
 working phase requeues failed and dead-lettered episodes</td>
 <td>None; <code>source_description</code> is passed to Graphiti as
@@ -17694,15 +17709,19 @@ tiers; single user</td>
 <td>Internal, with a <code>brain/Memory.tsx</code> page offering
 per-record edit and delete, and a <code>/memory</code> chat menu
 carrying the shared-learning toggle</td>
-<td>A cloud pull — an incremental fetch of <code>shareable=1</code>,
-non-dismissed rows newer than a cursor</td>
+<td>A heartbeat that consolidates reflections and prunes — demoting rows
+unseen for 30 days to <code>subconscious</code>, promoting corroborated
+<code>active</code> rows to <code>durable</code>, hard-deleting
+dismissed rows — and a cloud pull, an incremental fetch of
+<code>shareable=1</code>, non-dismissed rows newer than a cursor</td>
 <td>Four-way <code>evidenceKind</code>, corroboration counts, free-text
 provenance</td>
 <td>Durability separated from importance; a subconscious tier; a
 learning-pause switch</td>
-<td>Scores estimated once at write time; dismissal is not durable; and
-<code>shareable</code> only ever ratchets upward automatically — a merge
-promotes a private record, nothing demotes one</td>
+<td>Stored scores only ratchet upward — a merge keeps the larger of
+each, and no automatic path lowers one; dismissal is not durable; and
+<code>shareable</code> ratchets the same way — a merge promotes a
+private record, nothing demotes one</td>
 </tr>
 <tr>
 <td><a href="../systems/meridian/"><code>meridian</code></a></td>
@@ -21971,7 +21990,7 @@ stated invariants are returned as strings rather than asserted</td>
 </tr>
 <tr>
 <td><a href="../systems/opensre/"><code>opensre</code></a></td>
-<td>One markdown file with YAML frontmatter — slug, a four-value type, a
+<td>One markdown file with YAML frontmatter — slug, a five-value type, a
 200-character description, created and updated timestamps — beside a
 generated <code>MEMORY.md</code> index</td>
 <td>A per-principal directory of files at
@@ -21988,10 +22007,11 @@ process exit</td>
 <code>created_at</code>; <code>memory_forget</code> and
 <code>/memory forget</code> unlink the file. Nothing records that a
 value was rejected</td>
-<td>A <code>ContextVar</code> storage scope resolved per turn, inherited
-by the extraction thread through
-<code>contextvars.copy_context()</code>; memory is off by default on
-shared Slack and Telegram hosts</td>
+<td>A <code>ContextVar</code> storage scope resolved per turn selects a
+directory per actor, inherited by the extraction thread through
+<code>contextvars.copy_context()</code>; no record carries an owner, and
+<code>OPENSRE_MEMORY_DIR</code> puts every actor in one directory.
+Memory is off by default on shared Slack and Telegram hosts</td>
 <td>Three tools — <code>memory_remember</code>,
 <code>memory_forget</code>, <code>memory_recall</code> — gated by
 <code>is_available</code>, plus <code>/memory</code> slash commands in
@@ -22069,9 +22089,10 @@ older than 90 days by mtime with no archive.
 <td>The agent id, held in a <code>contextvars.ContextVar</code> set
 around every tool a roster agent runs and used as a directory:
 <code>memory/agents/&lt;id&gt;/{vector_memory.db,lessons,learning,mirror}</code>;
-the platform keeps <code>memory/</code> itself. Retrieval is only
-assembled for <code>session_type == "main"</code> (the terminal, the
-page, a DM) and never for a group chat</td>
+the platform keeps <code>memory/</code> itself. No row carries the id
+and no read filters on it: the partition is the file opened. Retrieval
+is only assembled for <code>session_type == "main"</code> (the terminal,
+the page, a DM) and never for a group chat</td>
 <td>A Python wallet: a local web page on 127.0.0.1:8420, Telegram,
 Discord, Slack and WhatsApp all through one conversation core; tools
 <code>remember</code>, <code>learning_feedback</code>,
@@ -23134,8 +23155,9 @@ the forgotten value; a claim carries a real-world validity window
 separate from its record time</td>
 <td><code>checkAccess</code> fails closed on agent-private, workspace
 and user scopes, applied as a read filter in the adapter and the recall
-pipeline; derived dream records stamp a <code>visibility</code> and
-their readers are handed a requester triple</td>
+pipeline; derived records stamp a <code>visibility</code>, filtered only
+when a caller passes a requester, which the REM-dream reader does and
+most others do not</td>
 <td>OpenClaw plugin — chat commands, an <code>agent_end</code> capture
 hook, background crons registered through the host's public plugin
 capabilities, an operator dashboard with opt-in write actions, and an
@@ -23549,9 +23571,10 @@ LLM extraction of up to six pages; cloud down-sync into the replica</td>
 rewire and delete forward to the closed cloud, which then deletes the
 local rows; page delete cascades its versions. No tombstone</td>
 <td>Workspace key and a six-kind visibility on each row, filtered per
-hit on search, list, load and hook recall; one database file per
-workspace; a signed per-agent capability on the RPC, none on the hook
-route</td>
+hit on search, list, load and hook recall and not on the turn-start
+digest, which puts every hub's path and summary in the system prompt;
+one database file per workspace; a signed per-agent capability on the
+RPC, none on the hook route</td>
 <td>Hermes memory provider plugin and shell hooks; memory_search,
 memory_load, memory_browse, memory_write and memory_curate tools shared
 across Claude Code, Hermes, OpenClaw and Codex adapters; a turn-start
@@ -23563,15 +23586,16 @@ task</td>
 <td>None local. A stale flag the cloud sets hides a page from local
 recall; supersession only re-ranks; the correction and deletion
 authority is cloud-side and not in the tree</td>
-<td>One visibility matrix shared by RPC, browse and recall; a
-self-signed per-agent capability with the acting identity taken from the
-cap, never the body; recall closes when the cloud authority lease
-expires; write and outbox in one transaction; a three-page leak test
-with member controls</td>
+<td>One visibility matrix shared by RPC search, list, load, browse and
+recall; a self-signed per-agent capability with the acting identity
+taken from the cap, never the body; recall closes when the cloud
+authority lease expires; write and outbox in one transaction; a
+three-page leak test with member controls</td>
 <td>The hook route trusts identity from the request body; the turn-start
-digest lists hubs with no visibility check; MEMORY.md mirrors land in a
-database nothing reads; the authoritative store, the correction verbs
-and the full ACL are closed; no public CI runs these tests</td>
+digest injects every hub's path and summary with no visibility check;
+MEMORY.md mirrors land in a database nothing reads; the authoritative
+store, the correction verbs and the full ACL are closed; no public CI
+runs these tests</td>
 </tr>
 <tr>
 <td><a href="../systems/pro-long/"><code>pro-long</code></a></td>
@@ -30844,7 +30868,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>179 of 704:</em> <a
+<p><em>178 of 704:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -30865,7 +30889,6 @@ href="../systems/autobot-ai/"><code>autobot-ai</code></a>, <a
 href="../systems/beever-atlas/"><code>beever-atlas</code></a>, <a
 href="../systems/bitterbot-desktop/"><code>bitterbot-desktop</code></a>,
 <a href="../systems/brain-db/"><code>brain-db</code></a>, <a
-href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/bwmem/"><code>bwmem</code></a>, <a
 href="../systems/cass-memory-system/"><code>cass-memory-system</code></a>,
 <a href="../systems/caura/"><code>caura</code></a>, <a
@@ -31157,7 +31180,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>323 of 704:</em> <a
+<p><em>317 of 704:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -31232,9 +31255,7 @@ href="../systems/cortana/"><code>cortana</code></a>, <a
 href="../systems/cortex-hub/"><code>cortex-hub</code></a>, <a
 href="../systems/cortexes/"><code>cortexes</code></a>, <a
 href="../systems/cowagent/"><code>cowagent</code></a>, <a
-href="../systems/create-context-graph/"><code>create-context-graph</code></a>,
-<a href="../systems/crewai/"><code>crewai</code></a>, <a
-href="../systems/csm/"><code>csm</code></a>, <a
+href="../systems/crewai/"><code>crewai</code></a>, <a
 href="../systems/cyrene-agent/"><code>cyrene-agent</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/deepcode/"><code>deepcode</code></a>, <a
@@ -31263,7 +31284,6 @@ href="../systems/flair/"><code>flair</code></a>, <a
 href="../systems/forgetful/"><code>forgetful</code></a>, <a
 href="../systems/gbrain/"><code>gbrain</code></a>, <a
 href="../systems/genome/"><code>genome</code></a>, <a
-href="../systems/gh-aw/"><code>gh-aw</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/gobii/"><code>gobii</code></a>, <a
 href="../systems/goodmemory/"><code>goodmemory</code></a>, <a
@@ -31399,9 +31419,7 @@ href="../systems/openhands-sdk/"><code>openhands-sdk</code></a>, <a
 href="../systems/openlore/"><code>openlore</code></a>, <a
 href="../systems/openmake-llm/"><code>openmake-llm</code></a>, <a
 href="../systems/openmemory/"><code>openmemory</code></a>, <a
-href="../systems/opensre/"><code>opensre</code></a>, <a
 href="../systems/openviking/"><code>openviking</code></a>, <a
-href="../systems/openvurp/"><code>openvurp</code></a>, <a
 href="../systems/openworker/"><code>openworker</code></a>, <a
 href="../systems/openyak/"><code>openyak</code></a>, <a
 href="../systems/openzync-core/"><code>openzync-core</code></a>, <a
@@ -31421,7 +31439,6 @@ href="../systems/potpie/"><code>potpie</code></a>, <a
 href="../systems/powermem/"><code>powermem</code></a>, <a
 href="../systems/prime-agent/"><code>prime-agent</code></a>, <a
 href="../systems/prism-coder/"><code>prism-coder</code></a>, <a
-href="../systems/prismer-cloud/"><code>prismer-cloud</code></a>, <a
 href="../systems/pro-workflow/"><code>pro-workflow</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a>,

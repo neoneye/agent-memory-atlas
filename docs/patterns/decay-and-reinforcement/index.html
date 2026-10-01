@@ -291,11 +291,15 @@ distinction in the schema rather than the policy:
 <code>confidence</code>, <code>importance</code>, and
 <code>durability</code> are three independent fields. How much a memory
 matters and how long it should last are different questions, and one
-column cannot answer both. Mercury's schema also declares a
-<code>subconscious</code> scope below active recall; what moves a memory
-into or out of it is an open question in the report, so the tier is a
-place demotion could go, not a demotion path the code is known to
-take.</p>
+column cannot answer both. Mercury also demotes on a clock: the
+heartbeat's <code>prune</code> moves every <code>active</code> or
+<code>durable</code> memory whose <code>last_seen_at</code> is more than
+30 days old into a <code>subconscious</code> scope that ordinary recall
+does not search, and recall promotes one back when too few conscious
+matches clear a health threshold. The clock is not use — retrieval
+stamps <code>last_used_at</code>, and only a merge or a promotion resets
+<code>last_seen_at</code> — so a memory recalled every day still demotes
+on schedule.</p>
 <p><a href="../../systems/openviking/">OpenViking</a> computes hotness
 as
 <code>sigmoid(log1p(active_count)) * exp(-ln2 · age / half_life)</code>

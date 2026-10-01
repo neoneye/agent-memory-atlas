@@ -292,9 +292,13 @@ are written by the agent's own tool calls, so the rule is whatever the
 model decides — the rule-inside-a-prompt shape. <a
 href="../../systems/loongflow/">LoongFlow</a>'s stm, mtm and ltm pass
 material through a <code>Compressor</code>. <a
-href="../../systems/mercury-agent/">Mercury</a> keeps a
-<code>subconscious</code> tier below active recall, and its report found
-nothing that states what moves a memory into or out of it. <a
+href="../../systems/mercury-agent/">Mercury</a> is not one of them: its
+heartbeat moves <code>active</code> and <code>durable</code> rows unseen
+for 30 days into a <code>subconscious</code> tier ordinary recall does
+not search, and recall promotes a row back when fewer than three
+conscious matches clear a health threshold — but
+<code>last_seen_at</code> moves on a merge or a promotion, not on
+retrieval, so a memory in daily use still demotes. <a
 href="../../systems/redis-agent-memory-server/">Redis Agent Memory
 Server</a> works the other end of the lifecycle: its forgetting policy
 combines TTL, inactivity, pinning, per-type allowlists and budget

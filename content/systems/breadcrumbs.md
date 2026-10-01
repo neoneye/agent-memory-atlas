@@ -1,7 +1,7 @@
 ---
 title: "breadcrumbs"
 eyebrow: "Correction that never reaches the retrieval lane"
-description: "A copy-and-adapt agent-ops kit whose sharpest artifact asks not whether a ledger entry is still true but whether it can ever be seen, with committed cases asserting that a superseded entry must never win the injection lane."
+description: "A copy-and-adapt agent-ops kit whose retrieval exam asks whether a ledger entry can be seen, asserting a superseded one never wins the injection lane."
 root: ../..
 page_kind: system
 source_name: "The-825/breadcrumbs"
@@ -9,18 +9,20 @@ source_url: https://github.com/The-825/breadcrumbs
 archive_name: "The-825--breadcrumbs"
 revision: bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73
 revision_url: https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73
-analyzed_at: 2026-09-19
-capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+analyzed_at: 2026-10-01
+licence: "MIT"
+size: "13,131 lines of Python in 60 files and 14,461 of Markdown in 151, 287 tracked files in all; templates/ledger-tools/ is 4,802 lines of Python, templates/memory-desk/ 1,902 lines"
+activity: "125 commits on main by 3 author identities, 4 August – 14 September 2026"
+capabilities: "tombstone, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
 capability_evidence:
   scope_enforced: "audience filtering at context assembly, with the audience derived rather than supplied | templates/ledger-tools/memory_engine.py:492,:573-584,:590-594,:617-630, templates/ledger-tools/scoped_context.py:34-58,:60-78 | `SCOPE_ORDER` is `{public: 0, internal: 1, regulated: 2}` and `build_context(audience=...)` filters facts against the caller clearance at assembly, with `e.get(\\\"scope\\\", \\\"internal\\\")` defaulting an unscoped fact to internal so it is withheld from a public audience rather than admitted. Two things raise it above a filter. The **whole episodic tier is dropped whenever an audience is set** — *\\\"the episodic tier carries no scope field, and supersession episodes embed prior VALUES, so under any audience filter episodes are omitted entirely: fail closed rather than leak through the side door\\\"* — which closes the lane a suppressed value would otherwise re-enter through. And `ScopedContextService` puts a derivation in front of the primitive: the request *\\\"never supplies a principal, audience, role, or clearance\\\"*, a host-owned `PrincipalProvider` returns the authenticated principal, and `ScopePolicy.clearance_for` raises `PermissionError` for a principal with no grant rather than defaulting. The engine names its own limit in the same docstring — *\\\"a low-level storage primitive, not an authorization boundary. A caller that may choose audience may also widen it\\\"* — which is the distinction this mark declines to certify, stated in the source | templates/ledger-tools/scoped_context.py selftest asserts a public principal cannot see internal or regulated facts"
   tombstone: "engine semantic tier | templates/ledger-tools/memory_engine.py | reject_fact writes tombstones.json keyed on the rejected value; store_fact raises when the incoming value matches one | memory_engine.py --selftest, 'a tombstoned value is refused on re-assertion'"
-  trust_state: "engine semantic tier | templates/ledger-tools/memory_engine.py | status asserted vs verified, promoted only by verify_fact, which raises on empty evidence | memory_engine.py --selftest, 'verify_fact refuses empty evidence'"
   audit_log: "engine episodic tier | templates/ledger-tools/memory_engine.py | episodes.jsonl carries COMPACTION, SUPERSEDED, REJECTED and TOMBSTONE_LIFTED rows, the second with the prior value and prior status | memory_engine.py --selftest, 'the prior value and status are logged before the overwrite'"
   human_review: "the merge gate over the ledger files, which are outside the auto-merge safe set | .github/workflows/automerge.yml, ci-kit/workflows/greenlight_tiers.py:14-54, ci-kit/workflows/greenlight-all.yml:8-21 | `considerPR` refuses to merge an agent branch without the `greenlight` label unless `classify` returns AUTO on every changed file, and the JSONL ledgers and the TSV index live under `templates/`, which the policy *always* gates — the comment gives the reason: in this repository the files there `ARE behavior-bearing product, not prose`. Deletions and renames gate anywhere. The batch labeller is `workflow_dispatch` only, and says why: `Dispatching this workflow IS the operator's approval action`. The limit belongs with the mark and is sharper than it looks: `SAFE_EXACT` is `(\"README.md\", \"planning/DECISIONS.md\", \"SESSION_STATE.md\")`, so the decisions ledger and the markdown handoff — both part of this store — merge on green with no label at all | greenlight_tiers.py --selftest, ten tier cases"
-  bitemporal: "the semantic tier, two clocks that compose on the read path | templates/ledger-tools/memory_engine.py:253 (`store_fact`), :548 (`compose_context`) | `store_fact` records `recorded_at` unconditionally and takes optional `valid_from`/`valid_until`, documented as *\"the VALID-AT axis: when the fact was true in the world, distinct from recorded_at (when the memory learned it)\"*. `compose_context(as_of=…, valid_at=…)` filters them independently — `as_of` drops facts learned after the cutoff, `valid_at` drops facts windowed away from the moment — and the docstring names the composed query: *\"as_of + valid_at asks what did we believe at T about what was true at T2, the stale-belief postmortem query\"*. Unstamped facts are always included and the assembled header says so. A third detail makes the replay honest rather than merely temporal: a `verified` fact whose `verified_at` is absent or later than `as_of` renders as `asserted` in the replayed view, a read-time mask that leaves storage untouched | templates/ledger-tools/memory_engine_golden.json case `learned-time-replay-excludes-the-future`, run by `memory_engine_exam.py`"
+  bitemporal: "the semantic tier, two clocks that compose on the read path | templates/ledger-tools/memory_engine.py:253 (`store_fact`), :547 (`build_context`) | `store_fact` records `recorded_at` unconditionally and takes optional `valid_from`/`valid_until`, documented as *\"the VALID-AT axis: when the fact was true in the world, distinct from recorded_at (when the memory learned it)\"*. `build_context(as_of=…, valid_at=…)` filters them independently — `as_of` drops facts learned after the cutoff, `valid_at` drops facts windowed away from the moment — and the docstring names the composed query: *\"as_of + valid_at asks what did we believe at T about what was true at T2, the stale-belief postmortem query\"*. Unstamped facts are always included and the assembled header says so. A third detail makes the replay honest rather than merely temporal: a `verified` fact whose `verified_at` is absent or later than `as_of` renders as `asserted` in the replayed view, a read-time mask that leaves storage untouched | templates/ledger-tools/memory_engine_golden.json case `learned-time-replay-excludes-the-future`, run by `memory_engine_exam.py`"
   negative_eval: "conclusions ledger injection lane | templates/ledger-tools/retrieval_exam.py | run_forbidden_check replays the boot matcher and names a superseded entry that still wins a slot | retrieval_exam.py --selftest, four forbidden-hit cases"
 matrix:
   memory_unit: "A JSONL line — a settled fact keyed to a repo path — plus an append-only episode row and a tab-separated index row"
@@ -31,15 +33,15 @@ matrix:
   scoping: "A three-level `public` / `internal` / `regulated` scope on a fact, filtered at context assembly with an unscoped fact defaulting to `internal`; `ScopedContextService` derives the audience from a host-authenticated principal so the caller never supplies one, and the whole episodic tier is dropped whenever an audience filter is active because episodes carry no scope"
   integration: "Claude Code hooks and slash commands, plus three push hooks for the fact index and a stdlib library for a loop you write yourself"
   background: "Nothing in this tree runs on its own; the sweeps are report-only and the weekly gardener trigger ships as a template"
-  trust: "asserted vs verified, where verified refuses to be set without a named oracle and a rejected value refuses to be re-asserted"
+  trust: "asserted vs verified as a rendered label that no read filters on; verified refuses a missing oracle, a missing verifier, agent authority and self-verification, and a rejected value refuses to be re-asserted"
   strengths: "Committed cases asserting a superseded entry must not win the injection lane, gated in CI"
   risks: "The fleet architecture the docs describe is not in the tree, and one essay of five says so"
 ---
 
 ## 1. Executive Summary
 
-breadcrumbs is a **copy-and-adapt kit**, not a library you install. 202 tracked
-files at this commit, most of them markdown: templates for a rules file, a
+breadcrumbs is a **copy-and-adapt kit**, not a library you install. Most of its
+files are markdown: templates for a rules file, a
 session handoff, a decisions ledger and a settled-facts store; a CI kit of lint
 guards and a fail-closed merge gate; pattern essays explaining each piece. MIT
 licensed, no package manifest, no dependencies — every executable here is
@@ -54,8 +56,8 @@ Two clusters of those files are a memory system, and they are the reason for
 this report. The **ledger tools**, which is where the correction machinery
 lives:
 
-- [`templates/ledger-tools/memory_engine.py`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/templates/ledger-tools/memory_engine.py)
-  — 484 lines of three-tier file-native memory (working state, append-only
+- [`templates/ledger-tools/memory_engine.py`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/templates/ledger-tools/memory_engine.py)
+  — 1,101 lines of three-tier file-native memory (working state, append-only
   episodes, semantic facts) for an agent loop you write yourself, carrying a
   rejected-value tombstone and an as-of replay.
 - [`templates/ledger-tools/conclusions_audit.py`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/templates/ledger-tools/conclusions_audit.py)
@@ -67,9 +69,9 @@ lives:
   ruling.
 
 And the **memory desk**
-([`templates/memory-desk/`](https://github.com/The-825/breadcrumbs/tree/abd08addf5f778fc8050894fe57eb1b0b57a8710/templates/memory-desk)),
+([`templates/memory-desk/`](https://github.com/The-825/breadcrumbs/tree/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/templates/memory-desk)),
 a second and separate store built for the read side: a 60-line kernel, a
-tab-separated fact index, an append-only capture journal, a 297-line `mem` CLI,
+tab-separated fact index, an append-only capture journal, a 536-line `mem` CLI,
 three harness hooks that push rows into context, and a written weekly curation
 contract. Section 6 covers why it exists; the short version is in its own
 essay, which designs *"for the weakest reader on their worst day"* and moves
@@ -96,8 +98,15 @@ Two more things are unusually well judged. The exam's **survey mode**
 computes link distance from the boot surface (`CLAUDE.md`, `AGENTS.md`,
 `README.md`, `.cursorrules`, `.github/copilot-instructions.md`), and reports
 the *orphan* — a document nothing links, which a session never opens on its
-own. And `memory_engine.verify_fact()` raises rather than writes when handed
-empty evidence, which is the shortest possible statement of oracle-gated trust.
+own. And `memory_engine.verify_fact()` raises rather than writes unless it is
+handed evidence and a named verifier of `tool` or `human` authority other than
+the actor that asserted the fact, which is the shortest possible statement of
+oracle-gated trust.
+
+Six of the seven marks hold. `trust_state` is withheld: the `asserted` /
+`verified` field is real and its promotion is gated, but `build_context()`
+renders every fact whatever its status and no read in the tree filters on it,
+so the state is a label rather than a withholding (section 9).
 
 **Where it is weakest is the distance between the prose and the tree.**
 [`docs/floating-memory.md`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/docs/floating-memory.md)
@@ -139,15 +148,21 @@ consolidation pass, no summarizer.
 **How a claim becomes a belief.** In `memory_engine.py` the semantic tier
 carries a discrete `status` field. `store_fact()` writes `"asserted"`
 unconditionally — the docstring is *"Nothing an agent stores starts verified."*
-`verify_fact(category, key, evidence)` is the only promotion path and refuses an
-empty oracle:
+`verify_fact(category, key, evidence, verified_by, verification_authority)` is
+the only promotion path. It refuses five ways before it writes
+(`memory_engine.py:429-452`): empty evidence, an empty `verified_by`, an
+authority outside `agent` / `tool` / `human`, `agent` authority —
+*"agent authority may assert but may not promote a claim to verified"* — and a
+verifier equal to the fact's `asserted_by`. The first refusal carries the rule:
 
 > "verified requires naming the oracle (a CI run, a data assertion, a human
 > ruling); an agent may not mark its own claim verified with nothing behind it"
 
 `build_context()` renders the state inline — `fact.env.python: >=3.11
-[verified (ci run 4412 green on 3.11)]` — so a reader of the prompt sees the
-oracle next to the claim, and an `asserted` fact is visibly one nobody checked.
+[verified (ci run 4412 green on 3.11)] asserted_by=… verified_by=tool:ci` — so
+a reader of the prompt sees the oracle next to the claim, and an `asserted`
+fact is visibly one nobody checked. Visibly is all: the `asserted` fact is in
+the same block, and nothing withholds it.
 
 **How a belief stops being one.** Never by editing. A wrong entry gets a newer
 entry that names it: `obsoleted_by` on the old line (forward half),
@@ -163,10 +178,10 @@ the tree and `AGING` when nothing re-verified it inside 180 days.
 into `.memory/tombstones.json` keyed by `category/key` and then by the rejected
 value itself, deletes the fact entry when that value is the one currently held,
 and logs a `REJECTED` episode. From then on `store_fact()` raises rather than
-writes when the same value arrives — the first thing it does, before it reads
-`facts.json` at all. Lifting is a deliberate act with its own required reason
-and its own `TOMBSTONE_LIFTED` episode, so the rejection and the reversal both
-survive in the episodic trail even after the tombstone row is gone. The
+writes when the same value arrives — once its arguments are validated and
+before it reads `facts.json` at all. Lifting is a deliberate act with its own
+required reason and its own `TOMBSTONE_LIFTED` episode, so the rejection and
+the reversal both survive in the episodic trail even after the tombstone row is gone. The
 docstring gives the reason a supersession alone is not enough: *"the next
 session that re-derives the old value writes it right back, and nothing
 remembers it was ever wrong."*
@@ -287,10 +302,11 @@ pitch, and it is accurate.
   holds the *same* value it returns without touching status or evidence.
 - **Rejection (engine)** — `reject_fact(category, key, value, reason)` and
   `lift_tombstone(category, key, value, reason)`, at
-  `templates/ledger-tools/memory_engine.py:209` and `:241`. Both refuse an empty
+  `templates/ledger-tools/memory_engine.py:356` and `:396`. Both refuse an empty
   reason, on the stated parallel that *"an unexplained rejection is as
   unauditable as an unexplained verification"*, and both log an episode.
-  `store_fact()` consults `tombstones.json` at line 177 before anything else.
+  `store_fact()` consults `tombstones.json` at line 295, after validating its
+  arguments and before it reads `facts.json`.
 - **Capture (ledger)** — by hand, prompted by `capture_nudge.py`, which regexes
   the submitted prompt for ruling-shaped language (`\bruling\b`,
   `\bfrom now on\b`, `\bgoing forward\b`, clause-initial `always|never` with
@@ -301,13 +317,14 @@ pitch, and it is accurate.
   `COMPACTION` row *before* the working file shrinks. The comment names the
   ordering guarantee: *"if the process dies between the two writes, the worst
   case is a duplicate episode, never a lost one."*
-- **Retrieval / context assembly** — `MemoryEngine.build_context(query, as_of=None)`:
-  newest-first episodes with exact keyword overlap promoted ahead of recency,
-  capped at `MAX_EPISODES_IN_CONTEXT = 5`, emitted under a header that names its
-  own limit: `=== MEMORY (retrieval: recency + exact keyword; no paraphrase
-  match) ===`. Passing `as_of` cuts episodes at that timestamp, drops facts
-  whose `recorded_at` is later, and extends the header with the exclusion and
-  the one case it cannot cover.
+- **Retrieval / context assembly** — `MemoryEngine.build_context(query,
+  max_episodes, as_of, valid_at, audience)` at `memory_engine.py:547`: episodes
+  ranked by reciprocal-rank fusion over lexical, action/tag and recency signals,
+  capped at `MAX_EPISODES_IN_CONTEXT = 5`, under a header that names its own
+  limit — *"no paraphrase match"*. Every fact is emitted unless one of three
+  masks drops it: `recorded_at` after `as_of`, a validity window excluding
+  `valid_at`, or a scope above the audience (`:620-631`). Status is not a mask;
+  it is read at `:632` only to choose the label.
 - **Retrieval (desk)** — `templates/memory-desk/mem`: `lookup()` matches the
   normalised query against keys and aliases exactly, falls back to a token
   score weighting key and alias overlap 3× against answer overlap, and prints
@@ -353,9 +370,9 @@ pitch, and it is accurate.
 - **Tests** — six `--selftest` entry points and one unittest suite, 115 checks
   total, all offline against `tempfile` fixtures or the shipped kit itself.
 
-### Two clocks, and a scope filter with no caller
+### Two clocks, a trust mask and an audience filter
 
-`compose_context` takes `as_of`, `valid_at` and `audience`, and the three are
+`build_context` takes `as_of`, `valid_at` and `audience`, and the three are
 independent read-time masks over storage that is never modified.
 
 `as_of` replays the **learned-at** axis and `valid_at` the **valid-at** axis;
@@ -368,11 +385,13 @@ tell it is a partial view.
 
 The detail that makes the replay honest is on the trust axis. A fact whose
 status is `verified` but whose `verified_at` is absent or later than `as_of`
-renders as `asserted`, with the reasoning in the comment: the memory knew the
-*value* by then, verification either has no timestamp *"(unknown, so never
+renders as `asserted`. The comment gives the reasoning: the memory knew the
+*value* by then, and verification either has no timestamp *"(unknown, so never
 assume it)"* or happened afterwards, so *"replay the honest state."* Most
 as-of replays in this corpus rewind the value and leave the confidence at
 today's level, which is the anachronism that makes a postmortem flattering.
+The mask errs in one direction only: it can hide a verification that did
+exist at the cutoff (section 5), and it never shows one that did not.
 
 `audience` filters a three-level scope lattice — `public < internal <
 regulated` — at assembly. Two decisions in it are worth taking. A fact carrying
@@ -383,12 +402,15 @@ supersession episodes embed prior values and would leak a regulated fact through
 the audit trail — a side door the module's own selftest found, with the date in
 the comment.
 
-**`scope_enforced` is still withheld, and the reason here is not the usual
-one.** In most systems the mark fails because a caller omits the filter; here
-there is no caller at all. `compose_context` has no invocation anywhere in the
-tree outside its selftest and the golden exam, because the engine ships as a
-library for a loop the adopter writes. The scope key is stored, the filter is
-real, and whether it is applied is a decision this repository does not make.
+**`scope_enforced` holds on this filter, with its limit stated in the source.**
+The `scope` key is on every fact `store_fact()` writes, and the predicate
+applies whenever an audience is passed. `audience=None` applies none, which the
+docstring names: *"A caller that may choose audience may also widen it."* The
+caller that cannot choose is `scoped_context.ScopedContextService`, whose
+`build_context` derives the audience from a host-authenticated principal and
+calls the engine with it (`scoped_context.py:69-79`). The engine still ships as
+a library, so whether an adopter's loop goes through that service is a decision
+this repository does not make.
 
 ### Replay that is not allowed to conclude anything
 
@@ -421,44 +443,41 @@ Seven stores, all flat text.
 and `verified` (the date it was last checked). `CONCLUSIONS_TEMPLATE.md`
 describes a believed-as-of-X filter over them — *believed at X iff `when <= X`
 and (no `obsoleted_by`, or its date is absent or later than X)* — which is the
-shape of a bi-temporal query, and no code implements it. In the engine there is
-a filter: `store_fact()` stamps every fact with `recorded_at`, and
-`build_context(as_of=…)` drops facts stamped later and truncates episodes at the
-cutoff. **That is one axis, and the docstring says which one**: *"This filters
-learned-at only; a valid-at axis (when the fact was true in the world) is a
-schema decision for your ledger, not this engine."* So the mark is withheld,
-correctly and by the project's own account: "what did we know on Tuesday" is
-answerable, "what was true on Tuesday" is not.
+shape of a bi-temporal query, and no code implements it over the ledger. The
+engine carries both axes on the stored fact: `store_fact()` stamps
+`recorded_at` unconditionally and takes optional `valid_from` / `valid_until`,
+and `build_context()` filters them independently through `as_of` and
+`valid_at` (section 4). "What did we know on Tuesday" and "what was true on
+Tuesday" are separate questions there, and the mark rests on that tier.
 
-**What the replay does not replay is the trust axis**, and that is the sharper
-limit. `verify_fact()` mutates the entry in place, writes no episode and does
-not touch `recorded_at`, so a fact stored before the cutoff and verified after
-it renders under `as_of` with the *later* oracle. Running the engine's own
-worked example at this commit — store `env/python`, verify it against `ci run
-4412`, take a cutoff, then verify it again against a run dated after the
-cutoff — a replay at that cutoff prints:
+**The trust axis replays from one stamp, so it replays conservatively.**
+`verify_fact()` writes `verified_at` beside the status (`memory_engine.py:457`),
+and under `as_of` a `verified` fact whose `verified_at` is absent or later than
+the cutoff renders as `asserted` with no oracle (`:632-643`). A fact verified
+after the cutoff therefore never replays with the later oracle; the selftest
+pins that case with controlled timestamps.
 
-```
-fact.env.python: >=3.11 [verified (ci run 9999 green, run AFTER the cutoff)]
-```
+What the row cannot hold is a sequence. A second `verify_fact()` overwrites
+`evidence`, `verified_by` and `verified_at` in place and writes no episode.
+Take the engine's own worked example — store `env/python`, verify it against `ci run 4412`, take a cutoff,
+verify it again against a later run. A replay at the cutoff renders the fact
+`[asserted]`; that is read from the code at this commit, not run. The fact was
+verified at that moment and the replay cannot say so, and the first oracle is
+gone. An episode on promotion, the piece section 9 names, would make the
+sequence reconstructable; nothing writes one.
 
-The header names its unstamped-facts limit and not this one. The replay answers
-which facts existed, not what was believed about them, which is the question a
-stale-belief postmortem usually has. The fix is the same missing piece section 9
-names: an episode on promotion would make the status reconstructable, and
-nothing writes one.
-
-**Scoping.** The `path` key is a *relevance* key. `injected_for()` applies it as
-a read-path predicate against the files a session touched, which is
-mechanically the same operation a scope filter performs, but it answers "is this
-about what I am working on", never "am I allowed to see this". There is no
-user, tenant, project or agent key anywhere in the schema. For a single-operator
-kit that is the right call, and it is why the scope mark is a dash rather than a
-defect.
+**Scoping.** In the conclusions ledger the `path` key is a *relevance* key.
+`injected_for()` applies it as a read-path predicate against the files a
+session touched, which is mechanically the same operation a scope filter
+performs, but it answers "is this about what I am working on", never "am I
+allowed to see this", and the ledger schema has no user, tenant, project or
+agent key. The engine is where scope lives: a `public` / `internal` /
+`regulated` field on every fact, filtered by audience at assembly, which is
+what the `scope_enforced` mark rests on (section 4).
 
 **The tombstone, and the one tier that has it.** `tombstones.json` is a durable
 record keyed on the rejected value, consulted on the write path, and it earns
-the mark: `store_fact()` reads it before it reads anything else and raises
+the mark: `store_fact()` reads it before it reads `facts.json` and raises
 rather than writes when the incoming value matches. Refusal is the whole
 mechanism — there is no silent drop, no shadow row, no status the caller has to
 remember to check — and the error text names the reason recorded at rejection
@@ -501,12 +520,14 @@ more than it admits.
 
 Three retrievers, all keyword-exact, all deterministic, none semantic.
 
-**The engine's.** `build_context()` splits the query on whitespace, drops tokens
-of two characters or fewer, intersects against `action + " " + outcome`
-lowercased and split, puts matches ahead of pure recency, and caps at five
-episodes. The header string tells the model what it is not getting. There is no
-scoring, no fusion, no reranking, no embedding — and the docstring says to add
-semantic recall as a separate layer rather than pretend this one has it.
+**The engine's.** `_rank_episodes()` tokenises the query on `[a-z0-9_]+`,
+ranks every episode three ways — token overlap with the outcome, with the action
+and tags, and recency — and fuses the ranks by reciprocal-rank fusion at weights
+3, 2 and 1 with list position breaking ties, so identical inputs render
+identically; `build_context()` keeps five. The header string tells the model
+what it is not getting. There is no embedding, and the docstring says to add
+semantic recall as a separate layer rather than pretend this one has it. Facts
+are not ranked at all: every fact that survives the three masks is emitted.
 
 **The modelled one.** `retrieval_exam.Matcher` is not a retriever; it is a model
 *of* the reader's retriever, and the script is unusually careful that the
@@ -676,7 +697,8 @@ would satisfy it — which is a small hole in a check that closes a real one.
 
 **Agency over memory is direct at the desk and reviewed at the branch.** A
 session writes a ledger line or journals a fact with no gate in the way; the
-refusals inside the code are `verify_fact()` declining an empty oracle,
+refusals inside the code are `verify_fact()` declining an empty oracle, an
+unnamed verifier, agent authority and self-verification,
 `reject_fact()` declining an empty reason and `store_fact()` declining a
 tombstoned value. What sits above all of them is the merge gate in section 9.
 The heavier refusals the whitepaper describes — a done-claim refused while
@@ -704,12 +726,26 @@ only."*
 
 ## 9. Reliability, Safety, and Trust
 
-**The trust ladder is the design's spine**, and it is stated identically in code
-and prose: human ruling, then oracle-verified, then asserted by a capable tier,
-then asserted by a working tier, then unattributed — with only the unattributed
-rank quarantined, on the argument that quarantining most of the fleet's memory
-*"would train everyone to ignore the lane, which is worse than no lane."* That
-is a judgement about adoption, made explicitly, and it is right.
+**The trust ladder is the design's spine, and in this tree it is prose.**
+`docs/floating-memory.md` ranks human ruling, then oracle-verified, then
+asserted by a capable tier, then asserted by a working tier, then unattributed.
+Only the unattributed rank is quarantined, on the argument that quarantining
+most of the fleet's memory *"would train everyone to ignore the lane, which is
+worse than no lane."* That is a judgement about adoption, made explicitly, and
+it is right. It belongs to the fleet system the essay's header says does not
+ship: `git grep -i -E 'quarantin|trust ladder|trust rank'` over the
+`.py`, `.sh`, `.js` and `.yml` files at this commit returns nothing.
+
+**Explicit trust state is withheld, and the near-miss is close.** The engine
+stores a discrete `status` — `asserted` or `verified` — and gates the promotion
+hard (section 2). But the only read of the field is the label in
+`build_context()`: `tag = e["status"]` at `memory_engine.py:632`, after the
+three masks at `:620-631` have already decided what is emitted, so an
+`asserted` fact reaches the prompt beside a `verified` one.
+`scoped_context.py` passes through to the same function, and
+`memory_engine_exam.py:42` reads `status` from fixture input to decide whether
+to call `verify_fact()`. A state that withholds nothing is a label. The one
+state that would withhold — the quarantine rank — is the one that does not ship.
 
 The
 [correction ledger](https://github.com/The-825/breadcrumbs/blob/e7940f325d6e102f53b782d50fc95ae75d9cdefa/templates/ledger-tools/CORRECTION_LEDGER_TEMPLATE.md)
@@ -737,17 +773,20 @@ contradiction persistence, provenance collapse — and maps each to the mechanis
 answering it. It is a documentation pattern, not a mechanism, and says so.
 
 **An audit log of memory mutations, covering the value axis and not the trust
-axis.** `episodes.jsonl` is append-only, lives in the engine's own store rather
-than in git, and carries four kinds of mutation row: `COMPACTION` naming the keys
-a working-tier flush evicted, `SUPERSEDED` naming a semantic fact's prior value,
-prior status and replacement, and `REJECTED` and `TOMBSTONE_LIFTED` naming a
-value refused and a refusal reversed, each with its required reason. That is a
-record of what changed, in the store, and it earns the mark. What it does not
-cover is the trust axis: `verify_fact()` promotes a fact to `verified` and writes
-no event. In a design whose spine is the trust ladder, the ladder is the one
-thing the log does not watch — and section 5 is where that costs something, since
-an as-of replay can reconstruct which facts existed and not what vouched for
-them. Git history covers the file-based ledgers and is a different mechanism.
+axis.** `episodes.jsonl` is append-only and lives in the engine's own store
+rather than in git. It carries five kinds of mutation row. `COMPACTION` names
+the keys a working-tier flush evicted; `SUPERSEDED` names a semantic fact's
+prior value, prior status and replacement; `REJECTED` and `TOMBSTONE_LIFTED`
+name a value refused and a refusal reversed, each with its required reason;
+`PROVENANCE_LINKED` names source episodes added to an unchanged fact. That is a
+record of what changed, in the store, and it earns the mark.
+
+What it does not cover is the trust axis: `verify_fact()` promotes a fact to
+`verified` and writes no event. In a design whose spine is the trust ladder, the ladder is the one
+thing the log does not watch. Section 5 is where that costs something: the
+replay reads trust from a single `verified_at` stamp on the row, so a
+re-verification after the cutoff hides the earlier one and its oracle is gone.
+Git history covers the file-based ledgers and is a different mechanism.
 
 **The review surface is the merge gate, and it is fail-closed.**
 [`.github/workflows/automerge.yml`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/.github/workflows/automerge.yml)
@@ -932,9 +971,15 @@ report.
   probe touched, `unexercised` for a forbidden check with nothing reachable to
   catch. A negative suite that reports green when it had no opportunity to fail
   is worse than none, because it retires the question.
-- **Refuse `verified` without a named oracle, in the setter.** Twelve lines,
-  raises rather than writes, and it converts "the model said so" from a default
-  into something a caller has to lie about deliberately.
+- **Refuse `verified` without a named oracle and a second party, in the
+  setter.** `verify_fact()` raises before it writes on empty evidence, an
+  unnamed verifier, an unknown authority class, `agent` authority, and a
+  verifier equal to the asserting actor, which converts "the model said so"
+  from a default into something a caller has to lie about deliberately. Know
+  where the lie is cheap: the authority class and both names are strings the
+  caller supplies, so the self-verification check is string inequality against
+  `asserted_by`. And pair the gate with a read that filters on it — here
+  nothing does, so the gate decides a label.
 - **Measure reachability, not just truth.** A staleness sweep and a reachability
   sweep catch disjoint failures; an entry can be perfectly true and structurally
   invisible, and only the second sweep can tell you.
@@ -942,9 +987,9 @@ report.
   unreachable entries is obvious. *Fewer precise entries at the same total* is
   the one people miss, because re-keying a specific entry to something broad
   reads as tidying up and is a downgrade.
-- **State the retrieval limit inside the injected block.** `=== MEMORY
-  (retrieval: recency + exact keyword; no paraphrase match) ===` costs one line
-  and tells the model what it is not being shown.
+- **State the retrieval limit inside the injected block.** The engine's header
+  names its limit — *"no paraphrase match"* — and appends each mask that ran,
+  which costs one line and tells the model what it is not being shown.
 - **Exclude model-vs-model disagreement from your correction signal.** A
   self-improvement loop trained on opinion optimizes a proxy.
 - **Record the writing surface, not the model.** When a class of entries turns
@@ -1012,12 +1057,12 @@ report.
   whitepaper beside it presents five mechanisms with no such header and two of
   them have no code path, which is what the fix looks like when it is applied
   per-file rather than per-shelf.
-- **Do not let a replay of "what did we know" imply "what did we believe".**
-  `build_context(as_of=…)` filters facts by when they were recorded, which is
-  exactly right, and renders each one's *current* status and oracle, which reads
-  as history and is not. Any field mutated in place outside the timeline is
-  invisible to a timeline query. Either stamp the mutation or log an event for
-  it; the header that names one limit makes the unnamed ones easier to miss.
+- **Do not keep the trust axis in one overwritable stamp.** The replay here
+  masks a `verified` status whose `verified_at` postdates the cutoff, which is
+  exactly right and never shows an oracle that did not exist yet. But
+  `verify_fact()` overwrites the stamp, the verifier and the evidence in place,
+  so a re-verification hides the earlier one and a timeline query cannot
+  recover it. Log the transition as an event, or keep the stamps as a list.
 - **Do not draw an automation boundary at a file class when your stores are
   spread across classes.** The tier policy's safe set is documentation-shaped —
   `docs/`, `checklists/`, `README.md` — plus one exception, and that exception
@@ -1133,6 +1178,8 @@ teams have never asked about the memory they already have.
 - `.github/workflows/automerge.yml`, `ci-kit/workflows/greenlight_tiers.py` — the label gate and the diff tiers that decide when it applies
 
 ## History
+
+**2026-10-01** — audited at the same commit [`bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73`](https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73); `trust_state` withdrawn, to six. `build_context()` emits every fact that passes its time and scope masks and reads `status` only for the label (`memory_engine.py:620-632`); no other read filters on it, so `asserted` withholds nothing ([section 9](#9-reliability-safety-and-trust)). Section 5 said an as-of replay shows a later oracle; `verify_fact()` stamps `verified_at` and the replay masks it to `asserted`, so the error runs the other way — a re-verification hides the earlier one. `verify_fact()` refuses five ways, not on empty evidence alone. Sections 4 and 5 also still argued `scope_enforced` and `bitemporal` were withheld, named a `compose_context` that does not exist, and described the pre-fusion ranker; all now match the code and the marks. Nothing was installed or run.
 
 **2026-09-19** — audited at the unchanged pin [`bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73`](https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73); nothing upstream moved. `human_review` stands, with a correction to what it covers. The previous record cited the merge gate over "the git-resident ledgers" without reading `SAFE_EXACT` against the memory model. Reading it: the JSONL ledgers and the TSV index live under `templates/`, which the policy always gates because those files "ARE behavior-bearing product, not prose" — so the mark holds there — but `SAFE_EXACT` is `("README.md", "planning/DECISIONS.md", "SESSION_STATE.md")`, and the decisions ledger and the markdown handoff are memory that merges on green with no label. Section 4's list of the safe set had omitted `SESSION_STATE.md` entirely. The batch labeller was checked too and does not weaken the gate: `greenlight-all.yml` is `workflow_dispatch` only and states that dispatching it is the operator's approval action. Screened again first; nothing was installed and no suite was run.
 

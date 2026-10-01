@@ -6151,6 +6151,167 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Aura report called its receipt chain the only
+hash-chained audit in the atlas, and gave two test censuses from other
+pins; corrected 2026-10-01.</strong> At <a
+href="https://github.com/youngbryan97/aura/commit/cf84a733c4bcf174646bc2a955d996ed170b990e"><code class="commit-id" title="cf84a733c4bcf174646bc2a955d996ed170b990e">cf84a733…</code></a>
+the <a href="../systems/aura/">Aura</a> report, its card, its verdict
+and the families and tensions pages called the chain unique; <a
+href="../systems/aimee/">aimee</a> and <a
+href="../systems/midas/">Midas</a> carry hash-chained audits too. Its
+sections 1 and 10 gave 44,104 and 21,206 test functions; at this pin
+<code>git grep -c -E '^[[:space:]]*(async[[:space:]]+)?def test_' -- 'tests/*.py'</code>
+gives 46,060 across 4,077 files. Its <em>"I ran it"</em> also went
+without a commit: the 16 audit-chain tests ran at the first pin,
+<code>e8866f4</code>, and were read, not run, afterwards.</li>
+<li><strong>The Mercury Agent report said nothing was known to move a
+memory into or out of its <code>subconscious</code> tier; corrected
+2026-10-01.</strong> At <a
+href="https://github.com/cosmicstack-labs/mercury-agent/commit/781daac263507ed28800f380242507364137caec"><code class="commit-id" title="781daac263507ed28800f380242507364137caec">781daac2…</code></a>
+the <a href="../systems/mercury-agent/">Mercury Agent</a> report left
+the question open, and two pattern pages repeated it as an absence. The
+agent's heartbeat calls <code>prune()</code>
+(<code>src/core/agent.ts:4291</code>), which calls
+<code>moveToSubconscious</code> on every <code>active</code> or
+<code>durable</code> row unseen for 30 days
+(<code>src/memory/second-brain-db.ts:480-493</code>), and
+<code>retrieveRelevant</code> calls <code>promoteToConscious</code> when
+fewer than three conscious matches clear the recall threshold
+(<code>src/memory/user-memory.ts:248</code>). The same report said
+scores were assigned once with no path to revision;
+<code>mergeRecord</code> raises them with <code>Math.max</code>
+(<code>user-memory.ts:505-507</code>).</li>
+<li><strong>The openvurp report awarded <code>scope_enforced</code> on a
+per-agent directory, and its description and section 9 said a correction
+typed to an agent reaches the platform's learning log; corrected
+2026-10-01.</strong> At <a
+href="https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0"><code class="commit-id" title="fc68e643e8df7282757af8af4d8d4adfb0975eb0">fc68e643…</code></a>,
+<code>memories</code> has no scope column
+(<code>core/vector_memory.py:66-75</code>) and neither the FTS nor the
+vector query carries a predicate; the agent id reaches storage only as
+the directory <code>MemoryManager</code> opens
+(<code>core/memory.py:32</code>). That is a physical partition, so the
+<a href="../systems/openvurp/">openvurp</a> report's
+<code>scope_enforced</code> mark was too generous and is withdrawn. A
+correction typed to a roster agent reaches no learning log at all,
+because the hook lives in <code>Agent.run</code> and a direct chat
+bypasses it, so the description named the wrong destination.</li>
+<li><strong>The gh-aw report awarded <code>scope_enforced</code> on an
+integrity lattice that is a partition by name, said the level is
+assigned by the trigger so a fork PR reads what a merged run remembered,
+and said comment-memory content is injected into the prompt; corrected
+2026-10-01.</strong> At <a
+href="https://github.com/github/gh-aw/commit/9259aea14a8d0d6f423fb5813b2675b3e81c8398"><code class="commit-id" title="9259aea14a8d0d6f423fb5813b2675b3e81c8398">9259aea1…</code></a>,
+the level is the workflow's compile-time
+<code>tools.github.min-integrity</code> enum, emitted as a literal
+<code>GH_AW_MIN_INTEGRITY</code>
+(<code>pkg/workflow/cache_memory.go:120</code>), and it prefixes the
+cache key that every restore key keeps
+(<code>pkg/workflow/cache_integrity.go:163-179</code>,
+<code>pkg/workflow/cache_steps.go:111-133</code>). A cache-memory store
+therefore never crosses levels, and the read-down merge does work only
+on a drive two levels share. No file carries a level and no read applies
+one, so the <a href="../systems/gh-aw/">gh-aw</a> report's
+<code>scope_enforced</code> mark was too generous and is withdrawn.
+<code>injectCommentMemoryPrompt</code> writes file paths, not content.
+Each error overstated the system.</li>
+<li><strong>The Microsoft Agent Framework report grounded
+<code>scope_enforced</code> on the harness memory's owner directory and
+said the Cosmos checkpoint store refuses an ambiguous checkpoint id;
+corrected 2026-10-01.</strong> At <a
+href="https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617"><code class="commit-id" title="c030fa3582b1d2971488645fa03ec65bffab8617">c030fa35…</code></a>,
+<code>MemoryTopicRecord</code> carries no owner and no read filters on
+one, so the harness isolation in the <a
+href="../systems/agent-framework/">Microsoft Agent Framework</a> report
+is a physical partition selected by path, which the mark excludes. The
+mark holds on <code>RedisContextProvider</code>, which stores
+<code>application_id</code>, <code>agent_id</code> and
+<code>user_id</code> on every document and ANDs a tag equality for each
+configured id into its search
+(<code>python/packages/redis/agent_framework_redis/_context_provider.py:319-322</code>,
+<code>:363-371</code>). The checkpoint refusal is on <code>load</code>
+only; <code>delete</code> removes the first document matching the id
+(<code>python/packages/azure-cosmos/agent_framework_azure_cosmos/_checkpoint_storage.py:311-343</code>),
+which the report overstated. No mark moved.</li>
+<li><strong>The OpenSRE report awarded <code>scope_enforced</code> on a
+directory per actor and said the store had four memory types, two of
+them grounded; corrected 2026-10-01.</strong> At <a
+href="https://github.com/Tracer-Cloud/opensre/commit/730ebc1ad151389393ece55051049d7a0af15864"><code class="commit-id" title="730ebc1ad151389393ece55051049d7a0af15864">730ebc1a…</code></a>,
+<code>MemoryRecord</code> carries no owner and every read globs the
+directory <code>memory_dir()</code> resolves, so per-user isolation in
+the <a href="../systems/opensre/">OpenSRE</a> report is a physical
+partition selected by path, which the mark excludes; the mark is
+withdrawn and one remains, <code>negative_eval</code>.
+<code>OPENSRE_MEMORY_DIR</code>, when set, files every actor in one
+directory. <code>MemoryType</code> has five values, and
+<code>repository</code> is grounded beside <code>infrastructure</code>
+and <code>investigation_learning</code>
+(<code>core/agent_harness/session/memory_extraction.py:52</code>), which
+the report understated.</li>
+<li><strong>The breadcrumbs report awarded <code>trust_state</code> on a
+status no read filters on, and said an as-of replay shows an oracle
+verified after the cutoff; corrected 2026-10-01.</strong> At <a
+href="https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73"><code class="commit-id" title="bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73">bf0b6a2b…</code></a>,
+<code>build_context()</code> emits every fact that passes its time and
+scope masks and reads <code>status</code> only to choose the label
+(<code>templates/ledger-tools/memory_engine.py:620-632</code>), and no
+other read in the tree filters on it, so the <a
+href="../systems/breadcrumbs/">breadcrumbs</a> report's
+<code>trust_state</code> mark was too generous and is withdrawn. The
+replay claim ran the other way: <code>verify_fact()</code> stamps
+<code>verified_at</code> and the replay masks a later stamp to
+<code>asserted</code>, so a re-verification after the cutoff hides the
+earlier verification rather than showing the later oracle. The report
+also described the promotion gate as refusing empty evidence alone,
+where it refuses five ways, and its sections 4 and 5 still argued
+<code>scope_enforced</code> and <code>bitemporal</code> were withheld
+while the report carried both.</li>
+<li><strong>The CSM report awarded <code>scope_enforced</code> beside a
+cross-project read it described; corrected 2026-10-01.</strong> At <a
+href="https://github.com/NovasPlace/CSM/commit/9c7cfb22e525eb9210c3048cb0d44544b09b95d0"><code class="commit-id" title="9c7cfb22e525eb9210c3048cb0d44544b09b95d0">9c7cfb22…</code></a>
+the <a href="../systems/csm/">CSM</a> report credited the mark to a
+search path that fails closed, while its own body said the
+lesson-trigger cache selects up to 50 lessons from the same
+<code>memories</code> table with no <code>project_id</code> predicate
+and injects them into the system prompt on every turn. An injection read
+over the same store that cannot carry the predicate withholds the mark,
+so it is withdrawn and the search path is the near-miss.</li>
+<li><strong>The Create Context Graph report awarded
+<code>scope_enforced</code> on REST read paths while the agent's query
+tools read the same graph unscoped; corrected 2026-10-01.</strong> At <a
+href="https://github.com/neo4j-labs/create-context-graph/commit/707b168d9509cbf1b919b82940285d1df4c6810d"><code class="commit-id" title="707b168d9509cbf1b919b82940285d1df4c6810d">707b168d…</code></a>
+the <a href="../systems/create-context-graph/">create-context-graph</a>
+report credited the mark to a null-permissive domain predicate on nine
+REST read paths. The agent's domain tools run fixed Cypher with no
+domain predicate through the same query function against the same graph,
+and its free-form Cypher tool applies one only when the model writes it.
+An agent-reachable read over the same store that cannot carry the
+predicate withholds the mark, so it is withdrawn and the routes are the
+near-miss.</li>
+<li><strong>The Janus-Graph report's <code>bitemporal</code> evidence
+record said the graph-search endpoint puts
+<code>invalid_at IS NULL</code> in its Cypher traversal and drops any
+invalidated row; corrected 2026-10-01.</strong> At <a
+href="https://github.com/Maple-Aikon/janus-graph/commit/5a66516fd795ca178870b90253bedb0a6a0e5aac"><code class="commit-id" title="5a66516fd795ca178870b90253bedb0a6a0e5aac">5a66516f…</code></a>
+the condition is <code>rel.invalid_at IS NULL OR true</code>
+(<code>daemon/search_engine.py:133</code>), so every relationship
+passes, as the report's own section 6 said; the record had repeated the
+module docstring. The filtered reads are <code>search_memory</code> over
+MCP and the daemon's <code>GET /search/memory</code>, both through
+<code>engine/search_memory.py:91-93</code>. The mark stands: Graphiti
+stores validity beside record time. See <a
+href="../systems/janus-graph/">Janus-Graph</a>.</li>
+<li><strong>The Prismer Cloud report awarded <code>scope_enforced</code>
+while its own section 9 showed the turn-start digest injecting hub
+summaries with no visibility check; corrected 2026-10-01.</strong> At <a
+href="https://github.com/Prismer-AI/PrismerCloud/commit/5337ca14c0e03e99446aff43bcbf1a2ad18f7205"><code class="commit-id" title="5337ca14c0e03e99446aff43bcbf1a2ad18f7205">5337ca14…</code></a>,
+<code>buildMemoryDigest</code> writes every hub's path and its
+description or first body line from the same <code>memory.db</code> that
+search filters, through a provider that takes only a workspace id, and
+the Hermes adapter appends it to every system prompt by default. An
+injection path over the scoped store that cannot carry the predicate
+withholds the mark; the <a href="../systems/prismer-cloud/">report</a>
+now carries <code>negative_eval</code> alone.</li>
 <li><strong>The OpenZync Core report said every read path imports one
 shared temporal predicate, that the organisation key reaches the two
 BM25 search legs and not the vector ones, that row-level security fails
@@ -10936,7 +11097,7 @@ each reference the analyzer could not resolve, so the index ships its
 own coverage gaps. Read against the corpus this atlas holds, that is a
 discrete ordered status that withholds, kept apart from where a claim
 came from, and applied on the read path — the combination <a
-href="../capabilities/">179
+href="../capabilities/">178
 systems</a> here express as a single float, and the reason
 <code>trust_state</code> is the mark most often refused. <strong>And the
 README states the retrieval consequence better than most memory systems

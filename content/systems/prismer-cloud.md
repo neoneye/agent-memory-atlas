@@ -9,14 +9,13 @@ source_url: https://github.com/Prismer-AI/PrismerCloud
 archive_name: "Prismer-AI--PrismerCloud"
 revision: 5337ca14c0e03e99446aff43bcbf1a2ad18f7205
 revision_url: https://github.com/Prismer-AI/PrismerCloud/commit/5337ca14c0e03e99446aff43bcbf1a2ad18f7205
-analyzed_at: 2026-09-30
+analyzed_at: 2026-10-01
 licence: "MIT for the SDK; the server backend is closed-source and not in the tree"
 size: "227,801 lines of TypeScript, Python, Go and Rust outside tests; the daemon memory module is 20,513 lines of TypeScript"
 activity: "1,414 commits on main by 4 contributors, 24 March 2026 – 29 September 2026; sdk/ is an rsync mirror of a closed repository"
 tests: "467 test files in 122,984 lines; 78 of them cover the daemon memory module"
-capabilities: "scope_enforced, negative_eval"
+capabilities: "negative_eval"
 capability_evidence:
-  scope_enforced: "a visibility kind and subject on every page row, applied per hit on the RPC search, list and load paths and on the automatic pre_llm_call recall | sdk/prismer/src/daemon/memory/store.ts:156-176; sdk/prismer/src/daemon/memory/acl-predicate.ts:86-161; sdk/prismer/src/daemon/memory/rpc.ts:711-755; sdk/prismer/src/daemon/memory/hook-server.ts:489-511, 570-578 | memory_pages carries workspaceId, visibilityKind and visibilityImUserId. canCapReadPage checks the cap's workspace, the replica's exact actor set and canReaderReadVisibility over workspace, agent, private, role, council and task; runWorkspaceSearch drops every hit the cap cannot read, and filterRecallHits applies the same matrix before recall is injected | the FTS query filters only workspaceId, stale and archivedAt, so visibility is applied after the topK cut; the hook route builds its reader from agent_im_user_id and workspace_id in the request body with no cap; the turn-start digest lists every hub with no visibility check"
   negative_eval: "role- and council-scoped pages must not reach another agent's injected recall, with the shared page asserted present and each scoped page recalled by its own member | sdk/prismer/test/hook-server-recall-acl.test.ts:101-221 | seedPages writes three pages sharing one token, scoped workspace, role:roleB and council:convB. The roleA agent's pre_llm_call context contains shared-note.md and neither roleB-secret.md nor convB-decision.md (lines 169-174); the roleB agent's contains roleB-secret.md (194-197) and the convB member's contains convB-decision.md (217-220), so the filter is not exclude-all | no workflow in .github/workflows runs the sdk/prismer suite at this commit; the cases resolve identity through the run-session registry, not the body-identity branch the Hermes plugin uses"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, graph"
@@ -27,12 +26,12 @@ matrix:
   retrieval: "FTS5 BM25, AND then OR fallback, plus a one-hop link-graph band below every text hit; recency and supersede or contradicts terms re-rank; a text miss returns INDEX and hub entry points instead of hits"
   write: "Agent memory_write through a capability-gated loopback RPC with placement, description, PKF and deliverable gates; post-turn in-daemon LLM extraction of up to six pages; cloud down-sync into the replica"
   update_delete: "Overwrite by path, one version row per write; supersede, merge, rewire and delete forward to the closed cloud, which then deletes the local rows; page delete cascades its versions. No tombstone"
-  scoping: "Workspace key and a six-kind visibility on each row, filtered per hit on search, list, load and hook recall; one database file per workspace; a signed per-agent capability on the RPC, none on the hook route"
+  scoping: "Workspace key and a six-kind visibility on each row, filtered per hit on search, list, load and hook recall and not on the turn-start digest, which puts every hub's path and summary in the system prompt; one database file per workspace; a signed per-agent capability on the RPC, none on the hook route"
   integration: "Hermes memory provider plugin and shell hooks; memory_search, memory_load, memory_browse, memory_write and memory_curate tools shared across Claude Code, Hermes, OpenClaw and Codex adapters; a turn-start digest in the system prompt"
   background: "Post-turn extraction and compaction workers, an outbox flush, cloud replica reconcile and WS invalidation. The daemon Dream timer is hard-disabled; consolidation is a cloud-dispatched orchestrator task"
   trust: "None local. A stale flag the cloud sets hides a page from local recall; supersession only re-ranks; the correction and deletion authority is cloud-side and not in the tree"
-  strengths: "One visibility matrix shared by RPC, browse and recall; a self-signed per-agent capability with the acting identity taken from the cap, never the body; recall closes when the cloud authority lease expires; write and outbox in one transaction; a three-page leak test with member controls"
-  risks: "The hook route trusts identity from the request body; the turn-start digest lists hubs with no visibility check; MEMORY.md mirrors land in a database nothing reads; the authoritative store, the correction verbs and the full ACL are closed; no public CI runs these tests"
+  strengths: "One visibility matrix shared by RPC search, list, load, browse and recall; a self-signed per-agent capability with the acting identity taken from the cap, never the body; recall closes when the cloud authority lease expires; write and outbox in one transaction; a three-page leak test with member controls"
+  risks: "The hook route trusts identity from the request body; the turn-start digest injects every hub's path and summary with no visibility check; MEMORY.md mirrors land in a database nothing reads; the authoritative store, the correction verbs and the full ACL are closed; no public CI runs these tests"
 ---
 
 ## 1. Executive Summary
@@ -55,7 +54,10 @@ recall, and a committed test proves the recall filter both excludes and admits.
 The weak part is that the predicate does not reach two paths. The hook intake
 at `/v1/hooks/*` carries no capability and, on the branch the Hermes plugin
 uses, takes the agent and workspace from the request body. The turn-start
-digest lists every hub page with no visibility check at all.
+digest, on by default, writes every hub's path and one-line summary from the
+same `memory.db` into every agent's system prompt with no visibility check.
+That digest is why the report carries one mark, `negative_eval`, and withholds
+`scope_enforced`.
 
 Three more findings shape the rest of this report.
 
@@ -374,14 +376,35 @@ exists. In pod mode the bind is `0.0.0.0` (`local-server.ts:468-477`).
 
 **The digest forgets the predicate its neighbour applies.**
 `assemblePlaceContext` filters hubs through `canSee` before they reach browse,
-extraction or a 422 hint (`hook-server.ts:1561-1590`). `buildMemoryDigest`
-lists hubs with `store.list({ pageType: 'hub', limit: 1000 })` and skips only
-encrypted ones (`digest.ts:188-203`). A role-, council- or agent-scoped hub
-contributes its path and one-line summary to every agent's system prompt in the
-workspace.
+extraction or a 422 hint, and its own comment calls `store.list` raw, "every
+visibility" (`hook-server.ts:1561-1590`). `buildMemoryDigest` lists hubs with
+`store.list({ pageType: 'hub', limit: 1000 })` and skips only encrypted ones
+(`digest.ts:188-203`). Each line is the hub's path and its description, or else
+the first non-heading line of its body, up to 160 characters
+(`digest.ts:97-107, 206-207`); the INDEX page's table of contents goes in whole
+(`digest.ts:179-186`).
+
+The store is the one search reads. The runner's provider calls
+`buildMemoryDigest(slot.store)` on the workspace's `memory.db` slot
+(`runner-wiring.ts:114-125`), the slot `runWorkspaceSearch` filters
+(`rpc.ts:711-739`). The provider takes a workspace id and nothing else
+(`digest.ts:118-120`), so no reader reaches it. The Hermes adapter appends the
+block to every dispatch (`adapters/persistence/hermes/index.ts:1143-1157`), and
+`FF_MEMORY_INDEX_INJECT_ENABLED` unset means on (`index-toc-inject.ts:38-42`).
+A role-, council- or agent-scoped hub therefore puts its path and summary into
+every agent's system prompt in the workspace.
 
 **Withheld marks.**
 
+- **`scope_enforced` — withheld.** The key is on the row and the predicate is
+  applied per hit on RPC search, list and load and on `pre_llm_call` recall
+  (`store.ts:156-176`; `rpc.ts:404-407, 727-739`; `hook-server.ts:489-511`).
+  The turn-start digest reads the same `memory.db` through an injection path
+  whose signature cannot carry a reader (`digest.ts:118-120, 190-207`;
+  `runner-wiring.ts:114-118`), and it injects hub content, not names alone.
+  That is the near-miss: one unfiltered assembler beside a filtered one. The
+  body-supplied identity on `/v1/hooks/*` is a separate limit; the predicate
+  runs there, on a reader the caller names.
 - **`trust_state` — withheld.** `stale` does withhold a page from recall, but
   it is a boolean the cloud sets, not a status this tree produces, and there is
   no candidate or verified state (`cloud-sync.ts:932`). Supersession is a
@@ -445,9 +468,10 @@ mirror write read back by some recall path.
   request.** A per-boot key, one workspace per agent cap, and a handler that
   overwrites any body actor field make impersonation a forgery problem rather
   than a typo.
-- **One visibility function, called from every read surface.** Search, list,
-  load, browse, recall and the 422 hint share `canReaderReadVisibility`, which
-  keeps the matrix from drifting. See [scope as a first-class
+- **One visibility function, called from every filtered read surface.**
+  Search, list, load, browse, recall and the 422 hint share
+  `canReaderReadVisibility`, which keeps the matrix from drifting — and the
+  digest shows the cost of one assembler that does not call it. See [scope as a first-class
   key](../../patterns/scope-as-a-first-class-key/).
 - **Close recall when the authority behind the replica goes stale.** A lease
   and a pinned subject hash turn "offline for a day" into "no recall" instead
@@ -533,6 +557,7 @@ Run at the repository root of the pinned checkout unless a directory is named.
 - `grep -rliE 'locomo|longmemeval' . --exclude-dir=.git` — no match.
 - `grep -nE 'x-prismer-memory-cap|verifyCap|readHeader|authorization' sdk/prismer/src/daemon/memory/hook-server.ts` — no match; `rpc.ts:226` reads the header for the RPC.
 - `grep -nE 'visib|canReader|canSee' sdk/prismer/src/daemon/memory/digest.ts` — no match.
+- `grep -rn "\.list({" sdk/prismer/src/daemon/memory | grep -v test` — five callers: `rpc.ts:404` (filtered at 407), `hook-server.ts:1590` and `hook-server.ts:1632` (both filtered by `canSee`), `search.ts:595` (navigation seeds, filtered at `rpc.ts:746-753`), and `digest.ts:191`, unfiltered.
 - `grep -rnE 'searchForAgent|\.shared\(\)|_shared\.db' sdk/prismer/src sdk/prismer/plugins | grep -v scoped-store.ts` — one comment at `hook-server.ts:1960`; no reader of `_shared.db` outside `scoped-store.ts`.
 - `grep -rn 'upsertLink(' sdk/prismer/src | grep -v 'store.ts:'` — `cloud-sync.ts:495` only.
 - `grep -rn 'archivedAt' sdk/prismer/src --include='*.ts'` — both inserts write `NULL` (`store.ts:921`, `store.ts:1824`); the rest are reads.
@@ -546,5 +571,7 @@ Run at the repository root of the pinned checkout unless a directory is named.
 - `grep -rniE 'renamed|formerly' README.md CHANGELOG.md` — no match.
 
 ## History
+
+**2026-10-01** — [`5337ca14c0e03e99446aff43bcbf1a2ad18f7205`](https://github.com/Prismer-AI/PrismerCloud/commit/5337ca14c0e03e99446aff43bcbf1a2ad18f7205) — audited at the same commit; `scope_enforced` withdrawn. The turn-start digest, on by default, injects every hub's path and its description or first body line, plus the whole INDEX table of contents, from the same `memory.db` that search filters, through a provider that takes only a workspace id (`digest.ts:97-107, 118-120, 190-207`; `runner-wiring.ts:114-118`). An injection path over the scoped store that cannot carry the predicate withholds the mark. One mark remains, `negative_eval`.
 
 **2026-09-30** — [`5337ca14c0e03e99446aff43bcbf1a2ad18f7205`](https://github.com/Prismer-AI/PrismerCloud/commit/5337ca14c0e03e99446aff43bcbf1a2ad18f7205) — first reading, at the head of `main`, a commit dated 29 September 2026. Two marks, `scope_enforced` and `negative_eval`; section 9 names each withheld mark. Only the daemon under `sdk/prismer` is covered; the server is closed-source and absent. Screened before reading: one auto-run surface (`.claude-plugin/marketplace.json`, which installs a plugin from npm and is inert unless added as a marketplace), four build-time execution points, eleven unpinned surfaces, fifteen dependency files inside the cooldown — every file in a depth-1 clone dates to the tip — and `CLAUDE.md` recorded as data. Read with `grep` and `sed`; nothing installed, built or run.

@@ -125,9 +125,9 @@ An append-only record of every mutation answers *what happened to this memory in
 March*. It also only ever grows, and the pass that bounds it is the pass most
 likely to go unbuilt.
 
-[Aura](../systems/aura/) holds the complete end: the only hash-chained audit in
-this atlas, receipts linked by `prev_hash`, verification that re-hashes the
-bodies, and sixteen tests for detecting modification, insertion and deletion.
+[Aura](../systems/aura/) holds the complete end: a hash-chained audit, receipts
+linked by `prev_hash`, verification that re-hashes the bodies, and sixteen tests
+for detecting modification, insertion and deletion.
 [daem0n-mcp](../systems/daem0n-mcp/) keeps a full content snapshot per version.
 
 [PowerMem](../systems/powermem/) shows the other end and what it costs: its audit

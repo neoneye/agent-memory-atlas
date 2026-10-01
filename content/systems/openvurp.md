@@ -1,7 +1,7 @@
 ---
 title: "openvurp"
 eyebrow: "Per-agent memory in a wallet of agents"
-description: "A Python wallet of user-created agents where each agent keeps its own SQLite FTS5 memory, lessons and replayed corrections under memory/agents/{id}/, with a nightly fade that runs only on the platform store, a lesson-promotion gate a person approves in safe mode and the runtime pre-approves in auto mode, and user corrections that reach the platform's learning log rather than the agent's."
+description: "A Python wallet of agents, each with its own SQLite FTS5 memory and lessons, where a correction typed to an agent reaches no learning log."
 root: ../..
 page_kind: system
 source_name: "openvurp/openvurp"
@@ -9,13 +9,15 @@ source_url: https://github.com/openvurp/openvurp
 archive_name: "openvurp--openvurp"
 revision: fc68e643e8df7282757af8af4d8d4adfb0975eb0
 revision_url: https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0
-analyzed_at: 2026-09-19
-capabilities: "scope_enforced, audit_log, human_review, negative_eval"
+analyzed_at: 2026-10-01
+licence: "MIT"
+size: "46,580 lines of Python in 176 files, 11,560 of them in 71 files under tests/"
+activity: "35 commits on main by 2 author identities, 30 June – 4 September 2026, 15 of them on 2 and 3 September"
+capabilities: "audit_log, human_review, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
 capability_evidence:
-  scope_enforced: "the agent id as a directory, resolved from a context variable on both the write and the read arm | core/scope.py:24-51, core/memory.py:29-39, core/agent.py:1309-1340, core/swarm.py:561-567,:691-706 | `set_scope(member.id)` wraps every tool a roster agent runs; `_remember_handler` writes through `memory_for(current_scope())`, whose `MemoryManager` roots itself at `agent_home(memory_dir, scope)` = `memory/agents/<id>/`; `Swarm._memories` reads back with `memory_for(member.id).get_relevant(prompt, …)` and injects the result as a system message. The scope is the path, so a query cannot name another agent's rows. What the key does not cover is the learning side — see section 9 | tests/test_memory_per_agent.py:44-52 test_what_one_remembers_the_other_does_not_find"
   audit_log: "an append-only, redacted event log per scope in the system's own store, with promotion and rollback as event kinds | core/learning.py:193-209,:333-342,:370-378,:553-557, core/vector_memory.py:319-369 | `LearningLoop.record_event` appends one JSON line to `learning/events.jsonl` with `open(path, \"a\")` and never rewrites it; `promote_candidate` records `kind=\"promotion\"` naming the lesson file, `rollback_lesson` records `kind=\"rollback\"` with the reason, and every event carries `timestamp`, `actor`, `source` and passes through `redact`. `VectorMemory.fade` appends each removed row to `.faded/faded.jsonl` with `faded_at` before deleting it. What is not recorded: a `remember` write reaches only the hash-chained `audit/audit.jsonl` as a `TOOL_CALL` with a 160-character argument preview | this is the log"
   human_review: "the promotion of a lesson is an approval-gated tool, and the mode that would skip the gate has no setter | tools/learning.py:143-179, :181-203, core/security/policy.py:75-80, core/executor.py:84-169, core/approvals.py:41-75, core/agent.py:429-440 | `LEARNING_PROMOTE_TOOL` and `LEARNING_ROLLBACK_TOOL` declare `requires_approval=True`; `ToolPolicyEngine.evaluate` returns `REQUIRE_APPROVAL` for any such tool, and `Executor.execute` then asks the UI with `_describe_action` — the tool name plus the first 100 characters of the JSON arguments — accepting yes, no or always, where always grants a `CapabilityLease` of eight hours or fifty uses. The answer arrives from the dashboard route `POST /api/approvals/<token>` or a messaging channel, never from a tool: `web_fetch` issues a GET, so no declared tool can answer, and the general `shell` tool is the stated limit of this reading. Silence is a no after 180 s, the heartbeat UI returns False outright, and a failure to publish the question refuses the action. `auto` mode would skip the gate, but `set_approval_mode` has no caller anywhere in the tree and `/mode` has no handler, so the mode can only be changed by hand-editing `memory/runtime/approval_mode.json`, which defaults to `safe` | tests/test_policy_engine.py, tests/test_capability_leases.py"
   negative_eval: "a scope test with its positive control in the same case | tests/test_memory_per_agent.py:44-52 | `test_what_one_remembers_the_other_does_not_find` writes one memory into amanda's store, asserts `\"Crucial\" in amanda.get_relevant(\"SSD Crucial prezzo\", session_type=\"main\")` — the control that proves the retriever returns something — and then asserts `\"Crucial\" not in ciccio.get_relevant(...)` over a second `MemoryManager` rooted at another id. The query shares one word with the memory, on purpose, because the FTS5 AND-of-words bug this test accompanies made recall fail on exactly that shape. Caveat: the case begins `if not amanda.remember(...): pytest.skip(...)`, so a build without FTS5 is green having asserted nothing; and ciccio's store is empty, so the negative half rests on the positive control rather than on a populated result set | tests/test_memory_per_agent.py:44-52"
@@ -25,7 +27,7 @@ matrix:
   retrieval: "Keyword scoring over memory files plus a semantic section: FTS5 over an OR of the query's words with bm25 normalised to the best hit, cosine similarity computed in Python over every embedded row, fused 0.7/0.3, decayed by a 30-day half-life on 30% of the score, cut at 0.3, diversified by word-overlap MMR, top 5"
   write: "`remember` inserts synchronously (an embedding call to Ollama or OpenAI on the hot path when available); corrections, feedback, tool failures and completed tasks append learning events; `learning_review` groups events into candidates; `learning_promote` writes a lesson file after a verification gate and a human approval; `store_lesson` also indexes the lesson into the vector store"
   update_delete: "No update path; `VectorMemory.forget` and `MemoryManager.forget` exist and nothing calls them. A nightly `fade` archives rows older than 45 days, not recalled in 45 days and recalled fewer than twice, to `.faded/faded.jsonl` and deletes them — on the platform store only. `cleanup()` at start-up deletes platform lesson files older than 90 days by mtime with no archive. `learning_rollback` moves a lesson into `lessons/.retired/` with a reason"
-  scoping: "The agent id, held in a `contextvars.ContextVar` set around every tool a roster agent runs and used as a directory: `memory/agents/<id>/{vector_memory.db,lessons,learning,mirror}`; the platform keeps `memory/` itself. Retrieval is only assembled for `session_type == \"main\"` (the terminal, the page, a DM) and never for a group chat"
+  scoping: "The agent id, held in a `contextvars.ContextVar` set around every tool a roster agent runs and used as a directory: `memory/agents/<id>/{vector_memory.db,lessons,learning,mirror}`; the platform keeps `memory/` itself. No row carries the id and no read filters on it: the partition is the file opened. Retrieval is only assembled for `session_type == \"main\"` (the terminal, the page, a DM) and never for a group chat"
   integration: "A Python wallet: a local web page on 127.0.0.1:8420, Telegram, Discord, Slack and WhatsApp all through one conversation core; tools `remember`, `learning_feedback`, `learning_review`, `learning_promote`, `learning_rollback`, `task_journal`, `reflection_note`, `open_loop`, `pact`, `capability_lease`; a `/specchio` command; an `/api/memory` overview"
   background: "A heartbeat thread every 30 minutes in active hours, two-tier so the model runs only on changed state, an event, or every four hours; once a day it fades the platform store and runs each agent's Mirror — up to five corrections replayed at two model calls each"
   trust: "None as a field. A lesson passes through candidate (`candidates.json`), active (`lessons/*.md`) and retired (`lessons/.retired/`) as directories; the header line `verificata: sì|forzata|no` is written by `_write_lesson` and read by nothing; a manual promotion with no candidate is stamped `verificata=sì` because the gate has nothing to check"
@@ -35,16 +37,12 @@ matrix:
 
 ## 1. Executive Summary
 
-openvurp is an MIT-licensed Python "wallet of agents": a local web page on
-which a person creates named agents, each with a job sentence and an engine,
-and talks to them one at a time or all together, from the browser or from
-Telegram, Discord, Slack and WhatsApp through one conversation core. 34,897
-lines of Python outside `tests/`, 11,087 lines of tests across 69 files, 32
-commits from two authors since 30 June 2026, read at
-[`e3fbf01d28b2e7a293a431c45cd96d45e609985c`](https://github.com/openvurp/openvurp/commit/e3fbf01d28b2e7a293a431c45cd96d45e609985c),
-dated 3 September 2026. Fourteen of the 32 commits are from 2 and 3 September,
-and the memory this report describes was reshaped in them: on 2 September 2026
-the project removed the platform's own character — *"openvurp is the place, not a
+openvurp is a Python "wallet of agents": a local web page on which a person
+creates named agents, each with a job sentence and an engine, and talks to
+them one at a time or all together, from the browser or from Telegram,
+Discord, Slack and WhatsApp through one conversation core. The memory this
+report describes was reshaped on 2 and 3 September 2026: on 2 September the
+project removed the platform's own character — *"openvurp is the place, not a
 character"* — and moved memory, lessons and the correction mirror from one
 shared store into a directory per agent.
 
@@ -65,30 +63,33 @@ per-correction pass streak. That last mechanism is the project's best idea
 and its README's central promise — *"A correction you give an agent
 becomes a test case, replayed later to check it does not come back"*.
 
-**The scoping is real for memory and absent for learning, and the seam runs
-through the middle of the promise.** `remember` and recall are keyed on a
-`contextvars` scope and a committed test proves one agent cannot read another's
-store. But the hook that turns *"hai sbagliato"* into a learning event lives in
-`Agent.run`, and a direct chat with a roster agent never calls `Agent.run` — it
-goes `Swarm.ask` → `_speak` → the model. So the correction the README describes
-is recorded only when it is typed to the platform's own chat, into the platform's
-unscoped log; an agent's Mirror has cases only if the agent filed feedback about
-itself with the `learning_feedback` tool; and when it does replay, the lessons it
-is shown come from the platform's `memory/lessons/`, not its own. Two further
-consequences of the same move: the nightly fade is wired to the platform's
-`MemoryManager` alone, so a roster agent's memories never fade, and the daily
-note that every scoped feedback appends lands in the platform's top-level memory
-directory, where the platform's retrieval reads it.
+**The partition is real for memory and absent for learning, and the seam runs
+through the middle of the promise.** `remember` and recall open a directory
+chosen from a `contextvars` scope, and a committed test proves one agent cannot
+read another's store. But the hook that turns *"hai sbagliato"* into a learning
+event lives in `Agent.run`, and a direct chat with a roster agent never calls
+`Agent.run` — it goes `Swarm.ask` → `_speak` → the model. So a correction typed
+to a roster agent reaches no learning log at all; only the same words typed to
+the platform's own chat are recorded, in the platform's unscoped log. An
+agent's Mirror has cases only if the agent filed feedback about itself with the
+`learning_feedback` tool, and when it does replay, the lessons it is shown come
+from the platform's `memory/lessons/`, not its own.
 
-Four marks. `scope_enforced` on the directory-as-key. `audit_log` on an
-append-only, redacted `events.jsonl` per scope that records promotions and
-rollbacks, plus a `faded.jsonl` for every row the fade removed. `human_review`
-on a promotion gate the runtime asks a person to approve in the default mode,
-with an *always* answer becoming an eight-hour lease. `negative_eval` on the
-two-agent test, with two caveats named in section 10. Withheld: `tombstone` (a
-retired lesson can be re-promoted under a new hash), `trust_state` (the lesson
-states are directories, and the one status field written into a lesson is read
-by nothing), `bitemporal` (record time only).
+Two further consequences of the 2 September move: the nightly fade is wired
+to the platform's `MemoryManager` alone, so a roster agent's memories never
+fade, and the daily note that every scoped feedback appends lands in the
+platform's top-level memory directory, where the platform's retrieval reads it.
+
+Three marks. `audit_log` on an append-only, redacted `events.jsonl` per scope
+that records promotions and rollbacks, plus a `faded.jsonl` for every row the
+fade removed. `human_review` on a promotion gate the runtime asks a person to
+approve in the default mode, with an *always* answer becoming an eight-hour
+lease. `negative_eval` on the two-agent test, with two caveats named in
+section 10. Withheld: `scope_enforced` (the agent id is a directory, never a
+column, and no read carries a predicate — section 9), `tombstone` (a retired
+lesson can be re-promoted under a new hash), `trust_state` (the lesson states
+are directories, and the one status field written into a lesson is read by
+nothing), `bitemporal` (record time only).
 
 ## 2. Mental Model
 
@@ -597,7 +598,9 @@ its turn. A remembered row carries nothing but a category the model chose.
 1. *Corrections do not reach the agent.* Established in section 4. The
    README's sentence *"What you teach the one who hunts deals does not end up
    with the one who writes code"* is true of `remember` and false of the
-   correction it describes, which ends up with the platform.
+   correction it describes: typed to the agent, it reaches no learning log at
+   all, and only the same words typed to the platform's own chat are recorded,
+   in the platform's log.
 2. *The daily note crosses the boundary.* `_append_daily_note` writes to
    `self.memory_dir`, the base path, for every scope (`core/learning.py:536`).
    The platform's `_iter_searchable_memories` reads every `YYYY-MM-DD.md` at the
@@ -611,6 +614,19 @@ its turn. A remembered row carries nothing but a category the model chose.
    never in the prompt. The module docstring says the Mirror *"tests the system
    (lessons + model), not the bare model"*; for a roster agent it tests the
    platform's lessons with the agent's correction.
+
+**Why `scope_enforced` is withheld.** The boundary is a physical partition.
+`memories` has no scope column (`core/vector_memory.py:66-75`), the FTS and
+vector queries carry no scope predicate (`:198-200`, `:224-226`), and the
+agent id reaches storage only as the directory `MemoryManager` roots itself in
+(`core/memory.py:32`, `:53`; `core/scope.py:49-54`). Both arms are correct —
+`_remember_handler` writes through `memory_for(current_scope())` and
+`Swarm._memories` reads through `memory_for(member.id)` (`core/agent.py:1328-1336`,
+`core/swarm.py:691-701`) — but a store selected by path with no key on the row
+is not the mark. One widening sits beside it: if a scoped `MemoryManager` fails
+to construct, `memory_for` caches and returns the platform's own manager
+(`core/agent.py:1321-1325`), so that agent then writes to and reads from the
+platform store.
 
 **Forgetting reaches one store.** `heartbeat.memory_manager = agent.memory`
 (`main.py:354`). The scoped `MemoryManager`s built by `memory_for` are never
@@ -733,7 +749,9 @@ again.
   of it.
 - **Make the scope a path.** A query cannot forget a `WHERE` clause that is not
   there; opening the wrong file is a harder mistake to make than omitting a
-  predicate.
+  predicate. It is a partition rather than a scope key, and section 9 shows
+  its cost: every writer that does not open its file through the scope escapes
+  the boundary unseen.
 - **Redact on every append.** One `redact` over tokens, keys, JWTs and
   `password=` pairs, applied by the event writer rather than by each caller.
 - **Let a pact outrank the mode.** A rule the owner set in conversation,
@@ -878,6 +896,8 @@ grep -c 'def test_' tests/*.py | awk -F: '{s+=$2} END {print s}'
 ```
 
 ## History
+
+**2026-10-01** — [`fc68e643e8df7282757af8af4d8d4adfb0975eb0`](https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0) — audited at the same commit; `scope_enforced` withdrawn. The agent id is a directory under `memory/agents/`, never a column: `memories` has no scope field and neither the FTS nor the vector query carries a predicate, so isolation is a physical partition, which the rubric does not count. Also recorded in section 9: `memory_for` falls back to the platform's own manager when a scoped one fails to construct. The description and section 9 said a correction typed to an agent reaches the platform's learning log; per section 4 it reaches no log at all, because the hook lives in `Agent.run` and a direct chat bypasses it. Three marks.
 
 **2026-09-19** — re-read at the same pin [`fc68e643e8df7282757af8af4d8d4adfb0975eb0`](https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0), still the tip of `main`; nothing upstream has moved since 4 September 2026, so everything found here is a correction to this report. **`human_review` holds**, and the reason is firmer than the previous record said. The approval question is published to the activity bus with a one-time token and the tool blocks on it; the answer arrives only from `POST /api/approvals/<token>` or a messaging channel; `web_fetch` issues a GET, so no declared tool can answer one, and the general `shell` tool is now named in the record as the stated limit. Silence is a no after 180 s, the heartbeat UI returns `False` outright, and a failure to publish the question refuses the action. The record's caveat about `auto` mode is now qualified: `set_approval_mode` has no caller anywhere in the tree and `/mode` has no handler in the eight-command slash dispatcher, so the mode can only change by hand-editing `memory/runtime/approval_mode.json`, which defaults to `safe`. The advertised-but-unimplemented `/mode` is written up as a defect in section 11. Also sharpened there: `force: true` skips the promotion's verification gate and sits past the 100-character cut of the approval prompt, so the flag that matters can be invisible in the sentence the owner reads. Screened again first: four files, no auto-run surface, no build-time execution point, two unpinned manifests with no lockfile beside them, nothing inside the cooldown this time. Nothing installed or run. Four marks, unchanged.
 

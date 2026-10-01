@@ -9,14 +9,13 @@ source_url: https://github.com/NovasPlace/CSM
 archive_name: "NovasPlace--CSM"
 revision: 9c7cfb22e525eb9210c3048cb0d44544b09b95d0
 revision_url: https://github.com/NovasPlace/CSM/commit/9c7cfb22e525eb9210c3048cb0d44544b09b95d0
-analyzed_at: 2026-09-28
+analyzed_at: 2026-10-01
 licence: "MIT"
 size: "57,379 lines of TypeScript in 414 files under src/, owning 46 tables"
 activity: "312 commits on master by eight author names, two of them bots, 25 June – 17 September 2026"
 tests: "1,782 test() and it() call sites in 212 files under test/; the committed full-test-output.txt of 8 July 2026 records 808 passing in 172 suites; not run"
-capabilities: "scope_enforced, audit_log, negative_eval"
+capabilities: "audit_log, negative_eval"
 capability_evidence:
-  scope_enforced: "hybrid search, in the default of three modes | src/hybrid-search-sources.ts:39-57, src/bridge-ops.ts:50-68, src/priming-engine.ts:130-145 | `appendProjectScope` pushes `1=0` when `project` mode has no project id, so an unscoped search returns nothing rather than everything, and the predicate is built into the same `WHERE` as the query. Two qualifications belong with it. The mode is one of three: `global` returns before any clause is appended, and `legacy` widens to `project_id = $n OR project_id IS NULL`. And `searchMemoriesOp` moves between them on its own — a `project`-mode search that returns zero rows with a project id present is retried as `legacy`, and the widened mode is then passed into the cascade, so an empty project result silently gains the unscoped rows. That widening reaches unscoped memories rather than another project's, which is what keeps the mark; the cascade's own `getMemory` defaults to `global` when its scope names no mode, and the production caller passes one | test/privacy-persistence-boundaries.test.ts"
   audit_log: "mutation and injection channels | src/memory-manager-base.ts:1057, :377, :500, :1026, src/merge-tool.ts:202, src/context-injection-logger.ts:75, src/memory-provenance-audit.ts:4-28, scripts/csm-audit.ts:65-77 | `memory_events` is appended to on create, delete and retention cleanup, and `memory_merges` on every exact-content merge with the normalized hash; `context_injection_events` and `_items` record what was injected, trimmed and omitted with an idempotency key and a block hash. Archival and metadata updates stamp the row and append nothing, so the mutation record covers three of the memory writes and merges, not all of them. The system also audits the completeness of its own provenance: `REQUIRED_MEMORY_PROVENANCE_FIELDS` names six fields, and `auditMemoryProvenance` counts, over all rows and over active rows separately, how many carry the full set, how many miss each field, and how many hold the unknown-model sentinel as against the default; `scripts/csm-audit.ts` prints it | test/privacy-persistence-boundaries.test.ts:167"
   negative_eval: "hybrid search, list, cascade and graph recall over a store holding a live, an archived and a superseded memory | test/active-memory-recall.test.ts:43-113 | three memories share the query phrase; one is archived and one superseded by the first, and search, list and cascade are each asserted to return exactly the live id, which is the positive control in the same assertion. Graph recall is asserted empty from both ends. A second, weaker case asserts raw file paths absent from the serialized context_cache metadata (test/privacy-persistence-boundaries.test.ts:254-265). Limits: the first case runs on SQLite, where search is the text fallback; the Postgres vector lane is covered only by a mocked-pool assertion that the SQL contains both predicates (:115-130) | active-memory-recall"
 stack_storage: "sqlite, postgres"
@@ -28,7 +27,7 @@ matrix:
   retrieval: "RRF over vector, Postgres FTS, and entity boost, weighted 0.35/0.25/0.35 with a 0.05 recency term and a 168-hour half-life"
   write: "Fully deterministic — no LLM on the write path; synchronous on the embedding call"
   update_delete: "Exact-content supersede, flag-based archive, a capped per-project TTL delete, and a lesson promoter that marks its source candidate applied; search, list, cascade and evidence injection exclude superseded and archived rows, the per-turn lesson-trigger cache does not"
-  scoping: "project_id bound at tool registration and applied on the read path, failing closed to `1=0` when absent"
+  scoping: "project_id bound at tool registration and applied on the search path, failing closed to `1=0` when absent; the per-turn lesson-trigger cache reads every project's lessons from the same table and injects them"
   integration: "OpenCode plugin over eleven hooks, four of them experimental; plus a stdio Codex MCP bridge"
   background: "In-process timers — distiller flush, belief consolidation, self-model replay, doc flush; no queue or worker"
   trust: "Provenance fields on every row and a known-versus-inferred claim classifier; no status on a memory, and the belief store's only admitting state is one no code path writes"
@@ -84,7 +83,8 @@ opens with `superseded_by IS NULL` and `archived_at IS NULL`
 the evidence block. One reader was left out. The lesson-trigger cache selects
 up to 50 lessons with neither those predicates nor a project filter and
 injects all of them on every turn (`src/lesson-trigger-cache.ts:74-80`),
-beside a lessons query in the same stage that carries both.
+beside a lessons query in the same stage that carries both. That reader is why
+`scope_enforced` is withheld; `audit_log` and `negative_eval` are the two marks.
 
 The more expensive disconnect is in the belief tier.
 `buildBeliefsLayer` (`src/reentry-layers-secondary.ts:42`) — the
@@ -392,7 +392,7 @@ the file, and calls `evaluateSurvival` (`src/work-ledger-lineage.ts:37`).
 timestamps, `access_count`, five archive columns and a self-referencing
 `superseded_by`.
 
-**Scoping is single-axis and strict.** Everything hangs off `project_id`, which
+**Scoping is single-axis, and strict on the search path.** Everything hangs off `project_id`, which
 is the workspace directory. There is no user, tenant, agent or team axis — CSM
 assumes one operator. What it does with that axis is careful:
 `saveMemory` refuses a write whose declared project disagrees with the session's
@@ -424,7 +424,9 @@ for stances, `checkpoints` and `goals` for task state,
 `memory_quality_scores` for a scored band per memory. That separation is the
 main reason 46 tables is legible rather than sprawling.
 
-One table breaks the scoping model: `self_model_capabilities` has **no
+Two readers break the scoping model. The lesson-trigger cache reads `memories`
+itself with no project predicate and injects what it finds
+([section 2](#2-mental-model)). And `self_model_capabilities` has **no
 `project_id`**, and `SelfModelUpdater.loadPackets`
 (`src/self-model-updater.ts:136`) reads `experience_packets` with no project
 filter and no limit. Capability confidence earned in one repository is derived
@@ -673,6 +675,24 @@ is exact-content deduplication or junk archival
 (`src/merge-tool.ts:194`, `src/archive-superseded-duplicates.ts:147`,
 `src/archive-tiny-junk.ts:239`). A superseded row says the same thing as its
 survivor, so the filter withholds a duplicate, not a claim held to be false.
+
+**`scope_enforced` is withheld, with a strong near-miss.** The search path
+fails closed to `1=0` in `project` mode, and every public tool binds `projectId`
+at registration so the model cannot name another project
+(`src/hybrid-search-sources.ts:39-57`, `src/tools.ts:71`). But
+`LessonTriggerCache.refresh` reads the same `memories` table with no
+`project_id` predicate (`src/lesson-trigger-cache.ts:74-80`), and
+`runSystemTransform` injects the result into the system prompt on every turn
+(`src/hooks/system-transform.ts:40`). The key is on those rows — the lesson
+promoter writes `projectId: ctx.directory` (`src/lesson-auto-promotion.ts:148`)
+— and the default store is one Postgres database at a fixed URL for every
+workspace (`src/config-provider.ts:10-11`, `:71`). So an injection hook over the
+same store carries no predicate at all.
+
+A second, weaker point sits beside it. A `project` search that returns zero
+rows is retried as `legacy`, which admits rows with no project, and the widened
+mode is passed into the cascade (`src/bridge-ops.ts:55-68`). That widening
+reaches unscoped memories rather than another project's.
 
 **Audit** is broad, with one gap. `memory_events` records creation, deletion
 and retention cleanup (`src/memory-manager-base.ts:377`, `:500`, `:1026`), and
@@ -954,6 +974,7 @@ Run from the root of the checkout at the pinned commit.
 | --- | --- | --- |
 | Search lanes and fallbacks carry both lifecycle predicates | `git grep -n -E "superseded_by IS NULL\|archived_at IS NULL" -- src/hybrid-search-sources.ts src/memory-manager-base.ts` | `hybrid-search-sources.ts:23-24`; `memory-manager-base.ts:568-569`, `:591-592`, `:676-677`, `:813-814` |
 | The lesson-trigger cache filters on neither lifecycle nor project | `git grep -n -E "superseded_by\|archived_at\|project_id" -- src/lesson-trigger-cache.ts` | Nothing |
+| The cache is read by the per-turn system transform, which injects it, and by the tool hook, which only logs | `git grep -n -E "injectLessonTriggers\(\|lessonTriggers\.refresh\(" -- src` | `hooks/system-transform.ts:40`, `hooks/system-transform-live-evidence.ts:169`, `hooks/tool-execute.ts:219`, and the definition at `system-transform-live-evidence.ts:164` |
 | No test exercises the lesson-trigger cache | `git grep -l -E "LessonTriggerCache\|lesson-trigger-cache" -- test` | Nothing |
 | Nothing writes a promoted or rejected belief | `git grep -n -E "INSERT INTO belief_knowledge_store\|UPDATE belief_knowledge_store" -- src scripts`; `git grep -n -E "'(promoted\|rejected)'" -- src/belief-knowledge-store.ts` | One INSERT writing the entry's own status, which is set to `'candidate'` (`belief-knowledge-store.ts:233`) or `'stale'` (`:196`), and two UPDATEs writing `'stale'`; the second command returns nothing |
 | Four read paths want one | `git grep -n -E "'promoted'" -- src` | `reentry-layers-secondary.ts:42`, `reentry-layers-state.ts:51`, `agent-onboarding.ts:430`, `continuity-resilience-report.ts:438`, plus two schema CHECKs and the `BeliefStatus` type |
@@ -968,6 +989,8 @@ Run from the root of the checkout at the pinned commit.
 | Tree and suite size | `git ls-tree -r --name-only HEAD -- src \| grep -c "\.ts$"`; the same list piped through `xargs cat \| wc -l`; `ls test/*.test.ts \| wc -l`; `cat test/*.test.ts \| grep -c -E "\b(test\|it)\("` | 414 files and 57,379 lines; 212 test files, 1,782 call sites |
 
 ## History
+
+**2026-10-01** — [`9c7cfb22e525eb9210c3048cb0d44544b09b95d0`](https://github.com/NovasPlace/CSM/commit/9c7cfb22e525eb9210c3048cb0d44544b09b95d0) — audited at the same commit; `scope_enforced` withdrawn. The mark rested on the search path, which fails closed. `LessonTriggerCache.refresh` reads the same `memories` table with no `project_id` predicate (`src/lesson-trigger-cache.ts:74-80`), and the system-transform hook injects the result on every turn (`src/hooks/system-transform.ts:40`), so an injection read over the same store cannot carry the predicate. The search path is the near-miss ([section 9](#9-reliability-safety-and-trust)). The zero-row retry to `legacy` is recorded beside it as a weaker point. Two marks remain, `audit_log` and `negative_eval`. Nothing installed, built or run.
 
 **2026-09-28** — [`9c7cfb22e525eb9210c3048cb0d44544b09b95d0`](https://github.com/NovasPlace/CSM/commit/9c7cfb22e525eb9210c3048cb0d44544b09b95d0) — audit at an unchanged pin; `master` had not moved. The headline criticism was wrong at this commit: since [`09e42f9805325650e23eba01a6526c0ff1b2a6a5`](https://github.com/NovasPlace/CSM/commit/09e42f9805325650e23eba01a6526c0ff1b2a6a5) (17 September 2026) the shared WHERE builder and both fallbacks exclude superseded and archived rows, with a populated test that becomes the `negative_eval` record. The gap that remains is the lesson-trigger cache, unscoped and unfiltered every turn ([section 2](#2-mental-model)). AgentBook declares 25 types, not 26, and eight of ten Recent Work entries are CSM's own tools, not seven of nine. `memory_events` covers three channels, not every mutation. Body anchors into the pre-split `memory-manager.ts` and fourteen other drifted lines were corrected. Marks unchanged. `CSM_LIVING_MIND_URL` is answered by route and field match ([section 8](#8-agent-integration)). Re-screened: three auto-run surfaces, eleven floating ranges, `AGENTS.md` as data; nothing installed, built or run.
 

@@ -173,9 +173,9 @@ Where the atlas has an exact count — the seven mechanisms on
 | Mechanism | Systems carrying it |
 | --- | --- |
 | Negative retrieval assertion | 416 of 704 |
-| Scope enforced in retrieval | 323 of 704 |
+| Scope enforced in retrieval | 317 of 704 |
 | Append-only mutation audit | 237 of 704 |
-| Explicit trust state | 179 of 704 |
+| Explicit trust state | 178 of 704 |
 | Bi-temporal validity | 119 of 704 |
 | Human review surface | 94 of 704 |
 | Rejected-value tombstone | 64 of 704 |
@@ -256,7 +256,8 @@ this section. The list below is the same classification, complete:
   many systems already do. The pattern refines a practice that exists.
 - **Advocacy — a handful of instances.**
   [Resolve, don't just detect](./resolve-not-just-detect/) has no complete
-  instance, and [explicit write destination](./explicit-write-destination/) —
+  instance in a knowledge store (its one complete ladder,
+  [Ouroboros](../systems/ouroboros-agent-os/), governs a specification), and [explicit write destination](./explicit-write-destination/) —
   a write with no named destination is refused rather than defaulted — has
   three. The atlas is arguing for them, not reporting them.
 - **Reporting, with one advocacy claim.** Each of these is common in one half
