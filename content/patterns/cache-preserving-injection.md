@@ -228,6 +228,16 @@ on how to write one.
   reason, naming *"a prompt-cache prefix that changes on each call"* as the
   failure.
 - **[dsh-continual-harness](../../systems/dsh-continual-harness/)** — the session-stable anchor as the default, with a measured reason and a visible price. The block is ranked against the session's opening request and cwd, republished only on a first injection, a new refinement, an emptied store or a new matched key, and replaced in place; the config comment reports a 95.4% against 81.2% cache-read hit rate over one six-message session. To stay byte-stable the default block drops entry content and lists 15 ids, under a header telling the model to read entries on demand, which no plugin tool can do.
+- **[Orgtree](../../systems/orgtree/)** — two cache decisions about one memory.
+  The breadcrumb tail is spliced into a cheap-compacted successor's system
+  prompt for its first turn only, and `_retire_breadcrumb_splice` clears the
+  marker at the first successful result, because re-splicing a file the agent
+  appends to every turn would rewrite the prefix each turn; the docstring puts
+  the stake at roughly 24% against 61% of cold starts prevented. The standing
+  notes go the other way: they sit in the hashed identity, so an edit
+  deliberately forces a cold respawn rather than letting a warm process serve
+  the old notes. The cost is that turn two onward sees the breadcrumbs only
+  through conversation history.
 
 Note that [MemOS](../../systems/memos/)'s "activation memory: KV/prefix cache" is
 a *different* mechanism — reusing model state rather than positioning text — and

@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A desktop workspace for persistent
+coding-agent teams whose memory is each agent's own Markdown notes and
+breadcrumb log, re-injected across session resets.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Orgtree — Agent Memory Atlas">
+    <meta property="og:description" content="A desktop workspace for
+persistent coding-agent teams whose memory is each agent's own Markdown
+notes and breadcrumb log, re-injected across session resets.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Orgtree — Agent Memory Atlas">
+    <meta name="twitter:description" content="A desktop workspace for
+persistent coding-agent teams whose memory is each agent's own Markdown
+notes and breadcrumb log, re-injected across session resets.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Orgtree — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Orgtree",
+      "description": "A desktop workspace for persistent coding-agent teams whose memory is each agent's own Markdown notes and breadcrumb log, re-injected across session resets.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Agent-kept notes files that survive session
+resets in a multi-agent desktop</p>
+          <h1>Orgtree</h1>
+          <p class="document-deck">A desktop workspace for persistent
+coding-agent teams whose memory is each agent's own Markdown notes and
+breadcrumb log, re-injected across session resets.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Maurdekye/orgtree">
+              <span>Source</span>
+              <strong>Maurdekye/orgtree</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Maurdekye/orgtree/commit/0151d66ec5f1a5e4a297dc9f07dc65fbb18739e2" title="0151d66ec5f1a5e4a297dc9f07dc65fbb18739e2">
+              <span>Analyzed revision</span>
+              <code>0151d66e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-01</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Maurdekye--orgtree" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Maurdekye--orgtree</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>169,872
+lines of Python in the engine, 71,459 of TypeScript and 20,536 of Rust
+outside tests; the notes, breadcrumb and handoff paths are about 1,600
+of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>3,328
+commits on main by 31 author identities, 7 September – 1 October
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>7,449
+Python test functions in 551 modules, 72 Node test files and 342
+renderer test files</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Orgtree is a Windows desktop app for running a persistent team of
+coding agents — Claude Code, Codex, Antigravity and OpenRouter models —
+arranged as an org chart, with a Python engine, a PostgreSQL store, a
+docket, mail and delegation. Its memory is deliberately plain: each
+agent keeps a <code>CLAUDE.md</code> of standing notes and a
+<code>breadcrumbs.md</code> log in its own scratch folder, and the
+engine makes sure both reach the next session.</p>
+<p>What is notable is how much engineering goes into the delivery of two
+text files. The notes are mirrored into the managed prompt on lanes
+whose CLI does not read <code>CLAUDE.md</code>. Editing them moves a
+warm-process identity hash so no parked process serves stale notes. A
+cheap compaction splices the breadcrumb tail into the successor's first
+turn only, with declared truncation and a fallback that refuses to
+invent notes.</p>
+<p>What is weak is the memory itself. The files carry no type, author,
+time or status, and <code>breadcrumbs.md</code> is append-only only
+because the prompt asks.</p>
+<p>The rest of the app is out of scope here: the docket is a task
+tracker, mail is messaging, and the <a
+href="../../families/#not-in-scope-conversation-window-management">scope
+note</a> says why. Three adjacent mechanisms are covered because they
+carry content across a session boundary. Archived sessions —
+<em>knowledge bearers</em> — can be read or rehired. A hash-checked
+<em>handoff record</em> is published at every boundary. A V1 import
+carries Claude Code's own auto-memory directory.</p>
+<p>The code is a successor to <a
+href="https://github.com/Maurdekye/claude-orgtree">claude-orgtree</a>,
+from which <code>THIRD_PARTY_NOTICES.md</code> says source was reused
+under MIT. The mail hub lives in a submodule, <a
+href="https://github.com/Maurdekye/orgtree-mailhub">orgtree-mailhub</a>
+at <code class="commit-id" title="6e856eec8ccfbcf8d16451123903b9d2ce16450b">6e856eec…</code>, and holds no
+memory.</p>
+<p>One mark, <code>negative_eval</code>, on a test that an agent holding
+one docket item cannot read an unrelated earlier holder's breadcrumbs,
+after a positive control. Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a line in a Markdown file the agent wrote about itself.
+It becomes a belief when the agent saves the file, and it is believed by
+whichever session next loads the file. Nothing is extracted, scored or
+reconciled. It stops being one when the agent edits it away, or when the
+user deletes the agent and the scratch folder goes with it.</p>
+<p><strong>Two files, two reading conventions.</strong>
+<code>CLAUDE.md</code> is curated: the prompt calls it <em>"standing
+notes"</em> that survive compaction, and a cut keeps the head
+(<code>engine/backend/orgtree/supervisor.py:9625-9629</code>,
+<code>:7429-7433</code>). <code>breadcrumbs.md</code> is a log: the
+prompt asks the agent to append <em>"important events, decisions,
+findings and open threads AS THEY HAPPEN"</em>, newest last, and to
+write <em>"for that stranger"</em> who will succeed it. A cut keeps the
+tail (<code>:9535-9547</code>, <code>:7518-7520</code>). The breadcrumb
+instruction is rendered only when the agent has an edit or shell
+tool.</p>
+<p><strong>A session boundary is where memory is tested.</strong> A
+cheap compaction, a cross-provider model switch or a reseed archives the
+old session as a bearer <code>&lt;node&gt;@&lt;gen&gt;</code> and starts
+the seat on an empty session
+(<code>engine/backend/orgtree/ledger.py:5403-5503</code>). The
+successor's only carried state is what the files say, plus whatever it
+chooses to read from the archived transcript or by rehiring the bearer
+as its own subordinate
+(<code>engine/backend/orgtree/events_render.py:647-659</code>).</p>
+<p><strong>The successor is told what is a claim.</strong> The handoff
+record's prompt header calls itself <em>"NOT memory, NOT a summary a
+model wrote"</em> and says <em>"a predecessor claim is a claim until you
+open its cited line in transcript.jsonl"</em>
+(<code>supervisor.py:7569-7576</code>). The notes carry no such label.
+On the non-Claude lanes they arrive under <em>"You wrote these; they are
+yours to revise"</em>, and the Claude CLI loads <code>CLAUDE.md</code>
+with no framing from Orgtree at all.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an agent's own notes cross a session boundary in Orgtree, and who else may read them</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an agent&#39;s own notes cross a session boundary in Orgtree, and who else may read them
+flowchart TD
+    W[&quot;agent edits CLAUDE.md or&lt;br/&gt;appends to breadcrumbs.md&lt;br/&gt;with its own file tools&quot;] --&gt; F[(&quot;scratch/SLUG/NODE&lt;br/&gt;shared by every generation&quot;)]
+    F --&gt; H{&quot;warm-process identity hash&lt;br/&gt;includes the notes&quot;}
+    H -- &quot;notes changed&quot; --&gt; RS[&quot;parked process respawned:&lt;br/&gt;next turn is cold, new notes&quot;]
+    B[&quot;boundary: cheap_compact,&lt;br/&gt;cross-provider switch, reseed&quot;] --&gt; AR[&quot;old session archived&lt;br/&gt;as bearer NODE@GEN&quot;]
+    AR --&gt; TX[&quot;transcript copied to&lt;br/&gt;scratch/transcript.jsonl&lt;br/&gt;(newest generation only)&quot;]
+    TX --&gt; V{&quot;handoff.verify&lt;br/&gt;anchored rebuild&quot;}
+    V -- &quot;problems&quot; --&gt; SK[&quot;record not written&quot;]
+    V -- &quot;clean&quot; --&gt; HR[&quot;handoff-gGEN/ published&lt;br/&gt;by one rename, never overwritten&quot;]
+    AR --&gt; CC[&quot;seat marked cheap_compacted&quot;]
+    CC --&gt; P[&quot;first turn of successor:&lt;br/&gt;identity prompt&quot;]
+    F --&gt; P
+    P --&gt; N1{&quot;lane reads CLAUDE.md&lt;br/&gt;natively?&quot;}
+    N1 -- &quot;no: codex, antigravity&quot; --&gt; MIR[&quot;notes mirrored,&lt;br/&gt;head 12,000 chars&quot;]
+    P --&gt; BC{&quot;breadcrumbs.md readable&lt;br/&gt;and non-empty?&quot;}
+    BC -- &quot;yes&quot; --&gt; TAIL[&quot;newest 12,000 chars spliced&quot;]
+    BC -- &quot;no&quot; --&gt; FB[&quot;absence stated, bounded&lt;br/&gt;authorized docket facts&quot;]
+    P --&gt; HF{&quot;handoff.flag file exists?&quot;}
+    HF -- &quot;yes&quot; --&gt; HB[&quot;record head spliced&quot;]
+    P --&gt; OK[&quot;first successful result:&lt;br/&gt;cheap_compacted cleared&quot;]
+    OK --&gt; L[&quot;later turns: notes only,&lt;br/&gt;no splice&quot;]
+    R[&quot;orgtree_read_scratch by another agent&quot;] --&gt; AC{&quot;self, descendant, or earlier&lt;br/&gt;holder of an open item&lt;br/&gt;the reader is listed on?&quot;}
+    AC -- &quot;no&quot; --&gt; REF[&quot;422 refusal&quot;]
+    AC -- &quot;yes&quot; --&gt; F</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The desktop app is Electron and React; the engine is a Python FastAPI
+service under <code>engine/backend/orgtree/</code>, launched by
+<code>engine/launch.py</code>, over a PostgreSQL instance the installer
+bundles. Rust crates under <code>engine/native/</code> cover the store
+schema, receipts and scope clamping. The engine spawns each agent's CLI
+with <code>cwd</code> set to that agent's scratch folder
+(<code>supervisor.py:21900-21902</code>), which is why a Claude Code
+agent loads its own <code>CLAUDE.md</code> without help.</p>
+<p><strong>The memory is files; its bookkeeping is rows.</strong>
+<code>scratch_dir</code> maps a node id to
+<code>scratch/&lt;slug&gt;/&lt;node&gt;</code>, strips the
+<code>@gen</code> suffix so every generation of a seat shares one
+folder, and creates it on demand (<code>supervisor.py:3548-3569</code>).
+The node document — bearer lineage, <code>generation</code>,
+<code>predecessor</code>, the <code>cheap_compacted</code> marker —
+lives in the org's store. <code>store.py</code> documents JSON and
+SQLite backends; the README and 3.0 release notes describe the move to
+the bundled PostgreSQL.</p>
+<p><strong>The managed prompt is the injection point.</strong>
+<code>identity_prompt</code> (<code>supervisor.py:8868-9643</code>) ends
+with the standing-notes mirror, any <code>CLAUDE.md</code> from granted
+folders, the breadcrumb block and the handoff block, in that order
+(<code>:9638-9642</code>). It rides
+<code>--append-system-prompt-file</code> on the Claude lane, the managed
+<code>AGENTS.md</code> on Codex and a plugin workspace on Antigravity,
+per the comments at <code>:7268-7272</code> and
+<code>:7382-7390</code>.</p>
+<p><strong>Freshness is enforced by respawn.</strong>
+<code>native_startup_context_digest</code> hashes the instruction files
+Claude Code loads once per session — the <code>CLAUDE.md</code> chain
+above the scratch folder, each granted folder's <code>CLAUDE.md</code>,
+and the first 25 KiB or 200 lines of Claude Code's own auto-memory
+<code>MEMORY.md</code>
+(<code>engine/backend/orgtree/warmpool.py:852-858</code>,
+<code>:781-785</code>, <code>:975-978</code>). An edit moves the hash
+and a parked process is replaced before its next turn.</p>
+<p>The mail hub submodule is a cross-machine relay with a SQLite queue
+and a 30-day retention sweep (<code>engine/mailhub</code> README); it
+stores no memory.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The packaged app is a Windows installer that carries Electron, a
+Python runtime and PostgreSQL; provider CLIs and accounts are installed
+separately. Nothing extra is needed for memory, and no API key is needed
+to store a note, because storing a note is saving a file. The store is
+entirely human-readable and repairable with a text editor. The
+engine-side state that decides what is spliced —
+<code>cheap_compacted</code>, <code>generation</code> — is in the
+database and is not.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> No engine code writes either notes file. The
+agent uses its CLI's Edit or shell tools, and <code>ro_deny_rules</code>
+guarantees its own scratch folder is never denied by a read-only grant,
+because, per its docstring, that folder is where the charter
+<em>"requires it to keep breadcrumbs.md/CLAUDE.md"</em>
+(<code>supervisor.py:12288-12297</code>).
+<code>breadcrumbs.append_note</code>
+(<code>engine/backend/orgtree/breadcrumbs.py:97-156</code>) appends in
+the file's existing encoding, caps a note at 2,000 characters and
+refuses to touch undecodable bytes; its only callers are tests.</p>
+<p><strong>Read at session start.</strong>
+<code>_standing_notes_block</code>
+(<code>supervisor.py:7366-7448</code>) returns nothing on lanes in
+<code>_NATIVE_CLAUDEMD_PROVIDERS</code> — Claude and OpenRouter, which
+runs the Claude CLI — unless the turn uses the Codex harness. Otherwise
+it renders the head 12,000 characters, states the scale of any cut, and
+renders a notice when the file exists but cannot be read.</p>
+<p><strong>Boundary.</strong> <code>orgtree_cheap_compact</code>
+(<code>engine/backend/orgtree/mcptool.py:1422-1434</code>) reaches
+<code>_archive_session_in_place</code>
+(<code>ledger.py:5403-5503</code>): the old node dict is copied to
+<code>&lt;nid&gt;@&lt;gen&gt;</code> as an archived bearer with tools
+stripped, the seat gets a fresh <code>session_id</code>, and
+<code>cheap_compacted</code> is set (<code>:5502</code>). After the
+commit, <code>export_predecessor_transcript_deferred</code> copies the
+old session's transcript to <code>scratch/transcript.jsonl</code> under
+a per-destination lock, ordered by generation, then calls
+<code>_publish_handoff_record</code>
+(<code>supervisor.py:4290-4366</code>, <code>:4570-4630</code>).</p>
+<p><strong>Handoff record.</strong> <code>_publish_handoff_record</code>
+captures the transcript lines, prompt-view sidecar rows, node doc,
+mailbox and grants, runs <code>handoff.verify</code> with all three
+anchors, and writes nothing if verification reports a problem
+(<code>supervisor.py:4619-4625</code>).
+<code>handoff.write_generation</code> stages <code>record.json</code>,
+<code>record.md</code> and <code>manifest.json</code> and publishes them
+with one rename, refusing an existing generation
+(<code>engine/backend/orgtree/handoff.py:966-997</code>).</p>
+<p><strong>First turn after the boundary.</strong>
+<code>_breadcrumbs_block</code> (<code>supervisor.py:7472-7526</code>)
+and <code>_handoff_block</code> (<code>:7532-7578</code>) render only
+while <code>cheap_compacted</code> is set.
+<code>_retire_breadcrumb_splice</code> clears it at the first successful
+result boundary (<code>:15252-15279</code>). The handoff block also
+requires <code>handoff_flag_on()</code>, the existence of
+<code>&lt;ORGTREE_DATA&gt;/handoff.flag</code>
+(<code>:4460-4467</code>).</p>
+<p><strong>Cross-agent read.</strong> <code>orgtree_read_scratch</code>
+and <code>orgtree_read_transcript</code>
+(<code>mcptool.py:1966-1996</code>) call <code>_agent_read_access</code>
+(<code>engine/backend/orgtree/api.py:10872-10914</code>), then resolve
+the path under the target's real scratch path with a separator-anchored
+prefix test and return at most 20,000 characters
+(<code>:13283-13300</code>). The item route is
+<code>Org.work_item_read_grant</code>
+(<code>ledger.py:13250-13290</code>).</p>
+<p><strong>Forget.</strong> <code>Org.delete</code> refuses any actor
+but the user (<code>ledger.py:6001-6009</code>);
+<code>supervisor.forget</code> then removes the base scratch folders and
+leaves the provider transcripts under <code>~/.claude</code>
+(<code>supervisor.py:35615-35634</code>). Retiring keeps the folder and
+the session for a later rehire (<code>mcptool.py:1408-1419</code>).</p>
+<p><strong>V1 import of Claude auto-memory.</strong>
+<code>desktop_native_claude_memory.py</code> ports Claude Code's
+project-key derivation, stages the source <code>memory/</code> directory
+with a SHA-256 manifest, refuses a shared or changed destination, and
+publishes it by rename
+(<code>engine/backend/orgtree/desktop_native_claude_memory.py:1-16</code>,
+<code>:284-336</code>, <code>:440-472</code>). The route is mounted at
+<code>/api/desktop/import-v1</code>
+(<code>engine/backend/orgtree/desktop_import.py:55</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>standing notes</td>
+<td><code>scratch/&lt;slug&gt;/&lt;node&gt;/CLAUDE.md</code></td>
+<td>free Markdown, agent-curated, head-cut at 12,000 chars on mirrored
+lanes</td>
+</tr>
+<tr>
+<td>breadcrumb log</td>
+<td><code>scratch/&lt;slug&gt;/&lt;node&gt;/breadcrumbs.md</code></td>
+<td>free Markdown, newest last by convention, tail-cut at 12,000
+chars</td>
+</tr>
+<tr>
+<td>transcript copy</td>
+<td><code>scratch/&lt;slug&gt;/&lt;node&gt;/transcript.jsonl</code> +
+<code>.generation</code> marker</td>
+<td>newest predecessor only</td>
+</tr>
+<tr>
+<td>handoff record</td>
+<td><code>scratch/&lt;slug&gt;/&lt;node&gt;/handoff-g&lt;gen&gt;/</code></td>
+<td><code>record.json</code>, <code>record.md</code>,
+<code>manifest.json</code>; one directory per generation</td>
+</tr>
+<tr>
+<td>knowledge bearer</td>
+<td>node row <code>&lt;node&gt;@&lt;gen&gt;</code></td>
+<td><code>state: archived</code>, <code>bearer_state: knowledge</code>,
+<code>successor</code>, tools stripped</td>
+</tr>
+<tr>
+<td>splice marker</td>
+<td>node field <code>cheap_compacted</code></td>
+<td>set at the boundary, cleared after the first successful turn</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scope is the folder.</strong> A record has no owner field
+because it is a file in its owner's directory, and lineage ids share
+that directory. Generations of one seat therefore share notes and
+breadcrumbs, which is the intent: the log is continuous across a
+reset.</p>
+<p><strong>The transcript copy is single-slot.</strong> The export
+docstring says a later cheap compact <em>"overwrites the copy with the
+newer generation's — earlier generations stay reachable by rehiring
+their bearers"</em> (<code>supervisor.py:4280-4283</code>). The handoff
+records, by contrast, accumulate one directory per generation.</p>
+<p><strong>No temporal, provenance or status fields exist on the
+notes.</strong> Time is file mtime; authorship is the folder. The
+handoff record carries rich provenance — line hashes, roles, omission
+counts, a worktree fingerprint — but it is a derived index of a
+transcript, not a memory an agent can correct.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Nothing ranks or searches. Retrieval is whole-file loading at session
+start, plus whatever the agent reads on purpose.</p>
+<p>On the Claude and OpenRouter lanes the CLI loads
+<code>CLAUDE.md</code> itself, and Orgtree adds nothing. On Codex and
+Antigravity the mirror carries the head 12,000 characters with a notice
+stating how many were cut. The breadcrumb splice carries the newest
+12,000 characters, and the notice says to <em>"read the file itself for
+the rest"</em> (<code>supervisor.py:7518-7526</code>).</p>
+<p><strong>The first-turn-only splice is a cache decision.</strong> The
+docstring of <code>_retire_breadcrumb_splice</code> says re-splicing a
+file the agent appends to every turn would re-dirty the prompt each
+turn, and puts the measured stake at roughly 24% against 61% of cold
+starts prevented (<code>supervisor.py:15253-15257</code>). The cost is
+that turn two onward sees the breadcrumbs only through the conversation
+history, which a later normal compaction may summarise away.</p>
+<p><strong>A missing log is announced, not papered over.</strong> When
+<code>breadcrumbs.md</code> is absent, unreadable or empty, the block
+says so and substitutes up to four rows of authorized docket facts —
+slug, title, status, <code>done_so_far</code>,
+<code>working_on_next</code> — drawn through <code>work_list</code> with
+the viewer's own disclosure rules (<code>:7454-7469</code>,
+<code>:7499-7515</code>; <code>:4470-4476</code>).</p>
+<p><strong>Other agents' material is read by path.</strong>
+<code>orgtree_read_scratch</code> lists a directory or returns one file.
+There is no query, so an inheriting agent must know to look; the
+reassignment mail tells it the item grants the read.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are the agent's own file edits, synchronous with its turn,
+visible to the next session immediately and to a parked process after
+the identity hash forces a respawn. No model call extracts, summarises
+or deduplicates anything, and no engine verb writes either notes file.
+The managed prompt is the only writer-side policy: append breadcrumbs as
+things happen, keep the notes short because each edit restarts the
+process.</p>
+<p><strong>Update is overwrite; append is a convention.</strong> An
+agent can rewrite or truncate <code>breadcrumbs.md</code> with the same
+tools it appends with. The engine reads the file's bytes as found and
+never repairs it. <code>append_note</code> would enforce
+append-in-place, but nothing calls it outside tests.</p>
+<p><strong>Agent-generated content is all there is.</strong> A
+breadcrumb records what the agent believed at the time, and the
+successor receives it as text under a heading that names its origin.
+Nothing filters content, and a prompt-injected line written into
+<code>breadcrumbs.md</code> reaches the successor's system prompt on the
+next reset.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: a file edit inside the agent's turn; no engine work.</li>
+<li>Boundary: one transcript copy plus one handoff capture and
+verification under the export lock. The handoff docstring measures 0.09
+s on a 1.5 MB session and 0.81 s on an 8.4 MB one
+(<code>handoff.py:38-42</code>).</li>
+<li>Background: auto cheap compact is opt-in.
+<code>_auto_cheap_cfg</code> returns nothing unless the org or node
+setting has <code>enabled</code>, and the only tunable is a
+context-fraction floor between 0.05 and 0.95
+(<code>supervisor.py:13555-13573</code>).</li>
+<li>Read: up to 12,000 characters of notes on mirrored lanes every
+session, plus up to 12,000 of breadcrumbs and 12,000 of handoff record
+on one turn after a reset. Each sits in the system prompt, so a notes
+edit costs a cold start.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent is told about its memory in the managed system prompt and
+handles it with its own CLI tools. The MCP server registers no remember,
+recall or forget verb
+(<code>rg -n '"name": "orgtree_' engine/backend/orgtree/mcptool.py</code>);
+the memory-adjacent tools are <code>orgtree_read_scratch</code>,
+<code>orgtree_read_transcript</code>, <code>orgtree_cheap_compact</code>
+(refused on oneself), <code>orgtree_rehire</code> and
+<code>orgtree_retire</code>.</p>
+<p>Lifecycle notices tell a successor where its memory went. The
+self-relation cheap-compact notice says the session is fresh, the
+breadcrumbs are spliced when they exist, the transcript is at
+<code>transcript.jsonl</code>, and the predecessor can be rehired as a
+subordinate <em>"to interrogate it directly"</em>
+(<code>events_render.py:647-659</code>).</p>
+<p><strong>The provider-lane mirror is the transferable part.</strong>
+The docstring of <code>_standing_notes_block</code> records that Codex
+reads <code>AGENTS.md</code> and never <code>CLAUDE.md</code>,
+<em>"measured 2026-09-04 with
+<code>codex debug prompt-input</code>"</em>, so those agents had kept
+<em>"a compaction-survival file that NOTHING READ"</em>
+(<code>supervisor.py:7370-7376</code>). The fix renders the notes into
+the prompt identity component that is already hashed on every lane, so
+invalidation comes free.
+<code>test_6k_its_standing_notes_are_mirrored_into_the_prompt</code>
+pins the mirror for an OpenRouter agent on the Codex harness
+(<code>tests/test_openrouter_harness.py:394-404</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Absence is made visible.</strong> A present-but-unreadable
+notes file, org charter or breadcrumb log renders a notice in the prompt
+rather than nothing (<code>supervisor.py:7419-7424</code>,
+<code>:7306-7317</code>, <code>:7505-7510</code>). A truncated one says
+how much is missing. This is the failure the code's comments return to
+most: <em>"a mechanism everybody believes in that does nothing"</em>
+(<code>:7379-7380</code>).</p>
+<p><strong>The handoff record is careful and mostly dark.</strong> It is
+verified before it is written and never overwritten. Its prompt splice
+and notice, though, need a <code>handoff.flag</code> file, which the
+docstring describes as a runtime switch an operator creates in the data
+root, off by default with the record still written to disk
+(<code>supervisor.py:4460-4467</code>); no code in the tree creates it
+(Recorded searches). The module docstring says each rule has <em>"a
+rejected forgery in tests/test_handoff_record.py"</em>
+(<code>handoff.py:15-16</code>). That file does not exist at the pin or
+anywhere in this repository's history. The only test calling
+<code>handoff.verify</code> asserts it returns no problems for an
+unforged capture
+(<code>tests/test_handoff_resilient_breadcrumbs.py:61-102</code>).</p>
+<p><strong>No provenance on the notes.</strong> A line in
+<code>breadcrumbs.md</code> cannot say which generation wrote it or
+when, so a successor cannot tell its predecessor's verified finding from
+a guess written under pressure.</p>
+<p><strong>Privacy.</strong> Delete is user-only and removes the scratch
+folder; the provider's own transcripts under <code>~/.claude</code> are
+left in place by design (<code>supervisor.py:35615-35619</code>).</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — nothing records a rejected value. The only
+tombstones in the engine mark spent watchdogs and removed mail
+entries.</li>
+<li><code>trust_state</code> — the notes have no status. The handoff
+record's "a claim is a claim" framing is prompt text, not a field any
+read filters on.</li>
+<li><code>bitemporal</code> — no time field beyond file mtime.</li>
+<li><code>scope_enforced</code> — withheld: the partition is one folder
+per seat with no key on a record. <code>_agent_read_access</code> is an
+authorisation check choosing which folder a request may open, a real
+boundary of a different kind.</li>
+<li><code>audit_log</code> — no record of note mutations; edits are file
+writes by the agent's CLI. The handoff generations record session
+boundaries, and the operation receipts cover Orgtree tool calls, where
+<code>orgtree_read_scratch</code> is classed <code>NONE</code>
+(<code>engine/backend/orgtree/opreceipts.py:148</code>).</li>
+<li><code>human_review</code> — nothing waits for a person. The user can
+edit the org charter through the org.md editor
+(<code>api.py:10604-10650</code>), which is authoring.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report. Everything below
+is from reading the tests at the pin and the committed baseline in
+<code>docs/test-baseline.json</code>, which records 481 Python modules
+passing and 39 failing on 28 September 2026 at commit
+<code class="commit-id" title="654658f982ef6f4b6ebdaebd1df18bcef3525145">654658f9…</code>, a pre-pin commit,
+on the SQLite store.</p>
+<p><strong>The negative case.</strong>
+<code>tests/test_item_scoped_reads.py</code> builds five peers under one
+coordinator and two docket items, and writes distinct text into two
+agents' <code>breadcrumbs.md</code> (<code>:71-77</code>).
+<code>test_holding_one_item_grants_nothing_about_another</code> asserts
+the holder of one item is refused the breadcrumbs of the earlier holder
+of the other, then asserts that the other item's holder reads the same
+file through the item route (<code>:152-164</code>). Further cases
+assert refusal for unrelated peers in three directions on both tools,
+for a superior, for the current holder, and after the item archives. A
+refuse-everything implementation fails
+<code>test_new_holder_reads_the_archived_previous_holders_material</code>,
+which checks the file's text (<code>:117-128</code>).</p>
+<p><strong>Breadcrumb persistence.</strong>
+<code>BreadcrumbPersistenceTests</code> pins UTF-16 detection without a
+BOM, one BOM after an append, malformed bytes left untouched, and an
+empty note not creating the file
+(<code>tests/test_handoff_resilient_breadcrumbs.py:13-58</code>). All
+four exercise <code>append_note</code>, which nothing in production
+calls.</p>
+<p><strong>Splice retirement.</strong>
+<code>test_retire_breadcrumb_splice</code> asserts the marker is cleared
+and that the write does not hold the document lock
+(<code>tests/test_pg3e_b_sessions.py:162-165</code>). No test asserts
+the breadcrumb block's text, its 12,000-character tail cut, or its
+docket fallback
+(<code>rg -n '_breadcrumbs_block|BREADCRUMBS_TAIL' tests</code>).</p>
+<p><strong>Claude auto-memory import.</strong>
+<code>tests/test_desktop_native_memory.py</code> is in the baseline's
+failing list since at least 16 September 2026, with a
+<code>ResourceWarning</code> about an unclosed database as the recorded
+error.</p>
+<p>No retrieval-quality evaluation exists, which fits a design that does
+not retrieve. No paper or citation block is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the memory promise true per provider, not per
+product.</strong> If agents run on several CLIs, check which instruction
+file each actually loads, and render the notes into the prompt where the
+CLI will not. Pin it with a test that plants a marker string.</li>
+<li><strong>Put memory files in the process identity hash.</strong> A
+warm process that outlives a notes edit serves the old notes; hashing
+the files the CLI loads at startup turns staleness into a respawn.</li>
+<li><strong>Splice the recovery log once, then stop.</strong> Give a
+summary-less successor the tail of its predecessor's log on turn one and
+drop it after the first successful result, so the prompt prefix stays
+cacheable.</li>
+<li><strong>Say when memory is missing.</strong> "Unreadable", "empty"
+and "cut, N characters remain" must each look different from "no
+notes".</li>
+<li><strong>Scope inherited reads by the work item, not the org
+chart.</strong> A reassigned ticket's new holder reads earlier holders'
+notes; an unrelated peer does not; the read ends when the item closes.
+Test every refusal beside its grant.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An append-only log enforced by prose.</strong> If the log is
+the recovery mechanism, route writes through an append function the
+agent cannot bypass, or record a hash per entry so a rewrite is
+detectable.</li>
+<li><strong>Docstrings that cite tests the tree does not hold.</strong>
+A reader takes "each with a rejected forgery in" a named file as
+coverage.</li>
+<li><strong>A flag that only a hand can create.</strong> A feature gated
+on a file nothing writes is off in every deployment, and its tests will
+not notice.</li>
+<li><strong>A single-slot copy of the last transcript.</strong> Two
+resets in a row leave the successor's folder pointing at the newest
+predecessor only.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an operator who already runs several provider CLIs as a
+team and wants each agent's own notes to survive resets reliably,
+without adopting a memory service. The memory layer assumes agents that
+write honest logs, and it gives a successor nothing to weigh one line
+against another. A reader who needs memories shared across agents by
+topic, searched rather than loaded, or checked before they are acted on
+should take the delivery and invalidation machinery and put a real store
+under it. A reader who wants a memory system alone would be adopting an
+org-chart desktop to get two files per agent.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>handoff.flag</code> created by any deployment or release
+step outside this repository, and did
+<code>tests/test_handoff_record.py</code> exist in claude-orgtree?</li>
+<li>Does the Claude CLI's own auto-memory, which the warm hash tracks,
+carry content across Orgtree's cheap compactions in practice, and do
+agents use it beside <code>CLAUDE.md</code>?</li>
+<li>How often do agents rewrite rather than append to
+<code>breadcrumbs.md</code>?</li>
+<li>Does any desktop client still call
+<code>/api/desktop/import-v1</code>, given the README says Orgtree 3 no
+longer imports V1 organizations?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Prompt assembly and splices:</strong>
+<code>engine/backend/orgtree/supervisor.py</code>
+(<code>_standing_notes_block</code>, <code>_breadcrumbs_block</code>,
+<code>_handoff_block</code>, <code>identity_prompt</code>,
+<code>_retire_breadcrumb_splice</code>,
+<code>handoff_flag_on</code>).</li>
+<li><strong>Boundary and lineage:</strong>
+<code>engine/backend/orgtree/ledger.py</code>
+(<code>_archive_session_in_place</code>, <code>delete</code>,
+<code>work_item_read_grant</code>), <code>supervisor.py</code>
+(<code>export_predecessor_transcript_deferred</code>,
+<code>_publish_handoff_record</code>, <code>forget</code>,
+<code>scratch_dir</code>).</li>
+<li><strong>Files:</strong>
+<code>engine/backend/orgtree/breadcrumbs.py</code>,
+<code>engine/backend/orgtree/handoff.py</code>,
+<code>engine/backend/orgtree/desktop_native_claude_memory.py</code>.</li>
+<li><strong>Freshness:</strong>
+<code>engine/backend/orgtree/warmpool.py</code>
+(<code>native_startup_context_digest</code>).</li>
+<li><strong>Agent surface:</strong>
+<code>engine/backend/orgtree/mcptool.py</code>,
+<code>engine/backend/orgtree/api.py</code>
+(<code>_agent_read_access</code>, agent tool dispatch),
+<code>engine/backend/orgtree/events_render.py</code>.</li>
+<li><strong>Tests:</strong>
+<code>tests/test_item_scoped_reads.py</code>,
+<code>tests/test_handoff_resilient_breadcrumbs.py</code>,
+<code>tests/test_openrouter_harness.py</code>,
+<code>tests/test_pg3e_b_sessions.py</code>,
+<code>docs/test-baseline.json</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>git grep -n 'append_note'</code> — the definition in
+<code>breadcrumbs.py</code> and four calls in
+<code>tests/test_handoff_resilient_breadcrumbs.py</code>; no production
+caller.</li>
+<li><code>git grep -n 'handoff\.flag'</code> — only
+<code>supervisor.py</code>, where <code>handoff_flag_on</code> reads it
+and docstrings mention it; nothing creates it, in <code>tools/</code>,
+<code>tests/</code> or the app.</li>
+<li><code>git log --all --oneline -- '*test_handoff_record*'</code> — no
+commit; <code>git ls-files | grep -i handoff</code> lists one test
+module, <code>tests/test_handoff_resilient_breadcrumbs.py</code>.</li>
+<li><code>git grep -nE "open\([^)]*(breadcrumbs|CLAUDE)\.md[^)]*['\"](w|a)" -- engine</code>
+— no match; the org.md editor writes the workspace
+<code>CLAUDE.md</code> through a path variable
+(<code>api.py:10626-10628</code>), and no engine path writes a scratch
+notes file.</li>
+<li><code>git grep -n -i 'tomb' -- engine</code> — watchdog tombs, a
+mail-entry tombstone and a cost accumulator; nothing keyed on note
+content.</li>
+<li><code>rg -n '"name": "orgtree_' engine/backend/orgtree/mcptool.py</code>
+— 48 tools; none named remember, recall, forget or note.</li>
+<li><code>git grep -n 'import-v1' -- apps packages engine tools</code> —
+the engine router prefix and two recovery routes in
+<code>engine/launch.py</code>; no caller in <code>apps/</code> or
+<code>packages/</code>.</li>
+<li><code>rg -n '_breadcrumbs_block|BREADCRUMBS_TAIL|_standing_notes_block' tests</code>
+— one call to <code>_standing_notes_block</code> in
+<code>test_openrouter_harness.py</code>; none to the breadcrumb
+block.</li>
+<li><code>grep -rniE 'memor|remember|recall|breadcrumb' engine/mailhub --exclude-dir=.git</code>
+— a session-name note, a durable <code>.corrupt-*</code> sibling and a
+web UI cache; no memory store.</li>
+<li><code>git grep -liE 'arxiv|bibtex|@article|@misc|doi\.org'</code> —
+no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-01</strong> — <a
+href="https://github.com/Maurdekye/orgtree/commit/0151d66ec5f1a5e4a297dc9f07dc65fbb18739e2"><code class="commit-id" title="0151d66ec5f1a5e4a297dc9f07dc65fbb18739e2">0151d66e…</code></a>
+— first reading, at the head of <code>main</code>, release 3.0.6 dated
+the same day. One mark, <code>negative_eval</code>. The
+<code>engine/mailhub</code> submodule was read at its pinned commit.
+Screened before reading: 1 auto-run surface (<code>.gitmodules</code>),
+1 build-time execution point
+(<code>engine/native/store-schema/build.rs</code>), <code>FRESH</code>
+on <code>package.json</code> and <code>package-lock.json</code> and on
+Cargo manifests under <code>engine/native/</code> — a real cooldown,
+since the clone is full — and <code>FLOAT</code> on
+<code>package.json</code> with a lockfile present; the mail hub's screen
+found <code>FLOAT</code> on <code>requirements.txt</code> only. No
+<code>AGENTS.md</code> or <code>CLAUDE.md</code> is in the tree. Nothing
+installed, built or run. The org chart, docket and mail are out of
+scope.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

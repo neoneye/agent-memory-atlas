@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 704 reports.**
+**This page covers all 705 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6361,3 +6361,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0-only, 7,370 lines of TypeScript under `src/` and 102 commits by one contributor between 16 February and 17 July 2026. 359 vitest cases in 24 files with no CI workflow; two association-read cases assert an archived or cross-scope neighbour is not returned beside a positive control, and one archive case is vacuous. `AUDIT-WHAT-FIRES.md` records which mechanisms were ever measured.
 - Study when: you want a failure-tolerant capture pipeline for a hook host, register-specific decay and merge rules, or a day-of-use clock for decay.
 - Do not copy when: memory must be corrected reliably or kept private on a network. Every compression step leaves a copy deletion does not chase, the agent holds every correcting verb, and the dashboard has no access control.
+
+### [`orgtree`](../systems/orgtree/)
+
+- Best idea: **make one memory promise true on every provider lane.** The prompt tells every agent its scratch `CLAUDE.md` is delivered each session; Codex and Antigravity never read that file, so `_standing_notes_block` renders it into the managed prompt there, inside the identity component already hashed on every lane. An edit therefore respawns the parked process on all lanes, and `native_startup_context_digest` does the same for the Claude lane's own instruction files and auto-memory prefix.
+- Biggest risk: **the recovery log is append-only by instruction only.** `breadcrumbs.md` is what a summary-less successor receives, yet the agent writes it with the same Edit and shell tools that can truncate it, and `breadcrumbs.append_note` — which would append in place and refuse to touch undecodable bytes — is called only by tests. A prompt-injected line written there reaches the successor's system prompt at the next reset.
+- Most reusable component: the item-scoped read in `_agent_read_access` and `Org.work_item_read_grant` — self and descendants by the chart, otherwise only earlier holders of an open docket item the reader is listed on, ending when the item closes — with `tests/test_item_scoped_reads.py` asserting each refusal beside a grant on the same fixture.
+- Second risk: **the verified handoff record is dark by default, and its forgery tests are cited rather than committed.** Every session boundary publishes a hash-checked record only after an anchored `verify`, but the prompt splice needs `<ORGTREE_DATA>/handoff.flag`, which no code creates. The module docstring places a rejected forgery per rule in `tests/test_handoff_record.py`, a file absent at the pin and from the repository's history.
+- Maturity impression: MIT, 169,872 lines of Python in the engine, 71,459 of TypeScript and 20,536 of Rust outside tests, 3,328 commits on main by 31 author identities between 7 September and 1 October 2026; the notes, breadcrumb and handoff paths are about 1,600 lines. One mark, `negative_eval`, on a scope-boundary refusal with a positive control. The committed baseline records 481 Python modules passing and 39 failing on 28 September 2026; nothing was run for the report.
+- Study when: you run agents on several provider CLIs and need per-agent notes to survive session resets, or you are deciding what a summary-less successor should receive on its first turn and when to stop sending it.
+- Do not copy when: memories must be shared across agents by topic, searched rather than loaded whole, attributed to the generation that wrote them, or checked before they are acted on. The design trusts each agent's log as written and gives a successor nothing to weigh one line against another.
