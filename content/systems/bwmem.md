@@ -35,6 +35,16 @@ matrix:
 
 ## 1. Executive Summary
 
+**The source of this report no longer exists upstream.** `Bitwarelabscom/bwmem`
+returns 404 with no rename redirect, and the account's only remaining public
+repository is its profile. The atlas holds a copy: the fork at
+[`agent-memory-atlas-archive/Bitwarelabscom--bwmem`](https://github.com/agent-memory-atlas-archive/Bitwarelabscom--bwmem)
+carries the pinned commit and the upstream history through 21 September 2026,
+so every file path below is readable there. Links in the body point at the dead
+upstream because that is where the reading happened; the archive is the working
+route. `chispaumana/bwmem` is an unrelated copy whose only branch stops on
+15 August 2026, six commits before the pin.
+
 bwmem is a "Memory SDK for AI chatbots" giving "your bot persistent, per-user
 memory: bi-temporal facts, semantic search, emotional capture, contradiction
 detection, quality scoring, session-texture carryover, held intentions,
@@ -230,6 +240,8 @@ invites a reader to expect the sentence somebody wrote.
 | `src/memory/facts.service.ts:590-621` | A supersession and its audit row, in one transaction |
 
 ## History
+
+**2026-10-01** — the upstream repository stopped resolving. `Bitwarelabscom/bwmem` returns 404 to an authenticated request with no rename redirect, and the archive fork's parent link was dropped by GitHub. The pin is not moved: [`1d0acee29e3b5121f9097ea856e2e6017be8af69`](https://github.com/agent-memory-atlas-archive/Bitwarelabscom--bwmem/commit/1d0acee29e3b5121f9097ea856e2e6017be8af69) is in the fork, and section 1 says where to read it. Nothing else in the report changed.
 
 **2026-09-19** — [`1d0acee29e3b5121f9097ea856e2e6017be8af69`](https://github.com/Bitwarelabscom/bwmem/commit/1d0acee29e3b5121f9097ea856e2e6017be8af69) — `trust_state` re-tested against the narrowed line, and the record's universal claim was worth checking: it said *every* read path filters to `fact_status = 'active'`. Seven of the eight reads of the facts table do, and the eighth leaves it out deliberately — `getFactsAsOf` (`src/memory/facts.service.ts:441-458`) answers what was believed at one time about the world at another and composes `recorded_at`, `superseded_at` and the validity window instead, because filtering to `active` would answer that question wrong: a fact superseded last week was the belief the week before. The mark holds and is better stated with the exception in it. Every other anchor re-checked in source, including the `CHECK` constraint and the partial index. The evidence record now names the eight sites and carries a test citation, `tests/unit/temporary-fact-expiry.test.ts:80`, which asserts the expiry sweep only ever touches temporary, active rows — the field previously held prose rather than a test. Screened again first; nothing was installed and no suite was run.
 
