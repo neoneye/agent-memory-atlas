@@ -357,23 +357,25 @@ is appended to `.faded/faded.jsonl` with a timestamp before the delete.
 **[Membrane](../../systems/membrane/) is where the sweep and the marker collide.** Its decay is exponential per type — one hour for episodic, thirty days for a captured semantic observation, one day for the facts capture and consolidation derive — with a reinforcement gain field, a pinned flag and a three-value deletion policy, and the shape is right. The gain is zero on every record the tree creates, so reinforcing resets the decay clock and restores no salience. But the decay pass computes elapsed time from a timestamp only reinforcement advances, and applies the result to the *already decayed* stored salience, so after repeated sweeps the exponent grows with the square of the sweep count; at the shipped defaults an episodic record sits at 0.00098 after four hourly sweeps instead of 0.0625, and the half-life constant stops meaning what it says. No test applies the decay pass twice to the same record, which is why the suite reports green. The second collision is worse: retraction marks a record by setting salience to zero, and the prune pass deletes any unpinned auto-prune record at or below its floor — default zero — so the retraction marker is also the deletion trigger, and the audit rows cascade away with the record. If you drive pruning off a numeric floor, retraction has to set something else.
 
 **[mini-AGI](../../systems/mini-agi/) decays weights rather than records, and its
-finding is about which signal to decay on.** An expert is deleted when nothing
-has admitted it to the working set inside a trailing survival window — not when
-its gate is low, and the source says why the obvious field is the wrong one:
-*"the gate is not merely uninformative about whether an expert will be wanted
-again, it is anti-predictive: the smallest gates belong to the busiest experts.
-One that behaves as a sink — chosen constantly, contributing little per character
-— reads as dead on a gate test, while a high-gate expert nothing has asked for in
-hundreds of thousands of segments reads as alive."* That is the strength-versus-
+finding is about which signal to decay on.** An expert is deleted when the router
+has not chosen it inside a trailing survival window — not when its gate is low,
+and the source says why the obvious field is the wrong one: *"The gate is not
+merely uninformative about whether an expert will be wanted again, it is
+anti-predictive: the smallest gates belong to the busiest experts. One that
+behaves as a sink - chosen constantly, contributing little per character - reads
+as dead on a gate test, while a high-gate expert nothing has asked for in
+hundreds of thousands of texts reads as alive."* That is the strength-versus-
 importance confusion this page separates, found empirically in a system that then
-removed the term. It also answers the checklist item about *not chosen* meaning a
-lost comparison rather than an absent one, twice: a newborn is exempt for a full
-survival window so it cannot be judged before it has competed, and a terminating
-cold-start sweep guarantees every unit one turn in the candidate set. The limit
-is the one this atlas draws everywhere for weights — staleness here is a fact
-about routing, not about truth, so a rare memory and a dead one are the same
-signal, and `prune()`'s docstring says so: *"an expert which is genuinely rare
-rather than dead is deleted, and deletion is permanent."*
+removed the term. It also meets the checklist item about not reinforcing what the
+system chose to inject: training forwards give an under-used expert an
+exploration bonus, and the prune clock counts only what the router would have
+admitted without it, so a forced trial never resets the clock. A newborn is
+exempt for a full survival window, so it cannot be judged before it has
+competed. The limit is the one this atlas draws everywhere for weights —
+staleness here is a fact about routing, not about truth, so a rare memory and a
+dead one are the same signal, and `prune()`'s docstring says so: *"an expert
+which is genuinely rare rather than dead is deleted, and deletion is
+permanent."*
 
 [Living Mind Cortex](../../systems/living-mind-cortex/) inverts the pattern. Each memory is also a node in a RAM-only heat-equation substrate that recall reheats and every tick cools, and a node that stays below the freeze temperature for eight ticks is written back to Postgres as a new `semantic` row at importance 0.90, tagged `identity` (`cortex/engine.py:482-541`). The service never wires edges between nodes, so heat never diffuses and neglect alone decides promotion: the runtime's 30-second heartbeat lines become permanent identity memories that the only prune exempts. Reinforcement lives in a recall side effect that lowers confidence 5 percent per read, so the most-used rows are the least trusted.
 

@@ -18167,19 +18167,19 @@ them are under <code>/api/debug/</code> and are called by nothing</td>
 <td>An expert — one .npz file holding three weight matrices and their
 Adam moments. Below that there is no unit: what a conversation taught
 the model is a delta spread across the trunk and whichever experts were
-resident</td>
+on the card</td>
 <td>A directory of files — manifest.json, core.npz, routers.npz,
 optim.npz and one e00000.npz per expert. No database and no index over
 content</td>
-<td>Cosine similarity between the hidden states of the previous chunk
-and a per-expert key vector, blended with router logits, gated by a
-displacement margin and a dwell window. It chooses which weights load,
-never which text comes back</td>
+<td>Each character ranks the whole pool with the router and asks for its
+top 8; a forward's first pass adds those requests to a vote over its
+whole text since position 0, and the forward may use the 32 most voted.
+It chooses which weights load, never which text comes back</td>
 <td>One gradient step per 2,048 characters of whatever is being read,
 the model's own replies included. Inline and blocking; no queue, no
 extraction, no summarisation</td>
-<td>No correction of any kind exists. Pruning deletes an expert file
-that nothing has routed to inside the survival window, which is capacity
+<td>No correction of any kind exists. Pruning deletes an expert file the
+router has not chosen inside the survival window, which is capacity
 reclamation rather than forgetting a fact</td>
 <td>None. One model, one weights directory, one person — no user,
 session or tenant key appears anywhere in the tree</td>
@@ -18190,15 +18190,16 @@ of files</td>
 controller all run inline on the reading loop</td>
 <td>None. An expert carries born, last_seen and a gate; all three are
 usage lifecycle, and no read path asks whether anything is believed</td>
-<td>The forgetting mitigation is measured rather than asserted and the
-losing arms are published beside the winning one; pruning reads
-staleness and documents why the gate is anti-predictive; reading a book
-and serving a reply are one code path at one granularity</td>
+<td>The forgetting mitigation is measured, with the probe and every
+arm's raw scores committed and the losing arms published beside the
+winning one; pruning reads staleness, ignores admissions bought by
+exploration, and documents why the gate is anti-predictive; reading a
+book and serving a reply are one code path</td>
 <td>Nothing learned can be named, corrected or deleted, and the file
 reader has no secret filter; the chat server persists into the weights
-by default while the CLI reader does not; a dry read still writes expert
-files back once the pool is larger than the RAM cache; there is no test
-anywhere in the tree</td>
+by default while the CLI reader does not; a dry read writes trained
+expert files back once the pool is larger than the RAM cache; there is
+no test anywhere in the tree</td>
 </tr>
 <tr>
 <td><a href="../systems/mira/"><code>mira</code></a></td>
