@@ -29398,33 +29398,38 @@ graph, per-tag summaries and a cost ledger — beside Neo4j and FalkorDB
 fact-link backends, a filesystem backend and Redis for session
 state</td>
 <td>Tag-directed with a local embedding tagger on the request path, so
-recall never waits on a model call, plus a temporal
-<code>remember_when</code> mode that resolves a date window and can
-anchor on a state as of a target date</td>
+recall never waits on a model call, plus eight paging tools the model
+calls to open a topic, search the verbatim record, query facts or
+restore a stubbed tool output, and a temporal <code>remember_when</code>
+mode that resolves a date window and can anchor on a state as of a
+target date</td>
 <td>Turns are tagged by an LLM after the response, compacted under
 budget pressure, and superseded when contradicted — with every accept
 and reject written to <code>fact_decisions</code> inside the same
 transaction</td>
-<td>A supersession checker sets <code>superseded_by</code> and search
-appends <code>IS NULL</code>; an actor-card entry can also expire out of
-the read path on its own validity window; conversations tombstone in
-Redis with a day-long TTL</td>
-<td>Three keys applied as predicates, not partitions:
-<code>tenant_id</code>, <code>conversation_id</code> and
-<code>audience_conversation_id</code>, with 354 conversation and 85
-tenant predicates in the SQLite backend alone and an
-<code>audience_scope</code> CHECK on every card entry</td>
+<td>A supersession checker sets <code>superseded_by</code> and fact
+search appends <code>IS NULL</code>; an actor-card entry can also expire
+out of the read path on its own validity window; conversations tombstone
+in Redis with a day-long TTL, and a conversation delete removes its
+rows, ledger included</td>
+<td><code>conversation_id</code> is a predicate on every proxy read and
+paging tool, with <code>tenant_id</code> above it on
+<code>conversations</code> and <code>audience_conversation_id</code> on
+canonical turns; the MCP server's <code>domain_status</code> tool and
+topic resources read every conversation in the store, and the audience
+check withholds a summary drawing on another audience but never a
+fact</td>
 <td>A proxy in front of the provider API, an MCP server, a CLI, a TUI, a
 Discord community surface and an OpenClaw integration. A typed-judgment
-layer can route five named decision seams — rerank, query intent,
-temporal intent, safety-critical and actor-card admission — to an
-external service, in three modes: <code>legacy</code> (never called, the
+layer can route thirteen named decision seams — rerank, query and
+temporal intent, safety, actor-card admission, tag reuse, tag selection,
+tag split, tag consolidation, supersession, fact curation, topic
+selection and summary grounding — to an external service, globally or
+per seam, in three modes: <code>legacy</code> (never called, the
 default), <code>shadow</code> (the legacy answer is used and the
 external one logged for comparison) and <code>jev</code> (the external
-answer is used, falling back to legacy on any failure). Each engine owns
-its own runtime so two engines in one process cannot share a mode, and
-the config comment says it is not tenant-settable in the hosted
-product</td>
+answer is used, falling back to legacy on any failure). The config
+comment says it is not tenant-settable in the hosted product</td>
 <td>Tag generation, vocabulary canonicalisation, tag splitting, per-tag
 summarisation, compaction and a due-queue of actor-card rebuilds</td>
 <td>None epistemic. <code>facts.status</code> is a temporal status — is
@@ -29437,12 +29442,13 @@ verdict is on the <em>decision</em>, in the ledger, not on the fact</td>
 <td>An append-only decision ledger a database trigger refuses to let
 anyone edit, recording the before, the after, the proposal and the
 reason for every accept and every reject</td>
-<td>Everything about the vocabulary is an LLM judgement, and only the
-end-to-end accuracy is measured; and the ledger has no production reader
-at all — <code>get_fact_decisions</code> is carried through the store
-protocol and the composite store, and every caller outside the storage
-layer is a test — so the same wrong fact can be proposed and refused
-forever</td>
+<td>The ledger has no production reader —
+<code>get_fact_decisions</code> is carried through the store protocol
+and the composite store, and every caller outside the storage layer is a
+test — so the same wrong fact can be proposed and refused forever; and
+the MCP server's <code>virtualcontext://domains/{tag}</code> resource
+returns the stored summaries of every conversation in the store carrying
+that tag</td>
 </tr>
 <tr>
 <td><a href="../systems/virtualwife/"><code>virtualwife</code></a></td>
@@ -31181,7 +31187,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>317 of 704:</em> <a
+<p><em>316 of 704:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -31497,7 +31503,6 @@ href="../systems/uteke/"><code>uteke</code></a>, <a
 href="../systems/utopia/"><code>utopia</code></a>, <a
 href="../systems/veracium/"><code>veracium</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a
-href="../systems/virtual-context/"><code>virtual-context</code></a>, <a
 href="../systems/vllm-semantic-router/"><code>vllm-semantic-router</code></a>,
 <a href="../systems/waggle/"><code>waggle</code></a>, <a
 href="../systems/weknora/"><code>weknora</code></a>, <a
