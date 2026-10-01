@@ -858,7 +858,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: a fail-closed owner directory checked three ways, with a post-resolve containment assertion, and `session_ids` provenance recorded on every topic; the `scope_enforced` mark rests on the Redis provider, whose documents carry the scope ids its search filters on.
 - Biggest risk: the provider contract declares neither deletion nor scope, so a third-party provider inherits AutoGen's gap, and compression is the only correction path.
 - Most reusable component: organising durable memory by topic rather than by time, with the index split from the content.
-- Maturity impression: about 1,357 lines of tests on the harness memory alone, aimed at state round-trips, consolidation scheduling, disk-full and misconfigured-client failures, and the scope boundary.
+- Maturity impression: 1,673 lines of tests on the harness memory alone, aimed at state round-trips, consolidation scheduling, disk-full and misconfigured-client failures, and the scope boundary.
 - Study when: you are in the Microsoft stack and want the context-provider seam, or you want a per-user assistant whose correction need is "rewrite the topic".
 - Do not copy when: you need to prove a deletion, hold a claim you are unsure about, or answer what the system believed last month — there is no unit below the topic file to attach any of that to.
 

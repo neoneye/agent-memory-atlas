@@ -596,9 +596,10 @@ because zero runtime dependencies is a product claim — exposing five read-only
 tools (`daimon_recall`, `daimon_brief`, `daimon_projects`, `daimon_status`,
 `requests_inbox`) through thin shims in `mcp_tools.py`.
 
-**Tests.** 5,247 test functions across ~84,300 lines under `plugin/tests/`,
-against ~38,600 lines of source in `plugin/daimon_briefing/`, not counting
-the two check modules mirrored under `_hooks/`.
+**Tests.** 6,500 test functions (`def test_` at line start) in 186
+Python files under `plugin/tests/`, which holds 196 and 106,724 lines in all, against 52,602 lines
+of source in `plugin/daimon_briefing/`, 48,195 of them outside its `_hooks/`
+directory. All are raw `wc -l` counts at the pin.
 
 ## 5. Memory Data Model
 
@@ -1840,7 +1841,7 @@ they stop working.
 
 ## History
 
-**2026-10-01** — [`c967baa7084839494f86883407963b25c1eec8c3`](https://github.com/Daily-Nerd/daimon/commit/c967baa7084839494f86883407963b25c1eec8c3) — audited at the same commit; **`scope_enforced` kept**, and its record now says why. The record opened on the per-project directory under `~/.daimon`, which on its own would be a physical partition the mark excludes. The slug is also a key on the row in both stores. The recall index is one SQLite file across every bucket, with a `project_slug` column that `search`, `lookup_item` and `suggest` filter with `project_slug IN (...)` (`recall.py:1101-1102`, `:1145`, `:1250`, `:1618`). Each checkpoint is stamped at write (`store.py:1369-1371`), and `_admit_payload` refuses a foreign stamp served through the shared global pointer (`store.py:1637-1648`). The record names two limits: `search` applies no filter when the project cannot be resolved, and an explicit slug or `all_projects` widens at the caller's choice. No mark moved. Nothing was installed, built or run.
+**2026-10-01** — [`c967baa7084839494f86883407963b25c1eec8c3`](https://github.com/Daily-Nerd/daimon/commit/c967baa7084839494f86883407963b25c1eec8c3) — audited at the same commit; **`scope_enforced` kept**, and its record now says why. The record opened on the per-project directory under `~/.daimon`, which on its own would be a physical partition the mark excludes. The slug is also a key on the row in both stores. The recall index is one SQLite file across every bucket, with a `project_slug` column that `search`, `lookup_item` and `suggest` filter with `project_slug IN (...)` (`recall.py:1101-1102`, `:1145`, `:1250`, `:1618`). Each checkpoint is stamped at write (`store.py:1369-1371`), and `_admit_payload` refuses a foreign stamp served through the shared global pointer (`store.py:1637-1648`). The record names two limits: `search` applies no filter when the project cannot be resolved, and an explicit slug or `all_projects` widens at the caller's choice. No mark moved. Nothing was installed, built or run. Section 4's test census is re-measured at the pin.
 
 **2026-09-24** — [`c967baa7084839494f86883407963b25c1eec8c3`](https://github.com/Daily-Nerd/daimon/commit/c967baa7084839494f86883407963b25c1eec8c3) — re-pinned 26 commits on, through releases 0.48.0 to 0.50.0; 134 files and +11,891 lines. Re-screened at the new pin: the same three auto-run surfaces, three build-time execution paths, one unpinned website manifest and two files inside the seven-day cooldown, with no finding the previous screen did not carry. Nothing was installed, built or run, and the read was made from a full clone. No mark moved — five of seven, `tombstone`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval`, with `trust_state` withdrawn at the previous reading and `bitemporal` absent. The grep over `plugin/daimon_briefing/` for `valid_from`, `valid_to`, `valid_until`, `event_time`, `occurred_at` and `as_of` returns nothing at exit 1, and so does one for `embedding`, `faiss` and `hnsw`, both against a control that returns 23 hits for `invalidated_by`.
 

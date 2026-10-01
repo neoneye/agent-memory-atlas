@@ -29,7 +29,7 @@ matrix:
   integration: "A `ContextProvider` contract of `before_run`/`after_run` plus a `source_id`, consumed by the Agent runtime; .NET and Python; DevUI; a hosted Foundry provider"
   background: "Consolidation of a topic file via an LLM prompt, scheduled by sessions-since-last-run"
   trust: "None. A topic memory is a bullet list; there is no status, confidence or verification anywhere on it"
-  strengths: "Fail-closed owner directory resolution with a post-resolve containment assertion; `session_ids` provenance on every topic; ~1,357 lines of tests on the harness memory alone"
+  strengths: "Fail-closed owner directory resolution with a post-resolve containment assertion; `session_ids` provenance on every topic; 1,673 lines of tests on the harness memory alone"
   risks: "The provider contract still declares neither deletion nor scope, so a third-party provider inherits AutoGen's gap; nothing records that a value was removed"
 ---
 
@@ -55,7 +55,7 @@ pretend to be a memory contract, which is a more honest position — and leaves
 every provider to invent deletion and tenancy separately, in incompatible forms.
 
 **Then the in-tree implementation is much better than the contract requires.**
-The harness memory (`_harness/_memory.py`, 1,657 lines, plus `_file_memory.py`)
+The harness memory (`_harness/_memory.py`, 1,702 lines, plus `_file_memory.py`)
 stores one Markdown file per *topic*: a `MemoryTopicRecord` with a summary, a
 list of durable bullets, an `updated_at`, and — the good part —
 `session_ids`, the sessions that contributed to it. Provenance is on the record
@@ -141,9 +141,9 @@ substitute a session id for a user id if the invariant ever moved.
 
 - `python/packages/core/agent_framework/_sessions.py` — `ContextProvider`,
   `AgentSession`, state registration.
-- `python/packages/core/agent_framework/_harness/_memory.py` (1,657) — topic
+- `python/packages/core/agent_framework/_harness/_memory.py` (1,702) — topic
   records, the index, the store ABC, the file store, consolidation.
-- `python/packages/core/agent_framework/_harness/_file_memory.py` (531) — the
+- `python/packages/core/agent_framework/_harness/_file_memory.py` (585) — the
   file-level tools and their traversal handling.
 - `python/packages/azure-cosmos-memory/.../_context_provider.py` (505) — the
   Cosmos provider.
@@ -309,7 +309,7 @@ query returns first.
 
 ## 10. Tests, Evals, and Benchmarks
 
-1,357 lines across `test_harness_memory.py` and `test_harness_file_memory.py`,
+1,673 lines across `test_harness_memory.py` and `test_harness_file_memory.py`,
 none run here, and they are aimed at the right things: state round-trips,
 Markdown parsing, consolidation scheduling, disk-full and misconfigured-client
 failures, and the boundary.
@@ -392,10 +392,10 @@ that wants to.
 
 | Path | Lines | What it holds |
 | --- | --- | --- |
-| `python/packages/core/agent_framework/_harness/_memory.py` | 1,657 | Topic records, index, store ABC, file store, consolidation |
-| `python/packages/core/agent_framework/_harness/_file_memory.py` | 531 | File-level tools and traversal handling |
-| `python/packages/azure-cosmos-memory/.../_context_provider.py` | 505 | Cosmos DB context provider |
-| `python/packages/foundry/agent_framework_foundry/_memory_provider.py` | 279 | Client for the hosted Foundry memory service |
+| `python/packages/core/agent_framework/_harness/_memory.py` | 1,702 | Topic records, index, store ABC, file store, consolidation |
+| `python/packages/core/agent_framework/_harness/_file_memory.py` | 585 | File-level tools and traversal handling |
+| `python/packages/azure-cosmos-memory/.../_context_provider.py` | 509 | Cosmos DB context provider |
+| `python/packages/foundry/agent_framework_foundry/_memory_provider.py` | 281 | Client for the hosted Foundry memory service |
 | `python/packages/redis/agent_framework_redis/_context_provider.py` | 434 | `RedisContextProvider`: tag-scoped documents and the filtered search |
 | `python/packages/redis/tests/test_providers.py` | 883 | Filter validation, stored scope fields, cross-session retrieval |
 | `python/packages/core/agent_framework/_sessions.py` | — | `ContextProvider`, `AgentSession`, state registration |
@@ -408,7 +408,7 @@ that wants to.
 
 ## History
 
-**2026-10-01** — [`c030fa3582b1d2971488645fa03ec65bffab8617`](https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617) — audited at the same commit; **`scope_enforced` re-grounded.** The record credited the harness memory's owner root. `MemoryTopicRecord` carries no owner and no read filters on one, so that is a directory per owner — a physical partition the mark excludes — and the record no longer cites it. The mark holds on `RedisContextProvider`, which this report had not read: every document carries `application_id`, `agent_id` and `user_id` as tags, and its search ANDs a tag equality for each configured id (`_context_provider.py:319-322`, `:363-371`). Section 9 states the limits. Also corrected: the Cosmos checkpoint store's collision refusal is on `load` only, and `delete` removes the first match. The Cosmos memory provider's open question now names where the query lives. Nothing was installed, built or run.
+**2026-10-01** — [`c030fa3582b1d2971488645fa03ec65bffab8617`](https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617) — audited at the same commit; **`scope_enforced` re-grounded.** The record credited the harness memory's owner root. `MemoryTopicRecord` carries no owner and no read filters on one, so that is a directory per owner — a physical partition the mark excludes — and the record no longer cites it. The mark holds on `RedisContextProvider`, which this report had not read: every document carries `application_id`, `agent_id` and `user_id` as tags, and its search ANDs a tag equality for each configured id (`_context_provider.py:319-322`, `:363-371`). Section 9 states the limits. Also corrected: the Cosmos checkpoint store's collision refusal is on `load` only, and `delete` removes the first match. The Cosmos memory provider's open question now names where the query lives. Nothing was installed, built or run. File sizes and the harness test census are re-measured at the pin.
 
 **2026-09-17** — [`c030fa3582b1d2971488645fa03ec65bffab8617`](https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617) — re-read after 276 commits. `_harness/_memory.py` and both cited test files moved, and the three claims in the evidence record were re-derived rather than assumed: the base root is resolved once, an owner id containing a traversal segment is rejected outright, and the composed memory root is asserted `is_relative_to` the base after resolution — the post-resolve containment check the record names, now at `:697`, `:717` and `:758-759`. The mark holds. Nothing was installed, built or run.
 

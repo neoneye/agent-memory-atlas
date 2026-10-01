@@ -46,9 +46,9 @@ session handoff, a decisions ledger and a settled-facts store; a CI kit of lint
 guards and a fail-closed merge gate; pattern essays explaining each piece. MIT
 licensed, no package manifest, no dependencies — every executable here is
 stdlib Python 3 or POSIX shell. There being nothing to install is a stated
-position rather than an omission: [`kit.json`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/kit.json)
+position rather than an omission: [`kit.json`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/kit.json)
 argues that *"a package would make our release cadence your dependency and fight
-the adapt step"*, and offers a machine-readable inventory instead — eight
+the adapt step"*, and offers a machine-readable inventory instead — thirteen
 problem statements routed to artifacts, and per-artifact `assumes` and
 `selftest` fields.
 
@@ -60,17 +60,17 @@ lives:
   — 1,101 lines of three-tier file-native memory (working state, append-only
   episodes, semantic facts) for an agent loop you write yourself, carrying a
   rejected-value tombstone and an as-of replay.
-- [`templates/ledger-tools/conclusions_audit.py`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/templates/ledger-tools/conclusions_audit.py)
+- [`templates/ledger-tools/conclusions_audit.py`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/templates/ledger-tools/conclusions_audit.py)
   — asks whether every ledger entry is still **true**.
-- [`templates/ledger-tools/retrieval_exam.py`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/templates/ledger-tools/retrieval_exam.py)
+- [`templates/ledger-tools/retrieval_exam.py`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/templates/ledger-tools/retrieval_exam.py)
   — 1017 lines asking whether any entry can ever be **seen**.
-- [`templates/ledger-tools/capture_nudge.py`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/templates/ledger-tools/capture_nudge.py)
+- [`templates/ledger-tools/capture_nudge.py`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/templates/ledger-tools/capture_nudge.py)
   — a prompt hook that fires when the operator's own wording looks like a
   ruling.
 
 And the **memory desk**
 ([`templates/memory-desk/`](https://github.com/The-825/breadcrumbs/tree/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/templates/memory-desk)),
-a second and separate store built for the read side: a 60-line kernel, a
+a second and separate store built for the read side: a kernel capped at 60 lines, a
 tab-separated fact index, an append-only capture journal, a 536-line `mem` CLI,
 three harness hooks that push rows into context, and a written weekly curation
 contract. Section 6 covers why it exists; the short version is in its own
@@ -109,7 +109,7 @@ renders every fact whatever its status and no read in the tree filters on it,
 so the state is a label rather than a withholding (section 9).
 
 **Where it is weakest is the distance between the prose and the tree.**
-[`docs/floating-memory.md`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/docs/floating-memory.md)
+[`docs/floating-memory.md`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/docs/floating-memory.md)
 describes a production memory layer in detail — an orphan git branch, a capped
 head file, per-session append-only fold files, a projection computed at read
 time, a trust rank, a reaper that greps merged history to check a fold's own
@@ -124,7 +124,7 @@ section: the fleet machinery *"runs in the system this pattern came out of and
 does NOT ship in this kit"*, followed by a link to the ledger tools a reader can
 copy today. That closes the entry point most likely to mislead, and it is the
 only essay carrying such a header.
-[`docs/breadcrumbs-whitepaper.md`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/docs/breadcrumbs-whitepaper.md)
+[`docs/breadcrumbs-whitepaper.md`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/docs/breadcrumbs-whitepaper.md)
 presents five mechanisms as the system, and two of them have no code path
 in the tree: the recorder that refuses a completion claim while obligations
 dangle (3.2), and the versioned handoff where a session acknowledges the state
@@ -546,7 +546,7 @@ detail.** `mem <words>` normalises the query, tries an exact match against every
 key and alias, and only then falls back to a token score that weights key and
 alias overlap three times as heavily as answer overlap. A hit is three lines:
 answer, source, checked date. Three hits maximum. Everything about it is an
-answer to a stated failure — [`docs/memory-desk.md`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/docs/memory-desk.md)
+answer to a stated failure — [`docs/memory-desk.md`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/docs/memory-desk.md)
 argues that *"every memory system in this kit was written by strong models on
 high effort, and most of it will be read by weak ones on low"*, and that the
 weak session fails at judgement rather than at execution, so *"take every
@@ -610,7 +610,7 @@ under pressure. So `mem add` has no quality bar beyond one typed sentence, the
 journal is append-only, and a weekly gardener pass promotes durable entries into
 index rows, dedupes, re-verifies stale rows at their sources and retires rows
 with stated reasons. The contract is written down in
-[`gardener/GARDENER.md`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/templates/memory-desk/gardener/GARDENER.md)
+[`gardener/GARDENER.md`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/templates/memory-desk/gardener/GARDENER.md)
 with an ordered pass, a watermark appended last so nothing is processed twice,
 and one boundary that is the reason the split works: *"Retire, never silently. A
 retired row is listed in the PR body with one line of reason."* The pass itself
@@ -657,9 +657,19 @@ against the very entry that replaced it."* The prescribed fix is a scan that
 strictly earlier date, *"because a wrong supersession pointer silently deletes a
 live fact from every future injection."* That scan is described and not shipped.
 
+The engine ships the proposal step for its own fact tier, and nothing calls it.
+`propose_contradiction()` (`memory_engine.py:200-251`) compares a candidate
+value against the stored fact without writing: a normalised exact match is
+corroboration, fully bounded disjoint validity windows coexist, and every other
+case goes to a caller-supplied evaluator, with a missing, failing or malformed
+evaluator returning `unknown`. Even a `contradiction` verdict comes back as
+`review_replacement`, never as a write. Its only callers are the module's own
+selftests (`:941-976`); `store_fact()`, the `mem` CLI and the hooks never
+reach it, so a differing value still supersedes the stored one directly.
+
 **Filtering hostile input.** The kit's answer is at the write boundary, not the
 read one:
-[`SEARCH_MISSES.md`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/templates/ledger-tools/SEARCH_MISSES.md)
+[`SEARCH_MISSES.md`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/templates/ledger-tools/SEARCH_MISSES.md)
 requires screening the verbatim `query` field before append, because it is the
 one field that captures whatever the user typed. `templates/hooks/outbound-pii-screen.sh`
 is the shipped screen. On the read side the only guard is a threshold: `mem`'s
@@ -789,7 +799,7 @@ re-verification after the cutoff hides the earlier one and its oracle is gone.
 Git history covers the file-based ledgers and is a different mechanism.
 
 **The review surface is the merge gate, and it is fail-closed.**
-[`.github/workflows/automerge.yml`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/.github/workflows/automerge.yml)
+[`.github/workflows/automerge.yml`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/.github/workflows/automerge.yml)
 squash-merges an agent-branch PR only after a person applies the `greenlight`
 label on top of green required checks, with the label read from a fresh
 `pulls.get` rather than from the triggering event's frozen payload, a missing
@@ -816,7 +826,7 @@ what reaches `main`, not what the session that wrote the line reads back
 from its own working tree. And the shipped policy exempts one of the
 stores.
 
-[`ci-kit/workflows/greenlight_tiers.py`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/ci-kit/workflows/greenlight_tiers.py)
+[`ci-kit/workflows/greenlight_tiers.py`](https://github.com/The-825/breadcrumbs/blob/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73/ci-kit/workflows/greenlight_tiers.py)
 lets a PR merge unlabeled when every changed file is an addition or
 modification inside `docs/`, `checklists/`, `README.md` or
 `planning/DECISIONS.md` — and `planning/DECISIONS.md` is the decisions
@@ -1179,7 +1189,7 @@ teams have never asked about the memory they already have.
 
 ## History
 
-**2026-10-01** — audited at the same commit [`bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73`](https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73); `trust_state` withdrawn, to six. `build_context()` emits every fact that passes its time and scope masks and reads `status` only for the label (`memory_engine.py:620-632`); no other read filters on it, so `asserted` withholds nothing ([section 9](#9-reliability-safety-and-trust)). Section 5 said an as-of replay shows a later oracle; `verify_fact()` stamps `verified_at` and the replay masks it to `asserted`, so the error runs the other way — a re-verification hides the earlier one. `verify_fact()` refuses five ways, not on empty evidence alone. Sections 4 and 5 also still argued `scope_enforced` and `bitemporal` were withheld, named a `compose_context` that does not exist, and described the pre-fusion ranker; all now match the code and the marks. Nothing was installed or run.
+**2026-10-01** — audited at the same commit [`bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73`](https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73); `trust_state` withdrawn, to six. `build_context()` emits every fact that passes its time and scope masks and reads `status` only for the label (`memory_engine.py:620-632`); no other read filters on it, so `asserted` withholds nothing ([section 9](#9-reliability-safety-and-trust)). Section 5 said an as-of replay shows a later oracle; `verify_fact()` stamps `verified_at` and the replay masks it to `asserted`, so the error runs the other way — a re-verification hides the earlier one. `verify_fact()` refuses five ways, not on empty evidence alone. Sections 4 and 5 also still argued `scope_enforced` and `bitemporal` were withheld, named a `compose_context` that does not exist, and described the pre-fusion ranker; all now match the code and the marks. Nothing was installed or run. The file index's links now point at the pin, and `propose_contradiction()`, shipped and called only by its selftests, is described.
 
 **2026-09-19** — audited at the unchanged pin [`bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73`](https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73); nothing upstream moved. `human_review` stands, with a correction to what it covers. The previous record cited the merge gate over "the git-resident ledgers" without reading `SAFE_EXACT` against the memory model. Reading it: the JSONL ledgers and the TSV index live under `templates/`, which the policy always gates because those files "ARE behavior-bearing product, not prose" — so the mark holds there — but `SAFE_EXACT` is `("README.md", "planning/DECISIONS.md", "SESSION_STATE.md")`, and the decisions ledger and the markdown handoff are memory that merges on green with no label. Section 4's list of the safe set had omitted `SESSION_STATE.md` entirely. The batch labeller was checked too and does not weaken the gate: `greenlight-all.yml` is `workflow_dispatch` only and states that dispatching it is the operator's approval action. Screened again first; nothing was installed and no suite was run.
 
