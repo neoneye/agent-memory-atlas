@@ -140,14 +140,15 @@ retrievable… rejection is the only state that removes" — distinguishes *reje
 (not memory-worthy, excluded unconditionally, retained with rejecter and reason)
 from *superseded* (once true, surfaced on request), and makes a reason mandatory
 on every governance action. It is aimed at review rather than at contradiction
-specifically.
+specifically, and its approve and reject verbs are also MCP tools the writing
+agent holds, recording the approver as a string rather than verifying it.
 
 [Daimon](../../systems/daimon/) solves requirement 5, which Memanto misses, while
 placing the decision somewhere neither of the others does: **inside the artifact the user is already reading**. A
 detected supersession renders in the next briefing as a flagged item with the
 confirm and reject commands printed beside it, so the disposition is chosen at
 the moment the stale claim is encountered rather than in a queue nobody opens.
-Confirming appends a resolution that withholds the item from then on; the
+Confirming appends a resolution that withholds the item from later briefings while search ranks it down; the
 `forget` path appends a content-keyed tombstone, which is the trace Memanto's
 `remove_both` lacks.
 
@@ -173,7 +174,7 @@ defend against a vacuous pass by designing the fixture so it cannot pass
 vacuously; this one puts the distinction in the verdict vocabulary, where a
 later fixture edit cannot quietly remove it.
 
-Three rules make the surface safe, and all three are transferable. A machine
+Three rules make Daimon's briefing surface safe, and all three are transferable. A machine
 suggestion is **live by construction** — the liveness fold refuses to let a
 `supersede-candidate` suppress anything, so a wrong guess costs a line of noise
 and never a memory. **Rejecting a guess needs no evidence, re-opening a resolved
@@ -184,8 +185,8 @@ re-detection permanently**, so the queue cannot refill with something a person
 has already answered.
 
 The absence is the more common finding, reached independently in several
-reports. [Gini](../../systems/gini-agent/) has `rejected` and `conflicted`
-as states with no operator-facing resolution.
+reports. [Gini](../../systems/gini-agent/) declares `rejected` and `conflicted`
+as states that no native code path writes, so there is nothing to resolve.
 [Magic Context](../../systems/magic-context/)'s `flagged` "marks a problem
 without an operator surface". [OpenViking](../../systems/openviking/) has merge
 operations but "no operator-facing review queue for contradictions".
@@ -220,8 +221,9 @@ separate resolution record.
 
 [Memora](../../systems/memora/) sits between the two groups: it classifies pairs
 into a defined vocabulary including `contradicts` as an edge between two named
-memories, and its correction pass defaults to a dry run — a report a human reads
-— but the dispositions available are supersede or nothing.
+memories, and its correction pass defaults to a dry run, though `dry_run` is a
+parameter on an MCP tool the model calls — and the dispositions available are
+supersede or nothing.
 
 [AIMAOS](../../systems/aimaos/) resolves rather than flags, and shows that
 resolution alone is not the whole of the pattern either. Its detector is
@@ -245,9 +247,10 @@ ladder** decides, then confidence, and `CONFLICTING` is returned only on an exac
 tie of both. No model is consulted anywhere in that function. The outcome is then
 written where the next write can see it — the loser's status becomes `WEAK` and
 its `rationale` field gains a sentence naming the reason, so the store carries
-both the surviving value and why the other one lost. The residual human decision
+both the surviving value and why the other one lost. The residual decision
 is the exact-tie case, which the ladder is designed to make rare, and it blocks
-the interview driver rather than sitting in a queue. Two properties this page
+the interview driver rather than sitting in a queue — an interview
+`ouroboros_pm_interview` answers from its parameters as readily as a person at a terminal. Two properties this page
 argues for and rarely finds together: **the automatic disposition is
 deterministic and free**, so it does not degrade when nobody is looking, and **a
 blocker is retirable** — an earlier transient block is cleared by a later

@@ -104,7 +104,8 @@ receipt bodies on disk. The module states what that buys: deletion shows up as a
 sequence gap, insertion as a broken link, because `entry_hash` covers
 `prev_hash`. A modified body fails because the recomputed `content_hash` no
 longer matches. `tests/test_audit_chain.py` asserts each of those cases
-separately and passes — 16 tests, run at the pinned commit.
+separately — 16 tests, which passed when run at the report's first pin and were
+read, not run, at its current one.
 
 Two design choices go with it and both are worth copying. The chain is a
 **sidecar**: only `emit` is extended, and existing callers see nothing, so
@@ -124,7 +125,7 @@ cannot be emitted — and not on the others.
 **[aimee](../../systems/aimee/) enforces the same property twice by independent
 means, and says which of the two an attacker can remove.** Its `audit_event`
 table has `BEFORE UPDATE` and `BEFORE DELETE` triggers raising `'WORM:
-audit_event is append-only'`, and its Postgres twin puts the runtime role on
+audit_event is append-only'`, and the Postgres outbox that feeds it puts the runtime role on
 `SELECT` alone at provisioning, with writes reaching the queue only through a
 `SECURITY DEFINER` submit function. Neither is presented as the
 guarantee. The comment in `audit_worm.c` is explicit that the triggers *"are NOT
@@ -180,12 +181,13 @@ deletes then fail loudly, which is correct, while stores go silently unlogged,
 which is not.
 
 **[Fireweed MCP](../../systems/fireweed-mcp/) ships the guard that catches the
-defect this whole section keeps finding, and leaves it off.** Its `ledger.py` is
+defect this whole section keeps finding, and turns it on at server start.** Its `ledger.py` is
 a complete append-only log — gap-free `seq`, `prev_hash` chain, canonical byte
 serialization, a closed event vocabulary, and a `resolver_version` stamped into
 every payload so the offline question *"would today's resolver have decided this
-differently?"* is answerable. `attach_ledger` and `seal()` have no caller
-anywhere in the repository, so this runs on every mutation:
+differently?"* is answerable. The server calls `attach_ledger` at start
+and `seal()` on the next line (`src/fireweed_mcp/server.py:163-184`), so this
+runs on every mutation:
 
 ```python
 if self._ledger is None:
@@ -195,12 +197,11 @@ if self._ledger is None:
     return
 ```
 
-The `return` is the corpus's most common defect and the `raise` is its fix, four
+The `return` is the defect this page keeps finding and the `raise` is its fix, four
 lines apart. **If you build an audit log, build the sealed mode with it**: a
 chokepoint that fails loudly on an unlogged write converts "we forgot to wire it"
-from a silent condition into a startup error. Fireweed's is one call away from
-being on, which is the difference between this and a log that was never
-finished.
+from a silent condition into a startup error. Fireweed's committed check on the
+log asserts that `ledger.db` exists after a write, not that the chain verifies.
 
 **[Helix AGI](../../systems/helix-agi/) is the counterexample that shows why the
 *coverage* question comes before the tamper-evidence question.** Its
@@ -376,8 +377,9 @@ row-level security rather than by everyone remembering not to write the
 statement. The migration numbers the choice (Decision D5) and says why app-layer
 capture beats a trigger on the data tables — application code can see the
 resolved actor and shape a human-readable target — then names the single table
-where no call site exists and a trigger is therefore the right answer. Eleven
-actions are pinned in a CHECK constraint.
+where no call site exists and a trigger is therefore the right answer. The
+actions are pinned in a CHECK constraint widened only by forward migrations, and
+a committed spec fails when it and the TypeScript vocabulary disagree.
 
 The warning is what the log then cannot answer. Every mutation is recorded with
 `{scope, key}` as its metadata, and the write path is an in-place upsert with no
@@ -440,8 +442,8 @@ and on whose word. The mechanism worth stealing is beside it. The store is
 append-only JSONL with an id index, and a status transition returns the record
 with the *same id*, so an id-keyed dedupe would have silently swallowed every
 promotion — the append key is therefore computed as `status:<id>:<status>:<updatedAt>`
-for a transition and as content for a candidate, and a record carrying `updatedAt`
-is never deduplicated at all. Making a log append-only is the easy half; choosing
+for a transition, and the bare id is the key only for a record that was never
+mutated. Making a log append-only is the easy half; choosing
 a key under which a mutation cannot be mistaken for a duplicate is the half that
 decides whether the log is complete.
 
@@ -503,7 +505,8 @@ same transaction as the snapshot and the UPDATE, which is the placement this
 pattern asks for. The vocabulary declares six event types and two have
 producers; store, archive, move and delete write nothing, a purge tool deletes
 events by age, and `ON DELETE CASCADE` removes a memory's events with it — so
-the log explains edits to memories that still exist and nothing else.
+the log explains edits to memories that still exist and nothing else, and the
+report withholds `audit_log` on that ground.
 
 **[Mnemosyne (Nabzx)](../../systems/mnemosyne-nabzx/) removes the transactional-coupling problem by making the log the state.** Each write is a `Commit` object and a new `State` in an insert-only redb table, written with a per-commit change set and the branch compare-and-swap in one transaction, so the audit cannot describe a mutation that never committed. It shows the pattern's other obligation from the opposite side: because nothing ever leaves the table, `forget` is a new snapshot and not a deletion, and the agent's own `recall_at` tool reads the forgotten value back. The one gap in coverage is before the log — a staged node is served by `recall` before any commit records it.
 

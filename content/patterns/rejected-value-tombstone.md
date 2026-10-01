@@ -153,8 +153,8 @@ precisely because of *how* it is weaker.
 [Provem](../../systems/provem/) arrives at it from regulation rather than from a
 failure, discussed below.
 [memsem](../../systems/memsem/) refuses the write like Verel and RainBox rather
-than filtering the read like Daimon and Provem, and puts the mechanism behind a
-human decision — discussed below.
+than filtering the read like Daimon and Provem, and arms the mechanism only on a
+candidate review — discussed below.
 [Perseus Vault](../../systems/perseus-vault/) refuses a value by its digest
 without storing it — discussed below.
 [PLUR1BUS](../../systems/plur1bus/) does the same with a SHA-256 fingerprint of
@@ -281,9 +281,6 @@ shipped to hosts says a hit is *"advisory, not a command veto"*. The `forget`
 ledger, which is far simpler, is the one wired into the fold that every read
 crosses. Elaboration is not the property. Being on the path is.
 
-Everything else stops at supersession, archival, or deletion — mechanisms that
-remove a value from view without recording that it was *judged wrong*:
-
 **Provem arrived from a regulation, and its key is a token subset.**
 [Provem](../../systems/provem/)'s `forget(term, scope)` deletes the matching
 records, appends the term's **token set** to a per-tenant `erased_terms`
@@ -306,7 +303,7 @@ way out. For a system whose stated purpose is GDPR Article 17 that is the sharpe
 version of the same criticism — the regulation is about what you hold, and this
 mechanism governs what you serve.
 
-**memsem's tombstone is one a person has to arm.**
+**memsem's tombstone is armed by a candidate review, and the review verb is an MCP tool the agent holds too.**
 [memsem](../../systems/memsem/) parks an uncertain fact in a `memory_candidates`
 table that no read path joins; rejecting it writes a row into
 `memory_suppressions` keyed on the normalised subject, predicate, object and
@@ -323,8 +320,8 @@ tombstone — is passed by omission rather than by decision.
 building the check is the easier half.** memsem's other correction path is
 supersession by attenuation: a contradicting write multiplies its rival's
 confidence by 0.6 and archives it below 0.25. That path writes no suppression.
-Archiving a value because it lost an argument and rejecting a candidate because a
-person said no are two judgements about the same sentence, and only the second is
+Archiving a value because it lost an argument and rejecting a candidate on review
+are two judgements about the same sentence, and only the second is
 recorded as a rejection — so the write path a background extractor uses reaches
 the store through the door with no lock on it. Measured against the project's own
 milk/lactose example: an ordinary correction is archived at the third
@@ -445,7 +442,7 @@ reported and never applied, and a person's re-assertion becomes a typed
 *"I had already rejected this — do you really want to confirm it again?"* whose
 `ja` writes a `sense_reactivated` audit entry. Seven cases in
 `tests/test_tombstone.py` hold each link, and the one covering re-assertion says
-in its own name that it replaced a test pinning the previous behaviour. The
+in its docstring that it replaced a test pinning the previous behaviour. The
 check lives in `add_sense`, and `TeachEngine.teach` calls `upgrade_unknown_sense`
 before it: on a concept that also holds an `unknown` placeholder, a refuted
 definition typed again fills the placeholder as `confirmed` without the
@@ -511,7 +508,7 @@ first row's reason and time.
 
 [PMB](../../systems/pmb/) shows why a closure reason has to be read by every path that can promote. A user negation archives the current keyed value and writes `closed_reason`, which nothing in the tree reads. The plain fact that first stated the value stays active, and `pmb repair-keyed --apply` promotes it back into a keyed value and archives the negation as obsolete. The record exists; it is keyed on the row rather than the value, and the repair pass walks past it.
 
-[MeMesh](../../systems/memesh/) carries the narrowest instance in the corpus that still fits the definition, and its scope is exactly where its rejections arise. The Stop hook restates three per-session snapshot entities from the transcript on every turn, which is a re-extraction from a retained source by construction; removing one observation from such a snapshot writes the SHA-256 of its exact text into `metadata.forgotten_observation_hashes` in the same transaction, and `captureEntity` drops any restated line whose hash is listed. Untrusted writes filter it as well, and only a trusted explicit write clears it. There is no normalisation, the list lives on one session's entity, and entity-level `forget` is ordinary archival that a plain `remember` reverses.
+[MeMesh](../../systems/memesh/) carries a narrow instance that still fits the definition, and its scope is exactly where its rejections arise. The Stop hook restates three per-session snapshot entities from the transcript on every turn, which is a re-extraction from a retained source by construction; removing one observation from such a snapshot writes the SHA-256 of its exact text into `metadata.forgotten_observation_hashes` in the same transaction, and `captureEntity` drops any restated line whose hash is listed. Untrusted writes filter it as well, and only a trusted explicit write clears it. There is no normalisation, the list lives on one session's entity, and entity-level `forget` is ordinary archival that a plain `remember` reverses.
 
 [Recollect](../../systems/recollect/) consults its rule at every write and suppresses on the read, and the read half reaches past the claim store. A reject, correct or withdraw review writes an `assertion_rules` row keyed on the normalised subject, predicate and value; a later proposal of that value from any writer is stored as `blocked_by_rule` and cleared from every eligibility gate, and recall withholds any raw source chunk whose text contains all three keys, so a copied note repeating the corrected value stays out outside history mode. Its committed case asserts exactly that after a positive lexical control, a `REINDEX` and a rebuilt router. The two limits are the text key, which a paraphrase walks past, and erasure, which blanks the rule's keys with the claim it came from.
 
@@ -527,16 +524,16 @@ completes?* The method is set out in
 
 | Kind | Systems | What happens on re-assertion |
 | --- | --- | --- |
-| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/), [OpenMake LLM](../../systems/openmake-llm/), [Argos](../../systems/argos/), [no_human](../../systems/no-human/), [SAGE](../../systems/sage-memory/), [Memora](../../systems/memora/), [Scope Recall](../../systems/scope-recall-hermes/) | The write is refused. No row, or no activation |
+| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/), [OpenMake LLM](../../systems/openmake-llm/), [Argos](../../systems/argos/), [no_human](../../systems/no-human/), [SAGE](../../systems/sage-memory/), [Memora](../../systems/memora/), [Scope Recall](../../systems/scope-recall-hermes/), [MeMesh](../../systems/memesh/), [Recollect](../../systems/recollect/), [TideMind](../../systems/tidemind/), [Utopia](../../systems/utopia/), [Velantrim Crystal](../../systems/velantrim-exocortex-crystal/), [marm-memory](../../systems/marm-memory/) | The write is refused. No row, or no activation |
 | **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Wenlan](../../systems/wenlan/), [memoir-cli](../../systems/memoir-cli/), [ShellBrain](../../systems/shellbrain/) | The write lands *on* the rejected row, which stays rejected. Accidental in Mnemosyne, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
-| **Suppressed** — the read path hides it | [Provem](../../systems/provem/), [OmniMem](../../systems/omnimem/) | A copy enters the store and is stopped on the way out — in OmniMem by a suppression set matched as a substring of content, written by hand or by an effort-4 abandonment |
+| **Suppressed** — the read path hides it | [Provem](../../systems/provem/), [OmniMem](../../systems/omnimem/) | A copy enters the store and is stopped on the way out — in OmniMem by a suppression set matched as a substring of content, written by hand or by an effort-4 or effort-5 abandonment |
 | **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
 
 **The Consulted row, then, is the strong form** — value-keyed, consulted before
 the write, refusing activation. The collided form
 is the rarer one, and Nova AI shows why the distinction is worth drawing:
 its refusal held by a missing filter, which its author then replaced with an
-explicit check, a `blocked` return value and six tests. A property nothing
+explicit check, a `blocked` return value and seven tests. A property nothing
 claims is one a tidy-up can delete. The mark is broader than this page's
 argument, and a reader deciding what to build should use the table rather than
 the count.
@@ -563,8 +560,7 @@ answer to "when is a match meaningful", and it fails on precisely the values —
 dates, prices, versions, identifiers — that get corrected most often. Scope the
 comparison to a field or a whole cell instead of to a length.
 
-**[MemoryOps AI](../../systems/memoryops-ai/) is the closest any system here comes
-without arriving**, and it is the best argument on this page that the expensive
+**[MemoryOps AI](../../systems/memoryops-ai/) comes close without arriving**, and it is the best argument on this page that the expensive
 half of the pattern is not the hard half. Its records carry
 `normalized_content`, computed on write, persisted on every row, and already
 compared — the normalization this page's *Cost to adopt* section calls "where the
@@ -609,7 +605,7 @@ exists; the lookup does not** — which is the same one-predicate gap as
 [MemoryOps AI](../../systems/memoryops-ai/) above, reached from the opposite
 direction, by a system that kept the value rather than one that normalised it.
 
-Worth holding beside the rest of that system, because it makes the page's central
+Worth holding beside the rest of [MemoryOps AI](../../systems/memoryops-ai/), because its gap makes the page's central
 claim concrete. This is a project that enforces tenancy through Postgres
 row-level security, chains its audit per tenant so it cannot fork, holds
 sensitive writes for human approval, and commits eval cases that plant a
@@ -617,9 +613,12 @@ cross-tenant memory before asserting it is unreachable. It is *more* careful tha
 most of the corpus about what may enter. **Admission and rejection are different
 problems, and building the first extremely well does not build the second.**
 
-- [Gini](../../systems/gini-agent/) has a `rejected` **status** on a unit, which
-  is closer than most, but nothing keyed on the value: an equivalent claim can be
-  retained again under a new id.
+Most of the near-misses below stop at supersession, archival, or deletion —
+mechanisms that remove a value from view without recording that it was *judged wrong*:
+
+- [Gini](../../systems/gini-agent/) declares a `rejected` **status** on a unit that
+  no native path writes — only a migration importer reaches it — and nothing is
+  keyed on the value: an equivalent claim can be retained again under a new id.
 - [OpenSRE](../../systems/opensre/) is where the re-extraction this page warns
   about runs on a **timer**. Its automatic extractor reads the last thirty turns
   after every recorded turn; `forget` unlinks the file and records nothing. So a
@@ -660,10 +659,11 @@ The absence matters most where it co-occurs with **automatic re-derivation**,
 which is now the common case. CowAgent re-distils `MEMORY.md` nightly from
 retained daily files. Atomic Agent re-clusters. Magic Context and Redis Agent
 Memory Server both extract on a schedule from retained history. OpenClaw's
-auto-capture can restore content a user deleted. In each, "forget that" is a
+forget tombstones the session rather than the claim, so the same sentence from
+another session is learned again. In each, "forget that" is a
 statement about the present that the next background pass is free to undo.
 
-[llm-wiki-memory](../../systems/llm-wiki-memory/) states the limit plainly:
+[llm-wiki-memory](../../systems/llm-wiki-memory/) shows the limit:
 operational supersession can archive an old leaf but cannot prevent the same
 rejected content from being distilled again.
 
@@ -733,9 +733,8 @@ and restating what a person deleted — which is why a `deleted_at` on the row
 would not have worked and somebody noticed. It is keyed on a filesystem path, so
 it never meets the normalization problem that defeated Verel's round 9 and
 Memori's key; this is the pattern on easy mode, and the easy mode is where it
-gets built. And nothing tests it, in a tree with 87 test files, beside a
-commit gate tested across nine cases — so even here, the negative half is the
-half nobody covered. The mechanism is not hard. It is reached when a concrete
+gets built. Its tests came a release after the mechanism: one file asserts the
+server's 409, another that the client drops the path on it. The mechanism is not hard. It is reached when a concrete
 re-assertion loop makes the need undeniable, and memory systems have exactly
 that loop and mostly have not noticed.
 
@@ -810,14 +809,15 @@ non-membership"*, which is *"structurally different from 'we don't know'"* and i
 handled by a separate epistemic state.
 
 **What is new is where the lookup runs.** Every tombstone above guards a write
-path or filters a read. RCK does both and then checks the same denials on the two
+path or filters a read. RCK offers a read filter the caller has to apply — no KB
+query invokes it — and checks the same denials automatically on the two
 paths that *manufacture* facts: `chain_induction.py` calls `denied_pairs_for`
 before an induced fact is accepted, and `rule_instantiation.py` calls it at a
 score floor before a rule fires. So the refusal is not defeated by the system's
 own derivation — the answer you rejected cannot be re-derived from the facts you
 kept.
 
-That is the gap most of this page's instances have and none of them names. A
+That is the gap most of this page's instances have. A
 store with any inference step — a consolidation pass, a rule engine, a summariser
 — can regenerate a rejected value from material that was never itself rejected,
 and a tombstone consulted only at ingest will not see it. Perseus Vault reaches
@@ -873,8 +873,9 @@ when the incoming value matches — *"a rejected value may not be silently
 re-asserted"* — and `lift_tombstone()` is the deliberate way out, requiring its
 own reason and logging its own event. An empty reason is refused on either call,
 on the stated parallel that *"an unexplained rejection is as unauditable as an
-unexplained verification"*. Five committed cases pin the behaviour, including
-that a different value under the same key still stores.
+unexplained verification"*. Seven selftest checks pin the behaviour, including
+that a different value under the same key still stores and that a rejection
+naming an alternative cites it in the refusal.
 
 Note what the two answers do *not* do: reconcile. The engine and the ledger are
 separate stores with separate write paths, and nothing in the ledger tooling
@@ -983,7 +984,7 @@ for being wrong does not record it, and recording it does not erase it.
 
 [create-context-graph](../../systems/create-context-graph/)'s session connector gets most of the way and stops at the key. A corrections pass reads a user turn matching one of ten patterns, writes the preceding assistant turn as an alternative carrying a not-chosen flag and a reason, and links it as rejected from a decision — a durable, reasoned record of a value a person rejected, which is more than most of the corpus has. Its name is derived from the session id and the message's index in the transcript, so importing a second session in which the model proposes the same thing creates a second node and consults neither. The distinction this page draws — keyed on the record versus keyed on the value — is the whole difference here, and it is one hash function wide.
 
-[elizaOS](../../systems/elizaos/) is the near-miss that comes closest to having
+[elizaOS](../../systems/elizaos/) is a near-miss that came close to having
 built it by accident. It already computes the key: `normalizeFactTextKey`
 canonicalizes a claim to lowercase, letters and numbers only, whitespace
 collapsed, unicode-aware — and `findEquivalentFact` looks that key up against
@@ -1016,19 +1017,20 @@ decision.
 - Attack the key normalization with unicode look-alikes and case and whitespace
   variants. Verel's round 9 was an NFKC bypass of `strip().lower()`.
 - Reject a value, rerun extraction, and prove it stays inactive. Every system
-  in the atlas that carries this mechanism should have this test; Daimon, which
-  has 4,388 others, does not, and neither does Mnemosyne, with 65,228 lines of
-  them. Both hold the property by accident. Nova AI is the counter-case and the
-  cheapest one to copy: `tests/test_tombstone.py` is 246 lines, isolates a store
+  in the atlas that carries this mechanism should have this test; Mnemosyne,
+  with 65,228 lines of tests, does not, and holds the property by accident.
+  Daimon's `test_deletion_durability_protocol.py` runs it end to end: forget a
+  value, re-feed the original transcript through the real serializer, and pair
+  every step with a never-forgotten twin. Nova AI is the cheapest to copy: `tests/test_tombstone.py` is 246 lines, isolates a store
   in a temporary directory, and asserts that a re-asserted rejected definition
   changes no status and creates no second sense. A tombstone is the one mechanism
   whose silent failure looks exactly like success.
 - **Run the lookup while the candidate is already in the table.** A tombstone
   consulted after the row is inserted and before it is admitted can match the
-  candidate itself. SAGE's v10.1 did: the dedup predicate was `status !=
+  candidate itself. SAGE's did before v10.1: the dedup predicate was `status !=
   'deprecated'`, the voter ran with the candidate sitting there as `proposed`,
   and on a single-validator chain every memory was rejected as a duplicate of
-  itself and deprecated on arrival. The first repair narrowed the lookup to
+  itself and deprecated on arrival. The first repair, v10.1, narrowed the lookup to
   committed rows and deleted the tombstone with the bug; the second, on
   12 September 2026, excludes the candidate's own id and ignores other
   in-flight candidates, so two identical proposals cannot veto each other.

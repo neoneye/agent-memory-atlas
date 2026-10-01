@@ -224,7 +224,8 @@ broken link, because <code>entry_hash</code> covers
 <code>prev_hash</code>. A modified body fails because the recomputed
 <code>content_hash</code> no longer matches.
 <code>tests/test_audit_chain.py</code> asserts each of those cases
-separately and passes — 16 tests, run at the pinned commit.</p>
+separately — 16 tests, which passed when run at the report's first pin
+and were read, not run, at its current one.</p>
 <p>Two design choices go with it and both are worth copying. The chain
 is a <strong>sidecar</strong>: only <code>emit</code> is extended, and
 existing callers see nothing, so tamper-evidence can be added to an
@@ -244,16 +245,17 @@ others.</p>
 property twice by independent means, and says which of the two an
 attacker can remove.</strong> Its <code>audit_event</code> table has
 <code>BEFORE UPDATE</code> and <code>BEFORE DELETE</code> triggers
-raising <code>'WORM: audit_event is append-only'</code>, and its
-Postgres twin puts the runtime role on <code>SELECT</code> alone at
-provisioning, with writes reaching the queue only through a
-<code>SECURITY DEFINER</code> submit function. Neither is presented as
-the guarantee. The comment in <code>audit_worm.c</code> is explicit that
-the triggers <em>"are NOT the adversarial guarantee (a process with file
-write access can drop them) — that is the hash-chain…"</em> Naming the
-threat model is the part to copy: a trigger stops a bug and a hash chain
-stops an editor, and a page that lists both without distinguishing them
-has told a reader less than it appears to.</p>
+raising <code>'WORM: audit_event is append-only'</code>, and the
+Postgres outbox that feeds it puts the runtime role on
+<code>SELECT</code> alone at provisioning, with writes reaching the
+queue only through a <code>SECURITY DEFINER</code> submit function.
+Neither is presented as the guarantee. The comment in
+<code>audit_worm.c</code> is explicit that the triggers <em>"are NOT the
+adversarial guarantee (a process with file write access can drop them) —
+that is the hash-chain…"</em> Naming the threat model is the part to
+copy: a trigger stops a bug and a hash chain stops an editor, and a page
+that lists both without distinguishing them has told a reader less than
+it appears to.</p>
 <p>Two construction details go with it, both addressing gaps the Aura
 entry above leaves open. The chain is guarded by a <strong>single-writer
 mutex</strong>, so <code>seq</code> is gap-free by construction rather
@@ -303,26 +305,27 @@ then fail loudly, which is correct, while stores go silently unlogged,
 which is not.</p>
 <p><strong><a href="../../systems/fireweed-mcp/">Fireweed MCP</a> ships
 the guard that catches the defect this whole section keeps finding, and
-leaves it off.</strong> Its <code>ledger.py</code> is a complete
-append-only log — gap-free <code>seq</code>, <code>prev_hash</code>
-chain, canonical byte serialization, a closed event vocabulary, and a
-<code>resolver_version</code> stamped into every payload so the offline
-question <em>"would today's resolver have decided this
-differently?"</em> is answerable. <code>attach_ledger</code> and
-<code>seal()</code> have no caller anywhere in the repository, so this
-runs on every mutation:</p>
+turns it on at server start.</strong> Its <code>ledger.py</code> is a
+complete append-only log — gap-free <code>seq</code>,
+<code>prev_hash</code> chain, canonical byte serialization, a closed
+event vocabulary, and a <code>resolver_version</code> stamped into every
+payload so the offline question <em>"would today's resolver have decided
+this differently?"</em> is answerable. The server calls
+<code>attach_ledger</code> at start and <code>seal()</code> on the next
+line (<code>src/fireweed_mcp/server.py:163-184</code>), so this runs on
+every mutation:</p>
 <pre class="python"><code>if self._ledger is None:
     if self._sealed:
         raise RuntimeError(f&quot;sealed graph: {kind} write without an attached ledger — &quot;
                            &quot;every mutation must be a captured event&quot;)
     return</code></pre>
-<p>The <code>return</code> is the corpus's most common defect and the
+<p>The <code>return</code> is the defect this page keeps finding and the
 <code>raise</code> is its fix, four lines apart. <strong>If you build an
 audit log, build the sealed mode with it</strong>: a chokepoint that
 fails loudly on an unlogged write converts "we forgot to wire it" from a
-silent condition into a startup error. Fireweed's is one call away from
-being on, which is the difference between this and a log that was never
-finished.</p>
+silent condition into a startup error. Fireweed's committed check on the
+log asserts that <code>ledger.db</code> exists after a write, not that
+the chain verifies.</p>
 <p><strong><a href="../../systems/helix-agi/">Helix AGI</a> is the
 counterexample that shows why the <em>coverage</em> question comes
 before the tamper-evidence question.</strong> Its
@@ -516,7 +519,9 @@ The migration numbers the choice (Decision D5) and says why app-layer
 capture beats a trigger on the data tables — application code can see
 the resolved actor and shape a human-readable target — then names the
 single table where no call site exists and a trigger is therefore the
-right answer. Eleven actions are pinned in a CHECK constraint.</p>
+right answer. The actions are pinned in a CHECK constraint widened only
+by forward migrations, and a committed spec fails when it and the
+TypeScript vocabulary disagree.</p>
 <p>The warning is what the log then cannot answer. Every mutation is
 recorded with <code>{scope, key}</code> as its metadata, and the write
 path is an in-place upsert with no version chain — so the log proves
@@ -588,11 +593,10 @@ the record with the <em>same id</em>, so an id-keyed dedupe would have
 silently swallowed every promotion — the append key is therefore
 computed as
 <code>status:&lt;id&gt;:&lt;status&gt;:&lt;updatedAt&gt;</code> for a
-transition and as content for a candidate, and a record carrying
-<code>updatedAt</code> is never deduplicated at all. Making a log
-append-only is the easy half; choosing a key under which a mutation
-cannot be mistaken for a duplicate is the half that decides whether the
-log is complete.</p>
+transition, and the bare id is the key only for a record that was never
+mutated. Making a log append-only is the easy half; choosing a key under
+which a mutation cannot be mistaken for a duplicate is the half that
+decides whether the log is complete.</p>
 <p><a href="../../systems/omniintelligence/">OmniIntelligence</a> stores
 the <em>evidence</em> beside the decision.
 <code>pattern_lifecycle_transitions</code> carries the usual from/to,
@@ -709,7 +713,8 @@ pattern asks for. The vocabulary declares six event types and two have
 producers; store, archive, move and delete write nothing, a purge tool
 deletes events by age, and <code>ON DELETE CASCADE</code> removes a
 memory's events with it — so the log explains edits to memories that
-still exist and nothing else.</p>
+still exist and nothing else, and the report withholds
+<code>audit_log</code> on that ground.</p>
 <p><strong><a href="../../systems/mnemosyne-nabzx/">Mnemosyne
 (Nabzx)</a> removes the transactional-coupling problem by making the log
 the state.</strong> Each write is a <code>Commit</code> object and a new

@@ -208,7 +208,7 @@ writes succeed against the wrong account. This is the *boundary* level of the
 three the [comparison](../../overview/#reading-this-report) distinguishes in its reading notes —
 tag, filter, boundary — and it costs an operator a key rather than an identity
 service. It is worth separating from the rest of that
-implementation, whose read path is the weakest the atlas has catalogued.
+implementation, whose read path reads Chroma distances as similarities and drops the closest matches.
 
 [MateClaw](../../systems/mateclaw/) extends the idea across a plugin boundary:
 its `MemoryProvider` SPI declares `prefetch(agentId, query, ownerKey)` and
@@ -239,7 +239,7 @@ prefix sits outside the charset every API-created peer must match, and the
 authoritative `kind` marker lives in a JSONB column that appears in no API
 schema, so neither a name squatter nor a crafted payload can manufacture one.
 
-Its workspace-level chat, added on 24 August 2026, is where the boundary meets an
+Its workspace-level chat is where the boundary meets an
 aggregate. A peer card is one cross-session summary, so a card for an in-scope peer
 can carry a fact from a session outside the scope; under a scope the agent drops
 every card and routes on counts alone, the `get_peer_card` tool refuses the same
@@ -258,7 +258,7 @@ fixpoint, on the rule that *"a deduction resting on removed evidence must leave
 with it, and so must an induction resting on that deduction"* — so the boundary
 holds for what was concluded inside it, not only for what was said. **A scope key
 that cannot be applied to existing data is a boundary for new users only**, and
-this is the one worked case in the corpus of a scope arriving late and reaching
+this is a worked case of a scope arriving late and reaching
 backwards.
 
 It ships the test to match: `scope_confines_recall.json` writes one fact inside
@@ -267,8 +267,8 @@ material, and then asks the same question unscoped and requires the outside
 material back — proof that the boundary held rather than that the pipeline was
 empty.
 
-[Memobase](../../systems/memobase/) takes the enforcement one level lower than
-anything else here — into the schema. Every memory table declares
+[Memobase](../../systems/memobase/) takes the enforcement below the query and
+into the schema. Every memory table declares
 `PrimaryKeyConstraint("id", "project_id")` with composite
 `ForeignKeyConstraint(["user_id", "project_id"], ...)`, so the tenant key is part
 of the row's identity rather than a column a query has to remember. OpenClaw makes
@@ -304,7 +304,8 @@ rare is not what makes it worth copying.
 The counterexamples are as instructive as the implementations.
 [Holographic](../../systems/holographic/) describes itself as a "single-user
 Hermes memory plugin" and has no scope column at all; `category` partitions banks, not
-access. [CowAgent](../../systems/cowagent/) defaults `scope` to `'shared'`, the
+access. [CowAgent](../../systems/cowagent/) filters every search arm on its key
+and still defaults `scope` to `'shared'`, the
 same hazard the atlas flags in [agentmemory](../../systems/agentmemory/) — the
 safe value should be the one nobody has to remember to set.
 [nanobot](../../systems/nanobot/) is one workspace, one memory, while its UI lets
@@ -366,8 +367,9 @@ and together they close the two failure modes this pattern most often leaves
 open — a caller widening its own scope, and a refactor that turns a missing
 scope into a table scan.
 
-The warning is about **derived** state. CSM's `memories` table is scoped
-rigorously; its `self_model_capabilities` table has no `project_id` at all, and
+The warning is about **derived** state. CSM's `memories` table is scoped on
+every search path, though the per-turn lesson-trigger cache reads it with no
+project filter; its `self_model_capabilities` table has no `project_id` at all, and
 the updater that fills it reads `experience_packets` with no project filter. So
 capability confidence learned in one repository is computed from every
 repository and injected into all of them. Scoping the store is the visible half
@@ -380,7 +382,7 @@ routinely conflates. The **scope key** is a validated string with four canonical
 forms — `global`, `project::{name}`, `repo::{owner}/{repo}`,
 `branch::{owner}/{repo}::{branch}` — normalised to lowercase, rejecting the
 single-colon mistake with an error that prints the corrected form, and applied
-as an equality filter on every read. The **tenancy boundary** is something else
+as an equality filter on every read that names one. The **tenancy boundary** is something else
 entirely: row-level security policies gating each read on `auth.uid()` or a
 matching `org_id` JWT claim. One says *which* memories are relevant; the other
 says *whose* they are, and it holds even against a caller that constructs its own
@@ -416,10 +418,11 @@ does not yet reach is a third option beside enforcing and leaking, and it is
 rarely taken.
 
 The counterweight, and the reason LoreKit is not simply the best entry here: the
-scope *hierarchy* is not enforced anywhere. LoreKit's own README describes agents
-reading branch, then repo, then global and merging — and `memory.list` filters on
-one exact scope. The ladder is three separate calls a skill file instructs the
-agent to make. A validated, RLS-backed, org-routed key whose hierarchy exists
+scope *hierarchy* is not enforced as a merge. LoreKit's own README describes agents
+reading branch, then repo, then global and merging; an unscoped `memory.read`
+picks one winner by scope type, and `memory.list` returns one exact scope or
+every visible one, unmerged. The ladder is three separate calls a skill file
+instructs the agent to make. A validated, RLS-backed, org-routed key whose hierarchy exists
 only in prose is a good reminder that a scope *format* and a scope *resolution
 order* are different pieces of work, and the second one is easy to assume you
 have done.
@@ -600,7 +603,7 @@ underneath you is willing to say yes.
 three forms in one repository.** Its section search filters
 `AND (? IS NULL OR sections.space = ?)`, and the `memory_search` MCP tool passes
 `optionalString(args.space)` — so an agent that omits the argument reads across
-every space. Twenty lines away in the same file, the failures query takes
+every space. Further down the same file, the failures query takes
 `WHERE space = ?` with no null branch. And the CLI resolves an unset `--space` to
 `"personal"` before calling the same function. Safe, defaulted, and unsafe, by
 the same author, over the same column — and the unsafe one is on the surface a
@@ -624,9 +627,9 @@ on `confidence` and on a canary slice, and never on `scope`, so a `global`
 lesson and a `workspace` lesson behave identically and both are confined to the
 workspace file they sit in. The isolation is real and the directory layout
 delivers it. Two things make this worth naming rather than shrugging at: the
-project's own rule document
-(`packs/rules/lessons-behavioural-only.md`) lists scoping first among the three
-properties that bound a bad lesson — *"a run-scoped or workspace-scoped lesson
+project's paper lists scoping first among the three properties that bound a bad
+lesson, and its rule document (`packs/rules/lessons-behavioural-only.md`)
+repeats it — *"a run-scoped or workspace-scoped lesson
 cannot reach another workspace"* — attributing to the field a guarantee the
 filesystem is providing; and `'run'`, the narrowest value, is never written by
 any caller. A scope key that is stored, deduped on, displayed and documented as
@@ -645,7 +648,7 @@ are tested, including an attempt to escalate `cli_scope` to `global` from inside
 the container. This is the call-site enumeration this page asks for, done.
 
 Then the durable memory sits outside all of it. `groups/<folder>/memory/` is a
-Markdown tree mounted at `/workspace/agent` in **every** session of the agent
+Markdown tree mounted at `/workspace/agent/memory` in **every** session of the agent
 group, while the conversation layer's echo fan is deliberately narrower — it
 targets only sessions of the messaging group a message appeared in, on the stated
 ground that *"same messaging group = identical audience by definition, so every
@@ -779,7 +782,8 @@ another agent's rows, and a committed case proves that what one agent remembers
 the other does not find. Three writers run outside a tool and missed the key:
 the hook that turns an owner's *"hai sbagliato"* into a learning event lives
 in the platform's own turn loop, which a direct chat with an agent never enters,
-so corrections land in the platform's unscoped log; the daily note each feedback
+so a correction typed to an agent is never logged, and one typed to the
+platform lands in its unscoped log; the daily note each feedback
 appends goes to the top-level memory directory, where the platform's retrieval
 reads it; and the nightly Mirror scores the *platform's* lessons into an agent's
 probe. A test that reads the scoped store passes on all three, because the leak
@@ -877,7 +881,7 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[Neo Agent Brain](../../systems/neo-agent-brain/) puts the tenant key on every row from the transport and applies it unevenly by read.** `add_memory` stamps `userId` from the OIDC token or the stdio identity, never from a tool argument; `query_recent_turns` puts `userId = ?` into its SQL and returns nothing when no tenant resolves, while the semantic and session reads apply the key only under the `private` policy, and the shipped default is `team`. A caller-supplied `memorySharing` is clamped so it can narrow and never widen. **Clamp the request to the configured scope, and write down which reads the default leaves unfiltered.**
 
-**[Octobrain](../../systems/octobrain/) enforces the key on every read and overwrites it on every rewrite.** One `build_scalar_predicate` puts `(scope = 'X' OR scope = '')` on the vector, hybrid and filter-only searches, and `get_memory` carries the same clause. The upsert writes the store's own scope rather than the row's, so a global memory that a project session updates, tags or penalises moves into that project, while `forget` of the same row matches nothing and reports success. **Take the scope of a rewrite from the row being rewritten, and make read and delete predicates agree.**
+**[Octobrain](../../systems/octobrain/) enforces the key on every read of a scoped store and overwrites it on every rewrite.** One `build_scalar_predicate` puts `(scope = 'X' OR scope = '')` on the vector, hybrid and filter-only searches, and `get_memory` carries the same clause. The upsert writes the store's own scope rather than the row's, so a global memory that a project session updates, tags or penalises moves into that project, while `forget` of the same row matches nothing and reports success. **Take the scope of a rewrite from the row being rewritten, and make read and delete predicates agree.**
 
 [AutoBot](../../systems/autobot-ai/) has the key done three ways and missing from the one read that matters most. The SQLite store makes the owner a required argument that raises when blank, trajectory recall puts `user_id` and `tenant_id` in the vector `where` and re-checks every returned row, and the explicit knowledge-base search routes apply owner and visibility filters that fail closed. The always-loaded Essential Context block reads 200 facts through `get_all_facts` with none of them, and the chat RAG path passes only the research-quarantine filter, so the predicate exists on the search surface and not on the path that reaches every prompt.
 

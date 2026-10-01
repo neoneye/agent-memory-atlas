@@ -332,8 +332,8 @@ instead of letting writes succeed against the wrong account. This is the
 href="../../overview/#reading-this-report">comparison</a> distinguishes
 in its reading notes — tag, filter, boundary — and it costs an operator
 a key rather than an identity service. It is worth separating from the
-rest of that implementation, whose read path is the weakest the atlas
-has catalogued.</p>
+rest of that implementation, whose read path reads Chroma distances as
+similarities and drops the closest matches.</p>
 <p><a href="../../systems/mateclaw/">MateClaw</a> extends the idea
 across a plugin boundary: its <code>MemoryProvider</code> SPI declares
 <code>prefetch(agentId, query, ownerKey)</code> and
@@ -368,15 +368,15 @@ reserved prefix sits outside the charset every API-created peer must
 match, and the authoritative <code>kind</code> marker lives in a JSONB
 column that appears in no API schema, so neither a name squatter nor a
 crafted payload can manufacture one.</p>
-<p>Its workspace-level chat, added on 24 August 2026, is where the
-boundary meets an aggregate. A peer card is one cross-session summary,
-so a card for an in-scope peer can carry a fact from a session outside
-the scope; under a scope the agent drops every card and routes on counts
-alone, the <code>get_peer_card</code> tool refuses the same way, and an
-empty scope union answers nothing rather than everything. A committed
-case puts one fact in a scoped session and another outside it, asserts
-the scoped answer contains neither of the outside terms, and asks again
-unscoped as the control.</p>
+<p>Its workspace-level chat is where the boundary meets an aggregate. A
+peer card is one cross-session summary, so a card for an in-scope peer
+can carry a fact from a session outside the scope; under a scope the
+agent drops every card and routes on counts alone, the
+<code>get_peer_card</code> tool refuses the same way, and an empty scope
+union answers nothing rather than everything. A committed case puts one
+fact in a scoped session and another outside it, asserts the scoped
+answer contains neither of the outside terms, and asks again unscoped as
+the control.</p>
 <p>Retroactivity is where most scope retrofits quietly fail, and Honcho
 makes it two queue jobs. Joining a scope that already has messages
 copies the session's <em>explicit</em> documents into the scope's
@@ -389,17 +389,16 @@ evidence must leave with it, and so must an induction resting on that
 deduction"</em> — so the boundary holds for what was concluded inside
 it, not only for what was said. <strong>A scope key that cannot be
 applied to existing data is a boundary for new users only</strong>, and
-this is the one worked case in the corpus of a scope arriving late and
-reaching backwards.</p>
+this is a worked case of a scope arriving late and reaching
+backwards.</p>
 <p>It ships the test to match: <code>scope_confines_recall.json</code>
 writes one fact inside the scope and a different one outside, asserts
 the scoped read omits the outside material, and then asks the same
 question unscoped and requires the outside material back — proof that
 the boundary held rather than that the pipeline was empty.</p>
 <p><a href="../../systems/memobase/">Memobase</a> takes the enforcement
-one level lower than anything else here — into the schema. Every memory
-table declares <code>PrimaryKeyConstraint("id", "project_id")</code>
-with composite
+below the query and into the schema. Every memory table declares
+<code>PrimaryKeyConstraint("id", "project_id")</code> with composite
 <code>ForeignKeyConstraint(["user_id", "project_id"], ...)</code>, so
 the tenant key is part of the row's identity rather than a column a
 query has to remember. OpenClaw makes an unscoped read inexpressible in
@@ -440,8 +439,9 @@ what makes it worth copying.</p>
 href="../../systems/holographic/">Holographic</a> describes itself as a
 "single-user Hermes memory plugin" and has no scope column at all;
 <code>category</code> partitions banks, not access. <a
-href="../../systems/cowagent/">CowAgent</a> defaults <code>scope</code>
-to <code>'shared'</code>, the same hazard the atlas flags in <a
+href="../../systems/cowagent/">CowAgent</a> filters every search arm on
+its key and still defaults <code>scope</code> to <code>'shared'</code>,
+the same hazard the atlas flags in <a
 href="../../systems/agentmemory/">agentmemory</a> — the safe value
 should be the one nobody has to remember to set. <a
 href="../../systems/nanobot/">nanobot</a> is one workspace, one memory,
@@ -510,7 +510,8 @@ Both are cheap, and together they close the two failure modes this
 pattern most often leaves open — a caller widening its own scope, and a
 refactor that turns a missing scope into a table scan.</p>
 <p>The warning is about <strong>derived</strong> state. CSM's
-<code>memories</code> table is scoped rigorously; its
+<code>memories</code> table is scoped on every search path, though the
+per-turn lesson-trigger cache reads it with no project filter; its
 <code>self_model_capabilities</code> table has no
 <code>project_id</code> at all, and the updater that fills it reads
 <code>experience_packets</code> with no project filter. So capability
@@ -527,12 +528,13 @@ key</strong> is a validated string with four canonical forms —
 <code>repo::{owner}/{repo}</code>,
 <code>branch::{owner}/{repo}::{branch}</code> — normalised to lowercase,
 rejecting the single-colon mistake with an error that prints the
-corrected form, and applied as an equality filter on every read. The
-<strong>tenancy boundary</strong> is something else entirely: row-level
-security policies gating each read on <code>auth.uid()</code> or a
-matching <code>org_id</code> JWT claim. One says <em>which</em> memories
-are relevant; the other says <em>whose</em> they are, and it holds even
-against a caller that constructs its own query.</p>
+corrected form, and applied as an equality filter on every read that
+names one. The <strong>tenancy boundary</strong> is something else
+entirely: row-level security policies gating each read on
+<code>auth.uid()</code> or a matching <code>org_id</code> JWT claim. One
+says <em>which</em> memories are relevant; the other says <em>whose</em>
+they are, and it holds even against a caller that constructs its own
+query.</p>
 <p>Then a third layer joins them, which is the part worth stealing.
 <code>org_scope_bindings</code> maps a scope string to an organisation,
 and the write RPC consults it: a write to a bound scope is routed to the
@@ -564,14 +566,16 @@ Telegram, because Slack storage is per-user while Telegram is still
 host-global. Disabling the feature where the key does not yet reach is a
 third option beside enforcing and leaking, and it is rarely taken.</p>
 <p>The counterweight, and the reason LoreKit is not simply the best
-entry here: the scope <em>hierarchy</em> is not enforced anywhere.
+entry here: the scope <em>hierarchy</em> is not enforced as a merge.
 LoreKit's own README describes agents reading branch, then repo, then
-global and merging — and <code>memory.list</code> filters on one exact
-scope. The ladder is three separate calls a skill file instructs the
-agent to make. A validated, RLS-backed, org-routed key whose hierarchy
-exists only in prose is a good reminder that a scope <em>format</em> and
-a scope <em>resolution order</em> are different pieces of work, and the
-second one is easy to assume you have done.</p>
+global and merging; an unscoped <code>memory.read</code> picks one
+winner by scope type, and <code>memory.list</code> returns one exact
+scope or every visible one, unmerged. The ladder is three separate calls
+a skill file instructs the agent to make. A validated, RLS-backed,
+org-routed key whose hierarchy exists only in prose is a good reminder
+that a scope <em>format</em> and a scope <em>resolution order</em> are
+different pieces of work, and the second one is easy to assume you have
+done.</p>
 <p><strong><a href="../../systems/gh-aw/">gh-aw</a> has a directional
 scope, enforced by a git branch checkout rather than a query.</strong>
 Its cache-memory store is a git repository with one branch per integrity
@@ -770,9 +774,9 @@ section search filters
 <code>AND (? IS NULL OR sections.space = ?)</code>, and the
 <code>memory_search</code> MCP tool passes
 <code>optionalString(args.space)</code> — so an agent that omits the
-argument reads across every space. Twenty lines away in the same file,
-the failures query takes <code>WHERE space = ?</code> with no null
-branch. And the CLI resolves an unset <code>--space</code> to
+argument reads across every space. Further down the same file, the
+failures query takes <code>WHERE space = ?</code> with no null branch.
+And the CLI resolves an unset <code>--space</code> to
 <code>"personal"</code> before calling the same function. Safe,
 defaulted, and unsafe, by the same author, over the same column — and
 the unsafe one is on the surface a model drives.</p>
@@ -798,10 +802,10 @@ and printed by <code>hats memory</code>. <code>LessonStore.select</code>
 <code>workspace</code> lesson behave identically and both are confined
 to the workspace file they sit in. The isolation is real and the
 directory layout delivers it. Two things make this worth naming rather
-than shrugging at: the project's own rule document
-(<code>packs/rules/lessons-behavioural-only.md</code>) lists scoping
-first among the three properties that bound a bad lesson — <em>"a
-run-scoped or workspace-scoped lesson cannot reach another
+than shrugging at: the project's paper lists scoping first among the
+three properties that bound a bad lesson, and its rule document
+(<code>packs/rules/lessons-behavioural-only.md</code>) repeats it —
+<em>"a run-scoped or workspace-scoped lesson cannot reach another
 workspace"</em> — attributing to the field a guarantee the filesystem is
 providing; and <code>'run'</code>, the narrowest value, is never written
 by any caller. A scope key that is stored, deduped on, displayed and
@@ -826,18 +830,19 @@ container. This is the call-site enumeration this page asks for,
 done.</p>
 <p>Then the durable memory sits outside all of it.
 <code>groups/&lt;folder&gt;/memory/</code> is a Markdown tree mounted at
-<code>/workspace/agent</code> in <strong>every</strong> session of the
-agent group, while the conversation layer's echo fan is deliberately
-narrower — it targets only sessions of the messaging group a message
-appeared in, on the stated ground that <em>"same messaging group =
-identical audience by definition, so every fan is provably audience-safe
-with no membership knowledge needed"</em>. Nothing carries a scope key
-into the memory tree, so a fact the agent writes after reading a scoped
-echo is loaded into conversations the echo was forbidden to reach.
-Neither half is wrong on its own terms. The lesson is that <strong>a
-scope key has to survive promotion</strong>: enforcing it on the channel
-and dropping it at the point where the agent turns a message into a
-durable fact moves the boundary rather than holding it.</p>
+<code>/workspace/agent/memory</code> in <strong>every</strong> session
+of the agent group, while the conversation layer's echo fan is
+deliberately narrower — it targets only sessions of the messaging group
+a message appeared in, on the stated ground that <em>"same messaging
+group = identical audience by definition, so every fan is provably
+audience-safe with no membership knowledge needed"</em>. Nothing carries
+a scope key into the memory tree, so a fact the agent writes after
+reading a scoped echo is loaded into conversations the echo was
+forbidden to reach. Neither half is wrong on its own terms. The lesson
+is that <strong>a scope key has to survive promotion</strong>: enforcing
+it on the channel and dropping it at the point where the agent turns a
+message into a durable fact moves the boundary rather than holding
+it.</p>
 <p><strong><code>yassinbahri/OnceMesh</code> is the worked instance of
 the cache-key advice at the top of this page, generalised past
 embeddings, and it is not a memory system — it caches computations, and
@@ -975,13 +980,14 @@ recall cannot name another agent's rows, and a committed case proves
 that what one agent remembers the other does not find. Three writers run
 outside a tool and missed the key: the hook that turns an owner's
 <em>"hai sbagliato"</em> into a learning event lives in the platform's
-own turn loop, which a direct chat with an agent never enters, so
-corrections land in the platform's unscoped log; the daily note each
-feedback appends goes to the top-level memory directory, where the
-platform's retrieval reads it; and the nightly Mirror scores the
-<em>platform's</em> lessons into an agent's probe. A test that reads the
-scoped store passes on all three, because the leak is in the paths the
-store's key does not govern.</p>
+own turn loop, which a direct chat with an agent never enters, so a
+correction typed to an agent is never logged, and one typed to the
+platform lands in its unscoped log; the daily note each feedback appends
+goes to the top-level memory directory, where the platform's retrieval
+reads it; and the nightly Mirror scores the <em>platform's</em> lessons
+into an agent's probe. A test that reads the scoped store passes on all
+three, because the leak is in the paths the store's key does not
+govern.</p>
 <p><a href="../../systems/forgetful/">Forgetful</a> is the plain
 WHERE-clause instance across two hand-mirrored backends: every
 repository method takes <code>user_id</code>, every statement carries
@@ -1234,8 +1240,8 @@ clamped so it can narrow and never widen. <strong>Clamp the request to
 the configured scope, and write down which reads the default leaves
 unfiltered.</strong></p>
 <p><strong><a href="../../systems/octobrain/">Octobrain</a> enforces the
-key on every read and overwrites it on every rewrite.</strong> One
-<code>build_scalar_predicate</code> puts
+key on every read of a scoped store and overwrites it on every
+rewrite.</strong> One <code>build_scalar_predicate</code> puts
 <code>(scope = 'X' OR scope = '')</code> on the vector, hybrid and
 filter-only searches, and <code>get_memory</code> carries the same
 clause. The upsert writes the store's own scope rather than the row's,

@@ -127,14 +127,17 @@ contract as an `ownerKey`, beside unscoped overloads that remain callable, so th
 destination is opt-in per call site; its recall ledger does drop a
 personal-scope write with no resolved owner rather than recording it, which is
 the rule applied to one table. [CowAgent](../../systems/cowagent/)'s `chunks.scope` column defaults to
-`'shared'`, and [agentmemory](../../systems/agentmemory/) shares agent scope
-unless isolation is switched on — in both, the omitted destination resolves to
+`'shared'`, and [agentmemory](../../systems/agentmemory/) reads across
+agents unless isolation is switched on — in both, the value left unset is
 the widest one, and the safe value is the one somebody has to remember to set.
+
 [Gas Town](../../systems/gastown/) fails in the other direction. `gt remember`
 takes no target, so the row lands in whichever Dolt database the process's
 working directory resolves to — the town's for the mayor, the rig's for crew and
 polecats. The mayor's prompt promises memories *"shared across all agents in the
-town"*, and a rule the mayor records never reaches a polecat.
+town"*, and a rule the mayor records never reaches a polecat. Against any `bd`
+from v1.1.0, which `gt` installs as latest, the write is rejected and no row
+lands at all.
 
 ## Implementation checklist
 

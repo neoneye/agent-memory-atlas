@@ -203,13 +203,13 @@ on how to write one.
   accident of lifecycle: its `<session_knowledge>` block is emitted once at
   `SessionStart` and once at `PreCompact` and never re-rendered mid-session, so
   it lands in the cached prefix. Nothing in that tree says this was reasoned
-  about, so it is the one arrangement here that could silently stop being true
+  about, so it is an arrangement that could silently stop being true
   if a maintainer added a per-turn refresh.
 - **[Khabeer](../../systems/khabeer/)** — that failure, with the intent written
   down. A port of Hermes whose specification states the frozen-snapshot rule in
   so many words, and whose runtime rebuilds the system prompt from the memory
   files inside every provider request builder — once per tool step on the
-  Anthropic path. Everything else in the Hermes store came across; the one
+  Anthropic path. Most of the Hermes store came across; the one
   property this pattern names did not, because the function that renders the
   block is called `systemPromptSnapshot` and holds no state.
 - **[Helm](../../systems/helm/)**, **[CSM](../../systems/csm/)**,
@@ -227,7 +227,7 @@ on how to write one.
   keys transient context per message rather than per turn for exactly this
   reason, naming *"a prompt-cache prefix that changes on each call"* as the
   failure.
-- **[dsh-continual-harness](../../systems/dsh-continual-harness/)** — the session-stable anchor as the default, with a measured reason and a visible price. The block is ranked against the session's opening request and cwd, republished only when a refinement lands or the store empties, and replaced in place; the config comment reports a 95.4% against 81.2% cache-read hit rate over one six-message session. To stay byte-stable the default block drops entry content and lists 15 ids, telling the model to read entries on demand when no plugin tool can.
+- **[dsh-continual-harness](../../systems/dsh-continual-harness/)** — the session-stable anchor as the default, with a measured reason and a visible price. The block is ranked against the session's opening request and cwd, republished only on a first injection, a new refinement, an emptied store or a new matched key, and replaced in place; the config comment reports a 95.4% against 81.2% cache-read hit rate over one six-message session. To stay byte-stable the default block drops entry content and lists 15 ids, under a header telling the model to read entries on demand, which no plugin tool can do.
 
 Note that [MemOS](../../systems/memos/)'s "activation memory: KV/prefix cache" is
 a *different* mechanism — reusing model state rather than positioning text — and
@@ -309,5 +309,6 @@ did above with a name instead of a hash.
   anything assembled from a set or a dict.
 - Under the bounded variant, assert a write that exceeds the cap is refused and
   returns the current entries, rather than silently truncating.
-- Measure it. Every claim on this page is about a mechanism read in code; no
-  system in this atlas publishes a cache hit rate, and the reports say so.
+- Measure it. Every claim on this page is about a mechanism read in code, and
+  the one hit rate quoted on it, dsh-continual-harness's, comes from a config
+  comment over a corpus that project's tree excludes.

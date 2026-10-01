@@ -155,14 +155,14 @@ missed lesson. Both are cheap, both are auditable, and neither can hallucinate.
 **The recurring hazard is capturing your own output.** Independent guards
 against it include OpenClaw's envelope sanitizer, Holographic excluding
 compaction handoff summaries that were being stored as facts on every context
-rollover, nanobot filtering its own `cron:` and `dream:` sessions, and Moltis
-sanitizing transcripts before export. If you capture
+rollover, and nanobot filtering its own `cron:` and `dream:` sessions. Moltis
+ships a transcript sanitizer that nothing calls, so its session logs enter raw. If you capture
 without a model, capture cheaply enough that everything flows in — which means
 something must decide what does not.
 
 [Helm](../../systems/helm/) is the smallest instance and demonstrates a second
 failure mode: the problem is not only *what* you capture without a
-model, it is *what you key it on*. One regex on the reply path — `remember that`,
+model, it is *what you key it on*. One regex over the user's turn, run after every reply — `remember that`,
 `note that`, `for the record`, `fyi` — lifts the following span into a durable
 fact with no model call and no latency on the turn. The key is
 `'note-' + Date.now().toString(36)`.
@@ -182,8 +182,7 @@ choice — it is the absence of one. Normalizing the captured span into a slug, 
 routing the write through an existing key when one matches, is the work this
 pattern skips at its peril.
 
-[CSM](../../systems/csm/) holds the pattern at one of the largest single-author
-scales in the atlas — 46 tables and 57,000 lines in which the only outbound call
+[CSM](../../systems/csm/) holds the pattern at a large scale — 46 tables and 57,000 lines in which the only outbound call
 is an embedding request, and a failed embedding stores the row with a NULL
 vector rather than failing the capture — and it gets the keying right where Helm got it wrong: a
 partial unique index on pending candidates over `(candidate_type, dedup_key)`, a
@@ -213,8 +212,8 @@ returning LLM-rewritten facts cannot report. It also publishes the cost of the
 bet rather than hiding it: whole-conversation aggregation and summarisation are
 listed as out of scope by design, "because top-k retrieval can't cover it".
 
-**[Context Mode](../../systems/context-mode/) is the widest deployment of the
-idea in this atlas**, and it shows what the ceiling costs. `src/session/extract.ts`
+**[Context Mode](../../systems/context-mode/) deploys the idea at full
+width**, and it shows what the ceiling costs. `src/session/extract.ts`
 is 2,960 lines of parsers over hook payloads from seventeen different harnesses,
 turning a `PostToolUse` into typed events — `file_read`, `error_tool`,
 `git_branch`, `decision`, `task`, the plan-mode transitions — with no model
@@ -232,8 +231,8 @@ tends to arrive with a zero-correction store, and the two are the same decision
 seen twice.
 
 **[memoir](../../systems/memoir-cli/) shows what the pattern costs when the
-input is prose rather than a typed hook payload, and it is the best-documented
-instance of paying that cost.** Its capture pass parses Claude Code's own JSONL
+input is prose rather than a typed hook payload, and it documents paying that
+cost rule by rule.** Its capture pass parses Claude Code's own JSONL
 transcripts and mints decisions from seven regexes over the conversation, behind
 a nine-rule quality gate — reject under 15 or over 200 characters, containing a
 pipe (a table cell), under three words, opening with a pronoun or filler,
@@ -268,7 +267,7 @@ record *whose sentence* each memory came from.
 [GENOME](../../systems/genome/) is the pattern taken to its limit and then
 cashed in for something the other instances do not claim. Its write path embeds
 the message with a local model and stores it — no extraction, no LLM, no
-network, and a `verify` module that monkeypatches `socket.connect` to raise
+network, and a `verify` module that monkeypatches `socket.socket.connect` to raise
 before writing two hundred memories, so the offline claim fails loudly rather
 than being asserted. The payoff it names is not cost. **A deterministic write
 path can be replayed**: because storage is a pure function of the input, an
@@ -289,7 +288,7 @@ as a rollback feature; nothing in that repository redacts or compacts the log.
 Cheap deterministic capture makes an audit trail affordable, and an audit trail
 is the thing a deletion request has to survive.
 
-[marm-memory](../../systems/marm-memory/) runs the pattern across the whole write path and then names the one decision it will not make deterministically. Classification is a keyword scan over lowercased content; deduplication is a hash of normalised text with the content compared before a merge; entity extraction is noun chunks and named entities typed by keyword triggers in the surrounding sentence, with predicates read off a dependency-parse lowest common ancestor. No model call appears anywhere on the write path, and a write succeeds with a null embedding when the encoder is unavailable. The interesting part is what it does about summarisation, which it accepts needs a mind: a background pass clusters a session by cosine and union-find, stages the cluster, and then the HTTP middleware prepends a request to the *connected agent's next tool result* asking it to write the summary, which the agent then applies or discards. That keeps the model out of capture entirely and borrows one already in the room for the one job capture cannot do — at the cost of putting standing instructions in a tool result, which is the half of the arrangement not to copy.
+[marm-memory](../../systems/marm-memory/) runs the pattern across the whole write path and then names the one decision it will not make deterministically. Classification is a keyword scan over lowercased content; deduplication, off unless `CONSOLIDATION_ENABLED=1`, is a hash of normalised text with the content compared before a merge; entity extraction is noun chunks and named entities typed by keyword triggers in the surrounding sentence, with predicates read off a dependency-parse lowest common ancestor. No model call appears anywhere on the write path, and a write succeeds with a null embedding when the encoder is unavailable. The interesting part is what it does about summarisation, which it accepts needs a mind: a background pass, off unless `COMPACTION_ENABLED=1`, clusters a session by cosine and union-find, stages the cluster, and then the HTTP middleware prepends a request to the *connected agent's next tool result* asking it to write the summary, which the agent then applies or discards. That keeps the model out of capture entirely and borrows one already in the room for the one job capture cannot do — at the cost of putting standing instructions in a tool result, which is the half of the arrangement not to copy.
 
 [Rust Self-Learning Memory](../../systems/rust-self-learning-memory/) has the pattern's availability property in full — reward, reflection, salient features, summaries, patterns and playbooks are all computed by rule, and no path calls a model — and shows that a deterministic gate in front of the durable write can fail as reliably as a provider outage. `complete_episode` scores quality on five weighted features before it generates the reflection and extracts the patterns that two of them read, so a fresh episode tops out at 0.64 against the 0.7 the shipped MCP server uses. The CLI and the MCP tests set the threshold to 0.0, so by that arithmetic a capture path with no model in it stores nothing through its own MCP server, and no test notices.
 

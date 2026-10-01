@@ -253,7 +253,9 @@ state that removes" — distinguishes <em>rejected</em> (not
 memory-worthy, excluded unconditionally, retained with rejecter and
 reason) from <em>superseded</em> (once true, surfaced on request), and
 makes a reason mandatory on every governance action. It is aimed at
-review rather than at contradiction specifically.</p>
+review rather than at contradiction specifically, and its approve and
+reject verbs are also MCP tools the writing agent holds, recording the
+approver as a string rather than verifying it.</p>
 <p><a href="../../systems/daimon/">Daimon</a> solves requirement 5,
 which Memanto misses, while placing the decision somewhere neither of
 the others does: <strong>inside the artifact the user is already
@@ -261,9 +263,10 @@ reading</strong>. A detected supersession renders in the next briefing
 as a flagged item with the confirm and reject commands printed beside
 it, so the disposition is chosen at the moment the stale claim is
 encountered rather than in a queue nobody opens. Confirming appends a
-resolution that withholds the item from then on; the <code>forget</code>
-path appends a content-keyed tombstone, which is the trace Memanto's
-<code>remove_both</code> lacks.</p>
+resolution that withholds the item from later briefings while search
+ranks it down; the <code>forget</code> path appends a content-keyed
+tombstone, which is the trace Memanto's <code>remove_both</code>
+lacks.</p>
 <p><a href="../../systems/breadcrumbs/">breadcrumbs</a> contributes the
 requirement none of the three above states, and it is the one that goes
 wrong after everything above is built correctly: <strong>the resolution
@@ -289,24 +292,25 @@ mistake proves nothing. Other suites here defend against a vacuous pass
 by designing the fixture so it cannot pass vacuously; this one puts the
 distinction in the verdict vocabulary, where a later fixture edit cannot
 quietly remove it.</p>
-<p>Three rules make the surface safe, and all three are transferable. A
-machine suggestion is <strong>live by construction</strong> — the
-liveness fold refuses to let a <code>supersede-candidate</code> suppress
-anything, so a wrong guess costs a line of noise and never a memory.
-<strong>Rejecting a guess needs no evidence, re-opening a resolved item
-does</strong>, because overruling a machine suggestion is not the same
-act as vouching for a claim, and the code refuses the second without
-either a live code anchor or an explicit <code>--evidence</code> string.
-And a human verdict <strong>silences re-detection permanently</strong>,
-so the queue cannot refill with something a person has already
-answered.</p>
+<p>Three rules make Daimon's briefing surface safe, and all three are
+transferable. A machine suggestion is <strong>live by
+construction</strong> — the liveness fold refuses to let a
+<code>supersede-candidate</code> suppress anything, so a wrong guess
+costs a line of noise and never a memory. <strong>Rejecting a guess
+needs no evidence, re-opening a resolved item does</strong>, because
+overruling a machine suggestion is not the same act as vouching for a
+claim, and the code refuses the second without either a live code anchor
+or an explicit <code>--evidence</code> string. And a human verdict
+<strong>silences re-detection permanently</strong>, so the queue cannot
+refill with something a person has already answered.</p>
 <p>The absence is the more common finding, reached independently in
-several reports. <a href="../../systems/gini-agent/">Gini</a> has
-<code>rejected</code> and <code>conflicted</code> as states with no
-operator-facing resolution. <a href="../../systems/magic-context/">Magic
-Context</a>'s <code>flagged</code> "marks a problem without an operator
-surface". <a href="../../systems/openviking/">OpenViking</a> has merge
-operations but "no operator-facing review queue for contradictions". <a
+several reports. <a href="../../systems/gini-agent/">Gini</a> declares
+<code>rejected</code> and <code>conflicted</code> as states that no
+native code path writes, so there is nothing to resolve. <a
+href="../../systems/magic-context/">Magic Context</a>'s
+<code>flagged</code> "marks a problem without an operator surface". <a
+href="../../systems/openviking/">OpenViking</a> has merge operations but
+"no operator-facing review queue for contradictions". <a
 href="../../systems/holographic/">Holographic</a> surfaces
 contradictions as an ordinary query and only reports them.</p>
 <p><a href="../../systems/mateclaw/">MateClaw</a> stops one step later:
@@ -341,8 +345,9 @@ than by a separate resolution record.</p>
 <p><a href="../../systems/memora/">Memora</a> sits between the two
 groups: it classifies pairs into a defined vocabulary including
 <code>contradicts</code> as an edge between two named memories, and its
-correction pass defaults to a dry run — a report a human reads — but the
-dispositions available are supersede or nothing.</p>
+correction pass defaults to a dry run, though <code>dry_run</code> is a
+parameter on an MCP tool the model calls — and the dispositions
+available are supersede or nothing.</p>
 <p><a href="../../systems/aimaos/">AIMAOS</a> resolves rather than
 flags, and shows that resolution alone is not the whole of the pattern
 either. Its detector is deterministic and unusually cheap — a
@@ -369,15 +374,16 @@ tie of both. No model is consulted anywhere in that function. The
 outcome is then written where the next write can see it — the loser's
 status becomes <code>WEAK</code> and its <code>rationale</code> field
 gains a sentence naming the reason, so the store carries both the
-surviving value and why the other one lost. The residual human decision
-is the exact-tie case, which the ladder is designed to make rare, and it
-blocks the interview driver rather than sitting in a queue. Two
-properties this page argues for and rarely finds together: <strong>the
-automatic disposition is deterministic and free</strong>, so it does not
-degrade when nobody is looking, and <strong>a blocker is
-retirable</strong> — an earlier transient block is cleared by a later
-non-blocked same-key answer rather than needing a human to remember it
-exists.</p>
+surviving value and why the other one lost. The residual decision is the
+exact-tie case, which the ladder is designed to make rare, and it blocks
+the interview driver rather than sitting in a queue — an interview
+<code>ouroboros_pm_interview</code> answers from its parameters as
+readily as a person at a terminal. Two properties this page argues for
+and rarely finds together: <strong>the automatic disposition is
+deterministic and free</strong>, so it does not degrade when nobody is
+looking, and <strong>a blocker is retirable</strong> — an earlier
+transient block is cleared by a later non-blocked same-key answer rather
+than needing a human to remember it exists.</p>
 <p><strong><a href="../../systems/claude-self-reflect/">Claude
 Self-Reflect</a> has four of the five requirements and deliberately
 declines the fifth.</strong> Its <code>csr_resolve</code> tool writes
