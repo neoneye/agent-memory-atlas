@@ -6172,6 +6172,46 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong><code>NVlabs/SoL-Pi</code> was examined and has no report:
+it is context engineering for one Pi session, and nothing it stores
+outlives that session or could turn out to be false.</strong> MIT, 3,250
+lines of TypeScript under <code>src/</code> with 143 test call sites in
+20 files, 39 commits between 8 September and 1 October 2026, read at <a
+href="https://github.com/NVlabs/SoL-Pi/commit/e1a586af0ad8956f42ae5b26bba20e48fbf30e00"><code class="commit-id" title="e1a586af0ad8956f42ae5b26bba20e48fbf30e00">e1a586af…</code></a>;
+it accompanies <a
+href="https://arxiv.org/abs/2609.20519">arXiv:2609.20519</a>. It is an
+extension for the Pi coding agent with four opt-in mechanisms, and three
+of them write files. ObservationPack stores a text tool result over 10
+KiB under an id hashed from the tool name, call id and content, sends it
+whole on its first two requests, then swaps in a placeholder with a 1
+KiB excerpt; <code>obs_recall</code> pages the original back by byte
+offset, and a <code>ledger.jsonl</code> records each send and recall
+(<code>observation-pack/index.ts:64-197</code>,
+<code>observation.ts:13-17</code>, <code>:105-106</code>). The
+Evidence-Preserving Reducer accepts a model-written log receipt only
+when every quotation occurs byte for byte in the archived log, and
+otherwise returns <code>unverifiable-quote</code> and keeps the original
+(<code>evidence-preserving-reducer/receipt.ts:110-122</code>). Online
+Context Compact prices a compaction against the requests it expects to
+remain (<code>online-context-compact/economics.ts:129-229</code>). Every
+one of those paths is rooted at <code>runtimeRoot</code>, which is
+<code>sol-pi/</code> plus the session id inside Pi's session directory,
+or a fresh temporary directory when the session has none
+(<code>src/sol-pi/runtime-paths.ts:13-30</code>); no code reads another
+session's root.
+<code>git grep -n -i -E 'memor(y|ies)|remember|long-term|cross-session|across sessions|previous session|prior session'</code>
+over the tree, lockfile excluded, returns only <em>in-memory
+session</em> and one documentation link. What is stored is a verbatim
+tool output, which happened and cannot be corrected, so this sits with
+<a
+href="../families/#not-in-scope-conversation-window-management">conversation-window
+management</a>. The reducer is the part that transfers: a derived
+summary admitted only when its quotations verify against the retained
+source is the check <a
+href="../patterns/evidence-before-belief/">evidence before belief</a>
+asks of a memory write. Screened before reading: no auto-run, build-time
+or unpinned surface; <code>AGENTS.md</code> and <code>CLAUDE.md</code>
+were treated as data; nothing was installed, built or run.</li>
 <li><strong>The virtual-context report awarded
 <code>scope_enforced</code> on every relational read path, called its
 audience receipt a read-side guard, said nothing measured a mechanism on
