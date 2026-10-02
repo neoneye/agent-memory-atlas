@@ -1,1007 +1,999 @@
 ---
 title: "NexusMem"
 eyebrow: "Shell history as memory"
-description: "A local SQLite store of what actually happened on the machine — shell commands with exit codes, git patches, docs, transcripts — ranked and token-budgeted on the way out, with a scope key on every read and a value-keyed deny list that survives the rebuild it would otherwise be undone by."
+description: "A local SQLite memory of what happened on a machine: commands with exit codes, git patches and docs, injected when a command fails again."
 root: ../..
 page_kind: system
 source_name: "yaminbkk/NexusMem"
 source_url: https://github.com/yaminbkk/NexusMem
 archive_name: "yaminbkk--NexusMem"
-revision: 0003e2432ba7dd9c0e7dc4558fffed56235dcf95
-revision_url: https://github.com/yaminbkk/NexusMem/commit/0003e2432ba7dd9c0e7dc4558fffed56235dcf95
-analyzed_at: 2026-09-19
+revision: e1842964dec6f268febbc99d5c429a37c9116a2a
+revision_url: https://github.com/yaminbkk/NexusMem/commit/e1842964dec6f268febbc99d5c429a37c9116a2a
+analyzed_at: 2026-10-02
+licence: "MIT"
+size: "16,983 lines of TypeScript in 132 files under src/, 20,736 under tests/, 5,308 under eval/, and a 1,501-line VS Code extension"
+activity: "443 commits on main, all but two by one author under two identities, 8 August – 27 September 2026"
+tests: "1,293 it/test declarations in 92 files under tests/ and 47 in 6 files under vscode-extension/; not run for this reading"
 capabilities: "tombstone, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  tombstone: "the deny list, consulted at every node-write seam | src/store/deny-list.ts, src/store/forget.ts, src/store/nodes.ts:89, src/store/reconcile.ts:93 | `nexusmem forget <value>` writes a `deny_list` row keyed on the value itself — literal or regex, with `ignore_case` and a free-text reason — and `upsertNodes` consults it per project before every insert, incrementing a `denied` counter and skipping the node, with `reconcile.ts` repeating the check on the project-id migration path so *\"a row denied here must never\"* re-enter. Over-broad patterns are refused up front: an empty literal, a regex that fails to compile, and a regex that matches the empty string. `--export`/`--import` carry the list between checkouts because the database is gitignored and never travels with a clone | tests/forget.test.ts:231 ingests a secret, confirms it is retrievable, forgets it, runs `sync --rebuild` over the untouched append-only hook log, then asserts the secret returns `[]` while a control command in the same log survives — and that `deny_list` still holds one row afterwards"
-  audit_log: "removals, in the store's own tables | src/store/forget.ts:129, src/store/schema.ts (V5 `mutation_audit`, `tombstones`) | `forget` opens a `mutation_audit` row before the delete sweep — action, project, a JSON detail of the pattern, match type, case flag, reason and the project ids in scope, started and finished timestamps — and each removed node leaves a `tombstones` row carrying kind, source, ts, signal, body length and `body_sha256`/`title_sha256`, foreign-keyed to both the deny-list entry and the audit row. The schema states the reason for hashing: *\"this table exists to prove a value was removed, not to retain a second copy of it… so the record that something was forgotten never itself becomes something worth forgetting.\"* One audit row is written whether or not anything matched. The gap is coverage: `pruneSourceNodes`, the other destructive path, writes neither an audit row nor a tombstone | tests/forget.test.ts:231 asserts one `mutation_audit` row and at least one `tombstones` row survive `sync --rebuild`"
-  scope_enforced: "the node store, every read arm | src/store/search.ts | search and vectorSearch both require n.project_id = ? as a WHERE predicate; the vector arm overfetches 8x because vec0 applies MATCH and k before the join filter, and the precheck arm repeats the predicate by hand because it runs its own SQL through store.raw | tests/cross-project.test.ts"
-  negative_eval: "the node store, retrieval | tests/store.test.ts | 'does not leak nodes across projects' and 'does not let the generic word id pull in an unrelated node over a real match' assert a node that exists is absent from a result set; tests/vector.test.ts repeats it for the vector arm, and tests/precheck.test.ts for the pre-commit arm | the tests are the mechanism"
-  bitemporal: "the node store — a record-time read beside the event time already on the row | src/store/schema.ts:26-36, src/store/search.ts:79 | a node carries `ts`/`ts_epoch`, *\"kept verbatim from the source event\"*, and a separate `created_at` for when the row was written; `--as-of` adds `AND (? IS NULL OR n.created_at <= ?)` to the lexical arm and its equivalent to the vector arm, so a query can ask what the store held at a past moment while the event's own time stays untouched. The commit that added it names it: *bi-temporal read over created_at* | tests/"
+  tombstone: "the deny list, consulted at every node-write seam | src/store/deny-list.ts, src/store/forget.ts, src/store/nodes.ts:95, src/store/reconcile.ts:93 | `nexusmem forget <value>` writes a `deny_list` row keyed on the value itself — literal or regex, with `ignore_case` and a free-text reason — and `upsertNodes` consults it per project before every insert, counting the node as `denied` and skipping it; `reconcile.ts` repeats the check on both project-id migration paths. An empty literal, a regex that fails to compile and a regex matching the empty string are refused. Limits: the entry holds the pattern in cleartext, as does the audit row's `detail`, so only the per-node `tombstones` rows are hash-only; an entry cannot be removed; the list lives in one gitignored database and travels between checkouts only through `--export`/`--import` | tests/forget.test.ts:231 ingests a value, confirms it is retrievable, forgets it, runs `sync --rebuild` over the hook log, then asserts no hit carries the value while a control command in the same log survives and `deny_list` still holds one row"
+  audit_log: "removals by value and by source, in the store's own tables | src/store/forget.ts:129, src/store/audit.ts:31, src/cli/commands/sync.ts:663, src/store/schema.ts (V5 `mutation_audit`, `tombstones`) | `forget` opens a `mutation_audit` row before its delete sweep and closes it with the affected count; each removed node leaves a `tombstones` row of kind, source, ts, signal, body length and sha256 of body and title, foreign-keyed to the deny-list entry and the audit row. A confirmed `--prune-source` writes one `prune_source` row through `recordMutationAudit`, with no tombstones. No statement deletes from the table and `sync --rebuild` leaves it in place. Limits: `sync --rebuild`, the docs collector's incremental prune, deny-list drops during reconcile, `review`, `mark-stale`, a dismissal and `scrub-secrets` write no row, and `listMutationAudit` has no caller outside tests | tests/forget.test.ts:231 asserts one audit row and a tombstone survive `sync --rebuild`; tests/prune-source.test.ts:266 asserts one `prune_source` row for a confirmed prune and none for a dry run"
+  scope_enforced: "the node store, every agent-reachable read | src/store/search.ts:84, src/store/embeddings.ts:124, src/agent/recall.ts:45, src/correlate/precheck.ts:89 | lexical search requires `n.project_id = ?`; the vector arm carries `project_id` as the vec0 partition key, so `k` is taken inside the project; the three ambient-recall queries, the session digest and both precheck queries carry the predicate, as do the listing, status and stale-suggestion reads behind the six MCP tools. Limits: id reads reached through `node_links` (`getNodesByIds`, `SELECT_BY_ID`) carry no predicate and rest on links being written inside one project; each repository has its own database file, so in a deployed store the predicate separates the repository's current identity from its prior ones; `allProjects` and a model-supplied `projectRoot` let an MCP caller read any registered repository | tests/agent-recall.test.ts:79, tests/store.test.ts:433, tests/vector.test.ts:153"
+  negative_eval: "the node store: retrieval and ambient recall | tests/agent-recall.test.ts, tests/store.test.ts, tests/vector.test.ts, tests/forget.test.ts, tests/project-admission.test.ts | tests/agent-recall.test.ts:79 seeds one execution under two projects in one database and requires each project's recall to count only its own failures and omit the other's edited files, a positive control in each direction; tests/store.test.ts:433 and tests/vector.test.ts:153 assert an existing node is absent from another project's lexical and vector results; tests/forget.test.ts:231 asserts a forgotten value is absent after a rebuild while a control survives; tests/project-admission.test.ts:233 asserts an event from a path differing only by case reaches neither recall nor the digest. The preflight script under eval/ambient/ is outside `npm test`, and its cross-project check seeds two databases | the tests are the mechanism"
+  bitemporal: "the node store — a record-time read beside the event time on the row | src/store/schema.ts:26-36, src/store/search.ts:85, src/store/embeddings.ts:125 | a node carries `ts`/`ts_epoch` from the source event and a separate `created_at` for when the row was written; `--as-of` and the MCP `asOf` argument add `n.created_at <= ?` to both arms, so a query can ask what the store held at a past moment while the event time stays on the row. Limit: the vector arm applies the cutoff after taking `max(limit * 8, 50)` neighbours, so an as-of read can return short | tests/store.test.ts:468 pins the lexical arm; no case covers the vector arm"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
 matrix:
-  memory_unit: "A `node` — kind, project, event timestamp, source, title, body, a `signal` float and a JSON `meta` blob — with an id of `sha256(projectId + kind + naturalKey)`; seven kinds declared and six collected, of which `shell_command` is the one no other store here holds"
-  storage: "One `better-sqlite3` file per repository: `nodes` plus an external-content FTS5 index, a `sqlite-vec` vec0 table, a `node_files` path index, a `node_links` edge table and a `file_edges` import graph that is not made of nodes and is replaced wholesale on every sync"
-  retrieval: "BM25 over FTS5 fused with cosine over sqlite-vec, then ranked by `relevance x signal^e x recency^e` where the exponents split one joint overturn budget between the two query-independent priors, then packed to a token budget. A second read path takes no query at all: `precheck` derives match tokens from the basenames of the staged files and returns unresolved failures"
-  write: "Collectors per source, cursor-resumed; an opt-in shell hook appends a JSONL of command, cwd and exit code, and scrape fallbacks tail bash/zsh/PSReadLine without either; pattern redaction is applied by two collectors of seven — conversation in full and code diffs on a high-confidence profile — and not by the shell, docs, git-commit, session or GitHub collectors"
-  update_delete: "Three granules. `forget <value>` deletes every matching node and writes a standing deny list consulted at every future write, with a hash-only tombstone and an audit row per operation; `--prune-source` wipes one source across the live project id and its prior identities, unaudited; `sync --rebuild` clears the project. `mark-stale <id> --supersedes <newId>` down-weights without deleting, prompted by a local model that judges whether a newer node contradicts an older one and files a suggestion a person has to accept"
-  scoping: "`project_id` on every node and a required predicate on both read arms; a cross-project query opens each registered repository`s own database and tags every hit with its origin"
-  integration: "A CLI, a four-tool stdio MCP server (search, sync, status, list-recent), a read-only VS Code panel, and an opt-in `.git/hooks/pre-commit` block that runs `nexusmem precheck` — without `--strict`, so it warns and cannot block a commit"
-  background: "None on a schedule. Every collector runs inside `nexusmem sync`, invoked by hand, by a shell hook or by the MCP `sync_project` tool; the git hook triggers a read rather than a write. `sync` also spends at most three local-model judgments per run on contradiction checking, on by default"
-  trust: "Two axes kept apart, and neither withholds. `trust_state` is `candidate` until a person runs `nexusmem review`, then `verified` or `rejected`, read on both arms and worth a 0.3 multiplier against a rejected node — a score, not a gate, which is why the mark is withheld. Beside it a `signal` float for ranking, plus `provenance` on a four-tier ordering — `observed`, `authored`, `recorded`, `derived` — set per collector, consumed by the ranker as a per-tier decay multiplier and printed in the packed context. An ordering, not a status: the ranker's floors are a deliberate refusal to let any tier gate a result, and the tier's one exclusion is from the staleness queue rather than from retrieval"
-  strengths: "A value-keyed deny list whose test proves the resurrection case — forget, rebuild from the untouched append-only log, and the value stays gone while a control survives; shell commands with exit codes, which git cannot supply and scrollback loses; a ranker that bounds how far query-independent priors may overturn the query, as one budget shared between them; redaction split into a high-confidence profile safe to run over source code and a broader one that is not; a document-frequency filter that drops tokens which are boilerplate in this project`s own corpus, because bm25 rewards rarity only within the corpus it is run against"
-  risks: "The deletion story is complete only through `forget`: `--prune-source` writes no tombstone and no audit row, so the coarse path is the unrecorded one; the GitHub source stores an issue or PR body verbatim without passing it through the redaction the conversation collector uses, and files it at the same provenance tier as the user's own words; `signal` is a prior nothing updates from use; the pre-commit signal fires on a basename token match, so it warns about a failure that merely shares a word with the file and stays silent about one that does not name it"
+  memory_unit: "A `node` — kind, project, event timestamp, source, title, body, a `signal` float and a JSON `meta` blob — with an id of `sha256(projectId + kind + naturalKey)`; eight kinds declared and seven collected, with `shell_command` carrying exit codes from a shell hook and from Claude Code tool calls"
+  storage: "One `better-sqlite3` file per repository: `nodes` plus an external-content FTS5 index, a `sqlite-vec` vec0 table partitioned by project, a `node_files` path index, a `node_links` edge table and a `file_edges` import graph replaced wholesale on every sync; two machine-wide JSONL logs feed it, one for shell commands and one for agent tool calls"
+  retrieval: "Three read paths. A query fuses BM25 over FTS5 with cosine over sqlite-vec, ranks by `relevance x signal^e x recency^e` with the two priors sharing one overturn budget, and packs to a token budget. A Claude Code hook looks up past failures of the command that just failed by an execution hash, and a session-start hook prints a digest of recent failures; neither uses the ranker, an embedding or a model. `precheck` matches staged file basenames against unresolved failures"
+  write: "Collectors per source, cursor-resumed, all through `upsertNodes`. Opt-in shell hooks append command, cwd and exit code to a JSONL; opt-in Claude Code hooks append each Bash call and edited path to a second one, redacted before the write. Redaction covers shell, agent, conversation and session text in full and code diffs on a high-confidence profile; docs, git commits and GitHub threads are stored as read"
+  update_delete: "Three granules. `forget` deletes every node matching a value and writes a standing deny list consulted at every future write, with a hash-only tombstone per node and an audit row; `--prune-source` wipes one source across the live project id and its prior identities and writes an audit row with no tombstones; `sync --rebuild` clears the project unrecorded. `mark-stale` down-weights without deleting, prompted by a local model that judges whether a newer node contradicts an older one. A deny-list entry cannot be removed"
+  scoping: "`project_id` on every node and a predicate on every read: both retrieval arms, the vec0 partition, ambient recall, the session digest, precheck and the MCP listings. One database file per repository, so inside a file the key separates the repository's current identity from prior ones; a cross-project query opens each registered database and tags every hit with its origin"
+  integration: "A CLI, a six-tool stdio MCP server (search, sync, status, list-recent, list and resolve stale suggestions), three Claude Code hooks installed by `agent install` (capture, recall after a Bash call, a session-start digest), a VS Code extension with search, recent-memory and stale-review views, and opt-in git pre-commit and post-commit hooks"
+  background: "No scheduler. Collectors run inside `nexusmem sync`, started by hand, by the MCP `sync_project` tool, by a git post-commit hook, or detached by the Claude Code SessionStart hook. `sync` also spends at most three local-model judgments per run on contradiction checking, on by default"
+  trust: "Three fields and no gate. `trust_state` is `candidate` until a person runs `nexusmem review`, then `verified` or `rejected`; a rejected node is multiplied by 0.3 in ranking and still returned, which is why the mark is withheld. `provenance` is a four-tier ordering set per collector that scales recency decay. An agent command's `outcome` is `unknown` when a pipe hid its exit status, fixed at capture. Ambient recall derives resolved, stale, superseded and uncertain at read time from links and revert commits, and changes its wording rather than what it returns"
+  strengths: "A value-keyed deny list whose test proves the resurrection case; exit codes for the commands an agent ran, which git cannot supply; recall keyed on an execution hash that survives `cd` and exit-echo wrappers and is silent on no match; a fix that failed again is reported as one that did not hold; a ranker that bounds how far query-independent priors may overturn the query; an ambient-memory experiment whose null results are recorded beside its design"
+  risks: "A forgotten value stays in cleartext in the deny list and the audit detail, in both JSONL logs, in any pre-scrub backup and in freed SQLite pages until a scrub runs; `sync_project` gives an MCP caller a source prune confirmed by its own `yes` flag; GitHub thread bodies are stored unredacted at the same provenance tier as the user's own words; project admission is lexical on cwd, so a case-insensitive macOS volume loses recall; `signal` is a prior nothing updates from use; the pre-commit warning fires on a basename token match"
 ---
 
 ## 1. Executive Summary
 
-NexusMem is a local memory for a coding agent whose central claim is about *what
-it stores* rather than how it stores it. The README states it in one line: your
-agent can read `git log`, and cannot read the four things you tried last Tuesday
-that did not work.
+NexusMem is a local memory for a coding agent that stores events that happened
+on the machine. They are shell commands with exit codes, the commands and edits
+a Claude Code session made, git history and patches, docs and, opt-in,
+transcripts and GitHub threads. Its notable mechanism is recall keyed on an execution: when a
+command fails, a hook tells the agent whether that execution failed in this
+repository before, what was edited each time, and whether the fix that followed
+held. Its weak point is that nothing withholds a memory. A human `rejected`
+verdict, a supersession and a failed fix all reorder or reword, and the
+committed experiment on whether ambient recall changes agent behaviour has not
+separated its arms.
 
-**The unit is an event that happened on the machine.** One `nodes` table carries
-every kind, and `NodeKind` declares seven: `shell_command`, `git_commit`,
-`code_diff`, `doc_section`, `conversation_turn`, `session_summary` and `note`.
-Six have a collector; `note` appears in the union and nowhere else in the tree —
-no producer, no reader, no test. Each node has an id of
-`sha256(projectId + kind + naturalKey)`, an event timestamp kept verbatim from
-the source, a `signal` float, and a JSON `meta` blob. Everything is a
-`better-sqlite3` file per repository. There is no server, no daemon, no cloud, no
-account and no telemetry.
+**The unit is an event, written once.** One `nodes` table carries every kind,
+and `NodeKind` declares eight (`src/core/types.ts:9-17`). Seven have a
+collector; `note` has no producer. Each node has an id of
+`sha256(projectId + kind + naturalKey)`, an event timestamp, a `signal` float
+and a JSON `meta` blob. State is one `better-sqlite3` file per repository, with
+no server, account or telemetry.
 
-**Shell commands with exit codes are the part no other store in this atlas
-holds.** An opt-in shell hook appends a JSONL line per command carrying the
-command text, the working directory and the exit status; without it, scrape
-fallbacks tail `~/.bash_history`, `~/.zsh_history` and PSReadLine, which have
-none of those three. The distinction is made explicitly in `src/shell/detect.ts`
-— once a hook is installed its coverage is authoritative and the raw history file
-is skipped, for PowerShell and, with `src/hooks/bash.ts` and `zsh.ts`, for bash and
-zsh, because it *"duplicates the same commands with worse
-data (no cwd, no exit code)."*
+**Exit codes arrive from two hooks, and the second is the one an agent needs.**
+An opt-in shell hook appends command, cwd and exit status for each interactive
+command. A command an agent runs never reaches an interactive prompt, so
+`nexusmem agent install` adds Claude Code hooks that record every Bash call and
+every edited path (`src/adapters/claude-code/install.ts:47`). Edits attach to
+the next command, so a node reads as an attempt: files changed, execution,
+result.
 
-**Nothing is summarized on the way out.** Retrieval fuses BM25 over an
-external-content FTS5 index with cosine over a `sqlite-vec` vec0 table, ranks the
-result, and packs it to a token budget. What the agent receives is stored text
-that was written at ingest, chosen by a ranker that decided what *not* to send.
-One source, `session_summary`, runs a local model — at ingest, never on the read
-path.
+**Memory reaches the agent three ways.** A query fuses BM25 with vector search,
+ranks, and packs stored text to a token budget; nothing is summarised on the
+read path. The recall hook answers a failed Bash call with past failures of the
+same execution and prints nothing on no match (`src/agent/recall.ts:123`).
+`nexusmem precheck` warns before a commit about unresolved failures whose
+command names a staged file's basename.
 
-**Memory arrives without being asked, once, at the moment before a commit.**
-`nexusmem precheck` takes the staged file list, tokenizes each *basename*, and
-asks the store for unresolved failed commands that match — then prints them, plus
-a high-churn warning, on stderr. `nexusmem hook git install` writes a marked
-block into `.git/hooks/pre-commit` that runs it without `--strict`, so it can
-warn and cannot block. Other reads here take no query either — `status` counts,
-`list_recent_memory` takes the newest — but this is the only one whose selector
-is *what the user is doing*, and it is a different design from the retrieval
-pipeline beside it: no embeddings, no ranker, no token budget, one question —
-*what already went wrong in the files you are about to commit?*
+**The scope key is on every read, and each repository also has its own file.**
+`project_id` is a predicate on both retrieval arms, the recall queries, the
+session digest and the precheck queries. The database lives under the
+repository's `.nexusmem/`, so inside one file the key separates the
+repository's current identity from the identities it had before a remote
+rename. Which events enter a project is a second boundary, decided lexically
+from the event's cwd (section 9c).
 
-**The scope key is real, and it is maintained in two places rather than one.**
-`project_id` is a required `WHERE` predicate on both retrieval arms
-(`src/store/store.ts`), and a cross-project query opens each registered
-repository's own database separately and tags every hit with its origin rather
-than pooling them. The precheck path does not go through those methods: it takes
-`store.raw` — *"escape hatch for tests and future modules"* — and writes its own
-`nodes_fts MATCH … AND n.project_id = ?`. The predicate is there and the boundary
-holds; what is worth noting is that only one of the two files enforcing it is the
-store, and the escape hatch invites the third.
+**A forgotten value is refused at every later write.** `nexusmem forget <value>`
+writes a `deny_list` row keyed on the value, and `upsertNodes` consults the list
+before every insert, so a `sync --rebuild` that re-reads the hook logs cannot
+restore it. Each deleted node leaves a hash-only `tombstones` row. The deny-list
+row and the audit row's `detail` hold the pattern in cleartext
+(`src/store/forget.ts:135`), so the hash-only property covers the per-node
+records and not the forgotten value (section 9b).
 
-**The answer to "a credential got in" is the mechanism worth the report.** A store
-that deliberately ingests assistant transcripts and shell command lines is
-ingesting the two places a pasted credential actually lives, and deleting the
-node is not enough, because the hook log those nodes were derived *from* is
-append-only and a `sync --rebuild` reads it again from line zero. So
-`nexusmem forget <value>` does not delete: it writes a `deny_list` row keyed on
-the value — literal or regex — and `upsertNodes` consults that list before every
-insert, forever. The comment on `deny-list.ts` states the shape in one line:
-*"a standing rule that a specific value (a leaked key, a name) must never become
-a node, checked on every insert rather than swept after the fact."*
-
-Two details make it more than a filter. Over-broad patterns are refused at write
-time — an empty literal, a regex that will not compile, and a regex that matches
-the empty string, on the stated ground that each *"matches every node just as
-broadly as an empty literal does."* And the record of the removal is
-**hash-only**: each deleted node leaves a `tombstones` row with kind, source,
-timestamp, signal, body length and `sha256` of body and title, never the text,
-because *"this table exists to prove a value was removed, not to retain a second
-copy of it… so the record that something was forgotten never itself becomes
-something worth forgetting."* That sentence is the best argument in this corpus
-for why a tombstone should not store what it tombstones.
+Five marks: `tombstone`, `bitemporal`, `scope_enforced`, `audit_log` and
+`negative_eval`. `trust_state` and `human_review` are withheld, and section 9a
+gives each near-miss.
 
 ## 2. Mental Model
 
-An event happens on the machine. A collector notices it, redacts it, scores it a
-prior, and writes it once under a content-derived id. No collector ever revises
-it. It is retrieved by fusing two indexes, re-ordered by two priors that are
-bounded in how far they may overturn the query, cut to a token budget, and handed
-over as the text that was stored — or, on the pre-commit path, selected by the
-names of the files you staged and printed without any of that.
+**A memory is an event with a result; the only inferred belief is a link
+between two of them.** A collector notices an event, redacts it, scores a
+prior and writes it under a content-derived id. A re-sync rewrites a node only
+when its derived title, body or signal changed, and never touches
+`trust_state`, `supersedes` or the retrieval counters (`src/store/nodes.ts:60-69`).
 
-The epistemic content of that loop is thin by design, and the honest way to draw
-it is to show what closes it and what does not. One arrow runs backwards into the
-store and it is a person's: `nexusmem review` sets `trust_state` on a node the
-collectors are forbidden to overwrite. Everything else leaving the store is
-wholesale.
+**The inferred belief is "this failure was fixed by that".**
+`correlateFailures` links a failed `shell_command` to what resolved it under
+one of two relations (`src/correlate/failure-fix.ts:71-72`).
+`resolved_by:retry` is a later pass of the same execution in the same cwd
+within 24 hours. `resolved_by:discussion` is the best AND-match among
+transcript nodes in the following 24 hours. For two agent-recorded rows, a pass
+with nothing edited in between is counted as unexplained and left unlinked
+(`:254-256`).
+
+**What the agent is told about a failure is derived at read time, and stored
+nowhere.** Recall classifies each execution as resolved, stale, superseded,
+uncertain or unresolved (`src/agent/recall.ts:256`):
+
+- *resolved*: the newest failure has a retry link.
+- *stale*: a retry link exists and the same execution failed again after it.
+- *superseded*: a later commit whose subject says revert touches a file the fix
+  edited (`:88-106`).
+- *uncertain*: only a discussion link exists. The digest words it as
+  *"possibly discussed"* and never as fixed.
+- *unresolved*: no link.
+
+**Four writes change what a node means, and one of them is on the agent's
+tool surface.** Collectors write nodes. `nexusmem review` sets `trust_state`
+and `forget` writes the deny list; both are CLI verbs with no MCP twin.
+`mark-stale` sets `supersedes`, and the MCP `resolve_stale_suggestion` tool
+reaches the same write (section 8).
+
+**A memory dies by value, by source or wholesale, and only the first is
+permanent.** `forget` deletes and writes a rule that refuses the value at every
+later insert. `--prune-source` deletes one source and leaves the source file on
+disk, so a rebuild re-derives what that file still holds. `sync --rebuild`
+clears the project.
+A `rejected` verdict and a supersession demote a node, by 0.3 and 0.5 in the
+ranker, and return it anyway.
 
 ```mermaid
-%% caption: two ways out — a ranked, budgeted answer to a query and a pre-commit warning nobody asked for — one human verdict written back onto a node no collector may overwrite, and one way back in, because a source-keyed removal leaves the source file on disk and the next full sync re-derives what was pruned
+%% caption: events enter through two hook logs and the collectors, a deny list stands between every collector and the node table, and three reads leave it — a ranked answer, a note when a command fails again, a pre-commit warning; a rebuild re-reads the logs and only the deny list stops a forgotten value returning
 flowchart TD
-    HOOK["Shell hook<br/>appends command, cwd, exit code"] --> LOG[("hook log JSONL<br/>append-only, never pruned")]
-    LOG --> COLL
-    SCRAPE["bash / zsh / PSReadLine tail<br/>no cwd, no exit code"] --> COLL
-    GIT["git log and patches"] --> COLL
-    DOCS["project docs"] --> COLL
-    CONV["assistant transcripts (opt-in)"] --> COLL
-    COLL["Collector<br/>redact, score a signal prior, derive id"] --> N[("nodes<br/>write-once by collectors<br/>trust_state kept out of upsert")]
-    REVIEW["nexusmem review &lt;id&gt;<br/>--verify / --reject"] -->|"sets trust_state"| N
-    N --> FTS["FTS5 BM25"]
-    N --> VEC["sqlite-vec cosine"]
-    FTS --> FUSE["fuse"]
-    VEC --> FUSE
-    FUSE --> RANK["rank: relevance x signal^e x recency^e<br/>priors share one overturn budget"]
-    RANK --> PACK["pack to token budget"]
-    PACK --> AGENT["agent, on a query"]
-    STAGED["git diff --cached<br/>staged file basenames"] --> PRE["precheck: unresolved failures + churn<br/>no query, no ranker, no budget"]
-    N --> PRE
-    PRE --> HOOK2["pre-commit hook, on stderr<br/>never --strict, never blocks"]
-    N -. "unrecorded removals" .-> PRUNE["--prune-source (whole source)<br/>--rebuild (whole project)"]
-    PRUNE -. "re-derives on next sync" .-> LOG
-    FORGET["forget &lt;value&gt;"] --> DENY[("deny_list<br/>+ hash-only tombstones<br/>+ mutation_audit")]
+    SH["shell hook<br/>command, cwd, exit code"] --> SLOG[("shell hook log<br/>machine-wide JSONL")]
+    CC["Claude Code hooks<br/>each Bash call and edited path"] --> ALOG[("agent event log<br/>redacted before the write")]
+    SLOG --> ADMIT["admission<br/>is the event's cwd under this repo root?"]
+    ALOG --> ADMIT
+    ADMIT --> COLL["collectors<br/>redact, score signal, derive id"]
+    GIT["git commits and patches, docs<br/>transcripts, GitHub threads"] --> COLL
+    FORGET["forget a value"] --> DENY[("deny_list and mutation_audit<br/>hash-only tombstones")]
+    DENY --> CHECK{"deny list match?"}
+    COLL --> CHECK
+    CHECK -->|"match"| DROP["skipped and counted<br/>never a node"]
+    CHECK -->|"no match"| N[("nodes<br/>project_id on every row")]
     FORGET -. "deletes matching nodes" .-> N
-    DENY -->|"consulted on every insert"| N
-    LOG -. "rebuild re-reads from line 0" .-> N
+    REVIEW["a person runs review<br/>verified or rejected"] -->|"0.3x rank if rejected"| N
+    N --> CORR["correlate<br/>failure to a later pass of the same execution"]
+    CORR --> LINKS[("node_links<br/>resolved_by retry or discussion")]
+    N --> Q["query<br/>BM25 and vector, rank, pack to budget"]
+    N --> PRE["precheck<br/>unresolved failures naming a staged file"]
+    N --> RECALL["agent recall<br/>same execHash, same project"]
+    LINKS --> RECALL
+    RECALL --> WORD["wording follows the evidence<br/>fixed / fix did not hold / reverted / no fix recorded"]
+    WORD --> INJ["injected once per execution per session<br/>at most five per session"]
+    REBUILD["sync rebuild"] -. "clears nodes, re-reads both logs" .-> ADMIT
 ```
 
-The two dotted paths out of the node store are the finding, and they end
-differently. A prune is keyed on the *source*: the append-only hook log is still
-on disk, nothing records that the data was meant to be gone, and the next full
-sync restores it. A `forget` is keyed on the *value*, and the rule it writes is
-consulted on every subsequent insert — including the insert a rebuild performs
-from that same untouched log. The coarse operation is the reversible one; the
-fine one is not, which is the opposite of the usual arrangement and the right way
-round.
+The two dotted paths end differently. A rebuild is keyed on the project: both
+logs are on disk, so the next pass restores what it cleared. A `forget` is
+keyed on the value, and the rule it writes is consulted on every insert,
+including the inserts a rebuild performs from those logs.
 
 ## 3. Architecture
 
-Nothing runs. `nexusmem` is an npm package requiring Node 22 whose runtime
-dependencies are `better-sqlite3`, `sqlite-vec`, the MCP SDK, `commander`,
-`picocolors` and `zod`. State is one SQLite file per repository plus a
-user-scoped registry listing the repositories that exist, so a cross-project
-query can find them.
+`nexusmem` is an npm package requiring Node 22. Its runtime dependencies are
+`better-sqlite3`, `sqlite-vec`, the MCP SDK, `commander`, `picocolors` and
+`zod`. Two optional local model calls go to Ollama: `nomic-embed-text` for
+embeddings and a small chat model for session summaries and contradiction
+checks.
 
-Four surfaces read it. The CLI is the primary one (`init`, `sync`, `query`,
-`precheck`, `status`, `projects`, per-source `scan-*` verbs, `hook`, `mcp`). The
-MCP server exposes four tools over stdio — `search_memory`, `sync_project`,
-`get_status`, `list_recent_memory` — none of which writes a memory. A VS Code
-extension adds a panel with search, refresh and sync commands. And
-`.git/hooks/pre-commit`, if the user installs it, reads the store on every commit.
+**State is split between the repository and the user's home.**
+`<repo>/.nexusmem/` holds `config.json` and `memory.db`, and ignores itself
+through its own `.gitignore`. `~/.nexusmem/`, or `NEXUSMEM_HOME`, holds
+machine-wide files, among them:
 
-The operator cost is a `sync`. There is no scheduler in the tree: collection
-happens when the CLI is invoked, when the shell hook fires, or when an agent
-calls `sync_project`. The tool writes into two files it does not own — a shell
-profile and `.git/hooks/pre-commit` — one to feed the store, one to read it, and
-neither happens unless asked: `init --hook` is off by default and the git hook
-has no `init` flag at all.
+- `projects.json`, the registry a cross-project query opens;
+- `shell-history.jsonl`, the shell hook log;
+- `agent-events.jsonl`, the agent event log (`src/agent/paths.ts:9`);
+- `agent-recall-state.json`, the per-session injection quota
+  (`src/agent/recall-state.ts:25`).
+
+Both logs are shared by every repository on the machine and are filtered by cwd
+when a sync reads them.
+
+**Six surfaces touch the store.**
+
+- The CLI: `init`, `sync`, `query`, `precheck`, `status`, `forget`, `review`,
+  `mark-stale`, `stale`, `scrub-secrets`, `projects`, `agent`, `hook`, `mcp` and
+  a `scan-*` verb per source.
+- A stdio MCP server with six tools (`src/mcp/server.ts`).
+- Three Claude Code hooks written into a settings file by `agent install`.
+- Shell hooks for PowerShell, bash and zsh.
+- Git pre-commit and post-commit hooks.
+- A VS Code extension that speaks to the MCP server.
+
+### Deployment and ergonomics
+
+Nothing has to be running. There is no scheduler: collection happens when
+`sync` runs, and four things run it. They are a person, the MCP `sync_project`
+tool, the post-commit hook under a lock that skips when a sync is in flight,
+and the SessionStart hook, which spawns a detached `sync --auto --quiet`
+(`src/cli/commands/agent.ts:207`).
+
+It runs offline. Without Ollama the vector arm, session summaries and
+contradiction checks drop out and retrieval is BM25 alone. No API key is
+needed to store anything.
+
+The tool writes into files it does not own, and each write is opt-in: a shell
+profile, `.git/hooks/pre-commit`, `.git/hooks/post-commit`, and a Claude Code
+settings file. `agent install` targets the user settings by default, or
+`.claude/settings.local.json` with `--project`, and never a settings file a team
+would commit (`src/cli/commands/agent.ts:42-46`).
+
+The store is a SQLite file a person can open. Repairing it by hand is not
+needed for anything `sync` can re-derive; the deny list, verdicts and links are
+the parts a rebuild cannot reproduce.
 
 ## 4. Essential Implementation Paths
 
-- **Ingest.** `src/collectors/` per source → `redact()` → a `signal` prior →
-  `sha256(projectId + kind + naturalKey)` → `INSERT` in `src/store/store.ts`,
-  with a per-source cursor in `sync_state` so a re-run is incremental.
-- **Shell tiering.** `src/shell/detect.ts` chooses between the hook log
-  (`src/shell/hook-log.ts`) and the three scrape parsers, and suppresses
-  PSReadLine once the hook covers it.
-- **Retrieval.** `src/retrieval/query-pipeline.ts` fans out to
-  `store.search` (BM25) and `store.vectorSearch`, fuses in `fuse.ts`, orders in
-  `rank.ts`, and cuts in `pack.ts`.
-- **Pre-commit read.** `src/cli/commands/precheck.ts` gets the staged paths from
-  `git diff --cached --name-only`, `src/correlate/precheck.ts:assessFiles` runs
-  two SQL queries per file through `store.raw`, and
-  `src/hooks/install-git-precommit.ts` is what puts the caller in
-  `.git/hooks/pre-commit`.
-- **Identity migration.** `src/store/reconcile.ts` moves nodes to a new project
-  id when a repository's remote is renamed, preserving each node's original
-  `created_at`.
-- **Correlation.** `src/correlate/` links a failed `shell_command` to whatever
-  later resolved it, and `filterBoilerplateTokens` there is the shared
-  corpus-relative token filter both the linker and the pre-commit read use.
-- **Structure.** `src/structure/` extracts relative import specifiers by regex,
-  resolves them against the tracked-path set, and `store.replaceFileEdges` swaps
-  the whole `file_edges` snapshot in one transaction.
+- **Ingest.** `src/collectors/` per source → `redact()` where the source calls
+  it → a `signal` prior → `makeNodeId` → `upsertNodes` in `src/store/nodes.ts`,
+  with a per-source cursor in `sync_state`.
+- **Agent capture.** `src/adapters/claude-code/hook-entry.ts` reads a hook
+  payload on stdin, `payload.ts` maps it to an `AgentEvent`, `redactAgentEvent`
+  in `src/agent/event.ts` hashes and redacts it, and `record.ts` appends one
+  line. `src/collectors/agent-events.ts` turns the log into `shell_command`
+  nodes at the next sync.
+- **Ambient recall.** `runAgentRecall` in `src/cli/commands/agent.ts` parses the
+  payload, resolves the repository from the event's cwd, and calls
+  `recallFailure` or `recallUncertain` in `src/agent/recall.ts`.
+  `claimInjection` in `recall-state.ts` decides whether to print.
+- **Session digest.** `runAgentSessionStart` starts a background sync and prints
+  `recallSessionStart`'s text.
+- **Query.** `src/retrieval/query-pipeline.ts` fans out to `store.search` and
+  `store.vectorSearch`, fuses in `fuse.ts`, orders in `rank.ts`, pulls linked
+  resolutions in beside their failure, and cuts in `pack.ts`.
+- **Pre-commit read.** `src/cli/commands/precheck.ts` lists staged paths and
+  `assessFiles` in `src/correlate/precheck.ts` runs two SQL queries per file.
+- **Correlation.** `src/correlate/failure-fix.ts` writes the failure-to-fix
+  links and holds `filterBoilerplateTokens`.
+- **Forget.** `src/store/forget.ts` writes the deny-list entry, the audit row,
+  the deletes and the tombstones in one transaction; `deny-list.ts` is the
+  matcher and its guards.
+- **Project boundary.** `isUnderRoot` in `src/shell/detect.ts` admits a hook
+  event into a project; `src/store/reconcile.ts` moves nodes to a new project id
+  after a remote rename and carries their links across.
+- **Remediation.** `src/store/scrub.ts` re-applies redaction to stored rows and
+  purges SQLite remnants.
 
 ## 5. Memory Data Model
 
-Alongside `nodes`: `node_files` (path,
-insertions, deletions, rename source) with its own index because path-scoped
-recall — *"what happened to `src/store/db.ts`?"* — is a first-class query;
-`node_links` for directed typed edges; `nodes_fts`, an **external-content** FTS5
-index that stores no copy of the text and points back at `nodes.rowid`, halving
-the searchable footprint; `nodes_vec`, a vec0 table; `sync_state` for per-source
-cursors; and `projects`.
+**One table holds every memory, and seven more sit beside it**
+(`src/store/schema.ts`, thirteen migrations). `node_files` indexes touched
+paths. `node_links` holds directed typed edges. `nodes_fts` is an
+external-content FTS5 index that stores no copy of the text. `nodes_vec` is a
+vec0 table. `sync_state` holds per-source cursors. `contradiction_checks`
+memoises model judgments. `file_edges` is an import graph of the working tree,
+replaced wholesale on every sync and read only by a status line.
 
-`file_edges` (schema v4) is the one table that is not made of memories, and the
-migration comment says why it could not be: a source file is not a node, and
-`node_links` foreign-keys both of its columns to `nodes.id`, so the import graph
-needs its own table *and* its own `project_id` column — *"there is no node to
-join through for it."* It also has the opposite lifecycle to everything else
-here. Nodes are write-once and never pruned below a whole source; `file_edges`
-describes the working tree rather than history, has no cursor to resume from, and
-is deleted and reinserted in its entirety on every sync. The store's only
-wholesale, routine, unremarkable delete is over the data that is not memory.
+**Two timestamps sit on every node and both are queried.** `ts` is the event's
+own time, `ts_epoch` the same instant as integer milliseconds, and `created_at`
+the moment the row was written (`src/store/schema.ts:26-36`). Event time drives
+ranking. Record time is what `--as-of` filters on, with
+`AND (? IS NULL OR n.created_at <= ?)` on the lexical arm
+(`src/store/search.ts:85`) and the same clause on the vector arm.
+`reconcile.ts` carries `created_at` forward through a project-id migration, so
+ingest time survives a repository rename.
 
-Two timestamps sit on every node and the distinction is deliberate: `ts` is the
-event's own time kept verbatim from the source, `ts_epoch` the same instant as
-integer milliseconds *"so range scans and ordering never parse strings"*, and
-`created_at` the moment the row was written. `reconcile.ts` carries `created_at`
-forward unchanged through a project-id migration, so ingest time survives a
-repository rename.
+**An agent command carries its identity in `meta`.** The collector writes
+`commandHash`, a hash of the raw command, and `execHash`, a hash of the command
+reduced to its one real execution (`src/agent/event.ts:42-52`). It also writes
+`exitCode`, `outcome`, `agentSessionId`, `toolUseId` and the `cwd`
+(`src/collectors/agent-events.ts:85-104`). The stored command text is redacted,
+so matching runs on the hashes and two commands that differ only by a secret
+are never treated as one.
 
-**Both axes are queried, which is what makes the pair bi-temporal rather than
-decorative.** Event time drives ranking; record time is what `--as-of` filters
-on, adding `AND (? IS NULL OR n.created_at <= ?)` to the lexical arm in
-`src/store/search.ts` and its equivalent to the vector arm. So "what did you hold
-last Tuesday" and "what happened last Tuesday" are different questions here, and
-`tests/store.test.ts:468` pins the distinction in its case title — *"asOfEpoch
-excludes a node recorded after the cutoff, even though it happened before"*.
-Section 9b names the one path on which that separation goes lossy.
+**Three columns describe where a claim came from, and they are kept apart on
+purpose.** `provenance` is a four-tier ordering — `observed`, `authored`,
+`recorded`, `derived` — set per collector. `capture_mode` records whether the
+store saw the event happen or reconstructed it from an artifact that predates
+installation; the V13 migration states that the evidence-quality axis *"cannot
+also say"* that. `source_ts` is null where an artifact has no trustworthy
+timestamp, for untimestamped shell history and document mtimes.
 
-Two schema columns carry the epistemics. `provenance` is a four-tier ordering —
-`observed`, `authored`, `recorded`, `derived` — backfilled by kind on migration
-*"since an unchanged node is never rewritten by a later sync… and so would never
-otherwise pick up the right value"*, and set explicitly by each collector.
-`defaultProvenanceForKind` is the whole taxonomy in one `switch`: commits, diffs
-and shell commands are `observed`; docs and notes are `authored`, *"a human's own
-written claim"*; conversation turns are `recorded`, *"verbatim discourse about
-events"*; session summaries are `derived`, *"a model's distillation"*.
-`supersedes` is a nullable pointer from the newer node to the one it replaces,
-with a partial index over the non-null rows.
+**Two more columns carry a person's judgement.** `trust_state` is `candidate`,
+`verified` or `rejected` and is set only by `nexusmem review`. `supersedes` is a
+nullable pointer from a newer node to the one it replaces. `upsertNodes`
+updates neither on conflict, so a re-sync cannot return a rejected node to
+`candidate`.
 
-**An ordering is not a state machine, and the code makes the distinction better
-than the rubric does.** Four tiers distinguish where a claim came from, not
-whether anyone has checked it, and the V10 migration says so in as many words
-before adding `trust_state` as the separate axis — which is a genuine
-candidate/verified/rejected field, and is withheld for a different reason set out
-in section 9a. More to the point here, the ranker's floors
-are an explicit decision that no tier may gate — *"Floors keep the combination a
-reordering within each dimension instead of an on/off gate"* — so `derived`
-decays four times faster than `observed` and is still returned. The tier has
-exactly one exclusion anywhere in the system, and it is not from retrieval: an
-`observed` node is never offered as a staleness candidate, because the store
-declines to suggest that something that happened has gone out of date.
-
-There is no `deleted_at`, because a deletion is a row in a different table.
+**Deletion is a row in other tables.** There is no `deleted_at`. `deny_list`
+holds the standing rules, `tombstones` one hash-only row per removed node, and
+`mutation_audit` one row per forget or confirmed source prune.
 
 ## 6. Retrieval Mechanics
 
-BM25 and vector cosine run as independent arms and are fused, then ranked as
-`relevance x signalWeight^e1 x recencyFactor^e2`.
+### The query path
 
-**The exponents are the interesting part, and the reasoning behind them is
-committed in a comment that is worth reading in full.** `relevance` is the only
-factor derived from the question; `signal` and `recency` are priors that hold
-before any query exists. Multiplied as equals, the priors win outright: signal
-spans 5x and recency 3.33x against relevance's 6.7x, so *"a well-scored recent
-commit could outrank a document that matched the question far better"* — observed
-live, a `fix:` commit at signal .9 taking rank 1 from the top-fused doc section
-at signal .55, on a 44% signal edge against a 15% relevance deficit.
+BM25 and vector cosine run as independent arms, are fused by reciprocal rank
+when both return hits, and are ranked as `relevance x signalWeight^e1 x recencyFactor^e2`
+(`src/retrieval/rank.ts:190`).
 
-The fix bounds rather than bans: exponents cap how far the priors may jointly
-overturn the query, and because the transform is monotonic the priors still order
-equally-relevant hits exactly as before. The second iteration is the one worth
-copying — capping each prior separately caps neither, because the score
-multiplies them and two priors each worth 2x are worth 4x together. The comment
-names why that is not a corner case: it *"describes every commit made during an
-active working day, both fresh and high-signal at once, so the failure
-concentrated on exactly the days with the most worth remembering."* So
-`MAX_PRIOR_OVERTURN` became a budget for all priors jointly, split evenly, each
-prior raised to the power that makes its whole range worth its share — and adding
-a third prior re-divides the same budget rather than enlarging it.
+**The exponents bound how far two query-independent priors may overturn the
+query.** `relevance` is the only factor derived from the question. Multiplied
+as equals, the priors win: the comment records a `fix:` commit at signal .9
+taking rank 1 from the top-fused doc section on a 44% signal edge against a 15%
+relevance deficit. `MAX_PRIOR_OVERTURN` is therefore one budget for all priors
+jointly, split evenly, and each prior is raised to the power that makes its
+whole range worth its share (`:97-101`). A third prior would re-divide the
+budget.
 
-The vector arm carries a subtlety worth flagging: `nodes_vec` applies its `MATCH`
-and `k` before the `project_id` filter is joined, so `vectorSearch` overfetches by
-8x (`Math.max(limit * 8, 50)`) to compensate. That is a heuristic, not a
-guarantee — a project whose nodes are sparse among a large neighbour set can
-still under-return.
+**The budget is shared because capping each prior separately caps neither.**
+The score multiplies them, so two priors each worth 2x are worth 4x together.
+The comment calls that the common case: it *"describes every commit made
+during an active working day"*.
 
-`pack.ts` then cuts to a token budget. Nothing is rewritten on the way out.
+**Provenance tunes recency, and no tier gates.** Recency decays on a half-life
+multiplied per tier, so a `derived` node's weight halves fastest
+(`:59-64`). Every factor has a floor, so a tier reorders and never excludes. A
+superseded node is multiplied by 0.5 and a rejected one by 0.3. `pack.ts` prints
+the tier, the capture mode and a non-default trust state as bracketed labels on
+each packed line (`src/retrieval/pack.ts:41-44`).
 
-**The second read path answers a question nobody typed, and it is built from a
-different set of parts.** `assessFiles` takes the staged paths and, per file,
-word-splits the *basename* — dropping the trailing extension first, because a
-bare `.ts` would become a required AND-match token that *"almost no real command
-or discussion ever types out literally, silently suppressing nearly every match
-on this (TS-heavy) codebase"* — then asks for `shell_command` nodes with a
-non-zero `exitCode`, inside a 30-day window, that carry no `resolved_by:*` link.
-Beside it, a churn count from `node_files` scoped to `kind = 'git_commit'` only,
-because `code_diff` nodes record the identical per-commit touches and summing
-both would double-count.
+**A linked resolution rides in beside its failure.** `pullLinkedResolutions`
+inserts the node a failure links to directly after it, with the failure's own
+score, so the fix survives the budget cut without matching the query
+(`src/retrieval/query-pipeline.ts:42-87`). It hydrates by id; section 9c
+covers why that read is in scope.
 
-The match is the weak joint and the project says so in the module comment rather
-than in a footnote: a failure whose command does not share a word with the file's
-name is invisible to it. The direction of that error is the safe one — silence
-rather than noise — but the pairing is worth naming, because the two arms fail
-oppositely. Retrieval over-returns and then ranks; the pre-commit read
-under-returns and then prints everything it found.
+**The vector arm takes its neighbours inside the project.** `nodes_vec`
+declares `project_id` as a vec0 partition key (`src/store/schema.ts:294`), and
+the query binds `v.project_id = ?` (`src/store/embeddings.ts:124`). The V11
+migration comment reports the failure this removed: with 495 rows in one
+project and 5 in another, a global `k=50` surfaced none of the 5.
 
-**Two AND-matches run through a document-frequency filter first — this one and
-the failure-to-fix linker's — and the reasoning behind it is the best empirical
-work in the repository.** `filterBoilerplateTokens` drops any token appearing in more than 20% of this
-project's own nodes of the relevant kinds, skipping the filter entirely below ten
-such nodes because *"any word can trivially hit 20%+ just by appearing once or
-twice"* on a young corpus. The threshold comes from measurement, not taste: the
-known `id` false positive measures 22–40% document frequency across two real
-corpora, this repository's own name and verbs measure 33–39% in its own history,
-and the terms that carried real links — `whoami`, `wsl`, `publish` — all measure
-under 2%.
+**An as-of read on the vector arm can return short.** `created_at` is not a
+partition column, so that path fetches `max(limit * 8, 50)` neighbours and
+filters afterwards (`src/store/embeddings.ts:117`). The result is short whenever more than
+`k - limit` of the project's nearest neighbours were recorded after the cutoff.
+A project whose recent months are its busiest fills the window with rows the
+filter then discards, and an empty answer reads the same as a store that held
+nothing.
 
-What makes it worth copying is the failure it was written for. Dogfooding against
-a second, previously unseen project found a command made entirely of the tool's
-own words (`nexusmem sync`) AND-matching an unrelated turn, and **bm25 could not
-separate it from a true positive**: the false positive scored −9.685, stronger
-than two real links at −5.899 and −6.559. The comment names why, and it is a
-property of the scoring function rather than a tuning miss — bm25 *"rewards
-rarity within whatever corpus it's run against"*, and in the smaller corpus those
-words had not accumulated enough occurrences to look generic. Then the disclosure
-that makes the whole passage trustworthy: at that project's measured frequencies
-(9.3% and 4.6%) the filter *does not* catch that instance, and the comment
-says so, restricting the claim to the class the numbers support. When every token
-is boilerplate the heuristic returns nothing rather than falling back unfiltered,
-because its design *"already prefers a missed link over a false one."*
+### Ambient recall
 
-**Two query-independent priors ride on top of the fused score, and provenance
-tunes one of them.** Recency decays on a half-life multiplied per tier by
-`HALF_LIFE_RATIO`, so a `derived` node's relevance halves fastest and an
-`observed` one's slowest. The comment scopes the claim exactly as far as the
-evidence goes: *"The exact ratios are judgment calls, not measured optima; only
-the ordering (observed > authored > recorded > derived) is the design claim."*
-That is the right way to ship a tuned constant — assert the monotonicity, not the
-numbers. A superseded node is multiplied by `SUPERSEDED_PENALTY = 0.5` rather
-than dropped, *"not near-zero, since it must stay reachable if it's still the
-best match"* — a supersession that demotes and refuses to hide. And `pack.ts`
-prints the provenance into the packed context, one bracket per line, so the model
-reading the memory is told which kind of claim it is looking at. A field that is
-set by every producer, consumed by the ranker and rendered to the reader is a
-rarer thing than its few lines of code suggest.
+**The hook matches an execution, not a string.** Claude Code rarely runs a
+command bare: it prefixes `cd`, appends `; echo "exit: $?"`, or leads with
+`ls`. `canonicalizeCommand` splits on `&&` and `;`, classifies each segment as
+navigation, observation or target, and hashes the single target
+(`src/agent/event.ts:198-207`). Any shape it cannot prove inert — two real
+commands, an env assignment, a pipeline, a `cd` to another directory — leaves
+the command whole. The comment gives the reason for the asymmetry: a missed match costs a
+silent recall, and a wrong one *"teaches the model a false fact"*.
+
+**Recall reads up to three past failures of that execution in this project.**
+`SELECT_BY_HASH` filters on `project_id`, `kind`, `execHash` and a non-zero
+`exitCode` (`src/agent/recall.ts:41-51`). Each line names the day and the files
+edited before that attempt. The text is capped at 1,200 characters. No model,
+embedding or network call is on the path.
+
+**A fix is reported as current only when the evidence still supports it.**
+The first linked fix decides the wording (`:139-160`). A revert commit touching
+the fix's files yields *"that fix was reverted"*. A newer failure of the same
+execution after the fix yields *"that fix no longer holds"*. Until commit
+[`888c3295f741192af2125cf73144e51eeec876e9`](https://github.com/yaminbkk/NexusMem/commit/888c3295f741192af2125cf73144e51eeec876e9), dated 16 September 2026, the second case was reported as fixed. The
+result carries `resolved`, `superseded` and `stale` flags, and the footer
+changes with them.
+
+**An undetermined run is never counted as a failure.** A command piped into
+`head`, `tail` or `tee` is captured with `outcome: 'unknown'` and a null exit
+code (`src/adapters/claude-code/payload.ts:122`). `recallFailure` requires a
+non-null exit code, so those rows are outside its count. `recallUncertain`
+reads them under its own header, which states that the status was hidden.
+
+**Delivery is rationed per session.** `claimInjection` takes a `mkdir` lock,
+refuses a key the session has already been told, and refuses a sixth injection
+(`src/agent/recall-state.ts:107-136`). Contention returns false without
+waiting. The CHANGELOG records the race this replaced: with a separate read
+and write, 3/20 concurrent invocations printed the same recall.
+
+### The session digest
+
+`recallSessionStart` reads up to 40 failures from the last 14 days in this
+project and groups them by execution (`src/agent/recall.ts:297-316`). It lists three, resolved
+chains first, inside 600 characters. A row with no `execHash` falls back to its
+raw-command hash, and a redacted row with neither hash stays its own entry,
+because two different secrets can redact to the same text (`:231-239`).
+
+### The pre-commit read
+
+`assessFiles` word-splits each staged file's basename, drops the extension,
+and asks for `shell_command` nodes with a non-zero exit code inside 30 days
+that carry no `resolved_by` link (`src/correlate/precheck.ts:84-96`). A failure
+whose command shares no word with the file's name is invisible to it. The
+printed line says so: *"commands naming this file failed"*, with a code comment
+that overclaiming location would misdirect the reader
+(`src/cli/commands/precheck.ts:78-83`).
+
+A churn count beside it is printed as a dim `note` labelled an untuned
+heuristic, and `HIGH_CHURN_THRESHOLD = 4` carries the same admission in its
+comment (`src/cli/commands/precheck.ts:20-28`, `:97`).
+
+**Two AND-matches run through a document-frequency filter first.**
+`filterBoilerplateTokens` drops a token that appears in more than 20% of the
+project's nodes of the relevant kinds, and skips the filter below ten such
+nodes (`src/correlate/failure-fix.ts:112-168`). The threshold is measured: the
+known `id` false positive sits at 22–40% across two corpora, the project's own
+name and verbs at 33–39%, and the terms that carried real links under 2%. When
+every token is boilerplate it returns nothing, because the heuristic *"already
+prefers a missed link over a false one."*
 
 ## 7. Write Mechanics
 
-Writes are synchronous and happen inside a `sync`; there is no queue and no
-background pass. Each collector resumes from a cursor in `sync_state`, so a
-re-run is incremental rather than a re-scan.
+Writes are synchronous inside a `sync`. Each collector resumes from a cursor
+in `sync_state`, and every node passes through `upsertNodes`, which is where
+the deny list is checked.
 
-**Redaction runs before anything reaches the index**, and it is split into two
-profiles for a reason the module states precisely. Shape rules — private-key
-blocks, `AKIA` keys, `gh[pousr]_` tokens, Slack tokens, JWTs — match strings
-nothing else produces and are safe over source code. The broader key/value rule
-is not: it would match `const apiKey = process.env.API_KEY` *"and would corrupt
-the very lines a diff is indexed for."* So conversation text gets the full set
-and code diffs get `high-confidence` only. The header calls it *"a safety net,
-not a guarantee."*
+### Capturing what an agent did
 
-**Deletion has three granules and only the finest one is recorded.**
-`forget <value>` is the finest: one transaction inserts the deny-list entry,
-opens a `mutation_audit` row *before* the sweep so tombstones can foreign-key a
-real id, deletes every matching node across the live project and its prior
-identities, writes a hash-only tombstone each, and closes the audit row with the
-affected count. The audit row is written *"whether or not anything matched —
-pre-emptively blocking a value that hasn't appeared yet is a valid, auditable
-call."* Without `--yes` it counts and prints, matching the prune convention
-exactly. `forget --list` shows the standing rules, and `--export`/`--import`
-move them between checkouts, since `deny_list` lives in the gitignored
-`.nexusmem/memory.db` and *"is exactly what… never travels with `git clone`."*
+**The adapter records an outcome only as far as its evidence goes.**
+`classifyBashResult` checks four cases in order
+(`src/adapters/claude-code/payload.ts:113-124`):
 
-`pruneSourceNodes` is the middle granule: one source, applied across the live
-project id **and every prior identity of the same repository** — a scope derived
-from `listOtherProjectIds` rather than from "every `project_id` in the table",
-which is the conservative choice. Without `--yes` it prints the matching count
-and removes nothing; with it, the output says *"this cannot be undone."* It
-writes no audit row and no tombstone, so the coarse path is the unrecorded one
-and a store's removal history covers only what was removed by value.
-`sync --rebuild` is the coarsest and is likewise silent.
+1. a real `PostToolUseFailure` carries its own exit code;
+2. a command ending in `; echo "exit: $?"` has its status recovered from the
+   last line of stdout;
+3. a pipe into `head`, `tail` or `tee` is `unknown`;
+4. otherwise the hook's verdict stands.
 
-**Supersession is the non-destructive option and the write is still manual.**
-`mark-stale <nodeId> --supersedes <newNodeId>` sets one pointer and validates
-that neither id is the other and that both belong to the current project.
-`nexusmem stale` prompts it, listing non-`observed` nodes older than 45 days that
-nothing supersedes, oldest first — and its header refuses the stronger claim:
-*"Heuristic surfacing only, not contradiction detection."*
+Output alone is never evidence, because a program can print `exit: 1` itself
+(`:59-63`).
 
-**What sits on top of that list is the most interesting thing in the tree, and
-its cost model is the reason it can be on by default.** `checkContradictions`
-takes each stale candidate, finds the nearest node *newer* than it by vector
-search, and asks a local Ollama model one question: does the newer one make the
-older one wrong? The instruction is narrow — *"Say YES only if the NEWER memory
-states something that makes the OLDER one factually wrong or obsolete — a
-decision reversed, a bug fixed, a plan abandoned… When unsure, say NO"* — and an
-unparseable reply is a `null`, never a guessed YES, on the stated grounds that a
-missed contradiction costs nothing while a false accusation prints beside a real
-memory.
+**Recall is installed on both tool events for that reason.** A wrapped command
+exits 0, so Claude Code reports a success and `PostToolUseFailure` never fires
+(`src/adapters/claude-code/install.ts:59-68`). The cost is one full CLI start
+per successful Bash call; commit [`eec8088578533475ae1f1533cd6c598c17963c25`](https://github.com/yaminbkk/NexusMem/commit/eec8088578533475ae1f1533cd6c598c17963c25) measures it at about 195 ms.
 
-Three decisions make it affordable. Judgments are **memoized** in
-`contradiction_checks` either way, so re-running against the same corpus
-converges to zero model calls. New judgments are **bounded** — `maxPerSync`
-defaults to three, so `sync` spends at most three completions and an explicit
-`stale --check-contradictions` run is unbounded. And either provider being
-unreachable degrades a candidate to "no suggestion" rather than an error. The
-neighbour limit is the one number with a measurement behind it: five was raised
-to twenty-five because a chunked conversation's own same-timestamp siblings
-*"dominate a candidate's own nearest neighbours by construction"*, measured at
-fifteen siblings ahead of the first genuinely newer node across ten real
-candidates, so every candidate silently got zero suggestions regardless of the
-model.
+**An edit is a path and nothing else.** The payload of an edit tool also holds
+the file's old and new content, and the adapter keeps only `file_path`
+(`payload.ts:252-256`). Edits accumulate per session and attach as the `files`
+of the next command in that session (`src/collectors/agent-events.ts:113-131`).
 
-**It is suggest-only, and both answers are recordable.** The checker's only write
-is the memoized judgment; `supersedes` is never set by it, so accepting a
-suggestion means a person typing `mark-stale`. Declining one is the other write:
-`nexusmem stale --dismiss <candidateId>` sets `dismissed = 1` on the memo row
-through a statement scoped by the same `nodes.project_id` join the listing uses,
-and both open-suggestion queries carry `c.dismissed = 0`, so a suggestion the
-reviewer judged wrong stops resurfacing without anyone marking the candidate
-stale to silence it. That column earns its place precisely because the
-memoization makes re-runs free: a judged pair is never re-asked, so without a
-dismissal the same rejected suggestion would print on every `sync` and every
-`status` forever. What it does not carry is *who* dismissed it or *when* — the
-memo holds the verdict and not its provenance, so the store can say a suggestion
-was declined and cannot say by whom.
+**The capture hook cannot block the agent.** It prints nothing, never exits 2,
+and records a dropped event as two normalised codes and a timestamp
+(`src/adapters/claude-code/hook-entry.ts:1-11`). `agent status` reports drops
+and the age of the last captured event, so a silent install is visible.
 
-`nexusmem status` closes half of the gap that leaves: it calls
-`listOtherProjectIds` and `countProjectNodes` and prints how many nodes prior
-identities of this repository still hold, with the prune command to run, so data
-a rename stranded is visible without opening the database by hand.
-What it does not do is make that data reachable by a query — the read arms filter
-on the live `project_id`, so a stale identity's nodes are counted, named and
-still unretrievable.
+### Redaction
+
+**Redaction runs per collector, and its coverage is five sources of eight.**
+Shell history, agent events, conversation turns and session summaries get the
+full rule set; code diffs get the `high-confidence` profile; docs, git commit
+messages and GitHub threads are stored as read. The split has a stated reason:
+the key/value rule *"matches ordinary code"* and *"would corrupt the very lines
+a diff is indexed for"* (`src/conversation/redact.ts:16-23`). The module
+header calls itself *"a safety net, not a guarantee"*.
+
+**The shell log is redacted where it lies.** The recorder redacts at capture,
+and each sync runs `sanitizeHookLog` over the shared log for lines an older
+hook wrote raw (`src/cli/commands/sync.ts:266-279`). `scrub-secrets` re-applies
+current rules to stored rows under the profile each kind's collector uses, then
+rebuilds the FTS index, runs `VACUUM` and truncates the WAL
+(`src/store/scrub.ts:166-185`).
+
+### Forgetting
+
+**Deletion has three granules, and two of them are recorded.**
+
+- `forget <value>` runs one transaction: it inserts the deny-list entry, opens a
+  `mutation_audit` row, deletes every matching node across the live project and
+  its prior identities, writes a hash-only tombstone each, and closes the audit
+  row with the count (`src/store/forget.ts:113-186`). The audit row is written
+  whether or not anything matched. Without `--yes` it counts and prints.
+- `--prune-source` wipes one source across the same identities and writes one
+  `prune_source` audit row, with no tombstones, because there is no single
+  matched value to hash (`src/cli/commands/sync.ts:660-671`).
+- `sync --rebuild` clears the project and writes no row.
+
+**The deny list refuses over-broad rules and cannot be shrunk.**
+`validatePattern` rejects an empty literal, a regex that will not compile, and
+a regex that matches the empty string (`src/store/deny-list.ts:47-63`).
+`docs/forget-mechanism.md` states that an entry *"cannot be removed once
+written"*. `--export` and `--import` carry the list between checkouts, because
+the database is gitignored and a fresh clone starts with none.
+
+### Supersession and the contradiction checker
+
+`mark-stale <nodeId> --supersedes <newNodeId>` sets one pointer after checking
+that both ids belong to the current project
+(`src/cli/commands/mark-stale.ts:37-47`). `nexusmem stale` lists non-`observed`
+nodes older than 45 days that nothing supersedes.
+
+**A local model proposes, and its only write is a memo.** For each stale
+candidate, `checkContradictions` finds the nearest newer node by vector search
+and asks an Ollama model whether it makes the older one wrong
+(`src/retrieval/contradiction.ts:68-132`). Judgments are memoised either way, so
+a re-run converges to zero model calls. `sync` spends at most three new
+judgments per run. A malformed reply records nothing. `stale --dismiss` sets
+`dismissed = 1` on a memo row, and both open-suggestion queries filter on it.
+
+### Operational cost
+
+The write path runs no model unless session summaries are enabled. A failure
+is recallable only after a sync has ingested it: `recallFailure`'s own comment
+says the node for the current run *"is not in the database yet"*. Three
+triggers narrow that lag — session start, a commit, and an explicit sync.
+Injection is bounded at 1,200 characters per recall, 600 per digest and five
+recalls per session.
 
 ## 8. Agent Integration
 
-Four MCP tools, none of which writes a memory: `search_memory`, `sync_project`,
-`get_status`, `list_recent_memory`. The VS Code extension is a panel — search,
-refresh, sync — and by the rubric's own line, viewing is not reviewing; the
-pre-commit warning prints and asks nothing either.
+**The MCP server registers six tools, and two of them write**
+(`src/mcp/server.ts:16-160`).
 
-**The review surface is the CLI, and only the CLI.** `nexusmem review <nodeId>
---verify` / `--reject` (`src/cli/commands/review.ts`, wired at
-`src/cli/index.ts:283-297`, which refuses unless exactly one of the two flags is
-passed) resolves the node, refuses an id belonging to another project, and writes
-the person's verdict to `trust_state` through `store.setTrustState`. Beside it
-`nexusmem stale --dismiss <nodeId>` records the other kind of verdict — that a
-contradiction the local model proposed is wrong — by setting `dismissed = 1` on
-the memo row, which both open-suggestion queries filter on. Either way a judgement lands in the store as a row a later read consults.
+- `search_memory`, `get_status`, `list_recent_memory` and
+  `list_stale_suggestions` read.
+- `sync_project` ingests, and with `pruneSource` or `pruneStaleShell` plus
+  `yes: true` it deletes a whole source. The confirmation is an argument of the
+  same call.
+- `resolve_stale_suggestion` takes `action: 'accept' | 'dismiss'`. Accept
+  reuses `runMarkStale`; dismiss calls `store.dismissContradictionSuggestion`
+  (`src/mcp/tools.ts:278-309`).
 
-Two things keep that from being `human_review`, and the second corrects a claim
-this section used to make. Neither verdict withholds anything: `verified` and
-`rejected` are worth a 0.3 ranking multiplier and nothing else, as the trust
-matrix row says — *"a score, not a gate"* — and a dismissed suggestion silences
-a listing rather than holding a node back. And the dismiss verdict *is* reachable
-from the agent-facing surface: `src/mcp/server.ts:140-158` registers
-`resolve_stale_suggestion` with `action: z.enum(['accept', 'dismiss'])`, and the
-dismiss branch calls the same `store.dismissContradictionSuggestion` the CLI
-does (`src/mcp/tools.ts:283-292`). The accept branch reuses `runMarkStale`. So
-the producing agent disposes of the queue it is shown.
+Every tool takes `projectRoot` from the caller, and `search_memory` takes
+`allProjects`, which searches every registered repository.
 
-Two components run without being asked. The shell hook writes to its own JSONL
-rather than to the database. The git pre-commit hook reads.
+**The ambient path needs no tool call.** `agent install` writes three hook
+entries: a capture command on `PostToolUse` and `PostToolUseFailure` for Bash
+and the edit tools, a recall command on both events for Bash, and a
+session-start command. Recall replies with `hookSpecificOutput.additionalContext`
+under the event name that carried the payload; the digest is plain stdout. The
+recall and digest hooks carry a five-second timeout.
 
-**The git-hook installer is the most carefully written file in the release, and
-none of its care is about memory.** `.git/hooks/pre-commit` is a file real tools
-own — husky, lint-staged, lefthook — so the installer marks its block with
-sentinels, refuses a foreign hook without `--force`, and under `--force`
-*appends* rather than prepends, so *"the existing hook's own commands still run
-first"* and nexusmem's check cannot reorder or override a decision the other hook
-already made. Removing restores the foreign content and deletes the file when
-nothing but the shebang the installer itself added remains. The generated script
-resolves `command -v nexusmem` at runtime and no-ops when it is missing, so an
-uninstalled binary prints nothing rather than breaking a commit; it passes no
-`--strict`, and a committed test asserts exactly that — *"the rendered snippet
-invokes precheck with no flags, so it can never block a commit on its own."*
-Stated limits are in the module comment rather than discovered: a foreign hook
-that `exit`s early prevents this block from ever running, and the installer says
-so.
+**The project's own experiment found the tools unused.** A comment in
+`scripts/eval-ambient.ts` records zero `mcp__nexusmem__*` calls across the 18
+trials that had the tools available, and declines to prompt the model into
+calling them. The digest's closing line points at the tools all the same.
+
+**The agent-facing instruction file asks for restraint.** `claude.md` tells an
+agent working on this repository to consult NexusMem before retrying an
+approach that may have failed, not on every prompt, and adds: *"Treat retrieved memory as evidence, not
+ground truth."*
+
+**Review is a CLI verb.** `nexusmem review <nodeId> --verify` or `--reject`
+refuses an id from another project and writes `trust_state`
+(`src/cli/commands/review.ts:33-41`). The VS Code extension adds a stale-review
+view whose accept and dismiss commands call `resolve_stale_suggestion`
+(`vscode-extension/src/mcpClient.ts:220-230`), so a person and an agent reach
+that verdict through the same tool.
+
+**The git-hook installer appends and never reorders.**
+`.git/hooks/pre-commit` is a file husky, lint-staged and lefthook own, so the
+installer marks its block with sentinels and refuses a foreign hook without
+`--force`. Under `--force` it appends, so *"the existing hook's own commands
+still run first"* (`src/hooks/git-hook-snippet.ts:36-48`). The generated script
+resolves `command -v nexusmem` at run time and passes no `--strict`, so it can
+warn and cannot block. A test asserts the rendered snippet carries no flag
+(`tests/git-hook-install.test.ts:50`).
 
 ## 9. Reliability, Safety, and Trust
 
-`signal` is a float in `[0.2, 1]` consulted only by the ranker. It is set at
-ingest from the kind and source and nothing updates it from use, so a node that
-is retrieved constantly and one that is never retrieved carry the same prior
-forever. **Nothing withholds a node from being returned.** `provenance`,
-`supersedes`, a confirmed contradiction and a human's own `rejected` verdict all
-change a node's *weight* or its *visibility in a maintenance list*, and none of
-them changes its *admissibility*. That is one sentence about four separate
-mechanisms, and it is why `trust_state` is withheld: the store has a reviewer, a
-verdict and three states, and no query that acts on them.
+**Nothing withholds a node from being returned.** `provenance`, `supersedes`, a
+confirmed contradiction and a person's `rejected` verdict change a node's
+weight or its place in a maintenance list. None changes whether a read returns
+it. The same holds on the ambient path: a fix that failed again is still named,
+with different words beside it.
 
-**The audit is real and its coverage is partial, which is the thing to check
-before relying on it.** `mutation_audit` is append-only, has one producer, and
-that producer sits on a user-reachable CLI command. It is also the only producer:
-a grep for `INSERT INTO mutation_audit` across `src/store/` returns exactly one
-file. So the store can answer "what values have been forgotten here, when, by
-what pattern, and how many nodes went" and cannot answer the same question about
-a pruned source. The asymmetry runs the useful way — the recorded path is the one
-a compliance question is about — and it is still an asymmetry a reader should
-know before quoting the table as a removal history.
+**The audit covers two kinds of confirmed removal, and no other mutation.**
+`mutation_audit` has two writers, `forget` and a confirmed source prune
+(`src/store/forget.ts:129`, `src/store/audit.ts:31`). One statement updates a
+row, and it is `forget` closing the row it opened in the same transaction. A
+rebuild, the docs collector's own prune, a deny-list drop during reconcile, a
+review verdict, a supersession, a dismissal and a scrub write nothing. The
+reader `listMutationAudit` has no caller outside tests, so the table answers a
+question only through SQL.
 
-The local-first posture is genuine — no network egress on the read path, no
-account, no telemetry — and the failure modes chosen under it are consistently
-the non-fatal ones. `openAllProjectSources` treats every failure as recoverable
-by design: *"a cross-project query that refuses to answer because one of six
-repositories is on an unplugged drive would be worse than one that answers from
-five and says so."*
+**The MCP surface holds a destructive verb.** `sync_project` with
+`pruneSource` and `yes: true` wipes a source in one call
+(`src/mcp/server.ts:69-77`). The prune is audited and its source file stays on
+disk, so a rebuild re-derives what that file still holds. Rows under a prior
+project identity whose natural key cannot be rebuilt are the exception.
 
-The privacy exposure is structural and the remedy is the deny list. The two
-collectors most likely to capture a credential are the two the design most wants
-— assistant transcripts and shell command lines — and redaction declares itself
-*"a safety net, not a guarantee."* What closes the loop is that the remedy
-survives the operation that would undo it: the hook log still holds the line
-after a `forget`, and the deny list is what stops it becoming a node again. The
-committed test is the one that proves the claim rather than the code — ingest a
-secret, confirm it is retrievable, forget it, `sync --rebuild` from the untouched
-log, then assert the secret returns `[]` *and* that a control command in the same
-log still returns hits, which is what separates a working deny list from a broken
-rebuild.
+**Failure modes are chosen to be quiet.** Every error path in the recall and
+session-start commands returns 0 and prints nothing
+(`src/cli/commands/agent.ts:318-322`). A cross-project query answers from the
+databases it can open; `sources.ts` argues that refusing *"because one of six
+repositories is on an unplugged drive would be worse"*. The cost is that a
+broken install and a quiet week look alike, which is what `agent status`
+exists to tell apart.
 
-The pre-commit path widens where that text can surface without widening what is
-stored. A failed command is printed, truncated to 90 characters, into the output
-of `git commit` — which is a terminal a person may be screen-sharing, and a
-buffer CI logs if the hook ever runs there. The store's redaction pass is the
-only thing standing between a credential typed into a shell and that output, and
-the module that wrote it calls itself *"a safety net, not a guarantee."*
+### 9a. Two withheld marks, and two fields that resemble them
 
-## 9a-ante. A third axis, kept separate on purpose
+**`trust_state` is withheld because no read filters on it.** The column is a
+discrete three-value status, set only by a person, protected from re-sync and
+shown to the model. Its readers are the ranker, which multiplies a `rejected`
+node by `REJECTED_TRUST_PENALTY = 0.3` (`src/retrieval/rank.ts:192`), and the
+packer, which prints a label (`src/retrieval/pack.ts:43`). The comment on the
+constant states the intent: *"`review` demotes, it doesn't delete."* A
+`verified` verdict changes no score. The three ambient-recall queries and the
+precheck queries do not select the column at all.
 
-Schema v13 adds `capture_mode` and `source_ts` to `nodes`, and the migration
-says why the first could not be folded into the existing one: *"[t]he
-evidence-quality axis (`provenance`) cannot also say whether NexusMem saw an
-event happen or reconstructed it from an artifact that already existed at
-installation. Keep that as a separate field."* How good the evidence is, and
-whether the system witnessed it or inferred it after the fact, are different
-questions, and most stores in this corpus answer only the first.
+**`human_review` is withheld on two grounds.** No memory waits: a `candidate`
+node is served at full weight from the moment it is written, so a verdict
+arrives after the write has taken effect. And the one queue the system keeps,
+open contradiction suggestions, is cleared by an MCP tool the agent holds
+(`src/mcp/server.ts:143-160`).
 
-`source_ts` is nullable for a stated reason rather than for convenience — it is
-empty *"specifically when an artifact has no trustworthy content/event
-timestamp (untimestamped shell history and document filesystem mtimes)"*, and
-the older synthetic values *"remain only for internal ordering."* A column that
-admits when it does not know, beside one that admits its values were never
-really times, is the honest version of a backfill.
+**`outcome: 'unknown'` is a stored status that one read sets apart, and it is
+not an epistemic state of the memory.** It is fixed at capture and no path
+moves a row out of it. The read that excludes it does so through the exit-code
+predicate. The memory it marks — this command ran and its status was hidden —
+is served as true by `recallUncertain`.
 
-**And the redaction that was wrong has been re-run over what it missed.**
-`scrub.ts` re-applies today's rules to rows written before the key/value rule
-and the shell `meta.command` fix landed — the remediation for secrets that
-reached `memory.db` under the old rules. Two bounds make it safe to run: each
-kind is scrubbed under *"exactly the profile its collector applies at ingest, so
-this never redacts more than a fresh sync would"*, and rows are updated in place
-so *"ids, links, trust state and reconcile keys are untouched."* A cleanup pass
-that cannot over-delete and cannot disturb identity is the shape this atlas
-keeps asking for.
+**Resolved, stale, superseded and uncertain are computed per call.** They have
+the vocabulary of a trust state and none of its storage: no query can ask for
+stale rows without replaying the links, and the classification changes wording
+only.
 
-## 9a. The two trust axes, and who is allowed to set them
+### 9b. What a forget leaves behind
 
-`provenance` says where a claim came from — `observed`, `authored`, `recorded`,
-`derived` — and the V10 migration opens by saying what that does not cover:
+**The tombstone is hash-only and the rule beside it is not.** The schema
+comment gives the reason for hashing: the table exists *"to prove a value was
+removed, not to retain a second copy of it"*. The `deny_list.pattern` column
+holds the value itself (`src/store/schema.ts:156`), and `forget` copies the
+pattern into the audit row's `detail` JSON (`src/store/forget.ts:135`). A
+literal matcher needs the value, so the first copy is structural; the second is
+a choice. `forget --list` prints the patterns, and `--export` warns that its
+file holds the raw values in plaintext.
 
-> `provenance` records where a claim came from […] it says nothing about whether
-> anyone has checked it. `trust_state` is that separate axis — 'candidate' until
-> a human runs `nexusmem review`, then 'verified' or 'rejected'.
+**Four other places can hold the value after a forget, or bring it back.**
 
-Three properties make it a mechanism rather than a column, and a fourth is
-the reason the mark is withheld anyway.
+- Both JSONL logs. `forget` reads neither file, and the deny list exists because
+  they persist.
+- Any `<db>.backup-*` file an earlier `scrub-secrets --yes` wrote. The command
+  warns that a backup *"still contains every secret removed here"* and that
+  NexusMem never deletes backups (`src/cli/commands/scrub-secrets.ts:102-107`).
+- Freed SQLite pages, FTS5 segments and WAL frames. `scrub.ts` names all three
+  as places old text survives and purges them; `forget` does not call that
+  purge.
+- Another checkout. The deny list does not travel with a clone, so a fresh
+  sync there re-derives the value. `tests/forget.test.ts` pins both the gap and
+  its `--export`/`--import` remedy.
 
-**A re-sync cannot overwrite a verdict.** `trust_state` is deliberately left out
-of `upsertNodes`' own INSERT columns and its `ON CONFLICT SET` clause, the same
-rule `supersedes` already followed, so a collector re-reading the same shell
-command or commit tomorrow cannot silently return a rejected node to
-`candidate`. The default does the work for a genuinely new node and nothing
-else touches it.
+**The mechanism has a dated origin.** `docs/forget-mechanism.md` says it shipped
+on 17 August 2026 in response to this atlas's report on the project, and quotes
+the finding it answers. The same document lists what the change does not close.
 
-**It reaches the ranker, and it is not a delete.** Both retrieval arms select
-`trust_state`, and `rank.ts` multiplies a rejected node's score by
-`REJECTED_TRUST_PENALTY = 0.3` — harsher than the supersession penalty, under a
-comment that draws the distinction: *"a human explicitly rejected this claim, not
-just a newer node quietly replacing it. Still not zero — `review` demotes, it
-doesn't delete."* A rejected memory can still surface when nothing better exists,
-which is a defensible product decision for a store whose reviewer may have been
-wrong.
+### 9c. The project boundary has two halves
 
-**And it is why `trust_state` is withheld.** The mark asks for a discrete status
-*"including at least one state that withholds a memory from being treated as
-true"*, and draws the line at what the status is used for: a score gets used for
-ranking, a state gets used for filtering. A grep for `trust_state` across `src/`
-returns the schema, the two retrieval arms selecting it, `nodes.ts:290` writing
-it, and `rank.ts:192` multiplying by `REJECTED_TRUST_PENALTY = 0.3`. Nothing
-filters on it anywhere. So this is the rubric's own collapse case built
-deliberately and well: a genuine three-value status, human-set, protected from
-re-sync, surfaced to the model — used as a confidence number. Everything except
-the property the mark is for is here, and one `WHERE trust_state != 'rejected'`
-on an opt-in flag would supply it.
+**The read half is a predicate.** Every query that returns node content to an
+agent binds `project_id`: lexical search, the vec0 partition, three recall
+queries, the digest, precheck, the recent listing and the stale-suggestion
+listing. Two reads take an id instead — `getNodesByIds`
+(`src/store/nodes.ts:195-204`) and recall's `SELECT_BY_ID`
+(`src/agent/recall.ts:65-68`). Both are reached only through `node_links` from
+a row the predicate already admitted.
 
-**It reaches the model.** `pack.ts` prefixes a reviewed node's line with
-`[verified]` or `[rejected]` in the injected context and stays *"silent for the
-overwhelming default ('candidate'): only a reviewed node earns a tag."* The
-absence of a tag means unreviewed rather than fine, and the tag budget is spent
-only where a person actually looked.
+**Those id reads hold because links never cross projects.** `correlateFailures`
+selects both ends under one `project_id`. `restoreLinks` re-creates a migrated
+link only when both ends landed under the new id, so one whose other end was
+left behind *"stays dropped rather than bridging two project identities"*
+(`src/store/reconcile.ts:165-183`). Until commit [`bf4140060eaf8f3b260c7a121d4455c505121832`](https://github.com/yaminbkk/NexusMem/commit/bf4140060eaf8f3b260c7a121d4455c505121832), dated 23 September 2026,
+a migration dropped every such link, and a failure came back from recall with
+no resolution.
 
-Beside it, `nexusmem stale --dismiss` closes the gap the contradiction memo had.
-A YES verdict a reviewer disagreed with sets `dismissed = 1` and both
-open-suggestion queries filter `c.dismissed = 0`, so it stops resurfacing. The
-migration says why that needed its own column rather than reusing supersession:
-without it the listing *"re-prints every open YES verdict on every run forever,
-with mark-stale as the only way to make one stop, which only works when the
-suggestion was actually right."* Marking a node stale to silence a wrong
-suggestion is a lie in the data, and this is the field that avoids telling it.
+**The write half is lexical, and it leaked until 21 September 2026.** Both hook
+logs are machine-wide, and `isUnderRoot` decides which events a sync takes in
+(`src/shell/detect.ts:69-74`). It used to fold case and read every backslash as
+a separator on every platform. Commit [`a4c8bbb3982dfa981c70d6ddaddb8e579d3d1885`](https://github.com/yaminbkk/NexusMem/commit/a4c8bbb3982dfa981c70d6ddaddb8e579d3d1885) records the consequence,
+reproduced end to end: on a case-sensitive filesystem a command from
+`/home/dev/Repo` became a node in `/home/dev/repo`, was returned by ambient
+recall and appeared in the digest.
 
-## 9a-bis. What the GitHub source carries in with it
+**The fix compares by the host's own rules and admits nothing it cannot
+prove.** Case folds only on Windows. `..` is resolved. macOS compares
+case-sensitively though its volumes usually are not, so a case-insensitive
+volume loses recall instead of gaining another directory's history. No call
+touches the filesystem and symlinks are not resolved.
 
-`nexusmem sync --github` collects issue and PR threads into
-`kind: 'github_thread'` nodes, rendering the opening body and every comment
-under a `--- @author (date) ---` header, truncated at 4,000 characters. Two
-properties of that node are worth stating because they are the first time this
-store ingests text **a stranger wrote**.
+**A key on the row did not stop that leak, and could not.** The node was
+stamped with the admitting project's id at write, so every scoped read returned
+it correctly. `scope_enforced` measures the predicate, and this was upstream of
+it.
 
-**Its provenance tier is `recorded`** — the collector's own comment says
-*"verbatim discourse, same tier as conversation_turn."* Within the four-tier
-ordering that is defensible: `provenance` encodes *how the claim was obtained*,
-and an issue comment is obtained the same way a chat turn is. The consequence is
-that the ordering carries no information about **who** made the claim. A shell
-command the user ran is `observed`; a sentence the user typed is `recorded`; a
-sentence a stranger typed into a bug report three years ago is also `recorded`,
-and the ranker's per-tier decay multiplier treats them identically. Authorship
-survives only as `@author` text inside the body, which nothing parses.
+**An MCP caller chooses its scope.** `projectRoot` is an argument on every tool
+and `allProjects` opens every registered database. The server's own comment
+gives the model: a client that can spawn the process already has the same
+filesystem access.
 
-**It does not pass through redaction, and the reason is legible.**
-`conversation/redact.ts` describes its own scope: it exists *"because
-conversation text is the collector most likely to contain something sensitive (a
-pasted credential, a key a user asked for help debugging), but a committed `.env`
-or a hard-coded key makes the code-diff collector a real second candidate."* Two
-collectors call it — `conversation.ts` in full and `diffs.ts` on the
-`high-confidence` profile, the latter because the key/value rule *"matches
-ordinary code such as `const apiKey = process.env.API_KEY` and would corrupt the
-very lines a diff is indexed for."* Neither the store nor `sync` applies it
-centrally.
+### 9d. What the GitHub source carries in
 
-So the coverage is a reasoned two of seven rather than an oversight. A GitHub
-thread is nonetheless a third candidate of exactly the shape the docstring
-describes — a bug report is where people paste the credential they are asking for
-help with — and it is stored verbatim, indexed into FTS, embedded, and packed
-into agent context. `shell-history.ts`, the collector this system is named for,
-does not redact either; a `curl -H "Authorization: Bearer …"` is captured as
-typed.
+`sync --github` collects issue and PR threads into `github_thread` nodes,
+rendering the opening body and every comment, truncated at 4,000 characters.
 
-## 9b. Scope pushed into the nearest-neighbour search
+**Its provenance tier is `recorded`**, the same tier as a conversation turn
+(`src/collectors/github.ts:83`). The tier encodes how a claim was obtained and
+says nothing about who made it. A sentence a stranger typed into an issue and a
+sentence the user typed into a chat decay identically, and authorship survives
+only as `@author` text in the body.
 
-`nodes_vec` declares `project_id TEXT PARTITION KEY` rather than carrying it as a
-plain column, and the migration comment reports the failure that change removes,
-reproduced before it was written:
-
-> `vectorSearch` had no way to ask vec0 for "k nearest *in this project*", only
-> "k nearest globally, then discard the wrong project's rows" […] a heuristic
-> that returns fewer than `limit` results, silently, whenever a small project
-> shares a database with a much larger one and none of its true nearest
-> neighbours make the global cut. Reproduced exactly that failure in a scratch
-> script before writing this: 495 rows in one project + 5 in another, global
-> `k=50` surfaced 0 of the 5; partitioned `k=5` surfaced all 5.
-
-That is a scope filter applied *inside* the search rather than after it, and the
-failure it closes is the one worth naming: the arrangement it replaced was not
-wrong about which rows it returned, it was silently short. The migration also
-records that vec0 cannot `ALTER TABLE ADD COLUMN` or be renamed without
-orphaning its shadow tables — *"tried first, confirmed broken"* — so the upgrade
-stages into a temp table, drops the virtual table and reloads.
-
-One overfetch survives, scoped to a single path, and the function's own comment
-concedes it: *"`created_at` isn't a partition column though (an `--as-of` query is
-rare and per-query, not worth a second one), so that path still over-fetches to
-compensate for rows the time filter drops afterward — the same heuristic this
-function used to need for both dimensions, now needed for only one."*
-
-The residual failure is worth spelling out, because it bites hardest on the query
-the feature exists for. With `--as-of`, vec0 returns the `k = max(limit * 8, 50)`
-nearest neighbours *within the project* — the partition key does its job — and
-`n.created_at <= ?` then removes rows, and `LIMIT` takes what is left. The result
-is short, silently, whenever more than `k - limit` of the project's nearest
-neighbours to that query were recorded after the cutoff. In a project whose
-recent months are its busiest, asking what the store held a year ago is exactly
-the case where the k-window fills with post-cutoff rows the filter was always
-going to discard, and an empty answer is indistinguishable from *the store knew
-nothing about this a year ago*.
-
-The bi-temporal semantics are pinned — `store.test.ts`'s *"asOfEpoch excludes a
-node recorded after the cutoff, even though it happened before"* is the exact
-distinction the mark is about. What no committed case covers is the short
-return: the cross-project version of this bug was reproduced in a scratch script
-before it was fixed, and its surviving twin on the time axis is reasoned about
-rather than measured.
+**It is stored unredacted.** `github.ts` does not import `redact`, and a bug
+report is where people paste the credential they want help with. The thread is
+indexed, embedded and packed into agent context as written.
 
 ## 10. Tests, Evals, and Benchmarks
 
-835 test declarations across 57 files, beside a 28-case labelled retrieval
-corpus in `eval/queries.json` driven by `scripts/eval.ts`. Coverage tracks the
-mechanisms:
-`store.test.ts`, `query-pipeline.test.ts`, `retrieval.test.ts`, `vector.test.ts`,
-`reconcile.test.ts`, `cross-project.test.ts`, `conversation.test.ts`,
-`correlate.test.ts`, `precheck.test.ts`, `forget.test.ts`, `stale.test.ts`,
-`contradiction.test.ts`, `slm-contradiction.test.ts`,
-`sync-auto-contradictions.test.ts`, `schema.test.ts`, `git-hook-install.test.ts`,
-`structure.test.ts`, a per-command CLI file for each `scan-*` subcommand, and
-per-parser shell tests. I did not run the suite.
+The suite is Vitest, run by CI on Linux, Windows and macOS across Node 22 and
+24 (`.github/workflows/ci.yml:33-44`). I ran none of it. The README's Status
+section gives 701 tests; the tree holds more declarations than that.
 
-**The eval harness produced the best sentence in the repository, and it is an
-argument against its own score.** `MAX_PRIOR_OVERTURN` bounds how far the
-query-independent priors may overturn a relevance gap. Its value was a guess, and
-once the harness existed it was grid-searched:
+### The negative assertions
 
-> 1.5 regresses (MRR 0.864), 2 scores 0.924, 2.4 scores 0.943, and 3-5 tie at a
-> higher 0.946 plateau, before a cliff at 6 (0.927, q007 regresses) — all with
-> zero per-case regressions *in that corpus*. But the corpus doesn't cover every
-> case this constant guards: `tests/retrieval.test.ts`'s "dogfooded regression"
-> case […] starts failing again anywhere above ~2.5 — the eval-optimal 3-5
-> plateau silently re-opens the original bug this mechanism exists to prevent,
-> just outside this specific 28-query corpus's view.
+**The scope boundary on ambient recall is pinned by a paired case.**
+`tests/agent-recall.test.ts:79` seeds the same execution under two projects in
+one database. It requires the first project's recall to count two failures and
+omit the other's edited file, and the second's to count one and omit all three
+of the first's. Commit [`377d9c225b5ded07107119e9135690231b9f4b66`](https://github.com/yaminbkk/NexusMem/commit/377d9c225b5ded07107119e9135690231b9f4b66) states why it was added: the preflight check
+seeded its second project in a separate repository, and *"a recall query that
+lost its project_id predicate would still pass it"*.
 
-The constant is set to 2.4: not the optimum, but the highest value that still
-passes every case in both suites, with the instruction to re-run both after
-touching it.
+**The older arms carry the same shape.** `tests/store.test.ts:433` asserts a
+node that exists is absent from another project's lexical search, and
+`tests/vector.test.ts:153` repeats it for a vector seeded at the exact query
+point. `tests/project-admission.test.ts:233` drives the admission leak end to
+end: an event from a path differing only by case must reach neither the
+project's rows, nor recall, nor the digest.
 
-**Nobody outside that machine can check any of it.** `scripts/eval.ts` imports
-`loadContext` and `OllamaEmbeddingProvider` and runs against the local project's
-own store, and a case's ground truth is a list of `relevantNodeIds` — which are
-`sha256(projectId + kind + naturalKey)`, computed over the author's own shell
-commands, commits and conversations. A reader cloning this repository gets 28
-queries whose correct answers are ids no other database contains. The harness is
-real, the discipline around it is real, and the corpus is not portable: the MRR
-figures, the grid search and the plateau it declined are all unreproducible
-outside the machine that produced them. Nothing about that is hidden — it is a
-consequence of content-addressed ids over private data, and it is the same
-trade the atlas records for every production-derived evaluation. A project that builds a scoring harness and then *declines to take
-its top score* — because a regression test outside the corpus knows something the
-corpus does not — is the answer to the failure this atlas records as a metric
-optimised into a bug. The eval corpus is 28 hand-labelled cases and its limits
-are stated rather than implied.
+**`forget.test.ts` tests the failure the feature exists to prevent.** Its
+central case appends a value and a control command to the hook log, syncs, and
+asserts the value is retrievable. It then forgets the value, rebuilds, and
+asserts no hit carries it while the control still returns
+(`tests/forget.test.ts:231-306`). The assertion was narrowed from an empty
+result to *the value is gone* after a macOS fixture path matched one word of
+the test value.
 
-The contradiction files are worth naming for what they assert rather than what
-they cover. `contradiction.test.ts` pins the memoization contract from both
-sides — *"remembers a judged pair either way, so the next run can skip re-asking
-the model"* and *"lists only YES verdicts"* — and pins the lifecycle at both ends:
-a suggestion *"drops … once the candidate is superseded"*, and a check
-*"cascades away with either node, so a check never outlives what it judged."*
-`schema.test.ts` replays a real subset of the migrations against hand-seeded
-old-shaped rows rather than re-typing frozen SQL, which is how a backfill claim
-gets tested instead of asserted.
+**`prune-source.test.ts` names its discriminating assertions inline.** One
+reads `// discriminating: an unscoped sweep would remove this too`
+(`tests/prune-source.test.ts:188`). Another asserts a dry run writes zero audit
+rows and a confirmed prune writes one (`:266-284`).
 
-**`forget.test.ts` is the file to read first, because it tests the failure the
-feature exists to prevent rather than the feature.** Its central case is titled
-*"the resurrection bug is fixed: a forgotten value does not come back after
-`sync --rebuild`, while an unrelated command in the same log does"*, and it is
-built as a positive control around a negative assertion: append a fake key and a
-control command to the hook log, sync, **assert the secret is retrievable** —
-the comment says why, *"confirms the secret was actually ingested before we try
-to forget it"* — forget it, rebuild from the untouched append-only log, then
-assert `search(projectId, secret, 10)` returns `[]` while the control command
-still returns hits, *"proves it's the deny-list, not a broken rebuild"*. It then
-checks `deny_list` still holds one row, because *"`--rebuild` must not wipe the
-deny-list along with the nodes"*. Four of the five assertions exist to rule out a
-way of passing for the wrong reason.
+### The ambient-memory experiments
 
-**The negative assertions are on the read path, which is what earns the mark.**
-`store.test.ts` writes a node under one project and asserts `search('proj-b', …)`
-returns nothing; `vector.test.ts` embeds a node under another project and asserts
-`vectorSearch` for that exact vector returns nothing; and `store.test.ts` names a
-live defect in its own case title — *"does not let the generic word `id` pull in
-an unrelated node over a real match"* — then asserts the noise node is absent
-from the results *and* that the right node is first. Material that exists and
-must not come back is what each of them pins. `precheck.test.ts` extends the same
-shape to the pre-commit arm: a failure already linked as resolved, a failure
-outside the window, and a failure whose command shares no word with the file are
-each asserted to produce an empty list.
+**Three generations are committed, and none reports an effect.**
 
-**`prune-source.test.ts` is still the file to read, for a reason the mark does
-not capture.** Its cases assert that a prune *"deletes exactly the named source
-and nothing else"*, that it reaches a stale prior identity of the same
-repository, and — the sharp one — that it *"never touches a project id this
-repo's database never registered."* That last test carries an inline
-discriminating control: `// discriminating: an unscoped sweep would remove this
-too`, naming in the test what a broken implementation would do to it. Very few
-negative suites in this atlas do that, and the technique is worth more than the
-flag beside it. The adjacent case documents a real defect the project found on
-2026-08-15: after a remote rename, `reconcile.ts` deliberately leaves dead
-pre-hook shell nodes under the old project id, and a live-id-only prune could not
-reach them.
+- **`eval/ambient/` with `scripts/eval-ambient.ts`.** Three arms — git history
+  only, MCP tools reachable, hooks installed — over three scenarios. It measures
+  agent behaviour from the session transcript: files edited and in what order,
+  tool calls, when the fix was reached, what was injected.
+  `eval/ambient-v2/README.md` records the result as 9/9 in every arm, with
+  ambient useful recall at 4/9 and a dead-end rate of 0/27 in every arm. Its own reading: a measure with no variance in the control arm *"cannot
+  discriminate, at any sample size"*.
+- **`eval/ambient-v2/`.** A frozen design whose primary endpoint is the repeated
+  dead-end rate, over 63 trials, with fingerprints, an isolation check and a
+  contamination guard. Its README states that no model trial of it has been run.
+  A comment in `eval/ambient-v3/scenario.ts` says a run happened and found a
+  control dead-end rate of 1/14, because the fixture's commit subjects narrated
+  every abandoned attempt. The two files disagree and no result file settles it.
+- **`eval/ambient-v3/`.** Fixtures with one uninformative commit and the
+  attempts held only in the seeded event log, a scorer that separates a dead end
+  from a different edit to the same file, and `checkPilotDiscriminates`, a gate
+  on the control arm's base rate. Commit [`001a8473d728ef71120f77e509baeefd35440b25`](https://github.com/yaminbkk/NexusMem/commit/001a8473d728ef71120f77e509baeefd35440b25) states that no pilot has been
+  run and no orchestration harness exists for it.
 
-**A benchmark is committed, and it measures packing rather than retrieval.**
-`scripts/benchmark.ts` (`npm run bench`) runs the real query pipeline over a
-synced corpus and compares `packed.tokensUsed` against two baselines built from
-the same file set the packed answer draws on — `git show HEAD:<path>` for every
-file touched, and `git log -p` over those files' full history. Its own header
-draws the distinction the number needs: holding the file set constant *"isolates
-the value the packing step adds, without also re-litigating retrieval quality in
-the same number."* The query set is derived mechanically from the corpus rather
-than hand-picked — real conversation questions where a corpus has them, generated
-"why" questions from conventional-commit subjects where it does not — and results
-are gitignored on purpose, so what is reproducible is the script and not a table.
-The published figures (95.1% and 98.8% aggregate against full-file reads, on this
-repository and on a synced clone of `vitejs/vite`) need an Ollama embedding
-endpoint and a synced database to reproduce, so this reading did not run them.
+**No run output is committed.** `eval/results/` is gitignored, and the tree
+holds no `records.json`, `scores.json` or `manifest.json`. Every figure above is
+a sentence in a README or a code comment. Neither `README.md` nor
+`CHANGELOG.md` states a result from these experiments; the 0.11.0 entry
+describes the feature and two fixes.
 
-What is still absent is the harder measurement: no retrieval-quality evaluation,
-no committed eval corpus, and no ablation of the ranker's exponents — notable
-because the exponent design is the most carefully argued code in the repository.
-Its evidence is dogfooding recorded in comments, and `docs/competitor-comparison.md`
-says the same thing about its own numbers: the file set is *"NexusMem's own
-ranking, not an independent judge."*
+**The preflight is a deterministic gate, and it is a script.**
+`eval/ambient/verify-preflight.ts` drives the built CLI with Claude-shaped
+payloads through fifteen lettered checks, A to O, with no model call. Its
+header counts twelve. Nothing in `package.json`, the workflows or the Vitest
+config runs it. The `tests/eval-*.test.ts` files do run in the suite, and they
+test the harness: fixtures, scorers, fingerprints and the hook runner.
+
+### Retrieval quality and the benchmark
+
+**The retrieval corpus argued against its own top score.** `eval/queries.json`
+holds 28 labelled cases, and `MAX_PRIOR_OVERTURN` was grid-searched against
+them. The comment in `rank.ts` records a higher-scoring plateau at 3 to 5 and
+the reason it was declined. A regression test outside the corpus fails above
+about 2.5, so the plateau *"silently re-opens the original bug this mechanism
+exists to prevent"*. The constant is 2.4.
+
+**That corpus is not portable.** `scripts/eval.ts` runs against the local
+project's own store, and a case's ground truth is a list of `relevantNodeIds`.
+Those ids hash the author's own shell commands, commits and conversations, so a
+clone holds 28 queries whose answers no other database contains.
+
+**The token benchmark measures packing, not retrieval.** `scripts/benchmark.ts`
+compares the packed context against reading in full the files the packed nodes
+touch. The README reports a 95% saving on this repository and 99% on a synced
+clone of `vitejs/vite`, and states the limit beside them: the file set is the
+system's own ranking and not an outside answer key.
 
 ## 11. For Your Own Build
 
 ### Steal
 
-- **Bound how far query-independent priors may overturn the query, as one budget
-  shared between them.** Recency and importance are priors that exist before
-  anyone asks anything, and multiplying them in as equals lets them win. Capping
-  each separately does not work, because the score multiplies. One joint budget,
-  split evenly, with each prior raised to the power that makes its range worth its
-  share — and a third prior re-divides rather than enlarges it.
-- **Split redaction by whether a rule is safe over code.** A key/value regex is
-  right for prose and destroys the diff lines you indexed the diff for. Two named
-  profiles, chosen per collector, is a five-line distinction that prevents a class
-  of silent corruption.
-- **Capture the exit code.** The cheapest high-value field in this whole design is
-  the one scrollback loses. What was attempted and failed is not in git, and a
-  store that has it can answer questions no repository-derived index can.
-- **Use an external-content FTS index.** `nodes_fts` stores no copy of the body
-  and points back at `nodes.rowid`, which halves the searchable footprint for a
-  store whose whole premise is keeping raw text.
-- **Name the discriminating assertion in the test.** `// discriminating: an
-  unscoped sweep would remove this too` is one comment that tells the next reader
-  what the case is protecting against.
-- **Filter tokens by frequency in *your* corpus, not by a global stopword list.**
-  A word is generic relative to a body of text, and bm25 only knows the body it
-  was run against — so a tool's own name is a strong signal in a corpus that
-  rarely mentions it and pure noise in one that always does. A document-frequency
-  check before the match query is a few lines and catches the class a relevance
-  score structurally cannot.
-- **Deliver a memory at the moment it changes a decision.** The pre-commit read
-  is worth more than its retrieval quality suggests, because it costs the user
-  nothing to ask: it fires when the files are chosen and the commit is not yet
-  made. A store that only answers questions is only as useful as the questions
-  someone remembers to ask.
-- **Append, never prepend, when you install into someone else's hook.** Under
-  `--force` this installer puts its block last so the existing hook still runs
-  first and keeps whatever it decided, refuses outright without `--force`, and
-  restores the original on removal. Every tool that writes to `.git/hooks` should
-  read this file first.
+- **Key recall on the execution, not on the command text.** An agent wraps the
+  same command in a dozen shapes. Reduce a compound to its one real execution by
+  an allowlist of inert segments, and leave anything unproven whole.
+- **Record what was edited before each attempt.** "The test failed twice" is not
+  a dead end anyone can recognise; "failed after editing a.ts, then after
+  editing b.ts" is.
+- **Re-check a recorded fix against what happened after it.** A later failure of
+  the same execution, or a revert touching the fix's files, turns "fixed" into
+  history. Say so in the injected text.
+- **Give an unknown outcome its own value.** A pipe into `head` hides the exit
+  status. Recording `unknown` costs one enum member and stops a false pass
+  becoming a link.
+- **Bound how far query-independent priors may overturn the query, as one
+  budget shared between them.** Capping each separately does not work, because
+  the score multiplies.
+- **Key deletion on the value and consult it at the write seam.** A delete on
+  the table is a pause when the source file is still on disk.
+- **Pair every scope negative with a positive in the same store.** A second
+  project in a second database passes a query that lost its predicate.
+- **Gate an experiment on its control arm's base rate before the full run.** A
+  dead-end rate near zero in control cannot separate any arm from it.
 
 ### Avoid
 
-- **Deletion keyed on the source when the source is still on disk.** Pruning
-  nodes derived from an append-only log that nothing prunes means the next full
-  sync re-derives them. If a store ingests anything sensitive, deletion has to be
-  keyed on the value and consulted at the write path, or it is a pause rather
-  than a removal.
-- **A prior nothing updates.** `signal` is assigned at ingest from kind and
-  source and never moves, so retrieval outcomes never feed back into ranking.
-- **A signal keyed on a filename, presented as a signal about the file.** The
-  pre-commit warning matches a failed command against the *basename* of a staged
-  file. `npm run precheck` failing implicates every path whose name contains
-  "precheck", and a build that failed because of a change in a file nobody named
-  implicates nothing. The heuristic is disclosed and the failure direction is
-  quiet rather than noisy, but a warning that says *"what already failed here"* is
-  making a claim about a location from evidence about a word.
-- **A churn threshold nobody measured, beside a token filter somebody did.**
-  `HIGH_CHURN_THRESHOLD = 4` is flagged in its own comment as *"not tuned against
-  real data (unlike the discussion-bridge heuristic's thresholds)"*. That honesty
-  is the right practice and the contrast is the lesson: in the same file, one
-  number carries two corpora of measurement behind it and the other is a guess,
-  and the output presents both as `WARN`.
+- **A hash-only tombstone beside a cleartext audit detail.** The care taken in
+  one table is undone by a copy in the next one.
+- **A destructive verb whose confirmation rides in the same tool call.** A `yes`
+  argument guards against a slip and not against a decision.
+- **A scope decided by string comparison on paths you did not canonicalise.**
+  Case folding and separator handling differ per platform, and the leak is
+  upstream of every scoped query.
+- **A prior nothing updates.** `signal` is assigned at ingest and never moves.
+  `retrieved_count` is written on every packed result and read by nothing in
+  the ranker.
+- **A signal keyed on a filename.** The pre-commit warning matches a failed
+  command against the basename of a staged file, so a build that failed because
+  of an unnamed file implicates nothing.
 
 ### Fit
 
-Take this if you work in one repository at a time on your own machine, you want
-an agent to know what you already tried, and you are comfortable that the store
-is append-only in practice. It is small, dependency-light, genuinely local, and
-the ingest side is more carefully reasoned than most stores twice its size.
+Take this if you run Claude Code in one repository at a time on your own
+machine and want the agent told, unprompted, that it has been down this road.
+The ambient path costs a process start per Bash call and injects at most five
+short notes and one digest per session. It is small, dependency-light and
+local.
 
-Walk away if you need staleness *handled* rather than surfaced. A local model
-will tell you which older node a newer one refutes, and the write is still a
-person typing `mark-stale` or `stale --dismiss`; until one of those is typed, a
-wrong document sits in the corpus at full weight. Review is a CLI verb, so the
-person doing it has to be at a terminal in the repository — an agent holding the
-four MCP tools cannot reach it and the VS Code panel only displays. The deletion
-story, by contrast, is one of the more complete in this
-atlas for the *value*-keyed case, and thin for the source-keyed one: a prune
-leaves no record that it happened.
+Walk away if a wrong memory must be withheld and not merely outranked, or if
+forgetting a value must also remove it from logs, backups and the rule that
+blocks it. Walk away too if you need evidence that ambient recall changes what
+an agent does: the project has looked three times and reports that its designs
+could not tell.
 
 ## 12. Open Questions
 
-- `dismissed` is a boolean with no reviewer and no timestamp beside it. A
-  dismissal is a human judgement the store keeps and cannot attribute or date,
-  which is the one property `mutation_audit` supplies for the other human-driven
-  write in the tree.
-- Review is reachable only from the CLI. What would a reviewed verdict look like
-  as an MCP tool — one an agent may *propose* and a person confirms — without
-  becoming the model grading its own memory?
-- The four tiers are ordered and the ratios are declared judgment calls. What
-  would a committed evaluation over this repository's own corpus say about the
-  ordering, which is the part the code actually claims?
-- Why is `pruneSourceNodes` outside the audit? The transaction shape `forget`
-  uses would drop onto it with little change, and the coarser operation is the
-  one whose blast radius is hardest to reconstruct afterwards.
-- The deny list is checked per node at insert, with entries loaded once per
-  project per batch. What does a project with hundreds of regex entries cost on
-  a full rebuild, and is there a point where the check becomes the sync?
-- Does the 8x overfetch on the vector arm hold for a sparse project in a large
-  database, and what does under-return look like when it does not?
-- The ranker's exponents are the most argued code in the tree and rest on
-  dogfooded anecdotes. What does a committed evaluation set change about them?
-- `signal` never moves after ingest. Would feeding retrieval outcomes back into it
-  help, or does it recreate the popularity-versus-truth problem the atlas records
-  elsewhere?
-- The pre-commit read matches on basename tokens. What would a version keyed on
-  the *paths a failed command touched* cost — the store already has `node_files`
-  for commits, but nothing records which files a shell command was about.
-- `file_edges` is populated, indexed for the reverse direction, and read by
-  nothing but a status line. What does an import graph change about ranking, if a
-  file's blast radius becomes a prior — and does that prior have to fit inside
-  the same overturn budget the other two share?
+- Does the v2 experiment have a run? Its README says none; the v3 scenario
+  comment cites a control dead-end rate from one.
+- What does a v3 pilot show, and does the control arm clear the gate?
+- Why does the audit row's `detail` carry the forgotten pattern when the
+  tombstones beside it are hashed?
+- What does `forget` cost on a full rebuild with hundreds of regex entries,
+  given entries are loaded per project per batch and matched per node?
+- Would a `WHERE trust_state != 'rejected'` behind an opt-in flag change the
+  product, given the partial index for it already exists?
+- How often does lexical admission lose events on a case-insensitive macOS
+  volume in practice?
+- `dismissed` is a boolean with no reviewer and no timestamp. Should a
+  dismissal be an audit row?
+- `file_edges` is populated and read by one status line. What would an import
+  graph change about ranking, and would it share the overturn budget?
+- `retrieved_count` is recorded and unused. What evaluation would admit it into
+  the score?
 
 ## Appendix: File Index
 
 **Store**
-- `src/store/schema.ts` — every table and the four migrations, with the reasoning
-  for the external-content FTS index, the separate path index, and why the import
-  graph could not reuse `node_links`
-- `src/store/store.ts` — writes, both retrieval arms, `clearProject`,
-  `pruneSourceNodes`, `node_links`, `replaceFileEdges`, and the `raw` escape hatch
-- `src/store/reconcile.ts` — project-id migration preserving `created_at`, and
-  the second place the deny list is consulted
-- `src/store/deny-list.ts` — the value-keyed rule, its matcher, and the guards
-  against a pattern that would deny everything
-- `src/store/forget.ts` — the one transaction that writes the deny-list entry,
-  the audit row, the deletes and the hash-only tombstones
-- `src/cli/commands/forget.ts` — the dry-run default, `--list`, and the
-  export/import payload that carries the list between checkouts
-- `src/cli/commands/mark-stale.ts`, `src/cli/commands/stale.ts` — manual
-  supersession and the heuristic list that prompts it
-- `src/retrieval/contradiction.ts`, `src/slm/contradiction.ts`,
-  `src/store/contradictions.ts` — the neighbour search, the one-question prompt
-  and its refusal to guess a YES, and the memo table with the open-suggestion
-  query that has no way to record a rejection
-- `src/store/fts.ts` — query construction and `significantTokens`, exported for
-  the corpus-relative filter that layers on top of it
+- `src/store/schema.ts` — every table and thirteen migrations, with the
+  reasoning for the external-content FTS index, the vec0 partition key and the
+  hash-only tombstone
+- `src/store/nodes.ts` — `upsertNodes` and its deny-list check, `clearProject`,
+  `pruneSourceNodes`, `getNodesByIds`, `setTrustState`
+- `src/store/search.ts`, `src/store/embeddings.ts` — the two retrieval arms and
+  the as-of clause
+- `src/store/deny-list.ts`, `src/store/forget.ts` — the value-keyed rule, its
+  guards, and the forget transaction
+- `src/store/audit.ts` — the second audit writer and the unused reader
+- `src/store/reconcile.ts` — project-id migration, the deny check on both
+  migration paths, link snapshot and restore
+- `src/store/scrub.ts` — re-redaction, the pre-scrub backup, remnant purge
+- `src/store/contradictions.ts`, `src/retrieval/contradiction.ts`,
+  `src/slm/contradiction.ts` — the memo table, the neighbour search, the prompt
+
+**Agent adapter**
+- `src/adapters/claude-code/payload.ts` — payload mapping and the outcome
+  evidence rules
+- `src/adapters/claude-code/install.ts`, `hook-entry.ts` — the three hook
+  entries and the capture bundle
+- `src/agent/event.ts` — `canonicalizeCommand`, `sameDirectory`,
+  `redactAgentEvent`
+- `src/agent/recall.ts` — failure recall, uncertain recall, the session digest
+- `src/agent/recall-state.ts` — the per-session quota and its lock
+- `src/agent/capture-health.ts`, `src/cli/commands/agent.ts` — drop accounting,
+  install, status, recall and session-start commands
+- `src/collectors/agent-events.ts` — events to `shell_command` nodes
 
 **Ingest**
 - `src/collectors/` — per-source collection
-- `src/shell/detect.ts`, `hook-log.ts`, `parse-bash.ts`, `parse-zsh.ts`,
-  `parse-psreadline.ts` — the two shell tiers
+- `src/shell/detect.ts` — source tiering and `isUnderRoot`
+- `src/shell/hook-log.ts`, `src/shell/recorder.ts` — the shell log and its
+  in-place sanitiser
 - `src/conversation/redact.ts` — the rule table and the two profiles
-- `src/slm/summarize.ts`, `provider.ts` — session summaries, the one model call
 
 **Retrieval**
 - `src/retrieval/query-pipeline.ts`, `fuse.ts`, `rank.ts`, `pack.ts`,
-  `sources.ts` — fan-out, fusion, the prior-overturn budget, the token cut,
+  `sources.ts` — fan-out, fusion, the overturn budget, the token cut,
   cross-project opening
-- `src/correlate/failure-fix.ts` — failure-to-fix linking, `filterBoilerplateTokens`
-  and its measured thresholds, `getChainStats`
-- `src/correlate/precheck.ts` — the pre-commit read, and the only memory query
-  outside the store class
-
-**Structure**
-- `src/structure/extract.ts`, `resolve.ts`, `collect.ts` — regex extraction, the
-  `./foo.js` → `foo.ts` rewrite, and the full-rescan collector
+- `src/correlate/failure-fix.ts`, `src/correlate/precheck.ts` — links, the
+  boilerplate filter, the pre-commit read
 
 **Surfaces**
-- `src/cli/`, `src/mcp/server.ts`, `vscode-extension/src/`
-- `src/hooks/git-pre-commit.ts`, `install-git-precommit.ts` — the marked block,
-  the foreign-hook refusal, and the append-not-prepend rule
-- `scripts/benchmark.ts` — the token-saving benchmark and its baselines
+- `src/cli/index.ts`, `src/cli/commands/` — every verb
+- `src/mcp/server.ts`, `src/mcp/tools.ts` — six tools
+- `src/hooks/` — shell and git hook installers
+- `vscode-extension/src/` — search, recent-memory and stale-review views
 
-**Tests**
-- `tests/` — `store.test.ts`, `vector.test.ts` and `precheck.test.ts` carry the
-  negative retrieval assertions; `prune-source.test.ts` and
-  `cross-project.test.ts` pin the scope boundary; `contradiction.test.ts`,
-  `slm-contradiction.test.ts` and `sync-auto-contradictions.test.ts` cover the
-  suggestion path and its memo
+**Tests and evals**
+- `tests/agent-recall.test.ts`, `tests/project-admission.test.ts`,
+  `tests/store.test.ts`, `tests/vector.test.ts`, `tests/forget.test.ts`,
+  `tests/prune-source.test.ts` — the scope, value and audit assertions
+- `tests/agent-execution-identity.test.ts`, `tests/agent-payload.test.ts` —
+  canonicalisation and outcome evidence
+- `eval/ambient/`, `eval/ambient-v2/`, `eval/ambient-v3/`,
+  `scripts/eval-ambient.ts` — the three experiment generations
+- `eval/queries.json`, `scripts/eval.ts`, `scripts/benchmark.ts` — the retrieval
+  corpus and the token benchmark
+
+## Appendix: Recorded Searches
+
+Run at the repository root at the pinned revision.
+
+- **No read filters on `trust_state`.**
+  `grep -rn -E "trust_state (=|!=|IN)|trustState (===|!==)" src` returns four
+  lines: the rank multiplier, the pack label, the partial index and the
+  `UPDATE` in `setTrustState`.
+- **`note` has no producer.** `grep -rn "kind: 'note'" src` returns nothing.
+  Control: `grep -rn "kind: 'github_thread'" src` returns one line.
+- **Two audit writers and one caller.**
+  `grep -rn -E 'INSERT INTO mutation_audit|recordMutationAudit\(' src` returns
+  six lines: the insert in `forget.ts`, the insert and definition in
+  `audit.ts`, the wrapper in `store.ts`, and one call at `sync.ts:663`.
+- **One statement updates the audit table and none deletes from it.**
+  `grep -rn -E '(UPDATE|DELETE FROM) mutation_audit' src` returns
+  `forget.ts:182`.
+- **The audit reader has no caller in `src`.** `grep -rn 'listMutationAudit' src`
+  returns four lines, all definitions or the import.
+- **`forget` does not purge remnants.**
+  `grep -rn -l -E 'purgeRemnants|VACUUM|secure_delete' src` lists `scrub.ts` and
+  `scrub-secrets.ts` only.
+- **`forget` reads neither log.**
+  `grep -n -E 'hookLogPath|agentEventLogPath|VACUUM' src/store/forget.ts`
+  returns nothing.
+- **Three collectors do not redact.**
+  `grep -n -E 'redact' src/collectors/docs.ts src/collectors/git-commits.ts src/collectors/github.ts`
+  returns nothing. Control: `grep -c redact src/collectors/shell-history.ts`
+  returns 6.
+- **No as-of case on the vector arm.**
+  `grep -n -E 'asOf' tests/vector.test.ts tests/query-pipeline.test.ts` returns
+  nothing. Control: `tests/store.test.ts:468`.
+- **The ranker reads no retrieval counter.**
+  `grep -n -E 'retrieved|Retrieved' src/retrieval/rank.ts` returns nothing.
+- **One read names `outcome`.** `grep -rn -F '$.outcome' src` returns
+  `recall.ts:185`.
+- **No review or trust verb on the MCP server.**
+  `grep -n -i -E 'review|trust' src/mcp/server.ts` returns nothing. Control:
+  `grep -c registerTool src/mcp/server.ts` returns 6.
+- **No experiment result in the README or CHANGELOG.**
+  `grep -n -i -E 'trial|dead.end rate|9/9|useful recall' README.md CHANGELOG.md`
+  returns nothing.
+- **No run output committed.**
+  `git ls-files | grep -i -E 'records\.json|scores\.json|manifest\.json|eval/results'`
+  returns nothing.
+- **Nothing runs the preflight or the experiment.**
+  `grep -rn -E 'verify-preflight|eval-ambient' package.json .github vitest.config.ts`
+  returns nothing.
+- **No scheduler.** `grep -rn -i -E 'setInterval|cron' src` returns nothing.
 
 ## History
+
+**2026-10-02** — [`e1842964dec6f268febbc99d5c429a37c9116a2a`](https://github.com/yaminbkk/NexusMem/commit/e1842964dec6f268febbc99d5c429a37c9116a2a) — 72 commits on, through release v0.11.0. No mark moved: five, with `trust_state` and `human_review` withheld ([section 9](#9-reliability-safety-and-trust)). `scope_enforced` and `negative_eval` are re-anchored on a two-project recall test added on 22 September 2026 ([section 10](#10-tests-evals-and-benchmarks)). Upstream stopped recall calling a failed-again fix current, closed a case-folding admission leak, and kept links through a project-id migration ([section 6](#6-retrieval-mechanics)). These published claims were wrong at the previous pin. The Claude Code capture and recall hooks, in the tree since 11 September 2026, were missing. A source prune was called unaudited. The MCP server was given four tools and no write, and the VS Code extension was called read-only. Shell commands were called unredacted. The vector arm was called post-filtered. The test count was 1,011 at that pin, not 835. Screened: one auto-run manifest, one build-time script, two files in cooldown. Nothing installed, built or run.
 
 **2026-09-19** — audited at the unchanged pin [`0003e2432ba7dd9c0e7dc4558fffed56235dcf95`](https://github.com/yaminbkk/NexusMem/commit/0003e2432ba7dd9c0e7dc4558fffed56235dcf95); nothing upstream moved, so both corrections are ours. `human_review` is **withdrawn** on two independent grounds, and section 9 carried a claim that contradicted the frontmatter. First, neither verdict withholds: `verified` and `rejected` buy a 0.3 ranking multiplier, which the trust matrix row already calls *"a score, not a gate"*, and a dismissal silences a listing. Second, section 9 said *"none of it is reachable from the agent-facing surfaces"* while the evidence record cited `resolveStaleSuggestion` in `src/mcp/tools.ts` and the 2026-09-07 entry recorded that addition as *extending* the evidence to MCP. Reading the server settles it: `src/mcp/server.ts:140-158` registers `resolve_stale_suggestion` with `action: z.enum(['accept', 'dismiss'])`, the dismiss branch calls the same `store.dismissContradictionSuggestion` the CLI does, and the accept branch reuses `runMarkStale`. The producing agent disposes of its own queue. The other five marks stand. Screened again first; nothing was installed, built or run.
 

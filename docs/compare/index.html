@@ -19715,82 +19715,84 @@ argument with no default, so an omitted one reads every workspace</td>
 <td><a href="../systems/nexusmem/"><code>nexusmem</code></a></td>
 <td>A <code>node</code> — kind, project, event timestamp, source, title,
 body, a <code>signal</code> float and a JSON <code>meta</code> blob —
-with an id of <code>sha256(projectId + kind + naturalKey)</code>; seven
-kinds declared and six collected, of which <code>shell_command</code> is
-the one no other store here holds</td>
+with an id of <code>sha256(projectId + kind + naturalKey)</code>; eight
+kinds declared and seven collected, with <code>shell_command</code>
+carrying exit codes from a shell hook and from Claude Code tool
+calls</td>
 <td>One <code>better-sqlite3</code> file per repository:
 <code>nodes</code> plus an external-content FTS5 index, a
-<code>sqlite-vec</code> vec0 table, a <code>node_files</code> path
-index, a <code>node_links</code> edge table and a
-<code>file_edges</code> import graph that is not made of nodes and is
-replaced wholesale on every sync</td>
-<td>BM25 over FTS5 fused with cosine over sqlite-vec, then ranked by
-<code>relevance x signal^e x recency^e</code> where the exponents split
-one joint overturn budget between the two query-independent priors, then
-packed to a token budget. A second read path takes no query at all:
-<code>precheck</code> derives match tokens from the basenames of the
-staged files and returns unresolved failures</td>
-<td>Collectors per source, cursor-resumed; an opt-in shell hook appends
-a JSONL of command, cwd and exit code, and scrape fallbacks tail
-bash/zsh/PSReadLine without either; pattern redaction is applied by two
-collectors of seven — conversation in full and code diffs on a
-high-confidence profile — and not by the shell, docs, git-commit,
-session or GitHub collectors</td>
-<td>Three granules. <code>forget &lt;value&gt;</code> deletes every
-matching node and writes a standing deny list consulted at every future
-write, with a hash-only tombstone and an audit row per operation;
+<code>sqlite-vec</code> vec0 table partitioned by project, a
+<code>node_files</code> path index, a <code>node_links</code> edge table
+and a <code>file_edges</code> import graph replaced wholesale on every
+sync; two machine-wide JSONL logs feed it, one for shell commands and
+one for agent tool calls</td>
+<td>Three read paths. A query fuses BM25 over FTS5 with cosine over
+sqlite-vec, ranks by <code>relevance x signal^e x recency^e</code> with
+the two priors sharing one overturn budget, and packs to a token budget.
+A Claude Code hook looks up past failures of the command that just
+failed by an execution hash, and a session-start hook prints a digest of
+recent failures; neither uses the ranker, an embedding or a model.
+<code>precheck</code> matches staged file basenames against unresolved
+failures</td>
+<td>Collectors per source, cursor-resumed, all through
+<code>upsertNodes</code>. Opt-in shell hooks append command, cwd and
+exit code to a JSONL; opt-in Claude Code hooks append each Bash call and
+edited path to a second one, redacted before the write. Redaction covers
+shell, agent, conversation and session text in full and code diffs on a
+high-confidence profile; docs, git commits and GitHub threads are stored
+as read</td>
+<td>Three granules. <code>forget</code> deletes every node matching a
+value and writes a standing deny list consulted at every future write,
+with a hash-only tombstone per node and an audit row;
 <code>--prune-source</code> wipes one source across the live project id
-and its prior identities, unaudited; <code>sync --rebuild</code> clears
-the project.
-<code>mark-stale &lt;id&gt; --supersedes &lt;newId&gt;</code>
-down-weights without deleting, prompted by a local model that judges
-whether a newer node contradicts an older one and files a suggestion a
-person has to accept</td>
-<td><code>project_id</code> on every node and a required predicate on
-both read arms; a cross-project query opens each registered repository`s
-own database and tags every hit with its origin</td>
-<td>A CLI, a four-tool stdio MCP server (search, sync, status,
-list-recent), a read-only VS Code panel, and an opt-in
-<code>.git/hooks/pre-commit</code> block that runs
-<code>nexusmem precheck</code> — without <code>--strict</code>, so it
-warns and cannot block a commit</td>
-<td>None on a schedule. Every collector runs inside
-<code>nexusmem sync</code>, invoked by hand, by a shell hook or by the
-MCP <code>sync_project</code> tool; the git hook triggers a read rather
-than a write. <code>sync</code> also spends at most three local-model
-judgments per run on contradiction checking, on by default</td>
-<td>Two axes kept apart, and neither withholds. <code>trust_state</code>
-is <code>candidate</code> until a person runs
-<code>nexusmem review</code>, then <code>verified</code> or
-<code>rejected</code>, read on both arms and worth a 0.3 multiplier
-against a rejected node — a score, not a gate, which is why the mark is
-withheld. Beside it a <code>signal</code> float for ranking, plus
-<code>provenance</code> on a four-tier ordering — <code>observed</code>,
-<code>authored</code>, <code>recorded</code>, <code>derived</code> — set
-per collector, consumed by the ranker as a per-tier decay multiplier and
-printed in the packed context. An ordering, not a status: the ranker's
-floors are a deliberate refusal to let any tier gate a result, and the
-tier's one exclusion is from the staleness queue rather than from
-retrieval</td>
-<td>A value-keyed deny list whose test proves the resurrection case —
-forget, rebuild from the untouched append-only log, and the value stays
-gone while a control survives; shell commands with exit codes, which git
-cannot supply and scrollback loses; a ranker that bounds how far
-query-independent priors may overturn the query, as one budget shared
-between them; redaction split into a high-confidence profile safe to run
-over source code and a broader one that is not; a document-frequency
-filter that drops tokens which are boilerplate in this project`s own
-corpus, because bm25 rewards rarity only within the corpus it is run
-against</td>
-<td>The deletion story is complete only through <code>forget</code>:
-<code>--prune-source</code> writes no tombstone and no audit row, so the
-coarse path is the unrecorded one; the GitHub source stores an issue or
-PR body verbatim without passing it through the redaction the
-conversation collector uses, and files it at the same provenance tier as
-the user's own words; <code>signal</code> is a prior nothing updates
-from use; the pre-commit signal fires on a basename token match, so it
-warns about a failure that merely shares a word with the file and stays
-silent about one that does not name it</td>
+and its prior identities and writes an audit row with no tombstones;
+<code>sync --rebuild</code> clears the project unrecorded.
+<code>mark-stale</code> down-weights without deleting, prompted by a
+local model that judges whether a newer node contradicts an older one. A
+deny-list entry cannot be removed</td>
+<td><code>project_id</code> on every node and a predicate on every read:
+both retrieval arms, the vec0 partition, ambient recall, the session
+digest, precheck and the MCP listings. One database file per repository,
+so inside a file the key separates the repository's current identity
+from prior ones; a cross-project query opens each registered database
+and tags every hit with its origin</td>
+<td>A CLI, a six-tool stdio MCP server (search, sync, status,
+list-recent, list and resolve stale suggestions), three Claude Code
+hooks installed by <code>agent install</code> (capture, recall after a
+Bash call, a session-start digest), a VS Code extension with search,
+recent-memory and stale-review views, and opt-in git pre-commit and
+post-commit hooks</td>
+<td>No scheduler. Collectors run inside <code>nexusmem sync</code>,
+started by hand, by the MCP <code>sync_project</code> tool, by a git
+post-commit hook, or detached by the Claude Code SessionStart hook.
+<code>sync</code> also spends at most three local-model judgments per
+run on contradiction checking, on by default</td>
+<td>Three fields and no gate. <code>trust_state</code> is
+<code>candidate</code> until a person runs <code>nexusmem review</code>,
+then <code>verified</code> or <code>rejected</code>; a rejected node is
+multiplied by 0.3 in ranking and still returned, which is why the mark
+is withheld. <code>provenance</code> is a four-tier ordering set per
+collector that scales recency decay. An agent command's
+<code>outcome</code> is <code>unknown</code> when a pipe hid its exit
+status, fixed at capture. Ambient recall derives resolved, stale,
+superseded and uncertain at read time from links and revert commits, and
+changes its wording rather than what it returns</td>
+<td>A value-keyed deny list whose test proves the resurrection case;
+exit codes for the commands an agent ran, which git cannot supply;
+recall keyed on an execution hash that survives <code>cd</code> and
+exit-echo wrappers and is silent on no match; a fix that failed again is
+reported as one that did not hold; a ranker that bounds how far
+query-independent priors may overturn the query; an ambient-memory
+experiment whose null results are recorded beside its design</td>
+<td>A forgotten value stays in cleartext in the deny list and the audit
+detail, in both JSONL logs, in any pre-scrub backup and in freed SQLite
+pages until a scrub runs; <code>sync_project</code> gives an MCP caller
+a source prune confirmed by its own <code>yes</code> flag; GitHub thread
+bodies are stored unredacted at the same provenance tier as the user's
+own words; project admission is lexical on cwd, so a case-insensitive
+macOS volume loses recall; <code>signal</code> is a prior nothing
+updates from use; the pre-commit warning fires on a basename token
+match</td>
 </tr>
 <tr>
 <td><a href="../systems/no-human/"><code>no-human</code></a></td>

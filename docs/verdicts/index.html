@@ -11408,84 +11408,63 @@ knob.</li>
 <h3 id="nexusmem"><a
 href="../systems/nexusmem/"><code>nexusmem</code></a></h3>
 <ul>
-<li>Best idea: bound how far query-independent priors may overturn the
-query, as <strong>one budget shared between them</strong>.
-<code>signal</code> and <code>recency</code> hold before any question
-exists, and multiplied in as equals they win outright — a
-<code>fix:</code> commit at signal .9 took rank 1 from the doc section
-that actually answered, on a 44% signal edge against a 15% relevance
-deficit. Capping each prior separately fixes nothing, because the score
-multiplies and two priors worth 2x each are worth 4x together; that
-shape <em>"describes every commit made during an active working
-day"</em>. So one joint budget, split evenly, each prior raised to the
-power that makes its range worth its share, and a third prior re-divides
-rather than enlarges it. Beside it, the cheapest good idea in the
-corpus: capture the shell exit code, which git cannot supply and
-scrollback loses.</li>
+<li>Best idea: <strong>recall keyed on an execution, worded by what the
+evidence supports.</strong> When a Bash call fails, a Claude Code hook
+reduces the command to its one real execution — dropping a
+<code>cd</code> to the same directory, an <code>ls</code> prefix, a
+trailing <code>echo "exit: $?"</code> — hashes it, and looks up past
+failures of that hash in this project. It names the files edited before
+each attempt and checks the recorded fix against what came after: a
+later failure of the same execution, or a revert touching the fix's
+files, turns "fixed" into a fix that did not hold. No match prints
+nothing, and no model, embedding or network call is on the path.</li>
 <li>Second idea: <strong>the deletion that survives the
 rebuild.</strong> <code>forget &lt;value&gt;</code> writes a
 <code>deny_list</code> row keyed on the value — literal or regex,
 over-broad patterns refused up front, including a regex matching the
 empty string — and <code>upsertNodes</code> consults it before every
-insert, so a value forgotten today cannot re-enter from the untouched
-append-only hook log on a later <code>sync --rebuild</code>. The removal
-record is hash-only by design: <em>"this table exists to prove a value
-was removed, not to retain a second copy of it… so the record that
-something was forgotten never itself becomes something worth
-forgetting."</em> The committed test proves the failure case rather than
-the feature — ingest a secret, confirm it is retrievable, forget,
-rebuild, assert it returns <code>[]</code> while a control command in
-the same log still returns hits.</li>
-<li>Biggest risk: <strong>the coarse deletion path is the unrecorded
-one, and staleness is entirely manual.</strong>
-<code>pruneSourceNodes</code> wipes a whole source and writes neither a
-tombstone nor a <code>mutation_audit</code> row, whose only producer is
-<code>forget</code> — so the removal history covers the fine-grained
-case and not the blunt one. Separately, staleness itself is a command a
-person runs: <code>stale</code> lists non-<code>observed</code> nodes
-old enough that nothing supersedes them, and only escalates to
-<code>checkContradictions</code> when asked for it. A wrong document
-sits at full weight until someone runs the pass.</li>
-<li>Most reusable component: <code>src/conversation/redact.ts</code>,
-for the distinction rather than the rules. Shape rules (private-key
-blocks, <code>AKIA</code>, <code>gh[pousr]_</code>, JWTs) match strings
-nothing else produces and are safe over source code; the broader
-key/value rule would match
-<code>const apiKey = process.env.API_KEY</code> <em>"and would corrupt
-the very lines a diff is indexed for"</em>. Two named profiles, chosen
-per collector. Beside it, <code>filterBoilerplateTokens</code> in
-<code>src/correlate/failure-fix.ts</code>: a token appearing in over 20%
-of a project's own history is dropped from the match query, because bm25
-rewards rarity only within the corpus it runs against — a measured false
-positive scored −9.685, stronger than two real links at −5.899 and
-−6.559.</li>
-<li>Maturity impression: MIT, 835 tests across 57 files, CI, an npm
-package, a four-tool MCP server, a VS Code panel and an opt-in git
-pre-commit hook. Five capability marks — <code>tombstone</code>,
-<code>audit_log</code>, <code>scope_enforced</code>
-(<code>project_id</code> a required predicate on every read arm),
-<code>negative_eval</code> (cross-project leak tests on both retrieval
-arms, plus three suppression cases on the pre-commit arm), and
-<code>bitemporal</code>, added by a schema migration that names in its
-own comment the failure it removes. <code>human_review</code> is
-withheld: neither verdict withholds anything, and the dismiss verdict is
-an MCP tool the agent holds. The near-miss is now the sharpest thing in
-the report: <code>trust_state</code> is a real
-<code>candidate</code>/<code>verified</code>/<code>rejected</code>
-column a person sets and a re-sync cannot overwrite, and
-<code>rank.ts</code> spends it as a 0.3 score multiplier while nothing
-in the tree filters on it — a state built well and used as a
-number.</li>
-<li>Study when: you want an agent to know what you already tried, you
-work locally in one repository at a time, and you would rather ship raw
-stored text through a good ranker than summaries through a model — or
-you want a worked example of memory delivered at a decision point rather
-than on request, in a git pre-commit hook that warns and cannot
-block.</li>
-<li>Do not copy when: you need staleness handled rather than surfaced,
-or you need the coarse deletion path recorded. A source prune leaves
-nothing behind, and a document that stopped being true stays at full
-weight until a person runs <code>mark-stale</code> on it.</li>
+insert, so a forgotten value cannot re-enter from the hook logs on a
+later <code>sync --rebuild</code>. Each removed node leaves a hash-only
+tombstone. The committed test proves the failure case: ingest a value,
+confirm it is retrievable, forget, rebuild, assert no hit carries it
+while a control command in the same log still returns.</li>
+<li>Biggest risk: <strong>nothing withholds a memory, and a forgotten
+value is kept in more places than its tombstone suggests.</strong> A
+<code>rejected</code> verdict is a 0.3 ranking multiplier and a fix that
+failed again is reworded, so both still reach the model. The deny-list
+row and the audit row's <code>detail</code> hold the forgotten pattern
+in cleartext, and both hook logs, any pre-scrub backup and freed SQLite
+pages keep it too. The MCP <code>sync_project</code> tool deletes a
+whole source when the caller passes its own <code>yes</code> flag.</li>
+<li>Most reusable component: <code>canonicalizeCommand</code> in
+<code>src/agent/event.ts</code> — a quote-aware split on
+<code>&amp;&amp;</code> and <code>;</code>, an allowlist of navigation
+and observation segments, and a rule that anything unproven leaves the
+command whole, because a missed match costs a silent recall while a
+wrong one <em>"teaches the model a false fact"</em>. Beside it,
+<code>src/conversation/redact.ts</code> for its two profiles: shape
+rules safe over source code, and a key/value rule that <em>"would
+corrupt the very lines a diff is indexed for"</em>.</li>
+<li>Maturity impression: MIT, 1,293 test declarations in 92 files, CI on
+three operating systems, an npm package at v0.11.0, a six-tool MCP
+server, Claude Code hooks, a VS Code extension and opt-in git hooks.
+Five capability marks — <code>tombstone</code>, <code>audit_log</code>,
+<code>scope_enforced</code> (<code>project_id</code> on every read, with
+one database file per repository beside it), <code>negative_eval</code>
+(a two-project recall case with a positive control each way,
+cross-project cases on both retrieval arms, and the forget-and-rebuild
+case) and <code>bitemporal</code>. <code>trust_state</code> is withheld
+because no read filters on the verdict; <code>human_review</code>
+because nothing waits for one and the suggestion queue is cleared by an
+MCP tool the agent holds. Three generations of an ambient-memory
+experiment are committed and none reports an effect.</li>
+<li>Study when: you want an agent told, unprompted, that it has been
+down this road; you work locally in one repository at a time; or you
+want a worked example of an experiment that records why its first two
+designs could not discriminate.</li>
+<li>Do not copy when: a wrong memory must be withheld and not merely
+outranked, or forgetting a value must also remove it from logs, backups
+and the rule that blocks it.</li>
 </ul>
 <h3 id="feltstate"><a
 href="../systems/feltstate/"><code>feltstate</code></a></h3>
