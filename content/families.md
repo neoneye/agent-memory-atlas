@@ -2341,7 +2341,7 @@ own store. `forget(term, scope)` deletes the matching records, appends the term'
 **token set** to a per-tenant erased registry, and emits an erasure certificate;
 every later recall excludes any record whose tokens are a superset. That is a
 value-keyed, normalized, tenant-scoped tombstone — a looser and more forgiving key
-than Daimon's exact-text hash — though like Daimon it suppresses at read rather
+than Daimon's canonical-text hash — though unlike Daimon it suppresses at read rather
 than refusing at write, so the store still holds what a subject asked to erase.
 Recall returns a *reason* per excluded record, and the subject-scope rule closes
 the bypass explicitly: a query naming no entity must not be served a
@@ -3316,6 +3316,9 @@ against the transcript and downgrades the item when it is not there. Everywhere
 else in this family, trust is assigned by policy over a claim; here the claim's
 own evidence is mechanically falsifiable, which is why it is the only system in
 the atlas whose trust classes can be wrong in a way the system itself detects.
+Its one withholding state lives in a separate ledger: a value a person
+quarantines is dropped from the briefing and the recall index until a person
+releases it, and an agent can propose that verdict and never confirm it.
 
 **OmniIntelligence is the family's most complete lifecycle and its clearest
 demonstration that a lifecycle can be argued and unwired at the same time.** A

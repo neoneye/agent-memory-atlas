@@ -148,12 +148,12 @@ below are the ones whose mechanism this page discusses.
 mechanism and protects rejected states from ordinary pruning.
 [RainBox](../../systems/rainbox/) stores `MemoryRejectedValue` rows when claims
 are rejected or superseded, and model writes check them before asserting.
-[Daimon](../../systems/daimon/) holds it more weakly, and it is instructive
-precisely because of *how* it is weaker.
+[Daimon](../../systems/daimon/) arrived at it independently and refuses at the
+checkpoint write, discussed below.
 [Provem](../../systems/provem/) arrives at it from regulation rather than from a
 failure, discussed below.
-[memsem](../../systems/memsem/) refuses the write like Verel and RainBox rather
-than filtering the read like Daimon and Provem, and arms the mechanism only on a
+[memsem](../../systems/memsem/) refuses the write like Verel, RainBox and Daimon
+rather than filtering the read like Provem, and arms the mechanism only on a
 candidate review — discussed below.
 [Perseus Vault](../../systems/perseus-vault/) refuses a value by its digest
 without storing it — discussed below.
@@ -234,38 +234,34 @@ appearances are one invention and one adoption, by the person who ran the
 survey, and the way it first spread was somebody reading another project's
 source. The arrivals that followed came by other routes, and they are what makes
 this a recurring mechanism rather than one project's idea: Daimon through
-content-addressed ids, Provem through a regulation, Universal Memory Engine as
+a canonical content key, Provem through a regulation, Universal Memory Engine as
 ordinary plumbing in its write gate.
 
-**Daimon is an independent arrival, and it stops short in the two places this
-page predicts.** [Daimon](../../systems/daimon/)'s `daimon forget` deletes the
-item from the live checkpoint and appends a `forgotten:<content-hash>` event to
-an append-only log. Because item ids are `sha1("<field>:<text>")`, that event is
-keyed on the *value*, not on a row: an identical re-extraction in a later
-session lands on the same id, is withheld from the briefing, is not carried
-forward, and is deleted from the search index across every historical checkpoint
-on the next rebuild. There is no evidence the author had read Verel or RainBox;
-the mechanism falls out of content-addressed ids rather than from a red-team
-finding.
+**Daimon is an independent arrival, and it lands on the strong form.**
+[Daimon](../../systems/daimon/)'s `daimon forget` deletes the item from the live
+checkpoint and appends a `forgotten:<content-hash>` event to an append-only
+log, keyed on the canonical *value* and not on a row. There is no evidence the
+author had read Verel or RainBox; the mechanism came out of the project's own
+deletion-durability issue rather than from a red-team finding.
 
-Two differences matter, and both are on the tradeoff list above.
-
-*It is mostly suppression at read, not refusal at write.* Verel and RainBox
-refuse the write; Daimon lets the extractor re-assert the value into a new
-checkpoint on disk and stops it reaching the agent. The observable behaviour is
-the same and the failure surface is not: every future read path has to remember
-to consult the fold, and the store itself holds content a user asked to forget.
-**One write path is an exception** — the supersede-candidate emitter skips values
-already in the ledger, which is a consultation the systems in the read-only class
-do not have.
+*It refuses at the write.* `store.write_checkpoint` runs every checkpoint
+through `policy.admit_checkpoint`, whose `drop_forgotten` removes any item whose
+canonical text hashes into the forgotten set before the item is stamped, signed,
+indexed or mirrored. The docstring names the alternative it replaced: *"not
+merely a render-time withhold, which leaves the value sitting on disk"*. A
+committed test asserts the re-extracted sentence is absent from the checkpoint
+file itself, beside a never-forgotten twin that must be present. The read side
+repeats the check — withheld from the briefing, not carried, deleted from the
+index on rebuild — and the supersede-candidate emitter skips values already in
+the ledger.
 
 **Daimon's key is canonical, not literal.** `normalize.canonical_text` folds NFKC,
 strips invisible characters, collapses whitespace, casefolds and **translates
 confusables**, and `content_key` truncates a digest under a docstring naming the
 direction it fails in: *"a prefix collision over-blocks, the fail-safe direction
 for a deletion guarantee"*. That is the round-9 lesson implemented, not missed.
-What still separates Daimon from Verel and RainBox is the write path, above —
-not the key.
+What separates Daimon from Verel and RainBox is reach: its gate guards the
+checkpoint write, and a reworded restatement produces a different key.
 
 *And the same system runs a second negative store beside it, which is the
 sharpest illustration on this page of what the tombstone property actually
@@ -297,7 +293,7 @@ surface nobody has measured. And it is **tenant-scoped**, so an erasure for one
 customer cannot silently censor another — scope is part of the rejection's
 identity, as it is in memsem's project key and Argos's user scope.
 
-It shares Daimon's limitation exactly: suppression at read, not refusal at write.
+Its limitation is one Daimon does not share: suppression at read, not refusal at write.
 A re-ingested erased value still lands in the backing store and is stopped on the
 way out. For a system whose stated purpose is GDPR Article 17 that is the sharper
 version of the same criticism — the regulation is about what you hold, and this
@@ -372,7 +368,7 @@ the mechanism: propagation reaches exactly as far as the provenance is declared,
 so a derived writer that omits its source ids escapes.
 
 Three further details. It **refuses at the write path** rather than filtering at
-read, like Verel and RainBox and unlike Daimon and Provem, enforced in
+read, like Verel, RainBox and Daimon and unlike Provem, enforced in
 `remember_impl` with a comment claiming the reach — agent remember, capture,
 ingest, connectors, derived writers. Its **override is an audited act**, not a
 bypass: a deliberate write passes `allow_rejected=true` and is journaled into the
@@ -527,7 +523,7 @@ completes?* The method is set out in
 | **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/), [OpenMake LLM](../../systems/openmake-llm/), [Argos](../../systems/argos/), [no_human](../../systems/no-human/), [SAGE](../../systems/sage-memory/), [Memora](../../systems/memora/), [Scope Recall](../../systems/scope-recall-hermes/), [MeMesh](../../systems/memesh/), [Recollect](../../systems/recollect/), [TideMind](../../systems/tidemind/), [Utopia](../../systems/utopia/), [Velantrim Crystal](../../systems/velantrim-exocortex-crystal/), [marm-memory](../../systems/marm-memory/) | The write is refused. No row, or no activation |
 | **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Wenlan](../../systems/wenlan/), [memoir-cli](../../systems/memoir-cli/), [ShellBrain](../../systems/shellbrain/) | The write lands *on* the rejected row, which stays rejected. Accidental in Mnemosyne, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
 | **Suppressed** — the read path hides it | [Provem](../../systems/provem/), [OmniMem](../../systems/omnimem/) | A copy enters the store and is stopped on the way out — in OmniMem by a suppression set matched as a substring of content, written by hand or by an effort-4 or effort-5 abandonment |
-| **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
+| **Hybrid** | [Daimon](../../systems/daimon/) | Consulted at every checkpoint write, where `drop_forgotten` removes the value before it reaches disk; also collided by content-addressed id, suppressed on every read, and consulted by one emitter |
 
 **The Consulted row, then, is the strong form** — value-keyed, consulted before
 the write, refusing activation. The collided form

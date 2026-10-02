@@ -115,20 +115,27 @@ recall, promotion, consolidation, and pruning, and for separating epistemic
 confidence from retrieval strength. [RainBox](../../systems/rainbox/) ties the
 transitions to an actor model and an operator review queue.
 
-[Daimon](../../systems/daimon/) is a near-miss on this page's definition, by
-design, and the reasons are stated in its source. Its `verbatim` / `inferred`
-field is a provenance label fixed at write: the item ships with the class the
-extractor chose, the quote is matched against the transcript and a miss forces
-the item down to `inferred`, and an outcome claim with no tool-result citation
-is forced down even when its quote matched. That is code disproving the model
-rather than a policy decision about a claim — and it records how a line was
-obtained, not a judgement that can later be revised. Supersession, overturn and
-contradiction then act as multiplicative demotions, and the project's comments
-rule out the filter explicitly: an overturned item is still evidence, so it
-*"ranks down and renders flagged rather than disappearing."* No read withholds
-an item on either field, which is why the report carries no `trust_state`.
+[Daimon](../../systems/daimon/) keeps two questions apart and gives only one of
+them a filter. Its `verbatim` / `inferred` field is a provenance label fixed at
+write: the item ships with the class the extractor chose, the quote is matched
+against the transcript and a miss forces the item down to `inferred`, and an
+outcome claim with no tool-result citation is forced down even when its quote
+matched. Supersession, overturn and contradiction then act as demotions, and
+the project's comments rule out the filter for them explicitly: an overturned
+item is still evidence, so it *"ranks down and renders flagged rather than
+disappearing."*
 
-Its second state machine answers a different question: *how do you know a
+The state that withholds is a person's. A quarantine ledger folds to
+`candidate`, `active`, `dismissed` or `released` per value, and an `active`
+value is dropped from the briefing, deleted from the recall index at rebuild
+and hidden in the viewer until a human releases it. An agent may propose one
+and cannot confirm it. The source states the rule in one line — *"a
+human-confirmed verdict may withhold; a machine signal only ever ranks down"* —
+and the report carries `trust_state` on that ledger. Four id-addressed reads,
+`why`, `blame`, `diff` and the candidate list `resolve` prints, do not consult
+it.
+
+Its refutation ledger answers a different question: *how do you know a
 human approved it*. A refutation —
 an approach recorded as having lost under cited evidence — folds to `candidate`,
 `active` or `overturned`, and the transition to `active` requires human

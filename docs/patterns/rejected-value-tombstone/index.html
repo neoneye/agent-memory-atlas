@@ -299,12 +299,12 @@ as a correctness mechanism and protects rejected states from ordinary
 pruning. <a href="../../systems/rainbox/">RainBox</a> stores
 <code>MemoryRejectedValue</code> rows when claims are rejected or
 superseded, and model writes check them before asserting. <a
-href="../../systems/daimon/">Daimon</a> holds it more weakly, and it is
-instructive precisely because of <em>how</em> it is weaker. <a
+href="../../systems/daimon/">Daimon</a> arrived at it independently and
+refuses at the checkpoint write, discussed below. <a
 href="../../systems/provem/">Provem</a> arrives at it from regulation
 rather than from a failure, discussed below. <a
-href="../../systems/memsem/">memsem</a> refuses the write like Verel and
-RainBox rather than filtering the read like Daimon and Provem, and arms
+href="../../systems/memsem/">memsem</a> refuses the write like Verel,
+RainBox and Daimon rather than filtering the read like Provem, and arms
 the mechanism only on a candidate review — discussed below. <a
 href="../../systems/perseus-vault/">Perseus Vault</a> refuses a value by
 its digest without storing it — discussed below. <a
@@ -417,30 +417,27 @@ invention and one adoption, by the person who ran the survey, and the
 way it first spread was somebody reading another project's source. The
 arrivals that followed came by other routes, and they are what makes
 this a recurring mechanism rather than one project's idea: Daimon
-through content-addressed ids, Provem through a regulation, Universal
+through a canonical content key, Provem through a regulation, Universal
 Memory Engine as ordinary plumbing in its write gate.</p>
-<p><strong>Daimon is an independent arrival, and it stops short in the
-two places this page predicts.</strong> <a
-href="../../systems/daimon/">Daimon</a>'s <code>daimon forget</code>
-deletes the item from the live checkpoint and appends a
-<code>forgotten:&lt;content-hash&gt;</code> event to an append-only log.
-Because item ids are <code>sha1("&lt;field&gt;:&lt;text&gt;")</code>,
-that event is keyed on the <em>value</em>, not on a row: an identical
-re-extraction in a later session lands on the same id, is withheld from
-the briefing, is not carried forward, and is deleted from the search
-index across every historical checkpoint on the next rebuild. There is
-no evidence the author had read Verel or RainBox; the mechanism falls
-out of content-addressed ids rather than from a red-team finding.</p>
-<p>Two differences matter, and both are on the tradeoff list above.</p>
-<p><em>It is mostly suppression at read, not refusal at write.</em>
-Verel and RainBox refuse the write; Daimon lets the extractor re-assert
-the value into a new checkpoint on disk and stops it reaching the agent.
-The observable behaviour is the same and the failure surface is not:
-every future read path has to remember to consult the fold, and the
-store itself holds content a user asked to forget. <strong>One write
-path is an exception</strong> — the supersede-candidate emitter skips
-values already in the ledger, which is a consultation the systems in the
-read-only class do not have.</p>
+<p><strong>Daimon is an independent arrival, and it lands on the strong
+form.</strong> <a href="../../systems/daimon/">Daimon</a>'s
+<code>daimon forget</code> deletes the item from the live checkpoint and
+appends a <code>forgotten:&lt;content-hash&gt;</code> event to an
+append-only log, keyed on the canonical <em>value</em> and not on a row.
+There is no evidence the author had read Verel or RainBox; the mechanism
+came out of the project's own deletion-durability issue rather than from
+a red-team finding.</p>
+<p><em>It refuses at the write.</em> <code>store.write_checkpoint</code>
+runs every checkpoint through <code>policy.admit_checkpoint</code>,
+whose <code>drop_forgotten</code> removes any item whose canonical text
+hashes into the forgotten set before the item is stamped, signed,
+indexed or mirrored. The docstring names the alternative it replaced:
+<em>"not merely a render-time withhold, which leaves the value sitting
+on disk"</em>. A committed test asserts the re-extracted sentence is
+absent from the checkpoint file itself, beside a never-forgotten twin
+that must be present. The read side repeats the check — withheld from
+the briefing, not carried, deleted from the index on rebuild — and the
+supersede-candidate emitter skips values already in the ledger.</p>
 <p><strong>Daimon's key is canonical, not literal.</strong>
 <code>normalize.canonical_text</code> folds NFKC, strips invisible
 characters, collapses whitespace, casefolds and <strong>translates
@@ -448,8 +445,9 @@ confusables</strong>, and <code>content_key</code> truncates a digest
 under a docstring naming the direction it fails in: <em>"a prefix
 collision over-blocks, the fail-safe direction for a deletion
 guarantee"</em>. That is the round-9 lesson implemented, not missed.
-What still separates Daimon from Verel and RainBox is the write path,
-above — not the key.</p>
+What separates Daimon from Verel and RainBox is reach: its gate guards
+the checkpoint write, and a reworded restatement produces a different
+key.</p>
 <p><em>And the same system runs a second negative store beside it, which
 is the sharpest illustration on this page of what the tombstone property
 actually buys.</em> Daimon's <code>refutations.jsonl</code> records an
@@ -484,7 +482,7 @@ surface nobody has measured. And it is <strong>tenant-scoped</strong>,
 so an erasure for one customer cannot silently censor another — scope is
 part of the rejection's identity, as it is in memsem's project key and
 Argos's user scope.</p>
-<p>It shares Daimon's limitation exactly: suppression at read, not
+<p>Its limitation is one Daimon does not share: suppression at read, not
 refusal at write. A re-ingested erased value still lands in the backing
 store and is stopped on the way out. For a system whose stated purpose
 is GDPR Article 17 that is the sharper version of the same criticism —
@@ -566,12 +564,12 @@ it. The limit is honest and worth stating with the mechanism:
 propagation reaches exactly as far as the provenance is declared, so a
 derived writer that omits its source ids escapes.</p>
 <p>Three further details. It <strong>refuses at the write path</strong>
-rather than filtering at read, like Verel and RainBox and unlike Daimon
-and Provem, enforced in <code>remember_impl</code> with a comment
-claiming the reach — agent remember, capture, ingest, connectors,
-derived writers. Its <strong>override is an audited act</strong>, not a
-bypass: a deliberate write passes <code>allow_rejected=true</code> and
-is journaled into the same hash-chained ledger, which is the shape the
+rather than filtering at read, like Verel, RainBox and Daimon and unlike
+Provem, enforced in <code>remember_impl</code> with a comment claiming
+the reach — agent remember, capture, ingest, connectors, derived
+writers. Its <strong>override is an audited act</strong>, not a bypass:
+a deliberate write passes <code>allow_rejected=true</code> and is
+journaled into the same hash-chained ledger, which is the shape the
 tradeoff list above asks for when a trusted human correction has to win.
 And the lookup matches on <strong>predicate and digest without the
 subject</strong>, so a rejected value is refused under any key in scope
@@ -841,8 +839,10 @@ or by an effort-4 or effort-5 abandonment</td>
 <tr>
 <td><strong>Hybrid</strong></td>
 <td><a href="../../systems/daimon/">Daimon</a></td>
-<td>All three at once: collided by content-addressed id, suppressed on
-every read, consulted by one emitter</td>
+<td>Consulted at every checkpoint write, where
+<code>drop_forgotten</code> removes the value before it reaches disk;
+also collided by content-addressed id, suppressed on every read, and
+consulted by one emitter</td>
 </tr>
 </tbody>
 </table></div>

@@ -167,7 +167,7 @@ preamble, a summarization or a write, which is a different and weaker
 thing. Read the count as a ceiling on the strict reading rather than as
 its total.</li>
 <li><strong>Trust is usually a number, not a state.</strong>
-178 of 705 record
+179 of 705 record
 a discrete epistemic status. The rest store a confidence float, which
 cannot express <em>rejected</em> and so cannot survive being wrong.</li>
 </ol>
@@ -507,16 +507,17 @@ naming the cleanup — 42 smoke episodes, 85 duplicate supersedes and 24
 polluted <code>learned</code> rows deleted. The general rule: if you log
 mutations into the store you consolidate from, tag them at the source,
 because a stop list is how you find out you did not.</p>
-<p><a href="../systems/daimon/"><code>daimon</code></a> captures nothing
-during a session and everything at the end of one: a
-<code>SessionEnd</code> hook spawns a <strong>detached</strong> child
-that serializes the whole transcript into a single checkpoint, so the
-agent never blocks on capture and there is no incremental write path at
-all. It is also the clearest instance of <em>referencing</em> evidence
-rather than storing it — the checkpoint carries a
-<code>transcript_hash</code> and per-item source message ids pointing
-into the host's own transcript file, which daimon never copies. That
-keeps the store tiny and the provenance real, at the cost of a
+<p><a href="../systems/daimon/"><code>daimon</code></a> captures at the
+session boundary: a <code>SessionEnd</code> hook spawns a
+<strong>detached</strong> child that serializes the whole transcript
+into a single checkpoint, so the agent never blocks on capture. On Codex
+and Kimi a throttled <code>Stop</code> hook also serializes mid-session
+as crash insurance; each run re-serializes the whole transcript, and
+there is no per-turn append. It is also the clearest instance of
+<em>referencing</em> evidence rather than storing it — the checkpoint
+carries a <code>transcript_hash</code> and per-item source message ids
+pointing into the host's own transcript file, which daimon never copies.
+That keeps the store tiny and the provenance real, at the cost of a
 provenance chain that breaks the moment the host rotates its
 transcripts.</p>
 <p>The important split is whether the captured item is itself memory or
@@ -1644,8 +1645,10 @@ path to a silent prune.</li>
 never the text, re-mints the checkpoint's signed receipt, and — because
 item ids are a hash of the item's own text — deletes every row with that
 id from the search index across <em>all</em> historical checkpoints on
-the next rebuild. Weight-based expiry from carry is the softer path: an
-item below the floor simply stops being carried forward.</li>
+the next rebuild. A later re-extraction of the same sentence is dropped
+at the checkpoint write, before it reaches disk. Weight-based expiry
+from carry is the softer path: an item below the floor simply stops
+being carried forward.</li>
 <li><a href="../systems/hindsight/"><code>hindsight</code></a>:
 bank/document/memory operations plus cascading schema relations; derived
 observations must remain consistent with source changes.</li>
@@ -3186,8 +3189,8 @@ the structural-loss guard that is its best idea.</li>
 far exceed implementation — 4,256 for the LanceDB extension and 2,814
 for the memory-core doctor contract; no committed retrieval
 benchmark.</li>
-<li><a href="../systems/daimon/"><code>daimon</code></a>: 6,500 tests
-across roughly 106,700 lines against 47,300 lines of source, with
+<li><a href="../systems/daimon/"><code>daimon</code></a>: 6,678 tests
+across roughly 109,300 lines against 49,700 lines of source, with
 dedicated quote-verification, carry, withhold, redaction-leak, receipt,
 and host-isolation suites. Its <code>benchmark/</code> runs
 LongMemEval-S through the real serializer and answers only from

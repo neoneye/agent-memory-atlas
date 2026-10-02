@@ -255,22 +255,29 @@ how states participate in recall, promotion, consolidation, and pruning,
 and for separating epistemic confidence from retrieval strength. <a
 href="../../systems/rainbox/">RainBox</a> ties the transitions to an
 actor model and an operator review queue.</p>
-<p><a href="../../systems/daimon/">Daimon</a> is a near-miss on this
-page's definition, by design, and the reasons are stated in its source.
-Its <code>verbatim</code> / <code>inferred</code> field is a provenance
-label fixed at write: the item ships with the class the extractor chose,
-the quote is matched against the transcript and a miss forces the item
-down to <code>inferred</code>, and an outcome claim with no tool-result
-citation is forced down even when its quote matched. That is code
-disproving the model rather than a policy decision about a claim — and
-it records how a line was obtained, not a judgement that can later be
-revised. Supersession, overturn and contradiction then act as
-multiplicative demotions, and the project's comments rule out the filter
-explicitly: an overturned item is still evidence, so it <em>"ranks down
-and renders flagged rather than disappearing."</em> No read withholds an
-item on either field, which is why the report carries no
-<code>trust_state</code>.</p>
-<p>Its second state machine answers a different question: <em>how do you
+<p><a href="../../systems/daimon/">Daimon</a> keeps two questions apart
+and gives only one of them a filter. Its <code>verbatim</code> /
+<code>inferred</code> field is a provenance label fixed at write: the
+item ships with the class the extractor chose, the quote is matched
+against the transcript and a miss forces the item down to
+<code>inferred</code>, and an outcome claim with no tool-result citation
+is forced down even when its quote matched. Supersession, overturn and
+contradiction then act as demotions, and the project's comments rule out
+the filter for them explicitly: an overturned item is still evidence, so
+it <em>"ranks down and renders flagged rather than
+disappearing."</em></p>
+<p>The state that withholds is a person's. A quarantine ledger folds to
+<code>candidate</code>, <code>active</code>, <code>dismissed</code> or
+<code>released</code> per value, and an <code>active</code> value is
+dropped from the briefing, deleted from the recall index at rebuild and
+hidden in the viewer until a human releases it. An agent may propose one
+and cannot confirm it. The source states the rule in one line — <em>"a
+human-confirmed verdict may withhold; a machine signal only ever ranks
+down"</em> — and the report carries <code>trust_state</code> on that
+ledger. Four id-addressed reads, <code>why</code>, <code>blame</code>,
+<code>diff</code> and the candidate list <code>resolve</code> prints, do
+not consult it.</p>
+<p>Its refutation ledger answers a different question: <em>how do you
 know a human approved it</em>. A refutation — an approach recorded as
 having lost under cited evidence — folds to <code>candidate</code>,
 <code>active</code> or <code>overturned</code>, and the transition to
