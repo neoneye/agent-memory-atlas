@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 705 reports.</strong></p>
+<p><strong>This page covers all 713 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -29317,6 +29317,366 @@ searched rather than loaded whole, attributed to the generation that
 wrote them, or checked before they are acted on. The design trusts each
 agent's log as written and gives a successor nothing to weigh one line
 against another.</li>
+</ul>
+<h3 id="smriti"><a
+href="../systems/smriti/"><code>smriti</code></a></h3>
+<ul>
+<li>Best idea: <strong>re-sort the validity chain on every
+write.</strong> <code>consolidate</code> loads the full history for a
+<code>(subject, predicate, scope)</code> key, inserts, sorts by event
+time and relinks every adjacent pair, so a message on 10 July about a
+move on 1 June closes the old interval at 1 June and a late note about
+January becomes history rather than the present. The enterprise
+<code>fact_validity_history</code> stamps each relink with the time the
+store learned it, and <code>facts_asof(world=, known=)</code> reads both
+axes.</li>
+<li>Biggest risk: <strong>trust and scope stop before the
+prompt.</strong> <code>strict_filter</code> drops quarantined and
+untrusted-origin rows only from <code>search(strict=True)</code>;
+<code>context()</code> has no strict mode, the <code>regulated</code>
+profile does not default to strict although its docstring says so, and
+no read path filters on <code>scope</code>. The MCP server builds core
+<code>Smriti</code>, so an agent's <code>add_fact</code> with
+<code>predicate: lives_in</code> supersedes the user's city with no
+origin recorded.</li>
+<li>Most reusable component: <code>smriti/consolidation.py</code> — 189
+lines holding the zero-token single-valued supersession, the chain
+rebuild that tolerates late-arriving history, and an arbiter whose
+answer is discarded unless its target is one of the candidates it was
+shown.</li>
+<li>Second risk: <strong>the headline benchmark cannot see the feature
+it sells.</strong> Every lab system runs <code>mode="lite"</code>, which
+stores no facts, so the published accuracy measures episodic retrieval
+and packing. The committed rows recompute exactly — 169 correct reads
+across 240 — and show the shipped default at 65.0% and 75.8% on two
+reads of the same questions, a spread wider than its margin over
+Mem0.</li>
+<li>Maturity impression: Apache-2.0, 5,288 lines of core Python and
+1,418 in the enterprise package, 99 commits on main by 2 contributors
+between 16 June and 26 September 2026. 247 core and 59 enterprise test
+functions, both suites in CI. Four marks: <code>trust_state</code>,
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>negative_eval</code>; the last rests on strict-filter and erasure
+cases with positive controls, and one enterprise assertion ends in
+<code>or True</code>.</li>
+<li>Study when: you want bi-temporal facts without a graph database, or
+an honest example of receipts, legal holds and lineage-exact erasure
+layered over an unmodified core.</li>
+<li>Do not copy when: several users, projects or tenants share a store,
+or untrusted content reaches it through MCP — scope and trust are not
+enforced on the path that builds context.</li>
+</ul>
+<h3 id="mainline"><a
+href="../systems/mainline/"><code>mainline</code></a></h3>
+<ul>
+<li>Best idea: <strong>the log is the store, and appends race on the
+ref, not the file.</strong> <code>AppendActorLogEvent</code> writes each
+event as a one-file tree, commits it on the actor ref's observed head
+and moves the ref with an <code>update-ref</code> compare-and-swap,
+retrying on the new head up to 128 times. Every intent, constraint and
+risk the agent reads is a replay of all actors' logs, so the view cannot
+drift from what was recorded, and the store needs nothing but
+<code>git</code>.</li>
+<li>Biggest risk: <strong>supersession is a reader with no
+writer.</strong> <code>intent.superseded</code> has an event type, a
+spec section, a ranking rule that keeps the replaced plan after its
+replacement, Hub and trace rendering, risk expiry, property tests and an
+eval fixture. No command emits it — the test helper patches the view
+<em>"so the test does not depend on a Supersede CLI command shape that
+may evolve"</em> — and 6 of the 9 code-first violations in the committed
+live eval come from the <code>superseded-decision</code> fixture, which
+seeds the status straight into a view.</li>
+<li>Most reusable component:
+<code>internal/engine/context_retrieval.go</code> — deterministic
+additive scoring with a per-weight breakdown returned to the agent, a
+query mode that refuses recency-only matches, and the lineage pass
+(<code>includeSupersededLineage</code>,
+<code>enforceSupersessionRanking</code>) that keeps a relevance
+threshold from cutting a decision history in half.</li>
+<li>Second risk: <strong>the everyday replay trusts every fetched
+event.</strong> <code>actor import</code> checks that each event belongs
+to the actor being imported; <code>rebuildView</code> does not, so an
+event in one actor's log can abandon or re-seal an intent another actor
+owns, and <code>mainline abandon</code> checks the transition table and
+not the owner. Nothing in the store can be deleted, and a seal travels
+with every push.</li>
+<li>Maturity impression: Layered Apache-2.0 and CC-BY-4.0 with brand and
+hosted surfaces excluded, 35,142 lines of Go outside tests, 433 commits
+on main by 5 contributors between 25 April and 2 October 2026; 579 test
+functions with 66 rapid property checks. Two marks,
+<code>audit_log</code> on the actor log and <code>negative_eval</code>
+on a retrieval case keeping a resolved risk's text out beside an open
+one that must match. Nothing was run for the report.</li>
+<li>Study when: you want agent reasoning to travel with a repository
+through ordinary fetch and push, with deterministic, explainable
+retrieval before edits and a hard line between agent-written history and
+human-written rules.</li>
+<li>Do not copy when: memory must be deleted, scoped below the
+repository, or shared with contributors who do not trust each other's
+push access; or when a lifecycle state matters to you — check that
+something sets it before relying on the reader.</li>
+</ul>
+<h3 id="minta"><a href="../systems/minta/"><code>minta</code></a></h3>
+<ul>
+<li>Best idea: <strong>treat the vector index as advisory and the row
+store as the authority.</strong> <code>/api/search</code> filters Chroma
+by owner metadata, then re-reads every candidate id from SQL under
+<code>user_id = caller OR user_id IS NULL</code> and the status
+predicate, so a stale or mis-tagged vector costs a candidate slot and
+never surfaces a row the caller may not see.</li>
+<li>Biggest risk: <strong>the correction machinery the README leads with
+does not run.</strong> <code>resolve_and_persist</code>, the only code
+that writes <code>stale</code>, has no caller;
+<code>check_temporal_validity</code> has none; the scheduler adds the
+lifecycle scan with <code>next_run_time=None</code>, which APScheduler 3
+treats as paused; and a scan finding reaches the inbox without its
+target id, so confirming it stores the suggestion as a new
+<code>lesson_learned</code> note and leaves the stale object
+active.</li>
+<li>Most reusable component: <code>server/routers/user_data.py</code> —
+one <code>CONTENT_TABLES</code> inventory walked by both export and
+delete, extended to the vector index, the JSONL decision logs and the
+separate evaluation store, committed per category with partial failure
+reported, and a test that fails when a user-scoped table is missing from
+it.</li>
+<li>Second risk: <strong>the gate is on the agent's tool list.</strong>
+<code>minta_confirm_inbox</code> and <code>minta_discard_inbox</code>
+are two of the thirteen MCP tools, under the user's own key, and
+<code>minta_write_context</code> writes <code>active</code> without the
+inbox. The HTTP MCP transport parses any POST body as JSON and
+authenticates nothing.</li>
+<li>Maturity impression: Apache-2.0, the open kernel of an open-core
+product, 16,727 lines of Python outside tests and 167 commits on main
+from 5 contributors between 31 May and 20 September 2026. Three marks:
+<code>scope_enforced</code> and <code>negative_eval</code> on both
+stores, <code>audit_log</code> on the slot plane only. 149 pytest
+functions; the README's conflict and staleness scores have no committed
+evaluation code.</li>
+<li>Study when: you want a small local example of a two-stage scoped
+search, or a user-data export and delete that reaches every store
+including the vectors.</li>
+<li>Do not copy when: you need contradictions resolved, review that the
+agent cannot bypass, or a correction to reach the object it is about.
+None of those is wired in the open tree.</li>
+</ul>
+<h3 id="agent-memory-engine"><a
+href="../systems/agent-memory-engine/"><code>agent-memory-engine</code></a></h3>
+<ul>
+<li>Best idea: <strong>bind a derived memory to the file it came
+from.</strong> A <code>debug</code> or <code>module</code> memory from a
+single-file task stores that file's SHA-256, and every
+<code>retrieve_agent_context</code> re-checks up to 50 such nodes —
+file, hash, Python symbol, commit ancestry — persisting
+<code>needs_revalidation</code> or <code>invalidated</code> with the
+previous status. The composer then withholds the node and says why in
+the trace, on the cache-hit path too.</li>
+<li>Biggest risk: <strong>a conflict flag that nothing resolves and the
+composer ignores.</strong> A keyword or confidence conflict marks the
+existing node <code>needs_review</code>. No tool, CLI command or route
+clears it, and <code>_fill_bucket</code> does not skip it, so the
+flagged memory keeps reaching the agent while the README lists the
+status as excluded.</li>
+<li>Most reusable component:
+<code>memory_engine/services/source_validity.py</code> — the bounded,
+persisted, provenance-only drift check, with its coarse full-file hash
+stated in its own docstring.</li>
+<li>Second risk: <strong>scoping and lifecycle verbs that stop short of
+the store.</strong> The branch passed to <code>reflect_and_write</code>
+is dropped before the node is written; the CLI's <code>stale</code>,
+<code>retention run</code> and <code>restore</code> open
+<code>./memory_engine.db</code> rather than the MCP server's
+<code>.memory-engine/memory.db</code>; compaction writes a
+<code>compacted</code> status the domain enum rejects.</li>
+<li>Maturity impression: MIT, 21,310 lines of Python, 97 commits on main
+from 2 contributors between 25 June and 1 October 2026, and 717 pytest
+functions. Three marks — <code>trust_state</code>,
+<code>scope_enforced</code>, <code>negative_eval</code> — the last on an
+end-to-end recall case with a positive control; the exact-set vector
+cases skip in CI.</li>
+<li>Study when: you want memory about code to expire when the code
+changes, or a trust ladder the agent's own tools cannot climb.</li>
+<li>Do not copy when: you need conflicts resolved, branch-scoped memory,
+or an operator correction path; the states and columns exist and no
+reachable path completes them.</li>
+</ul>
+<h3 id="alphaonedev-ai-memory"><a
+href="../systems/alphaonedev-ai-memory/"><code>alphaonedev-ai-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>make read visibility an allow-list, not a
+deny-list.</strong> <code>RECALL_VISIBLE_LIFECYCLE_STATES</code> names
+the five states a read may return, <code>lifecycle_visible_clause</code>
+generates the SQL from it, and <code>is_recall_visible</code> mirrors it
+for the HNSW branch, so <code>tombstoned</code>,
+<code>quarantined</code> and any state an older binary does not know are
+hidden on recall, search, list, export and federation catch-up alike.
+Six tests seed one open row beside one of each hidden state and assert
+the open one first.</li>
+<li>Biggest risk: <strong>the human gate is a parameter.</strong>
+<code>memory_pending_approve</code> is a registered MCP tool under the
+<code>admin</code> and <code>full</code> profiles; it takes the approver
+from <code>agent_id</code>, and on the MCP and CLI surface it refuses
+self-approval only when <code>AI_MEMORY_AGENT_ID</code> is set — a
+committed test asserts the default accepts it. The Ed25519 m-of-n quorum
+that would bind a real principal is stamped only by a function whose one
+caller is a test.</li>
+<li>Most reusable component: <code>src/models/memory.rs:472-520</code> —
+the allow-list constant and its SQL fragment builder, about fifty lines,
+placeholder-free so it drops into any query on either backend without
+renumbering parameters.</li>
+<li>Second risk: <strong>flags resolved from config and never
+seeded.</strong> <code>set_append_only</code>,
+<code>set_lineage_dag</code> and
+<code>set_consolidate_tombstone_sources</code> have no production
+caller, deliberately, for test isolation.
+<code>AI_MEMORY_APPEND_ONLY=1</code> therefore writes no revision leaf
+and consolidation always hard-deletes its sources, while flag-on
+integration tests pass by setting the atomic directly.</li>
+<li>Maturity impression: Apache-2.0, 615,647 lines of Rust, 2,811
+commits by one contributor between 31 March and 2 October 2026, and
+10,917 Rust test functions. Three marks — <code>trust_state</code> on
+federation quarantine, <code>audit_log</code> on an opt-in hash-chained
+trail, <code>negative_eval</code> — with <code>scope_enforced</code>
+withheld because the session-start hook falls back to every namespace's
+long-tier rows when the current one is empty, and
+<code>tombstone</code>, <code>bitemporal</code> and
+<code>human_review</code> withheld.</li>
+<li>Study when: you replicate memory between nodes and need forgotten
+ids to stay forgotten, unattested writes kept out of view, and one
+visibility rule that every read path is tested against.</li>
+<li>Do not copy when: you need reviewed memory, a write log in the
+database, or recall-driven promotion from a stdio-only MCP install — the
+first is self-approvable, the second is unseeded, and the third needs
+the daemon or a scheduled <code>ai-memory gc</code>.</li>
+</ul>
+<h3 id="selvedge"><a
+href="../systems/selvedge/"><code>selvedge</code></a></h3>
+<ul>
+<li>Best idea: <strong>make "considered and rejected" a first-class
+write.</strong> <code>change_type="reject"</code> records an approach
+nobody implemented, with the reason and what would invalidate it, and
+<code>prior_attempts</code> returns it as an <code>exact</code> row that
+clears the default confidence floor. A <code>supersede</code> event
+re-opens it by linking the rejected event's id, so the old verdict stays
+readable and every reader derives the current one.</li>
+<li>Biggest risk: <strong>the newest event decides, and nothing guards
+the write.</strong> <code>_derive_path_status</code> reads only the
+latest event on a path, so any <code>add</code> or <code>modify</code>
+logged after a <code>reject</code> makes the path <code>active</code> —
+the gate stops blocking and the digest stops naming it — with no
+supersede and no warning. The instruction to supersede first is prose in
+the tool description.</li>
+<li>Most reusable component: <code>selvedge/chain.py</code> — a hash
+chain in a sidecar table written in the mutating transaction, with an
+<code>amend</code> record for legitimate rewrites, a count-only
+<code>tombstone</code> for gated prunes, and a manifest that names what
+it does not cover.</li>
+<li>Second risk: <strong>erasure is all or nothing by age.</strong> The
+secret scanner warns and stores, the store is meant to be committed,
+there is no per-event delete, and the <code>embeddings</code> table has
+no delete path at all, so a pruned event's vector survives.</li>
+<li>Maturity impression: MIT, 17,252 lines of Python and 239 commits on
+main from 3 contributors (one a bot) between 22 April and 3 October
+2026, with 1,061 pytest functions. Two marks: <code>audit_log</code> on
+the chain sidecar, <code>negative_eval</code> on tests that a superseded
+decision leaves the revisit surfaces while a standing sibling stays. Two
+committed pilots recompute from their raw rows: 4 of 6 versus 0 of 6
+repeated rejected choices, and an earlier four-arm tie.</li>
+<li>Study when: you want rejected approaches and their invalidation
+conditions to survive the session, keyed to the code entity they
+concern, and enforced at the edit rather than left to the agent's memory
+of the instructions.</li>
+<li>Do not copy when: memories must be found by meaning, isolated per
+tenant in one store, or individually erasable; or when a later write
+must not be able to overturn a rejection silently.</li>
+</ul>
+<h3 id="gmeow-ontology"><a
+href="../systems/gmeow-ontology/"><code>gmeow-ontology</code></a></h3>
+<ul>
+<li>Best idea: <strong>retire by appending, and give the retired set its
+own read.</strong> <code>revise_belief</code> writes a suppression frame
+keyed on the claim's reifier; <code>recall</code> drops suppressed
+claims by default and returns them flagged under
+<code>include_suppressed</code>, so the audit question stays answerable
+without leaking into answers.
+<code>memory_triad_preserves_suppression_on_every_default_recall_path</code>
+asserts the retired claim absent and a sibling present across five
+argument shapes.</li>
+<li>Biggest risk: <strong>the claim file has no writer lock and the
+engine says it needs one.</strong> purrdf's <code>Memory</code> requires
+exclusive write ownership per path and <em>"deliberately does not claim
+cross-process locking"</em>; GMEOW locks both of its formula libraries
+and not the claim file, and the documented install points every client
+session's server at <code>~/.gmeow/memory.gts</code>.</li>
+<li>Most reusable component: the per-write <code>ToolCall</code> record
+in the same append-only package — tool IRI, JSON arguments, JSON result
+and the generated claim id — which makes "why is this here" answerable
+from the store alone.</li>
+<li>Second risk: <strong>revise resolves ids in the last segment
+only.</strong> The native backend opens a new segment whenever the
+bundle's dictionary changes, after which a claim stored earlier passes
+the handler's gate and then fails in <code>revise</code> as unknown. No
+test crosses a boundary.</li>
+<li>Maturity impression: AGPL-3.0-only tooling over a CC BY 4.0
+ontology, 486,044 lines of Rust outside test files, 5,484 commits on
+main by 2 contributors between 3 June and 2 October 2026, 7,549 Rust
+test functions. The claim store is 1,132 lines in the purrdf dependency,
+under <code>gts::examples</code>. Three marks: <code>trust_state</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you want an append-only claim log with suppression
+semantics and a mutation record in the same file, or a model of how to
+test a retired-value filter so that it cannot pass on an empty
+result.</li>
+<li>Do not copy when: you need recall by meaning, scope between users or
+projects, deletion on request, or several concurrent agent sessions
+writing one store.</li>
+</ul>
+<h3 id="local-memory-mcp"><a
+href="../systems/local-memory-mcp/"><code>local-memory-mcp</code></a></h3>
+<ul>
+<li>Best idea: <strong>retire a fact by closing its validity interval,
+and keep it readable as of a date.</strong>
+<code>memory_observation_supersede</code> sets <code>valid_to</code> to
+the superseding observation's <code>valid_from</code>, a caller instant,
+or now; live search, the live entity view and the contradiction scan
+drop the row, and <code>memory_entity_open({asOf})</code> still returns
+it inside <code>[valid_from, valid_to)</code>. Beside it, every write
+computes its vector outside the lock and commits row and vector in one
+transaction.</li>
+<li>Biggest risk: <strong>an archived learning comes back as
+new.</strong> <code>memory_learn_archive</code> records
+<code>archived:wrong</code> on the row, and the duplicate gate checks
+<code>content = ? AND archived = 0</code>, so the rejected sentence
+restated later is inserted as a fresh live row with nothing linking it
+to the rejection.</li>
+<li>Most reusable component: the write helpers in
+<code>src/db/vector.ts</code> with their callers in
+<code>src/tools/learn.ts</code> — <code>prepareEmbedding</code> outside
+the transaction, <code>writeEmbeddingSync</code> inside it, and
+<code>deleteEmbeddings</code> when a content change cannot be
+re-embedded, so the index never describes text the row no longer
+holds.</li>
+<li>Second risk: <strong>export then import silently drops every
+learning archived with a reason.</strong> <code>learnArchive</code>
+writes <code>archived:&lt;reason&gt;</code>, the import shape accepts
+only <code>active | ephemeral | archived</code>, and the whole record is
+counted as malformed. The test of that enum is titled for values "a tool
+could never produce", and the round-trip fixture archives nothing.</li>
+<li>Maturity impression: MIT, 5,070 lines of TypeScript outside tests,
+92 commits on main from 3 contributors (one a bot) since 16 April 2026.
+Three marks: <code>bitemporal</code> on the observation interval,
+<code>scope_enforced</code> on the project predicate of search and
+recall, <code>negative_eval</code> on a two-project scoped search and a
+supersede-then-search case. 255 Vitest cases run in CI against mock
+embeddings; several wrap their assertions in
+<code>if (result.success)</code> without asserting success. No benchmark
+has been run, and the whitepaper says so.</li>
+<li>Study when: you want a single-file local MCP memory with hybrid
+recall and a minimal as-of fact graph, and want to see a vacuous test
+identified and rebuilt by its own authors.</li>
+<li>Do not copy when: rejection must stick, decisions must be
+correctable, or asOf must answer what the store believed rather than
+what was valid — the interval's closing time is not recorded and
+<code>valid_from</code> has no interactive writer.</li>
 </ul>
         </article>
       </div>

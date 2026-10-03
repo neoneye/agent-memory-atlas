@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local MCP server that keeps a
+typed memory tree per repository, promotes agent reflections
+deterministically, and withholds memories whose source file drifted.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agent Memory
+Engine — Agent Memory Atlas">
+    <meta property="og:description" content="A local MCP server that
+keeps a typed memory tree per repository, promotes agent reflections
+deterministically, and withholds memories whose source file drifted.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agent Memory
+Engine — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local MCP server that
+keeps a typed memory tree per repository, promotes agent reflections
+deterministically, and withholds memories whose source file drifted.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agent Memory Engine — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Agent Memory Engine",
+      "description": "A local MCP server that keeps a typed memory tree per repository, promotes agent reflections deterministically, and withholds memories whose source file drifted.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An evidence-gated memory tree for coding
+agents</p>
+          <h1>Agent Memory Engine</h1>
+          <p class="document-deck">A local MCP server that keeps a typed
+memory tree per repository, promotes agent reflections
+deterministically, and withholds memories whose source file drifted.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/uudam42/agent-memory-engine">
+              <span>Source</span>
+              <strong>uudam42/agent-memory-engine</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/uudam42/agent-memory-engine/commit/6e345342051dea267e465fc24e3e88e326d9ac51" title="6e345342051dea267e465fc24e3e88e326d9ac51">
+              <span>Analyzed revision</span>
+              <code>6e345342…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/uudam42--agent-memory-engine" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>uudam42--agent-memory-engine</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>21,310
+lines of Python in memory_engine/ across 106 files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>97
+commits on main by 2 contributors, 25 June 2026 – 1 October
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>717
+pytest functions in 45 files, 16,697 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Agent Memory Engine is a local stdio MCP server for coding agents. It
+keeps a typed memory tree per repository: constraints, architecture,
+modules, decisions, incidents and procedures, each a row with status,
+confidence, trust and optional source evidence. Beside the tree it
+indexes the repository itself into an FTS5 knowledge base. The agent
+calls <code>retrieve_agent_context</code> before work and
+<code>reflect_and_write</code> after it; no model is called on either
+path.</p>
+<p>What is notable is how much of the epistemics is enforced in code. A
+memory derived from one file records that file's SHA-256, and every
+retrieval re-checks it. A drifted or deleted source moves the memory to
+<code>needs_revalidation</code> or <code>invalidated</code>, and the
+composer stops serving it. Trust and verification levels are assigned
+from provenance, never from the text, and the agent's tool schemas
+cannot raise either to its human-confirmed rung.</p>
+<p>What is weak is the wiring between those layers. A conflict flags the
+existing memory <code>needs_review</code>, the README says that status
+is excluded, and the composer serves it. The branch the agent passes to
+<code>reflect_and_write</code> never reaches the stored node. The human
+elevation verbs and <code>revalidate</code> have no caller. Compaction
+writes a status value the domain enum does not define.</p>
+<p>Three marks: <code>trust_state</code> on the status column the
+composer filters, <code>scope_enforced</code> on
+<code>project_id</code>, and <code>negative_eval</code> on an end-to-end
+recall case. Section 9 names the four withheld. The licence is MIT. The
+project dogfoods itself: its own <code>CLAUDE.md</code> tells a coding
+agent to call both tools while developing it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <code>MemoryNode</code>: a titled summary of a kind,
+placed in a tree under a parent, with numbers for importance and
+confidence and three discrete axes — lifecycle status, provenance trust,
+verification evidence. Nodes come from two places.
+<code>reflect_and_write</code> derives them from an agent's account of a
+finished task. <code>seed_project_context</code> takes constraints and
+decisions as typed and writes them as active.</p>
+<p><strong>Reflection is gated, then promoted at once.</strong>
+<code>ReflectionSkill.analyze</code> drops a task that failed, was
+reverted, failed tests, is unverified below 0.70 confidence, or is
+trivial and thin
+(<code>memory_engine/skills/reflection.py:188-262</code>). The MCP tool
+passes 0.65 for an unverified task, so only a task the agent calls
+<code>tests_passed</code>, <code>build_success</code> or
+<code>manual_check</code> produces candidates
+(<code>memory_engine/mcp/tools.py:530</code>). A surviving task yields a
+<code>debug</code>, <code>module</code> or <code>decision</code>
+candidate whose summary is the agent's own outcome text.</p>
+<p><strong>Promotion decides by similarity and by keyword.</strong>
+<code>PostTaskService</code> stages each candidate and promotes it in
+the same call (<code>memory_engine/services/post_task.py:85-120</code>).
+<code>DeduplicationService</code> scores it against every node: 0.6 of
+title-and-summary Jaccard, 0.2 for same kind, 0.2 for module overlap. At
+0.8 and above it is a near duplicate, at 0.5 a partial one
+(<code>memory_engine/services/deduplication.py:25-26</code>,
+<code>:94-140</code>). <code>ConflictService</code> then reports a
+conflict when the candidate's confidence is more than 0.15 below the
+existing node's. It also reports one when the two summaries straddle one
+of five keyword pairs, such as <code>must</code>/<code>may</code> or
+<code>synchronous</code>/<code>async</code>
+(<code>memory_engine/services/conflict.py:40-123</code>).</p>
+<p>The outcome table is <code>PromotionService._branch</code>
+(<code>memory_engine/services/promotion.py:248-287</code>):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Match</th>
+<th>Conflict</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>none, or below 0.5</td>
+<td>—</td>
+<td>create an active node</td>
+</tr>
+<tr>
+<td>near duplicate</td>
+<td>yes</td>
+<td>flag the existing node <code>needs_review</code></td>
+</tr>
+<tr>
+<td>near duplicate</td>
+<td>no, candidate at least as confident</td>
+<td>supersede: new active node, old one <code>superseded</code>, a
+<code>supersedes</code> relation</td>
+</tr>
+<tr>
+<td>near duplicate</td>
+<td>no, candidate less confident</td>
+<td>discard</td>
+</tr>
+<tr>
+<td>partial</td>
+<td>yes</td>
+<td>flag the existing node <code>needs_review</code></td>
+</tr>
+<tr>
+<td>partial</td>
+<td>no, candidate at least as confident</td>
+<td>update the summary in place</td>
+</tr>
+<tr>
+<td>partial</td>
+<td>no, candidate less confident</td>
+<td>merge: append up to 200 characters after
+<code>Additionally:</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>A memory stops being served in five ways, and one flag does
+not stop it.</strong> Supersession and a human <code>stale</code> mark
+are explicit. Retention archives stale and superseded nodes after 180
+and 120 days. Source drift is automatic: <code>RecallService</code> runs
+<code>SourceValidityService.check</code> over up to 50 nodes that carry
+a <code>source_path</code>. A missing file sets
+<code>invalidated</code>. A changed hash, a missing Python symbol or an
+unreachable commit sets <code>needs_revalidation</code>
+(<code>memory_engine/skills/recall.py:274-298</code>;
+<code>memory_engine/services/source_validity.py:264-341</code>). The
+composer skips all five statuses
+(<code>memory_engine/skills/composer.py:221-243</code>). It does not
+skip <code>needs_review</code>, so the node a conflict flagged keeps
+reaching the agent, labelled <code>non-authoritative</code> in its trace
+provenance (<code>:108-115</code>, <code>:174-176</code>).</p>
+<p><strong>Nothing leaves <code>needs_review</code> or
+<code>needs_revalidation</code>.</strong> No writer moves either back to
+<code>active</code>: <code>revalidate</code> exists and is called only
+from a test (<code>source_validity.py:343-369</code>). The conflicting
+candidate is recorded with status <code>needs_review</code> and never
+becomes a node.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an agent's task report becomes a served memory, and which statuses the composer withholds</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an agent&#39;s task report becomes a served memory, and which statuses the composer withholds
+flowchart TD
+    R[&quot;reflect_and_write: outcome text, verification_status&quot;] --&gt; G{&quot;five gates: failed, reverted,&lt;br/&gt;tests_failed, unverified below 0.70,&lt;br/&gt;trivial and thin&quot;}
+    G -- &quot;skip&quot; --&gt; X[&quot;nothing written&quot;]
+    G -- &quot;pass&quot; --&gt; C[&quot;candidate: debug, module or decision&lt;br/&gt;summary = the agent&#39;s outcome text&quot;]
+    S[&quot;seed_project_context&quot;] --&gt; ACT
+    C --&gt; D{&quot;Jaccard match against&lt;br/&gt;every node in the project&quot;}
+    D -- &quot;below 0.5&quot; --&gt; ACT[&quot;active node&quot;]
+    D -- &quot;match, no conflict&quot; --&gt; UP[&quot;supersede, update,&lt;br/&gt;merge or discard&quot;]
+    UP --&gt; ACT
+    D -- &quot;match, confidence gap&lt;br/&gt;or keyword contradiction&quot; --&gt; NR[&quot;existing node set to&lt;br/&gt;needs_review&quot;]
+    ACT --&gt; V{&quot;retrieval: source file,&lt;br/&gt;hash, symbol, commit&quot;}
+    V -- &quot;file gone&quot; --&gt; INV[&quot;invalidated&quot;]
+    V -- &quot;drifted&quot; --&gt; NRV[&quot;needs_revalidation&quot;]
+    V -- &quot;unchanged&quot; --&gt; ACT
+    ACT --&gt; F{&quot;_fill_bucket status filter&quot;}
+    NR --&gt; F
+    INV --&gt; F
+    NRV --&gt; F
+    F -- &quot;active, needs_review&quot; --&gt; OUT[&quot;served to the agent&quot;]
+    F -- &quot;stale, superseded, archived,&lt;br/&gt;needs_revalidation, invalidated&quot; --&gt; TR[&quot;trace entry: excluded, with reason&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python 3.11 package, <code>memory_engine</code>, with three front
+ends over one service layer: the MCP server
+<code>memory-engine-mcp</code>
+(<code>memory_engine/mcp/server.py</code>), the Typer CLI
+<code>memory</code> (<code>memory_engine/cli.py</code>), and a FastAPI
+app (<code>memory_engine/main.py</code>), which the Dockerfile runs on
+<code>0.0.0.0:8000</code>. Skills (<code>recall</code>,
+<code>reflection</code>, <code>inspect</code>, <code>composer</code>,
+<code>ranker</code>) call services (<code>promotion</code>,
+<code>retention</code>, <code>source_validity</code>,
+<code>source_trust</code>), which call repositories over SQLAlchemy.</p>
+<p><strong>The front ends open different databases by default.</strong>
+The MCP server's <code>ProjectContext</code> opens
+<code>&lt;root&gt;/.memory-engine/memory.db</code>
+(<code>memory_engine/bootstrap/local_storage.py:78-83</code>;
+<code>memory_engine/mcp/project_context.py:77-92</code>). The CLI and
+FastAPI app use <code>settings.database_url</code>,
+<code>sqlite:///./memory_engine.db</code> relative to the working
+directory, overridable as <code>ME_DATABASE_URL</code>
+(<code>memory_engine/config.py:63</code>;
+<code>memory_engine/db/session.py:10-17</code>).
+<code>memory stale</code>, <code>memory retention run</code> and
+<code>memory retention restore</code> therefore act on the MCP server's
+store only when an operator points that variable at it.</p>
+<p>The knowledge base shares the memory file: documents, chunks,
+paragraphs, propositions and module summaries, each with an FTS5 table,
+built deterministically from the repository at bootstrap and on
+<code>refresh_project_knowledge</code>. An optional sqlite-vec
+<code>vector.db</code> adds an embedding arm over knowledge records
+only. Embeddings come from sentence-transformers, Ollama or FastEmbed,
+off by default (<code>memory_engine/config.py:9-57</code>).</p>
+<p>Nothing runs in the background. There is no thread or task scheduler
+in the package; indexing, validity checks and promotion all run inside a
+tool call.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The documented path is
+<code>uv run memory-engine-mcp --project-root</code> with an absolute
+path, from an MCP client config. Storage is a SQLite file; no service,
+API key or network is needed, and the semantic extras are opt-in. On
+first connection, bootstrap creates <code>.memory-engine/</code>,
+indexes the repository, and writes a policy block into the project's
+<code>CLAUDE.md</code>
+(<code>memory_engine/bootstrap/bootstrap_service.py:405-425</code>).
+That contradicts the README's <em>"No writes outside
+<code>.memory-engine/</code>: guaranteed"</em>
+(<code>README.md:769</code>).</p>
+<p>The store is SQLite and readable with any client. Repair by hand
+means SQL: the CLI's lifecycle verbs open a different file by default,
+and no MCP tool corrects or removes a node.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>tool_reflect_and_write</code>
+(<code>memory_engine/mcp/tools.py:422-571</code>) validates the optional
+workspace handshake, maps <code>verification_status</code> and
+keyword-scans the outcome for failure words unless the status is
+verified. It builds a <code>ReflectionInput</code> with the branch and
+commit (<code>:523-533</code>) and calls
+<code>PostTaskService.reflect_and_write</code> with the server's project
+root (<code>:483</code>). The schema accepts <code>task_summary</code>,
+<code>test_summary</code> and <code>evidence_refs</code>
+(<code>memory_engine/mcp/schemas.py:82-89</code>), and the handler
+passes none of them on.</p>
+<p><strong>Extraction.</strong> <code>ReflectionSkill.analyze</code>
+(<code>memory_engine/skills/reflection.py:188-500</code>) applies the
+gates, then emits candidates by intent. It binds a
+<code>source_path</code> only for <code>debug</code> and
+<code>module</code> kinds and only when exactly one file was touched
+(<code>:133-163</code>). <code>discovered_constraints</code> and
+<code>discovered_procedures</code> are fields of
+<code>ReflectionInput</code>, and the MCP tool has no parameter that
+fills them.</p>
+<p><strong>Promotion.</strong> <code>PromotionService.promote</code>
+(<code>memory_engine/services/promotion.py:105-149</code>) runs
+placement, deduplication against <code>list_by_project</code>, the
+branch table above, and records the candidate's outcome.
+<code>_create_node</code> (<code>:482-547</code>) hashes the source
+file, assigns trust with <code>assign_creation_trust</code>, carries the
+evidence level, and writes <code>status="active"</code>. It passes no
+branch or commit, and <code>MemoryNodeRepository.create</code> has no
+parameter for either
+(<code>memory_engine/repositories/memory_node.py:14-61</code>).</p>
+<p><strong>Consolidation.</strong>
+<code>ConsolidationService.update_parent</code> rewrites a parent's
+summary from its children's after each create or supersede.</p>
+<p><strong>Retrieval.</strong> <code>tool_retrieve_agent_context</code>
+(<code>memory_engine/mcp/tools.py:203-323</code>) resolves git context
+and builds <code>UnifiedContextRetrievalService</code> with the project
+root (<code>:246</code>). That service checks its cache, revalidating
+the memory ids a cached pack referenced
+(<code>memory_engine/knowledge/fusion.py:140-158</code>). It gives 60%
+of the budget to <code>RecallService.recall</code> and the rest to
+knowledge search (<code>:80</code>, <code>:162-185</code>). Recall loads
+every node of the project
+(<code>memory_engine/skills/recall.py:265</code>), runs validity checks,
+scores, applies the relevance gate (<code>:332-339</code>) and calls
+<code>ContextComposer.compose</code>. Conflict detection then annotates
+the selection without writing (<code>:359-384</code>).</p>
+<p><strong>Correction.</strong> <code>PromotionService.mark_stale</code>
+(<code>promotion.py:151-160</code>) is reached from
+<code>memory stale</code> and
+<code>POST /memories/{node_id}/stale</code>. <code>set_trust</code> and
+<code>set_evidence_level</code> (<code>:162-230</code>) are documented
+as <em>"callable from CLI/API"</em>; neither the CLI nor any route calls
+them. <code>MemoryService.delete_node</code> has no caller.
+<code>MemoryRetentionService</code>
+(<code>memory_engine/services/retention.py</code>) expires pending
+candidates after 30 days, archives, compacts and restores.</p>
+<p><strong>MCP surface.</strong> Seven tools:
+<code>retrieve_agent_context</code>, <code>inspect_memory</code>,
+<code>inspect_knowledge</code>, <code>reflect_and_write</code>,
+<code>memory_status</code>, <code>refresh_project_knowledge</code>,
+<code>seed_project_context</code>
+(<code>memory_engine/mcp/server.py:109-294</code>). Twelve read-only
+resources, whose memory queries filter <code>status="active"</code>
+(<code>memory_engine/mcp/resources.py:25-40</code>).</p>
+<p><strong>Tests.</strong> <code>tests/</code>, run by CI with
+<code>uv run pytest</code> after <code>uv sync --extra dev</code>
+(<code>.github/workflows/ci.yml</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryNodeORM</code>
+(<code>memory_engine/models/orm.py:70-175</code>) carries, beyond title,
+summary, kind, depth, parent and tags:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Fields</th>
+<th>Written by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lifecycle</td>
+<td><code>status</code>, <code>previous_status</code>,
+<code>validity_reason</code>, <code>validity_checked_at</code></td>
+<td>promotion, <code>mark_stale</code>, <code>set_validity</code>,
+retention</td>
+</tr>
+<tr>
+<td>scores</td>
+<td><code>confidence</code>, <code>importance</code></td>
+<td>creation, update</td>
+</tr>
+<tr>
+<td>source evidence</td>
+<td><code>source_path</code>, <code>source_hash</code>,
+<code>source_symbol</code></td>
+<td><code>_create_node</code> for single-file <code>debug</code> and
+<code>module</code> candidates</td>
+</tr>
+<tr>
+<td>constraint scope</td>
+<td><code>constraint_scope</code>,
+<code>constraint_scope_ref</code></td>
+<td>reflection's <code>infer_candidate_scope</code>, direct
+creation</td>
+</tr>
+<tr>
+<td>trust</td>
+<td><code>trust_level</code>, <code>previous_trust</code>,
+<code>trust_elevated_by</code>, <code>_reason</code>,
+<code>_at</code></td>
+<td><code>assign_creation_trust</code>; elevation has no caller</td>
+</tr>
+<tr>
+<td>verification</td>
+<td><code>evidence_level</code>, <code>verification_evidence</code>
+JSON, elevation fields</td>
+<td>reflection's <code>assign_creation_evidence_level</code></td>
+</tr>
+<tr>
+<td>branch</td>
+<td><code>branch_name</code>, <code>commit_sha</code>,
+<code>branch_scope</code>, <code>source_revision</code></td>
+<td>no write path; tests set them on fixtures</td>
+</tr>
+<tr>
+<td>retention</td>
+<td><code>archived_at</code>, <code>archived_reason</code>,
+<code>compacted_into_id</code>, <code>last_retrieved_at</code>,
+<code>retrieval_count</code></td>
+<td>retention</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>evidence</code> rows hold content and a source per node.
+<code>memory_relations</code> hold typed edges —
+<code>supersedes</code>, <code>derived_from</code>,
+<code>contradicts</code>, <code>compaction_source</code> and branch
+relations — under a unique constraint. <code>memory_candidates</code>
+hold every staged proposal with its outcome (<code>:217-274</code>).</p>
+<p><strong>Every axis keeps one previous value.</strong>
+<code>set_validity</code>, <code>set_trust</code> and
+<code>set_evidence_level</code> copy the current value into a
+<code>previous_</code> column before overwriting
+(<code>memory_engine/repositories/memory_node.py:84-181</code>). A
+second transition loses the first.</p>
+<p><strong>Scope.</strong> <code>project_id</code> is on nodes,
+candidates and every knowledge table. <code>ConstraintScope</code> adds
+a radius to constraints: <code>global</code>, <code>repository</code>,
+<code>branch</code>, <code>module</code>, <code>path</code>,
+<code>symbol</code>, <code>task_intent</code>,
+<code>needs_scope_review</code>
+(<code>memory_engine/models/domain.py</code>). Reflection never infers
+<code>global</code>
+(<code>memory_engine/services/constraint_scope.py:181-205</code>).</p>
+<p><strong>Status values the code writes and the enum lacks.</strong>
+<code>MemoryStatus</code> has seven values
+(<code>domain.py:78-91</code>). <code>compact_memory_group</code> writes
+<code>status="compacted"</code>
+(<code>memory_engine/services/retention.py:395-412</code>), and
+<code>MemoryNode.status</code> is typed <code>MemoryStatus</code> with
+no validator. Recall and promotion both validate every row of the
+project, so after <code>memory retention run --no-dry-run</code>
+compacts a group, the next call should fail validation. This was read,
+not reproduced; <code>tests/test_phase11_retention.py:289-317</code>
+checks the compacted row through the ORM and never recalls
+afterwards.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Memory is ranked in Python over the whole project.</strong>
+<code>DeterministicRanker</code>
+(<code>memory_engine/skills/ranker.py</code>) combines nine signals.
+<code>semantic_similarity</code> (0.20) is the same Jaccard value as
+<code>lexical_similarity</code> (0.15), <em>"placeholder = lexical"</em>
+(<code>:236-238</code>), so word overlap carries 0.35 of the base score.
+With a branch, a second formula mixes in branch affinity, scope
+priority, revision validity and working-tree match. On memory nodes
+those read <code>branch_name</code> and <code>branch_scope</code>, which
+no write path sets, and <code>valid_to_revision</code>, which the node
+table does not have (<code>:375-396</code>).</p>
+<p><strong>Gates and buckets decide what is served.</strong> The
+relevance gate drops <code>architecture</code> and <code>decision</code>
+nodes with no lexical, file, symbol or semantic-at-0.4 signal.
+Constraints pass only when <code>constraint_is_eligible</code> says
+their scope applies
+(<code>memory_engine/skills/recall.py:84-175</code>). A
+<code>repository</code>-scoped constraint is always eligible, whatever
+its status
+(<code>memory_engine/services/constraint_scope.py:156-159</code>); a
+<code>global</code> one must also be <code>active</code>, at confidence
+0.85 and at trust <code>reviewed_committed_design</code> or higher
+(<code>:132-154</code>). The composer then fills five node buckets and
+an evidence allowance — 800, 900, 1,800, 1,700, 500 and 300 tokens at
+the default 6,000, scaled to the request — and estimates tokens as
+characters over four
+(<code>memory_engine/skills/composer.py:49-68</code>).</p>
+<p><strong>The trace is the strongest part of the read path.</strong>
+Every scored node appears in <code>retrieval_trace</code> as selected or
+excluded, with the score breakdown, the reason, and a compact provenance
+object: branch, source, status, constraint scope, trust label,
+verification label, which signals matched, and authority. The MCP
+response returns the first 20 entries
+(<code>memory_engine/mcp/tools.py:308</code>).</p>
+<p><strong>Knowledge is a separate hybrid.</strong> FTS5 over chunks
+with <code>project_id</code> and <code>index_status</code> predicates
+(<code>memory_engine/knowledge/fts_index.py:314-345</code>), an optional
+sqlite-vec arm, RRF fusion, and a near-duplicate drop against the
+selected memory summaries
+(<code>memory_engine/knowledge/fusion.py:240-275</code>). A
+multigranular pass routes by intent between propositions, paragraphs and
+module summaries.</p>
+<p><strong>Failure modes.</strong> Every retrieval loads and validates
+every node in the project, so cost grows with the store. Topic gating on
+Jaccard misses paraphrase unless embeddings are on, and they never cover
+memory nodes. A <code>needs_review</code> node is served (section 2).
+The <code>UNTRUSTED_REPOSITORY_CONTENT</code> marker for low-trust
+authoritative nodes is rendered only by
+<code>EnrichedContextPack.as_text</code>
+(<code>memory_engine/models/domain.py:844-858</code>), whose one caller
+is <code>memory debug recall</code>
+(<code>memory_engine/cli.py:507</code>). The MCP response serialises
+nodes with <code>model_dump</code> and carries <code>trust_level</code>
+as a field.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit, synchronous and deterministic.
+<code>reflect_and_write</code> promotes inside the call, bumps
+<code>memory_revision</code> and invalidates the cache, so the next
+retrieval sees the result
+(<code>memory_engine/mcp/tools.py:540-545</code>). No model is called
+anywhere on the write path.</p>
+<p><strong>The agent decides what is verified.</strong> The gate that
+admits a reflection is the agent's own <code>verification_status</code>.
+<code>tests_passed</code> yields confidence 0.85 after the clamp against
+the tool's fixed <code>agent_confidence</code>
+(<code>memory_engine/skills/reflection.py:68-74</code>,
+<code>:266-270</code>). The verification-evidence ladder records this as
+<code>agent_claimed</code>. <code>engine_observed</code> and
+<code>external_observed</code> need a target or external reference.
+<code>human_confirmed</code> passed at creation is not honoured
+(<code>tests/test_verification_evidence.py:201</code>).</p>
+<p><strong><code>seed_project_context</code> bypasses all of
+it.</strong> The tool writes a project overview, up to 12 constraints,
+up to 8 decisions and a conventions node as <code>active</code> at
+confidence 1.0 (<code>memory_engine/skills/seeding.py:131-232</code>).
+It fills empty fields from README headings. The description says
+<em>"Call ONCE"</em> and nothing enforces it. The reflection tool's
+description says agents <em>"cannot force memory creation directly"</em>
+(<code>memory_engine/mcp/server.py:206</code>); this tool is on the same
+surface. Seeded constraints carry no source path, so they land at
+<code>generated_report</code> trust and <code>repository</code> scope,
+which is always eligible.</p>
+<p><strong>Conflict handling is keyword-shaped.</strong> The five
+contradiction pairs fire on common words: one summary with
+<code>must</code> and another with <code>may</code> conflict. A
+reflection at 0.85 against a seeded node at 1.0 does not trip the 0.15
+confidence rule. It is discarded as a near duplicate, merged as a
+partial one, or flagged on a keyword pair. Merge appends
+<code>Additionally:</code> and the first 200 characters without changing
+confidence.</p>
+<p><strong>Branch scope is dropped on the write.</strong> The MCP
+handler computes <code>branch_scope</code> and passes
+<code>branch_name</code>
+(<code>memory_engine/mcp/tools.py:471-475</code>,
+<code>:531-533</code>). <code>ReflectionSkill</code> never reads either;
+its one branch argument is the literal <code>branch_name=None</code>
+(<code>memory_engine/skills/reflection.py:301</code>). The candidate
+repository and <code>_create_node</code> take no branch parameter. The
+tool description promises the opposite: <em>"to scope the written memory
+to the correct branch"</em>
+(<code>memory_engine/mcp/server.py:211</code>).</p>
+<p><strong>Delete and forget.</strong> There is no hard delete on any
+surface. Retention archives; <code>restore_memory</code> sets any node
+it is given back to <code>active</code>
+(<code>memory_engine/services/retention.py:444-453</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, no model call. One candidate insert, one Jaccard
+pass over every node in the project, one node write, plus a
+parent-summary rewrite.</li>
+<li>Lag: none; the cache generation is bumped in the same call.</li>
+<li>Background: none. Retention is an operator command.</li>
+<li>Read: every node loaded with its evidence, up to 50 file hashes,
+Python scoring. Injection is bounded by the token budget, 6,000 by
+default, 60% to memory. The response is a tool result, so it does not
+sit in a cached prompt prefix.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent has seven MCP tools and holds both write verbs:
+<code>reflect_and_write</code> and <code>seed_project_context</code>. It
+cannot mark a memory stale, correct one, delete one, or resolve a
+review. Those verbs exist only in the CLI and HTTP app.</p>
+<p>Bootstrap installs a block in the project's <code>CLAUDE.md</code>,
+and <code>memory policy install --client cursor</code> writes
+<code>.cursor/rules/agent-memory-policy.mdc</code>
+(<code>memory_engine/policy/installer.py:83-145</code>). The block tells
+the agent to retrieve before editing production code and to reflect
+after <code>tests_passed</code> or <code>build_success</code>. Recall is
+therefore prompted, not automatic: nothing injects memory without a tool
+call.</p>
+<p>Workspace isolation is a handshake. <code>workspace_root</code> and
+<code>repository_fingerprint</code> are optional. When absent, the
+request proceeds with a logged warning unless
+<code>MEMORY_ENGINE_STRICT_WORKSPACE=1</code>
+(<code>memory_engine/mcp/tools.py:82-196</code>). The
+<code>isolated_task</code> and <code>do_not_use_memory</code> flags skip
+retrieval.</p>
+<p>Adapting it to another MCP host is configuration only. Adapting the
+policy block to a host without <code>CLAUDE.md</code> or Cursor rules is
+manual.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Source-drift invalidation is the mechanism to study.</strong>
+A memory derived from one file is withheld once that file changes, a
+recorded symbol disappears, or its commit is no longer an ancestor of
+HEAD. The transition is persisted with the previous status and the
+actor, and runs on the cache-hit path too
+(<code>memory_engine/knowledge/fusion.py:348-397</code>). Its documented
+limit is coarse: any edit to the file triggers it. Its undocumented
+limit is that nothing reverses it.</p>
+<p><strong>Provenance trust cannot be talked up through the agent's
+tools.</strong> <code>assign_creation_trust</code> looks only at whether
+a source path exists and matches a seed-document pattern
+(<code>memory_engine/services/source_trust.py:148-180</code>).
+Reflection-derived and seeded constraints sit at
+<code>generated_report</code>, below the bar for a global constraint.
+The HTTP app is the exception: <code>MemoryNodeCreate</code> accepts
+<code>trust_level</code> verbatim
+(<code>memory_engine/services/memory_service.py:53-62</code>), and the
+app has no authentication.</p>
+<p><strong>Conflict detection ends in a flag nobody clears.</strong>
+<code>_action_needs_review</code> marks the existing node and records
+the candidate (<code>promotion.py:454-476</code>). No tool, CLI command
+or route lists, approves or rejects either. The node stays in the
+composer's output, and repeated reflections keep matching it, because
+<code>ConflictService</code> exempts only <code>stale</code>,
+<code>superseded</code> and <code>archived</code>
+(<code>memory_engine/services/conflict.py:88-93</code>).</p>
+<p><strong>Prompt injection.</strong> Content becomes memory through the
+agent's outcome text or seed lists, both agent-authored. Knowledge
+ingestion redacts eight secret patterns before storage. Nothing filters
+memory content.</p>
+<p><strong>Data loss.</strong> No delete path exists, and retention
+dry-runs by default. Compaction archives its sources and writes a row
+the domain model rejects (section 5). A second lifecycle transition
+overwrites the first <code>previous_status</code>.</p>
+<p><strong>Uncertainty is representable</strong> as a status the
+composer acts on, two ladders it labels, and per-signal scores in the
+trace.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded. The status column has states
+that withhold a node from being treated as current, written on a
+reachable path and filtered in <code>_fill_bucket</code>.
+<code>needs_review</code> is the state the README lists as excluded, and
+it is the one the composer serves.</li>
+<li><code>scope_enforced</code> — awarded on <code>project_id</code>,
+with the by-id inspect gap and the unwritten branch columns stated in
+the record.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — supersession keys on the old node's id, and
+a discarded candidate is a row nothing consults.
+<code>find_duplicates</code> reads nodes only, so the same text can
+return as a new candidate.</li>
+<li><code>bitemporal</code> — <code>created_at</code> and
+<code>updated_at</code> only. <code>valid_from_revision</code> and
+<code>valid_to_revision</code> are knowledge-document columns with no
+writer, and the ranker reads <code>valid_to_revision</code> off nodes
+that lack it.</li>
+<li><code>audit_log</code> — each axis keeps one <code>previous_</code>
+value, overwritten on the next transition.
+<code>memory_candidates</code> records reflected proposals and outcomes;
+seeding, direct creation, staleness, validity and retention bypass
+it.</li>
+<li><code>human_review</code> — <code>needs_review</code> waits for
+nobody: no verb on any surface resolves it, and the composer serves the
+flagged node meanwhile. Human elevation of trust and verification is
+implemented in <code>PromotionService.set_trust</code> and
+<code>set_evidence_level</code>, stamps <code>trust_elevated_by</code>,
+and has no caller outside tests.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed or run for this report; everything below is
+from reading the tests at the pin. The README states a count of 511
+passing tests (<code>README.md:921</code>); the checkout holds 717 test
+functions.</p>
+<p><strong>The negative cases.</strong>
+<code>test_s07_superseded_memory_excluded_from_recall</code>
+(<code>tests/test_phase4.py:141-180</code>) creates a superseded and an
+active architecture node, recalls, and asserts the first absent, the
+second present, and the first excluded in the trace with a
+<code>superseded</code> reason.
+<code>test_recall_excludes_invalidated_source_backed_memory</code>
+(<code>tests/test_source_validity.py:240-262</code>) deletes a node's
+source, recalls, and asserts it absent, persisted as
+<code>invalidated</code> with <code>previous_status == "active"</code>,
+and excluded in the trace. Composer unit tests do the same for
+<code>stale</code> and <code>superseded</code> with a positive control
+(<code>tests/test_context_composer.py:117-157</code>).</p>
+<p><strong>Scope.</strong>
+<code>test_evidence_is_scoped_to_the_owning_node_project</code>
+(<code>tests/test_verification_evidence.py:240-261</code>) creates two
+projects in one database and asserts the node lists under its own and
+not the other. The sqlite-vec cases assert exact id sets for project and
+lifecycle filters
+(<code>tests/test_phase13_sqlite_vec.py:97-113</code>). They start with
+<code>pytest.importorskip("sqlite_vec")</code>, and CI installs only the
+<code>dev</code> extra, which does not include it.
+<code>test_different_projects_isolated</code>
+(<code>tests/test_phase10_slice3_retrieval.py:768-797</code>) asserts
+<code>results == []</code> with no positive control.</p>
+<p><strong>Tests that assert the mechanism rather than the
+outcome.</strong> The branch tests set <code>branch_name</code> on
+hand-built nodes and check the ranker
+(<code>tests/test_phase9.py:86-106</code>); none reflects with a branch
+and reads the stored node. One phase 9 case asserts only that the input
+model carries <code>current_branch</code> (<code>:571</code>). The
+compaction tests read the compacted row through the ORM and never recall
+afterwards. No test asserts that a <code>needs_review</code> node is
+excluded or served.</p>
+<p><strong>Not present.</strong> No retrieval-quality benchmark, no
+latency measurement, and no paper or citation block in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Bind a derived memory to the file it came from, and withhold
+it when the file moves.</strong> Hash at write time, re-check a bounded
+shortlist on read, persist the transition with the previous status, and
+re-check the ids a cached pack referenced before serving the cache.</li>
+<li><strong>Assign trust from provenance only.</strong> Whether a memory
+has a committed source, and what kind, decides its authority; the words
+in it never do.</li>
+<li><strong>Make the top rung of each trust ladder unreachable from the
+agent's schema.</strong> Accept the agent's claim, record it as a claim,
+and refuse the human-confirmed value at creation.</li>
+<li><strong>Give constraints a radius.</strong> A constraint scoped to a
+path, symbol, module or intent surfaces when the task touches it,
+instead of on every task.</li>
+<li><strong>Return the exclusions.</strong> A trace entry for every node
+not served, with the reason, makes a status filter auditable from the
+agent's side.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A status the docs call excluded and the filter
+omits.</strong> Keep one exclusion set and import it everywhere; this
+tree has three, and they disagree.</li>
+<li><strong>A review state with no resolver.</strong> If nothing clears
+a flag, it is a label, and the flagged memory is served while the queue
+grows.</li>
+<li><strong>Accepting a scoping parameter and dropping it before the
+write.</strong> A test that the input carries the branch passes while no
+stored node has one.</li>
+<li><strong>Writing an enum value the reader's model does not
+define.</strong> The writer used the ORM's string column; the reader
+validates against the enum.</li>
+<li><strong>Two default databases for one product.</strong> An
+operator's CLI correction that lands in a file the agent never reads is
+silent.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer with one repository and an agent that will
+follow a retrieve-then-reflect policy, who wants memory derived from
+code to expire when the code changes. Everything is local and
+deterministic, and the source-drift machinery is careful. A reader who
+needs the review and branch features the README advertises must wire
+them: the states, columns and services exist, and no reachable path
+completes them. A team should keep the FastAPI app off the network; it
+has no authentication and accepts any trust level.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does recall fail after a non-dry-run compaction, as the enum reading
+predicts, or does a layer not read here coerce the value?</li>
+<li>Is the CLI meant to be used with <code>ME_DATABASE_URL</code>
+pointed at a project's <code>.memory-engine/memory.db</code>? No
+documentation read here says so.</li>
+<li>How often does the keyword contradiction check fire on real
+reflections, and how many nodes sit in <code>needs_review</code> after a
+month of use?</li>
+<li>Was <code>needs_review</code> left out of the composer's skipped set
+on purpose, given the provenance label it receives?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>memory_engine/models/orm.py</code>,
+<code>memory_engine/models/domain.py</code>,
+<code>memory_engine/models/knowledge_orm.py</code>,
+<code>memory_engine/db/init_db.py</code>,
+<code>memory_engine/db/session.py</code>,
+<code>memory_engine/config.py</code>,
+<code>memory_engine/bootstrap/local_storage.py</code>.</li>
+<li><strong>Write path:</strong>
+<code>memory_engine/mcp/tools.py</code>,
+<code>memory_engine/skills/reflection.py</code>,
+<code>memory_engine/services/post_task.py</code>,
+<code>memory_engine/services/promotion.py</code>,
+<code>memory_engine/services/deduplication.py</code>,
+<code>memory_engine/services/conflict.py</code>,
+<code>memory_engine/skills/seeding.py</code>,
+<code>memory_engine/repositories/memory_node.py</code>,
+<code>memory_engine/repositories/candidate.py</code>.</li>
+<li><strong>Trust and validity:</strong>
+<code>memory_engine/services/source_validity.py</code>,
+<code>memory_engine/services/source_trust.py</code>,
+<code>memory_engine/services/verification_evidence.py</code>,
+<code>memory_engine/services/constraint_scope.py</code>,
+<code>memory_engine/services/conflict_detection.py</code>.</li>
+<li><strong>Retrieval and context:</strong>
+<code>memory_engine/skills/recall.py</code>,
+<code>memory_engine/skills/ranker.py</code>,
+<code>memory_engine/skills/composer.py</code>,
+<code>memory_engine/knowledge/fusion.py</code>,
+<code>memory_engine/knowledge/fts_index.py</code>,
+<code>memory_engine/knowledge/sqlite_vec_index.py</code>.</li>
+<li><strong>Lifecycle:</strong>
+<code>memory_engine/services/retention.py</code>,
+<code>memory_engine/cli.py</code>.</li>
+<li><strong>MCP and HTTP:</strong>
+<code>memory_engine/mcp/server.py</code>,
+<code>memory_engine/mcp/schemas.py</code>,
+<code>memory_engine/mcp/resources.py</code>,
+<code>memory_engine/api/routes/</code>,
+<code>memory_engine/main.py</code>.</li>
+<li><strong>Bootstrap and policy:</strong>
+<code>memory_engine/bootstrap/bootstrap_service.py</code>,
+<code>memory_engine/policy/installer.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_phase4.py</code>,
+<code>tests/test_source_validity.py</code>,
+<code>tests/test_context_composer.py</code>,
+<code>tests/test_verification_evidence.py</code>,
+<code>tests/test_phase13_sqlite_vec.py</code>,
+<code>tests/test_phase11_retention.py</code>,
+<code>tests/test_promotion.py</code>,
+<code>tests/test_phase9.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'needs_review' --type py memory_engine</code> — written
+by <code>promotion.py:462-463</code> and the candidate outcome; read by
+<code>constraint_scope.py:70</code>, <code>composer.py:112</code>,
+<code>conflict_detection.py:112</code>; absent from
+<code>_fill_bucket</code>'s skipped set at
+<code>composer.py:225-231</code>.</li>
+<li><code>rg -n 'needs_review' tests</code> — promotion outcomes and
+tool outcome strings only; no recall assertion.</li>
+<li><code>rg -n '\.set_trust\(|\.set_evidence_level\(|apply_trust_transition|apply_verification_transition' --type py .</code>
+— definitions in <code>promotion.py</code>,
+<code>source_trust.py</code>, <code>verification_evidence.py</code>;
+callers only in <code>tests/test_source_trust.py</code> and
+<code>tests/test_verification_evidence.py</code>.</li>
+<li><code>rg -n 'revalidate\(' --type py memory_engine</code> — the
+definition and its docstring only.</li>
+<li><code>rg -n 'delete_node' --type py .</code> — the definition
+only.</li>
+<li><code>rg -n 'branch' memory_engine/services/post_task.py memory_engine/repositories/candidate.py memory_engine/services/promotion.py memory_engine/services/memory_service.py memory_engine/skills/seeding.py</code>
+— <code>promotion.py:132</code>, <code>:245</code>, <code>:248</code>,
+all the <code>_branch</code> method name.</li>
+<li><code>rg -n 'branch_name|head_commit|branch_scope' memory_engine/skills/reflection.py</code>
+— one hit, <code>:301</code>, <code>branch_name=None</code>.</li>
+<li><code>rg -n 'valid_to_revision|valid_from_revision' --type py .</code>
+— the knowledge ORM and migration columns, and the ranker's
+<code>getattr</code>; no writer.</li>
+<li><code>rg -n 'compacted' --type py memory_engine</code> —
+<code>retention.py</code> writes it; <code>MemoryStatus</code> does not
+define it.</li>
+<li><code>rg -n 'field_validator|model_validator' memory_engine/models/domain.py</code>
+— no match.</li>
+<li><code>rg -n 'threading|Thread\(|asyncio\.create_task|run_in_executor|BackgroundTasks' --type py memory_engine</code>
+— one match, a comment.</li>
+<li><code>rg -n '__tablename__' memory_engine</code> — twelve tables;
+none is an event or audit log.</li>
+<li><code>rg -n -i 'tombstone|rejected_value|deny_list|suppress' --type py memory_engine</code>
+— no match.</li>
+<li><code>rg -n '\.as_text\(' --type py memory_engine</code> — one
+caller, <code>cli.py:507</code>.</li>
+<li><code>rg -n 'database_url' --type py .</code> —
+<code>config.py:63</code> and <code>db/session.py</code>; the MCP
+context uses <code>local_storage.db_url</code>.</li>
+<li><code>grep -n 'importorskip' tests/test_phase13_sqlite_vec.py</code>
+— line 13.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git</code>
+— no match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/uudam42/agent-memory-engine/commit/6e345342051dea267e465fc24e3e88e326d9ac51"><code class="commit-id" title="6e345342051dea267e465fc24e3e88e326d9ac51">6e345342…</code></a>
+— first reading, at the head of <code>main</code>, a merge commit dated
+1 October 2026. Three marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>. Screened before
+reading: no auto-run surface, one build-time execution point
+(<code>tests/conftest.py</code>), two dependency files inside the
+cooldown (<code>pyproject.toml</code>, <code>uv.lock</code>) — every
+file in the depth-1 clone dates to the tip — and no unpinned surface;
+<code>CLAUDE.md</code> was treated as data. Nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

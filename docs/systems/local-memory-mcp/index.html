@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-file SQLite MCP server
+storing learnings, decisions and an entity graph with time-bounded
+observations, searched by BM25 and local-embedding cosine fused with
+RRF.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="local-memory-mcp — Agent Memory Atlas">
+    <meta property="og:description" content="A single-file SQLite MCP
+server storing learnings, decisions and an entity graph with
+time-bounded observations, searched by BM25 and local-embedding cosine
+fused with RRF.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="local-memory-mcp — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-file SQLite MCP
+server storing learnings, decisions and an entity graph with
+time-bounded observations, searched by BM25 and local-embedding cosine
+fused with RRF.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>local-memory-mcp — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "local-memory-mcp",
+      "description": "A single-file SQLite MCP server storing learnings, decisions and an entity graph with time-bounded observations, searched by BM25 and local-embedding cosine fused with RRF.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One SQLite file, hybrid recall, and a
+validity interval on graph observations</p>
+          <h1>local-memory-mcp</h1>
+          <p class="document-deck">A single-file SQLite MCP server
+storing learnings, decisions and an entity graph with time-bounded
+observations, searched by BM25 and local-embedding cosine fused with
+RRF.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/studiomeyer-io/local-memory-mcp">
+              <span>Source</span>
+              <strong>studiomeyer-io/local-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/studiomeyer-io/local-memory-mcp/commit/a2437ddb3051e4a248853d853883e1c26c0cc661" title="a2437ddb3051e4a248853d853883e1c26c0cc661">
+              <span>Analyzed revision</span>
+              <code>a2437ddb…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/studiomeyer-io--local-memory-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>studiomeyer-io--local-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>5,070
+lines of TypeScript outside tests, plus 238 lines of SQL
+schema</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>92
+commits on main by 3 contributors, one of them a bot, 16 April 2026 – 21
+September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>255
+Vitest cases in 17 files, 5,347 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>local-memory-mcp is a stdio MCP server that keeps one user's memory
+in one SQLite file: free-text learnings, decisions with their reasoning,
+session summaries, and a small knowledge graph of entities whose
+observations carry a validity interval. Search fuses FTS5 BM25 with
+sqlite-vec cosine over a locally run multilingual-e5-small model through
+Reciprocal Rank Fusion, and nothing calls a hosted model.</p>
+<p>What is notable is the write discipline. Every row and its vector
+commit in one transaction. A fuzzy auto-merge that overwrote unrelated
+learnings was removed, and its test was rebuilt on a corpus the old
+branch would have fired on. Observations retire by closing an interval
+rather than by deletion.</p>
+<p>What is weak is correction outside the graph. An archived learning
+can be stored again verbatim as a new live row. Decisions cannot be
+edited or retired. An export followed by an import drops every learning
+archived with a reason.</p>
+<p>Three marks: <code>bitemporal</code> on the observation interval,
+<code>scope_enforced</code> on the project predicate of search and
+recall, and <code>negative_eval</code> on a scoped-search case and a
+supersede case. Section 9 names the four withheld and why.</p>
+<p>The project has a hosted sibling at memory.studiomeyer.io, and the
+export envelope is designed to import there. The local server makes no
+network call of its own except the first download of the embedding model
+(<code>src/tools/export.ts:1-27</code>,
+<code>src/lib/embed.ts:85-111</code>). This report covers only the local
+server.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is whatever the agent passes to a write tool. There is no
+extraction, no model call and no candidate state:
+<code>memory_learn</code>, <code>memory_decide</code> and
+<code>memory_entity_observe</code> each insert a row that search returns
+on the next call. <code>confidence</code> is a caller-supplied float
+with a default of 0.7. Nothing filters on it, and only the contradiction
+scanner reads it.</p>
+<p><strong>A learning lives until it is archived, and the archive does
+not remember the text.</strong> <code>memory_learn_update</code>
+overwrites <code>content</code> in place and keeps no prior version
+(<code>src/tools/learn.ts:231-311</code>).
+<code>memory_learn_archive</code> sets <code>archived = 1</code> and
+<code>lifecycle_state</code> to <code>archived</code> or
+<code>archived:&lt;reason&gt;</code> (<code>:166-204</code>). Every read
+path then filters <code>archived = 0</code>. No tool reverses it: the
+update error tells the caller to <em>"Un-archive it first"</em>
+(<code>:252</code>), and no writer in <code>src/</code> sets
+<code>archived</code> back to 0. The duplicate gate checks
+<code>WHERE content = ? AND archived = 0</code> (<code>:68-70</code>),
+so storing the archived sentence again produces a fresh live row.</p>
+<p><strong>An observation lives until its interval closes.</strong>
+<code>valid_to</code> is null while it is live.
+<code>memory_observation_supersede</code> sets it to a caller instant,
+to the superseding observation's <code>valid_from</code>, or to now
+(<code>src/tools/entity.ts:496-525</code>). The row then drops out of
+live search, the live entity view and the contradiction scan, and stays
+visible to <code>memory_entity_open({asOf})</code> for instants inside
+the interval. <code>memory_entity_delete</code> removes the entity, its
+observations and its relations outright.</p>
+<p><strong>A decision never stops being one.</strong> It is inserted and
+read; no tool updates, retires or deletes it
+(<code>src/tools/registry.ts:56-207</code>).</p>
+<p><strong>The contradiction scanner proposes and never acts.</strong>
+It returns pairs of live observations on one entity that are close in
+cosine and differ in a negation marker or in confidence
+(<code>src/tools/contradictions.ts:181-288</code>). Retiring one is a
+separate call by the agent.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a learning and an observation become live, how each stops being live, and where a retired value can come back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a learning and an observation become live, how each stops being live, and where a retired value can come back
+flowchart TD
+    L[&quot;memory_learn(content)&quot;] --&gt; D{&quot;same content in a&lt;br/&gt;live row?&quot;}
+    D -- &quot;yes&quot; --&gt; BUMP[&quot;usage_count + 1&lt;br/&gt;no new row&quot;]
+    D -- &quot;no&quot; --&gt; LIVE[&quot;live learning&lt;br/&gt;archived = 0&quot;]
+    LIVE -- &quot;memory_learn_update&quot; --&gt; LIVE
+    LIVE -- &quot;memory_learn_archive(reason)&quot; --&gt; ARCH[&quot;archived = 1&lt;br/&gt;lifecycle archived:reason&quot;]
+    ARCH -. &quot;same text stored again:&lt;br/&gt;gate ignores archived rows&quot; .-&gt; L
+    ARCH -- &quot;export, then import&quot; --&gt; DROP[&quot;skipped as malformed:&lt;br/&gt;reason is off the import enum&quot;]
+    O[&quot;memory_entity_observe&quot;] --&gt; OLIVE[&quot;live observation&lt;br/&gt;valid_to NULL&quot;]
+    C[&quot;memory_contradictions&quot;] -. &quot;suggests a pair&quot; .-&gt; OLIVE
+    OLIVE -- &quot;memory_observation_supersede&quot; --&gt; RET[&quot;valid_to set&lt;br/&gt;hidden from live reads&quot;]
+    RET -- &quot;entity_open asOf inside window&quot; --&gt; SEEN[&quot;returned as of that instant&quot;]
+    OLIVE -- &quot;memory_entity_delete&quot; --&gt; GONE[&quot;row deleted&quot;]
+    RET -- &quot;memory_entity_delete&quot; --&gt; GONE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Node process speaks MCP over stdio and opens one SQLite database
+through <code>better-sqlite3</code>. The file sits under the OS data
+directory, or at <code>MEMORY_DB_PATH</code>
+(<code>src/db/client.ts:25-38</code>). WAL mode and a ten-second
+<code>busy_timeout</code> let several clients — Claude Desktop, Claude
+Code, Cursor — share the file (<code>:52-61</code>). The schema runs on
+every open and is idempotent (<code>src/db/schema.sql</code>).</p>
+<p>Lexical search is one FTS5 table, <code>search_fts</code>, kept in
+sync with learnings, decisions, entities and observations by insert,
+update and delete triggers (<code>schema.sql:128-196</code>). Vector
+search is a <code>vec0</code> virtual table of 384-dimension vectors
+keyed by content id
+(<code>src/db/migrations/002_vector.sql:24-28</code>). The sqlite-vec
+extension loads best-effort; when it fails the server runs FTS-only
+(<code>src/db/client.ts:96-100</code>).</p>
+<p>Embeddings come from <code>Xenova/multilingual-e5-small</code>,
+quantised to q8 and run in process by
+<code>@huggingface/transformers</code>. Stored text gets the
+<code>passage: </code> prefix and queries get <code>query: </code>
+(<code>src/lib/embed.ts:105-111</code>, <code>:196-260</code>). The only
+background work is a boot-time backfill that embeds entities missing a
+vector (<code>src/server.ts:128-141</code>,
+<code>src/db/vector.ts:392-431</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li>Nothing else runs: one process and one file. No API key is needed to
+store or search anything.</li>
+<li>The first embedding call downloads the model from the Hugging Face
+hub and caches it. Offline, or with
+<code>MEMORY_EMBED_DISABLED=1</code>, every write lands without a vector
+and search falls back to FTS, reporting the downgrade in a
+<code>notice</code> field
+(<code>src/tools/search.ts:434-450</code>).</li>
+<li>A learning, decision or observation written while the model is
+unavailable never gets a vector later. The boot backfill covers entities
+only (<code>src/db/vector.ts:392-404</code>).</li>
+<li>Install is <code>npx</code> from npm, or a <code>.mcpb</code> bundle
+per desktop OS. The store is readable with the <code>sqlite3</code> CLI,
+and <code>memory_export</code> writes the whole store as JSON.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>learn</code> → exact-duplicate probe
+→ <code>prepareEmbedding</code> outside the transaction →
+<code>INSERT INTO learnings</code> plus <code>writeEmbeddingSync</code>
+inside one (<code>src/tools/learn.ts:64-136</code>).
+<code>learnBulk</code> does the same for up to 500 items with one
+batched forward pass (<code>:362-440</code>). <code>decide</code> and
+<code>entityObserve</code> follow the same shape
+(<code>src/tools/decide.ts:50-81</code>,
+<code>src/tools/entity.ts:136-181</code>). <code>entityObserve</code>
+creates a missing entity by name and type first.</p>
+<p><strong>Extraction and consolidation.</strong> None.
+<code>classifyMemoryType</code> labels a learning <code>episodic</code>
+when its category is <code>mistake</code> or a regex finds words such as
+<em>today</em> or <em>gestern</em>, and <code>semantic</code> otherwise
+(<code>learn.ts:55-62</code>). The label is stored and returned and
+filters nothing.</p>
+<p><strong>Retrieval.</strong> <code>search</code> resolves the
+effective mode, then runs <code>ftsSearch</code>,
+<code>vectorSearch</code>, or both into
+<code>reciprocalRankFusion</code>
+(<code>src/tools/search.ts:421-495</code>). <code>recall</code> is FTS
+over learnings with a <code>LIKE</code> fallback
+(<code>learn.ts:477-530</code>). <code>entitySearch</code> unions FTS
+hits on entities and on live observations per entity
+(<code>entity.ts:191-269</code>).</p>
+<p><strong>Context assembly.</strong> <code>sessionStart</code> inserts
+a session row and returns the three newest sessions that have a summary,
+current project first, and the five newest live learnings
+(<code>src/tools/session.ts:18-68</code>). <code>reflect</code> returns
+most-used, stale, hot-entity and recent-decision lists plus a Markdown
+summary (<code>src/tools/reflect.ts</code>).</p>
+<p><strong>Correction.</strong> <code>learnUpdate</code>,
+<code>learnArchive</code> (<code>learn.ts:166-311</code>),
+<code>observationSupersede</code> and <code>entityDelete</code>
+(<code>entity.ts:414-547</code>). There is no path for decisions or
+sessions.</p>
+<p><strong>Schema.</strong> <code>src/db/schema.sql</code> and
+<code>src/db/migrations/002_vector.sql</code>.</p>
+<p><strong>Background.</strong> <code>backfillEntityEmbeddings</code> at
+boot only.</p>
+<p><strong>Integration.</strong> <code>src/server.ts</code> registers
+<code>ListTools</code> and <code>CallTool</code> handlers over
+<code>TOOLS</code> (<code>src/tools/registry.ts:56-207</code>),
+validates arguments with Zod and returns each result as a JSON text
+block.</p>
+<p><strong>Tests.</strong> <code>src/**/*.test.ts</code>, Vitest, with
+<code>MEMORY_EMBED_MOCK=1</code> set in
+<code>vitest.config.ts</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+<th>Lifecycle columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>learnings</code></td>
+<td>category (ten-value enum), content, project, tags, confidence,
+source, memory type</td>
+<td><code>usage_count</code>, <code>last_used</code>,
+<code>verified</code>, <code>archived</code>, <code>archived_at</code>,
+<code>importance</code>, <code>lifecycle_state</code></td>
+</tr>
+<tr>
+<td><code>decisions</code></td>
+<td>title, decision, reasoning, alternatives, project, tags, confidence,
+source</td>
+<td><code>verified</code>, <code>verified_at</code></td>
+</tr>
+<tr>
+<td><code>entities</code></td>
+<td>name, type, summary, confidence; unique on name and type</td>
+<td><code>created_at</code>, <code>updated_at</code></td>
+</tr>
+<tr>
+<td><code>entity_observations</code></td>
+<td>content, source, confidence, <code>session_id</code></td>
+<td><code>valid_from</code>, <code>valid_to</code>,
+<code>created_at</code></td>
+</tr>
+<tr>
+<td><code>entity_relations</code></td>
+<td>typed directed edge with weight</td>
+<td><code>created_at</code></td>
+</tr>
+<tr>
+<td><code>sessions</code></td>
+<td>project, summary, tasks</td>
+<td><code>started_at</code>, <code>ended_at</code></td>
+</tr>
+<tr>
+<td><code>meta</code></td>
+<td>schema version, model fingerprint, <code>profile_*</code> fields,
+<code>current_goal</code></td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p>The definitions are in <code>schema.sql:16-204</code>.</p>
+<p><strong>Several columns have no interactive writer.</strong>
+<code>importance</code> and <code>verified</code> on learnings,
+<code>verified</code> on decisions, and <code>session_id</code> on
+observations are written only by <code>memory_import</code>
+(<code>src/tools/export.ts:666-777</code>). <code>entityObserve</code>
+inserts <code>(id, entity_id, content, source, confidence)</code> and
+nothing else (<code>entity.ts:167-170</code>). The
+observation-to-session link therefore exists only for rows restored from
+an envelope.</p>
+<p><strong>Scope.</strong> <code>project</code> and
+<code>tags_json</code> exist on learnings and decisions only. Entities,
+observations and relations are global within the file. The file is the
+user boundary; the schema header says so: <em>"Single-user: no
+tenant_id, no auth"</em> (<code>schema.sql:5</code>).</p>
+<p><strong>Time.</strong> Observations carry the interval and an insert
+time. Learnings and decisions carry one <code>date</code>.
+<code>lifecycle_state</code> is free text: the type declares
+<code>active | ephemeral | archived</code>
+(<code>src/lib/types.ts:17</code>), and <code>learnArchive</code> writes
+<code>archived:&lt;reason&gt;</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Hybrid by default.</strong> Each leg pulls
+<code>max(limit * 3, 50)</code> candidates, RRF adds
+<code>1 / (60 + i)</code> per leg, and the fused score is multiplied by
+<code>1 + 0.15·recency + 0.10·usage + 0.15·importance</code>
+(<code>search.ts:347-419</code>, <code>:461-464</code>). Recency decays
+with a 30-day half-life from <code>last_used</code> or
+<code>date</code>. The weights are overridable per call or by
+environment variable.</p>
+<p><strong>Two of the three boost signals measure something
+else.</strong> <code>importance</code> has no writer outside import, so
+on a store built through the tools it is null for every row and
+contributes nothing. <code>usage_count</code> is incremented by a
+duplicate <code>learn</code>, a duplicate in <code>learnBulk</code>, and
+<code>learnUpdate</code>, and by nothing on a read path
+(<code>learn.ts:73</code>, <code>:261</code>, <code>:402</code>). The
+usage term ranks a learning by how often it was re-stored or edited, not
+by how often it was retrieved.</p>
+<p><strong>Visibility gates sit in both legs.</strong> Archived
+learnings and observations with <code>valid_to</code> set are excluded
+in SQL in the FTS query and in the vector query's outer select
+(<code>search.ts:213-214</code>, <code>:316-317</code>).</p>
+<p><strong>The vector leg filters after the nearest-neighbour
+cut.</strong> sqlite-vec rejects auxiliary-column constraints inside a
+KNN query, so <code>vectorSearch</code> fetches
+<code>k = min(max(limit * 4, 50), 200)</code> neighbours and only then
+applies type, scope, archive and validity filters
+(<code>search.ts:259</code>, <code>:285-322</code>). Archived learnings
+and superseded observations keep their vectors by design
+(<code>learn.ts:146-149</code>, <code>entity.ts:459-463</code>). As the
+retired set grows, and whenever a project or type filter is narrow, the
+200 slots can fill with rows the filter then discards. A scoped hybrid
+search over a large store can lose its vector leg without any
+signal.</p>
+<p><strong>Query handling.</strong> <code>escapeFtsQuery</code> quotes
+every whitespace token and joins them with <code>OR</code>
+(<code>src/db/client.ts:138-146</code>), which suits recall and is why
+the old fuzzy merge matched almost every row. There is no query
+rewriting and no reranker.</p>
+<p><strong>Injection.</strong> Nothing is injected without a call.
+<code>memory_session_start</code> returns at most three summaries and
+five learnings. Search returns up to 100 rows as JSON with id, type,
+title, body and the fused score.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen when the agent calls a tool. There is no capture of the
+conversation, no extraction prompt and no consolidation pass.
+Deduplication is exact content equality against live learnings. Bulk
+inserts collapse repeats inside one batch
+(<code>learn.ts:362-386</code>).</p>
+<p>The fuzzy gate is gone, and the file records why. Until v2.4.0 a new
+learning whose best FTS match passed a fixed bm25 threshold overwrote
+that row's content when the new text was more than 50 characters longer.
+The comment explains that OR-ed tokens made the candidate set
+near-universal and that bm25 is length- and corpus-scaled, so <em>"What
+remained of the decision was 'the new entry is longer'"</em>
+(<code>learn.ts:84-102</code>). Two comments still describe the removed
+branch, at <code>:150-151</code> and <code>:328-331</code>.</p>
+<p>Import is additive. Every record is parsed with a Zod shape mirroring
+its interactive tool, ids are canonicalised to UUIDs, a repeated id is
+rejected, and rows land with <code>INSERT OR IGNORE</code> in
+foreign-key order inside one transaction
+(<code>export.ts:300-792</code>). A record that fails its shape is
+counted in <code>skipped.malformed</code> and the rest continue.</p>
+<p>There is no content filter. Any string the agent passes is stored and
+returned by the next search.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Writes are synchronous: the call returns after a local embedding
+forward pass and one transaction. The first write of a process loads the
+model, and the first ever run downloads it.</li>
+<li>A memory is retrievable as soon as the call returns. There is no
+deferred lag.</li>
+<li>No background pass reads or rewrites the store.
+<code>memory_contradictions</code> is a per-entity self-join capped at
+200 observations per entity, run on demand
+(<code>contradictions.ts:127</code>, <code>:181-222</code>).</li>
+<li>Read cost is bounded by <code>limit</code> (at most 100). Nothing is
+placed in the system prompt automatically, so nothing here invalidates a
+prompt-prefix cache unless the client pastes <code>session_start</code>
+output there.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The server registers 25 tools and sends instructions telling the
+model to call <code>memory_session_start</code> first and
+<code>memory_session_end</code> last
+(<code>src/server.ts:55-105</code>). The README offers two ways to make
+that automatic: a line in <code>CLAUDE.md</code>, or a SessionStart hook
+whose output is the sentence <em>"Call memory_session_start now."</em>
+(<code>README.md:99-121</code>). Neither injects memory; both ask the
+model to fetch it.</p>
+<p>The agent holds every verb, including
+<code>memory_entity_delete</code>, <code>memory_import</code> and
+<code>memory_profile</code>. Each tool carries MCP annotations, and the
+destructive ones set <code>destructiveHint</code> so a client can ask
+for confirmation (<code>src/tools/registry.ts:276-318</code>). Whether a
+client asks is the client's decision.</p>
+<p>Two model-facing strings point at verbs that do not match the tool
+list. Every contradiction pair carries the suggestion <em>"call a future
+memory_observation_supersede tool"</em>
+(<code>contradictions.ts:283-284</code>), a tool that has existed since
+v2.2.0. The reflect summary heads its decision list <em>"review or
+verify"</em> (<code>reflect.ts:350</code>), and no tool sets
+<code>verified</code>.</p>
+<p>Adapting it to another agent is cheap: it is a stdio MCP server with
+no host-specific code.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Atomicity is careful.</strong> Each tool computes its vector
+before taking the write lock and commits row and vector together, so a
+crash cannot leave one without the other. When an update's re-embedding
+fails, the old vector is deleted rather than left describing text that
+no longer exists (<code>learn.ts:280-299</code>).</p>
+<p><strong>An export round trip loses archived learnings.</strong>
+<code>learnArchive</code> stores <code>archived:&lt;reason&gt;</code>
+whenever a reason is given (<code>learn.ts:187</code>). The export
+copies it into <code>lifecycleState</code>. The import shape accepts
+only <code>active | ephemeral | archived</code>
+(<code>export.ts:368</code>), so <code>parseRecord</code> rejects the
+record and the whole learning is counted as malformed
+(<code>:398-411</code>, <code>:722-723</code>). The test of that rule is
+titled <em>"rejects out-of-range and off-enum values a tool could never
+produce"</em> (<code>src/tools/export.test.ts:516-537</code>). The
+round-trip fixture archives nothing (<code>:38-58</code>), so the suite
+stays green. A user restoring a backup loses exactly the rows they had
+marked wrong, obsolete or duplicate, and the import reports it only as a
+count.</p>
+<p><strong>Reflect calls a learning stale on a signal nothing
+produces.</strong> The stale list is learnings older than 30 days with
+<code>usage_count = 0</code>, headed <em>"never recalled — review or
+archive"</em> (<code>reflect.ts:172-191</code>, <code>:319</code>). No
+read path increments <code>usage_count</code>, so a learning recalled
+every day is listed as never recalled and offered for archiving.
+<code>reflect.test.ts:63-66</code> sets <code>usage_count = 5</code>
+with raw SQL, so the test asserts the query and not the signal.</p>
+<p><strong>Deleting an entity leaves its own vector.</strong>
+<code>entityDelete</code> removes the observation vectors and not the
+entity's (<code>entity.ts:428-438</code>). Since v2.3.0 entities are
+embedded on create (<code>:106-109</code>). The orphan cannot surface,
+because the vector leg inner-joins <code>search_fts</code>
+(<code>search.ts:306</code>, <code>:315</code>), but it occupies
+nearest-neighbour slots. The regression test creates its entity with the
+synchronous <code>entityCreate</code>, which never embeds, so the case
+is not exercised (<code>src/tools/entity.test.ts:845</code>).</p>
+<p><strong>Provenance is a caller string.</strong> <code>source</code>
+is free text. There is no author, no session link on interactive writes,
+and no record of which client wrote a row. An injected instruction
+stored as a learning is returned by search like any other.</p>
+<p><strong>Privacy.</strong> Archiving keeps the row and its vector, and
+export includes archived rows by default (<code>export.ts:50-53</code>).
+The only hard delete is <code>memory_entity_delete</code>; removing a
+learning, decision or session summary means editing or deleting the
+file.</p>
+<p><strong>Uncertainty is a float.</strong> <code>confidence</code> is
+stored and compared, never used to withhold a row.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>bitemporal</code> — awarded on observations. The interval is
+caller-settable at its end through <code>validTo</code> and at its start
+through import, and the asOf read queries it. What is missing is record
+time for the closing of the interval: a retroactive supersede changes
+what an earlier asOf call would have returned, and the store cannot say
+what it believed on a date. The whitepaper lists a four-timestamp model
+with <code>expired_at</code> as roadmap
+(<code>WHITEPAPER.md:241</code>). The same three columns carry the mark
+in <a href="../clawmem/">ClawMem</a>; the diagnostic that withheld it
+from <a href="../helm/">Helm</a> — no writer can set validity apart from
+insert time — fails here on <code>validTo</code> and on import.</li>
+<li><code>scope_enforced</code> — awarded on the project and tag
+predicates of search and recall. The session-start context does not
+carry them, and the graph has no scope key.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — withheld. <code>archived:wrong</code> is
+keyed on the row, and the duplicate gate deliberately skips archived
+rows, so the rejected sentence is accepted again as new. Superseding an
+observation is an interval close on one record, which the tool
+description calls a <em>"tombstone"</em> (<code>registry.ts:155</code>)
+and which nothing consults when the same content is observed again.</li>
+<li><code>trust_state</code> — withheld. <code>archived</code> withholds
+a learning from reads, but it is a soft delete with a free-text reason,
+not an epistemic status a memory moves through. <code>verified</code>
+has no interactive writer, and the code says so:
+<em>"<code>verified</code> is never flipped to 1 anywhere in v2.1"</em>
+(<code>reflect.ts:212-214</code>), which still holds at this pin.</li>
+<li><code>audit_log</code> — withheld. No table records mutations.
+<code>archived_at</code> and <code>valid_to</code> record one moment
+each, and <code>learnUpdate</code> overwrites content with no prior
+version.</li>
+<li><code>human_review</code> — withheld. Every write and retire verb is
+on the agent's tool surface, and nothing waits for a person.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests at the pin and ran none of them. The suite has 255
+Vitest cases in 17 files. CI runs it on Node 20, 22 and 24 with
+<code>MEMORY_EMBED_MOCK=1</code>, so every vector assertion runs against
+deterministic token-hash vectors rather than the model
+(<code>.github/workflows/test.yml</code>,
+<code>vitest.config.ts</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>scoping.test.ts:33-47</code> stores a kafka learning under
+<code>alpha</code> and one under <code>beta</code>, searches
+<code>kafka</code> scoped to <code>alpha</code>, and asserts success,
+<code>count</code> 1 and the alpha text. That is a scope-boundary
+exclusion over a populated set with the included row asserted.
+<code>supersede.test.ts:92-121</code> asserts an observation is found,
+supersedes it, and asserts the same query no longer returns it.
+<code>search.test.ts:365-390</code> asserts the live learning present
+and the archived one absent in one hybrid result, and returns early if
+sqlite-vec did not load.</p>
+<p><strong>A test built against its own vacuity.</strong> The gatekeeper
+test that once accepted either outcome now seeds filler rows first,
+because bm25 is corpus-relative: <em>"without the filler rows a
+reintroduced fuzzy branch would never trip its -5 threshold and this
+test would pass vacuously against the very bug it pins"</em>
+(<code>learn.test.ts:112-120</code>).</p>
+<p><strong>Assertions that cannot fail on a failed call.</strong>
+Several cases wrap every assertion in <code>if (result.success)</code>
+without first asserting success, so an erroring call passes: the
+original archive exclusion (<code>search.test.ts:126-134</code>), two
+recall scoping cases (<code>scoping.test.ts:202-207</code>,
+<code>:215-220</code>) and the just-before-cutoff half of an asOf
+boundary case (<code>critical-paths.test.ts:59-63</code>). The archive
+and supersede gates still have cases that assert success, which is why
+the mark stands.</p>
+<p><strong>Mechanism stood in for outcome.</strong> The asOf boundary
+cases set <code>valid_from</code> and <code>valid_to</code> by raw SQL
+(<code>critical-paths.test.ts:46-48</code>, <code>:77-79</code>),
+because no tool writes <code>valid_from</code>. The reflect case sets
+<code>usage_count</code> by raw SQL. Both test the read and leave the
+producer untested, and the producer is where section 9's defects
+are.</p>
+<p><strong>Not covered.</strong> No case archives with a reason and
+round-trips the export. No case deletes an entity created through the
+embedding path. No case checks the vector leg under a narrow scope on a
+crowded index.</p>
+<p><strong>No benchmark and no paper.</strong> The whitepaper states
+<em>"We have not run a published LongMemEval score for the local
+server"</em> and declines to borrow the hosted sibling's
+(<code>WHITEPAPER.md:207</code>). Its references section cites Zep and
+LongMemEval as prior work; the project has no paper or citation file of
+its own.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Compute the vector outside the lock, commit row and vector
+together, and delete the old vector when re-embedding fails.</strong>
+Three rules, and the index never describes text the row no longer
+holds.</li>
+<li><strong>Remove a destructive heuristic rather than tune it,</strong>
+and rebuild its test on a fixture the old heuristic would actually have
+fired on.</li>
+<li><strong>Retire facts by closing an interval and keep them readable
+as of a date.</strong> <code>memory_observation_supersede</code> with
+<code>supersededById</code> is the smallest supersession that still
+answers "what was true then".</li>
+<li><strong>Validate import with the same schemas as the interactive
+tools,</strong> and canonicalise foreign ids deterministically so a
+re-import stays idempotent.</li>
+<li><strong>Report a mode downgrade in the result.</strong> A caller
+testing vector recall can tell "vector found nothing" from "vector did
+not run".</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A duplicate gate that skips retired rows.</strong> It turns
+"archived as wrong" into "accepted next time". Check retired content
+too, and refuse or flag it.</li>
+<li><strong>An import enum narrower than what the writers
+produce.</strong> Generate the import shape from the writer's
+vocabulary, and round-trip a fixture that exercises every lifecycle
+value.</li>
+<li><strong>Ranking and housekeeping on a counter nothing increments on
+read.</strong> If "used" means recalled, the read path must write it;
+otherwise rename it.</li>
+<li><strong>A ranking signal whose only producer is a restore.</strong>
+A weight on a column no tool writes is a constant that looks like a
+feature.</li>
+<li><strong>Post-filtering a fixed nearest-neighbour cut.</strong>
+Over-fetch in proportion to the filtered fraction, or partition the
+index on the filter key.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants several MCP clients on one machine
+to share a durable notebook and a small fact graph, offline, with
+nothing to operate. The retrieval is stronger than a keyword-only store
+and the write path is trustworthy. It is not a correction system:
+decisions are permanent, archive is reversible only in SQL, a rejected
+learning comes back the moment it is restated, and the asOf view answers
+validity rather than belief. A team needing per-tenant isolation,
+reviewed writes or an audit trail is not served by this design. A
+builder who needs those properties only on the graph will find the
+observation interval a sound base to extend.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any shipped client honour <code>destructiveHint</code> on these
+tools, and does <code>memory_entity_delete</code> reach a person first
+in practice?</li>
+<li>How full does the 200-slot KNN cut get on a store with thousands of
+archived learnings, and how often does a scoped hybrid search lose its
+vector leg?</li>
+<li>Does the hosted sibling's importer accept
+<code>archived:&lt;reason&gt;</code>, so that the round trip loses rows
+only between two local installs?</li>
+<li>Is <code>importance</code> written by the hosted service, which
+would explain a ranking weight on a column no local tool sets?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong> <code>src/db/schema.sql</code>,
+<code>src/db/migrations/002_vector.sql</code>,
+<code>src/db/client.ts</code>, <code>src/db/vector.ts</code>,
+<code>src/lib/types.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/tools/learn.ts</code>,
+<code>src/tools/decide.ts</code>, <code>src/tools/entity.ts</code>,
+<code>src/tools/session.ts</code>,
+<code>src/tools/export.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/tools/search.ts</code>,
+<code>src/tools/learn.ts</code> (<code>recall</code>),
+<code>src/tools/entity.ts</code> (<code>entitySearch</code>,
+<code>entityOpen</code>), <code>src/lib/embed.ts</code>.</li>
+<li><strong>Context and reflection:</strong>
+<code>src/tools/session.ts</code>, <code>src/tools/reflect.ts</code>,
+<code>src/tools/insights.ts</code>,
+<code>src/tools/contradictions.ts</code>.</li>
+<li><strong>MCP:</strong> <code>src/server.ts</code>,
+<code>src/tools/registry.ts</code>, <code>server.json</code>.</li>
+<li><strong>Tests:</strong> <code>src/tools/scoping.test.ts</code>,
+<code>src/tools/supersede.test.ts</code>,
+<code>src/tools/search.test.ts</code>,
+<code>src/tools/critical-paths.test.ts</code>,
+<code>src/tools/learn.test.ts</code>,
+<code>src/tools/export.test.ts</code>,
+<code>src/tools/entity.test.ts</code>,
+<code>src/tools/reflect.test.ts</code>, <code>vitest.config.ts</code>,
+<code>.github/workflows/test.yml</code>.</li>
+<li><strong>Claims:</strong> <code>README.md</code>,
+<code>WHITEPAPER.md</code>, <code>CHANGELOG.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run at the tree root of the pinned checkout.</p>
+<ul>
+<li><code>rg -n "usage_count = usage_count|last_used = " src --glob '!*.test.ts'</code>
+— <code>learn.ts:73</code>, <code>:261</code>, <code>:402</code> only;
+no read path increments usage.</li>
+<li><code>rg -n -U "INSERT[^;\</code>]<em>valid_from" src --glob
+'!</em>.test.ts'<code>—</code>export.ts:667-668<code>only; no interactive writer of</code>valid_from`.</li>
+<li><code>rg -n "SET valid_to|valid_to = \?" src --glob '!*.test.ts'</code>
+— <code>entity.ts:525</code> only.</li>
+<li><code>rg -n -U "INSERT[^;\</code>]<em>importance" src --glob
+'!</em>.test.ts'<code>—</code>export.ts:716-718` only.</li>
+<li><code>rg -n "verified\s*=\s*1|SET verified|verified = \?" src --glob '!*.test.ts'</code>
+— one match, the comment at <code>reflect.ts:26</code>.</li>
+<li><code>rg -n -i "un-?archive|SET archived = 0|archived = 0 WHERE" src --glob '!*.test.ts'</code>
+— one match, the error string at <code>learn.ts:252</code>;
+<code>rg -n "archived = \?|archived = 1" src --glob '!*.test.ts'</code>
+finds the archive writer at <code>learn.ts:191</code> and nothing that
+resets it.</li>
+<li><code>rg -n -i "audit|event_log|history" src --glob '!*.test.ts'</code>
+— two comments, no table.</li>
+<li><code>rg -n "DELETE FROM" src --glob '!*.test.ts'</code> —
+embeddings, FTS triggers, <code>entities</code>
+(<code>entity.ts:436</code>) and the goal key; no delete of learnings,
+decisions or sessions.</li>
+<li><code>rg -n "session_id" src --glob '!*.test.ts'</code> outside
+<code>export.ts</code> — the schema column only.</li>
+<li><code>rg -a -n "archived|lifecycle" src/tools/export.test.ts</code>
+— the off-enum case at <code>:526</code> and
+<code>lifecycleState: 'active'</code> at <code>:590</code>; no archived
+fixture.</li>
+<li><code>grep -rniE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' --exclude-dir=.git .</code>
+— two references in <code>WHITEPAPER.md:270-271</code>, both to other
+projects' papers; no <code>CITATION.cff</code>.</li>
+<li><code>rg -n "fetch\(|https?://|child_process|exec\(" src --glob '!*.test.ts'</code>
+— only <code>better-sqlite3</code>'s <code>db.exec</code>; the model
+download is inside <code>@huggingface/transformers</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/studiomeyer-io/local-memory-mcp/commit/a2437ddb3051e4a248853d853883e1c26c0cc661"><code class="commit-id" title="a2437ddb3051e4a248853d853883e1c26c0cc661">a2437ddb…</code></a>
+— first reading, at the head of <code>main</code>, v2.4.4, dated 21
+September 2026. Three marks: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>. Screened before
+reading: one auto-run surface (<code>server.json</code>, an MCP manifest
+declaring a start command), one build-time execution point
+(<code>prepublishOnly</code>), no file inside the cooldown, and one
+floating-range surface with a lockfile present. No
+<code>AGENTS.md</code> or <code>CLAUDE.md</code> in the tree. Read with
+<code>rg</code>, <code>sed</code> and <code>awk</code>; nothing
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

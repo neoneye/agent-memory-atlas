@@ -482,6 +482,28 @@ actor, a reason and an exact undo on the
 reach the write path: a <code>corrected</code> memory is archived by id,
 so the same claim written again in other words mints a new live row, and
 the write-time neighbour check leaves archived rows out.</p>
+<p><a href="../../systems/minta/">Minta</a> is the counterexample where
+detection and resolution were both written and the edge between them was
+not. Its lifecycle scanner finds stale, redundant and conflicting
+objects, and <code>findings_to_inbox_items</code> hands each one to the
+inbox as its suggestion sentence alone, dropping the object id, so
+confirming a finding stores the sentence as a new
+<code>lesson_learned</code> memory and leaves the stale object active.
+The resolver that would have acted, <code>resolve_and_persist</code>,
+marks the loser <code>stale</code> and records the winner, and nothing
+in the tree calls it. A detector whose output cannot name its target can
+only ever add notes about the store.</p>
+<p><a href="../../systems/agent-memory-engine/">Agent Memory Engine</a>
+detects and never disposes. <code>ConflictService</code> flags a
+conflict on a confidence gap of more than 0.15 or on five keyword pairs
+such as <code>must</code>/<code>may</code>, and
+<code>PromotionService</code> then sets the <em>existing</em> node to
+<code>needs_review</code> and records the candidate with the same
+status. No MCP tool, CLI command or HTTP route lists, approves or
+rejects either. <code>_fill_bucket</code> does not skip the status, so
+the flagged memory keeps reaching the agent — labelled
+<code>non-authoritative</code> in its trace provenance — while the
+README lists it as excluded; the problem statement above, verbatim.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

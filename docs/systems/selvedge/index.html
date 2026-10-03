@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local MCP server and CLI that
+records why code entities changed and which approaches were rejected, in
+a hash-chained SQLite log.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Selvedge — Agent Memory Atlas">
+    <meta property="og:description" content="A local MCP server and CLI
+that records why code entities changed and which approaches were
+rejected, in a hash-chained SQLite log.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Selvedge — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local MCP server and CLI
+that records why code entities changed and which approaches were
+rejected, in a hash-chained SQLite log.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Selvedge — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Selvedge",
+      "description": "A local MCP server and CLI that records why code entities changed and which approaches were rejected, in a hash-chained SQLite log.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Append-only decision memory keyed on code
+entities</p>
+          <h1>Selvedge</h1>
+          <p class="document-deck">A local MCP server and CLI that
+records why code entities changed and which approaches were rejected, in
+a hash-chained SQLite log.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/masondelan/selvedge">
+              <span>Source</span>
+              <strong>masondelan/selvedge</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/masondelan/selvedge/commit/10458144769b5f583785208594432591a6850a6c" title="10458144769b5f583785208594432591a6850a6c">
+              <span>Analyzed revision</span>
+              <code>10458144…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/masondelan--selvedge" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>masondelan--selvedge</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>17,252
+lines of Python in selvedge/; storage, chain, model, server and
+migrations are 4,655 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>239
+commits on main by 3 contributors (one a bot), 22 April – 3 October
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,061
+pytest functions in 49 files, 18,819 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Selvedge is a local decision memory for coding agents. An agent, or a
+person, records a change event against a named code entity — a column, a
+function, a route, a dependency — with the reasoning, the rejected
+alternative, and the condition that would make the decision stale. A
+later session asks <code>prior_attempts</code> before editing that
+entity and gets back what was tried, what was reverted or rejected, and
+why. Storage is one SQLite file per project, and no model is called on
+any write or read path.</p>
+<p>What is notable is how the log handles being wrong. A rejection is
+its own event type, a reversal of a rejection is a
+<code>supersede</code> event that links the row it re-opens, and nothing
+is ever edited. Every write lands beside a SHA-256 chain record in the
+same transaction, so a silent edit or deletion fails
+<code>selvedge verify</code>. A Claude Code PreToolUse hook turns the
+"check before editing" instruction into a block on schema and migration
+edits.</p>
+<p>What is weak is that the verdict is only as durable as the last
+event. Status is derived from whichever event on a path is newest, so a
+plain <code>modify</code> logged after a <code>reject</code> makes the
+path <code>active</code> again with no supersede and no warning. Scope
+is the database file. There is no way to delete one event, so a secret
+pasted into reasoning — which the write path detects and stores anyway —
+stays until an age-based prune removes everything older than it.</p>
+<p>Two marks: <code>audit_log</code>, on the <code>event_chain</code>
+sidecar, and <code>negative_eval</code>, on tests asserting a superseded
+decision drops out of the revisit surfaces while an untargeted sibling
+stays. Section 9 names the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a claim about why an entity is the way it is. It is
+written as one <code>ChangeEvent</code>
+(<code>selvedge/models.py:59-133</code>) and becomes retrievable on
+commit. There is no candidate state and no extraction: whoever writes it
+decides the content, and the README says a saved explanation is <em>"an
+account supplied by a person or agent"</em> that Selvedge does not
+verify.</p>
+<p><strong>The state of a decision is computed, never stored.</strong>
+<code>_derive_path_status</code> reads the newest event on an entity
+path, exact or dotted prefix. A removal — <code>remove</code>,
+<code>delete</code>, <code>index_remove</code>, <code>revert</code> or
+<code>reject</code> — means <code>reverted</code>; a
+<code>supersede</code> means <code>reopened</code>; anything else means
+<code>active</code> (<code>selvedge/storage.py:248-250</code>,
+<code>:318-340</code>). The docstring gives the reason: the status
+<em>"can never drift from the events that imply it"</em>.</p>
+<p><strong>A rejection is a record, not an absence.</strong>
+<code>reject</code> exists for an approach considered and never written.
+In <code>get_prior_attempts</code>, a reject that closes no earlier
+attempt surfaces as its own row with <code>outcome="rejected"</code> and
+<code>confidence="exact"</code>, so it clears the default confidence
+floor (<code>storage.py:1650-1878</code>). The reasoning on that row is
+the memory.</p>
+<p><strong>Re-opening is a new fact.</strong> <code>log_supersede</code>
+writes a <code>supersede</code> event whose <code>supersedes</code>
+column holds the id of the event it overrides. It auto-links to the
+newest removal on the path when no id is given, and refuses when there
+is nothing to re-open (<code>storage.py:775-873</code>). The overridden
+row is untouched, and readers derive <code>superseded_by</code> from the
+link.</p>
+<p><strong>What it cannot say.</strong> Because the newest event wins,
+the store treats any later attempt on a rejected path as the new
+standing state. The server instructions say <em>"Never re-apply a
+reverted change without superseding it first"</em>
+(<code>selvedge/server.py:92</code>, <code>:457</code>), and nothing on
+the write path enforces it.</p>
+<p><strong>How a memory dies.</strong> Only by
+<code>selvedge prune --include-events</code>, which deletes every event
+older than a cutoff after an interactive confirmation and with
+<code>SELVEDGE_DESTRUCTIVE=1</code> in the environment
+(<code>selvedge/prune.py:172-237</code>). <code>revisit_after</code>,
+<code>stale_when</code> and <code>expires_when</code> surface a decision
+for review; none retires it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Selvedge decision is recorded, closed, re-opened and enforced, and the unguarded way back to active</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Selvedge decision is recorded, closed, re-opened and enforced, and the unguarded way back to active
+flowchart TD
+    W[&quot;log_change or selvedge log:&lt;br/&gt;add, modify, create ...&quot;] --&gt; ACT[&quot;path status: active&quot;]
+    ACT -- &quot;remove, delete, revert&quot; --&gt; REV[&quot;path status: reverted&quot;]
+    J[&quot;log_change with change_type reject&lt;br/&gt;(approach never written)&quot;] --&gt; REV
+    REV -- &quot;supersede event,&lt;br/&gt;supersedes = closed event id&quot; --&gt; REO[&quot;path status: reopened&quot;]
+    REV -- &quot;any later add or modify,&lt;br/&gt;no supersede&quot; --&gt; ACT
+    REV --&gt; GATE{&quot;PreToolUse: Edit, Write, Bash&lt;br/&gt;on a watched schema path?&quot;}
+    GATE -- &quot;prior_attempts on a related path&lt;br/&gt;recorded since window start&quot; --&gt; ALLOW[&quot;edit allowed&quot;]
+    GATE -- &quot;none recorded&quot; --&gt; BLOCK[&quot;exit 2: block,&lt;br/&gt;tried and reverted reasoning inlined&quot;]
+    REV --&gt; DIG[&quot;SessionStart digest:&lt;br/&gt;up to 5 rejected or reverted entities&quot;]
+    ACT -- &quot;revisit date due and queried,&lt;br/&gt;stale_when matched, expires_when fired&quot; --&gt; STALE[&quot;stale_decisions:&lt;br/&gt;surfaced for review only&quot;]
+    REO -.-&gt;|&quot;re-opened row dropped&quot;| STALE
+    ALL[&quot;every event&quot;] -- &quot;prune --include-events,&lt;br/&gt;older than cutoff&quot; --&gt; GONE[&quot;rows deleted,&lt;br/&gt;count-only chain tombstone&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Selvedge is a Python package with three entry points:
+<code>selvedge-server</code>, a FastMCP stdio server with eight tools
+(<code>selvedge/server.py</code>); the <code>selvedge</code> CLI
+(<code>selvedge/cli.py</code>); and <code>selvedge-hook</code>, which
+the Claude Code plugin and the per-client adapters call
+(<code>selvedge/hooks/</code>). All three open the same
+<code>SelvedgeStorage</code> (<code>selvedge/storage.py:564</code>).</p>
+<p><strong>One SQLite file holds everything.</strong>
+<code>events</code> is the memory and <code>event_chain</code> is the
+hash-chain sidecar (<code>selvedge/chain.py:94-104</code>).
+<code>tool_calls</code> is local telemetry of every read and write call
+(<code>storage.py:71-80</code>), <code>path_migrations</code> records
+path rewrites, and <code>embeddings</code> is created only by
+<code>selvedge index</code> (<code>selvedge/semantic.py:68-74</code>).
+Connections use WAL, a 5-second busy timeout and an application retry on
+lock errors (<code>storage.py:28-37</code>). Every write that reads the
+chain head takes <code>BEGIN IMMEDIATE</code> first, so two processes
+cannot fork the chain (<code>storage.py:587-617</code>).</p>
+<p><strong>The database is found by walking up from the working
+directory.</strong> <code>SELVEDGE_DB</code> wins; otherwise the first
+<code>.selvedge/selvedge.db</code> that exists in an ancestor directory;
+otherwise <code>~/.selvedge/selvedge.db</code>, with a one-time stderr
+warning (<code>selvedge/config.py:92-113</code>).</p>
+<p>Nothing runs in the background. The post-commit hook back-fills
+<code>git_commit</code> on recent events, and semantic indexing runs on
+demand.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>uv tool install selvedge</code> then
+<code>selvedge setup</code>, which writes MCP config, agent instructions
+and optional hooks for the clients it detects. The Claude Code plugin
+fetches the package through <code>uvx</code> or <code>pipx</code> at a
+version pinned in <code>bin/selvedge-resolve</code>. Nothing needs an
+API key or a network connection after install; the optional semantic
+extra downloads a model2vec model on its first
+<code>selvedge index</code>. The store is SQLite, readable with any
+client, and <code>selvedge export --format markdown</code> writes a
+deterministic digest meant to be committed beside it. Repairing a row by
+hand breaks <code>selvedge verify</code>, by design.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>log_change</code>
+(<code>server.py:217-577</code>) records a telemetry row, validates
+<code>rename_from</code> and <code>supersedes</code> against
+<code>change_type</code>, normalises <code>revisit_after</code> and
+validates <code>expires_when</code> against a closed grammar. It then
+runs <code>apply_event_limits</code>, byte caps on diff and reasoning
+plus a secret-shape scan, all as warnings
+(<code>selvedge/validation.py:277-317</code>), and routes to
+<code>log_rename</code> (two events), <code>log_supersede</code> or
+<code>log_event</code>. <code>log_event</code> canonicalises the path
+and inserts the row and its chain record in one immediate transaction
+(<code>storage.py:739-752</code>). The CLI's <code>selvedge log</code>
+and <code>selvedge supersede</code> share the same storage calls.</p>
+<p><strong>Import.</strong> <code>selvedge import</code> reads SQL DDL
+and Alembic migrations (<code>selvedge/importers.py</code>), git history
+for revert commits (<code>selvedge/gitimport.py</code>, which stamps the
+commit date as <code>timestamp</code> at line 289), and Agent Trace
+v0.1.0 files with uuid5 ids. All go through
+<code>log_event_batch</code>, one transaction per batch.</p>
+<p><strong>Retrieval.</strong> <code>get_prior_attempts</code>
+(<code>storage.py:1650-1878</code>) loads every event on the path and
+its dotted children, pairs each attempt with the next removal, labels
+the outcome and a confidence tier, adds standalone rejections, applies
+the <code>min_confidence</code> floor and returns newest first.
+<code>get_decision_status</code> (<code>:1880-1941</code>) returns the
+derived status and a templated status line.
+<code>get_entity_history</code>, <code>get_blame</code>,
+<code>get_history</code>, <code>search</code> and
+<code>get_changeset</code> are plain SQL (<code>:1301-1473</code>).</p>
+<p><strong>Revisit surface.</strong> <code>get_stale_decisions</code>
+(<code>:1972</code>) selects events carrying any of the three revisit
+fields and drops ids a later supersede re-opened
+(<code>:2150-2154</code>). It flags rows whose date passed with later
+read or changeset activity, rows whose <code>stale_when</code> shares
+two or more tokens of four or more letters with a later event among the
+500 newest, and rows whose <code>expires_when</code> fired.</p>
+<p><strong>Context injection.</strong> <code>build_digest</code>
+(<code>selvedge/hooks/sessionstart.py:51-134</code>) emits up to five
+decisions due, up to five entities whose standing verdict is rejected or
+reverted, and one line of recent changesets. It caps the result at
+<code>digest_max_bytes</code> (default 4096) on a line boundary, or
+emits nothing.</p>
+<p><strong>Gate.</strong> <code>evaluate</code>
+(<code>selvedge/hooks/pretooluse.py:616-704</code>) matches touched
+paths against watch globs (migrations, Alembic, schema, model and SQL
+files by default), adds <code>table.column</code> tokens from the edit
+text, and blocks with exit 2 when any of those entities has status
+<code>reverted</code> and no <code>prior_attempts</code> call on a
+related path is recorded since the session's window start.</p>
+<p><strong>Delete.</strong> <code>prune_events</code>
+(<code>storage.py:1110-1151</code>) counts chained casualties, deletes
+by timestamp and appends a tombstone chain record, in one transaction.
+<code>run_events_prune</code> re-checks
+<code>SELVEDGE_DESTRUCTIVE</code> itself.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code>, <code>timestamp</code></td>
+<td>UUID4; canonical UTC with microseconds</td>
+</tr>
+<tr>
+<td><code>entity_path</code>, <code>entity_type</code></td>
+<td>path canonicalised on write; type coerced to <code>other</code> when
+unknown</td>
+</tr>
+<tr>
+<td><code>change_type</code></td>
+<td>closed enum of 13, including <code>reject</code>,
+<code>revert</code> and <code>supersede</code>; unknown values
+refused</td>
+</tr>
+<tr>
+<td><code>diff</code>, <code>reasoning</code></td>
+<td>free text, byte-capped with a visible truncation marker</td>
+</tr>
+<tr>
+<td><code>constraint</code>, <code>stale_when</code></td>
+<td>free text; <code>stale_when</code> is keyword-matched against later
+events</td>
+</tr>
+<tr>
+<td><code>revisit_after</code>, <code>expires_when</code></td>
+<td>ISO date or offset; closed grammar of <code>library:</code>,
+<code>entity:</code>, <code>date:</code>, <code>manual:</code></td>
+</tr>
+<tr>
+<td><code>supersedes</code></td>
+<td>id of the event this one overrides; set only on
+<code>supersede</code></td>
+</tr>
+<tr>
+<td><code>agent</code>, <code>session_id</code>, <code>project</code>,
+<code>changeset_id</code></td>
+<td>caller-supplied labels</td>
+</tr>
+<tr>
+<td><code>git_commit</code></td>
+<td>back-filled by the post-commit hook; outside the chain</td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td>JSON; carries <code>renamed_from</code> on rename pairs</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Time is one column.</strong> A live write stamps record time;
+the git importer stamps commit time into the same
+<code>timestamp</code>. Validity is expressed as conditions to review,
+not as an interval.</p>
+<p><strong>Identity is the path.</strong> History follows a rename
+through the <code>rename</code>/<code>create</code> pair and
+<code>metadata.renamed_from</code>. <code>migrate-paths --apply</code>
+rewrites stored paths after a canonicalisation change, writes a
+<code>path_migrations</code> row and an <code>amend</code> chain record,
+and reports which distinct paths it merged
+(<code>storage.py:1179-1273</code>).</p>
+<p><strong>Attribution is self-reported.</strong> <code>agent</code> and
+<code>session_id</code> are whatever the caller passes, and
+<code>selvedge/ledger.py:1-5</code> says so in its header.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is lookup, not ranking. An entity query matches the
+canonical path or any dotted child
+(<code>entity_path = ? OR entity_path LIKE 'p.%'</code>), backed by a
+<code>NOCASE</code> index whose comment records the hook's p50 going
+from 68 ms to about 4.9 s at 890,000 events without it
+(<code>storage.py:103-116</code>). <code>search</code> and
+<code>prior_attempts(description=...)</code> are escaped
+<code>LIKE</code> substring matches, with the query truncated at 4,096
+characters.</p>
+<p><strong>The confidence tier is the only filter.</strong>
+<code>prior_attempts</code> defaults to
+<code>min_confidence="proximity_high"</code>. Attempts closed by an
+explicit <code>revert</code> or <code>reject</code>
+(<code>exact</code>), and attempts closed by an implicit removal within
+seven days, pass; open attempts and slow removals are dropped. The tool
+description calls an empty list <em>"the normal, preferred
+answer"</em>.</p>
+<p><strong>Fuzzy recall is optional and approximate.</strong> With the
+semantic extra and a built index, <code>fuzzy_events</code> takes the
+dot product of a model2vec query vector with every stored vector, keeps
+those at or above 0.35, caps at <code>limit</code>, and only then joins
+<code>events</code> (<code>semantic.py:231-300</code>). A vector whose
+event was pruned still takes a slot and is then skipped.</p>
+<p><strong>Injection is bounded and push-based.</strong> The digest is
+the only automatic injection: at most ten entries and a changeset line
+under 4,096 bytes by default, and silent when there is nothing due,
+reverted or recent. It names rejected entities by path and reasoning and
+tells the agent to call <code>prior_attempts</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool or CLI calls; nothing is extracted from
+transcripts. The PreCompact hook names watched entities the session
+edited without logging them and asks the agent to log them before
+compaction (<code>selvedge/hooks/precompact.py:42-104</code>). It never
+blocks compaction.</p>
+<p><strong>Validation warns.</strong> Reasoning quality, entity-path
+shape, a missing revisit date on an architectural change, a missing
+invalidation condition on a reject, truncation and a secret shape all
+come back as <code>warnings</code> on a stored event. The secret module
+states the trade-off: a false positive that blocked a write would lose
+the reasoning, so it warns and stores
+(<code>selvedge/redaction.py:9-27</code>).</p>
+<p><strong>Nothing is updated in place</strong> except
+<code>git_commit</code>, which the post-commit hook sets on every event
+from the last 60 minutes that has none
+(<code>storage.py:948-972</code>), and <code>entity_path</code> under
+<code>migrate-paths --apply</code>.</p>
+<p><strong>Conflict is not detected.</strong> A second agent logging
+<code>modify</code> on a path a first agent rejected becomes the path's
+status. Nothing compares the new event with the standing verdict.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, one immediate SQLite transaction, no model call.
+A memory is retrievable as soon as <code>log_change</code> returns.</li>
+<li>Background: none. Semantic indexing is a manual, incremental pass
+over events with non-empty reasoning.</li>
+<li>Read: the digest is at most 4,096 bytes once per session start. The
+gate runs a Python process per watched tool call and returns before
+importing storage when no watched path is touched.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Eight MCP tools: <code>log_change</code>,
+<code>prior_attempts</code>, <code>blame</code>, <code>diff</code>,
+<code>history</code>, <code>changeset</code>, <code>search</code> and
+<code>stale_decisions</code> (<code>server.py</code>). The agent holds
+the write verb, the supersede verb as a <code>log_change</code> change
+type, and every read. <code>selvedge prompt --install</code> writes a
+sentinel-bracketed instruction block into <code>CLAUDE.md</code>,
+<code>AGENTS.md</code>, Cursor rules or <code>GEMINI.md</code>.</p>
+<p>The Claude Code plugin (<code>.claude-plugin/</code>,
+<code>hooks/hooks.json</code>, <code>.mcp.json</code>) registers the MCP
+server and three hooks. <code>selvedge/hooks/adapters.py</code>
+translates Codex, Cursor, Copilot, Gemini and Windsurf hook payloads to
+the same checks. Its header says compaction notices become user messages
+where a client cannot inject model context at that event.</p>
+<p>The <code>actions/review-context</code> GitHub Action renders the
+recorded trail for files a pull request touches, from the base commit's
+database. It refuses a database whose bytes differ from the base or that
+has WAL sidecars (<code>docs/review-context.md</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The chain makes tampering visible, and says what it does not
+prove.</strong> The protected core is 17 columns, every
+<code>events</code> column except <code>git_commit</code>. Each record
+binds its sequence number, its predecessor and a canonical-JSON digest.
+The module header states the threat model: it catches a stray
+<code>UPDATE</code>, a buggy path or a silent deletion, and is <em>"not
+proof against a motivated local attacker"</em>, because there is no key
+(<code>chain.py:41-46</code>). Rows from before the chain existed are
+reported as unchained, not invalid.</p>
+<p><strong>The gate errs open, and its session check is not per
+session.</strong> <code>tool_calls</code> has no session column
+(<code>storage.py:71-80</code>). <code>_queried_this_session</code> asks
+whether any <code>prior_attempts</code> call on a related path was
+recorded since the window start, which is the session's first gated call
+minus 30 minutes (<code>pretooluse.py:459-572</code>). A query by
+another agent, or by the same agent in an earlier session inside that
+window, unblocks the edit. The docstring calls the slack permissive by
+construction, and every error path allows.</p>
+<p><strong>Deletion is all or nothing by age.</strong> No surface
+deletes one event. A secret the write path detected is stored, the store
+is designed to be committed, and removing it means an age prune of
+everything older or a raw SQL delete that fails <code>verify</code>. The
+embedding of that reasoning survives a prune: no code path deletes from
+<code>embeddings</code>, and the comment at <code>semantic.py:295</code>
+reads <em>"no delete path yet"</em>.</p>
+<p><strong>Scope leaks at the fallback.</strong> Outside a project
+directory with a database, every client writes to
+<code>~/.selvedge/selvedge.db</code>. Only <code>history</code>,
+<code>stale_decisions</code> and the changeset listing can filter on
+<code>project</code>, and only when asked; the gate and the digest read
+the whole file.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>audit_log</code> — awarded. <code>event_chain</code> is an
+append-only record of every mutation the code performs on
+<code>events</code> except the <code>git_commit</code> back-fill,
+written in the mutating transaction. <code>path_migrations</code> adds
+the per-row rewrite list for path changes.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — withheld. A <code>reject</code> records a
+rejected approach keyed on the entity path, not on the approach, and any
+later non-removal event on the path overrides it without a supersede.
+The prune "tombstone" is a deletion count.</li>
+<li><code>trust_state</code> — withheld. <code>active</code>,
+<code>reverted</code> and <code>reopened</code> are derived from the
+newest event and describe whether a change stands, not whether a record
+is believed. The re-open filter in <code>get_stale_decisions</code>
+reads the <code>supersedes</code> link, not a status column.</li>
+<li><code>bitemporal</code> — withheld. One <code>timestamp</code>,
+which the git importer sets to commit time.</li>
+<li><code>scope_enforced</code> — withheld. <code>project</code> is on
+the row and filtered on three read paths only when the caller passes it;
+the recall paths ignore it. The boundary is the database file.</li>
+<li><code>human_review</code> — withheld. No memory waits for anyone.
+The PR Action and <code>selvedge ledger</code> display, and
+<code>manual:</code> expiry labels surface a row without holding
+it.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests and committed results at the pin; nothing was
+installed or run. CI runs <code>pytest</code> on Python 3.10 to 3.14
+(<code>.github/workflows/test.yml:69</code>), and
+<code>tests/conftest.py</code> points <code>SELVEDGE_DB</code> at a
+temporary file for every test. The one skip marker is for Node-dependent
+plugin tests.</p>
+<p><strong>The negative cases.</strong>
+<code>tests/test_stale_supersede.py</code> builds a store with two
+rejections on one path, supersedes one, and asserts the re-opened one is
+absent from <code>get_stale_decisions</code> and from the digest's
+revisit section while the other is present. It does so once with an
+explicit id (<code>:97-122</code>) and once through the id-less
+auto-link with an untargeted sibling (<code>:125-171</code>). The
+positive sits in the same assertion set each time, so an empty result
+fails.</p>
+<p><strong>Tamper evidence.</strong>
+<code>tests/test_tamper_evidence.py</code> covers a silent row deletion
+(<code>:396-408</code>), a re-pointed <code>entity_path</code>, an
+edited chain table, a consistently re-chained record, and a gated prune
+whose tombstone still verifies (<code>:596-619</code>).</p>
+<p><strong>Supersede semantics.</strong>
+<code>tests/test_supersede.py</code> asserts a supersede never mutates
+history (<code>:236</code>).
+<code>tests/test_prior_attempts.py:129</code> pins that an id-less
+supersede re-opens at most the single newest removal.</p>
+<p><strong>The pilot.</strong> <code>bench/decision_memory/</code> runs
+Claude Code against four synthetic configuration tasks under frozen
+schedules. The 1 October 2026 run's <code>results.jsonl</code>
+recomputes to its headline: still-valid rejected options were chosen in
+4 of 6 eligible no-memory trials and 0 of 6 with injected
+<code>prior_attempts</code> output, in 24 trials. The 25 September run's
+48 rows recompute to 12/12 correct for Selvedge, a decision file and
+inline facts, and 8/12 with no memory. In that run Selvedge was queried
+before the first edit in 9 of 12 pull trials. The bench README states
+the fixtures are author-written and too small for a general claim.</p>
+<p><strong>Not covered.</strong> No test was found asserting that a
+<code>modify</code> after a <code>reject</code> raises any warning, or
+that the gate distinguishes sessions. No paper or citation block for
+Selvedge itself is in the tree; the arXiv identifiers in
+<code>docs/</code> and the hook docstrings cite other work.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make "considered and rejected" a write.</strong> An approach
+nobody implemented leaves no diff; a <code>reject</code> event with the
+reason and the invalidating condition is the only way the next session
+finds it.</li>
+<li><strong>Re-open by link, never by edit.</strong> A
+<code>supersedes</code> id on a new event keeps the old verdict readable
+and lets every reader derive the current one.</li>
+<li><strong>Put the hash chain in a sidecar written in the same
+transaction.</strong> Give legitimate rewrites an <code>amend</code>
+record and deletions a counted tombstone, and declare in the manifest
+what the chain does not cover.</li>
+<li><strong>Gate the expensive repeat, not every edit.</strong> Blocking
+only watched paths whose verdict is reverted, with the old reasoning in
+the block message, keeps the false-block rate near zero.</li>
+<li><strong>Publish every trial, including the arm that
+tied.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deriving a verdict from "newest event wins" without guarding
+the write.</strong> The protection a rejection gives is erased by the
+next ordinary write on the same key; refuse or warn on a non-supersede
+write to a reverted path.</li>
+<li><strong>Keying an enforcement check on telemetry that cannot tell
+callers apart.</strong> "Queried this session" needs the session on the
+row it reads.</li>
+<li><strong>A derived index with no delete path.</strong> Every table
+that copies memory content belongs in the deletion, or a prune leaves
+the text's embedding behind.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team or a single developer who wants the reasons behind
+schema and dependency choices to outlive the session, and who runs a
+coding agent that can be told to log them. It assumes the agent
+cooperates: capture is explicit, attribution is a label, and the
+reasoning is not checked. It does not suit anyone who needs memories
+found by meaning across a large store, isolated per tenant in one file,
+or individually erasable. The design gives up the third deliberately to
+keep the log append-only.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does <code>SELVEDGE_HOOK_DISABLE=1</code>, which the block message
+suggests, reach the hook process when set from an agent's shell tool, or
+only from the harness environment?</li>
+<li>How often do agents log a plain <code>modify</code> on a rejected
+path in practice, given the instruction to supersede first?</li>
+<li>Does <code>_derive_path_status</code> over a prefix timeline give
+the intended status for a table whose columns carry different verdicts?
+It reads the newest event among all children; this was read, not
+reproduced.</li>
+<li>How large do real stores grow before the 500-event
+<code>stale_when</code> window misses the evidence a decision
+names?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Model and schema:</strong> <code>selvedge/models.py</code>,
+<code>selvedge/storage.py:42-133</code>,
+<code>selvedge/migrations.py</code>,
+<code>selvedge/chain.py</code>.</li>
+<li><strong>Write:</strong> <code>selvedge/server.py:217-577</code>,
+<code>selvedge/storage.py:739-946</code>,
+<code>selvedge/validation.py</code>, <code>selvedge/redaction.py</code>,
+<code>selvedge/importers.py</code>,
+<code>selvedge/gitimport.py</code>.</li>
+<li><strong>Read:</strong> <code>selvedge/storage.py:1301-1941</code>,
+<code>:1972-2280</code>, <code>selvedge/presenters.py</code>,
+<code>selvedge/semantic.py</code>, <code>selvedge/ledger.py</code>.</li>
+<li><strong>Context and enforcement:</strong>
+<code>selvedge/hooks/sessionstart.py</code>,
+<code>selvedge/hooks/pretooluse.py</code>,
+<code>selvedge/hooks/precompact.py</code>,
+<code>selvedge/hooks/adapters.py</code>,
+<code>hooks/hooks.json</code>.</li>
+<li><strong>Deletion and integrity:</strong>
+<code>selvedge/prune.py</code>,
+<code>selvedge/storage.py:1110-1273</code>,
+<code>selvedge/verify.py</code>.</li>
+<li><strong>Tests and evals:</strong>
+<code>tests/test_stale_supersede.py</code>,
+<code>tests/test_supersede.py</code>,
+<code>tests/test_tamper_evidence.py</code>,
+<code>tests/test_hook.py</code>,
+<code>tests/test_prior_attempts.py</code>,
+<code>bench/decision_memory/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n -i 'UPDATE events|DELETE FROM events|DELETE FROM event_chain|UPDATE event_chain|INSERT (OR REPLACE )?INTO events' --type py</code>
+— outside tests, only <code>storage.py:730</code> (insert),
+<code>:969</code> (git_commit back-fill), <code>:1147</code> (prune) and
+<code>:1235</code> (path rewrite).</li>
+<li><code>rg -n 'embeddings' --type py -g '!tests/**'</code> and
+<code>rg -n 'DELETE FROM embeddings' .</code> — the table is written
+only in <code>semantic.py</code>; no delete anywhere.</li>
+<li><code>rg -n -i 'def (forget|delete_event|redact_event|erase)' selvedge/</code>
+— no match; <code>rg -n '@cli\.command' selvedge/cli.py</code> lists no
+per-event delete command.</li>
+<li><code>rg -n 'project' selvedge/storage.py</code> —
+<code>project = ?</code> predicates only in <code>get_history</code>,
+<code>list_changesets</code>, <code>get_stale_decisions</code> and
+<code>summarize</code>, each behind <code>if project:</code>.</li>
+<li><code>sed -n 71,80p selvedge/storage.py</code> —
+<code>tool_calls</code> columns are id, timestamp, tool_name,
+entity_path, success, error_msg and agent; no session.</li>
+<li><code>rg -n -i 'valid_from|valid_to|valid_at|recorded_at|observed_at|event_time|effective' selvedge/</code>
+— no validity-time column.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— <code>CHANGELOG.md</code>, two hook files and four <code>docs/</code>
+pages, all citing third-party papers; no <code>CITATION.cff</code>.</li>
+<li><code>rg -n -E 'pytest.mark.skip|skipif|importorskip' tests</code> —
+one, <code>test_plugin.py:474</code>, for Node.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/masondelan/selvedge/commit/10458144769b5f583785208594432591a6850a6c"><code class="commit-id" title="10458144769b5f583785208594432591a6850a6c">10458144…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 3
+October 2026. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>. Screened before reading: five auto-run
+surfaces (<code>.claude-plugin/</code>, <code>.mcp.json</code>,
+<code>hooks/</code>, <code>hooks/hooks.json</code>, a
+<code>server.json</code> launching through <code>uvx</code>), two
+build-time execution points (<code>selvedge/setup.py</code>,
+<code>tests/conftest.py</code>), two dependency files inside the
+cooldown — every file in a depth-1 clone dates to the tip — one unpinned
+surface (<code>pyproject.toml</code> with no lockfile), and
+<code>CLAUDE.md</code> recorded as data. The committed dogfood database
+was opened read-only. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

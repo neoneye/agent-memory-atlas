@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An RDF ontology engine whose MCP
+server appends agent claims to one GTS file, hides revised ones by
+suppression frame, and recalls by token overlap.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="GMEOW — Agent Memory Atlas">
+    <meta property="og:description" content="An RDF ontology engine
+whose MCP server appends agent claims to one GTS file, hides revised
+ones by suppression frame, and recalls by token overlap.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GMEOW — Agent Memory Atlas">
+    <meta name="twitter:description" content="An RDF ontology engine
+whose MCP server appends agent claims to one GTS file, hides revised
+ones by suppression frame, and recalls by token overlap.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>GMEOW — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "GMEOW",
+      "description": "An RDF ontology engine whose MCP server appends agent claims to one GTS file, hides revised ones by suppression frame, and recalls by token overlap.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Append-only claim memory inside an ontology
+engine</p>
+          <h1>GMEOW</h1>
+          <p class="document-deck">An RDF ontology engine whose MCP
+server appends agent claims to one GTS file, hides revised ones by
+suppression frame, and recalls by token overlap.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Blackcat-Informatics/gmeow-ontology">
+              <span>Source</span>
+              <strong>Blackcat-Informatics/gmeow-ontology</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Blackcat-Informatics/gmeow-ontology/commit/38f568b04a5f6509e98ccb5e3b387623f1974b58" title="38f568b04a5f6509e98ccb5e3b387623f1974b58">
+              <span>Analyzed revision</span>
+              <code>38f568b0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Blackcat-Informatics--gmeow-ontology" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Blackcat-Informatics--gmeow-ontology</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0-only
+for the tooling and CC BY 4.0 for the ontology and docs, with commercial
+licences reserved; the purrdf engine is MIT OR Apache-2.0 OR
+MulanPSL-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>486,044
+lines of Rust outside test files; the claim store is 1,132 lines in the
+purrdf dependency plus 1,481 in crates/mcp/src/storage.rs</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>5,484
+commits on main by 2 contributors, one of them a dependency bot, 3 June
+– 2 October 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>7,549
+Rust test functions; files named as tests hold 299,472
+lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>GMEOW is an RDF 1.2 ontology and reasoning engine built in Rust,
+whose README names grounded agent memory as its flagship use. That
+memory is three MCP tools on the <code>gmeow mcp</code> server:
+<code>store_claim</code> appends a reified claim to a single GTS file,
+<code>recall</code> ranks claims by token overlap, and
+<code>revise_belief</code> suppresses one without deleting it. Every
+committed write also appends a tool-call record and a trajectory-audit
+segment to the same file.</p>
+<p>What is notable is the discipline around a small store. Revision is a
+suppression frame, never an erasure, and an explicit
+<code>include_suppressed</code> view shows what was retired. One test
+pins the suppression filter across five recall shapes with a control
+claim beside each negative.</p>
+<p>What is weak is the distance between that store and the ontology
+above it. The claim carries text, a creation stamp and three optional
+annotations. Standpoints, evidence, defeaters and the
+<code>originGenerated</code> confabulation flag the README describes
+live in the ontology slices and never reach the claim file.</p>
+<p>The native store is <code>purrdf::gts::examples::agent_memory</code>,
+a module of a separate Blackcat repository whose comments call it a
+<em>"dependency-light example API"</em> and disclaim cross-process
+locking (<code>agent_memory.rs:152</code>, <code>:277-283</code>). This
+report read it at the <code>rust-v3.0.0</code> tag the lockfile pins.
+GMEOW adds the Transaction-Logic gate, the audit segment and a browser
+backend.</p>
+<p>The tooling is AGPL-3.0-only and the ontology CC BY 4.0, with the
+copyright holder reserving separate commercial licences
+(<code>LICENSING.md</code>). A product that links the MCP crate takes on
+the AGPL.</p>
+<p>Three marks: <code>trust_state</code>, <code>audit_log</code>,
+<code>negative_eval</code>. Section 9 names the four withheld. The
+conjecture and candidate libraries are append-only stores of logic
+formulas tested against a knowledge base, not agent memory, and are not
+covered.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a claim: a string an agent asserts, with optional
+confidence, attribution and source. It becomes part of the store when
+<code>store_claim</code> commits. Nothing extracts, merges or checks it,
+and the README's line <em>"An LLM output is a claim, not a truth"</em>
+is the whole admission policy. Two contradictory claims coexist, and
+nothing adjudicates between them.</p>
+<p><strong>A claim has two states, live and suppressed, and one
+transition.</strong> <code>revise_belief</code> appends a suppression
+frame naming the claim's reifier term
+(<code>agent_memory.rs:538-566</code>). Recall drops suppressed claims
+unless asked for them (<code>:677-687</code>). There is no way back: the
+action policy names <code>store_claim</code> as
+<code>revise_belief</code>'s compensation, <em>"reversible by RE-STORING
+(re-asserting) the claim"</em>
+(<code>slices/core/agentic/examples/mcp-action-policy.ttl:146-159</code>).
+A re-stored claim is a new record with a new id, because the id hashes
+the file length and the creation stamp
+(<code>agent_memory.rs:445-458</code>).</p>
+<p><strong>Identity is the record, not the text.</strong> Each claim
+also has a subject <code>urn:purrdf:claim:</code> plus a digest of its
+text (<code>:459</code>), and <code>claims()</code> treats a suppression
+of either the reifier or the subject as suppressing the claim
+(<code>:744</code>). Only the reifier is ever targeted. The MCP handler
+admits a <code>claim_id</code> only if it is a known assertion id
+(<code>lib.rs:4967-4974</code>).</p>
+<p><strong>Every write passes a Transaction-Logic gate.</strong> The
+handler builds a start state from situations it asserts, runs the action
+schema through <code>execute_transaction_dataset</code>, and writes only
+on a committed success (<code>lib.rs:7732-7748</code>). For
+<code>store_claim</code> the handler asserts
+<code>wellFormedClaim</code> unconditionally once <code>text</code> is
+present (<code>:4874</code>), so the gate cannot refuse. For
+<code>revise_belief</code> it asserts <code>targetClaimExists</code>
+when the id is known, suppressed or not (<code>:4989-4995</code>), and
+the policy's precondition is that one situation. The verdict restates
+the handler's set membership, and a second revise of a suppressed claim
+passes and appends another frame.</p>
+<p><strong>Who moves a claim.</strong> The agent, through the two write
+tools. No person, no background pass and no model call holds any other
+route.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a GMEOW claim enters the package, how revise_belief retires it, and what recall returns</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a GMEOW claim enters the package, how revise_belief retires it, and what recall returns
+flowchart TD
+    S[&quot;store_claim(text, confidence?, according_to?, source?)&quot;] --&gt; G1{&quot;TR gate:&lt;br/&gt;wellFormedClaim asserted&lt;br/&gt;by the handler&quot;}
+    G1 -- &quot;dry_run&quot; --&gt; W1[&quot;verdict and witness,&lt;br/&gt;nothing written&quot;]
+    G1 -- &quot;commit&quot; --&gt; A1[&quot;append reified claim:&lt;br/&gt;assertion id = BLAKE3 over&lt;br/&gt;file length, text, stamp&quot;]
+    A1 --&gt; T1[&quot;append ToolCall record&quot;]
+    T1 --&gt; AU1[&quot;append trajectory-audit segment&quot;]
+    R[&quot;revise_belief(claim_id, reason?, superseded_by?)&quot;] --&gt; G2{&quot;claim_id in claims()?&quot;}
+    G2 -- &quot;no&quot; --&gt; E[&quot;ok: false, nothing written&quot;]
+    G2 -- &quot;yes, live or already suppressed&quot; --&gt; L{&quot;id in the last&lt;br/&gt;segment&#39;s term table?&quot;}
+    L -- &quot;yes&quot; --&gt; SUP[&quot;append suppress frame&lt;br/&gt;keyed on the reifier term&quot;]
+    L -- &quot;no: claim predates&lt;br/&gt;a segment boundary&quot; --&gt; ERR[&quot;UnknownClaim error&lt;br/&gt;after a committed verdict&quot;]
+    SUP --&gt; T2[&quot;append ToolCall record&quot;]
+    T2 --&gt; AU2[&quot;append trajectory-audit segment&quot;]
+    A1 --&gt; LIVE((&quot;live&quot;))
+    SUP --&gt; HID((&quot;suppressed&quot;))
+    Q[&quot;recall(query?, min_confidence?, limit?)&quot;] --&gt; F{&quot;include_suppressed?&quot;}
+    F -- &quot;no (default)&quot; --&gt; RL[&quot;live claims only&quot;]
+    F -- &quot;yes&quot; --&gt; RA[&quot;every claim,&lt;br/&gt;suppressed flagged&quot;]
+    RS[&quot;store_claim with the same text&quot;] --&gt; NEW[&quot;new assertion id,&lt;br/&gt;live again&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The repository is a Rust workspace of about fifty crates around an
+ontology authored as Turtle slices. A build pipeline compiles the slices
+into one GTS bundle, and the <code>gmeow</code> CLI embeds it as
+<code>BUNDLE_GTS</code>. <code>gmeow mcp</code> serves the consumer MCP
+surface over stdio from that bundle alone
+(<code>crates/gmeow-cli/src/commands.rs:5811-5828</code>).
+<code>gmeow-mcp</code> declares 38 tools
+(<code>crates/mcp/src/lib.rs:391</code>), of which six are governed
+writes (<code>:400-408</code>).</p>
+<p><strong>The storage seam is one trait with two backends</strong>
+(<code>crates/mcp/src/storage.rs:87-166</code>). Natively,
+<code>FsClaimStore</code> delegates every method to purrdf's
+<code>Memory</code> at the path <code>GMEOW_MEMORY_PATH</code> resolves
+to, defaulting to <code>~/.gmeow/memory.gts</code>
+(<code>:809-819</code>, <code>:850-876</code>, <code>:901-945</code>).
+In the browser, <code>InMemoryClaimStore</code> holds claims,
+suppressions and calls in a mutex and stamps a logical clock anchored at
+the Unix epoch (<code>:1145-1420</code>). No <code>localStorage</code>,
+<code>sessionStorage</code> or IndexedDB reference appears in the wasm
+crates or the docs assets, so a browser store lasts as long as the
+page.</p>
+<p><strong>The file is a GTS <code>ai-package</code>.</strong> One
+segment header carries the profile and an in-band zstd dictionary,
+<code>gmeow-memory-hot-v1</code>, read out of the loaded bundle
+(<code>lib.rs:8758</code>, <code>:8783-8806</code>). Each record appends
+<code>terms</code>, <code>quads</code>, <code>reifies</code>,
+<code>annot</code> or <code>suppress</code> frames to that segment's
+chain (<code>agent_memory.rs:509-520</code>). When the bundle's
+dictionary differs from the one the file's tail pins, the native backend
+opens a new segment header before writing
+(<code>storage.rs:741-754</code>).</p>
+<p><strong>Nothing runs in the background.</strong>
+<code>compact_store</code> would repack the file into one streamable
+signed segment under the library lock (<code>lib.rs:8805-8871</code>).
+It has no caller in the tree; <code>bench/README.md:368-376</code>
+discusses its dictionary.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One native binary, built from source or downloaded as a signed
+release, and a file under the home directory. No database, network,
+model or API key is needed to store or recall. The documented one-line
+install, <code>claude mcp add gmeow … -- uv run gmeow mcp</code>
+(<code>docs/mcp-server.md:12-14</code>), runs whatever
+<code>gmeow</code> is on <code>PATH</code>; the Python package in
+<code>packages/python/</code> is the generated Pydantic models and
+declares no <code>gmeow</code> script.</p>
+<p>The store is not human-readable. It is compressed binary frames, and
+reading or repairing it needs purrdf's reader, the <code>recall</code>
+tool with <code>include_suppressed</code>, or
+<code>store_segment</code>, which exports claims and calls as
+N-Quads.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>tool_store_claim</code>
+(<code>crates/mcp/src/lib.rs:4865-4943</code>) reads <code>text</code>,
+<code>confidence</code> and <code>dry_run</code>, runs
+<code>execute_memory_txn</code> with the store-claim schema
+(<code>:4874-4880</code>), returns early on a failure or a dry run, then
+calls <code>ClaimStore::store_claim</code>. Natively that is
+<code>Memory::store</code> (<code>agent_memory.rs:435-531</code>). It
+rejects empty text and a confidence outside <code>[0, 1]</code>, mints
+the assertion id, and appends four frames. The handler then calls
+<code>record_tool_call</code> (<code>lib.rs:4914-4927</code>) and
+<code>write_audit_segment</code> (<code>:4928-4941</code>,
+<code>:7815-7826</code>).</p>
+<p><strong>Confidence is range-checked by the engine, not the
+handler.</strong> The comment at <code>lib.rs:4870-4873</code> says
+in-range confidence is <em>"enforced above"</em>;
+<code>optional_f64</code> checks only that the value is a number
+(<code>:7511-7523</code>). An out-of-range value commits the verdict and
+fails in <code>Memory::store</code>, so nothing is written.</p>
+<p><strong>Read.</strong> <code>tool_recall</code> →
+<code>recall_json</code> (<code>lib.rs:4950-4952</code>,
+<code>:8369-8382</code>) → <code>Memory::recall</code>
+(<code>agent_memory.rs:677-719</code>), which calls
+<code>claims()</code> and so reads and parses the whole file
+(<code>:721-748</code>, <code>:813-819</code>).</p>
+<p><strong>Revise.</strong> <code>tool_revise_belief</code>
+(<code>lib.rs:4964-5063</code>) reads every claim to build the known and
+active id sets (<code>:4967-4974</code>), rejects an unknown successor
+(<code>:4975-4983</code>), runs the gate, then calls
+<code>Memory::revise</code> (<code>agent_memory.rs:538-566</code>). That
+function resolves the claim id against <code>last_segment_terms()</code>
+with <code>resolve_existing</code>, which never mints a row
+(<code>:540-543</code>, <code>:955-958</code>), and appends an optional
+<code>annot</code> frame linking the successor by
+<code>wasDerivedFrom</code>, then the <code>suppress</code> frame.</p>
+<p><strong>Export and re-seed.</strong> <code>store_segment</code>
+serializes claims and calls as position-addressed
+<code>gmeow:ClaimToken</code> and <code>gmeow:ToolCall</code> N-Quads,
+carrying <code>displayable</code> for suppression and dropping backend
+ids and creation stamps (<code>storage.rs:280-320</code>,
+<code>lib.rs:8404-8415</code>). <code>seed_claim_store</code> reads it
+back through the public write API (<code>storage.rs:574</code>), so a
+re-seeded claim is stamped afresh.</p>
+<p><strong>Tests.</strong>
+<code>crates/mcp/src/tests.rs:1216-1328</code> and
+<code>:2053-2218</code> cover the triad through
+<code>call_tool_result</code>;
+<code>crates/mcp/src/lib.browser_storage_tests.rs</code> and
+<code>crates/mcp/src/storage.tests.rs</code> cover the browser store and
+the export; the engine's own suite is purrdf's
+<code>crates/gts/tests/agent_memory_append.rs</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>reifier IRI</td>
+<td><code>urn:purrdf:assertion:blake3:</code> over kind, file length,
+text, stamp, source, confidence, attribution
+(<code>agent_memory.rs:880-899</code>)</td>
+</tr>
+<tr>
+<td>text</td>
+<td><code>rdf:value</code> literal of the reified statement</td>
+<td>the subject is <code>urn:purrdf:claim:</code> plus a digest of the
+text</td>
+</tr>
+<tr>
+<td>created</td>
+<td><code>dct:created</code> annotation</td>
+<td>wall-clock UTC natively, a logical epoch-anchored counter in the
+browser</td>
+</tr>
+<tr>
+<td>confidence</td>
+<td>annotation, <code>xsd:decimal</code></td>
+<td>optional, <code>[0, 1]</code></td>
+</tr>
+<tr>
+<td>according_to</td>
+<td>annotation</td>
+<td>stored as a plain literal (<code>:490-498</code>) though the
+option's doc calls it an IRI</td>
+</tr>
+<tr>
+<td>source</td>
+<td><code>sourceLocation</code> annotation</td>
+<td>free text</td>
+</tr>
+<tr>
+<td>suppressed</td>
+<td>derived from <code>suppress</code> frames</td>
+<td>not stored on the claim; the frame also carries the reason</td>
+</tr>
+</tbody>
+</table></div>
+<p>The predicates sit under <code>https://example.org/memory/</code>
+(<code>agent_memory.rs:30-45</code>). GMEOW's own <code>gmeow:</code>
+vocabulary appears only in the export, whose comment declines to
+reproduce purrdf's on-disk encoding as <em>"a second, silent source of
+truth for a shape we do not own"</em>
+(<code>storage.rs:291-298</code>).</p>
+<p><strong>No valid time.</strong> <code>dct:created</code> is the only
+time on a claim. The audit segment records <code>gmeow:atTime</code> and
+a temporal frame per call, which is also transaction time.</p>
+<p><strong>No scope key.</strong> One file is one memory.
+<code>according_to</code> is an annotation that no read consults.</p>
+<p><strong>No correction chain the reader follows.</strong> A successor
+named in <code>superseded_by</code> is written as a
+<code>wasDerivedFrom</code> annotation (<code>:545-549</code>), and
+nothing in <code>agent_memory.rs</code> reads that predicate back. The
+reason and the successor survive in the recorded
+<code>revise_belief</code> call's arguments.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is lexical and exhaustive. Every call parses the whole
+package, filters, scores and truncates
+(<code>agent_memory.rs:677-719</code>):</p>
+<ul>
+<li>Suppressed claims are dropped unless <code>include_suppressed</code>
+is set.</li>
+<li>With <code>min_confidence</code>, claims below it are dropped, and
+so is every claim stored without a confidence (<code>:683-686</code>). A
+floor of <code>0.0</code> hides those too.</li>
+<li>An empty query returns storage order reversed, newest first.</li>
+<li>Otherwise the query and each claim are lowercased and split on
+whitespace; the score is the size of the token intersection, zero-score
+claims are dropped, and ties go to the newer claim.</li>
+<li><code>limit</code> defaults to 10 (<code>lib.rs:8370</code>).</li>
+</ul>
+<p>Tokens keep their punctuation, so <code>window</code> does not match
+<code>window,</code>, and there is no stemming, synonymy or vector arm.
+Nothing is injected automatically; the agent calls <code>recall</code>
+and receives JSON with each claim's id, text, confidence, attribution,
+source, stamp and suppressed flag (<code>lib.rs:8417-8427</code>).</p>
+<p>The failure modes follow from the shape. Over-recall is bounded by
+<code>limit</code>. Under-recall is the main risk, because a paraphrase
+shares no tokens. A contradiction surfaces as two claims side by side,
+which is the design.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls, synchronous, with no model and no
+extraction. There is no deduplication: storing the same text twice
+yields two live claims with different ids. Update is suppression plus a
+new claim, and delete does not exist on the tool surface.</p>
+<p><strong>Agent-generated content is the only content.</strong> The
+handler checks the shape of the arguments and the engine checks text and
+confidence. Nothing inspects what the claim says or who could have said
+it, and <code>according_to</code> is whatever the caller passes.</p>
+<p><strong>The three appends are separate.</strong>
+<code>Memory::store</code> writes and returns, then
+<code>record_tool_call</code> appends, then
+<code>write_audit_segment</code> appends
+(<code>lib.rs:4903-4941</code>). The library path in the same file
+builds its verdict and audit segments together for <em>"one atomic
+replace"</em>, <em>"rather than two separate appends where the second
+can fail after the first has already landed"</em>
+(<code>lib.rs:7898-7902</code>). The claim path does what that comment
+rules out.</p>
+<p><strong>No lock is taken.</strong> <code>refute_conjecture</code>
+runs read, precondition and append inside <code>with_library_lock</code>
+and explains the lost update it prevents
+(<code>lib.rs:5274-5281</code>). <code>tool_store_claim</code> and
+<code>tool_revise_belief</code> take no lock, and purrdf's
+<code>Memory</code> requires exclusive write ownership of each path
+across processes while <em>"this example deliberately does not claim
+cross-process locking"</em> (<code>agent_memory.rs:277-283</code>). Two
+MCP server processes on the default path, one per client session, are
+the case that comment describes. This was read, not reproduced.</p>
+<p><strong>A segment boundary strands older claims.</strong>
+<code>revise</code> looks the claim id up only in the last segment's
+term table (<code>agent_memory.rs:540-543</code>). The native backend
+opens a new segment whenever the bundle's dictionary differs from the
+one the tail pins (<code>storage.rs:741-754</code>,
+<code>:858-861</code>). After such a boundary, a claim stored before it
+is in <code>claims()</code>, so the handler's gate commits, and
+<code>revise</code> then fails with <code>UnknownClaim</code>. No test
+revises across a boundary; the engine's cross-append test stays within
+one segment (<code>agent_memory_append.rs:443-476</code>). Read, not
+run.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, three appends, no model call. Each call
+constructs a fresh <code>Memory</code>, so the first append reads the
+whole file to rebuild the term table
+(<code>agent_memory.rs:355-387</code>), and the medium check reads it
+again (<code>storage.rs:742-746</code>).</li>
+<li>Background: none.</li>
+<li>Read: one full parse per <code>recall</code> and per
+<code>revise_belief</code>; cost grows with the file, which only grows.
+Output is bounded by <code>limit</code>, and nothing is injected into a
+prompt unless the agent asks.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration is an MCP stdio server and nothing else. There is no
+hook, no session-start injection and no compaction handling; the docs'
+guidance is <em>"<code>store_claim</code> when you learn,
+<code>recall</code> before you answer, <code>revise_belief</code> when
+you learn better"</em> (<code>docs/mcp-server.md:84-85</code>). The
+<code>recall</code> tool description an agent sees is <em>"Recall stored
+memory claims."</em> (<code>lib.rs:3346-3354</code>).</p>
+<p>The agent has full agency: it stores, recalls, revises and exports,
+and every write accepts <code>dry_run</code> for a verdict without a
+write. Adapting the store to another agent means running the same binary
+or linking <code>gmeow-mcp</code>, which brings the AGPL and the
+reasoner; the purrdf module alone is permissively licensed and has no
+reasoner dependency.</p>
+<p>The browser build splits the engine into two wasm images and keeps
+every claim-store tool in one of them. The doc comment on
+<code>REASONING_SEGMENT_TOOLS</code> records the defect this prevents, a
+<code>store_claim</code> that returned <code>ok</code> while
+<code>recall</code> answered <code>[]</code> from the other image's
+store (<code>lib.rs:316-337</code>), and
+<code>the_grounded_memory_triad_is_served_by_one_segment</code> pins it
+(<code>tests.rs:322</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is per record and per call.</strong> Each claim
+can carry attribution and source, and each committed write leaves a
+tool-call record with its arguments and result. Neither is verified:
+both are caller strings.</p>
+<p><strong>Uncertainty is representable in two ways that do not
+interact.</strong> Confidence is a float used only as an optional floor.
+Suppression is a bit that filters. A claim can be confident and
+suppressed, or live and unrated, and recall treats the two
+independently.</p>
+<p><strong>Concurrency is the weakest point.</strong> The engine
+requires a single writer and GMEOW does not enforce one on the claim
+file, while it does on both libraries (section 7). The likely result of
+two writers is two appends computing the same term base, which the
+engine's comment at <code>agent_memory.rs:400-407</code> describes as
+rows that <em>"silently point at the FIRST claim's terms"</em>.</p>
+<p><strong>Privacy.</strong> Nothing deletes. A claim a user wants gone
+is suppressed and stays in the file, in its tool-call record and in any
+export. <code>compact_store</code> is described as statement-preserving
+and is not wired.</p>
+<p><strong>Prompt-injected memories</strong> reach the store as readily
+as any other claim, and recall returns them without a marker of origin.
+The README's <code>originGenerated</code> flag is ontology vocabulary
+only; it appears in the slices and the generated Pydantic models, not in
+<code>crates/mcp/src</code> or the engine module.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded. A stored suppression withholds a
+claim from every default recall on both backends; evidence in the
+frontmatter record.</li>
+<li><code>audit_log</code> — awarded. A named <code>ToolCall</code>
+record per committed write in the same append-only file, with the gaps
+the record lists.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld. Suppression is keyed on the
+reifier, a record. The same text stored again is a new live claim, and
+the action policy names re-storing as the designed reversal. The subject
+IRI is a digest of the text and <code>claims()</code> would honour a
+suppression of it, but <code>revise_belief</code> cannot target it and a
+re-stored claim restates the subject as a new term.</li>
+<li><code>bitemporal</code> — withheld. One creation stamp, no valid
+time.</li>
+<li><code>scope_enforced</code> — withheld. The partition is the file;
+<code>according_to</code> is stored and never read as a filter.</li>
+<li><code>human_review</code> — withheld. No state waits for anyone, and
+the agent holds <code>revise_belief</code>.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below was read
+at the pin.</p>
+<p><strong>The negative case.</strong>
+<code>memory_triad_preserves_suppression_on_every_default_recall_path</code>
+(<code>crates/mcp/src/tests.rs:1216-1294</code>) stores a canary and a
+control with the same tail words, revises the canary, and for five
+argument shapes asserts the canary absent and the control present
+(<code>:1282-1283</code>). It then asserts the audit view returns the
+canary flagged. A filter that dropped everything fails on the control,
+and one that dropped nothing fails on the canary. The same test pins the
+tool-call trajectory: two stores and a revise, with the intervening
+recall unrecorded (<code>:1243-1268</code>).</p>
+<p><strong>Other triad cases.</strong>
+<code>revision_rejects_unknown_ids_before_writing</code>
+(<code>:1297-1328</code>) covers an unknown id and an unknown successor.
+<code>store_claim_dry_run_computes_verdict_without_persisting</code>,
+<code>revise_belief_dry_run_does_not_suppress</code> and
+<code>committed_revise_suppresses_but_never_deletes</code>
+(<code>:2053-2218</code>) cover the dry runs and the audit view.
+<code>committed_store_records_the_audit_context</code>
+(<code>:2088-2140</code>) asserts the six trajectory-audit predicates
+land in <code>memory.gts</code>.</p>
+<p><strong>Engine cases.</strong> <code>agent_memory_append.rs</code>
+asserts one header per store, that an appended store folds to the same
+claims as the older pack-per-claim layout, that an unknown revision
+appends nothing, and that a later revision suppresses the right claim.
+Both record ids are frozen against golden values
+(<code>agent_memory.rs:1119-1131</code>).</p>
+<p><strong>The test harness.</strong> The triad tests run inside
+<code>batch_mcp_items!</code>, which partitions cases by a
+<code>_heavy_offgate</code> name suffix; none of the triad cases carries
+it (<code>crates/test-batch-macros/src/lib.rs:299</code>).
+<code>ci.yml</code> installs <code>cargo-nextest</code>
+(<code>:380-383</code>). This reading did not trace which CI job runs
+the <code>gmeow-mcp</code> suite.</p>
+<p><strong>Evals.</strong> <code>evals/</code> scores an LLM's claim
+extraction from a corpus for grounding, hallucination and abstention;
+the only committed output is a hand-authored reference baseline
+(<code>evals/outputs/reference-baseline/meta.json</code>). It does not
+touch the claim store. No retrieval-quality evaluation of
+<code>recall</code> is in the tree.</p>
+<p><strong>Paper.</strong> <code>CITATION.cff</code> registers a DOI,
+<code>10.67342/26w4o</code>, for the ontology as a dataset. No paper
+describing or evaluating the memory is cited.</p>
+<p><strong>Not covered.</strong> Concurrent writers; revise across a
+segment boundary; a crash between the claim append and its call record;
+recall with <code>min_confidence</code> over claims stored without
+one.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Retire by appending, and give the retired set its own
+read.</strong> A default filter plus an explicit
+<code>include_suppressed</code> view keeps the audit question answerable
+without letting it leak into answers.</li>
+<li><strong>Record every mutation in the store it mutates.</strong> A
+tool-call record with arguments, result and generated ids, in the same
+append-only file, answers "why is this here" without a second
+system.</li>
+<li><strong>Pin the negative with a control in the same loop.</strong>
+Five argument shapes, each asserting the retired claim absent and a
+sibling present, is the minimum that cannot pass on an empty
+result.</li>
+<li><strong>Test the backend nobody can test where it ships.</strong>
+The browser store is compiled on every target so the native suite
+exercises it.</li>
+<li><strong>Keep reads and writes of one store in one
+deployable.</strong> The wasm split forked the store once; the tool list
+now says which tools share it, and a test enforces it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A gate whose inputs the handler asserts.</strong> A verdict
+computed over situations the caller pushed is a restatement of the
+caller's <code>if</code>. Put the check where it can disagree, or call
+it validation.</li>
+<li><strong>Locking one store and not its sibling.</strong> The
+libraries take an exclusive lock and the claim file, written by the same
+server, does not.</li>
+<li><strong>Resolving ids in the newest segment only</strong> of a file
+that opens new segments for operational reasons.</li>
+<li><strong>Writing a successor link nothing reads.</strong> If a
+correction chain matters, surface it on recall.</li>
+<li><strong>A floor that silently drops unrated records.</strong> Decide
+what a missing confidence means and say it in the tool description.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an agent builder who wants an inspectable, append-only
+claim log with clean suppression semantics and an audit trail, on one
+machine, under one writer, and who will call <code>recall</code>
+deliberately. It does not suit anyone who needs memory to be found by
+meaning, scoped between users or projects, deleted on request, or shared
+by several concurrent agent sessions on one file. The ontology's model
+of belief, standpoint and defeat is far richer than the store, and
+adopting GMEOW for memory means adopting the AGPL and a large reasoning
+engine to get a module the engine's own repository files under
+examples.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Do two <code>gmeow mcp</code> processes appending to one
+<code>memory.gts</code> corrupt it in practice, and does the reader
+detect it?</li>
+<li>Which CI job runs the <code>gmeow-mcp</code> triad tests, and on
+what bundle?</li>
+<li>Is a dictionary change between releases expected, and has any user
+file crossed a segment boundary?</li>
+<li>Does the published <code>purrdf</code> 3.0.0 crate match the
+<code>rust-v3.0.0</code> tag byte for byte? The lockfile checksum was
+not compared.</li>
+<li>Will <code>compact_store</code> be wired, and does a compacted file
+keep every suppression and call record?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>crates/mcp/src/storage.rs</code>; purrdf
+<code>crates/gts/src/examples/agent_memory.rs</code> at
+<code>rust-v3.0.0</code>.</li>
+<li><strong>Write, revise and audit:</strong>
+<code>crates/mcp/src/lib.rs:4865-5063</code>, <code>:7700-7990</code>;
+<code>slices/core/agentic/examples/mcp-action-policy.ttl:88-172</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>crates/mcp/src/lib.rs:8369-8427</code>;
+<code>agent_memory.rs:677-748</code>.</li>
+<li><strong>MCP surface:</strong>
+<code>crates/mcp/src/lib.rs:290-420</code>, <code>:3265-3385</code>;
+<code>crates/gmeow-cli/src/commands.rs:5811-5828</code>;
+<code>docs/mcp-server.md</code>.</li>
+<li><strong>Compaction:</strong>
+<code>crates/mcp/src/lib.rs:8805-8871</code>.</li>
+<li><strong>Tests:</strong> <code>crates/mcp/src/tests.rs</code>,
+<code>crates/mcp/src/storage.tests.rs</code>,
+<code>crates/mcp/src/lib.browser_storage_tests.rs</code>; purrdf
+<code>crates/gts/tests/agent_memory_append.rs</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, with purrdf at
+<code>rust-v3.0.0</code> cloned beside it as
+<code>.engine-purrdf</code>.</p>
+<ul>
+<li><code>rg -n 'compact_store' . --glob '!.engine-purrdf/**'</code> —
+the definition in <code>crates/mcp/src/lib.rs:8841</code> and two
+mentions in <code>bench/README.md</code>; no caller.</li>
+<li><code>rg -n 'with_library_lock|flock' crates/mcp/src/lib.rs crates/mcp/src/storage.rs</code>
+— library paths and compaction only; no hit in
+<code>tool_store_claim</code>, <code>tool_revise_belief</code> or
+<code>FsClaimStore</code>.</li>
+<li><code>rg -n 'lock' .engine-purrdf/crates/gts/src/examples/agent_memory.rs | rg -v 'cache|lock\(\)|PoisonError'</code>
+— no file lock.</li>
+<li><code>rg -n 'WAS_DERIVED_FROM|wasDerivedFrom' .engine-purrdf/crates/gts/src/examples/agent_memory.rs crates/mcp/src/*.rs</code>
+— the constant, two doc lines and the one writer in <code>revise</code>;
+no reader.</li>
+<li><code>rg -n -i 'valid_?from|valid_?to|valid_?until|tenure|valid_at|invalid_at' crates/mcp/src/lib.rs crates/mcp/src/storage.rs .engine-purrdf/crates/gts/src/examples/agent_memory.rs</code>
+— no match.</li>
+<li><code>rg -n 'according_to' .engine-purrdf/crates/gts/src/examples/agent_memory.rs crates/mcp/src/storage.rs | rg -i 'filter|=='</code>
+— no match.</li>
+<li><code>rg -n -i 'originGenerated|confabulat' crates/mcp/src .engine-purrdf/crates/gts/src/examples/agent_memory.rs</code>
+— no match;
+<code>rg -l -i 'originGenerated' --glob '!conformance/**'</code> lists
+the README, a doc, two slice files and the generated Pydantic
+models.</li>
+<li><code>rg -n -i 'indexeddb|localstorage|sessionStorage' crates/docs/assets crates/mcp-wasm crates/mcp-core-wasm -l</code>
+— no match.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' --exclude-dir=.git --exclude-dir=.engine-purrdf --exclude-dir=conformance .</code>
+— <code>CITATION.cff</code>, <code>README.md</code>,
+<code>docs/CITATIONS.md</code> and pipeline reference fixtures; the DOI
+is the ontology's own.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/Blackcat-Informatics/gmeow-ontology/commit/38f568b04a5f6509e98ccb5e3b387623f1974b58"><code class="commit-id" title="38f568b04a5f6509e98ccb5e3b387623f1974b58">38f568b0…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 2
+October 2026. Three marks: <code>trust_state</code>,
+<code>audit_log</code>, <code>negative_eval</code>. Screened before
+reading: 2 auto-run surfaces (<code>.cursorrules</code>,
+<code>.github/copilot-instructions.md</code>), 9 build-time execution
+points, 65 dependency files inside the cooldown, every file in the
+depth-1 clone dating to the tip, and 1 floating range;
+<code>AGENTS.md</code>, <code>CLAUDE.md</code> and
+<code>.cursorrules</code> were treated as data. The claim store was read
+in purrdf at <a
+href="https://github.com/Blackcat-Informatics/purrdf/commit/3954ae2438c3193bf5812cfd7621dc993f1d1d6d"><code class="commit-id" title="3954ae2438c3193bf5812cfd7621dc993f1d1d6d">3954ae24…</code></a>,
+the <code>rust-v3.0.0</code> tag the lockfile pins. Nothing installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

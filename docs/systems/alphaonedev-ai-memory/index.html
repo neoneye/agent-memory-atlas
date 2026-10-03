@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust MCP, HTTP and CLI memory
+server on SQLite or Postgres: tiered TTL rows, hybrid recall, governance
+queues, and quarantine for unattested federated writes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AlphaOne
+ai-memory — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust MCP, HTTP and CLI
+memory server on SQLite or Postgres: tiered TTL rows, hybrid recall,
+governance queues, and quarantine for unattested federated writes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AlphaOne
+ai-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust MCP, HTTP and CLI
+memory server on SQLite or Postgres: tiered TTL rows, hybrid recall,
+governance queues, and quarantine for unattested federated writes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AlphaOne ai-memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AlphaOne ai-memory",
+      "description": "A Rust MCP, HTTP and CLI memory server on SQLite or Postgres: tiered TTL rows, hybrid recall, governance queues, and quarantine for unattested federated writes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A governed SQLite memory server with a
+federation trust lane</p>
+          <h1>AlphaOne ai-memory</h1>
+          <p class="document-deck">A Rust MCP, HTTP and CLI memory
+server on SQLite or Postgres: tiered TTL rows, hybrid recall, governance
+queues, and quarantine for unattested federated writes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/alphaonedev/ai-memory-mcp">
+              <span>Source</span>
+              <strong>alphaonedev/ai-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/alphaonedev/ai-memory-mcp/commit/948fe9995f287942a8f6b917d83a362290698ee4" title="948fe9995f287942a8f6b917d83a362290698ee4">
+              <span>Analyzed revision</span>
+              <code>948fe999…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/alphaonedev--ai-memory-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>alphaonedev--ai-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>615,647
+lines of Rust; src/ holds 403,978 of them in 377 files, inline test
+modules included</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>2,811
+commits to the pin by 1 contributor, 31 March 2026 – 2 October
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>10,917
+Rust test functions; 3,725 of them in 494 files under
+tests/</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ai-memory is a single Rust binary that serves persistent memory to
+coding agents over MCP, an HTTP daemon and a CLI, on SQLite or an
+optional Postgres backend. A memory is a titled row with a tier
+(<code>short</code> 6 hours, <code>mid</code> 7 days, <code>long</code>
+permanent), a namespace, a visibility scope and a lifecycle state.
+Recall blends FTS5 with embeddings, and the session-start hook injects
+the namespace's top rows.</p>
+<p>What is notable is the read-side discipline. One fail-closed
+allow-list of lifecycle states is applied to recall, search, list,
+export, federation catch-up and graph traversal, with one negative test
+per lane. Federated writes without a verified author signature can be
+quarantined: stored, hidden everywhere, and released when a signed copy
+arrives.</p>
+<p>What is weak is the distance between what is resolved from
+configuration and what is wired. The append-only revision ledger,
+consolidation tombstones and the signed-approval quorum route each exist
+with tests and no production caller. The MCP approve tool accepts the
+approver's identity as a parameter and, by default, lets a requester
+approve its own queued action.</p>
+<p>The project is Apache-2.0 with a contributor licence agreement
+(<code>CLA.md</code>) and no rider on the licence text.</p>
+<p>The surface is large: 101 MCP tools across eight families, governance
+rules, leases, signals, routines, skills, personas, transcripts,
+federation with mTLS and signed events, and a curator. This report
+covers the memory row: how it is written, recalled, scoped, corrected
+and forgotten, and the trust and review mechanisms around it. The
+action, routine, lease and signal planes are coordination machinery and
+are read only where they touch memory.</p>
+<p>Three marks: <code>trust_state</code>, <code>audit_log</code> and
+<code>negative_eval</code>. Section 9 names the four withheld,
+<code>scope_enforced</code> among them: the session-start hook widens to
+every namespace when the current one is empty.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory becomes a belief when <code>memory_store</code> commits a
+row; the local path has no candidate state. Three gates can stop the
+write first. A namespace governance policy can deny it or queue it as a
+<code>pending_actions</code> row. An embedder-backed check refuses a
+write whose nearest neighbour is at least 0.95 cosine with different
+content, unless <code>force=true</code>
+(<code>src/mcp/tools/store/mod.rs:718-765</code>). With an LLM and
+<code>autonomous_hooks</code>, a synthesis pass can merge the write into
+an existing row or delete a candidate instead
+(<code>:540-640</code>).</p>
+<p><strong>Identity is the title within a namespace.</strong> A unique
+index on <code>(title, namespace)</code> makes a second store with the
+same title an update (<code>src/storage/migrations.rs:222</code>). The
+upsert keeps the higher confidence, priority and tier of the two rows
+(<code>src/storage/mod.rs:868-890</code>), so re-storing a fact with
+lower confidence does not lower it. Correction is
+<code>memory_update</code> with an optional
+<code>expected_version</code>.</p>
+<p><strong>A memory stops being one in five ways.</strong> It expires:
+<code>short</code> and <code>mid</code> rows carry
+<code>expires_at</code>, and GC moves expired rows to
+<code>archived_memories</code> by default. It is forgotten:
+<code>forget</code> archives, deletes, and writes a
+<code>forget_tombstones</code> row keyed on the memory id. It is
+consolidated, which hard-deletes the sources (section 7). A synthesis
+verdict deletes it. Or the system sets a hidden lifecycle state.</p>
+<p><strong>The lifecycle field carries two axes.</strong>
+<code>open</code>, <code>active</code>, <code>blocked</code>,
+<code>done</code> and <code>abandoned</code> are a work-item lifecycle a
+caller can move (<code>src/models/memory.rs:439-450</code>).
+<code>tombstoned</code> and <code>quarantined</code> are system-only:
+<code>validate_lifecycle_state</code> refuses them as input, and no
+caller transition reaches them (<code>src/validate.rs:1047-1065</code>).
+Every read lane admits only the first five
+(<code>src/models/memory.rs:472-520</code>).</p>
+<p><strong>Quarantine is the only state that means "not yet
+believed".</strong> A memory relayed by a federation peer is stamped
+<code>claimed</code> or <code>agent_attested</code> according to whether
+its per-write signature verified against the author's enrolled key. With
+<code>AI_MEMORY_FED_QUARANTINE_UNATTRIBUTED=1</code>, a
+<code>claimed</code> row is stored as <code>quarantined</code>
+(<code>src/handlers/federation_receive.rs:492-517</code>). When a signed
+copy of the same id later verifies, the receive path clears it back to
+<code>open</code> (<code>:1404-1412</code>). Local writes are believed
+on arrival.</p>
+<p>Everything else that sounds epistemic ranks or decorates.
+<code>confidence</code> is a float in the score.
+<code>confidence_tier</code> (<code>confirmed</code>,
+<code>likely</code>, <code>ambiguous</code>) is derived from it and is
+an optional caller filter. <code>provenance_tier</code> and the lineage
+<code>propagated_trust_tier</code> are labels on output; the code calls
+the first <em>"decoration only — it is NOT a ranking key"</em>
+(<code>src/mcp/tools/recall.rs:375</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a row becomes a believed memory in ai-memory, the quarantine lane for federated writes, and the ways a row stops being recalled</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a row becomes a believed memory in ai-memory, the quarantine lane for federated writes, and the ways a row stops being recalled
+flowchart TD
+    S[&quot;memory_store (MCP, HTTP, CLI)&quot;] --&gt; G{&quot;namespace governance&lt;br/&gt;policy&quot;}
+    G -- &quot;deny&quot; --&gt; X1[&quot;refused&quot;]
+    G -- &quot;approve required&quot; --&gt; P[&quot;pending_actions row&quot;]
+    P -- &quot;memory_pending_approve&lt;br/&gt;(caller-supplied approver id)&quot; --&gt; W
+    G -- &quot;allow&quot; --&gt; C{&quot;near-duplicate at&lt;br/&gt;0.95 cosine, no force?&quot;}
+    C -- &quot;yes&quot; --&gt; X2[&quot;refused: CONFLICT&quot;]
+    C -- &quot;no&quot; --&gt; SY{&quot;LLM synthesis eligible?&quot;}
+    SY -- &quot;update&quot; --&gt; U[&quot;merged into an&lt;br/&gt;existing row&quot;]
+    SY -- &quot;add or no-op&quot; --&gt; W[&quot;upsert on (title, namespace):&lt;br/&gt;lifecycle_state open&quot;]
+    F[&quot;federation sync_push&quot;] --&gt; A{&quot;per-write signature&lt;br/&gt;verifies?&quot;}
+    A -- &quot;forged&quot; --&gt; X3[&quot;rejected&quot;]
+    A -- &quot;agent_attested&quot; --&gt; W
+    A -- &quot;claimed, quarantine knob on&quot; --&gt; Q[&quot;quarantined:&lt;br/&gt;stored, hidden on every lane&quot;]
+    Q -- &quot;signed copy of same id verifies&quot; --&gt; W
+    W --&gt; R[&quot;recall allow-list:&lt;br/&gt;open, active, blocked,&lt;br/&gt;done, abandoned&quot;]
+    W -- &quot;expires_at passes&quot; --&gt; AR[&quot;archived_memories&quot;]
+    W -- &quot;memory_forget&quot; --&gt; FT[&quot;archived, deleted,&lt;br/&gt;forget_tombstones keyed on id&quot;]
+    FT -- &quot;inbound write, same id&quot; --&gt; X4[&quot;dropped&quot;]
+    W -- &quot;memory_consolidate&quot; --&gt; HD[&quot;sources hard-deleted;&lt;br/&gt;tombstone path never seeded&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The crate builds one binary, <code>ai-memory</code>, with subcommands
+for the stdio MCP server (<code>run_mcp_server</code>,
+<code>src/mcp/mod.rs:3329</code>), the HTTP daemon
+(<code>ai-memory serve</code>, bootstrapped in
+<code>src/daemon_runtime.rs</code>), the CLI verbs, and
+<code>boot</code>, <code>curator</code>, <code>doctor</code> and
+<code>install</code>. <code>src/storage/mod.rs</code> (24,456 lines) is
+the SQLite substrate. <code>src/store/postgres.rs</code> (26,603 lines)
+is the Postgres twin behind the <code>sal</code> feature, with Apache
+AGE for graph queries. This reading followed the SQLite path.</p>
+<p><strong>Persistence.</strong> One SQLite file at schema version 81,
+built by a bootstrap <code>SCHEMA</code> constant plus a migration
+ladder (<code>src/storage/migrations.rs</code>). <code>memories</code>
+carries an FTS5 shadow table over title, content and tags
+(<code>:466-472</code>) and an <code>embedding</code> BLOB. Beside it
+sit <code>memory_links</code> with validity columns,
+<code>archived_memories</code>, <code>pending_actions</code>,
+<code>forget_tombstones</code>, <code>signed_events</code>,
+<code>recall_observations</code>, <code>memory_revisions</code>,
+<code>governance_rules</code>, quotas and the coordination tables.</p>
+<p><strong>Retrieval stack.</strong> FTS5 always. The
+<code>semantic</code> feature tier adds a local MiniLM embedder through
+Candle and an in-process HNSW index, warmed in a background thread at
+MCP start (<code>src/mcp/mod.rs:3765-3795</code>).
+<code>autonomous</code> adds a cross-encoder reranker. The
+<code>smart</code> and <code>autonomous</code> tiers also take an LLM
+backend: Ollama by default, or one of the hosted providers named in
+<code>[llm]</code>.</p>
+<p><strong>Background work lives in the daemon.</strong>
+<code>bootstrap_serve</code> spawns the access-fold loop (default every
+60 seconds), the GC loop, lease sweeps and the federation DLQ replays
+(<code>src/background/access_fold.rs:4-21</code>). The stdio MCP server
+spawns only the HNSW warm thread. Section 7 states what that costs.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The documented install is a prebuilt binary from
+<code>install.sh</code>, then <code>ai-memory install claude-code</code>
+to write the SessionStart hook. The MCP server opens the SQLite file
+directly, so nothing else has to run, and the <code>keyword</code> tier
+needs no model and no key. Semantic recall needs a local model download.
+Synthesis, auto-tagging and contradiction detection need an LLM
+endpoint.</p>
+<p>The store is SQLite, inspectable with <code>ai-memory list</code>,
+<code>get</code>, <code>export</code> or SQL. Encryption at rest is a
+sqlcipher build plus an envelope column, off by default. The
+configuration surface is large: the <code>asi-hard</code> profile alone
+pins twelve environment knobs
+(<code>src/security_profile.rs:37-50</code>), and several flags the
+documentation describes as live are never seeded (section 9).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Store (MCP).</strong> <code>handle_store</code>
+(<code>src/mcp/tools/store/mod.rs:281</code>) validates the request and
+runs the permission rules and <code>db::enforce_governance</code>
+(<code>:466-500</code>). It fetches near candidates, runs the synthesis
+pass when eligible (<code>:585-640</code>), then the exact-title dedup
+update (<code>:650-716</code>), the proactive conflict check
+(<code>:718-765</code>) and the per-agent quota (<code>:775-787</code>).
+<code>db::insert</code> (<code>src/storage/mod.rs:769</code>) applies
+the record-stop fence, the optional governance pre-write hook, the
+secret-screen redaction backstop, and the upsert
+(<code>:868-890</code>). The handler emits a <code>Store</code> audit
+event (<code>store/mod.rs:848</code>).</p>
+<p><strong>Recall.</strong> <code>handle_recall_dto</code>
+(<code>src/mcp/tools/recall.rs:881</code>) first runs
+<code>db::gc_if_needed</code> (<code>:981</code>). It resolves the
+namespace from the argument or a <code>session_default</code> scope
+(<code>:1010-1012</code>), then calls <code>db::recall</code> or
+<code>recall_hybrid</code>. The FTS query is
+<code>src/storage/mod.rs:5398-5433</code>; the hybrid path is
+<code>recall_hybrid_precomputed_hnsw</code> (<code>:12882</code>) with
+<code>blend_and_rank</code> (<code>:13559-13618</code>). After retrieval
+the handler applies the optional <code>confidence_tier</code> filter and
+the private-scope filter (<code>recall.rs:957-982</code>), decorates
+rows, and writes one <code>recall_observations</code> row per candidate
+(<code>:702-752</code>).</p>
+<p><strong>Session start.</strong> <code>ai-memory boot</code>
+(<code>src/cli/boot.rs:493</code>) resolves the namespace from
+<code>--namespace</code>, <code>[storage].default_namespace</code> or
+the git root, and lists it. When the list is empty it falls back to the
+most recent <code>long</code> rows across all namespaces
+(<code>:204-243</code>).</p>
+<p><strong>Forget.</strong> <code>forget</code>
+(<code>src/storage/mod.rs:3907</code>) requires a namespace, pattern or
+tier, and archives and deletes the match set in one
+<code>BEGIN IMMEDIATE</code>. <code>purge_and_tombstone_forget</code>
+writes a signed <code>forget_tombstones</code> row per victim,
+crypto-erases the envelope and scrubs <code>cid_genesis</code>
+(<code>:3494-3615</code>). <code>insert_if_newer</code>, the federation
+merge, drops any inbound row whose id is tombstoned
+(<code>:11522-11530</code>).</p>
+<p><strong>Consolidate.</strong> <code>consolidate</code>
+(<code>src/storage/mod.rs:6706</code>) mints one row from N sources with
+<code>metadata.derived_from</code>, and hard-deletes the sources unless
+<code>consolidate_tombstone_sources_enabled()</code>
+(<code>:6946-6984</code>).</p>
+<p><strong>Governance.</strong> <code>enforce_governance</code> returns
+allow, deny or a pending id. <code>approve_with_approver_type</code>
+(<code>src/storage/mod.rs:15268</code>) resolves the namespace's
+approver type — Human, a named Agent, or Consensus of N registered
+agents — and <code>execute_pending_action</code> replays the
+payload.</p>
+<p><strong>Federation receive.</strong> <code>sync_push</code>
+(<code>src/handlers/federation_receive.rs:830</code>) checks the peer,
+nonce and per-write attestation, applies
+<code>maybe_quarantine_unattributed</code> (<code>:1309</code>), charges
+the storage quota and calls <code>db::merge_inbound</code>
+(<code>:1404</code>).</p>
+<p><strong>Graph.</strong> <code>memory_link</code>,
+<code>memory_kg_query</code>, <code>memory_kg_timeline</code> and
+<code>memory_kg_invalidate</code> work over <code>memory_links</code>.
+<code>kg_query</code> is a recursive CTE with a <code>valid_at</code>
+filter (<code>src/storage/mod.rs:8742-8762</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>UUID primary key; every foreign key and the federation tiebreak</td>
+</tr>
+<tr>
+<td><code>title</code>, <code>namespace</code></td>
+<td>unique together; the dedup identity</td>
+</tr>
+<tr>
+<td><code>tier</code>, <code>expires_at</code></td>
+<td><code>short</code> 6 h, <code>mid</code> 7 d, <code>long</code> none
+(<code>src/models/memory.rs:852-858</code>)</td>
+</tr>
+<tr>
+<td><code>priority</code>, <code>confidence</code>,
+<code>confidence_source</code></td>
+<td>1–10 and 0–1; the source names caller, derived, calibrated or
+decayed</td>
+</tr>
+<tr>
+<td><code>access_count</code>, <code>last_accessed_at</code></td>
+<td>written by the fold, never by recall</td>
+</tr>
+<tr>
+<td><code>memory_kind</code>, <code>kind_provenance</code></td>
+<td>sixteen kinds, among them <code>observation</code>,
+<code>reflection</code>, <code>persona</code>, <code>goal</code>,
+<code>told</code>, <code>instruction</code></td>
+</tr>
+<tr>
+<td><code>lifecycle_state</code></td>
+<td>five caller states plus system-only <code>tombstoned</code> and
+<code>quarantined</code></td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td>JSON: <code>agent_id</code>, <code>scope</code>,
+<code>attest_level</code>, <code>derived_from</code>, contradiction
+flags</td>
+</tr>
+<tr>
+<td><code>citations</code>, <code>source_uri</code>,
+<code>source_span</code></td>
+<td>first-class provenance pointers</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>optimistic-concurrency counter, bumped on every update</td>
+</tr>
+<tr>
+<td><code>cid</code>, <code>cid_genesis</code></td>
+<td>BLAKE3 content address of the genesis row; the pre-image is nulled
+on forget</td>
+</tr>
+<tr>
+<td><code>valid_from</code>, <code>valid_until</code></td>
+<td>claim-validity window with no writer and no reader (section 9)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Schema at <code>src/storage/migrations.rs:52-191</code>.</p>
+<p><strong>Scope is two keys.</strong> <code>namespace</code> is a
+<code>/</code>-separated path; a hierarchical query expands to the
+ancestor chain with a proximity boost. <code>metadata.scope</code> is
+<code>private</code>, <code>team</code>, <code>unit</code>,
+<code>org</code> or <code>collective</code>, indexed through a generated
+<code>scope_idx</code> column. Private visibility is keyed on the
+owner's <code>agent_id</code> rather than on the namespace
+(<code>src/storage/mod.rs:197-245</code>).</p>
+<p><strong>Provenance is rich and mostly self-asserted.</strong>
+<code>agent_id</code> is preserved across upserts. On the local path it
+is whatever <code>resolve_agent_id</code> returns: an explicit parameter
+first, then <code>AI_MEMORY_AGENT_ID</code>, then a synthesized
+<code>ai:&lt;client&gt;@&lt;host&gt;</code>
+(<code>src/identity/mod.rs:241-301</code>).
+<code>AI_MEMORY_REQUIRE_AGENT_ATTESTATION</code> makes unsigned direct
+writes refusable; only <code>asi-hard</code> pins it on.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The keyword score adds the negated FTS5 rank,
+<code>priority * 0.5</code>, <code>min(access_count, 50) * 0.1</code>,
+<code>confidence * 2.0</code>, a tier bonus of 3 for <code>long</code>
+and 1 for <code>mid</code>, and a recency term on
+<code>updated_at</code> (<code>src/storage/mod.rs:5398-5413</code>). The
+hybrid score is <code>w * cosine + (1 - w) * normalized_fts</code>.
+<code>w</code> falls linearly from 0.50 at 500 characters of content to
+0.15 at 5,000, and the product takes a decay factor
+(<code>:13578-13600</code>).</p>
+<p>Every lane applies the same filters: namespace or ancestor set,
+unexpired, tags, a <code>created_at</code> window, archived-source
+exclusion, visibility, and the lifecycle allow-list. The HNSW branch
+loads rows by id and re-applies each filter in Rust
+(<code>:13367-13412</code>), so a candidate from the ANN walk cannot
+skip them.</p>
+<p><strong>An omitted namespace means every namespace.</strong>
+<code>namespace</code> is optional on <code>memory_recall</code> and on
+the storage function, and <code>?2 IS NULL OR m.namespace = ?2</code>
+matches all rows when it is absent (<code>recall.rs:1010-1012</code>;
+<code>storage/mod.rs:5417</code>). The <code>as_agent</code> position
+governs team, unit and org visibility; it does not narrow the
+namespace.</p>
+<p><strong>Session-start injection ignores relevance.</strong>
+<code>boot</code> lists the namespace by
+<code>priority DESC, updated_at DESC</code>
+(<code>src/storage/mod.rs:40-41</code>), with limit 10 and a 4,096-token
+budget in the installed hook. The list query carries the lifecycle
+allow-list and no visibility predicate (<code>:4619-4669</code>). An
+empty namespace triggers the cross-namespace <code>long</code> fallback
+(<code>src/cli/boot.rs:205-241</code>): the read widens to every
+namespace's most recent <code>long</code> rows instead of returning
+nothing. The injected header says so in one line
+(<code>:447-450</code>); nothing stops the rows from reaching the
+prompt.</p>
+<p>Recall writes nothing to <code>memories</code>. Access counts, TTL
+extension and promotion from <code>mid</code> to <code>long</code> at
+five accesses (<code>src/models/mod.rs:51</code>) come from folding
+<code>recall_observations</code> later.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. The agent calls
+<code>memory_store</code>; nothing extracts memories from conversation
+on the default path. <code>memory_capture_turn</code> and a transcript
+store exist as a capture backstop, and a stderr nag fires when an agent
+goes five calls without storing. A row is retrievable by FTS on commit,
+and the embedding is computed inline when an embedder is wired.</p>
+<p><strong>Deduplication is by title, then by meaning.</strong> An exact
+title in the namespace updates in place and returns
+<code>duplicate: true</code>. A near-duplicate with different content is
+refused, which turns a contradiction into an error the agent resolves
+with <code>force</code> or <code>memory_update</code>. Under the
+<code>autonomous</code> tier the LLM synthesis pass may merge or delete
+instead. Its deletes are re-checked against the delete permission rule
+and capped at one per call by default
+(<code>src/mcp/tools/store/mod.rs:540-565</code>).</p>
+<p><strong>Consolidation destroys its sources.</strong> The function
+comment says it <em>"Hard-DELETEs the source memories"</em>, keeping
+their ids in <code>metadata.derived_from</code>
+(<code>src/storage/mod.rs:6695-6705</code>). The alternative, which
+keeps them as <code>tombstoned</code> rows behind
+<code>derived_from</code> edges, is gated on a flag nothing seeds
+(section 9). The <code>trust.rs</code> module header records that
+consolidation mints its result at <code>confidence = 1.0</code>
+(<code>src/trust.rs:8-12</code>).</p>
+<p><strong>Forget is id-keyed.</strong> The archive copy survives until
+<code>archive_purge</code> or <code>auto_purge_archive</code>.
+Re-storing the same text creates a new row; the tombstone stops only a
+peer re-sending the old id.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous. The keyword tier costs one transaction; the
+semantic tier adds one embedding per store. The autonomous tier adds an
+LLM synthesis call, plus optional auto-tag and contradiction calls,
+before the reply.</li>
+<li>Lag: none on FTS. The HNSW insert is immediate in the writing
+process.</li>
+<li>Background: the daemon folds access every 60 seconds and runs GC.
+The stdio MCP server runs neither. <code>ai-memory gc</code> folds
+first, and its comment calls the CLI-only gap a <em>"documented
+deferral"</em> (<code>src/cli/gc.rs:20-29</code>).</li>
+<li>Expiry without the fold: <code>handle_recall_dto</code> calls
+<code>gc_if_needed</code> without folding. In a stdio-only setup a
+<code>mid</code> row therefore expires after seven days however often it
+is recalled, and goes to the archive. This was read, not run.</li>
+<li>Read: recall returns at most <code>limit</code> rows under an
+optional token budget. Boot injects at most 10 rows and 4,096 tokens as
+installed.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server advertises 7 tools under the default <code>core</code>
+profile — store, recall, list, get, search, <code>load_family</code> and
+<code>smart_load</code> — plus the always-on
+<code>memory_capabilities</code>. The <code>graph</code>,
+<code>admin</code>, <code>power</code> and <code>full</code> profiles
+add the rest, up to 101 (<code>src/profile.rs:670-674</code>). A call to
+a tool outside the active profile is refused as unknown
+(<code>src/mcp/mod.rs:2741-2775</code>), and the profile is fixed at
+start.</p>
+<p><code>ai-memory install claude-code</code> writes a SessionStart hook
+running
+<code>ai-memory boot --quiet --limit 10 --budget-tokens 4096</code>
+(<code>src/cli/install.rs:1006</code>), and
+<code>docs/integrations/</code> carries recipes for twenty-odd hosts.
+The tree's own <code>CLAUDE.md</code> tells agents to call
+<code>memory_store</code> first on any multi-step operator directive.
+That is the intended posture: the model decides what to keep.</p>
+<p><code>docs/INSTALL.md</code> also offers
+<code>hooks/session-start.sh</code> as a manual alternative. That script
+stores a <code>_ns_probe</code> memory on every session start to learn
+the namespace, then runs <code>forget --pattern "_ns_probe"</code> with
+no namespace (<code>hooks/session-start.sh:23-30</code>). The sanitizer
+phrase-quotes the token, so the forget matches any row whose indexed
+text holds that phrase. Read, not run.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The read-side allow-list is the strongest design
+here.</strong> Hidden states are hidden by omission from a five-element
+allow-list, so an unknown future state read by an older binary is hidden
+too. One function generates the SQL fragment and one method mirrors it
+in Rust for the HNSW branch
+(<code>src/models/memory.rs:404-420, 472-520</code>). The test block's
+header records that before the allow-list, no SQL predicate excluded a
+<code>tombstoned</code> row
+(<code>src/storage/mod.rs:24193-24198</code>).</p>
+<p><strong>Three mechanisms are resolved from configuration and never
+seeded.</strong> <code>set_append_only</code>,
+<code>set_lineage_dag</code> and
+<code>set_consolidate_tombstone_sources</code> have no caller outside
+tests (<code>src/config.rs:5543, 5585, 5599</code>). The daemon
+bootstrap says why: the flags are <em>"DELIBERATELY NOT seeded into the
+process-wide"</em> atomics, to keep unit tests order-independent
+(<code>src/daemon_runtime.rs:1050-1069</code>). So
+<code>AI_MEMORY_APPEND_ONLY=1</code> writes no
+<code>memory_revisions</code> leaf
+(<code>src/revisions.rs:401-424</code>), and consolidation always
+hard-deletes. Flag-on integration tests pass by setting the atomic
+directly (<code>tests/append_only_spine_flagon_g6.rs</code>).</p>
+<p><strong>The signed-approval quorum has no producer.</strong>
+<code>verify_quorum</code> checks m-of-n Ed25519 signatures from
+enrolled approver keys over a domain-separated pre-image
+(<code>src/approvals.rs:545-616</code>).
+<code>handle_pending_approve</code> enforces it when a pending payload
+carries <code>requires_signed_approval</code>
+(<code>src/mcp/tools/pending.rs:366-406</code>). Only
+<code>route_escalation_to_approval_gate</code> stamps that key, and its
+one caller is <code>tests/r40_airgapped_approval.rs:208</code>.</p>
+<p><strong>Federation is the most defended boundary.</strong> It has
+peer enrollment, mTLS pins, a persisted nonce cache, per-write
+signatures and tombstone-wins on forgotten ids. A relayed
+<code>updated_at</code> is clamped, and inbound
+<code>attest_level</code> is reset to <code>claimed</code> before the
+merge tiebreak (<code>src/storage/mod.rs:11806-11830</code>). The
+quarantine knob defaults off
+(<code>src/federation/receive_auth.rs:436-440</code>), so a default
+receiver shows unattested relayed memories as believed.</p>
+<p><strong>Data loss.</strong> Archive-on-GC defaults on, and boot warns
+when it is disabled (<code>src/config.rs:7544-7552</code>).
+Consolidation and synthesis deletes do not archive.</p>
+<p><strong>Uncertainty is representable only for federated
+rows.</strong> A local agent's store is believed at once, and
+<code>confidence</code> ranks without filtering by default.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded on the quarantine state, with the
+limits in the frontmatter record. The state withholds, a verified
+signature releases it, and a forged signature is refused at the
+door.</li>
+<li><code>scope_enforced</code> — withheld, because the session-start
+read widens on an empty result. <code>fetch_boot_memories</code> lists
+the resolved namespace and, when it is empty, lists the most recent
+<code>long</code> rows of all namespaces with no private-scope predicate
+(<code>src/cli/boot.rs:205-241</code>). The near-miss is recall: a
+<code>namespace</code> column with an equality predicate on every arm
+(<code>src/storage/mod.rs:5417</code>), owner-keyed private visibility
+(<code>:197-245</code>; <code>src/mcp/tools/recall.rs:957-982</code>)
+and a committed cross-agent test. Recall's own gap is that an omitted
+namespace means all of them.</li>
+<li><code>audit_log</code> — awarded on the NDJSON trail, which is
+opt-in. The <code>signed_events</code> table is append-only and
+hash-chained, but it records link creation and invalidation, approvals
+and coordination events rather than memory writes.
+<code>memory_revisions</code> would be the in-database record and has no
+production producer.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — withheld. <code>forget_tombstones</code> is
+keyed on <code>memory_id</code>, and its own comment says <em>"a
+legitimate re-create mints a NEW uuid, unaffected"</em>
+(<code>src/storage/mod.rs:3644-3657</code>). It stops a replica from
+resurrecting a record, not a writer from re-asserting a value.</li>
+<li><code>bitemporal</code> — withheld. The memory-level
+<code>valid_from</code> and <code>valid_until</code> columns
+(<code>src/storage/migrations.rs:185-191</code>) are absent from the
+<code>Memory</code> struct and from every insert and select. On links,
+<code>valid_from</code> is the insert clock
+(<code>src/storage/mod.rs:6216, 6295</code>), and
+<code>memory_kg_invalidate</code> overwrites <code>valid_until</code> in
+place (<code>:8457-8470</code>). A link's validity can end apart from
+record time; it cannot start apart from it.</li>
+<li><code>human_review</code> — withheld.
+<code>memory_pending_approve</code> is a registered MCP tool, loaded
+under the <code>admin</code> and <code>full</code> profiles. Its handler
+takes the approver from the <code>agent_id</code> parameter
+(<code>src/mcp/tools/pending.rs:350</code>) and calls the
+<code>LocalOperator</code> surface (<code>:412</code>). There the
+self-approval check runs only when <code>AI_MEMORY_AGENT_ID</code> is
+set (<code>src/storage/mod.rs:15320-15336</code>). A committed test
+asserts that the default accepts self-approval
+(<code>:23183-23206</code>). With the variable set, the approver must be
+a registered agent, and <code>memory_agent_register</code> is on the
+same server. The verified-principal path is the unwired quorum
+above.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin.</p>
+<p><strong>The negative cases.</strong>
+<code>seed_lifecycle_corpus</code> inserts three rows sharing the token
+<code>widget</code> and plants <code>tombstoned</code> and
+<code>quarantined</code> on two of them with a raw <code>UPDATE</code>
+(<code>src/storage/mod.rs:24200-24221</code>). Six tests, one per lane —
+recall, search, list, <code>export_all</code>,
+<code>memories_updated_since</code> and <code>list_by_source_uri</code>
+— assert the open row present before asserting the other two absent
+(<code>:24224-24351</code>).</p>
+<p><code>a2a_3_scoped_recall_collective_visible_private_isolated</code>
+asserts that a cross-agent search returns exactly 2 collective rows and
+0 private ones, then that the owner sees all 5
+(<code>tests/a2a_campaign_round1.rs:382-488</code>). CI runs
+<code>cargo test --lib</code> on every configuration
+(<code>.github/workflows/ci.yml:386-390</code>).</p>
+<p><strong>Tests that pin a gap.</strong> The self-approval test above
+asserts the permissive default. The quarantine helper is tested on its
+own (<code>src/handlers/federation_receive.rs:2798-2825</code>). No test
+found in this reading drives a relayed unattested write through
+<code>sync_push</code> to a hidden recall.</p>
+<p><strong>Benchmarks.</strong>
+<code>benchmarks/longmemeval/results.md</code> reports LongMemEval-S
+over 500 questions from a harness that drives the shipped binary: R@5 of
+96.4% for keyword, 96.8% for semantic and 95.8% for autonomous. It
+labels the earlier 97.8% headline as coming from a shadow harness that
+re-implements scoring outside the binary. The raw per-run files are
+cited under <code>.local-runs/</code>, which is not in the tree, so no
+figure recomputes from the repository. The README's coverage,
+certification and compliance badges link to hosted pages that were not
+opened.</p>
+<p><strong>No paper.</strong> The arXiv references in the tree cite
+other work, such as CoALA and reviews of external papers, and there is
+no <code>CITATION.cff</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make read visibility an allow-list generated from one
+constant.</strong> A new state stays hidden until someone adds it, and
+the SQL and in-memory filters cannot drift because both derive from the
+same slice.</li>
+<li><strong>Write one negative test per read lane, seeded with a visible
+control.</strong> Six lanes share one three-row fixture, and each
+asserts the positive case first.</li>
+<li><strong>Quarantine rather than reject when provenance is
+missing.</strong> The bytes converge across replicas, only the local
+view hides them, and a later verified copy releases them without a
+person.</li>
+<li><strong>Key the forget tombstone on the id and check it before any
+merge.</strong> It closes last-writer-wins resurrection, the usual
+deletion leak in replicated stores.</li>
+<li><strong>Refuse near-duplicate contradictions at write time</strong>,
+and make the caller say <code>force</code>.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Behaviour flags whose seeding is deferred for test
+isolation.</strong> The config resolves them, the docs describe them,
+flag-on tests pass by setting the atomic, and the production binary
+never turns them on.</li>
+<li><strong>An approver identity taken from the request.</strong> A
+parameter is a claim; a human gate needs a principal the producing agent
+cannot type.</li>
+<li><strong>An optional scope argument that widens to everything when
+omitted.</strong> Default it from the session on every read tool, as
+<code>boot</code> does.</li>
+<li><strong>An upsert that keeps the maximum confidence.</strong> It
+makes a downward correction by re-store impossible.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an operator who wants one local binary that every MCP host
+can share. Keyword recall works offline, and the design grows into
+multi-agent or multi-node deployment with real federation controls. The
+cost is surface: 101 tools, a twelve-knob hardened profile, eight tool
+families, and flags whose documented effect has to be checked against
+the bootstrap. A single developer who wants memory and nothing else will
+configure and learn far more than they use. A team that needs reviewed
+memory should not rely on the pending queue as shipped. Anyone running
+only the stdio server should schedule <code>ai-memory gc</code> or run
+the daemon.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the Postgres backend's approve path carry the same
+<code>LocalOperator</code> default? Only the SQLite path was read.</li>
+<li>Is there an operator route to dequarantine a row whose author never
+re-signs? <code>dequarantine</code> has two callers, both on federation
+receive.</li>
+<li>How do the HTTP routes authenticate <code>X-Agent-Id</code> in a
+default daemon, and can an agent holding the API key reach the approve
+route?</li>
+<li>Does any host integration schedule <code>ai-memory gc</code> for
+stdio-only installs?</li>
+<li>What do the hosted coverage and certification pages measure?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and storage:</strong>
+<code>src/storage/migrations.rs</code>, <code>src/storage/mod.rs</code>,
+<code>src/models/memory.rs</code>, <code>src/models/mod.rs</code>,
+<code>migrations/sqlite/</code>.</li>
+<li><strong>Write path:</strong>
+<code>src/mcp/tools/store/mod.rs</code>,
+<code>src/mcp/tools/store/synthesis.rs</code>,
+<code>src/validate.rs</code>, <code>src/secret_screen.rs</code>,
+<code>src/quotas.rs</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/mcp/tools/recall.rs</code>,
+<code>src/storage/mod.rs:5269-5524, 12827-13760</code>,
+<code>src/hnsw.rs</code>, <code>src/reranker.rs</code>,
+<code>src/cli/boot.rs</code>.</li>
+<li><strong>Lifecycle and forgetting:</strong>
+<code>src/storage/mod.rs:1754-2031, 3494-3700, 3907-4140, 6706-6990, 10502-10705</code>,
+<code>src/revisions.rs</code>,
+<code>src/config.rs:5531-5610</code>.</li>
+<li><strong>Trust and governance:</strong>
+<code>src/handlers/federation_receive.rs</code>,
+<code>src/federation/receive_auth.rs</code>,
+<code>src/security_profile.rs</code>, <code>src/trust.rs</code>,
+<code>src/approvals.rs</code>, <code>src/mcp/tools/pending.rs</code>,
+<code>src/storage/mod.rs:15220-15420</code>,
+<code>src/identity/mod.rs</code>.</li>
+<li><strong>Audit:</strong> <code>src/audit.rs</code>,
+<code>src/signed_events.rs</code>, <code>src/main.rs:105-125</code>,
+<code>src/mcp/mod.rs:140-200</code>.</li>
+<li><strong>Integration:</strong> <code>src/mcp/mod.rs</code>,
+<code>src/mcp/registry.rs</code>, <code>src/profile.rs</code>,
+<code>src/cli/install.rs</code>, <code>hooks/session-start.sh</code>,
+<code>docs/integrations/</code>.</li>
+<li><strong>Background:</strong>
+<code>src/background/access_fold.rs</code>,
+<code>src/daemon_runtime.rs</code>, <code>src/cli/gc.rs</code>,
+<code>src/curator/mod.rs</code>.</li>
+<li><strong>Tests and benchmarks:</strong>
+<code>src/storage/mod.rs:24193-24460</code>,
+<code>tests/a2a_campaign_round1.rs</code>,
+<code>tests/append_only_spine_flagon_g6.rs</code>,
+<code>tests/r40_airgapped_approval.rs</code>,
+<code>benchmarks/longmemeval/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'set_lineage_dag|set_append_only|set_consolidate_tombstone_sources' --type rust .</code>
+— definitions in <code>src/config.rs</code>, a comment in
+<code>src/daemon_runtime.rs:1065</code>, and calls only under
+<code>tests/</code>.</li>
+<li><code>rg -n 'route_escalation_to_approval_gate' --type rust .</code>
+— the definition, a comment at <code>src/approvals.rs:862</code>, and
+<code>tests/r40_airgapped_approval.rs</code>.</li>
+<li><code>rg -n 'valid_from|valid_until' src/models/memory.rs src/mcp/tools/store/ src/handlers/create.rs</code>
+— no match; <code>awk</code> over
+<code>src/storage/mod.rs:769-1106</code>, the insert, finds none
+either.</li>
+<li><code>rg -n 'fold_recall_accesses|access_fold' src/mcp/</code> — no
+match; the callers are <code>src/background/access_fold.rs</code>,
+<code>src/daemon_runtime.rs</code>, <code>src/handlers/admin.rs</code>
+and <code>src/cli/gc.rs</code>.</li>
+<li><code>rg -n 'store\.dequarantine|db::dequarantine' src --type rust</code>
+— <code>src/handlers/federation_receive.rs:1411</code> and
+<code>src/handlers/federation_signing_check.rs:351</code> only.</li>
+<li><code>rg -n 'Tombstoned\.as_str' src --type rust</code> —
+<code>src/storage/mod.rs:6972</code> inside the flag-gated consolidate
+branch, and the Postgres twin.</li>
+<li><code>rg -n -i 'CREATE TABLE IF NOT EXISTS [a-z_]*(tombstone|reject|suppress|block|deny)' src migrations</code>
+— only <code>forget_tombstones</code>.</li>
+<li><code>rg -n 'propagated_trust_tier\(|transitive_suspects\(' src --type rust</code>
+— callers in <code>src/mcp/tools/lineage.rs</code> and
+<code>src/mcp/tools/dependents_of_invalidated.rs</code>, both reporting
+tools.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— eighteen documents citing external papers; no
+<code>CITATION.cff</code>.</li>
+<li><code>ls .local-runs</code> — absent from the checkout.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/alphaonedev/ai-memory-mcp/commit/948fe9995f287942a8f6b917d83a362290698ee4"><code class="commit-id" title="948fe9995f287942a8f6b917d83a362290698ee4">948fe999…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 2
+October 2026. Three marks: <code>trust_state</code>,
+<code>audit_log</code>, <code>negative_eval</code>;
+<code>scope_enforced</code> withheld on the boot fallback. Screened
+before reading: 3 auto-run surfaces (<code>.claude/settings.json</code>,
+an LSP block and a write deny-list with no hook command;
+<code>hooks/session-start.sh</code>; the <code>server.json</code> MCP
+manifest), 3 build-time execution points (three deploy
+<code>Makefile</code>s), 13 dependency files inside the cooldown — every
+file in a depth-1 clone dates to the tip — and 3 unpinned surfaces;
+<code>CLAUDE.md</code> was treated as data. Read with <code>rg</code>
+and <code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go CLI that stores coding
+agents' sealed intents, decisions and human-confirmed constraints as an
+append-only event log in Git refs, ranked deterministically before
+edits.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mainline — Agent Memory Atlas">
+    <meta property="og:description" content="A Go CLI that stores coding
+agents' sealed intents, decisions and human-confirmed constraints as an
+append-only event log in Git refs, ranked deterministically before
+edits.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mainline — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go CLI that stores
+coding agents' sealed intents, decisions and human-confirmed constraints
+as an append-only event log in Git refs, ranked deterministically before
+edits.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mainline — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mainline",
+      "description": "A Go CLI that stores coding agents' sealed intents, decisions and human-confirmed constraints as an append-only event log in Git refs, ranked deterministically before edits.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Sealed engineering intent, kept in Git
+refs</p>
+          <h1>Mainline</h1>
+          <p class="document-deck">A Go CLI that stores coding agents'
+sealed intents, decisions and human-confirmed constraints as an
+append-only event log in Git refs, ranked deterministically before
+edits.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mainline-org/mainline">
+              <span>Source</span>
+              <strong>mainline-org/mainline</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mainline-org/mainline/commit/79f4be3bc15adadc9d3f3ff97aa4f7d44a76762f" title="79f4be3bc15adadc9d3f3ff97aa4f7d44a76762f">
+              <span>Analyzed revision</span>
+              <code>79f4be3b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mainline-org--mainline" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mainline-org--mainline</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Layered:
+Apache-2.0 for the CLI, skills, hooks, SDKs and specs; CC-BY-4.0 or
+Apache-2.0 for documentation; brand and hosted surfaces
+excluded</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>35,142
+lines of Go in 111 files outside tests; the intent store, sync and
+retrieval are about 5,800 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>433
+commits on main by 5 contributors, 25 April 2026 – 2 October
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>579
+Go test functions in 77 files, 23,336 lines, 66 rapid property
+checks</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mainline is a Go CLI that gives coding agents a shared record of
+engineering intent. An agent starts an intent, appends turns while it
+works, and seals a summary of goal, decisions, rejected alternatives and
+touched files. The sealed record is an event in a per-actor log stored
+as Git objects under <code>refs/mainline/actors</code>, pushed and
+fetched with the repository. Before editing, the agent runs
+<code>mainline context</code>, which ranks prior intents against the
+files and words of the change.</p>
+<p>What is notable is that the event log is the store. Each append is a
+commit on the actor's ref moved by compare-and-swap, and every view is a
+replay. Seal refuses agent-written constraints, which only an
+interactive <code>guard add</code> from a terminal can create.</p>
+<p>What is weak is the lifecycle. Two of its seven states, superseded
+and reverted, are read by retrieval, the Hub, trace and risk expiry, and
+no command in the tree writes either. The published eval's largest win
+is on a fixture that seeds one of them directly.</p>
+<p>The licence is layered. The CLI, skills, hooks, SDKs and the two
+protocol specs are Apache-2.0, documentation is CC-BY-4.0 or Apache-2.0,
+and the name, brand and hosted services are excluded
+(<code>LICENSE</code>). GitHub reports no single SPDX identifier.</p>
+<p>Two marks. <code>audit_log</code> is earned on the actor log itself,
+and <code>negative_eval</code> on a retrieval test that keeps a resolved
+risk's text from making its intent relevant, beside an open risk that
+must. Section 9 names the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an intent: one unit of agent work, with the reasoning the
+agent attached when it finished. It becomes shared belief when
+<code>seal --submit</code> appends an <code>intent.sealed</code> event
+and pushes the actor's ref. It is then <code>proposed</code>, and
+becomes <code>merged</code> when a sync finds a Git note on a
+<code>main</code> commit naming it. Nothing extracts it, and Mainline
+calls no model; the agent writes the summary and the CLI validates
+it.</p>
+<p>An intent stops being current in three ways, by design.
+<code>mainline abandon</code> writes an <code>intent.abandoned</code>
+event (<code>internal/engine/intent.go:411-485</code>). An
+<code>intent.superseded</code> event marks it replaced
+(<code>internal/engine/sync.go:330-338</code>). A note listing it under
+<code>reverts</code> marks it reverted (<code>:801-806</code>). The last
+two are readers only: a tree-wide search finds
+<code>IntentSupersededEvent</code> and
+<code>IntentMergeAcknowledgedEvent</code> constructed in two test files
+and nowhere else, and no <code>CommitNote</code> literal outside tests
+sets <code>Reverts</code>.</p>
+<p>Retrieval maps lifecycle to a second status the agent sees:
+<code>abandoned</code> for abandoned or reverted,
+<code>superseded</code>, <code>stale</code> at 90 days or after three
+later intents touched one of its files, and otherwise
+<code>current</code>
+(<code>internal/engine/context_retrieval.go:573-600</code>). The status
+is a label with a guidance line and a 0.85 score multiplier. An
+abandoned intent is shown on purpose, as <em>"this approach was
+abandoned — understand why before retrying"</em>.</p>
+<p>Constraints are a separate record with a different authority. Only
+<code>guard add</code> creates one, a <code>constraint.added</code>
+event, and only a high-severity constraint whose files overlap the
+change is surfaced, as an inherited constraint the next seal must
+acknowledge by id (<code>internal/domain/inherited.go:49-142</code>). No
+event retires a constraint.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an intent becomes shared memory, which lifecycle states have a producer at the pin, and where a human gate sits</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an intent becomes shared memory, which lifecycle states have a producer at the pin, and where a human gate sits
+flowchart TD
+    S[&quot;mainline start: local draft&lt;br/&gt;in .ml-cache/drafts&quot;] --&gt; A[&quot;mainline append: turns&lt;br/&gt;in a local JSONL&quot;]
+    A --&gt; P[&quot;seal --prepare: starter&lt;br/&gt;from turns and diff&quot;]
+    P --&gt; SUB{&quot;seal --submit:&lt;br/&gt;anti_patterns, risks or&lt;br/&gt;followups in summary?&quot;}
+    SUB -- &quot;yes&quot; --&gt; REF[&quot;refused&quot;]
+    SUB -- &quot;lint error&quot; --&gt; REF
+    SUB -- &quot;no&quot; --&gt; EV[&quot;intent.sealed appended to&lt;br/&gt;the actor&#39;s log ref&lt;br/&gt;by compare-and-swap&quot;]
+    EV --&gt; PR[&quot;proposed, after push&quot;]
+    PR --&gt; MG[&quot;merged: auto-pin writes&lt;br/&gt;a note on a main commit&quot;]
+    PR --&gt; AB[&quot;abandoned: any actor&lt;br/&gt;runs mainline abandon&quot;]
+    PR -.-&gt; SU[&quot;superseded: read everywhere,&lt;br/&gt;no command writes it&quot;]
+    MG -.-&gt; RV[&quot;reverted: read from notes,&lt;br/&gt;no writer sets reverts&quot;]
+    G[&quot;guard add: stdin must be a TTY&lt;br/&gt;and the phrase typed&quot;] --&gt; C[&quot;constraint.added&quot;]
+    EV --&gt; CTX{&quot;mainline context&quot;}
+    MG --&gt; CTX
+    AB --&gt; CTX
+    C --&gt; CTX
+    CTX --&gt; OUT[&quot;top five by score; drafting dropped;&lt;br/&gt;abandoned and superseded labelled&lt;br/&gt;and multiplied by 0.85&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Go binary over the <code>git</code> executable. The store is Git:
+event blobs in single-file trees, one commit per event, on a ref per
+actor (<code>internal/storage/storage.go:470-516</code>). Merge evidence
+is JSON in Git notes at <code>refs/notes/mainline/intents</code>
+(<code>internal/gitops/git.go:886</code>). Team config is
+<code>.mainline/config.toml</code>, committed. Everything derived lives
+in <code>.ml-cache/</code>, which <code>init</code> adds to
+<code>.gitignore</code> (<code>internal/engine/engine.go:272</code>):
+drafts and turn logs, the rebuilt <code>views/mainline.json</code>, and
+a SQLite reverse index at <code>views/mainline.db</code> used to narrow
+the candidate set
+(<code>internal/storage/sqlite_cache.go:32-34</code>).</p>
+<p><code>mainline sync</code> fetches every actor ref and the notes. It
+reads each log through one <code>git log</code> and one
+<code>cat-file --batch</code> per actor in a bounded worker pool,
+deduplicates events by their bytes, sorts by the event's own timestamp
+and replays (<code>internal/engine/sync.go:515-591</code>). The view is
+rebuilt from nothing on each sync. Webhooks fan domain events out
+through a detached sender process.</p>
+<p>The Hub is a static HTML export of the view with heatmaps, lineage
+and team health (<code>internal/hub/</code>). It displays and edits
+nothing.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run besides <code>git</code>. No API key, model or
+network is needed to store anything; a remote is needed only to share.
+<code>mainline init</code> writes config, configures the ref and notes
+refspecs, installs the skill and the hooks for the detected agents, and
+records a coverage baseline. The store can be read with
+<code>mainline log</code>, <code>show</code> and <code>trace</code>, or
+with <code>git cat-file</code> on the actor refs. A record cannot be
+repaired by editing a file, since a fix is a new event; a wrong view is
+repaired by re-syncing.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>StartWithOptions</code> creates a
+draft for the current branch, or returns the existing one
+(<code>internal/engine/intent.go:43-60</code>). <code>Append</code> adds
+a turn with its description, file changes and caller, stored in
+<code>.ml-cache/drafts/</code> as a turn log. Turns never leave the
+machine; only their count travels in the sealed event
+(<code>internal/engine/seal.go:532</code>).</p>
+<p><strong>Seal.</strong> <code>SealPrepare</code> builds a starter from
+the turns and the diff against the draft's base
+(<code>seal.go:19-127</code>). <code>SealSubmitWithOptions</code>
+refuses a summary carrying <code>anti_patterns</code>,
+<code>risks</code> or <code>followups</code> (<code>:390-424</code>,
+<code>:452-454</code>), validates required fields, and overwrites
+<code>user_goal</code> with the draft's goal (<code>:478-481</code>). It
+checks the prepare snapshot against HEAD, branch and worktree, fails on
+any error-level lint issue (<code>:499-508</code>), then appends the
+event and pushes (<code>:560-589</code>). A push failure leaves the
+intent <code>sealed_local</code>.</p>
+<p><strong>Signals.</strong> <code>AddConstraint</code>,
+<code>AddRisk</code> and <code>AddFollowup</code> each append one event
+and push (<code>internal/engine/signals.go:35-208</code>). The CLI wraps
+the constraint path in a terminal check and a typed confirmation phrase
+(<code>internal/cli/signals.go:46-72</code>), and stamps
+<code>Source</code> as an explicit user (<code>:78-86</code>). Risk and
+follow-up commands have no such gate.</p>
+<p><strong>Replay.</strong> <code>rebuildView</code> dispatches on event
+type (<code>sync.go:240-481</code>), then <code>scanMainNotes</code>
+applies merge and revert notes over the result (<code>:661-806</code>),
+so a merge note overrides an earlier abandon.</p>
+<p><strong>Retrieve.</strong> <code>RetrieveContext</code> takes
+<code>current</code>, <code>files</code> or <code>query</code> mode
+(<code>context_retrieval.go:220-373</code>). It narrows candidates
+through SQLite when it can, drops drafts, scores, and applies a 0.05
+threshold. It then pulls in intents superseded by a returned intent
+(<code>:663-717</code>), sorts, forces each superseder directly above
+what it replaced (<code>:725-749</code>), truncates to five, and
+attaches inherited constraints.</p>
+<p><strong>Inject.</strong> The session-start hook runs sync and status
+and renders a Markdown block bounded at 32 KiB; the prompt-submit hook
+renders status and proposals at 16 KiB
+(<code>internal/hooks/dispatcher.go:89-90</code>, <code>:231-273</code>,
+<code>:317-425</code>). Neither runs <code>context</code>; the block
+tells the agent to.</p>
+<p><strong>Import.</strong> <code>ImportActorLog</code> accepts a fork
+contributor's log after checking every event belongs to the named actor
+(<code>internal/engine/actor_import.go:232-261</code>). It refuses a
+divergent head unless forced (<code>:116-128</code>), and records the
+acceptance as an event in the importer's own log
+(<code>:133-169</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Key fields</th>
+<th>Producer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>intent.sealed</code></td>
+<td>intent id, thread, goal, branch, base and code commit, summary,
+fingerprint, worktree status, dirty files, references, risk and
+follow-up resolutions</td>
+<td><code>seal --submit</code></td>
+</tr>
+<tr>
+<td><code>intent.abandoned</code></td>
+<td>intent id, reason</td>
+<td><code>mainline abandon</code></td>
+</tr>
+<tr>
+<td><code>intent.superseded</code></td>
+<td>intent id, superseded by, reason</td>
+<td>none outside tests</td>
+</tr>
+<tr>
+<td><code>intent.merge_acknowledged</code></td>
+<td>intent id, merge commit</td>
+<td>none outside tests</td>
+</tr>
+<tr>
+<td><code>constraint.added</code></td>
+<td>constraint id, files, what, why, severity, source</td>
+<td><code>guard add</code></td>
+</tr>
+<tr>
+<td><code>risk.added</code>, <code>followup.added</code></td>
+<td>id, intent, files, structured statement</td>
+<td><code>risks add</code>, <code>followups add</code></td>
+</tr>
+<tr>
+<td><code>risk.resolved</code>, <code>followup.resolved</code></td>
+<td>id, resolving intent, rationale</td>
+<td>resolve commands, or inside a seal</td>
+</tr>
+<tr>
+<td><code>check.judgment</code></td>
+<td>candidate intent, judgments, overall</td>
+<td><code>check --submit</code></td>
+</tr>
+<tr>
+<td><code>actor_log.accepted</code></td>
+<td>source ref and head, previous target head, sealed ids</td>
+<td><code>actor import</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Every event carries <code>event_id</code>,
+<code>schema_version</code>, <code>actor_id</code>,
+<code>actor_name</code> and <code>timestamp</code>
+(<code>internal/domain/events.go:21-28</code>). The summary separates
+<code>decisions</code> and <code>rejected</code> alternatives from
+<code>review_notes</code>, which no retrieval surface reads
+(<code>internal/domain/types.go:218-241</code>).</p>
+<p><strong>Scope is the repository.</strong> Every actor's log reaches
+every clone that fetches the remote. <code>actor_id</code> records who
+wrote an event; the only read that compares it is a preflight check on
+whether a proposal belongs to the caller
+(<code>internal/engine/preflight.go:370</code>). Branch adds 0.15 to a
+score in <code>current</code> mode and filters nothing
+(<code>context_retrieval.go:311-315</code>).</p>
+<p><strong>Time</strong> is the event timestamp and
+<code>sealed_at</code>, both written by the client. Merge time comes
+from the commit the note sits on. There is no validity time.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Scoring is additive and fixed in code
+(<code>context_retrieval.go:793-919</code>):</p>
+<ul>
+<li>0.20 per overlapping file, capped at 0.40, and 0.10 per path-derived
+subsystem;</li>
+<li>0.05 per title keyword, 0.025 per keyword in what and in why, and
+0.05 for the first matching decision;</li>
+<li>a contribution for open risk and follow-up text;</li>
+<li>0.10 for an intent sealed in the last seven days, 0.05 in the last
+thirty.</li>
+</ul>
+<p>Query mode drops any intent whose only signal is recency or path
+(<code>:316-318</code>). The query tokenizer carries a short-term
+allowlist, aliases and a CJK fallback through <code>go-ego/gse</code>
+(<code>internal/engine/context_query_tokenizer.go</code>).</p>
+<p>The decision surface is three decisions per intent and five intents
+per call (<code>:184-215</code>). Constraints are never truncated. A
+retrieval returns JSON with a reason list per intent and, in query mode,
+a breakdown of every weight, so an agent can see why something
+ranked.</p>
+<p>The lineage rule is the careful part. A superseded intent below
+threshold is still returned when its replacement is, scored no lower
+than the replacement and placed immediately after it
+(<code>:663-749</code>). The eval report traces this to a failure where
+the old plan vanished below the threshold. At this pin the rule acts
+only on imported logs, because no command emits supersession.</p>
+<p>Retrieval does not read the abandon reason.
+<code>ContextRelevant</code> declares <code>abandoned_reason</code> and
+nothing assigns it; the reason is reachable through
+<code>mainline trace</code>, which reads the raw event
+(<code>internal/engine/trace.go:280-285</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is an explicit CLI call by the agent or a person. Hooks
+write nothing to the store; the dispatcher's comment says start, append
+and seal <em>"require semantic judgment that hooks cannot perform
+without an LLM"</em> (<code>dispatcher.go:100-110</code>). The skill
+tells the agent when to start, append and seal, and tells it not to
+create constraints (<code>skills/mainline/SKILL.md:489-496</code>).</p>
+<p>Agent-authored content is checked for shape, not truth. Lint blocks a
+seal on deterministic issues and warns when a risk reads like a rule
+(<code>internal/engine/lint.go:171</code>). Nothing compares a decision
+to the code.</p>
+<p>Append-only holds for events, not for the view. A re-seal of the same
+intent id replaces the view entry, because the replay assigns
+<code>intentMap[evt.IntentID]</code> per sealed event
+(<code>sync.go:301</code>). Abandon checks the transition table
+(<code>internal/core/core.go:113-131</code>) and not the actor, so any
+teammate can abandon anyone's proposal
+(<code>intent.go:411-485</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, one blob, one tree, one commit and one ref
+update, then a push and, after a seal, a full sync and phase-one
+conflict scan. No model call.</li>
+<li>Lag: an intent is in the author's view once the seal's sync
+completes, and in a teammate's at that teammate's next sync, which the
+session-start hook runs.</li>
+<li>Background: none scheduled. Each sync replays every event from every
+actor and rewrites the view, so the cost grows with the history, not the
+day's work.</li>
+<li>Read: the hook injects at most 32 KiB at session start and 16 KiB
+per prompt. Both blocks change with every sync and sit in system
+context, where they invalidate a cached prefix.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>mainline hooks install</code> writes hook entries for Claude
+Code (SessionStart, UserPromptSubmit, Stop, PreCompact, SessionEnd),
+Codex, Cursor and Pi (<code>internal/hooks/agents/</code>). Only session
+start does work. The other events are webhook signals, and compaction is
+a no-op branch reserved for later (<code>dispatcher.go:194-224</code>).
+Re-injection after compaction therefore depends on the host firing
+SessionStart again.</p>
+<p>The agent holds every write verb except <code>guard add</code>. The
+skill and the session-start block ask it to run <code>context</code>
+before non-trivial edits and to treat retrieved intents as history to
+verify. Preflight reports overlaps with proposed and upstream intents at
+<code>warn</code> or <code>block</code> with
+<code>ok_to_continue</code>, and the autonomy setting names a stop line.
+<code>buildAgentAuthority</code> marks itself
+<code>AdvisoryOnly: true</code>
+(<code>internal/engine/authority.go:89-108</code>), so both are
+guidance.</p>
+<p>Adapting this to another agent means a hook adapter and the skill
+text. The store and retrieval know nothing about the host.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Concurrency is handled at the ref.</strong> Two processes
+appending to one actor log race on <code>update-ref</code> with the
+observed parent; the loser retries on the new head up to 128 times
+(<code>storage.go:491-515</code>). Cross-actor ordering is by
+client-written timestamp, so clock skew reorders replay.</p>
+<p><strong>The view trusts every event it can fetch.</strong> Import
+validates that each event belongs to the actor being imported. The
+normal sync does not, so an event in one actor's log can abandon or
+re-seal an intent another actor owns. In a team that trusts its push
+access this is collaboration; with outside contributors, push access is
+the boundary. The fetch refspec is forced
+(<code>internal/domain/config.go:102-106</code>), so a force-pushed log
+replaces the remote-tracking copy. A local ref still holding the dropped
+events keeps them in the replay, because replay deduplicates across
+both.</p>
+<p><strong>Delete does not exist.</strong> No command removes a sealed
+intent, a constraint or an event, and a secret written into a seal
+travels with every push of the actor ref. <code>doctor</code> deletes
+only stale local drafts.</p>
+<p><strong>Uncertainty is representable only as age.</strong> The
+<code>stale</code> status flags an intent by time or file churn; nothing
+records that a decision was found wrong.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>audit_log</code> — awarded; the append-only actor log is the
+store, with every intent, constraint, risk and follow-up mutation an
+event. The frontmatter record states its limits.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>trust_state</code> — withheld. Lifecycle and retrieval status
+are discrete, and neither withholds anything from being treated as true:
+abandoned, superseded and reverted intents are returned on purpose,
+labelled and multiplied by 0.85. The one exclusion,
+<code>drafting</code>, is a work-in-progress state, not a verdict.
+Resolved risks leave scoring, and resolution means addressed, not
+disbelieved.</li>
+<li><code>tombstone</code> — withheld. <code>rejected</code>
+alternatives and abandoned intents are text on a record. Nothing keyed
+on a rejected value refuses a later seal that re-asserts it, and
+preflight compares goals only against proposed intents.</li>
+<li><code>bitemporal</code> — withheld; one client-written time per
+event.</li>
+<li><code>scope_enforced</code> — withheld. The boundary is the
+repository and its remote; <code>actor_id</code> and branch are on the
+record and no read filters by them.</li>
+<li><code>human_review</code> — withheld. <code>guard add</code> is the
+strongest human gate in the tree: it refuses a non-terminal stdin and
+requires a typed phrase. It is authoring, though. A person writes the
+constraint directly, and no agent-proposed constraint waits anywhere for
+it. A shell that allocates a terminal would also pass the check.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests and committed results at the pin.</p>
+<p><strong>The negative case.</strong>
+<code>TestContextRetrieval_QueryModeScoresOnlyOpenRisks</code>
+(<code>internal/engine/context_retrieval_test.go:117-198</code>) is a
+read-path exclusion over a populated set, with a positive control in the
+same query. A second case asserts an empty result for a query matching
+only a legacy anti-pattern (<code>:426-480</code>), which a retriever
+returning nothing would also pass; the mark rests on the first.
+<code>TestContextRetrieval_DraftingIntentsExcluded</code>
+(<code>:310-333</code>) loops over the results looking for the draft and
+has no positive control.</p>
+<p><strong>Lifecycle in retrieval.</strong> One test abandons a sealed
+intent through the service and asserts it is returned, labelled and
+ranked below a merged twin (<code>:259-308</code>). The supersession
+tests seal both intents and then write the status straight into the
+view. The helper's comment gives the reason: <em>"so the test does not
+depend on a Supersede CLI command shape that may evolve"</em>
+(<code>:803-816</code>). <code>rebuild_view_property_test.go</code>
+appends superseded and merge-acknowledged events through
+<code>AppendActorLogEvent</code> (<code>:112-128</code>,
+<code>:355-365</code>), which tests the reader with events the product
+cannot write.</p>
+<p><strong>Property tests.</strong> Sixty-six <code>rapid.Check</code>
+calls cover replay consistency, sync idempotence, note shape, conflict
+detection and seal invariants, with failing seeds committed under
+<code>internal/engine/testdata/rapid/</code>. CI runs the quick suite,
+which excludes them by build tag, and <code>full-pbt.yml</code> runs
+them in full.</p>
+<p><strong>The published eval.</strong>
+<code>docs/eval-results.md</code> reports a deterministic layer at 8/8
+fixtures on 24 May 2026. Its live layer ran three seeds, with code-first
+agents at 9 violations and intent-first at 0. The committed summary
+<code>docs/eval-live-3seed.json</code> recomputes: 3 per seed, of which
+6 come from <code>superseded-decision</code> and 3 from
+<code>abandoned-approach</code>. It holds no transcripts, and the
+document marks the live layer as not rerun since the fixtures
+changed.</p>
+<p>Fixtures are built by <code>BuildView</code>, which writes
+<code>Status</code> and <code>SupersededByIntent</code> straight into a
+view (<code>internal/eval/eval.go:205-230</code>;
+<code>internal/eval/fixtures.go:145-163</code>). Two thirds of the
+measured advantage sits on a state no Mainline command produces at this
+pin.</p>
+<p>No paper or citation block is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the log the state, and append by compare-and-swap on
+its head.</strong> A view that is always a replay cannot drift from the
+record of what happened, and a CAS retry on the parent turns concurrent
+writers into an ordering problem rather than a lost write.</li>
+<li><strong>Split the authority of records by who may create
+them.</strong> Here the agent writes history and a person writes rules;
+seal rejects the rule-shaped fields outright rather than accepting and
+ignoring them.</li>
+<li><strong>Pull a replaced record in with its replacement.</strong> A
+relevance threshold should filter independently found records, not cut a
+lineage in half.</li>
+<li><strong>Return the scoring breakdown with the result.</strong> An
+agent that can see why a record ranked can argue with it.</li>
+<li><strong>Budget hook injection in bytes and say what was
+cut.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Shipping a lifecycle state without the verb that sets
+it.</strong> Supersession here has a spec section, an event type,
+readers in four surfaces, a ranking rule, property tests and an eval
+fixture, and no command.</li>
+<li><strong>Evaluating on states seeded straight into the view.</strong>
+The fixture measures the reader; it says nothing about whether real use
+ever reaches that state.</li>
+<li><strong>Replaying events without checking the event's actor against
+the record it changes.</strong> Validation that runs only on import
+leaves the everyday path open.</li>
+<li><strong>A declared output field with no writer.</strong>
+<code>abandoned_reason</code> is in the retrieval schema and empty on
+every result, on the one status whose reason the product leads
+with.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team whose agents work in one repository with shared
+push access and who want the reasoning behind changes to travel with the
+code, with no service to run. The memory is coarse, one record per unit
+of work, and the retrieval is deterministic and inspectable, which is
+the right trade for history an agent should verify against code anyway.
+It does not suit memory that must be deleted, scoped below the
+repository, or trusted across contributors who do not trust each other.
+For fact-level recall across conversations, <a
+href="../beads/">beads</a> keeps a flat key-value plane and <a
+href="../rekal/">Rekal</a> ships whole sessions over Git.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Did an earlier release produce supersession, and do existing
+repositories carry <code>intent.superseded</code> events from it? A
+GitHub commit search for <code>supersede</code> returned retrieval, eval
+and test commits from 28 and 29 April 2026 among its first five, and the
+full history was not read.</li>
+<li>The <code>CommitNote</code> comment names <em>"the removed mainline
+merge command"</em>; was it the writer of the <code>reverts</code> field
+that sync still reads?</li>
+<li>How large do actor logs grow in practice, and how long does a full
+replay take at session start on a repository with thousands of
+intents?</li>
+<li>Does the hosted Hub apply any actor check that the CLI's replay does
+not?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Event model:</strong>
+<code>internal/domain/events.go</code>,
+<code>internal/domain/types.go</code>,
+<code>internal/domain/inherited.go</code>,
+<code>internal/domain/risks.go</code>,
+<code>internal/core/core.go</code>.</li>
+<li><strong>Storage:</strong> <code>internal/storage/storage.go</code>,
+<code>internal/storage/sqlite_cache.go</code>,
+<code>internal/gitops/git.go</code>,
+<code>internal/domain/config.go</code>.</li>
+<li><strong>Write path:</strong> <code>internal/engine/intent.go</code>,
+<code>internal/engine/seal.go</code>,
+<code>internal/engine/signals.go</code>,
+<code>internal/engine/lint.go</code>,
+<code>internal/cli/signals.go</code>,
+<code>internal/engine/actor_import.go</code>.</li>
+<li><strong>Replay and merge:</strong>
+<code>internal/engine/sync.go</code>,
+<code>internal/engine/merge.go</code>,
+<code>internal/engine/notes_recovery.go</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>internal/engine/context_retrieval.go</code>,
+<code>internal/engine/context_query_terms.go</code>,
+<code>internal/engine/preflight.go</code>,
+<code>internal/engine/trace.go</code>.</li>
+<li><strong>Integration:</strong>
+<code>internal/hooks/dispatcher.go</code>,
+<code>internal/hooks/agents/</code>,
+<code>skills/mainline/SKILL.md</code>,
+<code>internal/engine/authority.go</code>.</li>
+<li><strong>Tests and eval:</strong>
+<code>internal/engine/context_retrieval_test.go</code>,
+<code>internal/engine/rebuild_view_property_test.go</code>,
+<code>internal/eval/</code>, <code>docs/eval-results.md</code>,
+<code>docs/eval-live-3seed.json</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>rg -n 'IntentMergeAcknowledgedEvent\{|IntentSupersededEvent\{' --type go</code>
+— <code>internal/engine/actor_import_test.go:308</code> and
+<code>internal/engine/rebuild_view_property_test.go:112,128,355,365</code>;
+no non-test constructor.</li>
+<li><code>rg -n 'intent\.superseded|merge_acknowledged|superseded_by"' .</code>
+— a trace label and Hub and test strings beside the constant
+definitions; no writer.</li>
+<li><code>rg -n 'CommitNote\{' --type go -g '!*_test.go' -A8</code> —
+four literals in <code>internal/engine/merge.go</code>
+(<code>:306</code>, <code>:363</code>, <code>:434</code>,
+<code>:756</code>), none setting <code>Reverts</code>.</li>
+<li><code>rg -n 'AbandonedReason' --type go</code> — the field
+declaration at <code>context_retrieval.go:139</code> and a comment at
+<code>internal/eval/eval.go:98</code>; no assignment.</li>
+<li><code>rg -n 'isatty|IsTerminal' --type go -g '!*_test.go'</code> —
+<code>cli/signals.go:47</code> on <code>guard add</code>,
+<code>cli/init.go:203-204</code> and the spinner; no check on risks,
+follow-ups, abandon or actor import.</li>
+<li><code>rg -n 'ActorID|Publication|Thread ==' internal/engine/context_retrieval.go internal/engine/preflight.go</code>
+— the same-thread boost at <code>context_retrieval.go:311</code> and the
+ownership check at <code>preflight.go:370</code>; no scope predicate on
+retrieval.</li>
+<li><code>rg -n -i 'redact|secret|forget|purge|delete.*intent|remove.*constraint' --type go -g '!*_test.go'</code>
+— webhook secrets, draft deletion and comments; no delete of a sealed
+record or a constraint.</li>
+<li><code>rg -n -i 'anthropic|openai|api\.|http\.(Post|Get|NewRequest)|embedding|vector' --type go -g '!*_test.go'</code>
+— comments, the webhook sender and the eval runner's documentation; no
+model call on the product path.</li>
+<li><code>rg -n -i 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' .</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/mainline-org/mainline/commit/79f4be3bc15adadc9d3f3ff97aa4f7d44a76762f"><code class="commit-id" title="79f4be3bc15adadc9d3f3ff97aa4f7d44a76762f">79f4be3b…</code></a>
+— first reading, at the head of <code>main</code>, a merge commit dated
+2 October 2026, after v0.5.1. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>. Screened before reading: 2 auto-run surfaces
+(<code>.cursor/rules/</code> and
+<code>.github/copilot-instructions.md</code>, both agent instruction
+text), 1 build-time execution point (<code>Makefile</code>), 2 files
+inside the cooldown (<code>go.mod</code>, <code>go.sum</code>) —
+inflated, as every file in the depth-1 clone dates to the tip — and no
+unpinned surface; <code>AGENTS.md</code> and <code>CLAUDE.md</code> were
+treated as data. The layered <code>LICENSE</code> was read and carries
+no rider on analysis. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

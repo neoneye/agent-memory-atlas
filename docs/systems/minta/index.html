@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local FastAPI memory hub for
+coding agents: typed context objects searched through Chroma, slot
+packs, and an inbox that the agent can also clear.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Minta — Agent Memory Atlas">
+    <meta property="og:description" content="A local FastAPI memory hub
+for coding agents: typed context objects searched through Chroma, slot
+packs, and an inbox that the agent can also clear.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Minta — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local FastAPI memory hub
+for coding agents: typed context objects searched through Chroma, slot
+packs, and an inbox that the agent can also clear.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Minta — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Minta",
+      "description": "A local FastAPI memory hub for coding agents: typed context objects searched through Chroma, slot packs, and an inbox that the agent can also clear.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A local context hub whose resolver has no
+caller</p>
+          <h1>Minta</h1>
+          <p class="document-deck">A local FastAPI memory hub for coding
+agents: typed context objects searched through Chroma, slot packs, and
+an inbox that the agent can also clear.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/xinchen03/minta">
+              <span>Source</span>
+              <strong>xinchen03/minta</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/xinchen03/minta/commit/a4201db8286e463da56920dd8dbdde6996131ea1" title="a4201db8286e463da56920dd8dbdde6996131ea1">
+              <span>Analyzed revision</span>
+              <code>a4201db8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/xinchen03--minta" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>xinchen03--minta</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+as the open kernel of an open-core product; the expert, rule-promotion
+and synthesis modules the code imports are not in the
+tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>16,727
+lines of Python outside tests: 12,437 in the business server, 1,205 in a
+separate evaluation plane; the web UI ships as a compiled bundle with no
+source</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>167
+commits on main by 5 contributors, 31 May – 20 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>149
+pytest functions in 24 files, 2,689 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Minta is a local memory hub for coding agents: a FastAPI server
+holding typed <em>context objects</em> in SQLite and Chroma, seven text
+<em>slots</em> per user that are packed into a context block, an
+<em>inbox</em> where captured corrections wait, and a lifecycle scanner
+that looks for stale, redundant and conflicting entries. An MCP server
+gives an agent thirteen tools over it. A separate evaluation plane
+implements an add-and-search contract for a memory leaderboard.</p>
+<p>What is notable is the search path. <code>/api/search</code> scopes
+the vector query by owner and then re-reads every candidate from SQL
+under an owner and status predicate, so a stale vector cannot surface a
+row the caller may not see. The user export and delete walk an explicit
+table inventory, the vector index, the JSONL logs and the evaluation
+store.</p>
+<p>What is weak is the part the README leads with. The code that would
+mark a contradicted memory stale has no caller, the bitemporal check has
+no caller, the scheduled scan is added paused, and a confirmed scan
+finding becomes a new memory rather than acting on the one it named. The
+inbox gate is reachable by the agent it gates.</p>
+<p>The repository is the Apache-2.0 open kernel of an open-core product;
+the <code>OPEN_SOURCE_BOUNDARY.md</code> file assigns expert runtime,
+rule promotion and governance to a closed tier. The code imports three
+of those modules — <code>services.production_store</code>,
+<code>services.rule_promotion</code>,
+<code>services.synthesis_engine</code> — inside
+<code>try: … except: pass</code>, and they are absent. Everything this
+report describes runs without them.</p>
+<p>Three marks: <code>scope_enforced</code> and
+<code>negative_eval</code> on both stores, and <code>audit_log</code> on
+the slot plane only. Section 9 names the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a context object: a titled note of one of nine types
+(<code>preference</code>, <code>workflow</code>,
+<code>project_context</code>, <code>decision_criteria</code>,
+<code>lesson_learned</code>, <code>writing_style</code>,
+<code>rule</code>, <code>ai_brief</code>, <code>work_profile</code>)
+with a status of <code>draft</code>, <code>active</code>,
+<code>stale</code> or <code>archived</code>. The model treats an active
+object as ground truth: it is returned by search and listed to the agent
+with no qualifier. Slots are a second, coarser memory — persona,
+preferences, knowledge, counter-examples, skills, pending, rules — free
+text with a size limit, injected as a block.</p>
+<p>The intended belief lifecycle is candidate, then confirmed, then
+decayed or superseded. Captures go to the inbox as <code>pending</code>;
+a person confirms one into an active object or discards it; the
+lifecycle scan flags what has gone stale or conflicts; the conflict
+resolver marks the loser <code>stale</code>, which removes it from
+default search. That last transition is the one the README sells.</p>
+<p>At this commit three of those edges do not fire.
+<code>resolve_and_persist</code>, the only code that writes
+<code>stale</code>, is defined in
+<code>conflict_detector.py:381-431</code> and called nowhere. A
+lifecycle finding reaches the inbox as its suggestion string only — the
+target object's id is dropped in <code>findings_to_inbox_items</code>
+(<code>lifecycle_scanner.py:393-412</code>) — so confirming it creates a
+new <code>lesson_learned</code> object whose text is the suggestion, and
+the stale object stays active. And two write paths skip the inbox
+entirely: <code>minta_write_context</code> posts
+<code>status: "active"</code> (<code>minta_mcp.py:154-187</code>), and
+reflection appends to slots before it files an inbox copy for review
+(<code>reflect.py:117-158</code>).</p>
+<p>So in practice a memory is born active or born pending, a pending one
+becomes active when anyone holding the user's key confirms it, and an
+active one stops being believed only when a person archives or deletes
+it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the intended path runs through the inbox and a resolver; at this commit the resolver has no caller, a confirmed finding becomes a new memory, and two writers bypass the inbox</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the intended path runs through the inbox and a resolver; at this commit the resolver has no caller, a confirmed finding becomes a new memory, and two writers bypass the inbox
+flowchart TB
+    Agent[&quot;Agent with the user&#39;s API key&quot;]
+    Agent --&gt;|&quot;minta_write_context&quot;| Active[(&quot;ContextObject status active&quot;)]
+    Agent --&gt;|&quot;append_inbox, postflight&quot;| Pending[&quot;InboxItem pending&quot;]
+    Reflect[&quot;POST /api/sessions/id/reflect&quot;] --&gt;|&quot;regex signal&quot;| Slot[(&quot;Slot text, injected by the pack&quot;)]
+    Reflect --&gt;|&quot;copy for review&quot;| Pending
+    Scan[&quot;lifecycle scan: manual POST; scheduled job added paused&quot;] --&gt;|&quot;suggestion text only, target id dropped&quot;| Pending
+    Pending --&gt;|&quot;confirm: UI archive or agent minta_confirm_inbox&quot;| NewObj[&quot;new lesson_learned object, active&quot;]
+    NewObj --&gt; Active
+    Pending --&gt;|&quot;discard&quot;| Discarded[&quot;InboxItem discarded, read by nothing&quot;]
+    Resolver[&quot;resolve_and_persist: no caller&quot;] -.-&gt;|&quot;would set&quot;| Stale[(&quot;status stale&quot;)]
+    Active --&gt;|&quot;PATCH by a person&quot;| Archived[(&quot;status archived&quot;)]
+    Active --&gt; Search{&quot;/api/search default&quot;}
+    Stale -.-&gt;|&quot;excluded unless include_stale&quot;| Search
+    Archived -.-&gt;|&quot;always excluded&quot;| Search</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three FastAPI processes started by <code>minta_cli.py start</code>,
+all bound to <code>127.0.0.1</code>: the data API on 8772
+(<code>server/main.py</code>), the same app again on 18730 for
+Autopilot, and the HTTP MCP transport on 18721
+(<code>server/minta_mcp_http.py</code>). Editors that speak stdio spawn
+<code>server/minta_mcp.py</code>, which starts the API itself if
+<code>/ping</code> does not answer.</p>
+<p>Persistence is SQLAlchemy over <code>sqlite:///./minta.db</code> by
+default, with <code>create_all</code> at import and no migrations.
+Vectors live in one Chroma <code>PersistentClient</code> collection,
+<code>minta_memories</code>, cosine space, embedded with
+<code>all-MiniLM-L6-v2</code> through sentence-transformers; a separate
+384-dimension embedding is written into
+<code>context_objects.embedding_384</code> for the conflict detector. An
+API-embedding backend (OpenAI, SiliconFlow, DeepSeek) and a FAISS
+backend are selectable by environment. Autopilot decisions go to JSONL
+files under <code>logs/autopilot/</code>.</p>
+<p>The evaluation plane is a separate app factory,
+<code>server/eval_app.py</code>, built by the root
+<code>Dockerfile</code> for a leaderboard: <code>/add</code> stores raw
+messages atomically in its own SQLite file, <code>/search</code> returns
+ranked user-scoped evidence. It imports nothing from the business
+server.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Running it needs Python, the pip requirements and a first-run model
+download; <code>docker compose up -d</code> builds
+<code>Dockerfile.web</code> with dependencies baked in. It runs offline
+after the model is local, and no API key is needed to store anything,
+though the MCP write tools need a key registered in the
+<code>api_keys</code> table. The SQLite file is readable and repairable
+with any client; the Chroma directory is not, but
+<code>scripts/backfill_vectors.py</code> rebuilds vectors from the rows.
+The web UI is <code>web/dist/</code> — compiled bundles with no
+<code>web/src/</code> in the tree, so its behaviour can be read only
+from minified strings.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture, explicit.</strong> <code>minta_write_context</code>
+→ <code>POST /api/contextObjects</code>
+(<code>context_objects.py:104-143</code>): the router validates the
+type, derives the id as <code>_slugify(title)</code> plus the last four
+digits of <code>time.time()</code>, accepts any <code>status</code> the
+payload sends, writes <code>embedding_384</code>, commits, then upserts
+the Chroma vector with <code>user_id</code>, <code>type</code> and
+<code>status</code> metadata (<code>vector_ops.py:36-48</code>). Vector
+failures are logged and swallowed.</p>
+<p><strong>Capture, inbox.</strong> <code>minta_append_inbox</code> →
+<code>POST /api/inbox/append</code> (<code>inbox.py:160-173</code>)
+stores a <code>pending</code> item. Autopilot postflight
+(<code>services/autopilot/memory_policy.py:128-211</code>) matches
+Chinese trigger words — 记住, 以后, 默认 for writes; 不是, 错了, 不对
+for corrections; 改成, 作废, 不再 for updates — against
+<code>user_message</code> only, and
+<code>memory_executor.py:216-319</code> appends the last 500 characters
+of it to the inbox with a type and a scope label in the text.</p>
+<p><strong>Confirm.</strong> The web UI calls
+<code>POST /api/inbox/archive</code> with a type map
+(<code>inbox.py:61-107</code>); the agent's
+<code>minta_confirm_inbox</code> calls
+<code>POST /api/inbox/{id}/confirm</code>
+(<code>inbox.py:110-148</code>). Both create an <code>active</code>
+context object with <code>source="counter_example"</code> and confidence
+<code>int(item.confidence * 5)</code>, and set the item
+<code>archived</code>. Discard sets <code>discarded</code>
+(<code>inbox.py:151-157</code>).</p>
+<p><strong>Retrieval.</strong> <code>POST /api/search</code>
+(<code>routers/search.py:33-133</code>) is described in section 6.
+Autopilot preflight (<code>memory_executor.py:124-210</code>) runs three
+fixed queries through it, then reads <code>GET /api/inbox</code> and
+<code>GET /api/skills</code>. The MCP read tools call
+<code>GET /api/contextObjects</code>
+(<code>context_objects.py:59-91</code>), which returns every status.</p>
+<p><strong>Context assembly.</strong>
+<code>GET /api/slots/pack/generate</code>
+(<code>routers/slots.py:133-181</code>) passes pinned non-empty slots to
+<code>build_context_pack</code>
+(<code>services/brief_builder.py:26-100</code>), which orders them by
+scene and truncates at <code>MAX_PACK_CHARS = 3500</code>.</p>
+<p><strong>Correction and forgetting.</strong>
+<code>PATCH /api/contextObjects/{id}</code>
+(<code>context_objects.py:146-184</code>) edits fields and toggles
+<code>active</code> and <code>archived</code>; <code>DELETE</code>
+removes the row and calls <code>drop_object</code>. Slot overflow goes
+through <code>smart_trim</code>
+(<code>services/retention.py:26-93</code>).</p>
+<p><strong>Background.</strong> <code>start_scheduler</code>
+(<code>services/lifecycle_auto_scanner.py:180-213</code>) adds
+<code>_do_scan</code> with <code>next_run_time=None</code>;
+<code>run_full_scan</code> (<code>lifecycle_scanner.py:371-390</code>)
+and <code>findings_to_inbox_items</code> (<code>:393-412</code>) are
+also reached through <code>POST /api/lifecycle/scan</code>.</p>
+<p><strong>Schema.</strong> <code>server/models/</code> —
+<code>context_object.py</code>, <code>inbox.py</code>,
+<code>slot.py</code>, <code>audit_log.py</code>,
+<code>archived_item.py</code>, <code>session.py</code>, plus retrieval,
+reward and bandit logs for an experiment.</p>
+<p><strong>Tests.</strong> <code>server/tests/</code>, run in CI by
+<code>.github/workflows/ci.yml</code>; section 10.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>ContextObject</code>
+(<code>models/context_object.py:8-44</code>) is keyed by a string id
+that is global, not per user, so two writes of the same title in the
+same second collide on the primary key. Provenance is a
+<code>source</code> enum (<code>manual</code>,
+<code>conversation</code>, <code>document</code>,
+<code>counter_example</code>, <code>skill</code>) and an owner name.
+Temporal fields are <code>created_at</code>, <code>updated_at</code>,
+<code>last_used_at</code>, <code>archived_at</code> and
+<code>archived_reason</code>. Nothing in the tree writes
+<code>last_used_at</code> outside <code>seed_demo.py</code>, so the
+staleness scan measures time since the last edit.</p>
+<p>The archive branch of <code>update_object</code> assigns
+<code>obj.archived_by</code>, <code>obj.restored_at</code> and
+<code>obj.restored_by</code> (<code>context_objects.py:168-175</code>).
+None is a mapped column, so SQLAlchemy keeps them as Python attributes
+on the instance and persists nothing; the comment above them calls them
+audit stamps.</p>
+<p><code>InboxItem</code> (<code>models/inbox.py:8-21</code>) holds free
+text, a suggested type, a float confidence, tags and a status of
+<code>pending</code>, <code>archived</code> or <code>discarded</code>.
+It has no reference to the object a finding is about.</p>
+<p><code>Slot</code> (<code>models/slot.py:7-35</code>) is one row per
+user and label, with <code>size_limit</code>, <code>pinned</code>,
+<code>scope</code> (<code>global</code> or <code>project</code>),
+<code>auto_reflected</code> and a <code>retention_score</code>.
+<code>ArchivedItem</code> keeps text trimmed out of a slot.</p>
+<p>Scope is <code>user_id</code> throughout, with <code>NULL</code>
+meaning shared. The default slots label three of seven as
+<code>project</code> scope, and nothing reads the column. There is no
+project or agent key on a context object.</p>
+<p>The evaluation plane's <code>Memory</code> row
+(<code>eval_store.py:69-86</code>) is one message:
+<code>request_id</code>, <code>msg_index</code>, <code>user_id</code>,
+<code>session_id</code>, <code>role</code>, <code>raw_content</code>,
+<code>timestamp_ms</code> from the caller and <code>created_at</code>
+from the server, with a deterministic id hashed from request and
+index.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>/api/search</code> asks Chroma for
+<code>max(top_k * 5, 25)</code> candidates, capped at 100, under
+<code>where={"user_id": {"$in": [caller, "global"]}}</code>
+(<code>search.py:47-58</code>). It then queries SQL for those ids under
+<code>user_id = caller OR user_id IS NULL</code>,
+<code>status != 'archived'</code>, and <code>status = 'active'</code>
+unless <code>include_stale</code> (<code>:66-77</code>). Each surviving
+hit scores semantic similarity plus 0.25 times the query-token overlap
+with title and summary, plus 0.10 times overlap with the body, plus 0.05
+for the caller's own rows, minus 0.20 for an
+<code>onboarding</code>-tagged row with no title overlap
+(<code>:83-101</code>). Query terms are ASCII words or single CJK
+characters. A temporal expression in the query is detected and returned
+as an annotation; it does not filter.</p>
+<p>The agent reaches this path only through Autopilot. Preflight fires
+when the message contains one of the read triggers or a project word,
+then queries three buckets mapped to storage types:
+<code>preference</code>; <code>project_context</code> and
+<code>decision_criteria</code>; and <code>counterexample</code>
+(<code>memory_executor.py:162-166</code>). No context object can have
+type <code>counterexample</code> — it is absent from the model's enum
+and the router's allow-list — so that bucket is always empty and the
+fallback at <code>:187-196</code> fills it with the ten newest archived
+inbox items, whatever the query. <code>lesson_learned</code>,
+<code>rule</code>, <code>workflow</code> and <code>writing_style</code>
+objects, including every confirmed correction, are never queried by
+preflight.</p>
+<p><code>minta_search_context</code> does not use the search route. It
+fetches the whole owner list and substring-matches title, summary and
+tags in the MCP process (<code>minta_mcp.py:204-221</code>), so it
+returns <code>stale</code>, <code>draft</code> and <code>archived</code>
+objects alongside active ones. The status filter lives on one read path
+of three.</p>
+<p>The evaluation plane loads every memory of the user into Python per
+query (<code>eval_store.py:181-194</code>), scores them by dense
+similarity, optionally fuses BM25 and a cross-encoder rerank, expands
+each seed by a neighbour window inside the same request, suppresses
+exact duplicates, and fills to <code>top_k</code>
+(<code>eval_retrieval.py:148-299</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every business-server write is synchronous and deterministic: no
+model is called on the write path except the sentence-transformer
+embedding, which runs inline before the commit. A new object is
+searchable as soon as the request returns. Postflight's keyword policy
+runs in the request too.</p>
+<p>Deduplication is thin. <code>route_to_slot</code> skips an entry
+whose first 50 characters already appear in the slot
+(<code>reflect.py:121-124</code>); nothing deduplicates context objects
+at write time, and the redundancy scan only reports. The lifecycle scan
+re-adds the same findings to the inbox on every run, with no check
+against pending items.</p>
+<p>Corrections on the reflection path are regex-driven and Chinese-only.
+A correction signal decrements the confidence of any active or draft
+object sharing two CJK runs with it and tags it <code>countered</code>
+(<code>reflect.py:167-214</code>); English text produces no tokens and
+touches nothing.</p>
+<p><code>smart_trim</code> (<code>retention.py:26-93</code>) splits slot
+content on blank lines, keeps the newest entries that fit and archives
+the rest. Reflection appends entries with single newlines
+(<code>reflect.py:126-128</code>), so an auto-reflected slot is one
+entry. When that one entry exceeds the limit, <code>kept</code> is empty
+and the fallback at <code>:64-66</code> keeps its first
+<code>size_limit</code> characters and archives nothing. Once such a
+slot is full, each new entry is appended, cut off the tail, and lost,
+while the audit row and the inbox copy are still written.</p>
+<p>Postflight's comment says authority comes from the user turn
+(<code>memory_policy.py:133-137</code>). Both <code>user_message</code>
+and <code>assistant_response</code> are arguments the agent supplies to
+the tool, so the rule separates two strings from one author.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes block on one local embedding after the model loads. Nothing
+rewrites the store in the background. The lifecycle scan is pairwise
+over up to 100 active objects for redundancy, and
+<code>/api/debt/status</code> is pairwise over every active object with
+an embedding, both on request. The pack is bounded at 3,500 characters
+while the seven slots allow 14,500, so the scene order decides which
+slots are cut. Preflight returns at most ten items per bucket.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The Community MCP surface is thirteen tools
+(<code>minta_mcp.py:440-713</code>, asserted in
+<code>tests/test_mcp_tool_surface.py:13-20</code>): login, read and
+write context, search context, append, list, confirm and discard inbox,
+get pack, get and update slot, and Autopilot preflight and postflight.
+Six expert and chat tools are defined and filtered out by
+<code>_ENTERPRISE_ONLY_TOOLS</code>.</p>
+<p>The agent is told to call preflight before every answer and
+postflight before finalising, by the tool descriptions, by
+<code>server/templates/agents/claude/CLAUDE.md.j2</code> (which no code
+renders) and by the DeepSeek Harness preset. The preset adds
+<em>"Writing memory goes through the inbox only … the user
+confirms"</em>; the same surface holds <code>minta_write_context</code>,
+which writes active, and <code>minta_confirm_inbox</code>.</p>
+<p><code>minta_cli.py connect</code> writes editor MCP configuration.
+Its <code>_install_hooks</code> (<code>minta_cli.py:427-468</code>)
+registers SessionStart, PostToolUse, PostToolUseFailure and Stop hooks
+by copying scripts from a <code>hooks/</code> directory that is not in
+the tree, and returns early when the directory is missing. The README's
+hook chain therefore has no in-tree implementation, and nothing in the
+tree calls <code>/api/sessions/{id}/reflect</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>scope_enforced</code> — awarded, on both
+stores.</strong> The key is on every row and vector and the predicate is
+on the read: <code>search.py:55-74</code> and
+<code>context_objects.py:59-66</code> in the business server,
+<code>eval_store.py:181-194</code> in the evaluation plane. The search
+route treats the vector filter as advisory and the SQL join as
+authoritative, which is the right order. Limits: <code>NULL</code>-owner
+rows are shared; <code>Slot.scope</code> and the inferred project scope
+never filter anything; and every capability of the agent is the user's,
+because the MCP process authenticates with the user's own key
+(<code>auth.py:121-145</code>).</p>
+<p><strong><code>audit_log</code> — awarded, on the slot plane.</strong>
+<code>AuditLog</code> (<code>models/audit_log.py:14-49</code>) is
+append-only in normal operation and written by slot updates, pin
+changes, clears, reflection and trim archiving, and by session events.
+It records lengths, not values. Its declared <code>context_object</code>
+and <code>inbox_item</code> targets have no producer, so the store the
+search path serves and every inbox confirmation leave no record.
+<code>record_audit</code> commits after the mutation and swallows its
+own failure.</p>
+<p><strong><code>human_review</code> — withheld.</strong> The inbox
+holds items <code>pending</code> until a confirm, and a person can
+resolve them in the UI. The agent holds <code>minta_confirm_inbox</code>
+and <code>minta_discard_inbox</code> under the same principal, so the
+producer can clear its own queue. Two writers bypass the queue entirely,
+and a confirmed lifecycle finding does not act on the object it
+names.</p>
+<p><strong><code>trust_state</code> — withheld, declared and
+unwired.</strong> The four-value status is used as a filter — default
+search returns <code>active</code> only, and the test asserts it. The
+epistemic states have no system producer:
+<code>resolve_and_persist</code> sets <code>stale</code> and has no
+caller; <code>PATCH</code> accepts only <code>active</code> and
+<code>archived</code>; <code>draft</code> and <code>stale</code> exist
+only when a client sends them at create. The same shape cost <a
+href="../nexusmem/">NexusMem</a> the mark from the other side — a
+producer and no filter.</p>
+<p><strong><code>bitemporal</code> — withheld.</strong>
+<code>check_temporal_validity</code> and
+<code>classify_staleness_with_bitemporal</code>
+(<code>decay_engine.py:95-179</code>) evaluate <code>valid_from</code>,
+<code>valid_to</code>, <code>valid_until</code> and
+<code>superseded_by</code>; no model has those columns and nothing
+outside the module calls either function. The evaluation plane keeps a
+caller's <code>timestamp_ms</code> beside the server's
+<code>created_at</code>, which is event time beside record time, not a
+validity interval.</p>
+<p><strong><code>tombstone</code> — withheld.</strong> A discarded inbox
+item keeps its text with status <code>discarded</code>; nothing reads
+that status, so the same capture can be appended and confirmed
+again.</p>
+<p><strong>The scheduled scan does not run.</strong>
+<code>start_scheduler</code> and <code>_reschedule</code> pass
+<code>next_run_time=None</code> to <code>add_job</code>
+(<code>lifecycle_auto_scanner.py:170, 203</code>). APScheduler 3's
+<code>add_job</code> documents that value as <em>"pass <code>None</code>
+to add the job as paused"</em>, and <code>pause_job</code> is
+implemented as the same call. The root <code>requirements.txt</code>
+pins <code>apscheduler&gt;=3.10,&lt;4</code>, and nothing in the tree
+resumes the job, while <code>/api/lifecycle/auto-scan/status</code>
+reports a <code>next_scan_at</code> five minutes after startup.</p>
+<p><strong>The HTTP MCP transport authenticates nothing.</strong>
+<code>POST /mcp</code> (<code>minta_mcp_http.py:80-118</code>) parses
+the raw body as JSON whatever its content type and dispatches
+<code>tools/call</code> with the server's configured key. The CLI and
+compose file bind it to loopback; run directly, <code>__main__</code>
+binds <code>0.0.0.0</code>. CORS limits which origins may read a
+response, and the one test checks only a preflight. A cross-origin
+<code>text/plain</code> POST is not preflighted, so a web page could
+invoke the write and confirm tools on a running instance. That last step
+is inference from the code and was not exercised.</p>
+<p><strong>Deletion is thorough.</strong>
+<code>DELETE /api/user/delete-data</code>
+(<code>routers/user_data.py:155-231</code>) purges every table in an
+explicit inventory, the user's Chroma vectors, the JSONL decision logs,
+the avatar file and the evaluation store, commits per category, and
+reports partial failure. <code>tests/test_user_data_inventory.py</code>
+checks that the inventory covers every user-scoped table.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is 149 pytest functions in 24 files; CI installs the
+requirements and runs it, then builds both images and round-trips
+<code>/add</code> and <code>/search</code> inside the evaluation
+container. I read the tests; I ran nothing.</p>
+<p>The negative assertions are the strongest part.
+<code>test_search_strict_user_isolation</code>
+(<code>test_eval_contract.py:174-188</code>) stores two near-identical
+sentences for two users and asserts each user's result equals exactly
+their own sentence under both queries.
+<code>test_main_search.py:155-198</code> asserts a lexically matching
+object of another user is absent while the caller's own is present, and
+that a <code>stale</code> object is absent from default search and
+present with <code>include_stale</code>. The business-server tests fake
+the embedding service, so they exercise the SQL predicate and not
+Chroma.</p>
+<p>Nothing tests the inbox confirm path, the conflict resolver, the
+scheduler, the audit writes, <code>smart_trim</code>, or the HTTP
+transport beyond its preflight.</p>
+<p>The README's benchmark table — conflict F1 0.81, staleness UFA 0.86,
+redundancy 0.67, fragmentation 0.746, LoCoMo Recall@20 97.1% — has no
+committed evaluation code or data.
+<code>assets/make_benchmark_fig.py</code> hardcodes the values it plots,
+and plots evidence Recall@20 as 82.6.
+<code>docs/benchmark_status.md</code> gives conflict F1 as 67.8% on its
+benchmark and 0.81 from a paper. The README says manuscripts are in
+preparation; no paper or citation is in the tree.</p>
+<p><code>docs/eval-proxy/</code> holds the harnesses for the leaderboard
+runs and <code>matrix_results_20260904.md</code> a dated ablation table;
+its raw runs are gitignored, so the table cannot be recomputed from the
+tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the vector index advisory and the row store
+authoritative.</strong> Filter the vector query by owner, then re-read
+the candidate ids from the database under the owner and status
+predicate. A stale or mis-tagged vector then costs a candidate slot,
+never a leak.</li>
+<li><strong>Keep the user-data inventory as one dict and test that it is
+complete.</strong> Export and delete both walk
+<code>CONTENT_TABLES</code>, and a test fails when a user-scoped table
+is missing from it.</li>
+<li><strong>Make ingest idempotent on a caller request id with a payload
+hash.</strong> The evaluation plane derives message ids from request and
+index, embeds before writing any row, and treats a replay as a no-op
+while warning on a hash mismatch.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Dropping the target when a detector hands a finding to a
+person.</strong> A finding that reaches review as prose can be accepted
+only as a new note. Carry the object id and a disposition, and make
+accepting it change that object.</li>
+<li><strong>Putting the approve verb on the agent's tool list.</strong>
+If the agent can call confirm, the inbox is a delay, not a gate.</li>
+<li><strong>Truncating from the head of an append-only buffer.</strong>
+When the overflow handler keeps the first N characters, the newest entry
+is the one lost.</li>
+<li><strong>Passing <code>None</code> to mean "default" to an API where
+<code>None</code> is meaningful.</strong> In APScheduler 3 it pauses the
+job.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Minta suits one developer who wants a local, inspectable notes store
+their agents can write to and search, with a web UI and a clean delete.
+The SQLite file and the scoped search are sound for that.</p>
+<p>It does not yet deliver what its README sells: nothing in the open
+tree marks a memory stale on its own, review is advisory, and the
+confidence and scan machinery is either Chinese-keyword-driven or
+unscheduled. A reader choosing it for contradiction handling should
+expect to wire the resolver, carry target ids through the inbox and take
+confirm off the tool surface first.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Do the closed tier's modules — <code>production_store</code>,
+<code>rule_promotion</code>, <code>synthesis_engine</code> — or a hooks
+package call <code>resolve_and_persist</code> or the reflection route?
+Nothing in this tree does.</li>
+<li>Is the paused scheduler intended? The comments say the first scan
+runs five minutes after startup; a running instance's
+<code>/api/lifecycle/auto-scan/status</code> and logs would settle
+it.</li>
+<li>Where do the README's conflict and staleness scores come from? The
+held-out sets and the scripts are not committed.</li>
+<li>What does the compiled UI do on inbox archive with no type assigned?
+The route archives the item without creating an object, and the
+preflight fallback then injects it as a counterexample; the bundle has
+no source to read.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>server/models/context_object.py</code>,
+<code>server/models/inbox.py</code>, <code>server/models/slot.py</code>,
+<code>server/models/audit_log.py</code>,
+<code>server/models/archived_item.py</code>,
+<code>server/config.py</code>,
+<code>server/services/embedding_service.py</code>,
+<code>server/services/vector_ops.py</code>.</li>
+<li><strong>Write path:</strong>
+<code>server/routers/context_objects.py</code>,
+<code>server/routers/inbox.py</code>,
+<code>server/routers/slots.py</code>,
+<code>server/routers/session.py</code>,
+<code>server/services/reflect.py</code>,
+<code>server/services/retention.py</code>,
+<code>server/services/autopilot/memory_policy.py</code>,
+<code>server/services/autopilot/memory_executor.py</code>.</li>
+<li><strong>Retrieval and assembly:</strong>
+<code>server/routers/search.py</code>,
+<code>server/services/brief_builder.py</code>.</li>
+<li><strong>Lifecycle and conflict:</strong>
+<code>server/services/lifecycle_scanner.py</code>,
+<code>server/services/lifecycle_auto_scanner.py</code>,
+<code>server/routers/lifecycle.py</code>,
+<code>server/services/conflict_detector.py</code>,
+<code>server/services/decay_engine.py</code>,
+<code>server/routers/debt.py</code>.</li>
+<li><strong>MCP and API:</strong> <code>server/minta_mcp.py</code>,
+<code>server/minta_mcp_http.py</code>,
+<code>server/routers/auth.py</code>,
+<code>server/routers/autopilot.py</code>,
+<code>server/routers/user_data.py</code>,
+<code>minta_cli.py</code>.</li>
+<li><strong>Evaluation plane:</strong> <code>server/eval_app.py</code>,
+<code>server/eval_store.py</code>,
+<code>server/eval_retrieval.py</code>.</li>
+<li><strong>Tests:</strong>
+<code>server/tests/test_main_search.py</code>,
+<code>server/tests/test_eval_contract.py</code>,
+<code>server/tests/test_mcp_tool_surface.py</code>,
+<code>server/tests/test_user_data_inventory.py</code>,
+<code>server/tests/test_lifecycle_scanner.py</code>,
+<code>.github/workflows/ci.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the
+repository root unless a directory is named.</p>
+<ul>
+<li><code>rg -n 'resolve_and_persist' .</code> — the definition in
+<code>server/services/conflict_detector.py:381</code> only.</li>
+<li><code>rg -n 'temporal_validity|decay_engine import' --type py .</code>
+— <code>decay_engine.py</code> itself,
+<code>conflict_detector.py:46</code> and
+<code>routers/debt.py:13</code>, neither importing the validity
+functions.</li>
+<li><code>rg -n 'record_audit|AuditLog' --type py</code> — writers in
+<code>reflect.py</code>, <code>retention.py</code>,
+<code>routers/session.py</code>, <code>routers/slots.py</code>; the
+purge in <code>routers/user_data.py</code>; none in
+<code>context_objects.py</code> or <code>inbox.py</code>.</li>
+<li><code>rg -n -i 'audit' server/tests</code> — only the export and
+delete inventory lists.</li>
+<li><code>rg -n 'discarded' --type py</code> — the enum and the discard
+writer.</li>
+<li><code>rg -n 'last_used_at' --type py server</code> — no writer for
+context objects outside <code>seed_demo.py</code>.</li>
+<li><code>rg -n 'archived_by|restored_at|restored_by'</code> —
+<code>context_objects.py:170-175</code> only; no model column.</li>
+<li><code>rg -n 'resume_job|resume\(|modify_job|reschedule_job|next_run_time' .</code>
+— the two <code>next_run_time=None</code> lines.</li>
+<li><code>rg -n -i 'apscheduler' requirements.txt server/requirements.txt</code>
+— <code>&gt;=3.10,&lt;4</code> and <code>&gt;=3.10</code>. APScheduler
+<code>3.11.0</code> <code>src/apscheduler/schedulers/base.py</code> read
+through the GitHub API for the <code>add_job</code> and
+<code>pause_job</code> semantics.</li>
+<li><code>rg -n 'Slot\.scope|\.scope ==|scope=' --type py server | grep -v tests</code>
+— the default-slot write at <code>routers/slots.py:40</code> only.</li>
+<li><code>ls hooks; /usr/bin/git ls-tree -r --name-only HEAD | grep -i hook</code>
+— no such directory, no hook file.</li>
+<li><code>rg -l -F 'api/sessions' .</code> —
+<code>server/routers/session.py</code> only.</li>
+<li><code>rg -o 'api/(slots|contextObjects|search|lifecycle|debt|sessions|inbox|autopilot)[^"]{0,25}' web/dist/*.js | sort -u</code>
+— contextObjects, inbox append, archive and discard, and slots; no
+search, lifecycle, debt, sessions or autopilot route.</li>
+<li><code>rg -n -o 'from services\.[a-z_]+' --type py server</code>,
+each checked for a file — <code>production_store</code>,
+<code>rule_promotion</code> and <code>synthesis_engine</code>
+absent.</li>
+<li><code>rg -n -i 'UFA|held-out|recall@20|67\.8|0\.746|MCR' --type py .</code>
+— <code>assets/make_benchmark_fig.py</code> and comments only.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' . --exclude-dir=.git --exclude-dir=dist</code>
+— three files, each on the word citation; no paper, no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/xinchen03/minta/commit/a4201db8286e463da56920dd8dbdde6996131ea1"><code class="commit-id" title="a4201db8286e463da56920dd8dbdde6996131ea1">a4201db8…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 20
+September 2026. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code> (slot plane only) and <code>negative_eval</code>.
+Screened before reading: no auto-run surface, one build-time execution
+point (<code>server/tests/conftest.py</code>), three unpinned dependency
+surfaces, nothing inside the cooldown, and no agent-instruction file;
+the Jinja template for a <code>CLAUDE.md</code> was read as data. Read
+with <code>rg</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

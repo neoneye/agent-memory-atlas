@@ -419,6 +419,32 @@ past bound, and an as-of query returned nothing at every bound until
 over the multi-attester history the store already kept. The code comment
 dates the measurement to 11 August 2026; the fix routes three call sites
 through one helper so the rule cannot drift between copies.</p>
+<p><a href="../../systems/smriti/">Smriti</a> shows both halves of the
+pattern split across a core and an add-on. The core row carries the
+world interval, and <code>consolidate</code> rebuilds the whole chain
+for a key by event time on every write, so a late report of an earlier
+fact becomes history instead of the current value
+(<code>smriti/consolidation.py:119-146</code>). The core never reads its
+own <code>ingested_at</code>, though, and its retrieval only sorts
+superseded facts below current ones; the knowledge axis and the as-of
+reader live in the enterprise package, whose
+<code>fact_validity_history</code> appends each relink with the time the
+store learned it, and <code>facts_asof(world=, known=)</code> answers
+"on K, what did we believe about W" in SQL
+(<code>enterprise/smriti_enterprise/temporal.py:36-100</code>).</p>
+<p><a href="../../systems/local-memory-mcp/">local-memory-mcp</a>
+carries the three ClawMem columns on its graph observations and answers
+a narrower question than it advertises.
+<code>memory_entity_open({asOf})</code> filters on
+<code>[valid_from, valid_to)</code> and the server instructions call
+that <em>"What did I know at this date?"</em>. But the moment
+<code>memory_observation_supersede</code> closed an interval is not
+recorded, so a retroactive <code>validTo</code> changes what an earlier
+as-of call returned, and <code>valid_from</code> has no interactive
+writer — only <code>memory_import</code> sets it, and the boundary tests
+set it by raw SQL. It passes Helm's diagnostic on the end of the
+interval and on restore, and the whitepaper lists
+<code>expired_at</code> as roadmap.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

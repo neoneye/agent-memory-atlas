@@ -412,6 +412,8 @@ visible only in the data.
 
 [aios (rexleimo)](../../systems/rexleimo-aios/) earns the filtering half and seals the transition. Its `claimStatus` is decided inside the append from the writer's runtime identity, a shared write without a publish capability lands `candidate`, and every default memo read drops candidates. But `authorize` denies promote, reject and expire unconditionally, so the state has an entry and no exit. The writers that pass no identity — the MCP and Pi write tools the model holds — land `verified` as `local-user`, which is the case this page's question about who may set the state exists to catch.
 
+[AlphaOne ai-memory](../../systems/alphaonedev-ai-memory/) puts its one trust state on a lifecycle column built for work items, and earns the mark on the filter rather than the vocabulary. `quarantined` is system-only — refused as caller input and absent from every caller transition — and is set by federation receive on a relayed write whose author signature did not verify, when `AI_MEMORY_FED_QUARANTINE_UNATTRIBUTED` is on. Reads admit only an allow-list of five other states, so the row is stored but invisible until a signed copy of the same id verifies and a raw update returns it to `open`. Local writes never enter the state, and the knob defaults off.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

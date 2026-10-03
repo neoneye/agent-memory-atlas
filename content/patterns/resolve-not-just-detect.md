@@ -290,6 +290,10 @@ reaches the model unmarked.
 
 [Counterparts](../../systems/counterparts/) meets requirements 1, 3 and 4 and misses 5. A pair a dream flags or a write notices stays live with an *"Unsettled — may be out of date"* label, and a settle picks `changed`, `corrected` or `open`, each with its own effect on the losing memory, an actor, a reason and an exact undo on the `contradiction_settles` trail. What the settle does not do is reach the write path: a `corrected` memory is archived by id, so the same claim written again in other words mints a new live row, and the write-time neighbour check leaves archived rows out.
 
+[Minta](../../systems/minta/) is the counterexample where detection and resolution were both written and the edge between them was not. Its lifecycle scanner finds stale, redundant and conflicting objects, and `findings_to_inbox_items` hands each one to the inbox as its suggestion sentence alone, dropping the object id, so confirming a finding stores the sentence as a new `lesson_learned` memory and leaves the stale object active. The resolver that would have acted, `resolve_and_persist`, marks the loser `stale` and records the winner, and nothing in the tree calls it. A detector whose output cannot name its target can only ever add notes about the store.
+
+[Agent Memory Engine](../../systems/agent-memory-engine/) detects and never disposes. `ConflictService` flags a conflict on a confidence gap of more than 0.15 or on five keyword pairs such as `must`/`may`, and `PromotionService` then sets the *existing* node to `needs_review` and records the candidate with the same status. No MCP tool, CLI command or HTTP route lists, approves or rejects either. `_fill_bucket` does not skip the status, so the flagged memory keeps reaching the agent — labelled `non-authoritative` in its trace provenance — while the README lists it as excluded; the problem statement above, verbatim.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

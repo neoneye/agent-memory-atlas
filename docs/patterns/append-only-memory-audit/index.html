@@ -727,6 +727,43 @@ new snapshot and not a deletion, and the agent's own
 <code>recall_at</code> tool reads the forgotten value back. The one gap
 in coverage is before the log — a staged node is served by
 <code>recall</code> before any commit records it.</p>
+<p><strong><a href="../../systems/mainline/">Mainline</a> makes the log
+the state with Git as the engine.</strong> Each event is a blob in a
+one-file tree, committed on a per-actor ref and published by an
+<code>update-ref</code> compare-and-swap that retries on the new head
+rather than overwriting a concurrent append, and every intent,
+constraint and risk is a replay of all actors' logs. Two limits come
+with the substrate: the fetch refspec is forced, so a force-pushed log
+replaces the remote-tracking copy, and the replay does not check that an
+event's actor owns the record it changes — only
+<code>actor import</code> does. The vocabulary also declares
+<code>intent.superseded</code> and
+<code>intent.merge_acknowledged</code>, which have readers and no
+producer outside tests.</p>
+<p><strong><a href="../../systems/selvedge/">Selvedge</a> chains the
+memory itself rather than a log beside it, and gives each legitimate
+mutation its own record kind.</strong> Each event insert appends an
+<code>event</code> record to the <code>event_chain</code> sidecar in the
+same <code>BEGIN IMMEDIATE</code> transaction.
+<code>migrate-paths --apply</code> appends one <code>amend</code> record
+re-binding the rewritten rows, and a gated prune appends a count-only
+<code>tombstone</code> before its <code>DELETE</code> commits, so a
+silent <code>sqlite3</code> deletion fails <code>selvedge verify</code>
+while a sanctioned one does not. The chain declares two omissions in its
+manifest — <code>git_commit</code>, back-filled by <code>UPDATE</code>,
+and the telemetry table — and misses a third: the
+<code>embeddings</code> table, which keeps a pruned event's vector.</p>
+<p><strong><a href="../../systems/gmeow-ontology/">GMEOW</a> keeps the
+mutation record in the file it records, and writes it in a separate
+append.</strong> Every committed <code>store_claim</code> or
+<code>revise_belief</code> appends a <code>ToolCall</code> with the
+tool, its JSON arguments, its result and the generated claim id, then a
+trajectory-audit segment, to the same append-only GTS package, and a
+test pins that a recall between writes records nothing. The three
+appends are not coupled: the claim lands first, with no lock, so a
+failure after it leaves an unrecorded claim — the outcome the same
+crate's library path avoids by committing its verdict and audit segments
+in one atomic replace, as its own comment says.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>
