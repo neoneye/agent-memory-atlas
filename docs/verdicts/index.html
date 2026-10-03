@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 722 reports.</strong></p>
+<p><strong>This page covers all 724 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -30041,6 +30041,91 @@ start.</li>
 <li>Do not copy when: you need sentence-level facts, time-aware recall
 through an MCP client, or a review queue the proposing agent cannot
 clear.</li>
+</ul>
+<h3 id="fluctlightdb"><a
+href="../systems/fluctlightdb/"><code>fluctlightdb</code></a></h3>
+<ul>
+<li>Best idea: <strong>provenance in the episode type from the first
+write.</strong> Five kinds and a <code>verified</code> flag sit on every
+<code>Episode</code>; age-based retention exempts verified rows, and the
+benchmark harness publishes the shared-brain condition (18%) beside the
+isolated one (100%) instead of only the flattering number.</li>
+<li>Biggest risk: <strong>the scope filter runs after the work is
+done.</strong> <code>activate_scoped</code> truncates to
+<code>top_k</code>, then keeps rows whose <code>agent_id</code> matches,
+then runs a balance-cue override and an exact-query lane that inject
+verified engrams from the whole brain at activation 10. In the committed
+shared-brain run every wallet question returns a refund fact.</li>
+<li>Most reusable component: the v4 checkpoint in
+<code>manifest.rs</code> — write a generation to a temporary directory,
+rename it into <code>generations/</code>, fsync the parent, then swap a
+<code>CURRENT</code> pointer, with a named fault point between each step
+that <code>checkpoint_fault_injection.rs</code> exercises.</li>
+<li>Second risk: <strong>state the loader expects and the writer never
+writes.</strong> <code>load_v4_dir</code> reads <code>agent</code> and
+<code>governance</code> segments that <code>write_checkpoint_dir</code>
+omits, so the governance audit log and the per-engram retention clock
+reset on every reopen; and <code>verified</code> is whatever the writer
+sends, including the agent through
+<code>memory_observe_tool</code>.</li>
+<li>Maturity impression: MIT OR Apache-2.0, 43,065 lines of Rust outside
+the tests/ directories and 505 Rust test functions, 267 commits on main
+from one contributor between 20 June and 1 October 2026. No marks.
+Storage durability is well tested; the one scope test asserts with
+<code>all()</code> and no positive control, and eleven tests exist to
+pass a count. The shared-brain provenance result recomputes from its
+JSON.</li>
+<li>Study when: you want an embedded, offline store for one agent with
+provenance kinds on every record, or a checkpoint sequence with fault
+points to copy.</li>
+<li>Do not copy when: several agents share one brain, the trust flag
+must be beyond the agent's reach, or a deletion record has to survive a
+restart.</li>
+</ul>
+<h3 id="osk-system"><a
+href="../systems/osk-system/"><code>osk-system</code></a></h3>
+<ul>
+<li>Best idea: <strong>bind each citation to both bodies' hashes, and
+close it only against what was read.</strong>
+<code>rechecks.jsonl</code> stores the citing node's body hash and the
+target's beside each <code>derived-from</code> pair, so a changed source
+turns every citing node into a candidate, with <code>next</code> and
+<code>cascade</code> telling the reviewer how far a correction would
+spread. A re-citation over MCP records only the state the agent read
+with <code>read_node</code> in that session; an unread change reports
+<code>recheck_unread</code> and stays open.</li>
+<li>Biggest risk: <strong>scope confines writes and not reads.</strong>
+A session bound to one scope is refused a landing in another and a scope
+node cannot cite another scope, but <code>search</code> runs BM25 over
+every Space with no predicate, and <code>read_node</code> and
+<code>read_raw</code> take no session. The constitution calls locality a
+ranking feature rather than a gate; the search code has no locality
+term.</li>
+<li>Most reusable component:
+<code>_governance/_engine/osk/core.py:691-755</code> —
+<code>ledger_append</code>, which locks, refuses a damaged ledger,
+assigns a monotone UUIDv7, sets <code>parents</code> to every head and
+fsyncs, so JSON Lines ledgers merge by Git union and a fork shows as
+several causal maxima.</li>
+<li>Second risk: <strong>the stops are text.</strong> The growth runner
+tells the agent never to correct a node when <code>cascade</code> is
+true, and the governing documents say an agent's inference about the
+user needs confirmation; <code>update_node</code> and
+<code>create_node</code> check neither. Node creation and edits append
+to no ledger, so Git is the only mutation record.</li>
+<li>Maturity impression: MIT, 23,121 lines of Python outside tests and
+485 commits on main from 1 contributor since 16 July 2026. One mark,
+<code>negative_eval</code>, on a CI-run regression case asserting a
+node's replaced body is no longer found by its old text after a positive
+control. The CI runner covers write integrity in depth; retrieval
+quality is unmeasured.</li>
+<li>Study when: you want provenance down to the transcript round, a
+correction trail that propagates along citations, or append-only ledgers
+that survive two devices editing offline.</li>
+<li>Do not copy when: projects must not see each other's knowledge,
+several people share one vault with different rights, or you need
+semantic recall or a library to embed rather than an application with
+its own constitution.</li>
 </ul>
         </article>
       </div>

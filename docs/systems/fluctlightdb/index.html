@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An embedded Rust memory engine for
+agents with cue-driven hybrid recall, provenance-weighted ranking and a
+neuroscience-named pipeline, one brain directory per agent.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="FluctlightDB — Agent Memory Atlas">
+    <meta property="og:description" content="An embedded Rust memory
+engine for agents with cue-driven hybrid recall, provenance-weighted
+ranking and a neuroscience-named pipeline, one brain directory per
+agent.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FluctlightDB — Agent Memory Atlas">
+    <meta name="twitter:description" content="An embedded Rust memory
+engine for agents with cue-driven hybrid recall, provenance-weighted
+ranking and a neuroscience-named pipeline, one brain directory per
+agent.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>FluctlightDB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "FluctlightDB",
+      "description": "An embedded Rust memory engine for agents with cue-driven hybrid recall, provenance-weighted ranking and a neuroscience-named pipeline, one brain directory per agent.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Embedded engine with provenance-weighted
+cue recall</p>
+          <h1>FluctlightDB</h1>
+          <p class="document-deck">An embedded Rust memory engine for
+agents with cue-driven hybrid recall, provenance-weighted ranking and a
+neuroscience-named pipeline, one brain directory per agent.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/voxmastery/FluctlightDB">
+              <span>Source</span>
+              <strong>voxmastery/FluctlightDB</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/voxmastery/FluctlightDB/commit/25556df0ae5bcc3d8309df7687744bcf7173b5b5" title="25556df0ae5bcc3d8309df7687744bcf7173b5b5">
+              <span>Analyzed revision</span>
+              <code>25556df0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/voxmastery--FluctlightDB" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>voxmastery--FluctlightDB</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+OR Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>43,065
+lines of Rust in crates/ outside the tests/ directories, inline test
+modules included; 5,151 lines of Python SDK</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>267
+commits on main by 1 contributor, 20 June 2026 – 1 October
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>505
+Rust test functions, 167 of them in tests/ directories; 35 Python test
+methods</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>FluctlightDB is an embedded memory engine for agents, written in Rust
+with a Python SDK, an MCP server and an HTTP server. A memory is an
+<em>engram</em>: an episode with content, context, optional agent and
+tenant ids and a provenance record. <code>experience()</code> writes
+one; <code>activate()</code> recalls by cue through hybrid FTS5 and
+vector candidates, spreading activation over a synapse graph, and a long
+chain of score adjustments named after brain regions.</p>
+<p>What is notable is the provenance lane. Every episode can carry a
+kind (<code>ChatAssertion</code>, <code>FileObservation</code>,
+<code>ToolGrounded</code>, <code>LedgerVerified</code>,
+<code>UserExplicit</code>) and a <code>verified</code> flag, and recall,
+retention and conflict resolution all read them. The engineering around
+storage is careful: generational checkpoints with fault-injection
+points, a write-ahead log, a writer fence, and a committed benchmark
+harness whose published shared-brain result recomputes from its
+JSON.</p>
+<p>What is weak is where the boundaries sit. The <code>agent_id</code>
+filter runs after the result is ranked and truncated, and two lanes then
+inject verified engrams from the whole brain. The v4 checkpoint writer
+omits two segments its loader reads, so the governance audit log and the
+retention clock reset on every reopen. <code>verified</code> is whatever
+the writer sends.</p>
+<p>The project is one author's work over about three and a half months,
+with a paper, <a
+href="https://arxiv.org/abs/2608.12365">arXiv:2608.12365</a> (submitted
+10 July 2026). It is dual-licensed MIT or Apache-2.0.</p>
+<p>No mark is awarded. Section 9 names each of the seven and the
+reason.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory becomes a belief when <code>experience()</code> returns.
+There is no candidate state: the engram is encoded into the hippocampus
+vector, wired into the graph, indexed in the sidecar and retrievable by
+the next <code>activate</code>. Two gates can refuse it first. A brain
+in the <code>Embryonic</code> development stage stores only content
+prefixed <code>reflex:</code>
+(<code>crates/fluctlightdb/src/brain.rs:422-424</code>). A separation
+gate, on unless <code>FLUCTLIGHT_SEPARATION_GATE</code> is off, refuses
+an unverified, non-ledger episode too confusable with existing ones and
+returns <code>gate_rejected</code> with a reason
+(<code>brain.rs:520-556</code>;
+<code>separation_gate.rs:25-29</code>).</p>
+<p><strong>Provenance is attached at write time and never
+re-derived.</strong> The kind and the <code>verified</code> flag come
+from the caller: <code>verified: true</code> in an HTTP body makes the
+row verified (<code>crates/fluctlightdb/src/serve.rs:2773-2795</code>),
+<code>verify_fact</code> promotes an existing row
+(<code>brain.rs:1117-1140</code>), and <code>observe_tool</code> stamps
+<code>ToolGrounded</code> on whatever tool name and result text it is
+handed (<code>crates/fluctlightdb/src/agent_runtime.rs:213-269</code>).
+Nothing checks the source.</p>
+<p><strong>A memory stops being one in five ways.</strong>
+<code>forget_engram</code> and the governance deletes remove rows
+(<code>crates/fluctlightdb/src/query.rs:391-405</code>;
+<code>governance.rs:179-254</code>). Retention prunes engrams below a
+salience floor of 0.12, or older than <code>retain_days</code>, unless
+verified (<code>retention_policy.rs:65-91</code>).
+<code>reconsolidate</code> overwrites the content in place and keeps no
+prior value (<code>brain.rs:1328-1399</code>). Compaction merges a
+near-duplicate into a keeper and discards the absorbed episode, its
+agent id and its provenance with it
+(<code>compact.rs:25-169</code>).</p>
+<p>Nothing marks a memory false. Recall ranks verified rows higher and
+annotates unverified rows that look numeric with <em>"recalled utterance
+— not verified ground truth; check ledger/tools"</em>
+(<code>brain.rs:2333-2357</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an engram is written, how activate_scoped builds a result, and where the agent filter sits relative to the lanes that inject after it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an engram is written, how activate_scoped builds a result, and where the agent filter sits relative to the lanes that inject after it
+flowchart TD
+    W[&quot;experience, wm_push + turn_end,&lt;br/&gt;observe_tool, MCP remember&quot;] --&gt; G{&quot;embryonic stage or&lt;br/&gt;separation gate refuses?&quot;}
+    G -- &quot;refused&quot; --&gt; R[&quot;not stored,&lt;br/&gt;gate_rejected&quot;]
+    G -- &quot;stored&quot; --&gt; E[&quot;engram: content, context, agent_id,&lt;br/&gt;provenance kind, verified flag&lt;br/&gt;(all caller-supplied)&quot;]
+    E --&gt; A[&quot;activate_scoped(cue, agent_id, top_k)&quot;]
+    A --&gt; H[&quot;FTS5 + vector candidates,&lt;br/&gt;spreading activation,&lt;br/&gt;truncate to top_k&quot;]
+    H --&gt; B[&quot;boosts: verified +0.15, cortex,&lt;br/&gt;CA3, chorus, neuromodulators, PFC&quot;]
+    B --&gt; F{&quot;agent_id given?&quot;}
+    F -- &quot;yes&quot; --&gt; FR[&quot;keep rows whose agent_id matches&quot;]
+    F -- &quot;no&quot; --&gt; L
+    FR --&gt; L[&quot;balance cue: highest-salience verified&lt;br/&gt;ledger engram from the whole brain&quot;]
+    L --&gt; X[&quot;exact cue: verified or tool-grounded&lt;br/&gt;engrams of the life injected at 10+&quot;]
+    X --&gt; T[&quot;trust_note on unverified&lt;br/&gt;numeric-looking rows&quot;]
+    E --&gt; C[&quot;compaction: merge near-duplicates,&lt;br/&gt;absorbed episode discarded&quot;]
+    E --&gt; D[&quot;forget, delete_by_subject,&lt;br/&gt;retention prune unless verified&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The core is the <code>fluctlightdb</code> crate:
+<code>FluctlightBrain</code> holds a hippocampus (the engram list), a
+synapse graph, a semantic field of vectors, a cortex of consolidated
+token weights and schemas, prefrontal goals and inhibitions, and about a
+dozen more subsystems named for brain regions.
+<code>fluctlight-py</code> exposes it to Python through PyO3,
+<code>fluctlight-cli</code> ships a CLI and the
+<code>fluctlight serve</code> HTTP server, and
+<code>sdks/python/fluctlightdb</code> wraps the native module with
+<code>connect_agent</code>, <code>connect_embedded</code>,
+<code>connect_project</code>, the MCP server and framework adapters.</p>
+<p><strong>Persistence is a directory of serde segments.</strong> The
+default v4 format writes each subsystem to its own segment under a
+numbered generation, renames the generation into place and then swaps a
+<code>CURRENT</code> pointer, with fault-injection hooks between steps
+(<code>crates/fluctlightdb/src/manifest.rs:72-100</code>,
+<code>:186-211</code>). A v3 format writes one bincode file with a CRC
+header (<code>store.rs:124-149</code>). The hybrid candidate index is a
+SQLite FTS5 table plus vectors in a sidecar
+(<code>index/sidecar.rs:19-37</code>). A segmented WAL covers
+<code>experience</code>, <code>sleep</code>, <code>tick</code>,
+<code>compact</code> and a few others, and is truncated on each
+checkpoint (<code>wal.rs:21-31</code>; <code>store.rs:51-56</code>).</p>
+<p><strong>Several subsystems are runtime-only.</strong> The multi-agent
+consensus store, the Chronos temporal index, the crystallizer and the
+Fabric traces are <code>#[serde(skip)]</code>, commented <em>"never
+persisted"</em>, and absent from the checkpoint writer
+(<code>brain.rs:115-129</code>).</p>
+<p>The server keeps one brain per tenant in an LRU pool, resolves the
+tenant from the path, the body or the API key, and checks the key's
+tenant access before dispatch (<code>serve.rs:830-855</code>,
+<code>:1547-1556</code>). A <code>distributed</code> feature adds a
+control plane with placements, watermarks and mTLS replication, and
+refuses most non-WAL mutations in that mode
+(<code>wal.rs:33-58</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install "fluctlightdb[native]"</code> installs a prebuilt
+wheel; nothing else has to run for embedded use, and no API key is
+needed to store anything. Vector recall needs the caller to supply
+embeddings or run the separate <code>embed-server</code>; lexical and
+graph recall work without one. The server is a Docker image or a systemd
+unit. The store is binary segments, so repair by hand means the Python
+query API or <code>export_snapshot</code>, which emits engrams, Chronos
+and agent state as JSON (<code>brain_snapshot.rs:16-52</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>FluctlightBrain::experience</code>
+appends to the WAL when enabled, then
+<code>experience_internal_assigned</code> runs the stage and separation
+gates, dedupes a RAG chunk by document and chunk id, separates and
+encodes the engram, and indexes it (<code>brain.rs:388-620</code>).
+Working memory is a ring: <code>wm_push</code> adds a slot and
+<code>turn_end(flush=True)</code> commits each slot as an engram
+(<code>agent_runtime.rs:185-211</code>). The MCP
+<code>memory_remember</code> pushes one slot, flushes and checkpoints,
+because each MCP call opens its own brain
+(<code>sdks/python/fluctlightdb/mcp_server.py:31-45</code>).</p>
+<p><strong>Recall, engine.</strong> <code>activate_scoped</code>
+(<code>brain.rs:840-1101</code>) checks a cache keyed on cue, agent and
+<code>top_k</code>, takes hybrid candidates, runs
+<code>activate_from_hybrid</code> (which sorts and truncates to
+<code>top_k</code>, <code>activation.rs:241-242</code>), then applies
+the boosts, merges Chorus hits, applies prefrontal goal and inhibition
+scores, filters on <code>agent_id</code>
+(<code>brain.rs:1066-1073</code>), runs the balance-cue override
+(<code>:1074</code>), the exact-query lane (<code>:1082-1089</code>) and
+the trust annotation (<code>:1091</code>).</p>
+<p><strong>Recall, agent.</strong> <code>recall_unified</code> routes
+between the episodic, Chorus, Muon and Tau lanes, calls
+<code>activate_scoped</code> with <code>agent_id</code> set to
+<code>None</code>, falls back to a lexical scan of working memory when
+every lane is empty, and applies a tick-range filter parsed from cues
+such as <em>"last week"</em> (<code>agent_runtime.rs:323-421</code>).
+The MCP <code>memory_recall</code> and
+<code>connect_agent().recall()</code> both land here.</p>
+<p><strong>Context injection.</strong>
+<code>ProjectBrain.session_context</code> recalls on two fixed cues from
+both the project and the agent brain, adds recent handoffs, and returns
+a Markdown block (<code>project.py:316-349</code>). The Cursor
+<code>sessionStart</code> template prints it as
+<code>additional_context</code> and prints <code>{}</code> on any
+exception
+(<code>templates/cursor/hooks/session_start.py:10-21</code>).</p>
+<p><strong>Correction and deletion.</strong> <code>reconsolidate</code>
+(<code>brain.rs:1328-1399</code>), <code>forget_engram</code> and
+<code>forget_before</code> (<code>query.rs:391-432</code>),
+<code>delete_by_subject</code> and <code>delete_by_agent_id</code>
+(<code>governance.rs:179-254</code>), <code>apply_retention</code>
+(<code>agent_runtime.rs:286-312</code>), and <code>compact_brain</code>
+(<code>compact.rs:25-169</code>). Over HTTP, forget sits behind
+<code>/api/v1/query</code> with the <code>Admin</code> role
+(<code>serve.rs:2721-2741</code>), and <code>/compact</code> also needs
+<code>Admin</code>.</p>
+<p><strong>Conflict resolution.</strong> <code>resolve</code> activates
+twelve candidates unscoped and ranks them by
+<code>0.35·activation + 0.4·provenance weight + 0.15·confidence + 0.1·salience</code>,
+calling the result contested when the top two differ by less than 0.12
+(<code>conflict_lattice.rs:21-90</code>;
+<code>agent_runtime.rs:424-427</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>content, context, outcome</td>
+<td><code>Episode</code></td>
+<td>free text; <code>reconsolidate</code> caps content at 500
+characters</td>
+</tr>
+<tr>
+<td>salience_hint</td>
+<td><code>Episode</code></td>
+<td>caller's hint, combined with the amygdala weight</td>
+</tr>
+<tr>
+<td>semantic_vector</td>
+<td><code>Episode</code></td>
+<td>optional; the engine does not embed</td>
+</tr>
+<tr>
+<td>agent_id, tenant_id</td>
+<td><code>Episode</code></td>
+<td>optional strings, documented as recall isolation and routing hint
+(<code>types.rs:17-22</code>)</td>
+</tr>
+<tr>
+<td>rag</td>
+<td><code>Episode</code></td>
+<td>source URI, document and chunk ids; the dedup key for chunk
+ingest</td>
+</tr>
+<tr>
+<td>provenance</td>
+<td><code>Episode</code></td>
+<td>kind, source URI, confidence, <code>verified</code>
+(<code>types.rs:31-54</code>)</td>
+</tr>
+<tr>
+<td>salience, encoded_at_tick, replay_count, is_core</td>
+<td><code>Engram</code></td>
+<td><code>is_core</code> rows survive governance deletes and life
+resets</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scope is physical first.</strong>
+<code>connect_project</code> opens <code>.fluctlight/project/</code> as
+a shared brain and <code>.fluctlight/agents/&lt;name&gt;/</code> per
+agent, and its <code>recall</code> merges both
+(<code>project.py:204-225</code>). The server keeps one brain per
+tenant. Inside a brain, <code>agent_id</code> is a key on the row;
+section 6 says where it is read.</p>
+<p><strong>Time is a tick counter.</strong> <code>encoded_at_tick</code>
+is the only persisted time on an engram. Chronos builds a temporal and
+causal DAG per session and is not persisted.</p>
+<p><strong>The governance log and agent state are declared persistent
+and are not.</strong> <code>load_v4_dir</code> reads <code>agent</code>
+and <code>governance</code> segments (<code>manifest.rs:311-312</code>);
+<code>write_checkpoint_dir</code> writes neither
+(<code>:186-211</code>), and nothing else in the tree writes a segment
+by either name. The v3 snapshot struct carries neither field
+(<code>store.rs:376-393</code>). So on every reopen the audit log is
+empty, and the retention clock per engram,
+<code>RetentionState.engram_ticks</code>, restarts at the current tick
+for every checkpointed engram. This was read, not reproduced.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is cue-driven. FTS5 and vector search pick up to 128
+candidates by default, spreading activation scores them over the synapse
+graph, and roughly fifteen adjustments follow in a fixed order.
+<code>tests/recall_stage_reachability.rs</code> exists to prove each
+stage can change an order. Verified rows gain 0.15 activation
+(<code>brain.rs:908-911</code>); a prefrontal <code>BoostVerified</code>
+rule multiplies them by 1.2; a <code>RequireSource</code> rule keeps
+only rows with a given source URI.</p>
+<p><strong>The scope filter is a post-filter after truncation.</strong>
+<code>activate_from_hybrid</code> truncates to <code>top_k</code> before
+the boosts and before <code>retain(|r| r.episode.agent_id == aid)</code>
+(<code>activation.rs:241-242</code>; <code>brain.rs:1069-1073</code>). A
+scoped query on a brain where other agents dominate the cue returns
+fewer than <code>top_k</code> rows, or none, while matching rows exist.
+Chorus hits are rebuilt with <code>Episode::new</code> and no agent id
+(<code>chorus_runtime.rs:206-207</code>), so a scoped query drops them
+all.</p>
+<p><strong>Two lanes run after the filter and read the whole
+brain.</strong> On a cue containing <em>balance</em>, <em>wallet</em>,
+<em>ledger</em>, <em>$</em>, <em>money</em> or <em>credit</em>,
+<code>prefer_ledger_truth_on_balance_cue</code> picks the
+highest-salience verified engram whose content contains <em>wallet</em>,
+<em>balance</em> or <em>ledger</em>, scanning
+<code>hippocampus.engrams</code> with no agent predicate, and inserts it
+at activation 10 (<code>brain.rs:2150-2219</code>). On a cue matching
+<code>detect_exact_query</code> — <em>exactly</em>, <em>invoice #</em>,
+<em>id:</em> and similar (<code>recall_router.rs:36-70</code>) —
+<code>exact_verified_recall</code> injects up to three verified or
+tool-grounded engrams from the life at activation 10 or more
+(<code>brain.rs:2237-2331</code>). A comment above the call says
+<em>"activation 2.0"</em>; the code uses 10.</p>
+<p><strong>The committed shared-brain benchmark shows the first lane
+misfiring.</strong>
+<code>provenance-conflict-shared-2026-07-10.json</code> puts all 50
+cases in one brain and scores 9 hits, which I recomputed from its
+<code>cases</code> array. All five wallet cases return <em>"ledger
+verified: refund amount 1500 USD"</em>. Every ledger template contains
+the word <em>ledger</em>, so the override's content test admits the
+refund facts too, and salience picks among them. That is my reading of
+the code against the result, not a run.</p>
+<p>Injection is bounded by <code>limit</code>; the Cursor hook asks
+<code>session_context</code> for twelve memories of up to 400 characters
+each.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. No model is called on the write
+path; encoding is tokenisation, neuron hashing, graph wiring and an FTS5
+insert. A write is visible to the next <code>activate</code> in the same
+process at once. Across processes it is visible after a checkpoint, or
+after WAL replay for the mutations the WAL covers.</p>
+<p><strong>Deduplication is narrow.</strong> A RAG chunk is deduped by
+document and chunk id. Ordinary episodes are not deduped at write;
+compaction later merges pairs whose content and context are equal, whose
+dentate overlap exceeds 0.85, or whose vectors exceed 0.94 cosine with
+overlap above 0.35 (<code>compact.rs:116-147</code>).
+<code>absorb_engram</code> keeps the keeper's episode and the maximum
+salience (<code>:149-169</code>). The merge test reads neither
+<code>agent_id</code> nor provenance, so a verified fact absorbed into
+an unverified near-twin loses its flag, and one agent's engram can be
+absorbed into another's.</p>
+<p><strong>Correction overwrites.</strong> <code>reconsolidate</code>
+replaces content, outcome and vector, bumps a revision counter and, with
+<code>supersede_similar</code> (the HTTP default), multiplies by 0.45
+the salience of other engrams equal to or containing the first 32
+characters of the <em>new</em> content
+(<code>brain.rs:1373-1393</code>). Old copies of the <em>old</em> value
+are untouched unless they share that prefix.</p>
+<p><strong>Deletion leaves residue.</strong> <code>forget_engram</code>
+removes the row, its vectors and its index entry; it does not touch the
+cortex token weights that sleep consolidated from its text
+(<code>sleep.rs:52-58</code>). <code>apply_retention</code> drops rows
+but not their vectors or index entries
+(<code>agent_runtime.rs:286-312</code>). <code>delete_by_subject</code>
+matches agent id, context prefix <em>or content substring</em>, so a
+short subject deletes widely (<code>governance.rs:187-204</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, no model call; the MCP path checkpoints on every
+<code>memory_remember</code>.</li>
+<li>Background: idle auto-consolidation on <code>tick</code>
+(working-memory flush, sleep, retention), compaction every few sleeps
+and on synapse pressure inside <code>experience</code>
+(<code>brain.rs:606-612</code>, <code>:1280-1289</code>). Compaction is
+pairwise over the life's engrams, so its cost grows with the square of
+the store.</li>
+<li>Read: bounded by <code>limit</code>; <code>session_context</code>
+runs two recalls on both brains.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers <code>memory_remember</code>,
+<code>memory_recall</code>, <code>memory_resolve</code>,
+<code>memory_consolidate</code> and <code>memory_observe_tool</code> on
+the agent brain, and <code>fluctlight_recall</code>,
+<code>fluctlight_remember</code>, <code>fluctlight_handoff</code>,
+<code>fluctlight_list_handoffs</code>, <code>fluctlight_status</code>
+and <code>fluctlight_session_context</code> on the project brain
+(<code>mcp_server.py:66-182</code>). There is no forget tool.
+<code>fluctlight_remember</code> takes <code>scope="agent"</code> or
+<code>"project"</code>, which picks a directory.</p>
+<p><code>fluctlight-project init</code> installs Cursor hooks (session
+start, before submit, stop handoff, file tracking) and MCP configs for
+Claude and Codex (<code>cli.py:164-215</code>). Handoffs are structured
+records other agents read at session start. Adapters for LangChain and
+LlamaIndex stamp each turn with <code>session:&lt;id&gt;</code> and
+filter recall hits by that marker
+(<code>integrations/langchain.py:44-75</code>).</p>
+<p>The agent has every write verb it needs to plant a top-ranked memory:
+<code>memory_observe_tool</code> with any tool name produces a
+<code>ToolGrounded</code> engram that the exact-query lane promotes over
+chat memories.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is declared, not established.</strong> The five
+kinds and the verified flag are inputs. A chat claim written with
+<code>verified: true</code> outranks a ledger read written without it.
+The design separates the lanes cleanly in the data model and leaves the
+boundary to every caller.</p>
+<p><strong>The server's tenant boundary is the strongest one.</strong>
+Keys carry roles and a tenant, the tenant brain is separate, and
+<code>tests/zz_security_review.rs</code> and
+<code>tests/auth_tenant.rs</code> assert that tenant keys do not cross
+and that a tenant admin cannot write another tenant. That is a physical
+partition.</p>
+<p><strong>Durability is engineered.</strong> Generational checkpoints
+with fsyncs and named fault points, a crash-recovery suite, a writer
+fence across processes (<code>tests/subprocess_storage.rs</code>), and a
+Jepsen-style chaos job in CI. Mutations outside the WAL list — forget,
+verify, reconsolidate — persist only at the next checkpoint.</p>
+<p><strong>Uncertainty is representable only as rank and a
+note.</strong></p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — withheld. Deletion removes rows. Prefrontal
+inhibition stores a phrase and subtracts at most 0.8 from matching rows
+once the brain reaches the <code>Adolescent</code> stage
+(<code>prefrontal.rs:108-118</code>, <code>:203-228</code>;
+<code>development.rs:228-230</code>). It is a recall penalty and does
+not stop the value being written again.</li>
+<li><code>trust_state</code> — withheld. <code>verified</code> is a
+boolean and the kind is a source genre; both are read as ranking
+weights, a retention exemption and an injection lane, and no read
+excludes an unverified row. <code>SchemaStatus</code> has
+<code>Provisional</code>, which nothing assigns, and
+<code>active()</code> filters schemas whose only reader,
+<code>activate_with_schemas</code>, has no caller outside tests
+(<code>schema.rs:9-14</code>, <code>:85-112</code>). Swarm feedback
+routes a memory with a reproduced failure to a warning lane, and
+<code>route_candidates</code> is called only from a test
+(<code>swarm.rs:345-363</code>).</li>
+<li><code>bitemporal</code> — withheld. One encode tick; Chronos is
+runtime-only.</li>
+<li><code>scope_enforced</code> — withheld. <code>agent_id</code> is a
+key on the row, filtered after truncation on
+<code>activate_scoped</code>, and the balance and exact-query lanes then
+inject rows from the whole brain. <code>recall_unified</code> and
+<code>resolve</code> pass no agent, and <code>ListVerified</code>,
+<code>ListUnverified</code> and <code>GetEngram</code> take none
+(<code>query.rs:11-40</code>). The consensus store has a scope list on
+each claim and a predicate on all three reads
+(<code>consensus.rs:49-57</code>), and is never persisted.</li>
+<li><code>audit_log</code> — withheld.
+<code>GovernanceState.audit_log</code> records four bulk verbs, drops
+its oldest entries past 10,000 (<code>governance.rs:134-147</code>),
+skips writes, single forgets, reconsolidation and compaction, and is not
+persisted in either storage format (section 5). The WAL is a durability
+log truncated at each checkpoint.</li>
+<li><code>human_review</code> — withheld. <code>brain_inspect</code> and
+the inbox UI display; no state waits on a person.</li>
+<li><code>negative_eval</code> — withheld; section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests at the pin; nothing was built or run. CI runs
+<code>cargo test --release</code>, clippy, rustfmt, Miri on the
+<code>miri_</code> tests, a chaos job and the Python suite, with one
+native-wheel test (<code>.github/workflows/ci.yml</code>).</p>
+<p><strong>Storage is well tested.</strong> Crash recovery, checkpoint
+fault injection, cross-process fencing, WAL corruption, codec drift,
+linearizability and three-node replication each have their own file
+under <code>crates/fluctlightdb/tests/</code>.</p>
+<p><strong>The scope test is vacuous.</strong>
+<code>tenant_scoped_recall_isolation</code> stores one memory per agent
+and asserts that every recall for <code>agent_a</code> carries
+<code>agent_a</code> (<code>tests/roadmap.rs:34-73</code>).
+<code>all()</code> holds on an empty result, and no assertion requires
+the agent's own memory to come back. It would also pass with the
+injection lanes leaking, because the cue triggers neither.</p>
+<p><strong>The forget test does not recall.</strong>
+<code>query_list_and_forget</code> lists, forgets and checks
+<code>removed</code> inside <code>if let</code> arms that skip silently
+on another variant (<code>tests/roadmap.rs:142-178</code>).</p>
+<p><strong>Two adapter tests do assert exclusion with a positive
+control.</strong> The LangChain and LlamaIndex suites store turns in two
+sessions on a stub brain and assert the exact list of one session's
+turns, the LangChain one also asserting no <em>"unrelated"</em> text
+(<code>sdks/python/tests/test_langchain_memory.py:89-102</code>;
+<code>test_llamaindex_memory.py:61-72</code>). They test a chat-history
+session filter in the adapter over a stub recall, so they guard a
+conversation buffer and not the engine's memory; the mark is withheld on
+that ground.</p>
+<p><strong>Padding.</strong> <code>tests/cert_extra.rs</code> opens
+<em>"Additional certification tests to exceed 300 bar"</em> and holds
+eleven <code>cert_padding_*</code> functions, each storing one memory
+and asserting the store is non-empty.</p>
+<p><strong>Benchmarks.</strong> <code>benchmarks/</code> holds harnesses
+for LoCoMo, LongMemEval, BEIR and the provenance-conflict suite, with
+result JSON under <code>benchmarks/results/</code>. The README states
+the LoCoMo figure as raw evidence recall at k=150 and at k=5, and says
+the earlier 99.0% came from crediting neighbours never retrieved. I
+recomputed only the shared-brain provenance-conflict result (section
+6).</p>
+<p><strong>Paper.</strong> <a
+href="https://arxiv.org/abs/2608.12365">arXiv:2608.12365</a>, submitted
+10 July 2026. Its abstract describes provenance-weighted recall and
+reports the 18% shared-brain figure beside 100% under per-case
+isolation, which matches the committed JSON. <code>CITATION.cff</code>
+says the corrected abstract is pending upload; the abstract arXiv served
+on 3 October 2026 already carries 96.8%.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put provenance in the record type, with a kind and a flag,
+from the first write.</strong> Retrofitting it is harder than ignoring
+it later.</li>
+<li><strong>Exempt verified rows from age-based retention.</strong> A
+ledger fact should not expire on the same clock as a chat aside.</li>
+<li><strong>Name every fault point in the checkpoint sequence and test
+each one.</strong> The generation-rename-then-pointer-swap with
+<code>checkpoint_fault::hit</code> calls is a clean pattern.</li>
+<li><strong>Publish the shared-store condition beside the isolated
+one.</strong> The 18% against 100% pair tells a reader more than either
+number.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Filtering scope after truncation, then running lanes that
+read the whole store.</strong> Put the predicate in candidate generation
+and in every injection lane.</li>
+<li><strong>A loader that reads segments the writer never
+writes.</strong> <code>unwrap_or_default</code> turns a missing segment
+into silent loss; fail the load or test the round-trip of every
+field.</li>
+<li><strong>A trust flag the writer sets.</strong> If
+<code>verified</code> decides rank and retention, derive it from a
+source the agent cannot supply.</li>
+<li><strong>Merging near-duplicates without comparing provenance and
+owner.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer who wants an embedded, offline memory
+with cue-driven recall, is comfortable with one brain directory per
+agent, and will treat the neuroscience vocabulary as names for scoring
+stages. Physical separation is the boundary to rely on; the in-brain
+<code>agent_id</code> is not. A team needing memories that can be held
+as unconfirmed, audited, or kept out of a shared brain needs those
+layers built beside it. Anyone choosing it for the benchmark numbers
+should run them, as the README itself asks.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does WAL replay re-record <code>engram_ticks</code> for engrams
+written after the last checkpoint, so that age-based retention works
+within one checkpoint window?</li>
+<li>Does a forget survive a crash before the next checkpoint, given that
+<code>forget_engram</code> is outside the WAL list and does not
+checkpoint?</li>
+<li>How often does the separation gate refuse ordinary agent writes, and
+does any caller surface <code>gate_reason</code>?</li>
+<li>Was the v2 abstract uploaded, or did arXiv's first version already
+carry the corrected figure?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Data model:</strong>
+<code>crates/fluctlightdb/src/types.rs</code>, <code>engram.rs</code>,
+<code>hippocampus.rs</code>, <code>schema.rs</code>,
+<code>consensus.rs</code>, <code>swarm.rs</code>.</li>
+<li><strong>Write:</strong> <code>brain.rs:388-620</code>,
+<code>agent_runtime.rs:185-268</code>, <code>separation_gate.rs</code>,
+<code>compact.rs</code>.</li>
+<li><strong>Retrieval:</strong> <code>brain.rs:840-1101</code>,
+<code>brain.rs:2150-2357</code>, <code>activation.rs</code>,
+<code>index/mod.rs</code>, <code>index/sidecar.rs</code>,
+<code>recall_router.rs</code>, <code>conflict_lattice.rs</code>,
+<code>chorus_runtime.rs</code>.</li>
+<li><strong>Correction and deletion:</strong>
+<code>brain.rs:1328-1399</code>, <code>query.rs</code>,
+<code>governance.rs</code>, <code>retention_policy.rs</code>,
+<code>prefrontal.rs</code>.</li>
+<li><strong>Persistence:</strong> <code>manifest.rs</code>,
+<code>store.rs</code>, <code>storage.rs</code>, <code>wal.rs</code>,
+<code>brain_snapshot.rs</code>.</li>
+<li><strong>Server:</strong> <code>serve.rs</code>,
+<code>auth.rs</code>, <code>tenant.rs</code>.</li>
+<li><strong>Python and MCP:</strong>
+<code>sdks/python/fluctlightdb/brain.py</code>, <code>project.py</code>,
+<code>mcp_server.py</code>, <code>integrations/</code>,
+<code>templates/cursor/hooks/</code>.</li>
+<li><strong>Tests:</strong>
+<code>crates/fluctlightdb/tests/roadmap.rs</code>,
+<code>cert_extra.rs</code>, <code>zz_security_review.rs</code>,
+<code>auth_tenant.rs</code>, <code>crash_recovery.rs</code>,
+<code>recall_stage_reachability.rs</code>,
+<code>sdks/python/tests/</code>.</li>
+<li><strong>Benchmarks:</strong>
+<code>benchmarks/provenance_conflict_bench.py</code>,
+<code>benchmarks/results/provenance-conflict-*.json</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from its
+root.</p>
+<ul>
+<li><code>rg -n -i 'tombstone|rejected|quarantin|candidate.*verified|TrustState|enum .*Status|audit' --type rust --type py</code>
+— no tombstone or trust enum on engrams; <code>SchemaStatus</code>,
+<code>SwarmStatus</code>, <code>WorkerStatus</code> and the governance
+<code>AuditEntry</code>.</li>
+<li><code>rg -n 'agent_id' --type rust</code> in
+<code>crates/fluctlightdb/src</code> — one read-side predicate,
+<code>brain.rs:1072</code>; consensus filters its own
+<code>Claim.agent_id</code>.</li>
+<li><code>rg -n '"governance"|"agent"\)' --type rust</code> and
+<code>rg -n 'write_segment' --type rust</code> — only the reads at
+<code>manifest.rs:311-312</code>; no writer for either segment.</li>
+<li><code>rg -n 'route_candidates|truth_revisions' --type rust --type py</code>
+— <code>route_candidates</code> called only at
+<code>swarm.rs:1061</code> in a test; <code>truth_revisions</code> has
+no writer.</li>
+<li><code>rg -n 'SchemaStatus::|fn active' crates/fluctlightdb/src</code>
+and <code>rg -n 'activate_with_schemas' crates --type rust</code> —
+<code>Provisional</code> never assigned; no non-test caller of
+<code>activate_with_schemas</code>.</li>
+<li><code>rg -n -i 'approv|review|pending|accept' sdks/python/fluctlightdb crates/fluctlightdb/src</code>
+— no review state on memory.</li>
+<li><code>rg -n 'engrams\.retain|engrams\.remove|engrams\.drain|engrams\.truncate' crates/fluctlightdb/src</code>
+— <code>compact.rs:102</code>, <code>hippocampus.rs:60</code>,
+<code>agent_runtime.rs:291</code>, <code>neurogenesis.rs:71</code>,
+<code>query.rs:399</code>.</li>
+<li><code>rg -n 'compact_internal|compact_brain\(' --type rust</code> —
+automatic calls at <code>brain.rs:612</code> and
+<code>:1288</code>.</li>
+<li><code>rg -n 'consensus' --type rust --type py</code> — reached only
+through four HTTP routes and the Python client.</li>
+<li><code>rg -n 'assertNotIn|not in |assertFalse|== \[\]' sdks/python/tests</code>
+and
+<code>rg -n 'assert!\(!.*contains|!.*\.any\(|is_empty\(\)\)' crates/fluctlightdb/tests</code>
+— the two adapter exclusions; no engine-level exclusion with a positive
+control.</li>
+<li><code>grep -rn -i 'arxiv' README.md CITATION.cff .zenodo.json docs/BENCHMARKS.md</code>
+— <a href="https://arxiv.org/abs/2608.12365">arXiv:2608.12365</a> and a
+Zenodo DOI.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/voxmastery/FluctlightDB/commit/25556df0ae5bcc3d8309df7687744bcf7173b5b5"><code class="commit-id" title="25556df0ae5bcc3d8309df7687744bcf7173b5b5">25556df0…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 1
+October 2026. No mark awarded; section 9 names each. Screened before
+reading: two auto-run surfaces (<code>.claude/settings.json</code>
+registering a project MCP server that runs
+<code>python3 -m fluctlightdb.mcp_server</code>, and
+<code>.githooks/prepare-commit-msg</code>, which strips attribution
+trailers), one build-time execution point (<code>Makefile</code>),
+twelve dependency files inside the cooldown — every file in a depth-1
+clone dates to the tip — four unpinned surfaces, and
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> recorded as data. Read
+with <code>rg</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

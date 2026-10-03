@@ -911,6 +911,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 [Synapse Layer](../../systems/synapse-layer/) is the predicate without the key. Its SQLite recall ANDs `agent_id = ?` onto both branches inside the SQL, and a committed test proves another agent's matching row stays out, but the primary key is the SHA-256 of the redacted content and the write is `INSERT OR REPLACE`. A second agent storing the same sentence therefore rewrites `agent_id` and removes the row from the first agent's recall — the read filter holds while the identity it guards moves, which is why the page asks for scope at the front of the key and for dedupe inside the boundary.
 
+**[FluctlightDB](../../systems/fluctlightdb/) filters on the key after the work is done, then hands the result to lanes that never saw it.** `activate_scoped` truncates to `top_k` before keeping the rows whose `agent_id` matches, so a scoped query can come back empty while the agent's own rows exist. Two override lanes, a balance-cue ledger lookup and an exact-query injection of verified rows, run after the filter and scan the whole brain, and the agent-facing `recall_unified` passes no agent at all. **A scope predicate applied after truncation is a page filter, and every lane that inserts rows afterwards needs it again.**
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

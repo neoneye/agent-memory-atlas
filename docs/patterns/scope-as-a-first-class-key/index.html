@@ -1351,6 +1351,17 @@ therefore rewrites <code>agent_id</code> and removes the row from the
 first agent's recall — the read filter holds while the identity it
 guards moves, which is why the page asks for scope at the front of the
 key and for dedupe inside the boundary.</p>
+<p><strong><a href="../../systems/fluctlightdb/">FluctlightDB</a>
+filters on the key after the work is done, then hands the result to
+lanes that never saw it.</strong> <code>activate_scoped</code> truncates
+to <code>top_k</code> before keeping the rows whose
+<code>agent_id</code> matches, so a scoped query can come back empty
+while the agent's own rows exist. Two override lanes, a balance-cue
+ledger lookup and an exact-query injection of verified rows, run after
+the filter and scan the whole brain, and the agent-facing
+<code>recall_unified</code> passes no agent at all. <strong>A scope
+predicate applied after truncation is a page filter, and every lane that
+inserts rows afterwards needs it again.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

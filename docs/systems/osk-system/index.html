@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Markdown vault where
+coding-agent hooks capture transcripts, the agent distills cited nodes
+over MCP, and append-only causal ledgers govern approvals and
+rechecks.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="osk-system — Agent Memory Atlas">
+    <meta property="og:description" content="A local Markdown vault
+where coding-agent hooks capture transcripts, the agent distills cited
+nodes over MCP, and append-only causal ledgers govern approvals and
+rechecks.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="osk-system — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Markdown vault
+where coding-agent hooks capture transcripts, the agent distills cited
+nodes over MCP, and append-only causal ledgers govern approvals and
+rechecks.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>osk-system — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "osk-system",
+      "description": "A local Markdown vault where coding-agent hooks capture transcripts, the agent distills cited nodes over MCP, and append-only causal ledgers govern approvals and rechecks.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A governed Markdown knowledge vault for
+coding agents</p>
+          <h1>osk-system</h1>
+          <p class="document-deck">A local Markdown vault where
+coding-agent hooks capture transcripts, the agent distills cited nodes
+over MCP, and append-only causal ledgers govern approvals and
+rechecks.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/lpaiu-cs/osk-system">
+              <span>Source</span>
+              <strong>lpaiu-cs/osk-system</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/lpaiu-cs/osk-system/commit/edf9523fe32c5d9a08ab41b95dd464b3d0fe433f" title="edf9523fe32c5d9a08ab41b95dd464b3d0fe433f">
+              <span>Analyzed revision</span>
+              <code>edf9523f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/lpaiu-cs--osk-system" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>lpaiu-cs--osk-system</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT;
+a Korean rider declares the governing documents the author's own
+work</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>23,121
+lines of Python outside tests; 1,515 lines of Korean governing
+documents</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>485
+commits on main by 1 contributor, 16 July 2026 – 3 October
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>425
+test functions and script-style suites in 22,380 lines of Python, run in
+CI through one regression runner</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>osk-system is a local Markdown memory vault for coding agents.
+Session hooks for Claude Code, Codex, Kiro and Antigravity capture every
+conversation round verbatim into an append-only <code>_raw/</code>
+record. At fixed turns, or in a background fork, the agent distills
+durable claims into nodes over MCP, each citing its evidence down to the
+round. BM25 search, a per-scope shared note injected at session start,
+and an Obsidian graph bring them back.</p>
+<p>What is notable is the provenance machinery. Every
+<code>derived-from</code> pair is bound to a hash of both bodies in an
+append-only ledger, so a changed source turns every citing node into a
+recheck candidate, and the candidacy propagates along citations. The
+ledgers carry UUIDv7 ids and causal parents, so two devices' appends
+merge by Git union and a fork is reported, not silently resolved.</p>
+<p>What is weak is the read side. Search covers every Space, every scope
+included, while writes are confined to a session's bound scope. The
+cascade stop on corrections and the rule that an agent's inference about
+the user needs confirmation are prompt and governance text. Node
+creation and edits are recorded nowhere but Git.</p>
+<p>The design is written down as law. A Korean constitution, bylaws and
+mechanism document under <code>_governance/</code> define Spaces, nodes,
+ledgers and authority. The engine cites them article by article in its
+comments, and <code>_governance/records/</code> holds 24 dated
+deliberation records. <code>docs/FORMAT.md</code> is an English,
+non-normative commentary on the on-disk format.</p>
+<p>The licence is MIT. A Korean rider in <code>LICENSE</code> declares
+the governing documents the author's own work; it does not restrict
+analysis.</p>
+<p>One mark: <code>negative_eval</code>, on a regression case asserting
+that a node's replaced body is no longer found by its old text, after a
+positive control. Section 9 names the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>node</strong>: a Markdown file whose title is
+its handle. Its frontmatter carries a server-assigned id, two KST
+timestamps, <code>author</code> (<code>user</code> or
+<code>agent</code>), <code>drafter</code> (a model name), a one-line
+summary, and two optional typed edges, <code>derived-from</code> and
+<code>conflicts</code>
+(<code>_governance/_engine/osk/contract.py:202</code>;
+<code>docs/FORMAT.md</code> section 2). A node lives in one of three
+Spaces: Scope for a project, Domain for knowledge reused across
+projects, Person for the user model.</p>
+<p>Beneath the nodes sit two non-node stores. The <strong>raw
+record</strong> is the verbatim transcript, in numbered rounds, which
+only grows. The <strong>scope memory</strong> is one note per scope,
+capped at 1,500 characters and shared by every session and device
+(<code>osk/scope_memory.py:35</code>). The cap is deliberate: an
+over-limit write is refused rather than truncated, so the refusal itself
+is the signal to distill into a node
+(<code>osk/scope_memory.py:1-22</code>).</p>
+<p>A claim becomes a node when the agent writes it, and nothing else
+decides. Every MCP write stamps <code>author: "agent"</code>
+(<code>osk/write.py:1108-1110</code>), and no reader consults the field.
+There is no candidate state and no review before a node is searchable.
+The README puts it as trust coming <em>"from sources, relations and
+history, not from an approval stamp"</em>.</p>
+<p>A node stops being current in three ways, none of them a state. The
+agent rewrites it in place under a hash or anchor check. A cited
+target's body changes, which makes the pair a recheck candidate until
+the agent re-cites it as <code>unchanged</code> or corrects the node as
+<code>updated</code> (<code>osk/rechecks.py:193-230</code>). Or a person
+deletes the file. A contradiction can be filed as a conflict candidate
+keyed on both parties' content hashes and adjudicated in a case file the
+engine does not write (<code>osk/write.py:1866-1914</code>).</p>
+<p>Protected regions add an after-the-fact lane. A person marks a
+directory protected and the engine keeps the approved snapshot as
+content-addressed objects. Agent edits still take effect at once, and
+the difference waits as a changeset the person approves or reverts at a
+terminal (<code>osk/cli.py:19-28</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — How a conversation becomes a cited node, and how a changed source reopens it. The dotted edge is a person's after-the-fact lane; the escalation edge is a prompt rule, not a refusal.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: How a conversation becomes a cited node, and how a changed source reopens it. The dotted edge is a person&#39;s after-the-fact lane; the escalation edge is a prompt rule, not a refusal.
+flowchart TD
+  A[&quot;Stop hook appends the round to _raw/.records (append-only, secret-filtered)&quot;] --&gt; B[&quot;Prompt at input turns 9 and 15, or a background fork after 9 final answers&quot;]
+  B --&gt; C[&quot;Agent calls create_node or update_node over MCP (author fixed to agent)&quot;]
+  C --&gt; D[&quot;Node file with derived-from edges to rounds, nodes or files&quot;]
+  C --&gt; E[&quot;Scope memory note, 1,500-character cap, refused when over&quot;]
+  E -- &quot;first shrinking write after a refusal&quot; --&gt; F[&quot;evictions.jsonl evict, later settled&quot;]
+  D --&gt; G[&quot;rechecks.jsonl bound: citing body hash and target hash&quot;]
+  H[&quot;A cited target&#39;s body changes&quot;] --&gt; I[&quot;Pair no longer matches: recheck candidate&quot;]
+  G --&gt; I
+  I --&gt; J[&quot;Growth job or session prompt: re-cite as unchanged, or correct as updated&quot;]
+  J -- &quot;correction would touch a citing node, or cascade is true&quot; --&gt; K[&quot;recheck_review escalated for the user (prompt instruction)&quot;]
+  D --&gt; L[&quot;search: BM25 over every Space but Workbench transit and governance&quot;]
+  E --&gt; M[&quot;SessionStart hook injects the bound scope&#39;s note&quot;]
+  N[&quot;Person at a terminal: approve or revert a protected region (isatty)&quot;] -.-&gt; D</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The runtime is one Python package,
+<code>_governance/_engine/osk/</code>, behind three surfaces.
+<code>mcp_server.py</code> is a FastMCP stdio server with 12 tools.
+<code>osk/cli.py</code> is the operator and hook CLI. Three hook scripts
+under <code>scripts/hooks/</code> handle session start, prompt submit
+and stop, with per-host adapters in <code>osk/harness/</code>.
+Dependencies are <code>mcp</code>, <code>pydantic</code>,
+<code>PyYAML</code> and <code>rank-bm25</code>
+(<code>_governance/_engine/requirements.txt</code>).</p>
+<p>Persistence is the vault directory. Nodes are files; ledgers are JSON
+Lines under <code>00_Scope/Workbench/_ledger/</code>; approved snapshots
+are content-addressed objects beside them. Device-owned state — locks,
+hook-run records, integration cursors, distillation journals — lives in
+the repository's Git directory and is never synchronized
+(<code>docs/FORMAT.md</code> section 1).</p>
+<p>Every ledger append takes an exclusive file lock, refuses a
+structurally damaged ledger, assigns a monotone UUIDv7, sets
+<code>parents</code> to every current head, and fsyncs the line and, on
+creation, the directory (<code>osk/core.py:691-755</code>).
+<code>.gitattributes</code> merges ledgers with
+<code>merge=union</code>, so lines appended on two devices both survive
+and the next append joins the branches.</p>
+<p>Search is computed from the files. <code>Searcher</code> tokenizes
+title, summary and body into ASCII words and character bigrams and
+builds <code>BM25Okapi</code> on first search
+(<code>osk/search.py:24-58</code>). The server caches the index behind a
+fingerprint of paths, mtimes and sizes, and refuses to trust it inside
+the mtime race window (<code>mcp_server.py:59-112</code>).</p>
+<p>Background work runs in three places. A subscription fork re-runs the
+source session's harness after every 9 successful final answers
+(<code>osk/response_growth.py:18-22</code>). A scheduled growth runner
+spawns a harness CLI with a bounded job manifest
+(<code>osk/growth.py:1021-1038</code>). An optional daemon commits,
+pulls with rebase and pushes the vault
+(<code>vault_sync.py:1-15</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run but Python 3.11 and Git. There is no database, no
+embedding model and no network service; the store is human-readable
+Markdown and JSON Lines, and <code>docs/FORMAT.md</code> documents how
+to repair a ledger by hand.</p>
+<p>The documented install has an agent clone a release tag and run
+<code>scripts/setup.py --interactive</code>, which creates a venv,
+records the release baseline and registers MCP and hooks per host after
+a confirmation. The background fork needs a logged-in subscription CLI;
+without it, review falls back to in-session prompts. Updates arrive as
+attested releases whose <code>release.json</code> hashes every file,
+applied in a journalled transaction (<code>docs/FORMAT.md</code> section
+7).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> The Stop hook
+(<code>scripts/hooks/capture_stop.py</code>) reads the host transcript
+through <code>osk/transcripts.py</code> and appends rounds through
+<code>raw.append_round</code>. That call secret-filters seven patterns
+and accepts a write only when the file's bytes are a prefix of the new
+bytes (<code>docs/FORMAT.md</code> section 6.1). The MCP
+<code>append_raw</code> tool is the same path for hosts without hooks
+(<code>mcp_server.py:468-476</code>).</p>
+<p><strong>Review cadence.</strong> <code>osk/integration.py</code>
+keeps a durable per-conversation cursor with
+<code>SOFT, HARD = 9, 15</code> (<code>osk/integration.py:17</code>),
+and the prompt-submit hook asks for an in-session review at those input
+turns. <code>osk/response_growth.py</code> runs the background fork
+instead when the host CLI passes its checks, and falls back after two
+unfinished forks (<code>osk/response_growth.py:18-22</code>).</p>
+<p><strong>Node write.</strong> <code>write.create_node</code> takes the
+mutation lock, builds one index, and checks the title, edges, session
+key and routing. It refuses a landing in a scope other than the
+session's bound one (<code>osk/write.py:1040-1053</code>), requires a
+cluster's hub before its first other node, and refuses portable-name
+collisions. It then renders and validates, writes atomically, binds the
+session on first success, and appends recheck records
+(<code>osk/write.py:1017-1147</code>). <code>update_node</code> requires
+<code>expect_hash</code> for a full body or a unique
+<code>old_text</code> anchor (<code>mcp_server.py:415-437</code>).</p>
+<p><strong>Citation topology.</strong> <code>_topology_of</code> refuses
+a Scope node citing another scope's nodes or raw rounds, a Domain node
+citing raw rounds directly, and any node citing Workbench work state
+(<code>osk/write.py:591-643</code>).</p>
+<p><strong>Recheck.</strong> <code>rechecks.after_write</code> records
+<code>bound</code> for new pairs and carries complete pairs forward when
+the body changes (<code>osk/rechecks.py:409-420</code>).
+<code>rechecks.candidates</code> lists every pair whose recorded hashes
+no longer match, with <code>next</code>, the citing nodes, and
+<code>cascade</code>, whether the target's current body came from a
+recheck correction (<code>osk/rechecks.py:193-230</code>).</p>
+<p><strong>Scope memory.</strong> <code>scope_memory.replace</code>
+takes <code>edits</code> as unique anchors or <code>text</code> with
+<code>expect_hash</code>, measures the cap after filtering, and refuses
+an over-limit result. On the first shrinking write after a refusal it
+records the removed lines as an <code>evict</code> before the file
+changes (<code>osk/scope_memory.py:293-490</code>).</p>
+<p><strong>Retrieval and injection.</strong> <code>search</code> calls
+<code>Searcher.view_search</code>, which is <code>work_search</code>
+(<code>mcp_server.py:178-182</code>; <code>osk/search.py:60-92</code>).
+The SessionStart hook resolves the session key from the Git repository.
+For a bound scope it injects the scope memory with its hash, recheck
+notes, pending reviews and eviction items, folding blocks to the host's
+context budget
+(<code>scripts/hooks/claude_session_start.py:211-236</code>,
+<code>466-500</code>).</p>
+<p><strong>Authority.</strong> <code>osk protect</code>,
+<code>approve</code>, <code>revert</code> and <code>unprotect</code>
+call <code>_confirm</code>, which exits when stdin is not a terminal and
+has no bypass flag (<code>osk/cli.py:19-28</code>,
+<code>572-640</code>). <code>validate.surface_lint</code> walks the MCP
+modules' AST and fails on a call to any of those verbs or an append to
+the approvals, signatures or pins ledgers
+(<code>osk/validate.py:537-539</code>, <code>778-791</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The node contract admits exactly six required keys and two edges; any
+other key is an error (<code>osk/contract.py:202</code>;
+<code>docs/FORMAT.md</code> section 2.1). The id is the identity: two
+readable files with one id make every read and write by that id or title
+refuse until a person resolves it (<code>mcp_server.py:186-239</code>).
+Titles are unique vault-wide after NFC and case folding, because they
+are file names on NTFS and APFS.</p>
+<p>Scope is physical. A node's Space and top-level cluster come from its
+path (<code>graph.space_of</code>); there is no scope column. A session
+key is bound to one scope in <code>routing.jsonl</code>
+(<code>docs/FORMAT.md</code> section 4.3). The key is the main
+repository's directory name, or that name plus 8 hex digits of a root
+commit when an unrelated repository already owns the name.</p>
+<p>Temporal fields are <code>created</code> and <code>updated</code> at
+minute precision, and the ledgers' <code>at</code>. There is no validity
+time. Correction is in-place overwrite with the old body left to Git;
+the recheck ledger keeps body hashes, not bodies. The approval store
+keeps every approved file version by content hash, but only for
+protected regions.</p>
+<p>The <code>conflicts</code> edge accepts only an open case the node is
+a party to (<code>osk/write.py:591-602</code>). The candidate ledger
+keys each candidate on a <code>sha256</code> of its type and each
+party's <code>id@file-hash</code>, so a dismissal suppresses only the
+same parties at the same bytes
+(<code>osk/write.py:1909-1914</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is lexical and tool-mediated. A query is tokenized like the
+corpus; a document is a candidate when it shares a token with the query
+or its title equals the query, and an exact title sorts first regardless
+of score (<code>osk/search.py:60-75</code>). Each hit returns title,
+path, id, summary, <code>updated</code> and the BM25 score, and the
+tool's description tells the model to <code>read_node</code> before
+citing. <code>k</code> defaults to 8 and is capped at 50
+(<code>mcp_server.py:178-182</code>).</p>
+<p>What search does not filter is the finding. It excludes only
+Workbench transit and governance nodes
+(<code>osk/search.py:50-53</code>); every scope, Domain and Person node
+is in one corpus. This is deliberate: Constitution article 11(3) defines
+work search as a union over all Spaces in which <em>"locality는 순위
+자질이며 검색 관문이 아니다"</em> — locality ranks results and does not
+gate them. The ranking half is not built — <code>work_search</code>
+sorts by exact title and BM25 score only
+(<code>osk/search.py:74-75</code>).</p>
+<p>A node that is a recheck candidate, or a party to an open conflict
+case, is returned without a marker. Those states surface in
+<code>overview</code> and the session-start block instead.</p>
+<p><code>read_node</code> pages a long body by outline or character
+range, at most 4,000 characters per call, and withholds the CAS hash
+from a partial read so an excerpt cannot authorize a full replacement
+(<code>mcp_server.py:250-297</code>). <code>read_raw</code> defaults to
+a selected review view capped at 6,000 characters
+(<code>mcp_server.py:300-313</code>).</p>
+<p>Session-start injection is bounded by the host budget, and the scope
+memory is at most 1,500 characters. When a conversation already received
+the same hash, a one-line pointer replaces the full note
+(<code>scripts/hooks/claude_session_start.py:199-209</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are agent-driven and synchronous from the tool's side: the
+node is searchable as soon as <code>create_node</code> returns. The
+cadence decides when they happen: in-session prompts at input turns 9
+and 15, or a background fork after every 9 final answers that does not
+block the user's session. The README states that a subscription failure
+never falls back to paid API calls.</p>
+<p>Deduplication is the agent's job, steered by the tool text, which
+tells it to correct the same claim and conditions in place, and by the
+global title uniqueness check. <code>record_candidate</code> files a
+contradiction, duplication, competition or delegation-overlap for a
+person, deduplicated on its basis (<code>osk/write.py:1866-1906</code>).
+There is no extraction model in the engine; the calling agent writes
+every byte of meaning.</p>
+<p>Noise filtering is the secret filter on raw records, scope memory and
+distillations from raw; node bodies are not filtered, by design. A
+distillation job journals its source refs and resumes after a crash, and
+its receipts <em>"prove persisted bytes and references, never semantic
+correctness"</em> (<code>osk/distillation.py:1-5</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write path costs the user nothing beyond the agent's own turns,
+and the fork reuses the source session's prompt cache.
+<code>docs/response-growth.md</code> reports a 98.74% cache hit for a
+Codex app fork in one measured experiment. No background pass rewrites
+the whole store: growth jobs are bounded by <code>BATCH_SIZE = 4</code>
+and <code>MAX_LIMIT = 20</code> (<code>osk/growth.py:25-27</code>).
+Search rebuilds BM25 over every node when any node changes;
+<code>docs/performance-index.md</code> records about 75 ms after a
+raw-only change and about 2 s cold at 5,000 nodes, on one Windows
+machine.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds 12 tools: <code>search</code>,
+<code>read_node</code>, <code>read_raw</code>, <code>overview</code>,
+<code>run_validators</code>, <code>create_node</code>,
+<code>update_node</code>, <code>move_nodes</code>,
+<code>move_cluster</code>, <code>record_candidate</code>,
+<code>append_raw</code> and <code>scope_memory</code>. Unknown arguments
+are rejected before dispatch, and the server refuses to start if it
+cannot install that rejection (<code>mcp_server.py:497-522</code>). No
+tool deletes a node, approves a region, appends a pin, or writes a case
+file.</p>
+<p>Injection is automatic at session start, and the agent is told to
+search before answering memory questions
+(<code>scripts/hooks/claude_session_start.py:239-246</code>).
+<code>setup.py</code> registers the server and hooks for four hosts;
+another MCP client gets the tools but no capture or cadence. A fifth
+host needs an adapter in <code>osk/harness/</code> with transcript
+parsing, completion ids and hook budgets, and the README lists what each
+new harness must verify.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is the strongest property.</strong> A node can
+cite a raw round by coordinate, and the round's hash excludes trailing
+newlines so appending does not change it. A citation is bound to both
+bodies' hashes, and a changed source reopens every citing node until it
+is re-read. A re-citation records only the state the agent read in that
+session, so an unread target reports <code>recheck_unread</code> instead
+of closing (<code>docs/FORMAT.md</code> section 4.10).</p>
+<p><strong>The cascade stop is a prompt.</strong> The growth runner
+tells the agent not to apply a correction that would require changing a
+node in <code>next</code>, and never to correct when
+<code>cascade</code> is true (<code>osk/growth.py:447-457</code>).
+<code>update_node</code> does not consult either field;
+<code>cascade</code> is produced only for the candidate report and the
+job manifest.</p>
+<p><strong>Scope is open on read, by design.</strong> A session bound to
+scope A cannot write into scope B, and a scope-A node cannot cite scope
+B (<code>osk/write.py:1040-1053</code>, <code>629-642</code>). Search
+returns scope B's nodes to that session, and <code>read_node</code> and
+<code>read_raw</code> take no session at all. The constitution asks for
+locality as a ranking feature instead, which the search code does not
+apply.</p>
+<p><strong>Concurrency and sync.</strong> One mutation lock serializes
+writes on a device, and CAS on full rewrites catches another device's
+pulled edit. Ledger forks across devices leave a subject unresolved
+until a joining record, and approvals wait for a person's sealing
+approve.</p>
+<p><strong>Marks.</strong></p>
+<ul>
+<li><code>negative_eval</code> — awarded.
+<code>test_read_cache_dependencies</code> asserts a node is found by its
+original text, rewrites the body, asserts the new text finds it, then
+asserts the old text no longer does
+(<code>tests/test_regression.py:11105-11126</code>).
+<code>test_retrieval.py:37-42</code> asserts Workbench-transit and
+governance nodes stay out of search beside found controls. Both run in
+CI through the regression runner.</li>
+<li><code>tombstone</code> — withheld. The candidate ledger's
+<code>dismiss</code> is keyed on the parties' ids and file hashes, not
+on a rejected value, and the engine never appends one
+(<code>osk/write.py:1866-1869</code>). A growth <code>no_value</code>
+review suppresses re-comparing the same source set at the same bytes;
+nothing stops the same claim being written again.</li>
+<li><code>trust_state</code> — withheld. <code>author</code> is a
+two-valued field fixed to <code>agent</code> on every MCP write, and no
+read path filters on it. The Person-space rule that an agent's inference
+is not the user's fact without confirmation has no gate in
+<code>osk/write.py</code>.</li>
+<li><code>bitemporal</code> — withheld. <code>created</code> and
+<code>updated</code> are record times only.</li>
+<li><code>scope_enforced</code> — withheld. Scope is a directory, not a
+key on the node, and <code>search</code> reads every Space with no
+predicate (<code>osk/search.py:50-53</code>). The session binding
+confines writes and session-start injection: a real boundary on the
+write side and a physical partition on the injection side.</li>
+<li><code>audit_log</code> — withheld. The ledgers are append-only and
+well built, but none records node creation or edits;
+<code>ledger_append</code> has no call in the create or update path
+beyond routing and candidates. <code>evictions.jsonl</code> records only
+lines cut after an over-limit refusal and states that ordinary cleanup
+is not recorded (<code>osk/evictions.py:1-8</code>).
+<code>approvals.jsonl</code> records a person's decisions about region
+snapshots. Git history is the mutation record.</li>
+<li><code>human_review</code> — withheld. The approve and revert verbs
+pass the actor test: off the MCP surface, AST-guarded, and refused
+without a terminal (<code>osk/cli.py:19-28</code>). But agent edits to a
+protected region take effect at once and search reads the working copy
+(<code>osk/search.py:8-10</code>), so nothing waits. The one reader of
+approved state, the delegation check, returns <code>hold</code> whether
+or not the delegation is approved
+(<code>osk/authority.py:124-170</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I did not run the suite. CI runs
+<code>tests/test_regression.py</code> on Windows and Linux with Python
+3.11 and 3.12, and on macOS as advisory
+(<code>.github/workflows/ci.yml:41-82</code>). The runner is a
+fail-collecting <code>check()</code> harness with 179 test functions. It
+also runs 15 isolated suites as subprocesses — capture, integration,
+growth, retrieval, organization, setup — and counts a suite's skip as a
+skip, never a pass (<code>tests/test_regression.py:11846-11880</code>).
+<code>tests/conftest.py</code> makes a <code>check()</code> failure fail
+under pytest too, written after v3.2.0 shipped with pytest reporting
+"103 passed" over failing checks.</p>
+<p>Memory-specific coverage is deep on write integrity: CAS, duplicate
+ids, portable names, topology, ledger damage, multi-device forks,
+recheck carrying, eviction recording and approval lifecycles. Retrieval
+coverage is thin. <code>test_retrieval.py</code> checks title
+precedence, BM25 order and the two excluded classes; nothing measures
+recall or precision on a labelled set.</p>
+<p><code>tests/test_adversarial.py</code> kills processes during updates
+and checks five invariants, and is run by hand: no CI job or runner
+references it. <code>benchmarks/</code> holds latency benchmarks for
+index and sync with CSV results dated 22 September 2026; they measure
+speed, not retrieval quality. No paper is cited in the tree.</p>
+<p>Tests I would want: a cross-scope read case — write in A, search from
+B, assert absence — which would fail at this commit. A check that a
+recheck candidate is flagged on the search hit. A test that
+<code>update_node</code> refuses a correction when <code>cascade</code>
+is true, which would also fail.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Bind each citation to both bodies' hashes.</strong> A ledger
+row of citing node, citing body hash, target and target body hash turns
+"the source changed" into a mechanical candidate list. Recording only
+the version the agent read stops a re-citation from closing on an unread
+change.</li>
+<li><strong>Give append-only ledgers causal parents, not
+timestamps.</strong> UUIDv7 ids plus <code>parents</code> set to the
+current heads make a Git union merge safe, and make a fork visible as
+several maxima that the reader can refuse to resolve.</li>
+<li><strong>Refuse over the cap; never truncate.</strong> A small shared
+note that rejects an over-limit write forces distillation into durable
+nodes, and logging what was cut after the refusal keeps the forced edit
+from losing material.</li>
+<li><strong>Lint the tool surface for authority verbs.</strong> An AST
+check that fails when the MCP module calls approve or revert, or appends
+to the authority ledgers, keeps the boundary from eroding in
+refactors.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Confining writes by scope and leaving search open.</strong>
+Write-side rules look like isolation and do not stop a bound session
+reading every other project's nodes. If locality is meant to rank rather
+than gate, build the ranking before relying on it.</li>
+<li><strong>Putting the stop condition in the prompt.</strong> A cascade
+rule the write tool never checks holds only as long as the model follows
+it.</li>
+<li><strong>A review lane whose approved state no read
+consults.</strong> An approved snapshot that search ignores, and a
+delegation check that holds either way, give a person a ceremony rather
+than a gate.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants a durable, inspectable knowledge
+base across several coding agents and will read Markdown and diffs. It
+assumes a maintainer who accepts governance by documents, most of them
+in Korean, and a design that moves through dated amendments. It is a
+poor fit where projects must not see each other's knowledge, where
+several people share a vault with different rights, or where the
+operator needs semantic recall. The README says protected regions are
+not a security boundary. A team wanting a library to embed will find an
+application with its own constitution instead.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does the background fork complete a review in practice,
+and how many nodes does a typical review write? The README marks
+autonomous growth as experimental and under measurement.</li>
+<li>Is a locality term planned for <code>work_search</code>?
+Constitution article 11(3) names locality as a ranking feature, and the
+engine has no code for it.</li>
+<li>What does the eviction docstring's measurement of cleanup at 93% and
+distillation at 7% over 14 days rest on? The record
+<code>_governance/records/2026-09-02-eviction-ledger.md</code> was not
+read.</li>
+<li>Does <code>osk check</code>, which always returns <code>hold</code>,
+have a consumer outside the CLI?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema:
+<code>_governance/_engine/osk/contract.py</code>,
+<code>osk/core.py</code>, <code>osk/graph.py</code>,
+<code>docs/FORMAT.md</code>, <code>.gitattributes</code>.</li>
+<li>Write path: <code>osk/write.py</code>,
+<code>osk/distillation.py</code>, <code>osk/scope_memory.py</code>,
+<code>osk/evictions.py</code>, <code>osk/raw.py</code>,
+<code>osk/secrets.py</code>.</li>
+<li>Retrieval: <code>osk/search.py</code>, <code>mcp_server.py</code>
+(<code>search</code>, <code>read_node</code>,
+<code>read_raw</code>).</li>
+<li>Context assembly:
+<code>scripts/hooks/claude_session_start.py</code>,
+<code>scripts/hooks/claude_prompt_submit.py</code>,
+<code>osk/hook_text.py</code>.</li>
+<li>Background: <code>osk/integration.py</code>,
+<code>osk/response_growth.py</code>, <code>osk/growth.py</code>,
+<code>osk/rechecks.py</code>, <code>osk/organization.py</code>,
+<code>vault_sync.py</code>, <code>sync_daemon.py</code>.</li>
+<li>Authority: <code>osk/approvals.py</code>,
+<code>osk/authority.py</code>, <code>osk/cli.py</code>,
+<code>osk/validate.py</code>.</li>
+<li>MCP and hooks: <code>mcp_server.py</code>,
+<code>osk/harness/</code>, <code>scripts/setup.py</code>.</li>
+<li>Tests: <code>tests/test_regression.py</code>,
+<code>tests/test_retrieval.py</code>, <code>tests/conftest.py</code>,
+<code>.github/workflows/ci.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the
+repository root.</p>
+<ul>
+<li><code>rg -n '@mcp.tool' _governance/_engine/mcp_server.py</code> —
+12 tools; none named for delete, approve, protect, pin or case.</li>
+<li><code>rg -n 'unlink\(|os\.remove|rmtree|def delete|delete_node' _governance/_engine/osk/write.py _governance/_engine/osk/distillation.py _governance/_engine/mcp_server.py</code>
+— one match, a temporary file in <code>_atomic_write</code>.</li>
+<li><code>rg -n '"author"|\[.author.\]|get\(.author' _governance/_engine/osk _governance/_engine/scripts _governance/_engine/mcp_server.py</code>
+— the contract list, the validator and the one writer in
+<code>write.py</code>; no reader.</li>
+<li><code>rg -n 'ledger_append\(' _governance/_engine/osk _governance/_engine/scripts _governance/_engine/mcp_server.py</code>
+— callers in <code>cli.py</code> (validators),
+<code>evictions.py</code>, <code>write.py</code> (routing, candidates),
+<code>approvals.py</code>, <code>update.py</code> and
+<code>growth.py</code>; none in the node create or update path.</li>
+<li><code>rg -n 'approvals\.' _governance/_engine/osk _governance/_engine/scripts _governance/_engine/mcp_server.py -g '!**/osk/approvals.py'</code>
+— calls in <code>authority.py</code>, <code>cli.py</code>,
+<code>update.py</code>, <code>validate.py</code> and
+<code>write.py</code> (<code>record_move</code>), and a comment in
+<code>graph.py</code>; none in <code>search.py</code> or the hooks.</li>
+<li><code>rg -n 'cascade' _governance/_engine/osk _governance/_engine/mcp_server.py</code>
+— <code>rechecks.py</code> and the growth prompt only.</li>
+<li><code>rg -n 'CASE-|case_no|"dismiss"|dismiss' _governance/_engine/osk _governance/_engine/scripts _governance/_engine/mcp_server.py</code>
+— readers and validators; no writer of a case file or a
+<code>dismiss</code> record.</li>
+<li><code>rg -n 'discarded|no_value' _governance/_engine/osk</code> —
+outcome vocabularies, prompts and settlement checks in
+<code>cli.py</code>, <code>evictions.py</code>, <code>growth.py</code>
+and <code>integration.py</code>; no reader that refuses a later
+write.</li>
+<li><code>rg -n 'PERSON|Delegation' _governance/_engine/osk/write.py _governance/_engine/osk/graph.py</code>
+— layout constants and messages; no confirmation gate on Person
+writes.</li>
+<li><code>rg -n 'test_adversarial' _governance/_engine/tests/test_regression.py .github/</code>
+— no match.</li>
+<li><code>rg -n 'locality' _governance/_engine</code> — no match; the
+term appears in the governing documents only.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+<li><code>find . -iname AGENTS.md -o -iname CLAUDE.md -o -iname GEMINI.md</code>,
+excluding <code>.git</code> — none.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/lpaiu-cs/osk-system/commit/edf9523fe32c5d9a08ab41b95dd464b3d0fe433f"><code class="commit-id" title="edf9523fe32c5d9a08ab41b95dd464b3d0fe433f">edf9523f…</code></a>
+— first reading, at release v4.1.3, a commit dated 3 October 2026. One
+mark, <code>negative_eval</code>. Screened before reading: 0 auto-run
+surfaces, 3 build-time execution points (two <code>setup.py</code> files
+and <code>tests/conftest.py</code>), 1 dependency file inside the
+cooldown — every file in a depth-1 clone dates to the tip — and 1
+unpinned surface, <code>requirements.txt</code>, which CI constrains
+with <code>constraints.txt</code>. No <code>.gitattributes</code> filter
+driver and no submodules; <code>docs/INSTALL-AGENT.md</code>, written
+for agents, was read as data. Nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
