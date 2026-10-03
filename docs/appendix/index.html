@@ -6172,6 +6172,40 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong><code>kiagentkronos-cell/openclaw-visual-memory</code> was
+examined and has no report: it is an open hook around a memory whose
+code is not published.</strong> MIT, 1,776 lines of TypeScript under
+<code>src/</code> with 93 test cases, 17 commits between 29 September
+and 1 October 2026, read at <a
+href="https://github.com/kiagentkronos-cell/openclaw-visual-memory/commit/d5f59e1e12a6b19fffadd605a7354dcdc6cf1caf"><code class="commit-id" title="d5f59e1e12a6b19fffadd605a7354dcdc6cf1caf">d5f59e1e…</code></a>.
+It is an OpenClaw plugin that, for every inbound message carrying an
+image, runs a local Visual Memory check and injects the verdict into the
+same prompt turn, as
+<code>[Visual Memory] Treffer: &lt;Name&gt; (kind, confidence, score)</code>
+or <code>keine Treffer</code>. The README says the plugin "contains
+<strong>no register logic</strong>" and is "a thin hook wrapper" around
+a Visual Memory CLI that "owns faces, embeddings, thresholds, and the
+SQLite register" (<code>README.md:9-11</code>). The code agrees: the
+only call into that CLI is
+<code>spawn(pythonPath, [scriptPath, "check", imagePath])</code>
+(<code>src/checker.ts:97</code>), with the script expected at
+<code>scripts/visual-memory/vm.py</code> inside the operator's workspace
+(<code>src/config.ts:69-70</code>, <code>README.md:25-28</code>), so the
+plugin never enrolls, corrects or deletes anything. What it writes is a
+rotating decision log (<code>src/diaglog.ts</code>) and one JSONL
+transcript per processed image (<code>src/transcript.ts</code>), records
+of runs rather than of beliefs. The register, its enrollment path and
+the <code>dreaming</code> settings the README documents
+(<code>README.md:119-138</code>) belong to that tool, and its source is
+not in this tree, not among the account's other public repositories, and
+not found by a GitHub repository search for the name or a code search
+for <code>vm.py check</code>; the README links to no repository at all.
+The privacy section (<code>README.md:182-194</code>) is the part worth
+keeping: the register holds face embeddings and reference crops of real
+people, enrollment is explicit and a third party's requires consent, and
+erasure is deleting the CLI's database files. Screened before reading:
+no auto-run, build-time or unpinned surface, one manifest inside the
+seven-day cooldown; nothing was installed, built or run.</li>
 <li><strong>The NexusMem report omitted the Claude Code capture and
 recall hooks, called a source prune unaudited, gave the MCP server four
 read-only tools, called the VS Code extension read-only, said shell
