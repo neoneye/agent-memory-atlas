@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **725 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **726 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -332,6 +332,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <ul class="az">
 <li><a class="az-row" href="../systems/iai-pme/"><span class="az-id">iai-pme</span><span class="az-what">A tie against a published number</span><code class="az-repo">CodeAbra/iai-personal-memory-engine</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/icarus/"><span class="az-id">Icarus</span><span class="az-what">Trust and freshness on separate axes</span><code class="az-repo">esaradev/icarus-memory-infra</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/ihmt-memory/"><span class="az-id">IHMT</span><span class="az-what">A file tree of summaries for coding-agent memory</span><code class="az-repo">gonzaroman/IHMT-MEMORY</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/inite-brain/"><span class="az-id">INITE Brain</span><span class="az-what">Two clocks, and a fence that stops at the search lane</span><code class="az-repo">inite-ai/inite-brain-service</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/inno-agent/"><span class="az-id">Inno Agent</span><span class="az-what">A careful evidence model, and two tools that route around it</span><code class="az-repo">hhyqhh/inno-agent</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/inspeximus/"><span class="az-id">inspeximus</span><span class="az-what">The value that was corrected is refused when it comes back</span><code class="az-repo">DanceNitra/inspeximus</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>

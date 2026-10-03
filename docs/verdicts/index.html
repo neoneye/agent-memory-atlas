@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 725 reports.</strong></p>
+<p><strong>This page covers all 726 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -30169,6 +30169,42 @@ enforcement against stored constraints.</li>
 <li>Do not copy when: one connected client might be hostile, memory must
 be partitioned by project or tenant, or a person must approve what
 becomes governing.</li>
+</ul>
+<h3 id="ihmt-memory"><a
+href="../systems/ihmt-memory/"><code>ihmt-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>refuse to answer a tie.</strong> Confidence is
+<code>0.6 × coverage + 0.4 × margin</code>, and a near-tie under a one-
+or two-term query also counts, so a bare name returns its candidates and
+a request for a clue rather than one of them picked at random; a leaf
+with no matching term is never returned.</li>
+<li>Biggest risk: <strong>the correction annotates and does not
+decide.</strong> <code>_resolve_key</code> demotes the older fact to
+<code>HISTORICAL</code>, but its source leaf stays <code>ACTIVE</code>
+and ranks on its words alone, so a question about the current value
+returns <code>AMBIGUOUS</code> between old and new, which the project's
+roadmap records.</li>
+<li>Most reusable component: <code>ihmt/storage.py</code> with the leaf
+header in <code>ihmt/models.py</code> — atomic replace for every file, a
+catalog rebuilt from self-describing leaves, and a consolidation that
+writes the parent before stamping its children.</li>
+<li>Second risk: <strong>under-recall reads as an empty store.</strong>
+The descent opens three branches per level chosen on 320-character
+excerpts and ten keywords, and a missed leaf produces <em>"Nothing has
+been stored about this yet — consider save_memory"</em>, which invites a
+duplicate.</li>
+<li>Maturity impression: MIT; 8,589 lines of Python outside tests and
+examples, 15 commits on main by 1 contributor on 30 September 2026, 191
+unittest functions with the 25 MCP-server cases skipped without the SDK,
+no CI. No marks. Four negative cases, none with both a populated set and
+a positive control; the token and A/B figures in <code>GUIDE.md</code>
+have no committed harness.</li>
+<li>Study when: you want a dependency-free memory one developer can read
+and repair by hand, or a retrieval that refuses to guess between
+near-tied matches.</li>
+<li>Do not copy when: several agents write at once, a correction must
+change the answer rather than annotate it, or memories must be found by
+meaning.</li>
 </ul>
         </article>
       </div>

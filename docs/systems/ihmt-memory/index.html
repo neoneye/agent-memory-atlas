@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A stdlib-only MCP memory for
+coding agents that files text in a summary tree, walks it with BM25, and
+dates facts on a regex timeline.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="IHMT — Agent Memory Atlas">
+    <meta property="og:description" content="A stdlib-only MCP memory
+for coding agents that files text in a summary tree, walks it with BM25,
+and dates facts on a regex timeline.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="IHMT — Agent Memory Atlas">
+    <meta name="twitter:description" content="A stdlib-only MCP memory
+for coding agents that files text in a summary tree, walks it with BM25,
+and dates facts on a regex timeline.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>IHMT — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "IHMT",
+      "description": "A stdlib-only MCP memory for coding agents that files text in a summary tree, walks it with BM25, and dates facts on a regex timeline.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A file tree of summaries for coding-agent
+memory</p>
+          <h1>IHMT</h1>
+          <p class="document-deck">A stdlib-only MCP memory for coding
+agents that files text in a summary tree, walks it with BM25, and dates
+facts on a regex timeline.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/gonzaroman/IHMT-MEMORY">
+              <span>Source</span>
+              <strong>gonzaroman/IHMT-MEMORY</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/gonzaroman/IHMT-MEMORY/commit/ba0c45579c3a59a24ec6b0aea1185eee072b6825" title="ba0c45579c3a59a24ec6b0aea1185eee072b6825">
+              <span>Analyzed revision</span>
+              <code>ba0c4557…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gonzaroman--IHMT-MEMORY" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>gonzaroman--IHMT-MEMORY</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,589
+lines of Python outside tests and examples; the ihmt/ package is 6,012
+of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>15
+commits on main by 1 contributor, all on 30 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>191
+unittest test functions in 2,497 lines; the 25 MCP-server cases skip
+without the MCP SDK</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>IHMT ("Infinite Hierarchical Memory Tree") is a long-term memory for
+coding agents served as a stdio MCP server over a directory of plain
+files. The agent calls <code>save_memory</code> with text and
+<code>search_memory</code> with words. Text becomes leaf files,
+consolidation groups leaves into summary branches, and a search walks
+from <code>root.json</code> down the branches with BM25.</p>
+<p>What is notable is the restraint. The core is the Python standard
+library, every leaf describes itself so the index can be rebuilt from
+the files, and a search whose top matches are near-tied returns
+<code>AMBIGUOUS</code> and asks for a clue instead of picking one.
+Corrections are dated: a regex extractor turns sentences such as <em>"I
+moved to Valencia"</em> into facts on a per-attribute timeline, and the
+older value's source text is served with an <code>OUTDATED</code>
+notice.</p>
+<p>What is weak is that the correction stops at the notice. Leaf ranking
+ignores the timeline, so the project's own roadmap records that
+<em>"where do I live?"</em> returns <code>AMBIGUOUS</code> between the
+old and new address (<code>GUIDE.md:1404-1405</code>). The beam descent
+can miss a stored leaf and report that nothing is stored. The README
+invites several agents to share one store while its design notes assume
+one writer.</p>
+<p>The memory is the leaf store and the fact timeline under
+<code>$IHMT_HOME/ihmt_memory</code>. The per-project code index
+(<code>project_map</code>, <code>find_code</code>), the
+<code>read_file</code> diff cache and the session scratch store
+(<code>note</code>, <code>recall</code>, <code>digest_output</code>) sit
+on the same engine. They are caches of files or of one session, and this
+report covers them only where they share code with the memory.</p>
+<p>No marks. Section 9 names the seven withheld and the near-miss behind
+each.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a chunk of text the agent chose to save. It becomes a
+belief the moment <code>save_memory</code> returns: there is no
+candidate state, no model call on the default path, and no review. It is
+never deleted through the agent's tools.</p>
+<p><strong>A date in the text is the memory's time, when the right
+chunker sees it.</strong> A line opening with an ISO or numeric date
+adds 3.0 to the detector's <code>PERSONAL</code> score
+(<code>ihmt/detectors.py:106</code>, <code>:177</code>),
+<code>PERSONAL</code> and <code>CLINICAL</code> route to the
+<code>TemporalChunker</code>
+(<code>ihmt/chunkers/__init__.py:48-51</code>), and its extracted date
+becomes the leaf's <code>timestamp</code>
+(<code>ihmt/universal_ingestor.py:284</code>). Undated text goes to
+another chunker and is stamped with the save time. The usage template
+tells the agent to start a dated memory with its date for this reason
+(<code>templates/memory-instructions.md</code>).</p>
+<p><strong>Facts are a second layer, and only six attributes have
+one.</strong> Thirteen regexes lift <code>location</code>,
+<code>employer</code>, <code>stack</code>, <code>diagnosis</code>,
+<code>treatment</code> and <code>medication</code> values out of English
+and Spanish sentences (<code>ihmt/conflict_resolver.py:55-69</code>).
+Each <code>(subject, attribute)</code> timeline is re-sorted on every
+new fact: the newest timestamp is <code>ACTIVE</code>, each older one
+<code>HISTORICAL</code> with <code>superseded_by</code> and a
+<code>valid_to</code> equal to its successor's timestamp
+(<code>:210-237</code>). A changed value writes a persisted notice into
+the old fact's source leaf, and that leaf stays <code>ACTIVE</code>
+(<code>:239-264</code>). Anything outside the six attributes has no
+timeline, so two contradictory memories about it are both current.</p>
+<p><strong>A memory stops being current only in a narrow case.</strong>
+Leaf <code>status</code> becomes <code>HISTORICAL</code> when the CLI
+re-ingests a file whose content changed
+(<code>universal_ingestor.py:198-233</code>, <code>:332-347</code>), and
+the navigator then skips it
+(<code>ihmt/semantic_navigator.py:554-555</code>).
+<code>save_memory</code> never sets that flag, so on the agent's path a
+corrected memory keeps ranking beside its correction and is
+distinguished only by the notice.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a save_memory call becomes a leaf and a fact, how search_memory walks to it, and where the timeline's correction stops short of the ranking</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a save_memory call becomes a leaf and a fact, how search_memory walks to it, and where the timeline&#39;s correction stops short of the ranking
+flowchart TD
+    S[&quot;save_memory(content)&quot;] --&gt; D{&quot;line opens with a date&lt;br/&gt;and PERSONAL scores highest?&quot;}
+    D -- &quot;yes&quot; --&gt; T[&quot;TemporalChunker:&lt;br/&gt;date in text = leaf timestamp&quot;]
+    D -- &quot;no&quot; --&gt; N[&quot;other chunker:&lt;br/&gt;timestamp = save time&quot;]
+    T --&gt; L[&quot;leaf .txt, status ACTIVE,&lt;br/&gt;source mcp://claude-code&quot;]
+    N --&gt; L
+    L --&gt; R{&quot;a fact regex&lt;br/&gt;matches?&quot;}
+    R -- &quot;yes&quot; --&gt; F[&quot;fact on the facts.json timeline&quot;]
+    F --&gt; RK[&quot;re-sort by timestamp:&lt;br/&gt;newest ACTIVE, older HISTORICAL&quot;]
+    RK --&gt; FL[&quot;old leaf gets a persisted notice&lt;br/&gt;and stays ACTIVE&quot;]
+    L --&gt; C[&quot;consolidate in the same call:&lt;br/&gt;8 parentless leaves become a branch&quot;]
+    C --&gt; ROOT[&quot;root.json: per-domain digest&lt;br/&gt;of every parentless item&quot;]
+    Q[&quot;search_memory(query)&quot;] --&gt; ROOT
+    ROOT --&gt; B[&quot;BM25 over sibling descriptors,&lt;br/&gt;beam of 3 branches per level&quot;]
+    B --&gt; P{&quot;any leaf scored above 0?&quot;}
+    P -- &quot;no&quot; --&gt; NONE[&quot;&#39;Nothing has been stored&lt;br/&gt;about this yet&#39;&quot;]
+    P -- &quot;yes&quot; --&gt; AMB{&quot;confidence below 0.45&lt;br/&gt;or near-tied rivals?&quot;}
+    AMB -- &quot;yes&quot; --&gt; CLUE[&quot;AMBIGUOUS: candidates listed,&lt;br/&gt;no answer returned&quot;]
+    AMB -- &quot;no&quot; --&gt; OUT[&quot;best leaf with OUTDATED notices&quot;]
+    FL -.-&gt; OUT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything lives under one directory,
+<code>$IHMT_HOME/ihmt_memory</code>, which defaults to the checkout's
+own folder when <code>IHMT_HOME</code> is unset
+(<code>mcp_server.py:76-80</code>). Leaves are
+<code>layer_0/&lt;domain&gt;/&lt;leaf_id&gt;.txt</code>, a JSON header
+between <code>&lt;&lt;&lt;IHMT-META</code> and
+<code>IHMT-META&gt;&gt;&gt;</code> followed by the raw text
+(<code>ihmt/models.py:102-180</code>). Branches are
+<code>layers/&lt;n&gt;/&lt;node_id&gt;.json</code>, each embedding its
+children's title, excerpt, keywords and tags so a level can be ranked
+without opening the children (<code>models.py:239-285</code>).
+<code>root.json</code> holds a digest per domain.
+<code>state/catalog.json</code> maps ids to paths, parents and status;
+<code>state/facts.json</code> holds the timeline.</p>
+<p><code>MemoryStore</code> is the only module that touches disk. Every
+write goes through <code>write_atomic</code>, a temporary file,
+<code>fsync</code> and <code>os.replace</code>
+(<code>ihmt/storage.py:249-261</code>). The catalog is an index that
+<code>rebuild_catalog</code> recreates by scanning the files under a
+cooperative lock (<code>:527-568</code>), and <code>rebuild</code>
+re-extracts every fact from the leaves
+(<code>conflict_resolver.py:360-372</code>).</p>
+<p>The MCP server is one process per agent session over stdio. It caches
+one facade and drops the cached catalog and timeline at the start of
+each call so another writer's changes are seen
+(<code>mcp_server.py:118-136</code>). The session store is a
+<code>TemporaryDirectory</code> removed at exit
+(<code>:152-159</code>).</p>
+<p>Consolidation runs inside every ingest. The default
+<code>HeuristicSummarizer</code> is extractive and offline.
+<code>summarizer_backend = "anthropic"</code> sends child titles and
+excerpts to the Anthropic API and falls back to the heuristic on any
+failure (<code>ihmt/summarizers.py:153-160</code>,
+<code>:202-240</code>, <code>:255-264</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run besides the MCP server; the core needs Python 3.10
+and no packages, and the server needs <code>mcp[cli]&gt;=2.0</code>
+(<code>requirements-mcp.txt</code>). No API key is needed. The store is
+readable and editable with a text editor, and
+<code>main.py rebuild</code> restores the catalog, timeline and trunk
+after a hand edit. <code>INSTALL.md</code> is written for an agent to
+follow, including registering the server with the agent's own CLI. A
+loopback GUI (<code>gui.py</code>) browses the tree, runs diagnostic
+searches and shows the timeline; its only writes are store creation and
+agent registration (<code>ihmt_gui/handlers.py:398-410</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Save.</strong> <code>save_memory</code>
+(<code>mcp_server.py:276-344</code>) normalises <code>domain</code> and
+<code>content_type</code>, snapshots the current contradictions, and
+calls <code>ingest_text</code> with
+<code>source="mcp://claude-code"</code> and the tag
+<code>source:claude-code</code> whichever agent is calling
+(<code>:310-316</code>). It then reports any contradiction that was not
+there before (<code>:335-343</code>).</p>
+<p><strong>Ingest.</strong> <code>UniversalIngestor.ingest_text</code>
+(<code>universal_ingestor.py:129-196</code>) detects type and domain,
+chunks without cutting a logical block, builds each leaf, saves it
+inside <code>store.batch()</code>, and calls
+<code>extract_from_leaf</code> per leaf. Leaf ids hash source, position
+and content (<code>:326-330</code>), so identical text saved twice
+rewrites one leaf. <code>_save_preserving_parent</code> keeps the
+earlier parent link and status (<code>:349-368</code>) and does not keep
+<code>ingested_at</code>, which <code>_build_leaf</code> sets to the
+save time (<code>:314</code>). After the batch,
+<code>consolidate()</code> runs (<code>:193-194</code>).</p>
+<p><strong>Consolidate.</strong>
+<code>RecursiveSummarizer.consolidate</code>
+(<code>recursive_summarizer.py:93-115</code>) groups parentless entries
+per domain in timestamp order, writes a branch for every full group of
+<code>branch_factor</code> (8), and only then stamps the children's
+<code>parent_id</code> (<code>:138-167</code>).
+<code>rebuild_root</code> then summarises every parentless item of every
+domain into <code>root.json</code> (<code>:239-289</code>).</p>
+<p><strong>Search.</strong> <code>search_memory</code> →
+<code>_search</code> (<code>mcp_server.py:235-246</code>) →
+<code>SemanticNavigator.search</code>
+(<code>semantic_navigator.py:287-398</code>). Domains are ranked first
+and, if none scores above zero, all stay in play
+(<code>:469-509</code>). Each level ranks the frontier, pools admissible
+leaves with a positive score, and expands the top
+<code>beam_width</code> branches (<code>:338-381</code>).
+<code>_admissible</code> checks catalog status and the project-index
+filters (<code>:546-561</code>). <code>_materialize</code> loads the
+leaf and attaches <code>notices_for_leaf</code>
+(<code>:590-622</code>).</p>
+<p><strong>Disambiguate.</strong> <code>_confidence</code> is
+<code>0.6 × coverage + 0.4 × margin</code> (<code>:637-653</code>).
+<code>_maybe_clue_request</code> fires on confidence below 0.45, on
+near-tied rivals in different branches, or on near-tied rivals under a
+query of one or two terms (<code>:655-705</code>). The MCP reply then
+lists candidates and returns no memory
+(<code>mcp_server.py:217-232</code>).</p>
+<p><strong>Timeline.</strong> <code>record_fact</code>
+(<code>conflict_resolver.py:136-181</code>), <code>_resolve_key</code>
+(<code>:210-237</code>), <code>_flag_leaf</code>
+(<code>:239-264</code>), <code>notices_for_leaf</code>
+(<code>:332-348</code>). <code>state_at</code> answers "what was true on
+a date" (<code>:283-303</code>); its callers are the CLI demo
+(<code>main.py:339</code>) and the tests.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>leaf_id</code></td>
+<td>leaf header</td>
+<td><code>L-&lt;domain&gt;-&lt;index&gt;-&lt;hash&gt;</code>, the hash
+over source, index and content</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>leaf header</td>
+<td>date found by the temporal chunker, file mtime for a CLI file, else
+save time</td>
+</tr>
+<tr>
+<td><code>ingested_at</code></td>
+<td>leaf header</td>
+<td>save time; overwritten when identical text is saved again; read only
+by the GUI</td>
+</tr>
+<tr>
+<td><code>domain</code>, <code>data_type</code></td>
+<td>leaf header</td>
+<td>detector output or caller override; <code>domain</code> is also the
+directory</td>
+</tr>
+<tr>
+<td><code>source</code>, <code>tags</code></td>
+<td>leaf header</td>
+<td><code>mcp://claude-code</code> and <code>source:claude-code</code>
+for every MCP save</td>
+</tr>
+<tr>
+<td><code>status</code>, <code>superseded_by</code></td>
+<td>leaf header and catalog</td>
+<td><code>ACTIVE</code> or <code>HISTORICAL</code>; set
+<code>HISTORICAL</code> only by CLI file re-ingest</td>
+</tr>
+<tr>
+<td><code>extra.superseded_facts</code></td>
+<td>leaf header</td>
+<td>notices written when a fact this leaf sourced is superseded</td>
+</tr>
+<tr>
+<td>fact <code>value</code>, <code>timestamp</code>,
+<code>valid_from</code>, <code>valid_to</code>, <code>status</code></td>
+<td><code>facts.json</code></td>
+<td>recomputed from timestamps on each new fact</td>
+</tr>
+</tbody>
+</table></div>
+<p>The fact's <code>timestamp</code> is the source leaf's, so it is the
+date in the text when there is one. <code>valid_to</code> is the
+successor's timestamp, not the time the supersession was recorded, and
+no fact carries a record time of its own.</p>
+<p><strong>Scope is the directory.</strong> A leaf has no user, project
+or agent key (<code>models.py:102-130</code>). Every agent whose server
+points at the same <code>IHMT_HOME</code> reads and writes one store,
+which is what the README advertises (<code>README.md:12-13</code>); a
+separate <code>IHMT_HOME</code> is a separate memory.</p>
+<p><strong>There is no delete on the agent's path.</strong>
+<code>delete_leaf</code> exists for the derived project indexes and its
+docstring says long-term memories are never deleted
+(<code>storage.py:472-485</code>). A person can remove a file and run
+<code>rebuild</code>. <code>initialize(force=True)</code> keeps leaves
+and empties the timeline, which <code>rebuild</code> re-extracts from
+the leaves (<code>storage.py:185-211</code>); a fact recorded through
+the Python <code>record_fact</code> with no source leaf does not come
+back.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is lexical: accent-folded, CamelCase-split terms scored by
+BM25 with field weights (title and keywords 3, tags 2, excerpt 1) and
+document frequencies computed over the siblings at each level
+(<code>semantic_navigator.py:193-262</code>). There is no query
+rewriting and no embedding.</p>
+<p><strong>The beam bounds cost and also bounds recall.</strong> Only
+the top three branches per level are opened, chosen on their embedded
+descriptors: a title, a 320-character excerpt, ten keywords and eight
+tags per child (<code>recursive_summarizer.py:193-225</code>). A leaf
+whose words are not in its ancestors' descriptors sits under a branch
+that loses at some level and is never scored. The descent then ends with
+no leaf, and the agent is told <em>"Nothing has been stored about this
+yet — consider save_memory"</em> (<code>mcp_server.py:242-243</code>,
+<code>:269-270</code>). An under-recall therefore reads as an absence
+and invites a duplicate save. This is read from the code, not
+reproduced; the GUIDE's troubleshooting answer is to search with the
+words used when saving (<code>GUIDE.md:1362-1364</code>).</p>
+<p><strong>Corrections attach to results but do not rank them.</strong>
+<code>notices_for_leaf</code> returns the leaf's persisted notices plus
+a live check of each <code>HISTORICAL</code> fact it sourced
+(<code>conflict_resolver.py:332-348</code>). Nothing in
+<code>_rank</code> or <code>_adjust_for_code</code> reads the fact
+timeline, so the old and new statements score on their words alone. A
+query of one or two terms with near-tied matches then triggers the clue
+request, and the agent gets candidates rather than the current value.
+Persisted notices are never retracted, so a value that later reverts
+still carries the earlier "updated to" text.</p>
+<p><strong>Output is bounded.</strong> The compact form returns the best
+leaf's full text up to 6,000 characters and one line for each of two
+rivals (<code>mcp_server.py:83-87</code>, <code>:194-214</code>).
+Nothing is injected without a tool call.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls. Chunking keeps logical blocks whole
+and flags an oversized one rather than cutting it. Facts come only from
+the thirteen regexes; the extracted value is the up-to-80-character run
+after the trigger phrase (<code>conflict_resolver.py:51</code>), so
+<em>"I live in Valencia now"</em> stores <code>Valencia now</code>,
+which the GUIDE states (<code>GUIDE.md:1387-1389</code>). A fact
+repeated at a later date is a confirmation, not a contradiction
+(<code>:306-330</code>).</p>
+<p>Ordering is by the date in the text, not by arrival. A dated save
+older than the current value is filed as history at once. An undated
+wrong value saved today outranks a correction whose text carries an
+earlier date, so the correction is demoted on arrival. This follows from
+<code>_resolve_key</code> and was not run.</p>
+<p>Agent-written content is treated like a person's. The template asks
+the agent not to store secrets
+(<code>templates/memory-instructions.md</code>); nothing in the code
+checks.</p>
+<p><strong>Concurrency.</strong> <code>catalog.json</code> and
+<code>facts.json</code> are each rewritten whole on every change
+(<code>storage.py:438-446</code>;
+<code>conflict_resolver.py:116-122</code>), and the only lock is taken
+by <code>rebuild_catalog</code> (<code>storage.py:533</code>). Two
+agents sharing one <code>IHMT_HOME</code> run two server processes, and
+the README and GUIDE both say the store assumes one writer
+(<code>README.md:521-522</code>; <code>GUIDE.md:1313-1314</code>,
+<code>:1390</code>). Two overlapping saves can therefore lose one
+catalog or timeline entry while its leaf file stays on disk. That is an
+inference from the code; <code>rebuild</code> would restore the catalog
+and re-extract the facts.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous. One <code>save_memory</code> chunks, extracts,
+consolidates and rewrites <code>root.json</code> before returning; on
+the default backend no model is called.</li>
+<li>With the Anthropic backend, <code>rebuild_root</code> summarises
+every domain on every save (<code>recursive_summarizer.py:112</code>,
+<code>:264-269</code>), so each save makes one model call per domain
+plus one per new branch.</li>
+<li>Lag: none. A saved leaf is reachable from the trunk as soon as the
+call returns, because <code>rebuild_root</code> lists every parentless
+item (<code>:251-264</code>).</li>
+<li>Read: a search opens <code>root.json</code>, at most three branches
+per level and the returned leaves. Nothing is injected per turn, so a
+provider's prefix cache is untouched.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The server registers eight tools (<code>mcp_server.py:250-545</code>)
+and an <code>instructions</code> string that tells the model to search
+before answering, never guess on <code>AMBIGUOUS</code>, and always
+relay <code>OUTDATED</code> (<code>:89-102</code>). The agent-run
+installer appends <code>templates/memory-instructions.md</code> to
+<code>~/.claude/CLAUDE.md</code>, <code>~/.codex/AGENTS.md</code> or
+opencode's <code>AGENTS.md</code> (<code>INSTALL.md:369-376</code>).
+There is no SessionStart, PreCompact or prompt hook, so every recall
+depends on the model deciding to call <code>search_memory</code>.</p>
+<p>The agent holds save and search and nothing that edits or removes.
+Codex needs <code>default_tools_approval_mode = "approve"</code> to call
+the tools at all (<code>README.md:102-104</code>). Adapting it to
+another MCP client is a registration line; <code>INSTALL.md</code>
+carries untested ones for six more clients.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Recoverability is the strongest property.</strong> Every leaf
+is self-describing, writes are atomic, a branch is durable before its
+children point at it, and the catalog, trunk and timeline can all be
+rebuilt from the leaf files.</p>
+<p><strong>Provenance is one label.</strong> Every MCP save is
+<code>mcp://claude-code</code>, so in a store shared by Claude Code,
+Codex and opencode nothing records which agent or session wrote a
+memory.</p>
+<p><strong>Prompt-injected memories are stored like any other.</strong>
+Text the agent saves from a tool result becomes a leaf and, if it
+matches a regex, a fact that can supersede the user's own statement by
+carrying a later date.</p>
+<p><strong>Privacy.</strong> Nothing leaves the machine on the default
+backend. The memory reaches the model as tool output.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — withheld. No verb removes or rejects a
+value, and re-saving an old value with a newer date makes it
+<code>ACTIVE</code> again
+(<code>conflict_resolver.py:210-237</code>).</li>
+<li><code>trust_state</code> — withheld. Fact
+<code>ACTIVE</code>/<code>HISTORICAL</code> is recomputed from
+timestamps, a lifecycle order and not an epistemic status. Leaf
+<code>HISTORICAL</code> is filtered on read
+(<code>semantic_navigator.py:554-555</code>) but marks a superseded file
+version and is produced only by CLI re-ingest.</li>
+<li><code>bitemporal</code> — withheld. Facts carry a validity interval
+that starts at the date in the text and ends at the successor's date,
+and no record time. The record clock <code>ingested_at</code> sits on
+the leaf, is overwritten by a repeat save, and is read only by the
+GUI.</li>
+<li><code>scope_enforced</code> — withheld. The boundary is the
+<code>IHMT_HOME</code> directory, a physical partition with no key on a
+leaf. The <code>scope</code> and <code>path_prefix</code> filters are
+caller-supplied predicates on a project index's source paths, and domain
+pruning widens to every domain on a zero score
+(<code>semantic_navigator.py:505</code>).</li>
+<li><code>audit_log</code> — withheld. <code>facts.json</code> and the
+catalog are rewritten whole, and <code>SummarizationEvent</code> records
+are returned to the caller and not stored
+(<code>recursive_summarizer.py:33-53</code>).</li>
+<li><code>human_review</code> — withheld. Saves land live, and the GUI
+only displays memory.</li>
+<li><code>negative_eval</code> — withheld; the near-misses are in
+section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin. The tree has no CI
+configuration.</p>
+<p>The suite is 191 <code>unittest</code> functions in ten modules. It
+pins byte-exact reconstruction of chunked code, block atomicity, header
+round-trips, catalog recovery, consolidation idempotence, reachability
+of every leaf from the root, node reads bounded by beam times depth
+(<code>tests/test_navigator.py:49-53</code>), the clue loop, and the
+timeline. <code>tests/test_mcp_server.py</code> holds 25 cases behind
+<code>skipUnless(HAS_MCP, ...)</code> (<code>:29</code>,
+<code>:159</code>, <code>:284</code>), so a run without the SDK reports
+them as skipped.</p>
+<p><strong>Four negative cases, none of which earns
+<code>negative_eval</code>:</strong></p>
+<ul>
+<li><code>test_notes_are_recalled_and_stay_out_of_long_term_memory</code>
+(<code>tests/test_mcp_server.py:260-266</code>) has the right shape: a
+note recalled through <code>recall</code>, then
+<code>search_memory</code> with the same words must return
+<code>No memory found</code>. The long-term store holds nothing else, so
+a search that never finds anything also passes.</li>
+<li><code>test_an_unrelated_query_reports_nothing_rather_than_guessing</code>
+(<code>:122-127</code>) stores one memory and asserts an unrelated query
+does not return it, with no positive control in the case.</li>
+<li><code>test_reingesting_a_changed_file_demotes_its_previous_version</code>
+(<code>tests/test_project_index.py:243-255</code>) asserts that no
+superseded leaf id appears by looping over
+<code>response.results</code>, and passes on an empty result. One
+<code>assertTrue</code> that a new-version leaf is returned would make
+it the mark's case.</li>
+<li><code>test_a_query_matching_nothing_returns_nothing</code>
+(<code>tests/test_navigator.py:65-74</code>) asserts an empty result for
+nonsense terms, which guards over-recall rather than excluding
+particular material.</li>
+</ul>
+<p><code>test_retrieving_outdated_material_surfaces_the_correction</code>
+(<code>tests/test_conflicts.py:109-114</code>) asserts the notice
+arrives with old material. No test asks for a current value and checks
+which leaf ranks first, which is the case the roadmap records as
+failing.</p>
+<p><strong>Benchmarks are prose.</strong> <code>GUIDE.md</code> §11
+reports token savings on generated corpora up to 5,000 notes, query
+latency, and a 22-session A/B run in which forcing the project tools
+made sessions 42–71% more expensive (<code>GUIDE.md:1201-1262</code>).
+No corpus generator, harness or result file is committed. No paper or
+citation is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make every record self-describing and the index
+disposable.</strong> A JSON header in each leaf file lets the catalog,
+trunk and timeline be rebuilt from a directory listing after a crash or
+a hand edit.</li>
+<li><strong>Write the parent before the children point at it.</strong>
+An interrupted consolidation re-processes a group instead of orphaning
+it.</li>
+<li><strong>Refuse to answer on a tie.</strong> A confidence built from
+coverage and margin, plus a tie test for one- and two-word queries,
+turns <em>"which Luis?"</em> into a question instead of a
+fabrication.</li>
+<li><strong>Date facts by the text, not by arrival.</strong> A
+backfilled memory then lands in history where it belongs.</li>
+<li><strong>Carry the correction with the stale text.</strong> A notice
+on the old leaf means a retrieval of it cannot silently read as
+current.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A timeline the ranker cannot see.</strong> Supersession that
+only annotates leaves ties the old and new values on the next query;
+feed the fact status into scoring or demote the source leaf.</li>
+<li><strong>Reporting an unexplored branch as an empty store.</strong> A
+pruned descent should say what it did not search, or fall back to a
+scan, before telling the agent to save again.</li>
+<li><strong>One hard-coded provenance label for every client.</strong>
+Sharing a store across agents is the feature; record which agent wrote
+what.</li>
+<li><strong>Advertising shared writes on a single-writer store.</strong>
+Lock the read-modify-write of every whole-file index, or say per client
+that only one may write.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants memory they can read, copy and fix
+by hand, saved deliberately and searched with the words they used, at a
+few hundred to a few thousand entries. The engineering around the files
+is careful and small enough to audit in an afternoon. It does not suit
+anyone who needs memories found by meaning, corrections that change the
+answer rather than annotate it, several agents writing at once, or
+attribution of who wrote what.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does the beam miss a stored leaf at a few thousand
+entries? No committed test or result measures recall against a known
+answer set.</li>
+<li>Does the MCP SDK run synchronous tools concurrently within one
+server process? If so, the lost-update window exists inside a single
+agent too.</li>
+<li>Will the roadmap's "prefer the current version of a fact" demote
+source leaves, or rank on fact status?</li>
+<li>What did the 22 A/B sessions measure as quality, and can they be
+re-run?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage/schema:</strong> <code>ihmt/models.py</code>,
+<code>ihmt/storage.py</code>, <code>ihmt/config.py</code>.</li>
+<li><strong>Write path:</strong> <code>mcp_server.py:276-344</code>,
+<code>ihmt/universal_ingestor.py</code>, <code>ihmt/detectors.py</code>,
+<code>ihmt/chunkers/</code>.</li>
+<li><strong>Timeline:</strong>
+<code>ihmt/conflict_resolver.py</code>.</li>
+<li><strong>Consolidation:</strong>
+<code>ihmt/recursive_summarizer.py</code>,
+<code>ihmt/summarizers.py</code>.</li>
+<li><strong>Retrieval:</strong> <code>ihmt/semantic_navigator.py</code>,
+<code>mcp_server.py:163-273</code>.</li>
+<li><strong>Integration:</strong> <code>mcp_server.py</code>,
+<code>templates/memory-instructions.md</code>, <code>INSTALL.md</code>,
+<code>main.py</code>, <code>ihmt_gui/</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_mcp_server.py</code>,
+<code>tests/test_navigator.py</code>,
+<code>tests/test_conflicts.py</code>,
+<code>tests/test_project_index.py</code>,
+<code>tests/test_tree.py</code>,
+<code>tests/test_storage.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rniE 'renamed|formerly|arxiv|bibtex|@article|@misc|doi\.org|zenodo|citation' --exclude-dir=.git .</code>
+— two matches: <code>GUIDE.md:1239</code> (a task description) and
+<code>mcp_server.py:48</code> (the MCP SDK's rename); no paper, and no
+<code>CITATION.cff</code>.</li>
+<li><code>rg -n -i 'sessionstart|hook|PreCompact|UserPromptSubmit' .</code>
+— no match; no injection hook.</li>
+<li><code>rg -n 'replace_previous' -g '*.py' -g '!tests/**' .</code> —
+default <code>False</code> on <code>ingest_text</code>,
+<code>True</code> on <code>ingest_file</code>; <code>save_memory</code>
+passes neither, so only file ingest demotes leaves.</li>
+<li><code>rg -n 'state_at|active_state|ingested_at|record_fact\(' -g '*.py' -g '*.js' .</code>
+— <code>ingested_at</code> is read only in
+<code>ihmt_gui/handlers.py:230</code>; <code>state_at</code> is called
+from <code>main.py:339</code> and tests.</li>
+<li><code>rg -n '_FileLock|lock' -g '*.py' .</code> — the lock class and
+its one use in <code>rebuild_catalog</code>.</li>
+<li><code>rg -n 'delete_leaf|unlink\(|rmtree' -g '*.py' -g '!tests/**' .</code>
+— <code>delete_leaf</code> is called only from
+<code>ihmt/project_index.py:246</code>.</li>
+<li><code>rg -n -i 'audit|\.jsonl|append-only' -g '*.py' -g '!tests/**' .</code>
+— no match.</li>
+<li><code>rg -n -i 'user_id|project_id|tenant|agent_id|namespace' -g '*.py' -g '!tests/**' .</code>
+— only code-chunker keywords and <code>argparse.Namespace</code>; no
+scope key.</li>
+<li><code>git ls-files | grep -iE 'bench|eval|corpus|experiment'</code>
+— no match; <code>git ls-files .github</code> — empty.</li>
+<li><code>rg -n 'assertNotIn|assertFalse|assertIsNone|No memory found|assertEqual\(\[\]|skipUnless' tests/</code>
+— the negative cases listed in section 10 and the three skip
+guards.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/gonzaroman/IHMT-MEMORY/commit/ba0c45579c3a59a24ec6b0aea1185eee072b6825"><code class="commit-id" title="ba0c45579c3a59a24ec6b0aea1185eee072b6825">ba0c4557…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 30
+September 2026. No marks. Screened before reading: 4 files scanned, no
+auto-run surface, 1 build-time execution point
+(<code>ihmt_gui/setup.py</code>, a GUI module named like a setuptools
+script), and <code>requirements-mcp.txt</code> both inside the cooldown
+and unpinned (<code>mcp[cli]&gt;=2.0</code>), the repository having been
+created on 30 September 2026; <code>CLAUDE.md</code> was treated as
+data. Read from a full clone with <code>grep</code> and
+<code>sed</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

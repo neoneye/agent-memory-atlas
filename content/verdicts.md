@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 725 reports.**
+**This page covers all 726 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6569,3 +6569,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: source-available, service-restricted licence; 51,646 lines of Go outside tests, 48 commits on main by 2 contributors between 29 March and 15 September 2026, 1,067 Go test functions. Three marks: `trust_state`, `bitemporal`, and `negative_eval` on a CI-run lifecycle case whose historical-mode twin returns the row the current-mode case excludes. The semantic-filter exclusion tests are vacuous, and no test reads a quarantined lesson back through `recall_context`.
 - Study when: you want a shared pool for several coding agents with a model-free write path, a status lifecycle that withholds, and pre-change enforcement against stored constraints.
 - Do not copy when: one connected client might be hostile, memory must be partitioned by project or tenant, or a person must approve what becomes governing.
+
+### [`ihmt-memory`](../systems/ihmt-memory/)
+
+- Best idea: **refuse to answer a tie.** Confidence is `0.6 × coverage + 0.4 × margin`, and a near-tie under a one- or two-term query also counts, so a bare name returns its candidates and a request for a clue rather than one of them picked at random; a leaf with no matching term is never returned.
+- Biggest risk: **the correction annotates and does not decide.** `_resolve_key` demotes the older fact to `HISTORICAL`, but its source leaf stays `ACTIVE` and ranks on its words alone, so a question about the current value returns `AMBIGUOUS` between old and new, which the project's roadmap records.
+- Most reusable component: `ihmt/storage.py` with the leaf header in `ihmt/models.py` — atomic replace for every file, a catalog rebuilt from self-describing leaves, and a consolidation that writes the parent before stamping its children.
+- Second risk: **under-recall reads as an empty store.** The descent opens three branches per level chosen on 320-character excerpts and ten keywords, and a missed leaf produces *"Nothing has been stored about this yet — consider save_memory"*, which invites a duplicate.
+- Maturity impression: MIT; 8,589 lines of Python outside tests and examples, 15 commits on main by 1 contributor on 30 September 2026, 191 unittest functions with the 25 MCP-server cases skipped without the SDK, no CI. No marks. Four negative cases, none with both a populated set and a positive control; the token and A/B figures in `GUIDE.md` have no committed harness.
+- Study when: you want a dependency-free memory one developer can read and repair by hand, or a retrieval that refuses to guess between near-tied matches.
+- Do not copy when: several agents write at once, a correction must change the answer rather than annotate it, or memories must be found by meaning.

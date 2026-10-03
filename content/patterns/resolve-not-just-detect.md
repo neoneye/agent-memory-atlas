@@ -305,6 +305,8 @@ reader sees.
 
 [MGI-Mind](../../systems/mgi-mind/) resolves every contradiction automatically, and shows what happens when the resolver's inputs have no producer. A fact on a `Single` or `TemporalSingle` predicate duels the strongest visible rival and ends `active`, `contested` or `quarantine_candidate`, with the loser retired `stale` or `superseded` under a cross-process lock. Entrenchment's dependants term is written only by a migration command, so on the live path the disposition is decided by age, and any rival under about nine months old loses. It also misses requirement 5: re-adding a retired triple rebuilds its row with a fresh duel, so the old value can win the rematch.
 
+[IHMT](../../systems/ihmt-memory/) disposes of a contradiction on the wrong record. Thirteen regexes put six attributes on a dated timeline, and a newer value demotes the older fact to `HISTORICAL`, closes its validity interval, and writes a persisted notice into the old fact's source leaf. The leaf itself stays `ACTIVE` and the navigator never reads the fact timeline, so the old and new statements rank on their words alone. A question about the current value then returns `AMBIGUOUS` between them, which the project's roadmap records. **A disposition that lands on the derived fact and not on the text the reader retrieves is a label, not a resolution.**
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval
