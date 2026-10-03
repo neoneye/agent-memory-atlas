@@ -516,6 +516,8 @@ report withholds `audit_log` on that ground.
 
 **[GMEOW](../../systems/gmeow-ontology/) keeps the mutation record in the file it records, and writes it in a separate append.** Every committed `store_claim` or `revise_belief` appends a `ToolCall` with the tool, its JSON arguments, its result and the generated claim id, then a trajectory-audit segment, to the same append-only GTS package, and a test pins that a recall between writes records nothing. The three appends are not coupled: the claim lands first, with no lock, so a failure after it leaves an unrecorded claim — the outcome the same crate's library path avoids by committing its verdict and audit segments in one atomic replace, as its own comment says.
 
+**[Mnemo](../../systems/mnemo/) has the table and no writer.** Migration `mem_003` creates `memory_audit` with `memory_id`, `prev_state_hash`, `new_state_hash`, `operation`, `commit_sha` and `occurred_at`, and a test asserts its columns and index. No statement under `src/` inserts into it, while the README's comparison table claims an audit trail with state hashes and the `knowledge-audit` skill tells the agent to treat a memory with no audit row as an out-of-band write — a query that, at this commit, returns every memory in the store. The mutations themselves leave `[AUDIT]` lines in the loguru process log and closed rows with `superseded_by` in the table, which is a version chain, not an event record.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

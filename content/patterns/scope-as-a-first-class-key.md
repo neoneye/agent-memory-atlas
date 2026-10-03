@@ -907,6 +907,10 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 [Session Recall](../../systems/session-recall/) is a counterexample at the boundary between a raw layer and a derived one. Its transcript chunks carry `cwd`, and both retrieval arms apply a boundary-safe prefix predicate inside the vector prefilter. The distilled meta docs entries are indexed into the same table with `cwd=""`, so every scoped search excludes them. The bundled skill also tells the agent to retry globally when a scoped result is thin. A derived record has to inherit the scope key its reads filter on, or the scope silently drops it.
 
+**[CortexDB](../../systems/cortexdb/) builds its strictest scope check on the server and leaves the default install's read lanes to disagree.** A memory's bucket — scope, user and namespace — is its `session_id`, and the lexical and semantic arms put `session_id = ?` in SQL, while the graph and PPR lanes walk every memory node and drop other buckets after loading each row, after the candidate cap. The gRPC server's scoped keys refuse an unset or mismatched scope field and refuse `CallTool` outright because its arguments are opaque, which also silences the plugin's recall hook under a confined key. That hook passes no scope at all and reads only the global default bucket. **A scope a hook never sets is a scope its reads never see.**
+
+[Synapse Layer](../../systems/synapse-layer/) is the predicate without the key. Its SQLite recall ANDs `agent_id = ?` onto both branches inside the SQL, and a committed test proves another agent's matching row stays out, but the primary key is the SHA-256 of the redacted content and the write is `INSERT OR REPLACE`. A second agent storing the same sentence therefore rewrites `agent_id` and removes the row from the first agent's recall — the read filter holds while the identity it guards moves, which is why the page asks for scope at the front of the key and for dedupe inside the boundary.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

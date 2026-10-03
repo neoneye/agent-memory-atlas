@@ -1329,6 +1329,28 @@ distilled meta docs entries are indexed into the same table with
 skill also tells the agent to retry globally when a scoped result is
 thin. A derived record has to inherit the scope key its reads filter on,
 or the scope silently drops it.</p>
+<p><strong><a href="../../systems/cortexdb/">CortexDB</a> builds its
+strictest scope check on the server and leaves the default install's
+read lanes to disagree.</strong> A memory's bucket — scope, user and
+namespace — is its <code>session_id</code>, and the lexical and semantic
+arms put <code>session_id = ?</code> in SQL, while the graph and PPR
+lanes walk every memory node and drop other buckets after loading each
+row, after the candidate cap. The gRPC server's scoped keys refuse an
+unset or mismatched scope field and refuse <code>CallTool</code>
+outright because its arguments are opaque, which also silences the
+plugin's recall hook under a confined key. That hook passes no scope at
+all and reads only the global default bucket. <strong>A scope a hook
+never sets is a scope its reads never see.</strong></p>
+<p><a href="../../systems/synapse-layer/">Synapse Layer</a> is the
+predicate without the key. Its SQLite recall ANDs
+<code>agent_id = ?</code> onto both branches inside the SQL, and a
+committed test proves another agent's matching row stays out, but the
+primary key is the SHA-256 of the redacted content and the write is
+<code>INSERT OR REPLACE</code>. A second agent storing the same sentence
+therefore rewrites <code>agent_id</code> and removes the row from the
+first agent's recall — the read filter holds while the identity it
+guards moves, which is why the page asks for scope at the front of the
+key and for dedupe inside the boundary.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

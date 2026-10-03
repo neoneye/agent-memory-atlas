@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="The 718
+    <meta name="description" content="The 722
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -13,7 +13,7 @@ here.">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="System
 Families — Agent Memory Atlas">
-    <meta property="og:description" content="The 718
+    <meta property="og:description" content="The 722
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -22,7 +22,7 @@ here.">
     <meta name="twitter:title" content="System
 Families — Agent Memory Atlas">
     <meta name="twitter:description" content="The
-718 systems grouped by eight architectural
+722 systems grouped by eight architectural
 commitments, the categories almost nothing models, and the boundaries of
 what counts as memory here.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
@@ -46,7 +46,7 @@ what counts as memory here.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "System Families",
-      "description": "The 718 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
+      "description": "The 722 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -103,7 +103,7 @@ what counts as memory here.">
         <div class="document-hero-inner">
           <p class="eyebrow">Taxonomy</p>
           <h1>System Families</h1>
-          <p class="document-deck">The 718 systems
+          <p class="document-deck">The 722 systems
 grouped by eight architectural commitments, the categories almost
 nothing models, and the boundaries of what counts as memory here.</p>
                                                 </div>
@@ -120,7 +120,7 @@ nothing models, and the boundaries of what counts as memory here.</p>
           </div>
         </aside>
         <article class="prose" id="article">
-<p>718 systems do not fall into 182 categories. They
+<p>722 systems do not fall into 182 categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -164,7 +164,9 @@ href="../systems/engram-cognitive/"><code>engram-cognitive</code></a>,
 href="../systems/aidememo/"><code>aidememo</code></a>, <a
 href="../systems/cognee-rs/"><code>cognee-rs</code></a>, <a
 href="../systems/mnemosyne-nabzx/"><code>mnemosyne-nabzx</code></a>, <a
-href="../systems/memhop/"><code>memhop</code></a></p>
+href="../systems/memhop/"><code>memhop</code></a>, <a
+href="../systems/cortexdb/"><code>cortexdb</code></a>, <a
+href="../systems/fernme/"><code>fernme</code></a></p>
 <p>Called from an application that owns the agent loop. Easy to adopt;
 weak authority over when memory is written or how recall is used.</p>
 <p><strong>AI Workflow Workspace is the family's clearest case of
@@ -823,6 +825,31 @@ background Dream replaces adjacent lists with keywords of a
 model-written reconstruction. The storage and its isolation tests are
 careful; the surviving memory is model output, and deletes stay in the
 file until the host compacts.</p>
+<p><strong><a href="../systems/cortexdb/">CortexDB</a> puts more
+correction machinery around a memory row than most libraries here put
+around anything, and then reads the row from a bucket the save
+instructions never use.</strong> A pure-Go, MIT library over one SQLite
+file, shipped as a Claude Code and Codex plugin with three hooks. A
+memory is a <code>messages</code> row in a bucket built from scope, user
+and namespace; <code>supersedes</code> retires it from every search
+lane, deletion retracts its graph node into history, a trigger-written
+change log records each committed change, and the graph beneath is
+bitemporal. The auto-recall hook passes no scope and reads only the
+global default bucket while <code>/remember</code> saves under user
+scope, and the graph lane, <code>memory_get</code> and
+<code>memory_list_all</code> cross buckets.</p>
+<p><strong><a href="../systems/fernme/">FERNme</a> writes memory with
+arithmetic and governs it like a product, and its MCP surface does not
+inherit the governance.</strong> A per-site, per-user graph of
+namespaced tags weighted 0 to 9 is bumped by a Hebbian rule with no
+model call and compiled by spreading activation into an eight-tag card.
+Around it sit consent gates, an HMAC audit chain that outlives erasure,
+a k-anonymous noised population prior for cold start, and a review queue
+whose content-hash ids keep a rejection rejected. The weak side is the
+default deployment: the local MCP server lets the proposing agent accept
+its own suggestions, defaults every timestamp to 0, which turns off
+decay and latest-value-wins, and never enables the curation that
+produces <code>superseded</code>.</p>
 <h2 id="hosted-and-service-memory">Hosted and service memory</h2>
 <p><a href="../systems/openlore/"><code>openlore</code></a>, <a
 href="../systems/honcho/"><code>honcho</code></a>, <a
@@ -864,7 +891,8 @@ href="../systems/spector/"><code>spector</code></a>, <a
 href="../systems/resonant-mind/"><code>resonant-mind</code></a>, <a
 href="../systems/kagura-memory-cloud/"><code>kagura-memory-cloud</code></a>,
 <a href="../systems/memseek/"><code>memseek</code></a>, <a
-href="../systems/mindmemos/"><code>mindmemos</code></a></p>
+href="../systems/mindmemos/"><code>mindmemos</code></a>, <a
+href="../systems/synapse-layer/"><code>synapse-layer</code></a></p>
 <p><strong>Statewave answers the family's hardest question by refusing
 to ask it at read time.</strong> Apache-2.0, 462 commits from April to
 September 2026 by thirteen authors, 26,041 lines of Python over
@@ -1396,6 +1424,18 @@ reaches graph expansion. Below the project, <code>user_id</code> is a
 request field: list and scroll accept it and ignore it, and the dreaming
 pass finds neighbours by shared entity with no user predicate, then
 archives exact-text duplicates across that cluster.</p>
+<p><strong><a href="../systems/synapse-layer/">Synapse Layer</a> keeps
+its agent key inside the SQL and out of the row's identity.</strong> The
+Apache-2.0 Python SDK of a hosted memory service whose pgvector store,
+Trust Quotient and MCP tools are closed; the open tree holds a
+regex-redacting write path and an opt-in SQLite table. Recall ANDs
+<code>agent_id = ?</code> onto every branch, and a committed test proves
+another agent's matching row stays out. The primary key is a content
+hash, so a second agent storing the same sentence takes the row over.
+Ranking ignores the match: candidates are any row sharing a word,
+ordered by a score that is a keyword-and-self-report blend squared.
+Self-healing, the recall router and the plugin strategies are declared
+and never take effect.</p>
 <h2 id="agent-runtime-memory">Agent-runtime memory</h2>
 <p><a href="../systems/humans/"><code>humans</code></a>, <a
 href="../systems/letta/"><code>letta</code></a>, <a
@@ -3891,7 +3931,8 @@ href="../systems/local-memory-mcp/"><code>local-memory-mcp</code></a>,
 <a href="../systems/archeus/"><code>archeus</code></a>, <a
 href="../systems/marvis/"><code>marvis</code></a>, <a
 href="../systems/attune-ai/"><code>attune-ai</code></a>, <a
-href="../systems/session-recall/"><code>session-recall</code></a></p>
+href="../systems/session-recall/"><code>session-recall</code></a>, <a
+href="../systems/mnemo/"><code>mnemo</code></a></p>
 <p><strong><a href="../systems/dsh-mneme/">dsh-mneme</a> makes
 background consolidation accountable rather than trusted.</strong> A
 DeepSeek Harness plugin on SQLite with Markdown mirrors, it writes a
@@ -7835,6 +7876,18 @@ every later unscoped search with no review, the delete reason the tool
 demands is discarded, and entries are indexed with an empty
 <code>cwd</code>, so scoped search never returns them. One mark,
 <code>negative_eval</code>.</p>
+<p><strong><a href="../systems/mnemo/">Mnemo</a> supersedes carefully
+and forgets loosely.</strong> An Apache-2.0 HTTP MCP server on one
+SQLite file per namespace: FTS5 tiers and sqlite-vec cosine fused by
+RRF, weighted by recency, access and LLM-scored importance, then
+reranked. Update closes the row in one guarded
+<code>UPDATE … RETURNING</code> with a race test built to fail if the
+guard goes, and a changed embedding model is refused at open. Delete
+only closes the row, and <code>history</code> and <code>export</code>
+still return the text. The advertised <code>memory_audit</code> table
+has no writer, the extractor's <code>supersedes</code> list is dropped,
+and the <code>subject</code> scope the evals measure lives on a CLI core
+the server never calls.</p>
 <h2 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
 symbolic memory</h2>
 <p><a href="../systems/holomem/"><code>holomem</code></a>, <a

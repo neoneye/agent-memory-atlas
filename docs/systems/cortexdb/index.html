@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A pure-Go SQLite library and
+Claude Code plugin storing scoped memory rows beside a bitemporal
+knowledge graph, with hook-driven recall and LLM session capture.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CortexDB — Agent Memory Atlas">
+    <meta property="og:description" content="A pure-Go SQLite library
+and Claude Code plugin storing scoped memory rows beside a bitemporal
+knowledge graph, with hook-driven recall and LLM session capture.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CortexDB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A pure-Go SQLite library
+and Claude Code plugin storing scoped memory rows beside a bitemporal
+knowledge graph, with hook-driven recall and LLM session capture.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CortexDB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "CortexDB",
+      "description": "A pure-Go SQLite library and Claude Code plugin storing scoped memory rows beside a bitemporal knowledge graph, with hook-driven recall and LLM session capture.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Scoped memory rows beside a bitemporal
+knowledge graph in one SQLite file</p>
+          <h1>CortexDB</h1>
+          <p class="document-deck">A pure-Go SQLite library and Claude
+Code plugin storing scoped memory rows beside a bitemporal knowledge
+graph, with hook-driven recall and LLM session capture.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/liliang-cn/cortexdb">
+              <span>Source</span>
+              <strong>liliang-cn/cortexdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/liliang-cn/cortexdb/commit/0a11f80409acb38eda4ccab4c7026ebbe72de393" title="0a11f80409acb38eda4ccab4c7026ebbe72de393">
+              <span>Analyzed revision</span>
+              <code>0a11f804…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/liliang-cn--cortexdb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>liliang-cn--cortexdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>149,757
+lines of Go outside tests, 12,199 of them generated gRPC code; the
+memory API is 1,674 lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>592
+commits on main by 1 contributor, 7 August 2025 – 3 October
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,028
+Go test functions in 91,082 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CortexDB is a pure-Go library that puts vector, full-text, RAG, an
+RDF and property knowledge graph, and a scoped agent-memory API into one
+SQLite file, or PostgreSQL. It ships as a Claude Code and Codex plugin
+with an MCP server and three hooks, a gRPC server for a shared brain,
+and Go, Rust, Python and Node clients. Memory is a row in the
+<code>messages</code> table under a bucket id built from scope, user and
+namespace.</p>
+<p>What is notable is how much correction machinery surrounds a simple
+row. <code>supersedes</code> retires a memory without deleting it and
+every search lane honours it. Deleting a memory retracts its graph node
+into history. A trigger-written change log records every committed
+change. The graph underneath is bitemporal. The gRPC server's scoped
+keys refuse rather than narrow, and refuse the one RPC whose arguments
+they cannot see.</p>
+<p>What is weak is the read side of scope on the default install. The
+auto-recall hook passes no scope and so reads only
+<code>memory:global:default</code>, while the <code>/remember</code>
+command tells the agent to save under <code>scope=user</code>.
+<code>memory_get</code>, <code>memory_list_all</code> and the graph
+tools read across every bucket, and the graph lane filters by bucket
+after its query.</p>
+<p>Three marks: <code>bitemporal</code> on the knowledge graph,
+<code>audit_log</code> on the change log, and <code>negative_eval</code>
+on a superseded-memory test with a positive control. Section 9 names the
+four withheld.</p>
+<p>The repository is MIT-licensed and was renamed from
+<code>sqvect</code> (<code>CHANGELOG.md:2947</code>). Three further
+memory layers — <code>pkg/agentmem</code>, <code>pkg/hindsight</code>
+and <code>pkg/memoryflow</code> — are library packages that no binary in
+<code>cmd/</code> and no facade file imports; they are named here and
+not analysed.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory becomes a belief the moment <code>SaveMemory</code> commits.
+There is no candidate state: the row is an upsert into
+<code>messages</code>, keyed on a caller-chosen <code>memory_id</code>,
+in the bucket <code>resolveMemoryBucket</code> derives
+(<code>pkg/cortexdb/memory_api.go:35-86</code>, <code>:625-658</code>).
+An empty scope resolves to session if a session id is given, user if a
+user id is given, else global, and the namespace defaults to
+<code>default</code>.</p>
+<p><strong>A memory stops being current in one of four ways.</strong> A
+later save names it in <code>supersedes</code>, which stamps
+<code>superseded_by</code> on the old row; every search lane skips such
+a row, and export and <code>memory_get</code> still return it
+(<code>memory_api.go:979-1018</code>). A TTL passes and the read path
+hides the row without deleting it (<code>:720-725</code>).
+<code>memory_update</code> rewrites content in place, leaving only the
+change log's 200-character preview of what was there. Or
+<code>memory_delete</code> removes the row and retracts its graph
+node.</p>
+<p><strong>The graph is a second epistemic layer with its own
+rules.</strong> Entities and relations attached to a memory become graph
+rows. Those carry valid time and transaction time, and a single-valued
+link closes the prior fact when a new one starts
+(<code>pkg/graphflow/temporal.go:78-157</code>). Graph rows may also
+carry a knowledge-contract <code>_grade</code>, which
+<code>verify_claims</code> reads and recall ignores.</p>
+<p><strong>Capture without the agent.</strong> When an LLM is
+configured, the SessionEnd hook hands the transcript to
+<code>--capture-session</code>, which asks the model for up to eight
+durable facts and saves each as a global memory with an id of the form
+<code>auto:&lt;session&gt;:&lt;slug&gt;</code>
+(<code>cmd/cortexdb-mcp-stdio/capture_session.go:95-121</code>,
+<code>:235-248</code>). Nothing reviews these before they are
+recallable.</p>
+<p>Injected memories carry no qualifier beyond their id. The
+session-start directive asks the model to use <em>"only relevant
+returned evidence"</em>.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a CortexDB memory is written, which reads honour its bucket, and how it stops being current</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a CortexDB memory is written, which reads honour its bucket, and how it stops being current
+flowchart TD
+    W[&quot;memory_save or capture-session&quot;] --&gt; B[&quot;bucket id from scope, user_id, namespace&lt;br/&gt;empty scope with no ids = memory:global:default&quot;]
+    B --&gt; ROW[&quot;messages row: id, session_id = bucket,&lt;br/&gt;content, vector, metadata&quot;]
+    W -- &quot;entities given&quot; --&gt; GN[&quot;graph node memory:id&lt;br/&gt;with mention edges&quot;]
+    ROW --&gt; CL[&quot;change_log event via trigger&lt;br/&gt;kept 7 days by default&quot;]
+    S[&quot;supersedes: old ids&quot;] --&gt; SB[&quot;superseded_by stamped on old rows&quot;]
+    Q[&quot;memory_search&quot;] --&gt; LEX[&quot;lexical arm:&lt;br/&gt;WHERE session_id = bucket&quot;]
+    Q --&gt; SEM[&quot;cosine arm:&lt;br/&gt;WHERE session_id = bucket, floor 0.28&quot;]
+    Q --&gt; GR[&quot;graph and PPR lanes:&lt;br/&gt;every memory node, bucket checked after load&quot;]
+    LEX --&gt; F{&quot;expired or superseded?&quot;}
+    SEM --&gt; F
+    GR --&gt; F
+    F -- &quot;no&quot; --&gt; HIT[&quot;returned, recall_count bumped&quot;]
+    F -- &quot;yes&quot; --&gt; DROP[&quot;dropped from results&quot;]
+    HOOK[&quot;UserPromptSubmit hook&quot;] --&gt; GLOB[&quot;Recall with no scope:&lt;br/&gt;memory:global:default only&quot;]
+    WIDE[&quot;memory_get, memory_list_all,&lt;br/&gt;graph_list_all&quot;] --&gt; ALL[&quot;every bucket, no predicate&quot;]
+    D[&quot;memory_delete&quot;] --&gt; GONE[&quot;row deleted; graph node archived&lt;br/&gt;to graph_node_history&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The facade is <code>pkg/cortexdb</code>, a <code>*DB</code> over
+<code>pkg/core</code> (SQLite or PostgreSQL storage, FTS5, vector
+indexes) and <code>pkg/graph</code> (property graph, RDF quads, SPARQL,
+Cypher, temporal history, change feed). Memories share the
+<code>messages</code> and <code>sessions</code> tables with the chat
+primitives in <code>pkg/core</code>; a memory bucket is a
+<code>sessions</code> row with <code>kind: memory_bucket</code> in its
+metadata (<code>memory_api.go:434-451</code>).</p>
+<p>Four binaries ship in <code>cmd/</code>.
+<code>cortexdb-mcp-stdio</code> is the plugin's MCP server and also
+every one-shot mode the hooks and slash commands use
+(<code>cmd/cortexdb-mcp-stdio/main.go:17-251</code>).
+<code>cortexdb-grpc</code> serves a shared brain; with
+<code>CORTEXDB_REMOTE</code> set the stdio server forwards every tool
+call to it. <code>cortexdb-connector-mcp</code> and
+<code>cortexdb-bench</code> are the rest.</p>
+<p>Retrieval for memory is FTS5 with a trigram companion index for CJK
+and a <code>LIKE</code> fallback below the trigram floor, an optional
+embedder at an OpenAI-compatible endpoint, and graph walks over mention
+edges. Without an embedder every memory read is lexical or graph.</p>
+<p>Background work is three things: the detached capture process, an
+hourly change-log janitor, and automatic inference maintenance that
+reads the change log (<code>pkg/cortexdb/changes.go:1-15</code>,
+<code>:82-125</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The library needs nothing running. The plugin's launcher downloads a
+prebuilt binary from the GitHub release matching the plugin version and
+caches it (<code>plugins/cortexdb/bin/cortexdb-mcp</code>). No API key
+is needed to store or recall; an embedder and an LLM are optional and
+enable semantic recall and capture.</p>
+<p><code>DefaultDBPath</code> is one global file,
+<code>~/.cortexdb/cortexdb.db</code>, so every project and session on a
+machine shares one brain (<code>pkg/cortexdb/cortexdb.go:75-84</code>).
+The store is repairable by hand through <code>--export-memory</code>,
+which writes one Markdown file per memory, and
+<code>--sync-memory</code>, which writes edits back and deletes on
+<code>--prune</code>
+(<code>pkg/cortexdb/memory_sync.go:13-60</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>memory_save</code> →
+<code>GraphRAGToolbox.SaveMemory</code> → <code>DB.SaveMemory</code>
+(<code>pkg/cortexdb/mcp.go:497-506</code>;
+<code>memory_api.go:35-86</code>). It resolves the bucket, creates the
+bucket session if absent, builds metadata with <code>kind</code>,
+<code>scope</code>, <code>namespace</code>, <code>importance</code>,
+<code>ttl_seconds</code> and <code>expires_at</code>, embeds the
+content, upserts with <code>ON CONFLICT(id) DO UPDATE</code>, stamps any
+<code>supersedes</code> targets, and writes attached entities and
+relations to the graph through a <code>memory:&lt;id&gt;</code> node
+(<code>:727-812</code>). An embed failure logs and saves without a
+vector (<code>:453-472</code>).</p>
+<p><strong>Update.</strong> <code>memory_update</code> loads the row,
+merges metadata, re-embeds on new content and rewrites in place
+(<code>:89-145</code>). It cannot change scope or bucket.</p>
+<p><strong>Search.</strong> <code>searchMemory</code> resolves a
+retrieval plan, then the bucket, then runs up to four lanes
+(<code>:164-318</code>). PPR mode runs the first stage over a wider pool
+and walks the graph
+(<code>pkg/cortexdb/graphrag_ppr.go:776-845</code>).</p>
+<p><strong>Recall.</strong> <code>KnowledgeMemory.Recall</code> runs
+<code>SearchMemory</code> with the request's scope fields,
+<code>SearchKnowledge</code> with only a collection, and
+<code>collectGraphFacts</code> from the entities either surfaced, then
+packs a context (<code>pkg/cortexdb/brain.go:37-115</code>;
+<code>brain_graph_facts.go:24</code>).</p>
+<p><strong>Auto-recall.</strong> <code>cortexdb-recall</code> checks an
+opt-in sentinel and execs <code>cortexdb-mcp --recall</code>, which
+calls <code>Recall</code> with the prompt, prompt keywords,
+<code>GraphLight</code> and top-k 3, and no user, session, scope or
+namespace (<code>cmd/cortexdb-mcp-stdio/recall.go:75-82</code>). The
+shared-brain variant sends the same arguments through
+<code>CallTool</code> (<code>recall_remote.go:47-80</code>).</p>
+<p><strong>Delete.</strong> <code>DeleteMemory</code> deletes the row,
+deletes the bucket session if now empty, and calls
+<code>RetractNodes</code> on the memory's graph node with reason
+<code>retracted</code>, which archives it before deleting
+(<code>memory_api.go:374-407</code>).</p>
+<p><strong>Capture.</strong> <code>runCaptureSession</code> digests the
+transcript, skips sessions with fewer than three user turns, prompts for
+facts, and saves each locally or through the remote
+<code>memory_save</code> (<code>capture_session.go:30-132</code>,
+<code>:330-362</code>).</p>
+<p><strong>Scoped keys.</strong> The gRPC interceptor runs
+<code>AuthorizeRows</code>, which requires each confined field at the
+request's top level and equal to the key's value, and refuses
+<code>CallTool</code> outright for a confined key
+(<code>pkg/authz/methods.go:219-266</code>;
+<code>pkg/authz/tools.go:100-117</code>). Id-addressed RPCs read the row
+and compare it in the handler
+(<code>pkg/rpcserver/ownership.go:73-142</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td><code>messages.id</code></td>
+<td>caller-chosen, upsert key</td>
+</tr>
+<tr>
+<td>bucket</td>
+<td><code>messages.session_id</code></td>
+<td><code>memory:global:ns</code>, <code>memory:user:uid:ns</code> or
+<code>memory:session:sid:ns</code></td>
+</tr>
+<tr>
+<td>user</td>
+<td><code>sessions.user_id</code></td>
+<td>joined on read</td>
+</tr>
+<tr>
+<td>role</td>
+<td><code>messages.role</code></td>
+<td><code>memory</code> by default, <code>summary</code> from
+consolidate</td>
+</tr>
+<tr>
+<td>content, vector</td>
+<td><code>messages</code></td>
+<td>vector null without an embedder</td>
+</tr>
+<tr>
+<td>scope, namespace, importance, ttl_seconds, expires_at</td>
+<td><code>messages.metadata</code> JSON</td>
+<td>rebuilt on every save</td>
+</tr>
+<tr>
+<td>superseded_by</td>
+<td>metadata</td>
+<td>the only status a memory has</td>
+</tr>
+<tr>
+<td>recall_count, last_recalled_at</td>
+<td>metadata</td>
+<td>bumped on every hit, read only by <code>--memory-usage</code></td>
+</tr>
+<tr>
+<td>created_at</td>
+<td><code>messages.created_at</code></td>
+<td>not updated by <code>memory_update</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The scope key is the bucket string.</strong> User and
+namespace are encoded in <code>session_id</code>, and two search lanes
+match it exactly in SQL. Nothing checks that a caller asking for
+<code>user_id=alice</code> is Alice, except a scoped gRPC key.</p>
+<p><strong>Provenance is free metadata.</strong> Capture stamps
+<code>source: auto-capture</code>, the session and a date; the slash
+commands stamp nothing. The knowledge contract's <code>_source</code>,
+<code>_producer</code>, <code>_grade</code>, <code>_by</code> and
+<code>_why</code> keys are defined for graph and knowledge rows and
+validated only when a producer calls <code>ValidateContract</code> —
+<em>"The server does not call this"</em>
+(<code>pkg/cortexdb/contract.go:153</code>).</p>
+<p><strong>Graph time.</strong> Nodes and edges carry
+<code>valid_from</code>, <code>valid_to</code>, <code>recorded_at</code>
+and <code>retracted_at</code>; live tables hold only current rows and
+closed versions move to history tables with a reason and producer
+(<code>pkg/graph/graph.go:28-40</code>;
+<code>pkg/graph/temporal.go:1-20</code>). Memory rows have none of
+this.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>memory_search</code> fuses up to four lanes and caps at
+<code>top_k</code> (default 5).</p>
+<ul>
+<li><strong>Lexical.</strong> FTS5 <code>bm25</code> over
+<code>messages_fts</code>, or the trigram index for CJK, or
+<code>LIKE</code> for a one- or two-character CJK query, each with
+<code>m.session_id = ?</code> and <code>LIMIT topK*4</code>
+(<code>memory_api.go:1134-1180</code>). The query, keywords and
+alternate phrasings run as separate queries, later ones weighted down to
+0.8.</li>
+<li><strong>Semantic.</strong> With an embedder and <code>auto</code>
+mode, a cosine search over the bucket's vectors with
+<code>WHERE session_id = ?</code>, a 0.28 similarity floor calibrated on
+one live store, and a pool of <code>topK*4</code>
+(<code>memory_api.go:21-27</code>, <code>:237-270</code>). On SQLite
+this is a linear scan of the bucket followed by a nested-loop sort
+(<code>pkg/core/chat.go:172-230</code>); on PostgreSQL it is a pgvector
+<code>ORDER BY</code>.</li>
+<li><strong>Graph.</strong> When entity names are given and resolve to
+nodes, a query over every <code>mentions</code> edge from a
+<code>memory:</code> node, then a load of each candidate row and a
+bucket comparison in Go (<code>memory_api.go:820-922</code>).</li>
+<li><strong>PPR.</strong> Personalized PageRank from the first stage's
+hits and the named entities, with the same after-load bucket check for
+memories the walk reaches (<code>graphrag_ppr.go:820-835</code>).</li>
+</ul>
+<p>Importance and age enter as a multiplier between 0.85 and 1.0, so
+they reorder ties without overturning a better match
+(<code>memory_api.go:959-977</code>).</p>
+<p><strong>Filtering happens after the limit.</strong> Both SQL arms
+take <code>topK*4</code> rows before Go drops expired and superseded
+ones, and the graph lane caps candidates at <code>topK*8</code> before
+it drops other buckets. A bucket crowded by retired rows, or a popular
+entity mentioned mostly by other buckets' memories, can return fewer
+than <code>top_k</code>.</p>
+<p><strong>Recall injects little.</strong> The hook injects at most
+three memories and three knowledge hits, snippets capped at 220 runes on
+the remote path (<code>recall_remote.go:31-34</code>). It sits in
+<code>additionalContext</code> on each prompt.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. <code>memory_save</code> blocks
+on one embed call when an embedder is configured, then one upsert, and
+the memory is retrievable on the next search. There is no deduplication
+beyond the id; two saves of the same text under different ids are two
+memories.</p>
+<p>Correction is caller-driven. The agent supersedes by naming ids it
+found by searching, updates by id, or deletes by id. Nothing detects a
+contradiction on memory rows. The graph layer closes a prior open fact
+for a single-valued link when the ontology says so
+(<code>pkg/graphflow/temporal.go:195-210</code>).</p>
+<p><strong>Capture is the one model-driven write.</strong> The prompt
+asks for zero to eight self-contained facts with absolute dates and an
+importance tier, and the ids are stable per session and slug, so
+recapturing a session overwrites its own memories. They land in the
+global bucket whatever scope the session used.</p>
+<p><strong>Consolidation crosses the scope line.</strong>
+<code>knowledge_memory_consolidate</code> recalls memories, knowledge
+and graph facts, summarises them, and saves the summary as a memory in
+the requested bucket (<code>brain.go:374-436</code>). Knowledge and
+graph facts carry no user key, so a user-scoped summary can contain
+material from outside that user's bucket.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous; one embed call when configured, one upsert, plus
+graph writes when entities are given.</li>
+<li>Capture: one LLM call per session end, detached, so the session
+exits at once. A captured memory is retrievable when that process
+finishes.</li>
+<li>Background: no pass re-reads or rewrites the memory table. The
+change-log janitor runs hourly.</li>
+<li>Read: every search writes <code>recall_count</code> back to each
+hit's metadata, one <code>UPDATE</code> per hit, and each one is a
+change-log event (<code>memory_api.go:1082-1124</code>). The hook runs a
+recall on every prompt.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The plugin registers three hooks
+(<code>plugins/cortexdb/hooks/hooks.json</code>). SessionStart injects a
+directive to recall before answering and to save durable facts, only
+when auto-recall is enabled. UserPromptSubmit runs the recall; on first
+run it asks the model to ask the user whether to enable it. SessionEnd
+parks the hook payload in a file and runs capture under
+<code>nohup</code>.</p>
+<p>The MCP server exposes the memory verbs <code>memory_save</code>,
+<code>memory_update</code>, <code>memory_get</code>,
+<code>memory_search</code>, <code>memory_list_all</code> and
+<code>memory_delete</code>
+(<code>pkg/cortexdb/knowledge_memory_tooldefs.go:261-363</code>), the
+<code>knowledge_memory_*</code> family, and the graph, SPARQL, Cypher,
+ontology, decision and contract tools. The agent holds every verb,
+including delete and the graph writes.</p>
+<p><strong>The auto-recall hook and the remember command disagree about
+where memory lives.</strong> <code>/remember</code> instructs
+<code>scope=user</code> with <code>namespace=assistant</code>
+(<code>plugins/cortexdb/commands/remember.md:5</code>), which also
+requires a <code>user_id</code> the agent must invent. The hook recalls
+with no scope, which resolves to <code>memory:global:default</code>
+(<code>recall.go:75-82</code>; <code>memory_api.go:629-644</code>). A
+memory saved as the command instructs is never auto-injected. Capture
+writes global memories, which the hook does see.</p>
+<p>The OpenClaw and Hermes providers stamp <code>user_id</code>,
+<code>scope</code> and <code>namespace</code> from host configuration
+rather than from the model
+(<code>plugins/openclaw-cortexdb-memory/lib/cortexdb.js:18-20</code>;
+<code>plugins/hermes-cortexdb-memory/__init__.py:47-49</code>), which is
+the stronger shape. Hermes reaches the server through
+<code>CallTool</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Supersession is done properly for a row store.</strong> The
+old memory stays, names its replacement, leaves every search lane, and
+an aim at a missing id fails rather than succeeding silently
+(<code>memory_api.go:993-1018</code>).</p>
+<p><strong>Deletion reaches the graph and stops at history.</strong> The
+memory node is archived to <code>graph_node_history</code> with its
+content, and the change log keeps a 200-character preview for up to
+seven days. <code>vacuum_graph</code> purges graph history before a
+cutoff; nothing schedules it.</p>
+<p><strong>The scoped-key server is careful.</strong> Keys carry a
+clearance and a scope. A confined key must name its own user on every
+request, an unset field means every user and is refused, and nested plan
+filters must agree (<code>pkg/authz/methods.go:219-266</code>).
+<code>CallTool</code> is refused because its arguments are opaque JSON
+(<code>pkg/authz/tools.go:100-117</code>). A row fetched by id that the
+key may not see answers <code>NOT_FOUND</code>, so ids are not an oracle
+(<code>pkg/rpcserver/ownership.go:96-112</code>). The cost is that the
+recall hook and the Hermes provider, both <code>CallTool</code> clients,
+stop working under a confined key, and the hook fails silently.</p>
+<p><strong>Prompt-injected memories.</strong> The agent writes without
+review, capture writes whatever the model extracts from the transcript,
+and the hook injects the top hits on every prompt. Nothing filters
+content.</p>
+<p><strong>Uncertainty is not representable on a memory.</strong> A
+memory is current, superseded or expired.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>bitemporal</code> — awarded on the knowledge graph; evidence
+in the record. Memory rows have no valid time.</li>
+<li><code>audit_log</code> — awarded on the change log, with its
+seven-day default retention.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — withheld. <code>superseded_by</code> and
+<code>memory_delete</code> are keyed on the record, and nothing stops
+capture or a save from re-asserting the text. The nearest thing is in
+entity resolution: a <code>possiblySame</code> edge graded
+<code>refused</code> keeps that pair from being merged or re-proposed
+(<code>pkg/graphflow/resolve_linkfirst.go:206-208</code>,
+<code>:305-307</code>). It rejects an identity merge, not a memory
+value.</li>
+<li><code>trust_state</code> — withheld. Memory rows have no status
+beyond <code>superseded_by</code>. The contract <code>_grade</code> on
+graph rows has a withholding value, <code>refused</code>, and
+<code>verify_claims</code> excludes refused edges from support
+(<code>pkg/cortexdb/verify_claims.go:311-326</code>). The recall path
+that feeds the agent never reads it: <code>brain_graph_facts.go</code>
+has no reference to a grade.</li>
+<li><code>scope_enforced</code> — withheld. The lexical and semantic
+lanes carry <code>session_id = ?</code>; the graph and PPR lanes query
+every memory node and check the bucket after loading each row
+(<code>memory_api.go:852-860</code>, <code>:908</code>;
+<code>graphrag_ppr.go:830</code>). On the local MCP server
+<code>memory_get</code> reads by id with no scope
+(<code>:148-154</code>), <code>memory_list_all</code> reads every
+bucket, and <code>graph_list_all</code> returns memory nodes with their
+content (<code>pkg/cortexdb/graph_list_all.go:151-152</code>). The
+scoped gRPC key closes most of this for a confined caller and is the
+strongest part of the design; it is optional, and the graph lane's
+after-query check remains behind it.</li>
+<li><code>human_review</code> — withheld. <code>possiblySame</code>
+links wait as <code>held</code> with a reason for a person, and
+<code>contract_needs_attention</code> lists them, but the verdict is set
+by writing <code>_grade</code> into the edge's metadata, which
+<code>upsert_relations</code> accepts from the agent
+(<code>pkg/cortexdb/graphrag_tool_ingest.go:417-419</code>;
+<code>resolve_linkfirst.go:468</code>). <code>--memory-html</code> and
+<code>--memory-usage</code> display.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests and committed artifacts at the pin. CI runs
+<code>go test -race</code> over every package
+(<code>.github/workflows/ci.yml:38</code>).</p>
+<p><strong>The negative case.</strong>
+<code>TestSupersededMemoryLeavesRecallButNotTheStore</code> saves a
+memory and its replacement, searches, fails if the old one appears and
+fails if the new one does not, then asserts the old row survives for
+<code>memory_get</code> and export
+(<code>pkg/cortexdb/memory_boosts_test.go:59-120</code>). The positive
+control is in the same test, so an empty result fails. A second case in
+<code>knowledge_memory_test.go:371-384</code> asserts an updated
+memory's old wording no longer matches; its <code>len == 0</code> would
+pass on an empty retriever, and only the next search in the same test
+shows the retriever works.</p>
+<p><strong>Scope.</strong> <code>scoped_keys_test.go</code> and
+<code>ownership_test.go</code> assert <code>PERMISSION_DENIED</code> for
+another user's search, and that a refused delete or update leaves the
+other user's row unchanged. They test the request gate, not a populated
+result.</p>
+<p><strong>Benchmarks.</strong> <code>pkg/eval</code> holds LoCoMo,
+LongMemEval, MuSiQue, 2WikiMultiHopQA and HippoRAG loaders, a manifest
+pinning dataset hashes, and
+<code>testdata/baselines-v2.114.1.json</code> with lexical, vector,
+hybrid, graph and PPR rows. The lexical recall@5 figures
+<code>docs/GUIDE.md:36</code> quotes — 0.657, 0.457, 0.493, 0.861 —
+recompute from that file. The <code>auto</code> figures beside them do
+not appear in it. Every row measures <code>SaveKnowledge</code> and
+<code>SearchKnowledge</code>, the document path
+(<code>cmd/cortexdb-bench/retrieve.go:21-32</code>, <code>:106</code>),
+not <code>memory_save</code> and <code>memory_search</code>. The
+LongMemEval rows answer 100 or 470 questions, not the full set.</p>
+<p>No paper or citation block is in the tree.</p>
+<p><strong>Not covered.</strong> No test exercises the auto-recall
+hook's bucket, the graph lane's bucket check against a populated foreign
+bucket, or capture's extraction quality.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Supersede by id and keep the old row.</strong> Stamp the
+replacement on the old record, drop it from every read lane, keep it for
+export and audit, and fail a supersede aimed at an id that does not
+exist.</li>
+<li><strong>Give semantic search a floor.</strong> A nearest-neighbour
+search always has an answer; a calibrated threshold is what lets it
+return nothing.</li>
+<li><strong>Never refuse a write because the embedder is down.</strong>
+Store the text, leave the vector null, and backfill with a re-embed
+pass.</li>
+<li><strong>Log changes with triggers inside the write.</strong> One
+trigger per table catches every write path, including ones added later,
+and rolls back with the write.</li>
+<li><strong>For a shared server, refuse what you cannot check.</strong>
+Deny a confined key any request whose scope fields are absent, unset or
+opaque, and answer <code>NOT_FOUND</code> for rows it may not see.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Hooks that read a different bucket from the one the
+instructions write to.</strong> If the recall hook and the save
+instructions are written separately, derive both from one default.</li>
+<li><strong>A scope filter on some retrieval lanes.</strong> Every lane,
+including graph walks and id lookups, needs the predicate in its query,
+or the lane needs a key on the node it walks.</li>
+<li><strong>Status filtering after a <code>LIMIT</code>.</strong> It
+turns retired rows into lost recall.</li>
+<li><strong>Writing usage counters into the record you audit.</strong> A
+read that updates metadata makes every search a mutation event.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants one local brain across Claude Code
+and Codex, wants graph and RAG tooling beside memory, and treats memory
+as a personal store where every project may see every other. The
+engineering is careful and densely commented, and defects are fixed with
+the failure written into the code beside the fix. The surface is large
+for a single maintainer — a graph engine, SPARQL, Cypher, ontologies,
+three servers, four clients — and memory is a small part of it. A team
+that needs per-user isolation should run the gRPC server with scoped
+keys and typed RPCs, and accept that the plugin's recall hook does not
+work there.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the hook's global-only recall intended, with user scope reserved
+for the providers? The plugin README and <code>/remember</code> suggest
+not.</li>
+<li>How large do real buckets get, and does the SQLite semantic lane's
+linear scan and nested-loop sort show up in hook latency?</li>
+<li>How fast does the change log fill on a store where every prompt runs
+a recall and writes recall counts back?</li>
+<li>Do <code>pkg/agentmem</code> and <code>pkg/hindsight</code> have
+users outside this repository?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Memory API:</strong>
+<code>pkg/cortexdb/memory_api.go</code>,
+<code>memory_list_all.go</code>, <code>memory_sync.go</code>,
+<code>knowledge_memory_types.go</code>,
+<code>knowledge_memory_tooldefs.go</code>, <code>brain.go</code>,
+<code>brain_graph_facts.go</code>, <code>graphrag_ppr.go</code>.</li>
+<li><strong>Storage:</strong> <code>pkg/core/chat.go</code>,
+<code>pkg/core/store_postgres_chat.go</code>,
+<code>pkg/cortexdb/cortexdb.go</code>.</li>
+<li><strong>Graph time and history:</strong>
+<code>pkg/graph/graph.go</code>, <code>pkg/graph/temporal.go</code>,
+<code>pkg/graphflow/temporal.go</code>,
+<code>pkg/cortexdb/temporal.go</code>.</li>
+<li><strong>Change log:</strong> <code>pkg/graph/changefeed.go</code>,
+<code>pkg/cortexdb/changes.go</code>.</li>
+<li><strong>Contract and verification:</strong>
+<code>pkg/cortexdb/contract.go</code>, <code>verify_claims.go</code>,
+<code>pkg/graphflow/resolve.go</code>,
+<code>pkg/graphflow/resolve_linkfirst.go</code>.</li>
+<li><strong>Plugin and hooks:</strong>
+<code>plugins/cortexdb/hooks/hooks.json</code>,
+<code>plugins/cortexdb/bin/</code>,
+<code>plugins/cortexdb/commands/remember.md</code>,
+<code>cmd/cortexdb-mcp-stdio/main.go</code>, <code>recall.go</code>,
+<code>recall_remote.go</code>, <code>capture_session.go</code>.</li>
+<li><strong>Server scope:</strong> <code>pkg/authz/authz.go</code>,
+<code>methods.go</code>, <code>tools.go</code>;
+<code>pkg/rpcserver/ownership.go</code>, <code>memory.go</code>.</li>
+<li><strong>Tests and evals:</strong>
+<code>pkg/cortexdb/memory_boosts_test.go</code>,
+<code>knowledge_memory_test.go</code>, <code>changes_test.go</code>,
+<code>pkg/graphflow/temporal_test.go</code>,
+<code>pkg/rpcserver/scoped_keys_test.go</code>,
+<code>pkg/rpcserver/ownership_test.go</code>, <code>pkg/eval/</code>,
+<code>pkg/eval/testdata/baselines-v2.114.1.json</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'SaveTemporalFact\(' --type go -g '!*_test.go'</code> —
+the definition only; no caller outside tests.</li>
+<li><code>rg -n 'factValidFromKey|"valid_from"' --type go -g '!*_test.go' pkg cmd</code>
+— writers of the valid-time property are in
+<code>pkg/graphflow/temporal.go</code>; <code>pkg/graph</code> holds the
+column.</li>
+<li><code>rg -n 'KeyGrade|GradeHeld|GradeRefused|"_grade"' --type go -g '!*_test.go'</code>
+— readers in <code>verify_claims.go</code>,
+<code>graph_health.go</code>, <code>resolve_linkfirst.go</code>,
+<code>decision_query.go</code>, <code>contract_query.go</code> and
+<code>pkg/liveview</code>; none in <code>brain_graph_facts.go</code>,
+<code>memory_api.go</code> or the knowledge search files.</li>
+<li><code>rg -n -i 'tombstone|blocklist|denylist|rejected_values|suppress' --type go -g '!*_test.go'</code>
+— no value-keyed rejection store for memories.</li>
+<li><code>rg -l 'pkg/memoryflow"|pkg/agentmem"|pkg/hindsight"' --type go -g '!*_test.go'</code>
+— <code>examples/03_memoryflow/main.go</code> and
+<code>pkg/hindsight/strategy.go</code> only.</li>
+<li><code>rg -n 'DELETE FROM change_log|UPDATE change_log' pkg/graph/changefeed.go</code>
+— one <code>DELETE</code>, the retention prune at
+<code>:1056</code>.</li>
+<li><code>rg -n -l 'SearchMemory\(' --type go -g '*_test.go'</code>,
+then reading the memory and rpcserver hits — no case saves to two
+buckets and asserts one stays out of the other's results.</li>
+<li><code>rg -n 'SearchKnowledge|SearchMemory|SaveMemory|SaveKnowledge' cmd/cortexdb-bench/*.go</code>
+— knowledge calls only.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/liliang-cn/cortexdb/commit/0a11f80409acb38eda4ccab4c7026ebbe72de393"><code class="commit-id" title="0a11f80409acb38eda4ccab4c7026ebbe72de393">0a11f804…</code></a>
+— first reading, at the head of <code>main</code>, v2.119.1, a commit
+from the same day. Three marks: <code>bitemporal</code>,
+<code>audit_log</code>, <code>negative_eval</code>. Screened before
+reading: one auto-run surface (<code>.claude-plugin/</code>), no
+build-time execution, twelve dependency files inside the cooldown —
+every file in a depth-1 clone dates to the tip — and two floating ranges
+with lockfiles present. <code>SKILL.md</code>, <code>.agents/</code> and
+the plugin's skills and commands were read as data. Read with
+<code>rg</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

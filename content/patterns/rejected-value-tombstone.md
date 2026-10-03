@@ -510,6 +510,8 @@ first row's reason and time.
 
 **[TideMind](../../systems/tidemind/) has the value-keyed form on tag assignments and nothing on content.** A person rejecting a tag on the desktop flips the node-to-tag link to `rejected_by_user` rather than deleting it, and the background annotator drops any model-proposed tag whose case-folded name matches a rejected one for that node; the existence check keeps tag-promote from re-linking it, and decay and pending-link GC never touch the row. The re-extraction the tombstone guards against is live, because a recall-time rewrite resets the node to unannotated. Content has no equivalent: a corrected value re-digested later dedup-merges into the corrected node under a prompt that says the newer text wins, and a link the evaluator rejects is soft-deleted and can be proposed again.
 
+[FERNme](../../systems/fernme/) puts its tombstone on the suggestion layer, as Wenlan does, and derives the key from the content: `suggestion_id` is the SHA-256 of site, user, kind and the canonical-JSON payload, and `upsert_suggestion` leaves a rejected row untouched, so the refresh generator and the agent's `propose_*` tools collide with it. The key is only as stable as the payload. An alias merge names its pair as `canonical_attr` and `alias_attr`, ordered by current weight, so a reinforcement that flips the order mints a new id and the rejected merge returns as pending; the committed test holds weights fixed. And `remember` writes the rejected tag straight to the graph, which the tombstone never consults.
+
 ### Sorted by what actually stops the value
 
 The mark covers four different mechanisms. The table sorts the holders this page

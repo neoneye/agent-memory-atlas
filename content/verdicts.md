@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 718 reports.**
+**This page covers all 722 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6500,3 +6500,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 25,368 lines of Rust before the inline test modules, 297 commits from one contributor between 28 May and 13 September 2026, 432 unit tests and 24 integration tests. Three marks: `trust_state`, `audit_log`, and `negative_eval` on two CI-run duel tests; the HTTP scope canary never runs in CI. Published LongMemEval-S recall recomputes exactly from the committed files.
 - Study when: you want a contradiction rule with its formulas, locks and filter derivation written out and tested, or a quarantine that keeps rejected candidates recoverable and counted.
 - Do not copy when: a fact must survive a newer wrong assertion, or a token's library must bound everything it reads.
+
+### [`mnemo`](../systems/mnemo/)
+
+- Best idea: **supersede in one statement that only a live row can satisfy.** `MemoryDB.update` closes the predecessor with `UPDATE … SET valid_to, superseded_by WHERE id = ? AND valid_to IS NULL RETURNING *`, inserts the successor, and rolls back on every exit including a zero-row match; `test_db_update_atomicity.py` fires a competing writer mid-call and asserts one live row and an intact chain.
+- Biggest risk: **delete hides the text from search and hands it back elsewhere.** `delete` sets `valid_to` and keeps the content; `history_for_entity` returns closed rows by design and `export_jsonl` selects every row, so a memory the user asked to forget is still returned by two agent tools.
+- Most reusable component: the embedding-identity guard in `src/mnemo/db.py:330-416` — stamp model and dimension into `store_meta`, refuse a mismatch at open, and drop only the vectors when a reindex is requested.
+- Second risk: **capture can discard a correction as a duplicate.** The probe is FTS over the first ten words scored by word-set overlap, and at 0.92 `capture` returns the old id without writing, so a one-word change to a long sentence is reported as `deduplicated`.
+- Maturity impression: Apache-2.0 with MIT portions, 9,373 lines of Python under `src/`, 1,178 commits on main by 9 contributor identities, most of them automation, since 12 February 2026. One mark, `negative_eval`, on scoped-recall and current-view exclusions with positive controls; 979 pytest functions run in CI. `memory_audit`, the extracted `supersedes` list and the supersession settings have no consumer, and no benchmark result is committed.
+- Study when: you want a single-file SQLite MCP memory with hybrid recall, or a worked example of transaction-safe supersession and the tests that pin it.
+- Do not copy when: forgetting must be provable, edits must be attributable, or agents sharing a token must not read each other's rows.
+
+### [`cortexdb`](../systems/cortexdb/)
+
+- Best idea: **supersede without deleting, and make every read lane honour it.** `supersedes` stamps `superseded_by` on the named rows; the lexical, semantic, graph and PPR lanes all skip a stamped row, export and `memory_get` still return it with the replacement named, and a supersede aimed at a missing id fails rather than reporting success. One committed test holds it with a positive control.
+- Biggest risk: **the auto-recall hook reads a bucket the save instructions do not write.** The UserPromptSubmit hook calls `Recall` with no user, session, scope or namespace, which resolves to `memory:global:default`; the `/remember` command tells the agent to save with `scope=user` and `namespace=assistant`. A memory saved as instructed is never injected, and nothing reports it.
+- Most reusable component: `pkg/authz` with `pkg/rpcserver/ownership.go` — scoped keys with a two-value clearance, a request check that refuses an unset or mismatched scope field instead of narrowing it, an outright refusal of the one RPC whose arguments are opaque JSON, and a single `NOT_FOUND` answer for another user's id so ids are not an oracle.
+- Second risk: **scope is a predicate on two of four search lanes.** The lexical and semantic arms put `session_id = ?` in SQL; the graph and PPR lanes query every memory node and drop other buckets after loading each row, after the candidate cap. On the local MCP server `memory_get`, `memory_list_all` and `graph_list_all` read every bucket, and consolidation saves summaries built from unscoped knowledge and graph facts into a user bucket.
+- Maturity impression: MIT, 149,757 lines of Go outside tests and 2,028 test functions, 592 commits on main from one contributor between 7 August 2025 and 3 October 2026. Three marks — `bitemporal` on the knowledge graph, `audit_log` on a change log pruned to seven days by default, `negative_eval` on one superseded-memory test. Committed benchmark baselines measure the knowledge path, not memory.
+- Study when: you want a single-file Go store that combines memory, RAG and a temporal graph, or you are building a shared memory server and want a scope model that refuses what it cannot check.
+- Do not copy when: you need per-user isolation on the default plugin install, or a memory status richer than current, superseded and expired.
+
+### [`synapse-layer`](../systems/synapse-layer/)
+- Best idea: **put the scope predicate inside the SQL on every branch, including the empty-query one.** `SqliteBackend.recall` ANDs `agent_id = ?` onto the keyword match and appends it to the most-recent fallback, and `SynapseMemory` always supplies its own non-empty id, so no read of the file in the SDK runs unscoped.
+- Biggest risk: **the scope is not in the key.** `memory_id` is the SHA-256 of the redacted text and the write is `INSERT OR REPLACE`, so another agent storing the same sentence rewrites `agent_id` and the row leaves the first agent's recall.
+- Most reusable component: the redaction-first write path — sanitize before the hash, the row and the log line — and the call-site assertion in `ForgeBackend` that no plaintext `content` key reaches the request body.
+- Second risk: two copies of the store. Adapters for AutoGen and CrewAI clear, delete and update the in-process `_memories` list while recall reads SQLite, so a deleted memory returns on the next query; `SynapseMemory` itself has no delete.
+- Maturity impression: Apache-2.0, 8,131 lines of Python, 486 pytest functions run in CI on three Python versions, 182 commits between 2 April and 18 September 2026. Open core: the hosted Forge engine and the TypeScript SDK's source are not in the tree.
+- Study when: you want a small scoped SQLite recall and a redaction pipeline to read in an afternoon, or a worked example of declared mechanisms — self-healing, routing, plugin strategies — that tests assert by type and that never run.
+- Do not copy when: you need recall ordered by relevance, deletion that reaches the store, or the semantic recall and MCP surface the README describes, which live in the closed service. Two marks: `scope_enforced`, `negative_eval`.
+
+### [`fernme`](../systems/fernme/)
+
+- Best idea: **make the suggestion id a hash of the suggestion.** `suggestion_id` is the SHA-256 of site, user, kind and the canonical-JSON payload, and `upsert_suggestion` leaves any non-pending row untouched, so a rejected alias merge or tag proposal occupies its own id and every regenerator and `propose_*` call collides with it. TTL and cap trimming touch only pending rows.
+- Biggest risk: **the approve verb sits on the producer's tool surface.** The local stdio server registers `accept_canonicalization_suggestion` in the same core group as `propose_tags`; only remote HTTP clients have it removed. The shipped skill asks the model to leave acceptance to the person, which is prose.
+- Most reusable component: `fernme/service.py` `_released_prior` with `prior_refresh` — a population prior released only above k=5 holders, with bounded-mean Laplace noise seeded from the install secret, sensitive namespaces removed, and recomputed on every erasure route.
+- Second risk: **time defaults to zero on the agent's path.** `remember` and `recall_card` default `ts` and `now` to 0.0, so read-time decay never runs and single-value slots keep every city; `observe` also raises a weight the user pinned with `edit_memory`, which `decay` and `record_outcome` both respect.
+- Maturity impression: Apache-2.0, 17,093 lines of Python, 60 commits on main from 1 contributor between 18 June and 1 October 2026, and 479 pytest functions. Four marks — `tombstone`, `trust_state`, `audit_log`, `negative_eval` — with the `superseded` state and its negative test behind an opt-in config; the README's synthetic harness rows recompute from the committed per-seed JSON.
+- Study when: you are building multi-user personalization with a model-free write path, a consent gate and a privacy-preserving cold start.
+- Do not copy when: you need sentence-level facts, time-aware recall through an MCP client, or a review queue the proposing agent cannot clear.

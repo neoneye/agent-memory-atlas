@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A per-site, per-user Hebbian tag
+graph for agents, written without model calls, recalled by spreading
+activation into a bounded card, with a propose-only review queue.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="FERNme — Agent Memory Atlas">
+    <meta property="og:description" content="A per-site, per-user
+Hebbian tag graph for agents, written without model calls, recalled by
+spreading activation into a bounded card, with a propose-only review
+queue.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FERNme — Agent Memory Atlas">
+    <meta name="twitter:description" content="A per-site, per-user
+Hebbian tag graph for agents, written without model calls, recalled by
+spreading activation into a bounded card, with a propose-only review
+queue.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>FERNme — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "FERNme",
+      "description": "A per-site, per-user Hebbian tag graph for agents, written without model calls, recalled by spreading activation into a bounded card, with a propose-only review queue.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A Hebbian preference graph with a
+zero-model write path</p>
+          <h1>FERNme</h1>
+          <p class="document-deck">A per-site, per-user Hebbian tag
+graph for agents, written without model calls, recalled by spreading
+activation into a bounded card, with a propose-only review queue.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mirkofr/FERNme">
+              <span>Source</span>
+              <strong>mirkofr/FERNme</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mirkofr/FERNme/commit/320a9edf9b10cd47045a9f3007fdec07a880b895" title="320a9edf9b10cd47045a9f3007fdec07a880b895">
+              <span>Analyzed revision</span>
+              <code>320a9edf…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mirkofr--FERNme" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mirkofr--FERNme</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>17,093
+lines of Python in the fernme package, 3,216 of them evaluation
+harnesses; a 2,342-line React graph UI</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>60
+commits on main by 1 contributor, 18 June – 1 October
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>479
+pytest functions in 68 files, 9,153 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>FERNme is a personalization memory for agents that act for many
+users. Each user on each site is a sparse graph of namespaced tags
+weighted 0 to 9, written by arithmetic rather than a model, recalled by
+spreading activation into an eight-tag card of roughly 40 tokens, and
+editable, exportable and deletable by the person it describes. It ships
+as a Python library, an MCP server packaged as Claude Code and Codex
+plugins, a REST API and a React graph UI.</p>
+<p>What is notable is how much governance sits around a small core.
+Writes are consent-gated and audited in an HMAC chain. Agent-inferred
+tags can be queued as <code>pending</code> suggestions rather than
+written, and a rejected suggestion stays rejected because its id is a
+hash of its content. A population prior gives a new user a cold-start
+card while keeping single-holder traits out.</p>
+<p>What is weak is the distance between the library and the shipped MCP
+surface. The local server registers
+<code>accept_canonicalization_suggestion</code> beside
+<code>propose_tags</code>, so the producing agent can approve itself.
+Its <code>remember</code> and <code>recall_card</code> tools default
+every timestamp to 0, which switches off read-time decay and
+latest-value-wins. Curation, which produces the <code>superseded</code>
+state, is off in every entry point.</p>
+<p>Four marks: <code>tombstone</code>, <code>trust_state</code>,
+<code>audit_log</code> and <code>negative_eval</code>. Section 9 names
+the three withheld and why.</p>
+<p>The project is a single-author research preview. Its
+<code>PAPER.md</code> and <code>paper/main.tex</code> are a preprint
+draft with no arXiv identifier, and the README states its benchmarks are
+synthetic or LLM-authored.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a tag such as <code>pref:oat_milk</code> or
+<code>!likes:dairy</code> (a leading <code>!</code> is a dislike), held
+as an <code>Edge</code> on one user's graph at one site
+(<code>fernme/core/graph.py:9-21</code>). The edge is not a sentence.
+Its text lives in the Cabinet, an append-only event table the
+<code>recall_events</code> tool searches. Belief is graded by weight and
+confidence and gated by a discrete <code>source</code>.</p>
+<p>A tag becomes a belief in one of two ways. <code>remember</code>
+writes it at once: the agent declares <code>stated</code> or
+<code>inferred</code> provenance, <code>observe</code> bumps the weight
+along a saturating curve, and the edge is <code>known</code>
+(<code>fernme/write/hebbian.py:16-50</code>). <code>propose_tags</code>
+instead stores a <code>pending</code> suggestion that changes nothing
+the card reads until <code>accept_suggestion</code> replays it through
+<code>observe</code> as <code>inferred</code>
+(<code>fernme/service.py:2246-2300</code>).</p>
+<p>A belief stops being one in five ways. Opt-in curation demotes a
+displaced value to <code>superseded</code> and the card skips it. A
+decay pass, or the read-time fade, drops it below the floor. The user
+pins it with <code>edit_memory</code> as an <code>override</code>.
+<code>forget_me</code> deletes the user. A rejected suggestion never
+becomes a belief and cannot be proposed again under the same
+payload.</p>
+<p>Two other sources reach the card without being written by this user.
+A brand-new user's empty graph is seeded at read time with
+<code>guessed</code> edges from the site's population prior. And the
+site-wide association graph, which other users' co-occurrences feed,
+shapes which of the user's own tags win the eight slots.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a tag reaches the card by a direct write or by an accepted proposal; rejection is sticky because the suggestion id is a hash of its payload, and only opt-in curation produces the superseded state the card skips</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a tag reaches the card by a direct write or by an accepted proposal; rejection is sticky because the suggestion id is a hash of its payload, and only opt-in curation produces the superseded state the card skips
+flowchart TD
+    R[&quot;remember (MCP)&quot;] --&gt; OBS[&quot;observe: sanitize, Hebbian bump&quot;]
+    P[&quot;propose_tags (MCP)&quot;] --&gt; PEND[&quot;suggestion: pending&lt;br/&gt;id = sha256 of payload&quot;]
+    PEND --&gt;|&quot;accept (MCP tool or app)&quot;| OBS
+    PEND --&gt;|reject| REJ[&quot;rejected&lt;br/&gt;row kept, id occupied&quot;]
+    REJ -.-&gt;|&quot;same payload re-proposed&quot;| NOOP[&quot;upsert: no-op&quot;]
+    PEND --&gt;|&quot;TTL 90 days or cap 50&quot;| GONE1[&quot;deleted&quot;]
+    OBS --&gt; KNOWN[&quot;edge: known&quot;]
+    PRIOR[&quot;population prior&lt;br/&gt;k at least 5, noised&quot;] --&gt;|&quot;user graph empty&quot;| GUESS[&quot;edge: guessed, read time only&quot;]
+    KNOWN --&gt;|&quot;curation=True only&quot;| SUP[&quot;edge: superseded&quot;]
+    KNOWN --&gt;|edit_memory| OVR[&quot;edge: override&quot;]
+    KNOWN --&gt;|&quot;decay below floor&quot;| GONE2[&quot;deleted&quot;]
+    KNOWN --&gt; CARD[&quot;card: top 8 tags&quot;]
+    GUESS --&gt;|&quot;ranked behind real&quot;| CARD
+    OVR --&gt; CARD
+    SUP -.-&gt;|skipped| CARD</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>FERNme is one Python package around <code>FernService</code>
+(<code>fernme/service.py</code>, 3,429 lines), which every entry point
+instantiates. The service holds a store, a <code>Config</code> dataclass
+and a per-install secret, and every load-modify-save method runs inside
+the store's transaction (<code>fernme/service.py:141-170</code>).</p>
+<p>Two stores implement one interface. <code>SQLiteStore</code> creates
+24 tables from one <code>SCHEMA</code> string
+(<code>fernme/store/sqlite_store.py:12-138</code>);
+<code>PostgresStore</code> mirrors it with advisory locks and a
+migration command (<code>fernme/store/postgres_store.py</code>). A
+<code>json_store.py</code> remains for state snapshots. Managed
+documents and photos are files in a vault beside the database, enabled
+by <code>fern.toml</code> or <code>FERNME_MANAGED_DOCUMENTS</code>.</p>
+<p>Three entry points read the same database. <code>fernme-mcp</code>
+builds a FastMCP server from tool groups <code>core</code>,
+<code>documents</code> and <code>photos</code>, over stdio by default or
+over HTTP with one token per remote agent
+(<code>fernme/api/mcp_server.py:738-792</code>,
+<code>fernme/api/remote.py</code>). <code>fernme/api/rest.py</code>
+serves the REST API and the React SPA under <code>/ui</code>. The
+library is the third, and the only one that can set
+<code>curation</code>, <code>entities</code> or
+<code>enrichment_enabled</code>.</p>
+<p>Nothing runs in the background. <code>FernService.decay</code> and
+<code>forget_everywhere</code> have no caller in the package outside the
+evaluation modules; the population prior is rebuilt by
+<code>POST /prior_refresh</code> or by an erasure.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running beyond a Python process: the default store
+is <code>~/.fernme/fernme.db</code>, created on first use, and no API
+key or model is needed to store anything. The shipped plugin config runs
+<code>uvx</code> against the <code>v0.4.2</code> tag. The SQLite file is
+readable with any client, the REST API exports a user as JSON, and
+<code>export_memory</code> writes the export to an <code>exports</code>
+folder next to the database. The README warns against cloud-synced
+folders. Postgres is the documented production store.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>remember</code>
+(<code>fernme/api/mcp_server.py:376-406</code>) calls
+<code>near_duplicate_tags</code> and <code>FernService.observe</code>
+(<code>fernme/service.py:521-583</code>). <code>observe</code> requires
+consent, runs <code>sanitize_tags</code>
+(<code>fernme/safety.py:26-43</code>), maps the event through the site
+catalog, optionally canonicalizes through a vocabulary, and calls the
+Hebbian <code>observe</code>
+(<code>fernme/write/hebbian.py:16-58</code>). It then runs
+<code>_curate</code> when enabled, saves the user graph and touched
+association pairs, appends the event, and appends an audit entry.</p>
+<p><strong>Proposal and review.</strong> <code>propose_tags</code>
+(<code>fernme/service.py:2335-2378</code>) canonicalizes and sanitizes,
+caps document-linked proposals at eight tags, and enqueues a
+<code>tag-proposal</code>. <code>list_suggestions</code> purges expired
+pending rows, regenerates alias-merge, entity-link and re-kind
+candidates from the graph (<code>fernme/service.py:2195-2232</code>,
+<code>fernme/curation_queue.py:167-229</code>), and returns
+<code>pending</code>. <code>accept_suggestion</code> dispatches on kind
+(<code>fernme/service.py:2246-2301</code>);
+<code>reject_suggestion</code> only flips the status
+(<code>fernme/service.py:2315-2321</code>).</p>
+<p><strong>Retrieval.</strong> <code>recall_card</code> calls
+<code>FernService.card</code> (<code>fernme/service.py:781-798</code>).
+It loads the user, applies the cold start when the graph is empty, loads
+the association neighbourhood with cross-user suppression
+(<code>fernme/store/sqlite_store.py:532-595</code>), and compiles
+through <code>compile_card</code>
+(<code>fernme/retrieve/card.py:152-202</code>) or, with entities on,
+<code>compile_entity_card</code>. Settings are attached last.</p>
+<p><strong>Correction and deletion.</strong> <code>edit_memory</code>
+writes an <code>override</code> edge
+(<code>fernme/service.py:1966-1982</code>). <code>forget_me</code> calls
+<code>delete</code> (<code>fernme/service.py:2035-2040</code>), which
+purges files, deletes the user's rows from 19 tables
+(<code>fernme/store/sqlite_store.py:409-459</code>) and recomputes the
+prior if one exists. Withdrawing consent does the same through
+<code>consent</code>.</p>
+<p><strong>Tests.</strong>
+<code>tests/test_canonicalization_queue.py</code>,
+<code>tests/test_curation_integration.py</code>,
+<code>tests/test_salience.py</code>,
+<code>tests/test_privacy_fixes.py</code>,
+<code>tests/test_audit.py</code>,
+<code>tests/test_mcp_agent_safety.py</code> and
+<code>tests/test_remote_mcp.py</code> carry the memory-specific
+behaviour.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>user_edges</code> is keyed <code>(site, user, attr)</code> and
+holds <code>weight</code>, <code>confidence</code>, <code>source</code>,
+<code>last_reinforced</code>, <code>hits</code>, <code>fast</code>,
+<code>salience</code> and <code>provenance</code>
+(<code>fernme/store/sqlite_store.py:20-24</code>). Reinforcement
+timestamps sit in <code>user_history</code>, capped by
+<code>history_cap</code>. Numeric side fields sit in
+<code>user_numeric</code>. <code>events</code> is the Cabinet: an
+autoincrement id, <code>site</code>, <code>user</code>, a
+caller-supplied <code>ts</code>, <code>type</code>, the JSON payload and
+the mapped attrs.</p>
+<p>The shared state is per site. <code>assoc_edges</code> holds
+tag-to-tag weights with a contributor count, and
+<code>assoc_edge_users</code> records which user touched which pair, so
+<code>load_assoc</code> can hide pairs fewer than
+<code>assoc_min_users</code> (2) people share unless the reader is one
+of them. <code>prior_node</code> and <code>prior_meta</code> hold the
+population prior. <code>identities</code> and <code>share_policy</code>
+link a person to local users across sites for the supernode.</p>
+<p>The opt-in entity layer adds <code>entities</code>,
+<code>entity_aliases</code>, <code>entity_fields</code>,
+<code>entity_relations</code> and <code>relation_facts</code>, all keyed
+on site and user except <code>entity_fields</code>, which is keyed on a
+UUID <code>entity_id</code>. <code>canonicalization_suggestions</code>
+holds the review queue
+(<code>fernme/store/sqlite_store.py:83-88</code>). <code>audit</code> is
+keyed <code>(site, user, seq)</code> with <code>prev_hash</code> and
+<code>hash</code>.</p>
+<p>There is no validity time. An event's <code>ts</code> is when the
+caller says it happened, nothing records when the row landed, and edges
+keep only <code>last_reinforced</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The card is the agent's read. <code>spread</code> seeds activation
+from the user's edges and the call's <code>context</code> tags, with an
+ACT-R base level over each tag's reinforcement history
+(<code>fernme/retrieve/activation.py:10-20</code>, <code>48</code>), and
+walks <code>hops</code> (2) steps over the association graph.
+<code>compile_card</code> scores each stored edge as a tuple: real
+before guessed, fresh before faded, then activation times prior idf plus
+a fast-lane and salience boost
+(<code>fernme/retrieve/card.py:161-171</code>). The top
+<code>top_n</code> (8) become a wire string such as
+<code>user:elena | pref:concise:7* …</code>, with <code>*</code> for
+known and <code>?</code> for guessed.</p>
+<p>Only stored edges are eligible, so another user's tag cannot appear
+through the association graph; it can only change which of this user's
+tags rank first. The exception is the cold start, which adds up to eight
+<code>guessed</code> edges from the released prior when the user has
+none (<code>fernme/service.py:786-789</code>,
+<code>fernme/prior/population.py:44-55</code>).</p>
+<p>Time enters through <code>faded_view</code>
+(<code>fernme/retrieve/card.py:119-149</code>). Read-time decay runs
+only when <code>now &gt; 0</code>, and single-value slots such as
+<code>city:</code> show only the newest confirmed value only when no
+value in the slot has <code>last_reinforced &lt;= 0</code>. The MCP
+<code>remember</code> and <code>recall_card</code> tools default
+<code>ts</code> and <code>now</code> to <code>0.0</code> and the shipped
+skill does not mention either, so through the default plugin both
+mechanisms stay off and two cities rank side by side.</p>
+<p><code>recall_events</code> is a SQL <code>LIKE</code> over the JSON
+payload, newest first, capped by <code>limit</code>
+(<code>fernme/store/sqlite_store.py:631-644</code>). There is no vector
+index.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is deterministic. The tag sanitizer drops anything over
+64 characters or matching <code>_INJECTION</code>, then strips
+characters outside <code>[a-z0-9_:!-]</code>
+(<code>fernme/safety.py:11-15</code>, <code>36-38</code>). The pattern
+includes the bare words <code>prompt</code> and <code>override</code>,
+so <code>topic:prompt-engineering</code> is silently discarded; the
+settings validator carries a narrower list for this reason, and its
+comment says so (<code>fernme/service.py:179-181</code>).</p>
+<p>Deduplication is advisory. <code>near_duplicate_tags</code> returns
+existing spellings that differ only by separators or a plural, and the
+review queue offers alias merges; the new spelling is stored either
+way.</p>
+<p>Conflict handling is opt-in. With <code>curation=True</code>,
+<code>_curate</code> runs <code>curation.review</code> per new tag:
+polarity, a single-value slot or a declared opposition is a conflict; a
+higher-authority source supersedes, a lower one raises a question, and
+equals resolve by time (<code>fernme/curation.py:105-197</code>,
+<code>fernme/service.py:741-762</code>). The displaced edge is set to
+the floor weight and <code>superseded</code>, and a
+<code>supersede</code> event is appended. No entry point enables it.</p>
+<p><code>observe</code> does not respect an <code>override</code>. It
+keeps the <code>source</code> but bumps the weight
+(<code>fernme/write/hebbian.py:34-38</code>), so a memory the user
+pinned to 0 with <code>edit_memory</code> rises again on the next
+<code>remember</code> of that tag. <code>record_outcome</code> and
+<code>decay</code> both skip overrides
+(<code>fernme/service.py:2877</code>,
+<code>fernme/write/hebbian.py:98</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes are synchronous, in one transaction, with no model call, and a
+memory is on the next card as soon as <code>observe</code> returns.
+Nothing rewrites the store in the background. The read cost is bounded:
+eight tags plus pinned settings, measured by the project at about 40
+tokens. The card is a tool result, so where it sits in the prompt is the
+agent's choice.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The core group registers 20 tools
+(<code>fernme/api/mcp_server.py:374-735</code>): <code>remember</code>,
+settings, consent, <code>recall_card</code>, <code>recall_events</code>,
+<code>edit_memory</code>, <code>forget_me</code>, the suggestion list,
+accept and reject, three <code>propose_*</code> tools,
+<code>record_outcome</code>, <code>why</code>,
+<code>export_memory</code> and two importers. The server instructions
+tell the agent to call <code>recall_card</code> at the start of a task
+and to treat the card as data
+(<code>fernme/api/mcp_server.py:765-777</code>). There is no hook;
+injection is the agent's call.</p>
+<p>Profile choice is the agent's unless the operator pins it.
+<code>_enforce_profile</code> refuses any other <code>site</code> or
+<code>user</code> when <code>FERNME_SITE</code> and
+<code>FERNME_USER</code> are set
+(<code>fernme/api/mcp_server.py:300-337</code>); the shipped plugin sets
+neither. A remote agent's token is bound to one profile, and
+<code>REMOTE_BLOCKED_TOOLS</code> removes the importers and
+<code>accept_canonicalization_suggestion</code> from its server
+(<code>fernme/api/mcp_server.py:340-347</code>,
+<code>790-792</code>).</p>
+<p>Consent takes two calls in local mode: the agent shows a question and
+calls back with <code>confirm=true</code>.
+<code>FERNME_CONSENT_MODE=inbox</code>, the default for remote agents,
+leaves approval to the owner's review queue.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance</strong> is a two-value field set from the
+caller's <code>source</code> argument, and the curation rule that an
+inferred value cannot displace a stated one depends on the agent
+reporting honestly. <code>why</code> reconstructs observation and
+outcome counts from the Cabinet.</p>
+<p><strong>Privacy of the prior</strong> is engineered with care.
+<code>_released_prior</code> drops traits fewer than five users hold,
+adds bounded-mean Laplace noise seeded from the install secret, and
+removes sensitive namespaces (<code>fernme/service.py:800-827</code>).
+Erasure recomputes the prior so a removed user's unique traits leave it,
+which <code>tests/test_privacy_fixes.py</code> asserts per deletion
+route.</p>
+<p><strong>Prompt injection</strong> is handled by the tag regex and a
+separate filter on settings. Free text in the Cabinet is stored as data
+and returned by <code>recall_events</code> unfiltered.</p>
+<p><strong>Concurrency</strong> is handled by store transactions with
+per-site and per-user locks, and Postgres advisory locks keep audit
+sequence numbers gap-free.</p>
+<p><strong>Withheld marks.</strong></p>
+<ul>
+<li><strong><code>scope_enforced</code> — withheld.</strong> Every row
+carries <code>site</code> and <code>user</code> and every SQL read
+filters on both. But the card, the primary agent read, widens when the
+user's own graph is empty: <code>card</code> seeds <code>guessed</code>
+edges from the site-wide prior (<code>fernme/service.py:786-789</code>),
+and <code>tests/test_privacy_fixes.py:27-32</code> asserts a newcomer's
+card contains <code>topic:hiking</code>, a tag only other users stored.
+The REST <code>/graph-data</code> route returns every consented user's
+edges when <code>user</code> is omitted
+(<code>fernme/service.py:3031-3036</code>,
+<code>fernme/api/rest.py:118-125</code>). The k-anonymity and noise are
+real privacy controls; they are not a scope predicate.</li>
+<li><strong><code>human_review</code> — withheld.</strong> A
+<code>pending</code> suggestion waits for accept, but the local MCP
+server registers <code>accept_canonicalization_suggestion</code> in the
+same core group as <code>propose_tags</code>
+(<code>fernme/api/mcp_server.py:659-664</code>). The skill's line that
+<em>"Accepting and rejecting are human decisions"</em>
+(<code>packaging/claude/plugins/fernme-memory/skills/fernme-memory/SKILL.md:27</code>)
+is prose to the model. The remote server is the passing shape — the verb
+is excluded and the token is bound — but the shipped plugin is local
+stdio.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> No validity
+interval exists on edges, events or relations.</li>
+</ul>
+<p><strong>Audit gaps.</strong> <code>forget_me</code> writes no audit
+entry, while the library's <code>forget_everywhere</code> does.
+<code>verify</code> cannot detect a deleted tail. The project's own
+docstring names the stronger design, per-user asymmetric keys
+(<code>fernme/audit.py:1-7</code>).</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 479 pytest functions in 68 files. CI runs
+<code>pytest -q</code> on Python 3.10 to 3.12
+(<code>.github/workflows/ci.yml</code>). The README reports 338 passed
+and 61 skipped without the optional extras; Postgres, FERNmark and media
+suites skip without their dependencies. I ran nothing.</p>
+<p>The memory-relevant cases can fail.
+<code>test_superseded_identity_is_not_locked_in_by_salience</code>
+asserts the replacement on the card and the displaced value off it from
+one read (<code>tests/test_salience.py:211-235</code>).
+<code>test_single_user_trait_never_reaches_a_newcomer</code> asserts a
+common trait in and a single-holder trait out
+(<code>tests/test_privacy_fixes.py:27-33</code>).
+<code>test_tenant_isolation</code>
+(<code>tests/test_service.py:31-37</code>) checks a user with no prior
+and no memories, so its negative passes on an empty card.
+<code>test_rejected_suggestion_never_reappears</code> holds weights
+fixed, which is why the order-flip gap in section 11 is untested.</p>
+<p>The evaluation package (<code>fernme/eval/</code>) is a synthetic
+harness. The unified harness writes
+<code>reports/eval_harness.json</code> with per-seed rows for eight
+regimes and five methods. I recomputed three README rows from that file
+— static recall@5 0.917 ± 0.118 for FERNme and 0.583 ± 0.118 for
+recency, abrupt drift 0.833 ± 0.186 — and they match as population
+standard deviations over six seeds. The README says where baselines
+win.</p>
+<p>The README's table on LLM-authored profiles has no committed input or
+result file I could find. <code>PAPER.md</code> describes its diary
+dataset as both natural and about one fictional person.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make a suggestion's id a hash of its content.</strong> A
+rejection then occupies the id, and every regenerator and proposer
+collides with it without a second lookup. Order any pair canonically
+before hashing, or the key moves with the data.</li>
+<li><strong>Give agent inference its own verb.</strong>
+<code>propose_tags</code> beside <code>remember</code> lets the agent
+say "I think" without writing truth, and the accept path replays through
+the normal write.</li>
+<li><strong>Release a population prior only through k-anonymity and
+seeded noise</strong>, and recompute it on erasure so a deleted user's
+unique traits leave with them.</li>
+<li><strong>Keep the audit chain content-free and outside the
+erasure.</strong> Keyed references prove an edit happened without
+retaining the name.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Defaulting time to zero on the agent's tools.</strong> Every
+mechanism that orders by recency silently degrades to frequency when the
+transport supplies no clock.</li>
+<li><strong>Excluding the approve verb for remote agents only.</strong>
+The local agent is a producer too.</li>
+<li><strong>Matching instruction words inside data tokens.</strong> A
+regex that rejects <code>prompt</code> anywhere in a tag drops
+legitimate memories with no signal.</li>
+<li><strong>A user override the main write path ignores.</strong> If
+decay and outcomes respect a pin, observation must too.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>FERNme fits a host application that personalizes for many users with
+short, typed preference tags and wants a model-free write path and
+visible consent. It is a poor fit for an individual's coding memory:
+facts are tags rather than sentences, the free text is only
+substring-searchable, and the mechanisms that make it more than a
+frequency counter — curation, decay, latest-value-wins — need a library
+host that sets the config and supplies timestamps. Expect to own that
+wiring. It is one author's research preview from 2026.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does a weight flip in a live store resurface a rejected alias merge,
+as the payload ordering implies? Running two reinforcements after a
+rejection would settle it.</li>
+<li>Is <code>curation=True</code> meant to become the MCP default? The
+release notes call it additive and off by default.</li>
+<li>What do the README's LLM-authored profiles and their answer keys
+look like, and where are they kept?</li>
+<li>Should <code>forget_me</code> route through
+<code>forget_everywhere</code> so the erasure is recorded?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>fernme/store/sqlite_store.py</code>,
+<code>fernme/store/postgres_store.py</code>,
+<code>fernme/core/graph.py</code>.</li>
+<li><strong>Write path:</strong> <code>fernme/service.py</code>
+(<code>observe</code>, <code>_curate</code>, <code>edit</code>,
+<code>record_outcome</code>), <code>fernme/write/hebbian.py</code>,
+<code>fernme/safety.py</code>, <code>fernme/curation.py</code>.</li>
+<li><strong>Review queue:</strong>
+<code>fernme/curation_queue.py</code>, <code>fernme/service.py</code>
+(<code>list_suggestions</code>, <code>accept_suggestion</code>,
+<code>reject_suggestion</code>, <code>propose_tags</code>).</li>
+<li><strong>Retrieval:</strong> <code>fernme/retrieve/card.py</code>,
+<code>fernme/retrieve/entity_card.py</code>,
+<code>fernme/retrieve/activation.py</code>,
+<code>fernme/prior/population.py</code>.</li>
+<li><strong>Audit:</strong> <code>fernme/audit.py</code>,
+<code>fernme/install_key.py</code>.</li>
+<li><strong>Integration:</strong> <code>fernme/api/mcp_server.py</code>,
+<code>fernme/api/remote.py</code>, <code>fernme/api/rest.py</code>,
+<code>packaging/claude/plugins/fernme-memory/</code>.</li>
+<li><strong>Tests and evals:</strong>
+<code>tests/test_canonicalization_queue.py</code>,
+<code>tests/test_salience.py</code>,
+<code>tests/test_privacy_fixes.py</code>,
+<code>tests/test_audit.py</code>,
+<code>tests/test_mcp_agent_safety.py</code>,
+<code>tests/test_remote_mcp.py</code>,
+<code>fernme/eval/harness.py</code>,
+<code>reports/eval_harness.json</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn -E 'curation\s*=\s*True' --include='*.py' .</code> —
+two test files; no entry point.</li>
+<li><code>grep -rn -E '\.decay\(|forget_everywhere\(' --include='*.py' fernme | grep -v '/eval/' | grep -v 'def '</code>
+— no match.</li>
+<li><code>grep -rn -iE 'valid_from|valid_to|valid_at|invalid_at' --include='*.py' .</code>
+— one match, a test named for a valid token.</li>
+<li><code>grep -rn -E 'DELETE FROM audit|UPDATE audit' --include='*.py' fernme</code>
+— no match; the tests that tamper do so directly.</li>
+<li><code>grep -rn -i -E 'embedding|pgvector|cosine' fernme --include='*.py' | grep -v '/eval/'</code>
+— one docstring about embedding the library in a host.</li>
+<li><code>grep -n -E '\bts\b|\bnow\b|timestamp' packaging/claude/plugins/fernme-memory/skills/fernme-memory/SKILL.md</code>
+— no match.</li>
+<li><code>find . -path ./.git -prune -o \( -name 'hooks.json' -o -name 'hooks' \) -print</code>
+— no match.</li>
+<li><code>git ls-files | grep -i -E 'profile|persona'</code> —
+<code>scripts/validate_real_profile.py</code> and its test only.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— <code>COMPARISON.md</code>, <code>PAPER.md</code>,
+<code>paper/main.tex</code>, citing other work;
+<code>CITATION.cff</code> names the software.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/mirkofr/FERNme/commit/320a9edf9b10cd47045a9f3007fdec07a880b895"><code class="commit-id" title="320a9edf9b10cd47045a9f3007fdec07a880b895">320a9edf…</code></a>
+— first reading, at the head of <code>main</code> (0.4.2), a commit
+dated 1 October 2026. Four marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>audit_log</code>,
+<code>negative_eval</code>. Screened before reading: one auto-run
+surface (<code>.claude-plugin/marketplace.json</code>, which points at
+the packaged plugins), no build-time execution point, four dependency
+files inside the cooldown — every file in a depth-1 clone dates to the
+tip — and three unpinned surfaces; <code>AGENTS.md</code> and the plugin
+skills were treated as data. Read with <code>grep</code> and
+<code>sed</code>, and the committed harness JSON parsed with the
+standard library; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

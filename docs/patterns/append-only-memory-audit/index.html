@@ -764,6 +764,20 @@ appends are not coupled: the claim lands first, with no lock, so a
 failure after it leaves an unrecorded claim — the outcome the same
 crate's library path avoids by committing its verdict and audit segments
 in one atomic replace, as its own comment says.</p>
+<p><strong><a href="../../systems/mnemo/">Mnemo</a> has the table and no
+writer.</strong> Migration <code>mem_003</code> creates
+<code>memory_audit</code> with <code>memory_id</code>,
+<code>prev_state_hash</code>, <code>new_state_hash</code>,
+<code>operation</code>, <code>commit_sha</code> and
+<code>occurred_at</code>, and a test asserts its columns and index. No
+statement under <code>src/</code> inserts into it, while the README's
+comparison table claims an audit trail with state hashes and the
+<code>knowledge-audit</code> skill tells the agent to treat a memory
+with no audit row as an out-of-band write — a query that, at this
+commit, returns every memory in the store. The mutations themselves
+leave <code>[AUDIT]</code> lines in the loguru process log and closed
+rows with <code>superseded_by</code> in the table, which is a version
+chain, not an event record.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

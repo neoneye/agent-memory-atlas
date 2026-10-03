@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 718 reports.</strong></p>
+<p><strong>This page covers all 722 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -29880,6 +29880,167 @@ and filter derivation written out and tested, or a quarantine that keeps
 rejected candidates recoverable and counted.</li>
 <li>Do not copy when: a fact must survive a newer wrong assertion, or a
 token's library must bound everything it reads.</li>
+</ul>
+<h3 id="mnemo"><a href="../systems/mnemo/"><code>mnemo</code></a></h3>
+<ul>
+<li>Best idea: <strong>supersede in one statement that only a live row
+can satisfy.</strong> <code>MemoryDB.update</code> closes the
+predecessor with
+<code>UPDATE … SET valid_to, superseded_by WHERE id = ? AND valid_to IS NULL RETURNING *</code>,
+inserts the successor, and rolls back on every exit including a zero-row
+match; <code>test_db_update_atomicity.py</code> fires a competing writer
+mid-call and asserts one live row and an intact chain.</li>
+<li>Biggest risk: <strong>delete hides the text from search and hands it
+back elsewhere.</strong> <code>delete</code> sets <code>valid_to</code>
+and keeps the content; <code>history_for_entity</code> returns closed
+rows by design and <code>export_jsonl</code> selects every row, so a
+memory the user asked to forget is still returned by two agent
+tools.</li>
+<li>Most reusable component: the embedding-identity guard in
+<code>src/mnemo/db.py:330-416</code> — stamp model and dimension into
+<code>store_meta</code>, refuse a mismatch at open, and drop only the
+vectors when a reindex is requested.</li>
+<li>Second risk: <strong>capture can discard a correction as a
+duplicate.</strong> The probe is FTS over the first ten words scored by
+word-set overlap, and at 0.92 <code>capture</code> returns the old id
+without writing, so a one-word change to a long sentence is reported as
+<code>deduplicated</code>.</li>
+<li>Maturity impression: Apache-2.0 with MIT portions, 9,373 lines of
+Python under <code>src/</code>, 1,178 commits on main by 9 contributor
+identities, most of them automation, since 12 February 2026. One mark,
+<code>negative_eval</code>, on scoped-recall and current-view exclusions
+with positive controls; 979 pytest functions run in CI.
+<code>memory_audit</code>, the extracted <code>supersedes</code> list
+and the supersession settings have no consumer, and no benchmark result
+is committed.</li>
+<li>Study when: you want a single-file SQLite MCP memory with hybrid
+recall, or a worked example of transaction-safe supersession and the
+tests that pin it.</li>
+<li>Do not copy when: forgetting must be provable, edits must be
+attributable, or agents sharing a token must not read each other's
+rows.</li>
+</ul>
+<h3 id="cortexdb"><a
+href="../systems/cortexdb/"><code>cortexdb</code></a></h3>
+<ul>
+<li>Best idea: <strong>supersede without deleting, and make every read
+lane honour it.</strong> <code>supersedes</code> stamps
+<code>superseded_by</code> on the named rows; the lexical, semantic,
+graph and PPR lanes all skip a stamped row, export and
+<code>memory_get</code> still return it with the replacement named, and
+a supersede aimed at a missing id fails rather than reporting success.
+One committed test holds it with a positive control.</li>
+<li>Biggest risk: <strong>the auto-recall hook reads a bucket the save
+instructions do not write.</strong> The UserPromptSubmit hook calls
+<code>Recall</code> with no user, session, scope or namespace, which
+resolves to <code>memory:global:default</code>; the
+<code>/remember</code> command tells the agent to save with
+<code>scope=user</code> and <code>namespace=assistant</code>. A memory
+saved as instructed is never injected, and nothing reports it.</li>
+<li>Most reusable component: <code>pkg/authz</code> with
+<code>pkg/rpcserver/ownership.go</code> — scoped keys with a two-value
+clearance, a request check that refuses an unset or mismatched scope
+field instead of narrowing it, an outright refusal of the one RPC whose
+arguments are opaque JSON, and a single <code>NOT_FOUND</code> answer
+for another user's id so ids are not an oracle.</li>
+<li>Second risk: <strong>scope is a predicate on two of four search
+lanes.</strong> The lexical and semantic arms put
+<code>session_id = ?</code> in SQL; the graph and PPR lanes query every
+memory node and drop other buckets after loading each row, after the
+candidate cap. On the local MCP server <code>memory_get</code>,
+<code>memory_list_all</code> and <code>graph_list_all</code> read every
+bucket, and consolidation saves summaries built from unscoped knowledge
+and graph facts into a user bucket.</li>
+<li>Maturity impression: MIT, 149,757 lines of Go outside tests and
+2,028 test functions, 592 commits on main from one contributor between 7
+August 2025 and 3 October 2026. Three marks — <code>bitemporal</code> on
+the knowledge graph, <code>audit_log</code> on a change log pruned to
+seven days by default, <code>negative_eval</code> on one
+superseded-memory test. Committed benchmark baselines measure the
+knowledge path, not memory.</li>
+<li>Study when: you want a single-file Go store that combines memory,
+RAG and a temporal graph, or you are building a shared memory server and
+want a scope model that refuses what it cannot check.</li>
+<li>Do not copy when: you need per-user isolation on the default plugin
+install, or a memory status richer than current, superseded and
+expired.</li>
+</ul>
+<h3 id="synapse-layer"><a
+href="../systems/synapse-layer/"><code>synapse-layer</code></a></h3>
+<ul>
+<li>Best idea: <strong>put the scope predicate inside the SQL on every
+branch, including the empty-query one.</strong>
+<code>SqliteBackend.recall</code> ANDs <code>agent_id = ?</code> onto
+the keyword match and appends it to the most-recent fallback, and
+<code>SynapseMemory</code> always supplies its own non-empty id, so no
+read of the file in the SDK runs unscoped.</li>
+<li>Biggest risk: <strong>the scope is not in the key.</strong>
+<code>memory_id</code> is the SHA-256 of the redacted text and the write
+is <code>INSERT OR REPLACE</code>, so another agent storing the same
+sentence rewrites <code>agent_id</code> and the row leaves the first
+agent's recall.</li>
+<li>Most reusable component: the redaction-first write path — sanitize
+before the hash, the row and the log line — and the call-site assertion
+in <code>ForgeBackend</code> that no plaintext <code>content</code> key
+reaches the request body.</li>
+<li>Second risk: two copies of the store. Adapters for AutoGen and
+CrewAI clear, delete and update the in-process <code>_memories</code>
+list while recall reads SQLite, so a deleted memory returns on the next
+query; <code>SynapseMemory</code> itself has no delete.</li>
+<li>Maturity impression: Apache-2.0, 8,131 lines of Python, 486 pytest
+functions run in CI on three Python versions, 182 commits between 2
+April and 18 September 2026. Open core: the hosted Forge engine and the
+TypeScript SDK's source are not in the tree.</li>
+<li>Study when: you want a small scoped SQLite recall and a redaction
+pipeline to read in an afternoon, or a worked example of declared
+mechanisms — self-healing, routing, plugin strategies — that tests
+assert by type and that never run.</li>
+<li>Do not copy when: you need recall ordered by relevance, deletion
+that reaches the store, or the semantic recall and MCP surface the
+README describes, which live in the closed service. Two marks:
+<code>scope_enforced</code>, <code>negative_eval</code>.</li>
+</ul>
+<h3 id="fernme"><a
+href="../systems/fernme/"><code>fernme</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the suggestion id a hash of the
+suggestion.</strong> <code>suggestion_id</code> is the SHA-256 of site,
+user, kind and the canonical-JSON payload, and
+<code>upsert_suggestion</code> leaves any non-pending row untouched, so
+a rejected alias merge or tag proposal occupies its own id and every
+regenerator and <code>propose_*</code> call collides with it. TTL and
+cap trimming touch only pending rows.</li>
+<li>Biggest risk: <strong>the approve verb sits on the producer's tool
+surface.</strong> The local stdio server registers
+<code>accept_canonicalization_suggestion</code> in the same core group
+as <code>propose_tags</code>; only remote HTTP clients have it removed.
+The shipped skill asks the model to leave acceptance to the person,
+which is prose.</li>
+<li>Most reusable component: <code>fernme/service.py</code>
+<code>_released_prior</code> with <code>prior_refresh</code> — a
+population prior released only above k=5 holders, with bounded-mean
+Laplace noise seeded from the install secret, sensitive namespaces
+removed, and recomputed on every erasure route.</li>
+<li>Second risk: <strong>time defaults to zero on the agent's
+path.</strong> <code>remember</code> and <code>recall_card</code>
+default <code>ts</code> and <code>now</code> to 0.0, so read-time decay
+never runs and single-value slots keep every city; <code>observe</code>
+also raises a weight the user pinned with <code>edit_memory</code>,
+which <code>decay</code> and <code>record_outcome</code> both
+respect.</li>
+<li>Maturity impression: Apache-2.0, 17,093 lines of Python, 60 commits
+on main from 1 contributor between 18 June and 1 October 2026, and 479
+pytest functions. Four marks — <code>tombstone</code>,
+<code>trust_state</code>, <code>audit_log</code>,
+<code>negative_eval</code> — with the <code>superseded</code> state and
+its negative test behind an opt-in config; the README's synthetic
+harness rows recompute from the committed per-seed JSON.</li>
+<li>Study when: you are building multi-user personalization with a
+model-free write path, a consent gate and a privacy-preserving cold
+start.</li>
+<li>Do not copy when: you need sentence-level facts, time-aware recall
+through an MCP client, or a review queue the proposing agent cannot
+clear.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The open Python SDK of a hosted
+memory service: a local SQLite store with an agent-key filter,
+keyword-scored trust, and the hosted engine closed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Synapse
+Layer — Agent Memory Atlas">
+    <meta property="og:description" content="The open Python SDK of a
+hosted memory service: a local SQLite store with an agent-key filter,
+keyword-scored trust, and the hosted engine closed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Synapse
+Layer — Agent Memory Atlas">
+    <meta name="twitter:description" content="The open Python SDK of a
+hosted memory service: a local SQLite store with an agent-key filter,
+keyword-scored trust, and the hosted engine closed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Synapse Layer — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Synapse Layer",
+      "description": "The open Python SDK of a hosted memory service: a local SQLite store with an agent-key filter, keyword-scored trust, and the hosted engine closed.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An open SDK with a keyword-matched SQLite
+store beside a closed hosted engine</p>
+          <h1>Synapse Layer</h1>
+          <p class="document-deck">The open Python SDK of a hosted
+memory service: a local SQLite store with an agent-key filter,
+keyword-scored trust, and the hosted engine closed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/SynapseLayer/synapse-layer">
+              <span>Source</span>
+              <strong>SynapseLayer/synapse-layer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/SynapseLayer/synapse-layer/commit/196733cacd866168a042374364abf9124dbe70bd" title="196733cacd866168a042374364abf9124dbe70bd">
+              <span>Analyzed revision</span>
+              <code>196733ca…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/SynapseLayer--synapse-layer" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>SynapseLayer--synapse-layer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,131
+lines of Python in two packages; core.py and the four backend files are
+1,644 lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>182
+commits on main by three contributor identities, 2 April – 18 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>486
+pytest functions in 5,495 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Synapse Layer is the open-source Python SDK of a hosted memory
+service. Its own memory path is <code>SynapseMemory</code>: content is
+regex-redacted, labelled with an intent by keyword counts, scored, and
+saved to an in-process list or, opt-in, a local SQLite table that recall
+reads with a word-by-word <code>LIKE</code> filtered by
+<code>agent_id</code>.</p>
+<p>What is notable is that the agent key sits inside the SQL on both
+recall branches, and a committed test proves it excludes another agent's
+matching row. The pipeline also redacts before anything is hashed,
+stored or logged.</p>
+<p>What is weak is the distance between the advertised mechanisms and
+the code. Self-healing, the recall router and the plugin strategies are
+declared and do not take effect. Recall orders by a trust score that is
+the square of a keyword-and-self-report blend. The primary key omits the
+agent, so another agent can take a row over. The pgvector store, Trust
+Quotient and MCP tools the README describes live in the closed Forge
+service.</p>
+<p><strong>The repository is open core.</strong>
+<code>docs/open-core.mdx</code> lists the Python SDK and "MCP Server
+&amp; Auto-Save Bridge" as Apache-2.0 and the PRO strategies, Forge
+dashboard and Trust Quotient weights as proprietary. The link it gives
+for the MCP server, <code>tree/main/mcp-autosave</code>, names a
+directory absent at this commit. The two governance files under
+<code>docs/governance/</code> (in Portuguese) set the rule that a public
+file explains a benefit and a private one keeps the mechanism. This
+report covers what the tree holds: the SDK, its local backends, the
+client for the hosted API, and the tests. The TypeScript SDK directory
+holds a README, a <code>package.json</code> and a note that its source
+was never committed
+(<code>sdk-typescript/src/README-SOURCE-GAP.md</code>).</p>
+<p>Two marks: <code>scope_enforced</code> on the SQLite read path and
+<code>negative_eval</code> on the test that pins it. Section 9 names the
+five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one redacted string. It becomes a stored belief when
+<code>SynapseMemory.store</code> runs; nothing extracts, merges or waits
+for review. It stops being one only when something deletes the row, and
+<code>SynapseMemory</code> has no method that does.</p>
+<p><strong>Redaction defines identity.</strong>
+<code>SynapseSanitizer.sanitize_content</code> replaces emails, card
+numbers, SSNs, CPFs, phone numbers, API keys, bearer tokens, IP
+addresses and AWS keys with <code>[TYPE_REDACTED]</code>, and the memory
+id is the first 32 hex characters of the SHA-256 of the result
+(<code>synapse_memory/core.py:222-225</code>;
+<code>synapse_memory/sanitizer.py:202-221</code>). Two sentences that
+differ only in a redacted value become one id, and re-storing the same
+sentence refreshes the row instead of adding one.</p>
+<p><strong>Classification is keyword counting, and it sets the
+score.</strong> <code>SynapseValidator.validate_intent</code> counts
+substring hits against six keyword lists, blends
+<code>0.4 × min(hits/3, 1)</code> with <code>0.6 ×</code> the caller's
+own <code>confidence</code>, and labels the row <code>validated</code>
+at 0.85 or above and <code>inference</code> below
+(<code>synapse_memory/engine/validator.py:274-313</code>). Any of seven
+trigger words — <code>emergency</code>, <code>critical</code>,
+<code>breach</code>, <code>attack</code>, <code>exploit</code>,
+<code>vulnerability</code>, <code>ransomware</code> — short-circuits to
+<code>critical_override</code> with confidence 1.0
+(<code>:247-271</code>). <code>_compute_tq</code> multiplies the
+confidence by the validation score, which is the same number, so
+<code>trust_quotient</code> is the blend squared
+(<code>core.py:563-572</code>; <code>validator.py:351</code>). A plain
+sentence stored at the default 0.9 scores 0.2916; one containing
+"emergency" scores 1.0.</p>
+<p><strong>The label withholds nothing.</strong> The warning text says a
+low-confidence memory is <em>"stored as 'inference' — may be
+reclassified"</em> (<code>validator.py:309-312</code>). No reader
+filters on <code>source_type</code> and no writer reclassifies a stored
+row. <code>ARCHITECTURE.md:43-46</code> draws a gate where a score below
+0.85 asks the user and can drop the memory; <code>store</code> saves it
+either way.</p>
+<p><strong>Self-healing cannot fire on the persistent path.</strong>
+During recall, adjacent results with different intents and embedding
+cosine at or above 0.85 have the second relabelled
+(<code>core.py:351-380</code>; <code>validator.py:365-439</code>).
+SQLite rows carry no embedding column, so the similarity is 0.0 and the
+branch never runs
+(<code>synapse_memory/backends/sqlite_backend.py:37-54,206-216</code>).
+On the in-memory path the vectors are SHA-256 expansions plus Gaussian
+noise, not semantic ones (<code>core.py:532-561</code>). The validator's
+second healing path, <code>_resolve_ambiguous</code>, is guarded by
+<code>raw_confidence &gt; 0.0 and best_cat == UNKNOWN</code>, and
+<code>raw_confidence</code> is 0.0 whenever the category is
+<code>UNKNOWN</code> (<code>validator.py:284-290,324-339</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how text becomes a Synapse Layer memory in the open SDK, what orders recall, and the scope boundary a second agent's write can move</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how text becomes a Synapse Layer memory in the open SDK, what orders recall, and the scope boundary a second agent&#39;s write can move
+flowchart TD
+    IN[&quot;store(content, confidence)&quot;] --&gt; SAN[&quot;regex redaction:&lt;br/&gt;value becomes TYPE_REDACTED&quot;]
+    SAN --&gt; VAL{&quot;any of seven&lt;br/&gt;trigger words?&quot;}
+    VAL -- &quot;yes&quot; --&gt; CRIT[&quot;critical_override,&lt;br/&gt;confidence 1.0&quot;]
+    VAL -- &quot;no&quot; --&gt; BLEND[&quot;0.4 x keyword hits/3&lt;br/&gt;+ 0.6 x caller confidence&quot;]
+    BLEND --&gt; GATE{&quot;blend at or&lt;br/&gt;above 0.85?&quot;}
+    GATE -- &quot;yes&quot; --&gt; V[&quot;source_type validated&quot;]
+    GATE -- &quot;no&quot; --&gt; INF[&quot;source_type inference:&lt;br/&gt;stored anyway, never read&quot;]
+    CRIT --&gt; TQ[&quot;trust_quotient =&lt;br/&gt;blend squared&quot;]
+    V --&gt; TQ
+    INF --&gt; TQ
+    TQ --&gt; ID[&quot;memory_id = sha256 of&lt;br/&gt;redacted text, first 32 hex&quot;]
+    ID --&gt; UP[&quot;INSERT OR REPLACE:&lt;br/&gt;agent_id overwritten&lt;br/&gt;by the latest writer&quot;]
+    Q[&quot;recall(query) as agent A&quot;] --&gt; LIKE[&quot;one LIKE per word, OR-joined,&lt;br/&gt;AND agent_id = A&quot;]
+    UP --&gt; LIKE
+    LIKE --&gt; ORD[&quot;ORDER BY trust_quotient,&lt;br/&gt;then timestamp&quot;]
+    ORD --&gt; HEAL{&quot;adjacent intents differ,&lt;br/&gt;cosine at least 0.85?&quot;}
+    HEAL -- &quot;SQLite rows carry&lt;br/&gt;no embedding: never&quot; --&gt; OUT[&quot;results&quot;]
+    B[&quot;agent B stores the&lt;br/&gt;same redacted text&quot;] --&gt; UP</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two importable packages: <code>synapse_memory</code>, the
+implementation, and <code>synapse_layer</code>, which re-exports it
+under the PyPI name (<code>synapse_layer/__init__.py:14-24</code>).
+Dependencies are <code>cryptography</code>, <code>pydantic</code> and
+<code>httpx</code>, with framework adapters behind extras
+(<code>pyproject.toml:38-60</code>).</p>
+<p><code>SynapseMemory</code> takes a backend implementing a five-method
+protocol — <code>save</code>, <code>recall</code>, <code>delete</code>,
+<code>clear</code>, <code>count</code>
+(<code>synapse_memory/backends/interface.py:16-73</code>). Three
+ship:</p>
+<ul>
+<li><strong><code>MemoryBackend</code></strong>, the default when no
+backend is passed: a Python list, gone at process exit
+(<code>core.py:141-145</code>;
+<code>backends/memory_backend.py</code>).</li>
+<li><strong><code>SqliteBackend</code></strong>: one
+<code>memories</code> table at <code>.synapse/memories.db</code> under
+the working directory, WAL mode, a thread-local connection, indexes on
+<code>agent_id</code>, <code>timestamp</code> and
+<code>trust_quotient</code> (<code>sqlite_backend.py:35-83</code>).</li>
+<li><strong><code>ForgeBackend</code></strong>: encrypts content
+client-side with AES-256-GCM and posts ciphertext to the hosted
+<code>/api/v1/capture</code>; recall decrypts what the server returns
+(<code>synapse_memory/backends/forge_backend.py:357-386,474-580</code>).</li>
+</ul>
+<p>Beside them sits <code>Synapse</code> in <code>client.py</code>, a
+synchronous HTTP client that sends plaintext to the hosted
+<code>/api/v1/memory/commit</code> and <code>/api/v1/sdk/recall</code>,
+where the server encrypts at rest
+(<code>synapse_memory/client.py:115-217</code>). This is the README's
+quickstart path.</p>
+<p><code>SynapseMemory</code> also keeps a second list,
+<code>_memories</code>, appended on every store for adapters that read
+it directly (<code>core.py:147-149,245-247</code>). The two copies
+diverge as soon as the backend is SQLite: recall reads the file, and
+every adapter delete edits the list.</p>
+<p>Nothing runs in the background. <code>AutoSaveEngine</code> describes
+an insert with a null embedding and a job queue for a later backfill,
+against a <code>DatabaseProtocol</code>
+(<code>synapse_memory/autosave/engine.py:54-62,158-277</code>); the
+tree's only implementations of that protocol are test fakes.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install synapse-layer</code>; the local path needs nothing
+else running and no API key. Persistence requires passing
+<code>SqliteBackend()</code> explicitly, and the default store forgets
+everything at exit. The SQLite file is plain and inspectable with any
+client, though content is the redacted text, so the original value of
+anything the regexes matched is gone. The README's own quickstart, the
+<code>Synapse</code> client and <code>ForgeBackend</code> all need an
+<code>sk_connect_</code> token from the hosted Forge.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>SynapseMemory.store</code>
+(<code>core.py:161-290</code>): sanitize (<code>:191-197</code>),
+validate (<code>:200-203</code>), hash-derived 384-dimension
+pseudo-embedding (<code>:208</code>), optional differential-privacy
+noise on it (<code>:213-219</code>), id from the content hash
+(<code>:222-225</code>), <code>_compute_tq</code> (<code>:229</code>),
+then <code>self._backend.save(record)</code> and the legacy append
+(<code>:245-247</code>). It returns a <code>StoreResult</code> described
+as an <em>"Immutable audit payload"</em>; nothing persists it
+(<code>:41-52</code>).</p>
+<p><strong>SQLite upsert.</strong> <code>SqliteBackend.save</code> runs
+<code>INSERT OR REPLACE</code> on <code>memory_id</code>, rewriting
+<code>agent_id</code>, <code>trust_quotient</code>,
+<code>source_type</code>, metadata and timestamp
+(<code>sqlite_backend.py:94-125</code>). The <code>embedding</code>
+field of the record is dropped: the schema has no column for it
+(<code>:37-54</code>).</p>
+<p><strong>Recall.</strong> <code>SynapseMemory.recall</code>
+(<code>core.py:292-394</code>). For any backend other than
+<code>MemoryBackend</code> it calls
+<code>self._backend.recall(query, agent_id=self.agent_id, limit=top_k)</code>
+and assigns every row relevance 1.0 (<code>:322-328</code>). For the
+default backend it ignores the backend and scores the legacy list by
+word-hit ratio times <code>trust_quotient</code>
+(<code>:330-345</code>).</p>
+<p><strong>SQLite query.</strong> <code>SqliteBackend.recall</code>
+splits the query on whitespace, takes the first ten words, and builds
+one <code>content_lower LIKE '%word%'</code> per word. The comment above
+the loop says <em>"each word must appear"</em>; the join is
+<code>OR</code> (<code>sqlite_backend.py:153-160</code>). The agent
+predicate is ANDed on (<code>:161-163</code>) and the order is
+<code>trust_quotient DESC, timestamp DESC</code>
+(<code>:165-170</code>). An empty query returns the agent's
+highest-scored rows (<code>:141-151</code>).</p>
+<p><strong>Delete.</strong> <code>SqliteBackend.delete</code> and
+<code>clear</code> exist (<code>:176-193</code>). No method of
+<code>SynapseMemory</code> calls either (Recorded searches).</p>
+<p><strong>Handover.</strong> <code>create_handover</code> packages the
+legacy list into an HMAC-signed token held in a per-instance dict
+(<code>core.py:398-449</code>;
+<code>synapse_memory/engine/handover.py:195-207</code>).
+<code>accept_handover</code> imports into <code>_memories</code> only
+(<code>core.py:466-489</code>), so on the SQLite path the imported
+memories never reach recall.</p>
+<p><strong>Hosted client.</strong> <code>Synapse.store</code>,
+<code>recall</code> and <code>list_memories</code>
+(<code>client.py:115-253</code>); <code>ForgeBackend.store</code> and
+<code>recall</code> (<code>forge_backend.py:316-580</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One table (<code>sqlite_backend.py:37-54</code>):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory_id</code></td>
+<td>Primary key; SHA-256 of the redacted content, first 32 hex</td>
+</tr>
+<tr>
+<td><code>agent_id</code></td>
+<td>NOT NULL; the constructing caller's string</td>
+</tr>
+<tr>
+<td><code>content</code>, <code>content_lower</code></td>
+<td>Redacted text and its lowercase copy for <code>LIKE</code></td>
+</tr>
+<tr>
+<td><code>trust_quotient</code>, <code>confidence</code></td>
+<td>The blend squared, and the blend</td>
+</tr>
+<tr>
+<td><code>intent</code>, <code>is_critical</code></td>
+<td>Keyword category, and whether it is <code>critical</code></td>
+</tr>
+<tr>
+<td><code>source_type</code></td>
+<td><code>validated</code>, <code>inference</code>,
+<code>critical_override</code> or <code>handover</code></td>
+</tr>
+<tr>
+<td><code>metadata_json</code>, <code>timestamp</code></td>
+<td>Caller metadata; epoch seconds of the last write</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scope is one column and not part of the identity.</strong>
+The schema indexes <code>agent_id</code> but keys on content alone,
+which is the inverse of the layout in <a
+href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
+key</a>. There is no user, project or tenant column. The hosted
+service's <code>scope: tenant</code> option appears only in the
+manifests (<code>smithery.yaml:37-41,74-78</code>).</p>
+<p><strong>One time field.</strong> <code>timestamp</code> is
+overwritten by each upsert, so a re-stored memory looks new. There is no
+validity interval, no version and no supersession link.</p>
+<p><strong>Episodic and semantic are not separated.</strong> Chat
+messages written by the LangChain and Semantic Kernel adapters, facts
+from <code>store</code>, and function return values from the
+<code>remember</code> decorator all land in the same table with an
+intent label.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval on the persistent path is lexical substring matching with
+no relevance score. Every row containing any query word as a substring
+is a candidate, since nothing filters stop words or one-letter words,
+and candidates are ordered by <code>trust_quotient</code>
+(<code>sqlite_backend.py:139-170</code>; <code>core.py:328</code>). A
+query such as "what does the user prefer" matches every row containing
+"the", and the order then follows keyword density and the writer's
+self-reported confidence, not the question.</p>
+<p><strong>A trigger word wins every tie.</strong> A memory whose text
+contains "attack" or "emergency" scores 1.0 and tops every result list
+it appears in (<code>validator.py:247-271</code>;
+<code>core.py:563-572</code>).</p>
+<p><strong>The recall router is not on any path.</strong>
+<code>RecallRouter</code>, <code>detect_recall_mode</code> and
+<code>compute_hybrid_score</code> implement temporal, priority, semantic
+and hybrid routing by keyword
+(<code>synapse_memory/router.py:81-127</code>). Outside tests they
+appear only in <code>router.py</code> and the package exports.</p>
+<p><strong>Context injection is the <code>remember</code>
+decorator.</strong> It takes the first string argument as the query,
+recalls three memories, and appends them after
+<code>"\n\n[Recalled context]:\n"</code> to that argument
+(<code>synapse_memory/wrapper.py:43-54,117-127</code>). There is no
+token budget beyond <code>top_k</code>, and a recall failure is
+swallowed unless <code>verbose</code> is set
+(<code>:106-115</code>).</p>
+<p><strong>LangChain history is a fixed query.</strong>
+<code>SynapseChatMessageHistory.messages</code> recalls with the literal
+query <code>"conversation history messages"</code>
+(<code>synapse_memory/integrations/langchain_memory.py:139-145</code>),
+so on SQLite it returns only stored messages containing one of those
+three substrings.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit or decorator-driven, synchronous, and
+append-or-replace.</p>
+<ul>
+<li><strong><code>store</code></strong> runs the full pipeline and
+upserts. The caller's <code>confidence</code> carries 60 percent of the
+blend, so an agent that always passes 1.0 lifts every memory it writes
+(<code>validator.py:293-297</code>).</li>
+<li><strong><code>@remember</code></strong> stores every non-empty
+return value of the wrapped function by default
+(<code>auto_store=True</code>), so model output becomes memory with no
+review (<code>wrapper.py:43-54,132-140</code>).</li>
+<li><strong>Adapters</strong> write messages, records or documents
+through <code>store</code>
+(<code>synapse_memory/integrations/*.py</code>).</li>
+</ul>
+<p><strong>Redaction is the only input filter.</strong> The sanitizer's
+patterns run before the hash, the row and the log line. Nothing screens
+for instructions aimed at a future reader, and a memory's trust comes
+from its own wording.</p>
+<p><strong>Delete does not reach SQLite from any adapter.</strong>
+<code>SynapseAutoGenMemory.clear</code> empties <code>_memories</code>
+(<code>integrations/autogen_memory.py:227-230</code>);
+<code>SynapseCrewStorage.delete</code> and <code>update</code> rewrite
+entries of the same list
+(<code>integrations/crewai_memory.py:200-250</code>). With
+<code>SqliteBackend</code>, recall reads the file, so a cleared or
+deleted memory returns on the next query. The adapter tests run on the
+default backend, where the two copies agree.</p>
+<p><strong>Auto-save is a library without a store.</strong>
+<code>PolicyEngine</code> blocks secrets and PII, requires importance 3
+in OSS mode, and accepts only five project names hard-coded in
+<code>synapse_memory/autosave/types.py:26-28</code> unless the caller
+passes <code>allowed_projects</code>
+(<code>synapse_memory/autosave/policy.py:78,113,134</code>).
+<code>AutoSaveEngine</code> resolves an importance scorer, conflict
+resolver and dedup strategy from arguments, the PRO plugin or defaults,
+and <code>save</code> calls none of them
+(<code>engine.py:129-154,158-277</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes block the caller for regex passes, keyword counting, a
+384-dimension hash expansion and one SQLite commit; no model is called.
+A stored memory is retrievable on the next query. No background pass
+touches the store. Injection is three memories by default, appended to
+the user's string argument, so it lands at the end of the prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The open SDK is a Python library; the agent sees memory only through
+whatever the application or adapter exposes. Adapters cover LangChain
+chat history, LlamaIndex retriever and chat store, CrewAI storage,
+AutoGen memory and Semantic Kernel chat history and memory store
+(<code>synapse_memory/integrations/</code>).</p>
+<p><strong>The MCP surface in the manifests is the hosted one.</strong>
+<code>server.json</code> and <code>smithery.yaml</code> declare
+<code>https://forge.synapselayer.org/api/mcp</code> with thirteen tools,
+including <code>recall</code> and <code>search</code> whose
+<code>scope</code> argument accepts <code>tenant</code>, described as
+searching across all agents (<code>smithery.yaml:74-78,288</code>).
+Whether the server checks that argument against the token cannot be read
+here.</p>
+<p><strong>The in-tree MCP example does not run as written.</strong>
+<code>examples/mcp-secure-memory/server.py</code> defines synchronous
+tools that call <code>memory.store</code> and <code>memory.recall</code>
+without <code>await</code>, then read <code>result.memory_id</code>,
+<code>r.similarity</code> and <code>r.self_healed</code> from the
+returned coroutine and from a <code>RecallResult</code> that has neither
+field (<code>server.py:76-85,101-113</code>;
+<code>core.py:55-64</code>). It also uses the default in-memory backend
+(<code>server.py:40-45</code>). This follows from reading; it was not
+run.</p>
+<p><strong>Two classes share one public name.</strong>
+<code>synapse_memory.SynapseClient</code> is <code>SynapseMemory</code>
+(<code>synapse_memory/__init__.py:16</code>), while
+<code>client.py</code> documents
+<code>SynapseClient(token="sk_connect_...")</code> and aliases it to the
+HTTP client (<code>client.py:9-11,274</code>). The documented call
+reaches the local class, which takes <code>agent_id</code>.</p>
+<p><strong><code>ForgeBackend</code> does not compose with
+<code>SynapseMemory</code>.</strong> Its <code>recall</code> is a
+coroutine and <code>SynapseMemory.recall</code> iterates the return
+value synchronously; its <code>save</code> calls
+<code>asyncio.run</code> from inside the already-running
+<code>store</code> (<code>forge_backend.py:474,616-621</code>;
+<code>core.py:323-328,245</code>). No test constructs the pair (Recorded
+searches).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The scope boundary can be moved by a write.</strong> Agent B
+storing a sentence whose redacted form equals one agent A stored
+replaces A's row and its <code>agent_id</code>
+(<code>sqlite_backend.py:108-122</code>; <code>core.py:222-225</code>).
+A's recall then filters it out. The read predicate holds; the identity
+it guards does not include the scope.</p>
+<p><strong>Provenance is thin.</strong> A row records the agent string,
+<code>source_type</code> and caller metadata. There is no session, no
+source message and no history of earlier values, and an upsert
+overwrites the timestamp.</p>
+<p><strong>Redaction is the strongest safety property, and it is lossy
+by design.</strong> Matched values never reach the row, the hash or the
+logs, which also means a memory whose point was the value cannot hold
+it.</p>
+<p><strong>The client-side-encryption backend leaks the
+vocabulary.</strong> <code>ForgeBackend</code> sends ciphertext with
+<code>zkMode: True</code> and an <code>assert</code> that no
+<code>content</code> key is present, beside a <code>searchIndex</code>
+holding every distinct lowercase word of the plaintext after a
+four-pattern redaction, and an embedding of the plaintext
+(<code>forge_backend.py:357-384,431-446</code>). Its <code>delete</code>
+and <code>clear</code> log a warning and return <code>False</code> and
+<code>0</code> (<code>:634-642</code>).</p>
+<p><strong>Handover only works within one object.</strong> The ledger
+and the signing key are per <code>NeuralHandover</code> instance, and
+each <code>SynapseMemory</code> builds its own
+(<code>core.py:133-136</code>;
+<code>handover.py:195-207,711-716</code>). The cross-agent test assigns
+<code>agent_b._handover = agent_a._handover</code> under the comment
+<em>"Need to use the same handover engine"</em>
+(<code>tests/test_core_integration.py:236-239</code>).</p>
+<p><strong>Uncertainty is representable and unused.</strong>
+<code>inference</code> exists as a stored value and nothing reads
+it.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — awarded. <code>agent_id</code> is a
+NOT NULL column and an SQL predicate on both recall branches, and
+<code>SynapseMemory</code> always supplies its own non-empty id
+(<code>sqlite_backend.py:145-147,161-163</code>;
+<code>core.py:116-117,325</code>). Every other read in the SDK goes to
+the instance's in-process list, which holds only that instance's writes.
+The write-side takeover above is outside what the mark measures.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — no record of a rejected value.
+<code>SynapseMemory</code> cannot delete, and a deleted SQLite row can
+be re-stored identically.</li>
+<li><code>trust_state</code> — <code>source_type</code> holds
+<code>validated</code> and <code>inference</code>, and no read filters
+on it; <code>trust_quotient</code> is a float used for ordering.</li>
+<li><code>bitemporal</code> — one <code>timestamp</code>, overwritten on
+upsert.</li>
+<li><code>audit_log</code> — <code>StoreResult</code> is returned to the
+caller and not stored; the handover ledger is an in-process dict.
+<code>ARCHITECTURE.md:54,323</code> describes an immutable audit log
+that is not in this tree.</li>
+<li><code>human_review</code> — no state waits for anyone; the
+ARCHITECTURE gate that asks the user is not in <code>store</code>.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin. CI runs <code>pytest</code> on
+Python 3.10, 3.11 and 3.12 with every adapter extra installed
+(<code>.github/workflows/ci.yml:14-31</code>).</p>
+<p><strong>The negative case.</strong>
+<code>test_recall_with_agent_filter</code> writes <code>m1</code> for
+<code>a1</code> and <code>m2</code> for <code>a2</code>, both containing
+"dark", recalls <code>"dark"</code> for <code>a1</code>, and asserts one
+result whose <code>agent_id</code> is <code>a1</code>
+(<code>tests/test_backends.py:152-159</code>). A recall that ignored the
+predicate would return two rows; one that returned nothing fails the
+second assertion.</p>
+<p><strong>SQLite persistence and the backend switch.</strong>
+<code>test_persistence</code> reopens the file and recalls
+(<code>:109-119</code>).
+<code>test_recall_uses_backend_not_legacy</code> clears
+<code>_memories</code> and still recalls through SQLite
+(<code>:194-208</code>), which is the same fact that makes adapter
+deletes miss the file.</p>
+<p><strong>Tests that assert the wiring, not the effect.</strong>
+<code>TestValidatorSelfHealingUnknown</code> says it covers the healing
+branch, feeds text containing <code>legal</code> and
+<code>security</code> — both words in the critical keyword list — and
+accepts any of six categories
+(<code>tests/test_coverage_boost.py:299-326</code>). The plugin tests
+assert which class <code>AutoSaveEngine</code> holds, never that
+<code>save</code> calls it
+(<code>tests/test_plugin_architecture.py:352-356</code>).</p>
+<p><strong>Clear after a positive control.</strong>
+<code>test_clear_removes_all</code> recalls a stored memory, clears, and
+asserts the recall is empty
+(<code>tests/integrations/test_autogen_memory.py:310-321</code>). After
+a clear the store holds nothing, so an empty result also passes; it runs
+on the default backend.</p>
+<p><strong>Not covered.</strong> No test stores identical content under
+two agents, deletes through an adapter over SQLite, or composes
+<code>SynapseMemory</code> with <code>ForgeBackend</code>. No
+retrieval-quality evaluation exists. <code>docs/benchmark.md</code>
+links an external comparison page and commits no data.
+<code>CITATION.cff</code> cites the software; there is no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the scope predicate inside the query, on every
+branch.</strong> The no-query branch is where a filter is most often
+forgotten; here it carries the same clause.</li>
+<li><strong>Redact before you hash, store or log.</strong> Doing it
+first means no identifier, index or log line ever sees the raw
+value.</li>
+<li><strong>Assert the payload invariant at the call site.</strong> An
+explicit check that the plaintext field never reaches the request body
+turns a privacy promise into a crash.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Keying a row on content when scope is a column.</strong>
+Upsert on a content hash lets any writer reassign ownership; put the
+scope in the key.</li>
+<li><strong>Ordering lexical hits by a confidence the writer
+supplies.</strong> A blend that is 60 percent self-report and ranks
+ahead of the match makes recall a measure of how sure the author
+sounded.</li>
+<li><strong>Two copies of the store.</strong> An in-process list kept
+for adapters beside a persistent backend means deletes and edits land in
+one and reads come from the other.</li>
+<li><strong>Strategies resolved and never invoked.</strong> Injection
+points tested by <code>isinstance</code> read as extensibility and do
+nothing.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a reader who wants a few hundred lines to read for a
+redaction-first write path and a scoped SQLite query, or who already
+pays for the hosted Forge and wants the Python client. As a local memory
+it is a keyword store with a ranking that does not depend on the
+question, no delete on the main class, and adapters whose delete misses
+the file. Anyone choosing it for the pgvector recall, Trust Quotient or
+MCP tools in the README is choosing the hosted service, and none of that
+can be inspected from this repository.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the hosted MCP <code>scope: tenant</code> argument widen beyond
+the token's own tenant, and is it checked server-side?</li>
+<li>What does the Forge server do with the plaintext
+<code>searchIndex</code> and embedding that <code>ForgeBackend</code>
+sends beside the ciphertext?</li>
+<li>Is the <code>mcp-autosave</code> bridge that
+<code>docs/open-core.mdx</code> links published anywhere, and does it
+implement <code>DatabaseProtocol</code>?</li>
+<li>Has the TypeScript SDK's source been recovered, as its gap note
+plans?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Core and model:</strong>
+<code>synapse_memory/core.py</code>,
+<code>synapse_memory/engine/validator.py</code>,
+<code>synapse_memory/sanitizer.py</code>,
+<code>synapse_memory/privacy.py</code>.</li>
+<li><strong>Storage:</strong>
+<code>synapse_memory/backends/interface.py</code>,
+<code>synapse_memory/backends/sqlite_backend.py</code>,
+<code>synapse_memory/backends/memory_backend.py</code>,
+<code>synapse_memory/backends/forge_backend.py</code>.</li>
+<li><strong>Hosted client:</strong>
+<code>synapse_memory/client.py</code>, <code>server.json</code>,
+<code>smithery.yaml</code>.</li>
+<li><strong>Retrieval helpers:</strong>
+<code>synapse_memory/router.py</code>,
+<code>synapse_memory/wrapper.py</code>.</li>
+<li><strong>Auto-save and plugins:</strong>
+<code>synapse_memory/autosave/engine.py</code>,
+<code>synapse_memory/autosave/policy.py</code>,
+<code>synapse_memory/autosave/types.py</code>,
+<code>synapse_memory/plugins/</code>.</li>
+<li><strong>Handover:</strong>
+<code>synapse_memory/engine/handover.py</code>.</li>
+<li><strong>Adapters:</strong>
+<code>synapse_memory/integrations/*.py</code>,
+<code>examples/mcp-secure-memory/server.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_backends.py</code>,
+<code>tests/test_core_integration.py</code>,
+<code>tests/test_coverage_boost.py</code>,
+<code>tests/test_plugin_architecture.py</code>,
+<code>tests/integrations/test_autogen_memory.py</code>.</li>
+<li><strong>Open-core boundary:</strong>
+<code>docs/open-core.mdx</code>, <code>docs/governance/</code>,
+<code>sdk-typescript/src/README-SOURCE-GAP.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the checkout root at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'def (delete|forget|clear|update)' synapse_memory/core.py</code>
+— no match.</li>
+<li><code>rg -n '_backend\.(delete|clear|count)|backend\.(delete|clear)' --type py .</code>
+— matches only in <code>tests/test_backends.py</code>.</li>
+<li><code>rg -n "source_type|is_valid\b|'inference'|\"inference\"" --type py -g '!tests/**' .</code>
+— writers in <code>core.py</code>, <code>handover.py</code> and
+<code>sqlite_backend.py</code>, and a print in
+<code>examples/memory_pipeline.py</code>; no read that filters.</li>
+<li><code>rg -n 'embedding' synapse_memory/backends/sqlite_backend.py</code>
+— no match.</li>
+<li><code>rg -n 'RecallRouter|detect_recall_mode|resolve_recall_mode|compute_hybrid_score' --type py -g '!tests/**'</code>
+— <code>router.py</code> and the <code>__init__.py</code> export
+only.</li>
+<li><code>rg -n 'importance_scorer\.|conflict_resolver\.|dedup_strategy\.|\.resolve\(|\.is_duplicate\(|\.score\(' --type py . | grep -v '^./tests'</code>
+— no match.</li>
+<li><code>rg -n 'def insert_memory|def enqueue_embedding' .</code> — the
+protocol in <code>autosave/engine.py</code> and fakes in
+<code>tests/test_autosave.py</code> and
+<code>tests/test_plugin_architecture.py</code>.</li>
+<li><code>rg -n 'SynapseMemory\(' tests/test_forge_backend.py</code> —
+no match.</li>
+<li><code>rg -n -i 'tombstone|audit_log|append.only|valid_from|valid_to|invalid_at|pending_review|approve' --type py .</code>
+— only <code>reason="approved"</code> strings and test names.</li>
+<li><code>ls sdk-typescript/src</code> —
+<code>README-SOURCE-GAP.md</code> only.</li>
+<li><code>grep -rniE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match; <code>CITATION.cff</code> is a software citation.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/SynapseLayer/synapse-layer/commit/196733cacd866168a042374364abf9124dbe70bd"><code class="commit-id" title="196733cacd866168a042374364abf9124dbe70bd">196733ca…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 18
+September 2026. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>. Screened before reading: two auto-run
+surfaces (<code>server.json</code> and <code>smithery.yaml</code>, MCP
+manifests naming the remote Forge URL with no local command), one
+build-time execution point (<code>tests/conftest.py</code>), no
+dependency file inside the cooldown although the depth-1 clone dates
+every file to the tip, and two unpinned surfaces
+(<code>pyproject.toml</code> with no lockfile, the example's
+<code>requirements.txt</code>). No AGENT file was flagged;
+<code>skill.md</code>, <code>skills/synapse-layer/SKILL.md</code> and
+<code>llms.txt</code> were read as data. Read with <code>rg</code> and
+<code>sed</code>; nothing installed, built or run. The hosted Forge
+engine is not in the tree and is not covered.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
