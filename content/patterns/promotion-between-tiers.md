@@ -183,6 +183,8 @@ rather than moved to a lower tier.
 
 [Roampal Core](../../systems/roampal-core/) computes its tier rule from ratings the consuming model gives. Summaries enter `working` at 0.5 and move to `history` at 0.7 with two uses, and to `patterns` at 0.9 with three uses and five successes counted since promotion; `unknown`, meaning the memory was shown and not used, subtracts 0.05, so retrieval noise drifts a pattern toward demotion. A working row not promoted within 24 hours is deleted, and demotion keeps the original `created_at`, so a demoted pattern past 30 days is deleted at the next history cleanup. The companion paper's headline accuracy was measured with promotion and decay disabled, so its own benchmark does not measure the rule.
 
+[archeus](../../systems/archeus/) promotes a lesson from one project's graph into the user-level CLAUDE.md by recurrence: a reviewed lesson needs two projects and a pending one needs three, with the comment that *"waiting for a manual approval that never comes is why this feature sat empty"* (`claude_sessions/conventions.py:20-26`). The rule is computable and the threshold is provenance-aware, which is the shape this pattern asks for. It also shows the cost: the promoted tier is read by every session on the account, so a lesson nobody approved reaches the widest scope the system has, while the per-project tier it came from still withholds it.
+
 ### Separate inputs, a ceiling, a recorded decision — argued
 
 No system cited here has all three on a storage-tier move; each has part.

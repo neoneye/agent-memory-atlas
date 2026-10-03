@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-713, generated from each report's frontmatter —
+715, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-713, generated from each report's frontmatter —
+715, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-713, generated from each report's frontmatter —
+715, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 713, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 715, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-713, generated from each report's frontmatter —
+715, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 713 systems by the seven mechanisms
+filters all 715 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -2520,6 +2520,55 @@ game is written down by the thing that forwards it — and 191 sessions of
 measured failure analysis</td>
 <td>The archive detects a changed file by its size, so a same-length
 edit to the agent's notes never reaches the record</td>
+</tr>
+<tr>
+<td><a href="../systems/archeus/"><code>archeus</code></a></td>
+<td>An entity (name, type, one-sentence summary, repo, module, source
+file) extracted per module by a headless claude -p call, plus relations;
+a lesson (title, summary, kind, confidence, status) distilled from a
+session transcript; a heuristic session episode in a separate
+worklog</td>
+<td>One JSON graph per project at .archeus/memory/graph.json, mirrored
+to the account's encoded project folder, written atomically;
+worklog.json beside it; hits.log and dirty.log sidecars; a
+twelve-version snapshot ring</td>
+<td>Four rankers (presence-only BM25 over name and summary, path
+segments, dependency rank, lesson confidence) fused by reciprocal rank,
+then one or two hops over relations and module import edges, cut to a
+token budget that fits rather than truncates</td>
+<td>Background or on demand: per-module extraction re-run when a file's
+mtime and size, then hash, change; one lesson call per finished
+transcript; heuristic episode capture at Stop; nothing written by the
+session agent</td>
+<td>A fact a re-read module no longer emits is marked valid false with
+invalidated_at and kept up to 30 days, at most 40 such facts; entities
+beyond a 500-entity cap are evicted by rank plus hits; unpinned lessons
+decay after 30 scanned sessions unused; a person can evict a lesson</td>
+<td>Physical: one graph per project directory, found by cwd; no scope
+predicate on any read. Lessons are mined from every account's sessions
+for the project, and cross-project conventions read every project's
+graph by design</td>
+<td>A micro-digest in CLAUDE.md and every other harness instructions
+file, path-scoped .claude/rules files, an opt-in UserPromptSubmit hook,
+archeus recall over Bash, a Claude Code plugin with recall, status and
+review commands, a TUI and a local token-guarded GUI</td>
+<td>A detached worker per project under an O_EXCL scan lock: capped
+extraction cycles, lesson mining, a token-free forget pass that expires
+invalidated facts and flags facts unconfirmed for 90 days</td>
+<td>Lessons are pending until a person approves them or the extractor's
+confidence clears 0.8; code facts carry valid and a stale flag but no
+review state; a pending lesson recurring in three projects is promoted
+to the global CLAUDE.md</td>
+<td>Provenance advances only for modules actually extracted, so a failed
+or capped cycle never marks stale work done; a contentless prompt
+retrieves nothing; reinforcement credits only what was injected and a
+preview never logs; snapshot before any shrinking save; every headless
+call is marked so archeus never learns from itself</td>
+<td>Module-edge expansion injects invalidated facts; the extractor can
+approve its own lessons; unreviewed lessons reach every session on the
+machine through cross-project promotion; a GUI approval races the
+background worker on a whole-file write; the reinject-after-compact
+preset runs a hook that ignores that event</td>
 </tr>
 <tr>
 <td><a href="../systems/arcon/"><code>arcon</code></a></td>
@@ -14993,6 +15042,52 @@ a memory</td>
 one line later, so a post addressed to one body is returned to every
 caller; one profile schema has the origin constraint and the other does
 not, as documented</td>
+</tr>
+<tr>
+<td><a href="../systems/marvis/"><code>marvis</code></a></td>
+<td>A learning row: title, category from a closed set, description,
+prevention, severity, tags, module, project, frequency and
+last_occurrence. Handoff markdown files and indexed project documents
+sit beside it</td>
+<td>One SQLite database with FTS5 tables and a sqlite-vec table for the
+document mirror; project metadata directories on disk hold handoffs,
+context and decision files</td>
+<td>check_learnings is a LIKE match over five columns that retries with
+up to eight extracted terms when the exact phrase finds nothing; search
+fuses six lanes (semantic, KG FTS, documents FTS, tasks, inbox,
+learnings FTS) with weighted RRF; session_brief returns the five
+learnings with the latest last_occurrence</td>
+<td>Explicit: create_learning over MCP or HTTP by an operator-role
+caller, embedded into the document mirror after the row commits. A brain
+cycle proposes, and never writes, learnings</td>
+<td>update_learning edits in place; delete_learning hard-deletes the row
+and prunes the FTS, vector and salience mirrors. Supersede columns exist
+but no reachable path sets invalid_at</td>
+<td>workspace_id on every learning and a predicate on every learnings
+use-case read; the hybrid search KG lane over the graph_nodes mirror of
+learnings carries no workspace predicate and is post-filtered by project
+grant, not at all for the local account. A NULL project means visible in
+every project of the workspace</td>
+<td>In-process MCP server (stdio or hosted HTTP) with a 91-tool surface;
+the guidance text tells agents to call session_brief at cold start and
+check_learnings before risky work. Hooks installed by marvis hooks are
+PreToolUse governance gates, not memory injection</td>
+<td>A brain cycle digests events into findings and pending
+memory-operation proposals; a nightly dream-cycle pass and a warehouse
+consolidation are written, the first with no caller and the second
+default off</td>
+<td>None on learnings: a learning is live on insert and a status column
+added in migration 049 is read by nothing. Brain proposals carry an
+approval state, which no learnings read consults</td>
+<td>One use-case layer shared by HTTP and MCP, so the workspace
+predicate is written once per read; delete prunes every derived index in
+one writer transaction; the temporal read filter is binary exclusion,
+applied on check, list, get, search and the cold-start bundle alike</td>
+<td>The supersede pipeline cannot fire: the write-time decision runs
+before the learning is embedded, the dream cycle has no caller, the
+resolver is a no-op, and approval yields guidance with no apply path.
+The approve verb is on the agent's tool surface. Learning mutations
+write no audit row</td>
 </tr>
 <tr>
 <td><a
@@ -31236,7 +31331,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>64 of 713:</em> <a
+<p><em>64 of 715:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -31304,7 +31399,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>183 of 713:</em> <a
+<p><em>184 of 715:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -31319,6 +31414,7 @@ href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/alphaonedev-ai-memory/"><code>alphaonedev-ai-memory</code></a>,
 <a href="../systems/anda-db/"><code>anda-db</code></a>, <a
 href="../systems/animus/"><code>animus</code></a>, <a
+href="../systems/archeus/"><code>archeus</code></a>, <a
 href="../systems/arcon/"><code>arcon</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -31495,7 +31591,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>121 of 713:</em> <a
+<p><em>121 of 715:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -31624,7 +31720,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>319 of 713:</em> <a
+<p><em>319 of 715:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -31959,7 +32055,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>243 of 713:</em> <a
+<p><em>243 of 715:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -32212,7 +32308,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>94 of 713:</em> <a
+<p><em>94 of 715:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
@@ -32310,7 +32406,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>425 of 713:</em> <a
+<p><em>426 of 715:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -32347,7 +32443,8 @@ href="../systems/anatid/"><code>anatid</code></a>, <a
 href="../systems/anda-brain/"><code>anda-brain</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
 href="../systems/anolisa-agent-memory/"><code>anolisa-agent-memory</code></a>,
-<a href="../systems/arcon/"><code>arcon</code></a>, <a
+<a href="../systems/archeus/"><code>archeus</code></a>, <a
+href="../systems/arcon/"><code>arcon</code></a>, <a
 href="../systems/arcrift/"><code>arcrift</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
 href="../systems/argo/"><code>argo</code></a>, <a
@@ -32769,8 +32866,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-425 repositories of
-713 assert that particular material must
+426 repositories of
+715 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -32843,7 +32940,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 713 is the real figure for the second kind, and
+of 715 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

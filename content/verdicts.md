@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 713 reports.**
+**This page covers all 715 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6451,3 +6451,23 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 5,070 lines of TypeScript outside tests, 92 commits on main from 3 contributors (one a bot) since 16 April 2026. Three marks: `bitemporal` on the observation interval, `scope_enforced` on the project predicate of search and recall, `negative_eval` on a two-project scoped search and a supersede-then-search case. 255 Vitest cases run in CI against mock embeddings; several wrap their assertions in `if (result.success)` without asserting success. No benchmark has been run, and the whitepaper says so.
 - Study when: you want a single-file local MCP memory with hybrid recall and a minimal as-of fact graph, and want to see a vacuous test identified and rebuilt by its own authors.
 - Do not copy when: rejection must stick, decisions must be correctable, or asOf must answer what the store believed rather than what was valid — the interval's closing time is not recorded and `valid_from` has no interactive writer.
+
+### [`archeus`](../systems/archeus/)
+
+- Best idea: **advance provenance only for the work that completed.** A module's file hashes are recorded after its extraction succeeds, a failed call keeps the old facts and the old hashes, and a capped cycle leaves the skipped modules stale for the next one. The comments name the defect each rule replaced: a failed call used to wipe a module's memory and mark it current.
+- Biggest risk: **the review has two doors that need no person.** `merge_lessons` approves any lesson whose model-supplied confidence reaches `memory_lessons_autoapprove`, 0.8 by default, and `conventions._candidates` promotes a still-pending lesson into the user-level `~/.claude/CLAUDE.md` once it recurs in three projects — read by every session on the account.
+- Most reusable component: `claude_sessions/recall.py` — a 630-line, dependency-free retriever with a stopword floor, presence-only BM25, reciprocal-rank fusion of four rankers, a budget that fits rather than truncates, and reinforcement credited only to what was rendered.
+- Second risk: **validity is checked in the scorer and not in the expander.** `expand_relations` takes the first three entities of each import-linked module with no `valid` test, so a neighbour holding fewer than three live facts contributes invalidated ones; the one test for invalidated facts has no positive control.
+- Maturity impression: MIT, 43,385 lines of Python of which the memory core is about 3,800, 306 commits on main by two people and a bot since 11 June 2026, 2,059 pytest functions run in CI on six interpreter and OS combinations. Two marks, `trust_state` on the lesson status and `negative_eval` on a pending-versus-approved retrieve test.
+- Study when: you are building background extraction over a codebase that must survive failures, rate limits and caps without marking unfinished work done, or want a small deterministic recall gate for a per-prompt hook.
+- Do not copy when: lessons must never act before a person approves them, memory must be scoped by user or tenant, or corrections must be auditable; a lesson evict deletes the row and leaves no record.
+
+### [`marvis`](../systems/marvis/)
+
+- Best idea: **exclude a retracted memory, never down-weight it, on every read shape at once.** `_temporal_filter` returns one SQL fragment that check, list, get, the hybrid-search learning lane and the `session_brief` cold-start bundle all append, and its docstring gives the reason: a down-weighted tombstone is still visible to the model and can still be cited. Because HTTP and MCP call the same use cases, the workspace predicate beside it is written once per read too.
+- Biggest risk: **the supersede pipeline has no reachable producer.** The write-time gate reads the new learning's vector before either surface has embedded it, so every create is an ADD; the tiebreak resolver is a no-op; the nightly dream cycle has no caller; and approving a supersede proposal returns "manual Edit" guidance with no apply path. With the flag on, the live filter filters on a column nothing sets.
+- Most reusable component: `core/api/use_cases/learnings.py` `_temporal_filter` plus `_prune_search_index` — the binary live filter, and a delete that removes the FTS, vector and reinforcement mirrors in the caller's writer transaction.
+- Second risk: **no record of who changed a learning, and an approve verb on the agent's surface.** The trigger-immutable audit log receives task, team and grant events but nothing from the learnings use cases; `brain_memory_operations_patch` sits in the same MCP registry as `create_learning`, and the HTTP route accepts any operator token.
+- Maturity impression: BSL 1.1, 171,942 lines of Python outside tests and 97,487 lines of TypeScript and JavaScript, 107 commits on main by 6 contributor identities between 30 June and 22 September 2026, from what reads as a public mirror. No mark — `scope_enforced` is withheld because the knowledge-graph search lane over the learnings mirror has no workspace predicate; two Python test files touch learnings and none asserts an absence or a workspace boundary.
+- Study when: you want one use-case layer under several transports so a scope predicate cannot fork, or a worked design for supersession — system-time columns, binary exclusion, a two-band dedupe gate, a proposal queue — to finish rather than copy.
+- Do not copy when: you need correction to work today, review before belief, or an audit trail of memory edits. Learnings go live on insert, update overwrites, delete is hard, and none of it is recorded.

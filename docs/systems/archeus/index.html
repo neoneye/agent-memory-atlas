@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code launcher that keeps
+a model-extracted code graph and session-distilled lessons per project,
+injected through CLAUDE.md, path-scoped rules and a prompt hook.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="archeus — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code launcher that
+keeps a model-extracted code graph and session-distilled lessons per
+project, injected through CLAUDE.md, path-scoped rules and a prompt
+hook.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="archeus — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code launcher
+that keeps a model-extracted code graph and session-distilled lessons
+per project, injected through CLAUDE.md, path-scoped rules and a prompt
+hook.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>archeus — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "archeus",
+      "description": "A Claude Code launcher that keeps a model-extracted code graph and session-distilled lessons per project, injected through CLAUDE.md, path-scoped rules and a prompt hook.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A per-project code graph and reviewed
+lessons for Claude Code</p>
+          <h1>archeus</h1>
+          <p class="document-deck">A Claude Code launcher that keeps a
+model-extracted code graph and session-distilled lessons per project,
+injected through CLAUDE.md, path-scoped rules and a prompt hook.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/babarmuhammad/archeus">
+              <span>Source</span>
+              <strong>babarmuhammad/archeus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/babarmuhammad/archeus/commit/a52ccb47f5dcec888df27e900486fc1f1b7f38c6" title="a52ccb47f5dcec888df27e900486fc1f1b7f38c6">
+              <span>Analyzed revision</span>
+              <code>a52ccb47…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/babarmuhammad--archeus" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>babarmuhammad--archeus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>43,385
+lines of Python in claude_sessions/; the memory core is about 3,800 of
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>306
+commits on main by two people and a bot, 11 June 2026 – 28 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,059
+pytest functions in 119 test files</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>archeus, formerly <code>claudectl</code>, is a terminal and desktop
+launcher for Claude Code whose memory layer keeps a per-project
+knowledge graph of the codebase and a set of lessons distilled from
+finished sessions. A headless <code>claude -p</code> call summarises
+each module into entities and relations; another call per transcript
+proposes lessons. Both land in one JSON file per project and reach the
+agent through a small CLAUDE.md digest, path-scoped rule files and an
+opt-in per-prompt hook.</p>
+<p>What is notable is how much of the bookkeeping is right. Provenance
+hashes advance only for modules a cycle actually extracted, so a failed
+or capped run leaves the rest stale instead of marking it current. A
+fact a re-read no longer emits is invalidated with a timestamp rather
+than deleted. The retrieval gate returns nothing for a prompt made of
+stopwords. Nearly every one of these carries a comment naming the
+measured defect it replaced.</p>
+<p>What is weak is where the lesson review is bypassed. The extractor's
+own confidence approves a lesson at 0.8 by default. A pending lesson
+that recurs across three projects is written into the user-level
+<code>~/.claude/CLAUDE.md</code> without review. Module-edge expansion
+in recall does not check validity, so an invalidated fact can still be
+injected.</p>
+<p>Two marks. <code>trust_state</code> rests on the lesson status, which
+every per-project injection surface filters. <code>negative_eval</code>
+rests on a CI-run test asserting a pending lesson stays out of
+<code>recall.retrieve</code> while an approved one on the same words
+comes back. Section 9 names the five withheld.</p>
+<p>The repository is MIT. The memory core is about 3,800 lines in nine
+modules; the rest of the package is a session browser, account rotation,
+usage tracking, an architecture graph and a GUI, none of which this
+report covers.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>archeus holds three kinds of memory with three different
+epistemics.</p>
+<p><strong>Code facts are re-derived, never asserted.</strong> An entity
+exists because the last extraction of its module emitted it.
+Re-extraction updates a surviving entity in place, stamping
+<code>confirmed_at</code>, and invalidates one the model did not re-emit
+with <code>valid: false</code> and <code>invalidated_at</code>
+(<code>claude_sessions/memory.py:1240-1274</code>). A module that
+disappears from disk invalidates its entities the same way
+(<code>:1183-1195</code>). Nobody, person or agent, writes a code fact
+directly. Invalidated facts are kept as history for 30 days, at most 40
+at a time, and never injected by the main ranking path
+(<code>:47-52</code>, <code>:1420-1425</code>, <code>:1465-1467</code>).
+A fact unconfirmed for 90 days is flagged <code>stale</code> and
+deliberately not evicted (<code>:1426-1432</code>).</p>
+<p><strong>Lessons are proposed, then reviewed or
+auto-approved.</strong> One call per finished transcript returns at most
+eight lessons, each with <code>kind</code> and a model-supplied
+<code>confidence</code>
+(<code>claude_sessions/lessons.py:112-144</code>).
+<code>merge_lessons</code> folds a near-duplicate into the existing
+lesson by token Jaccard above 0.6 and otherwise writes a new one as
+<code>pending</code>, or as <code>approved</code> when the model's
+confidence reaches <code>memory_lessons_autoapprove</code>, 0.8 by
+default (<code>:154-182</code>;
+<code>claude_sessions/config.py:183</code>). A person approves, pins or
+evicts in the TUI or the GUI. Unpinned lessons decay after 30 scanned
+sessions without being injected (<code>lessons.py:185-196</code>).</p>
+<p><strong>Conventions are lessons promoted by recurrence.</strong> A
+preference, correction or decision lesson that clusters across projects
+is written to the user-level CLAUDE.md. A reviewed one needs two
+projects; a pending one needs three, and the comment says why:
+<em>"waiting for a manual approval that never comes is why this feature
+sat empty"</em> (<code>claude_sessions/conventions.py:20-26</code>).</p>
+<p>The session agent writes none of this. It reads memory through what
+is injected, and can run <code>archeus recall</code> over Bash.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a lesson and a code fact become injectable in archeus, and the paths around the review</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a lesson and a code fact become injectable in archeus, and the paths around the review
+flowchart TD
+    T[&quot;finished transcript&quot;] --&gt; X[&quot;claude -p lesson call:&lt;br/&gt;title, summary, kind, confidence&quot;]
+    X --&gt; M{&quot;Jaccard above 0.6 with&lt;br/&gt;an existing lesson?&quot;}
+    M -- &quot;yes&quot; --&gt; D[&quot;merge: keep max confidence,&lt;br/&gt;bump last_used&quot;]
+    M -- &quot;no&quot; --&gt; C{&quot;confidence at least 0.8&lt;br/&gt;(autoapprove)&quot;}
+    C -- &quot;yes&quot; --&gt; A[&quot;approved&quot;]
+    C -- &quot;no&quot; --&gt; P[&quot;pending&quot;]
+    P -- &quot;person: a or P&lt;br/&gt;in TUI or GUI&quot; --&gt; A
+    P -- &quot;person: x&quot; --&gt; GONE[&quot;deleted, no record&quot;]
+    A --&gt; INJ[&quot;recall, digest, review prompt&quot;]
+    P -. &quot;excluded&quot; .-&gt; INJ
+    P -- &quot;same rule in 3 projects&quot; --&gt; GL[&quot;~/.claude/CLAUDE.md&lt;br/&gt;conventions block&quot;]
+    A -- &quot;same rule in 2 projects&quot; --&gt; GL
+    F[&quot;module re-extracted&quot;] --&gt; V{&quot;entity re-emitted?&quot;}
+    V -- &quot;yes&quot; --&gt; OK[&quot;valid, confirmed_at = now&quot;]
+    V -- &quot;no&quot; --&gt; INV[&quot;valid false, invalidated_at&quot;]
+    OK --&gt; INJ
+    INV -. &quot;skipped by score_entities&quot; .-&gt; INJ
+    INV -- &quot;neighbour unit via module edge,&lt;br/&gt;under 3 valid facts&quot; --&gt; INJ</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>archeus is a pure-standard-library Python package
+(<code>claude_sessions/</code>) shipped on PyPI, with launchers for npm,
+crates, NuGet, RubyGems and Packagist under <code>packaging/</code> and
+a Claude Code plugin under <code>plugin/</code>. It drives the user's
+installed <code>claude</code> CLI, or Codex or pi, for every model call,
+and needs no API key of its own.</p>
+<p>The store is one JSON document per project,
+<code>&lt;project&gt;/.archeus/memory/graph.json</code>, written
+atomically to the working directory and mirrored to
+<code>&lt;config&gt;/projects/&lt;encoded&gt;/.archeus/memory/</code> so
+cross-project scans can find it
+(<code>claude_sessions/memory.py:57-63</code>, <code>:130-147</code>). A
+save that loses entities first snapshots the old graph into a
+twelve-version ring under <code>.archeus/snapshots/</code>
+(<code>:103-127</code>; <code>claude_sessions/diffview.py:26</code>,
+<code>:205-209</code>). Beside it sit <code>worklog.json</code> (up to
+50 heuristic session episodes, 60-day TTL), <code>hits.log</code> (names
+injected by the prompt hook) and <code>dirty.log</code> (paths an edit
+hook recorded).</p>
+<p>Background work runs in a detached child process,
+<code>archeus --bg-scan</code>, spawned with a 60-second cooldown and
+serialised by <code>scan.lock</code>, which is claimed with
+<code>O_CREAT|O_EXCL</code> (<code>memory.py:209-241</code>,
+<code>:310-352</code>). <code>scan_guard</code> wraps every refresh so
+the three manual build paths take the same lock (<code>:262-291</code>).
+Headless calls run
+<code>claude -p --max-turns 20 --disallowedTools Write,Edit,NotebookEdit,Bash</code>
+in the project directory, under an optional
+<code>--max-budget-usd</code> and an optional routed provider
+(<code>:466-551</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pipx install archeus</code> and the Claude Code CLI are the
+whole install. Nothing else runs; the GUI is a local server on 127.0.0.1
+behind a per-run token held in memory
+(<code>claude_sessions/gui.py:530-533</code>, <code>:600-610</code>).
+Fully local except for the model calls, which spend the user's own
+Claude account; extraction sends up to 40,000 characters of source per
+module to that account. The graph is readable JSON and repairable by
+hand, and the snapshot ring gives twelve undo points for a shrinking
+save.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture, code.</strong> <code>refresh_memory</code> →
+<code>_refresh_locked</code> (<code>memory.py:1112-1359</code>).
+<code>_units</code> splits the project into repo and module units
+(<code>:762-786</code>); <code>_changed_units</code> compares each
+file's <code>(mtime_ns, size)</code> and re-hashes only on a change
+(<code>:962-1008</code>). <code>_prioritise</code> orders the work by
+just-edited, never-covered, dependency rank and recency
+(<code>:1024-1064</code>), and <code>_reserve_for_new</code> keeps half
+a capped cycle for never-covered units (<code>:1067-1082</code>).
+<code>_extract</code> asks for a <code>GRAPH_SCHEMA</code> object
+through <code>--json-schema</code> and returns <code>None</code> on a
+failed call, distinct from an empty result (<code>:662-714</code>). A
+failed unit keeps its old facts and its old hashes
+(<code>:1226-1233</code>); provenance advances only for extracted units
+(<code>:1319-1321</code>).</p>
+<p><strong>Capture, lessons.</strong> <code>auto_cycle</code> runs the
+refresh, then <code>scan_sessions</code> over <code>pending_sids</code>
+(<code>memory.py:1629-1706</code>). <code>pending_sids</code> walks the
+project's session folder under every account, skips transcripts under
+500 bytes, younger than 60 seconds or written by archeus's own headless
+calls (<code>lessons.py:45-74</code>). Each transcript is one
+<code>extract_lessons</code> call and one save; the scan then runs
+<code>apply_decay</code> and <code>conventions.sync_to_global</code>
+(<code>:222-246</code>).</p>
+<p><strong>Consolidation.</strong> <code>_consolidate</code> merges
+valid entities with the same normalised name within one repo, summing
+rank, keeping the longer summary and flagging a pair whose summaries
+overlap below 0.3 as a <code>conflict</code>. It then holds pinned
+entities out of a 500-entity cap and evicts the rest by
+<code>rank + 2 * hits</code> (<code>memory.py:1453-1546</code>).</p>
+<p><strong>Forgetting.</strong> <code>forget_pass</code> runs with no
+model call on every scheduler pass: worklog TTL, lesson decay, expiry of
+invalidated facts past 30 days, and the 90-day stale flag
+(<code>memory.py:1390-1440</code>).</p>
+<p><strong>Retrieval.</strong> <code>recall.retrieve</code> →
+<code>build_index</code> → <code>score_entities</code> →
+<code>expand_relations</code> → <code>render_context</code>
+(<code>claude_sessions/recall.py:454-509</code>). Details in section
+6.</p>
+<p><strong>Injection.</strong> <code>sync_to_claudemd</code> writes
+<code>build_digest_micro</code> between <code>ARCHEUS:MEMORY</code>
+sentinels in every installed harness's instructions file
+(<code>memory.py:1769-1840</code>, <code>:1878-1890</code>;
+<code>claude_sessions/claude_md.py:86</code>).
+<code>memrules.sync_rules</code> writes one
+<code>archeus-mem-&lt;repo&gt;-&lt;module&gt;.md</code> per unit with
+two or more valid non-lesson entities, scoped with <code>paths:</code>
+(<code>claude_sessions/memrules.py:80-157</code>).
+<code>recall_hook.py</code> answers <code>UserPromptSubmit</code> with
+the recall text as <code>additionalContext</code>
+(<code>claude_sessions/recall_hook.py:42-73</code>).
+<code>worklog_hook.py</code> captures an episode at Stop or SessionEnd
+and injects the worklog digest at SessionStart
+(<code>claude_sessions/worklog_hook.py:53-84</code>).</p>
+<p><strong>Review.</strong> TUI <code>review_screen</code> and GUI
+<code>api_lessons_post</code> call <code>_set_status</code> or
+<code>_evict</code>, each a load, edit and whole-file save
+(<code>lessons.py:254-318</code>;
+<code>claude_sessions/gui_api.py:2679-2697</code>).
+<code>conventions.pin_convention</code> pins every lesson clustering
+with a text in every project (<code>conventions.py:177-202</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>On</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>entity, lesson</td>
+<td><code>entity:</code> plus repo, module and name, or
+<code>lesson:</code> plus session id and index</td>
+</tr>
+<tr>
+<td><code>name</code>, <code>summary</code>, <code>type</code></td>
+<td>both</td>
+<td>type clamped to
+<code>module, component, concept, service, model</code> or
+<code>lesson</code></td>
+</tr>
+<tr>
+<td><code>repo</code>, <code>module</code>,
+<code>source_files</code></td>
+<td>both</td>
+<td>lessons carry <code>repo: ''</code>,
+<code>module: '(project)'</code></td>
+</tr>
+<tr>
+<td><code>valid</code>, <code>invalidated_at</code></td>
+<td>entity</td>
+<td>set by re-extraction; lessons never set them</td>
+</tr>
+<tr>
+<td><code>created_at</code>, <code>confirmed_at</code></td>
+<td>entity</td>
+<td>first sighting; last re-emission</td>
+</tr>
+<tr>
+<td><code>stale</code></td>
+<td>entity</td>
+<td>90 days unconfirmed; flag only</td>
+</tr>
+<tr>
+<td><code>rank</code>, <code>hits</code></td>
+<td>both</td>
+<td>dependency degree of the unit; injections folded from
+<code>hits.log</code></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>lesson</td>
+<td><code>pending</code>, <code>approved</code>,
+<code>pinned</code></td>
+</tr>
+<tr>
+<td><code>kind</code>, <code>confidence</code>, <code>sid</code>,
+<code>sids</code>, <code>last_used</code></td>
+<td>lesson</td>
+<td><code>last_used</code> is a session counter, not a time</td>
+</tr>
+<tr>
+<td><code>conflict</code></td>
+<td>entity</td>
+<td>the losing summary and its module, after a disagreeing merge</td>
+</tr>
+</tbody>
+</table></div>
+<p>The graph also holds per-unit <code>summaries</code>,
+<code>relations</code> tagged with their unit, <code>module_edges</code>
+from the import graph, per-file <code>provenance</code> hashes and
+signatures, <code>lessons_scanned</code> by session id and a lifetime
+<code>cost_usd_total</code> (<code>memory.py:66-75</code>).</p>
+<p>There is no scope key on a row. <code>repo</code> scopes the
+consolidation merge (<code>memory.py:1481-1489</code>) and is used by no
+read as a filter. The boundary is the file: the prompt hook opens
+<code>.archeus/memory/graph.json</code> under the hook's
+<code>cwd</code> (<code>recall_hook.py:46</code>), and
+<code>archeus recall</code> resolves the project from the working
+directory (<code>claude_sessions/main.py:36-47</code>).</p>
+<p><code>invalidated_at</code> and <code>confirmed_at</code> are both
+observation times — when a re-read stopped or kept emitting a fact.
+Neither records when the fact was true of the code.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is lexical and deterministic, with no embeddings.
+<code>query_tokens</code> drops stopwords and single characters, and an
+empty token set returns nothing (<code>recall.py:44-57</code>,
+<code>:130-132</code>, <code>:209-212</code>). <code>build_index</code>
+computes BM25 IDF over valid entities only (<code>:60-103</code>).
+<code>score_entities</code> skips invalid entities and pending lessons,
+admits a candidate only on token or path-segment overlap, and fuses four
+rankings — lexical, path, dependency rank, lesson confidence — by
+reciprocal rank with <code>k = 60</code> and weights 1.0, 0.8, 0.35 and
+0.5 (<code>:119-127</code>, <code>:198-261</code>).</p>
+<p><code>retrieve</code> takes the top 24 seeds, expands the top eight
+by one hop and, when the seeds cost under half the budget, the top four
+by two hops (<code>recall.py:466-474</code>). Expansion follows entity
+relations, skipping pending lessons, and module import edges, taking the
+first three entities of each neighbouring unit and skipping lessons
+(<code>:264-302</code>). <strong>The module-edge branch does not check
+<code>valid</code>.</strong> <code>_consolidate</code> orders the list
+valid-first, so a neighbouring unit with fewer than three valid entities
+contributes invalidated ones, and <code>render_context</code> emits them
+as ordinary facts (<code>:292-299</code>, <code>:310-384</code>;
+<code>memory.py:1537</code>). This was read, not reproduced.</p>
+<p><code>render_context</code> fits rather than truncates: a line that
+does not fit is skipped and smaller lines behind it still enter.
+Relations among included entities come next, then approved lessons, then
+up to two past-session episodes scored by the same BM25
+(<code>recall.py:149-195</code>, <code>:310-384</code>). The default
+budget is 600 tokens. The names actually emitted go to
+<code>hits.log</code>, unless the call is a preview
+(<code>:454-509</code>).</p>
+<p><code>hits</code> are folded by name, not id, so every entity sharing
+a name — one per repo after consolidation — is credited for one
+injection (<code>recall.py:441-446</code>).</p>
+<p><code>ask_memory</code>, the GUI and TUI question surface, falls back
+on an empty recall to the first twelve entities of the graph with no
+status or validity check (<code>memory.py:1900-1908</code>). It is
+reached only from the GUI and TUI.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The session agent never writes memory. Every write is archeus's own:
+extraction and lesson calls in a background worker, or on demand from
+the TUI and GUI; heuristic episode capture at Stop; and a person's
+lesson actions.</p>
+<p><strong>Freshness and cost.</strong> Extraction is capped per cycle
+(<code>auto_cap</code>, 6 by default, and
+<code>memory_max_calls</code>); the remainder is reported as queued and
+taken by the next cycle at the configured interval. A failed unit is
+counted separately from a capped one, with the error text kept
+(<code>memory.py:1166-1176</code>, <code>:1322-1337</code>). Every model
+call's <code>total_cost_usd</code> is folded into a lifetime total
+(<code>:932-950</code>). The prompt-path writes are one appended line to
+<code>hits.log</code>; the edit hook appends one line to
+<code>dirty.log</code>.</p>
+<p><strong>Dedup and conflict.</strong> Code facts dedupe by normalised
+name within a repo; a disagreeing pair is flagged and the longer summary
+still wins (<code>memory.py:1500-1513</code>). Lessons dedupe by token
+Jaccard above 0.6, keeping the higher confidence. Nothing compares a
+lesson against code facts.</p>
+<p><strong>Delete.</strong> A lesson's evict deletes the row
+(<code>lessons.py:315-318</code>). There is no rejected state and no
+record of the evicted text, and <code>lessons_scanned</code> records
+sessions, not lessons, so a later session that yields the same lesson
+creates it again as new.</p>
+<p><strong>Concurrency.</strong> The scan lock serialises refreshes and
+lesson scans. The review writers do not take it:
+<code>_set_status</code> and <code>_evict</code> load, edit and save the
+whole file, so an approval made while a background cycle holds an
+earlier copy can be overwritten when that cycle saves.</p>
+<p><strong>Agent-generated content.</strong> Lessons come from
+transcripts the agent wrote into. The prompt asks for durable error-fix
+pairs, decisions, corrections and preferences; nothing filters a lesson
+that encodes a mistaken belief, and one the model rates at 0.8 is
+approved on arrival.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: asynchronous; nothing blocks the agent. A new code fact is
+retrievable after the next cycle reaches its module, which on an
+opted-in project is the configured interval and on a large backlog
+several cycles. A lesson is retrievable after its transcript is scanned
+and, unless auto-approved, after a person approves it.</li>
+<li>Background: one model call per changed module (up to 40,000
+characters of source) and one per finished transcript. No pass re-reads
+the whole store with a model; <code>forget_pass</code> is
+token-free.</li>
+<li>Read: a digest capped at 250 tokens in CLAUDE.md on every turn, rule
+files capped at 400 tokens each loaded when Claude opens a matching
+path, and up to 600 tokens per prompt from the hook. The hook's text is
+a per-prompt <code>additionalContext</code>, which sits after the cached
+prefix; the CLAUDE.md digest changes only when a cycle rewrites it.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Five surfaces, all controlled by archeus rather than the agent:</p>
+<ul>
+<li>The <code>ARCHEUS:MEMORY</code> digest in CLAUDE.md and the other
+harnesses' instruction files, ending with a pointer to
+<code>archeus recall</code>.</li>
+<li><code>.claude/rules/archeus-mem-*.md</code> scoped by
+<code>paths:</code>; the code comment records that an earlier
+<code>globs:</code> key made every rule load unconditionally
+(<code>memrules.py:80-88</code>).</li>
+<li>The <code>UserPromptSubmit</code> recall hook, installed user-wide
+and enabled per project, off by default
+(<code>claude_sessions/hooks.py:403-421</code>;
+<code>config.py:176</code>).</li>
+<li><code>archeus recall "&lt;topic&gt;"</code> over Bash, and the
+plugin's <code>/recall</code>, <code>/status</code> and
+<code>/review</code> commands (<code>plugin/commands/</code>). The
+review prompt includes up to twenty approved or pinned lessons
+(<code>claude_sessions/review.py:63-73</code>).</li>
+<li>The SessionStart worklog digest, opt-in per project.</li>
+</ul>
+<p>The agent has no write verb and no review verb. The CLI exposes
+<code>workspace status</code>, <code>recall</code>, <code>review</code>,
+<code>sync-accounts</code> and <code>statusline</code>
+(<code>main.py:291-312</code>); lesson actions exist only in the TUI and
+in GUI routes behind the per-run token.</p>
+<p>The <code>reinject-after-compact</code> hook preset registers
+<code>recall_hook.py</code> on <code>PostCompact</code>
+(<code>hooks.py:292-302</code>). <code>recall_hook.main</code> acts only
+when <code>hook_event_name</code> is <code>UserPromptSubmit</code> and
+returns 0 otherwise (<code>recall_hook.py:63-73</code>), so the preset
+installs a hook that does nothing. The two tests that cover it assert
+its event name and label (<code>tests/test_statusline.py:338-339</code>;
+<code>tests/test_tui_hooks.py:326-331</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Work is never marked done unless it was done.</strong> A
+failed extraction keeps the module's facts and leaves its hashes stale,
+a capped cycle leaves the skipped units stale, and an empty-store
+refresh still stamps freshness without a model call. Each of these has a
+comment describing the defect it replaced
+(<code>memory.py:1219-1233</code>, <code>:1305-1321</code>,
+<code>:1138-1163</code>).</p>
+<p><strong>Two bypasses around the lesson review.</strong> The extractor
+writes the confidence that decides <code>approved</code> at 0.8, and
+<code>memory_lessons_autoapprove</code> is on by default. Independently,
+<code>conventions._candidates</code> counts <code>pending</code>
+lessons, and a rule seen in three projects is promoted into the
+user-level CLAUDE.md that every session on the account loads
+(<code>conventions.py:105-145</code>, <code>:218-256</code>). Setting
+autoapprove to 0 closes the first and not the second.</p>
+<p><strong>Invalidation is not enforced on every read.</strong>
+<code>score_entities</code>, <code>build_index</code>, the digest and
+the rule files all skip <code>valid: false</code>. Module-edge expansion
+does not (section 6), and <code>ask_memory</code>'s empty-result
+fallback widens to the first twelve entities regardless.</p>
+<p><strong>Declared and unwired: pinning a code fact.</strong> The docs
+say <em>"Pin any entity or lesson and the importance cap can never evict
+it"</em>, and <code>_consolidate</code> holds pinned entities out of the
+cap (<code>memory.py:1514-1534</code>). The only writers of
+<code>status</code> are <code>_set_status</code>, called from the lesson
+table, and <code>pin_convention</code>, which touches lessons; the GUI's
+pin button renders per lesson
+(<code>claude_sessions/web/app.js:2729-2731</code>). No path pins a code
+entity.</p>
+<p><strong>Privacy.</strong> Extraction sends module source to the
+user's model account. The digest and the rule files are written into the
+repository's own CLAUDE.md and <code>.claude/rules/</code>, so they
+travel with any commit that includes them. The conventions block crosses
+every project on the machine by design.</p>
+<p><strong>Uncertainty.</strong> A pending lesson is the one memory
+archeus holds without believing it. A code fact's <code>stale</code> and
+<code>conflict</code> flags are shown in the GUI and do not change what
+is injected.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded. The lesson status is a stored,
+discrete field; <code>pending</code> is excluded from scoring, relation
+expansion, the digest and the review prompt, and module-edge expansion
+excludes lessons altogether. The auto-approval threshold and the
+conventions promotion are the limits. <code>valid</code> on code facts
+is supersession, not a review state.</li>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>human_review</code> — withheld. The queue is real and its
+approve verb is on no agent surface, but a status the producer can write
+fails the mark: the extractor's confidence approves at 0.8 by default,
+and pending lessons reach the global CLAUDE.md at three projects with no
+person involved.</li>
+<li><code>tombstone</code> — withheld. Evicting a lesson deletes it;
+nothing keyed on its text stops a later session from proposing it again.
+Invalidation is keyed on a record and expires after 30 days.</li>
+<li><code>bitemporal</code> — withheld. <code>created_at</code>,
+<code>confirmed_at</code> and <code>invalidated_at</code> are all times
+the system observed something.</li>
+<li><code>scope_enforced</code> — withheld. One graph per project
+directory is a physical partition; <code>repo</code> is on the row and
+no read filters on it.</li>
+<li><code>audit_log</code> — withheld. The snapshot ring keeps twelve
+versions and deletes older ones, so it is not append-only;
+<code>events.py</code> logs archeus's own failures, not memory
+mutations.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed or run for this report; everything below is
+from reading the tests at the pin. CI runs <code>pytest tests/</code> on
+Windows with Python 3.10, 3.12, 3.13 and 3.14 and on Ubuntu and macOS
+with 3.12, after asserting at least 1,300 tests were collected
+(<code>.github/workflows/ci.yml</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>test_pending_lessons_never_injected</code> saves a pending and an
+approved lesson on the same words and asserts, through
+<code>recall.retrieve</code>, that the approved one is in the text and
+the pending one is not (<code>tests/test_lessons.py:108-121</code>).
+<code>test_scoring_order_and_lesson_boost</code> asserts a pending
+lesson absent from a ranking that contains a code fact and an approved
+lesson (<code>tests/test_recall.py:35-43</code>).
+<code>test_a_pending_lesson_is_never_retrievable</code> repeats the
+check over every eval query
+(<code>tests/test_recall_eval.py:130-133</code>).</p>
+<p><strong>A case without a control.</strong>
+<code>test_an_invalidated_fact_is_never_retrievable</code> adds
+<code>OldCache</code> with <code>valid: false</code> and asserts it is
+absent from the ranking for <em>caching layer</em>. No other entity in
+the fixture contains either word, so an empty result passes too
+(<code>tests/test_recall_eval.py:136-142</code>). It tests
+<code>score_entities</code> only; no test runs expansion against an
+invalidated fact.</p>
+<p><strong>Retrieval quality.</strong>
+<code>tests/test_recall_eval.py</code> is a deterministic recall eval
+over a ten-entity fixture with per-category recall at six (exact name,
+descriptive, path, lesson), a must-be-empty list of contentless prompts,
+a budget-fit case and a check that reinforcement credits only rendered
+names. The file's header states the ceiling: lexical retrieval misses a
+query sharing no vocabulary with the summary.</p>
+<p><strong>Beyond recall.</strong> <code>tests/test_memauto.py</code>
+holds that an auto cycle writes only inside its own sentinels and files.
+<code>tests/test_memory.py</code> covers the refresh, failure and
+capping paths. <code>tests/test_conventions.py</code> covers promotion
+thresholds and pinning.</p>
+<p><strong>Not covered.</strong> The race between a review write and a
+background save; the <code>PostCompact</code> hook producing output;
+module-edge expansion of invalidated facts. No paper, and no external
+benchmark result is committed; <code>CITATION.cff</code> cites the
+software.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Advance provenance only for work that completed.</strong>
+Record a unit's hashes after its extraction succeeds, not at the end of
+the run, and keep the old facts when a call fails. A capped or failed
+cycle then leaves exactly the unfinished work stale.</li>
+<li><strong>Invalidate on non-re-emission.</strong> When a source is
+re-read, a fact the extractor no longer produces is the strongest
+supersession signal available, and it needs no contradiction
+detector.</li>
+<li><strong>Gate retrieval on content tokens, not on score.</strong> A
+stoplist plus "no overlap, no candidate" makes a contentless prompt
+inject nothing; an IDF that never reaches zero cannot.</li>
+<li><strong>Credit reinforcement to what was rendered, and never on a
+preview.</strong> Otherwise inspecting memory reshapes eviction.</li>
+<li><strong>Mark your own headless calls.</strong> archeus appends a
+marker to every prompt it sends so its transcripts are never mined for
+lessons or listed as sessions.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Letting the proposer's confidence clear its own
+review.</strong> If a threshold must exist, compute it from something
+the extractor does not write.</li>
+<li><strong>A second promotion rule that counts unreviewed
+items.</strong> Recurrence across projects is evidence, and it is also
+how one wrong habit of the same model appears in three places.</li>
+<li><strong>Putting the validity predicate in the scorer and not in the
+expander.</strong> Any path that adds candidates after ranking needs the
+same filter.</li>
+<li><strong>Review writes outside the lock the background writer
+holds.</strong> A whole-file read-modify-write needs the same lock on
+both sides.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer who runs Claude Code across several
+projects and is willing to spend model calls to keep a summarised map of
+each codebase current. It is a product with a memory layer, not a memory
+library: the graph format, the injection surfaces and the scheduler are
+tied to archeus's launcher and to Claude Code's file conventions. A team
+that needs memory scoped by person, auditable corrections, or lessons
+that never act before review should treat the code as reference for the
+freshness bookkeeping and the recall gate, not as a component.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does Claude Code accept <code>additionalContext</code> from a
+<code>PostCompact</code> hook at all, which would decide whether fixing
+the dispatch is enough?</li>
+<li>How often does a neighbouring unit hold fewer than three valid
+entities on a real graph, which bounds how often expansion injects an
+invalidated fact?</li>
+<li>How many lessons does the default 0.8 threshold auto-approve in
+practice?</li>
+<li>Is the review-versus-worker race observed, or does the GUI's job
+model keep them apart in practice?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Store and graph:</strong>
+<code>claude_sessions/memory.py</code> (persistence, scan lock,
+extraction, refresh, consolidation, forget pass, digest),
+<code>claude_sessions/diffview.py</code>,
+<code>claude_sessions/jsonstore.py</code>.</li>
+<li><strong>Lessons and conventions:</strong>
+<code>claude_sessions/lessons.py</code>,
+<code>claude_sessions/conventions.py</code>.</li>
+<li><strong>Retrieval and injection:</strong>
+<code>claude_sessions/recall.py</code>,
+<code>claude_sessions/recall_hook.py</code>,
+<code>claude_sessions/memrules.py</code>,
+<code>claude_sessions/claude_md.py</code>,
+<code>claude_sessions/worklog.py</code>,
+<code>claude_sessions/worklog_hook.py</code>,
+<code>claude_sessions/memdirty_hook.py</code>.</li>
+<li><strong>Surfaces:</strong> <code>claude_sessions/main.py</code>,
+<code>claude_sessions/cli.py</code>,
+<code>claude_sessions/hooks.py</code>,
+<code>claude_sessions/gui_api.py</code>,
+<code>claude_sessions/review.py</code>,
+<code>plugin/commands/</code>.</li>
+<li><strong>Settings:</strong>
+<code>claude_sessions/config.py:174-186</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_recall.py</code>,
+<code>tests/test_recall_eval.py</code>,
+<code>tests/test_lessons.py</code>, <code>tests/test_memory.py</code>,
+<code>tests/test_memauto.py</code>,
+<code>tests/test_conventions.py</code>,
+<code>.github/workflows/ci.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n "valid" claude_sessions/recall.py</code> — lines 70, 74
+and 220 only; <code>expand_relations</code> has no validity check.</li>
+<li><code>rg -n "e\['status'\]|\['status'\] = " claude_sessions --type py</code>
+— <code>lessons.py:310</code> and <code>conventions.py:196</code> are
+the only status writers outside job bookkeeping.</li>
+<li><code>rg -n "action:\s*'pin'|api/lessons" claude_sessions/web/*.js claude_sessions/gui_api.py</code>
+— the pin action is sent only from the lesson table rows.</li>
+<li><code>rg -n "argv|'recall'" claude_sessions/main.py claude_sessions/__main__.py</code>
+— no lesson, approve or forget command on the CLI.</li>
+<li><code>rg -n -i "tombstone|rejected|blocklist|suppress|denylist" claude_sessions/lessons.py claude_sessions/memory.py claude_sessions/conventions.py</code>
+— no value-keyed rejection record.</li>
+<li><code>rg -n "repo|module" claude_sessions/recall.py | rg -i "filter|==|!="</code>
+— no match; no read filters on <code>repo</code>.</li>
+<li><code>rg -n "PostCompact|reinject" tests/*.py</code> — the two tests
+assert the preset's event and label only.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' --exclude-dir=.git .</code>
+— no match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/babarmuhammad/archeus/commit/a52ccb47f5dcec888df27e900486fc1f1b7f38c6"><code class="commit-id" title="a52ccb47f5dcec888df27e900486fc1f1b7f38c6">a52ccb47…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 28
+September 2026. Two marks, <code>trust_state</code> and
+<code>negative_eval</code>. Screened before reading: one auto-run
+surface (<code>.claude-plugin/marketplace.json</code>, a plugin manifest
+pointing at <code>./plugin</code>, whose commands run
+<code>archeus</code> over Bash), one build-time execution point
+(<code>tests/conftest.py</code>, environment isolation only), eight
+dependency files inside the cooldown — every file in a depth-1 clone
+dates to the tip — and four unpinned surfaces;
+<code>www/AGENTS.md</code> was treated as data. Nothing installed, built
+or run. Only the memory layer was read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MCP company brain
+whose memory is a workspace-scoped learnings table; its supersede
+machinery is flag-gated off and has no reachable producer.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Marvis — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MCP company
+brain whose memory is a workspace-scoped learnings table; its supersede
+machinery is flag-gated off and has no reachable producer.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Marvis — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MCP company
+brain whose memory is a workspace-scoped learnings table; its supersede
+machinery is flag-gated off and has no reachable producer.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Marvis — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Marvis",
+      "description": "A self-hosted MCP company brain whose memory is a workspace-scoped learnings table; its supersede machinery is flag-gated off and has no reachable producer.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Self-hosted company brain with a learnings
+store and an unclosed supersede gate</p>
+          <h1>Marvis</h1>
+          <p class="document-deck">A self-hosted MCP company brain whose
+memory is a workspace-scoped learnings table; its supersede machinery is
+flag-gated off and has no reachable producer.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/emiliomartucci/marvis">
+              <span>Source</span>
+              <strong>emiliomartucci/marvis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/emiliomartucci/marvis/commit/166c4466c72c991e0bd5154f2d30540f911835a6" title="166c4466c72c991e0bd5154f2d30540f911835a6">
+              <span>Analyzed revision</span>
+              <code>166c4466…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/emiliomartucci--marvis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>emiliomartucci--marvis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>BSL
+1.1 (source-available; no hosted or managed service for third parties;
+Apache 2.0 from 1 January 2030)</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>171,942
+lines of Python outside tests and 97,487 lines of TypeScript and
+JavaScript; the learnings and supersede code is about 4,400
+lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>107
+commits on main by 6 contributor identities, 30 June – 22 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>629
+Python test functions in 66 files and 549 TypeScript test cases; two
+Python files exercise the learnings use cases</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Marvis is the open core of MarvisX, a self-hosted "company brain" for
+coding agents: projects, tasks, PRs, an inbox, a cross-project knowledge
+graph and a reflective brain cycle, all behind one in-process MCP server
+and a FastAPI service over a single SQLite database. The memory in that
+product is the <strong>learnings</strong> table — post-mortems with a
+prevention rule, written by an agent with <code>create_learning</code>,
+recalled with <code>check_learnings</code> before risky work, and
+surfaced at cold start by <code>session_brief</code>.</p>
+<p>What is notable is the scope discipline. HTTP and MCP call the same
+use-case functions, and every learnings use-case read binds the caller's
+workspace, so the predicate is written once rather than twice. It misses
+one lane: hybrid search matches the knowledge-graph mirror of learnings
+with no workspace predicate, which is why <code>scope_enforced</code> is
+withheld.</p>
+<p>What is weak is the correction story. A full supersede design is in
+the tree — system-time columns, a binary live filter, a cosine two-band
+write gate, a proposal queue, a nightly re-scan — and at this pin
+nothing reachable ever sets <code>invalid_at</code>. Section 2 traces
+each of the four breaks.</p>
+<p>The licence is BSL 1.1 with an additional use grant: production and
+internal commercial use are allowed, and offering Marvis to third
+parties as a hosted or managed service is not, until it converts to
+Apache 2.0 on 1 January 2030.</p>
+<p>No mark. Section 9 names all seven withheld and why. Tasks, PRs, the
+inbox and the governance hooks are not memory and are covered only where
+they touch a learning.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A learning becomes a belief on insert. <code>create_learning</code>
+validates the category and severity, writes the row with
+<code>frequency = 1</code>, commits, and returns it
+(<code>core/api/use_cases/learnings.py:576-670</code>). There is no
+candidate state and no review: an operator-role caller, which includes
+the local MCP agent
+(<code>core/api/use_cases/_context.py:91-108</code>), writes straight to
+live.</p>
+<p>It stops being one in only two ways that run by default:
+<code>update_learning</code> overwrites fields in place
+(<code>:805-888</code>), and <code>delete_learning</code> hard-deletes
+the row and its search mirrors (<code>:949-992</code>). Neither leaves a
+trace in the store.</p>
+<p><strong>The designed third way is supersession, and it is wired
+dark.</strong> Migration 148 adds <code>valid_from</code>,
+<code>invalid_at</code>, <code>superseded_by</code> and
+<code>supersede_reason</code>, and calls the result bitemporal while
+stating that only the system-time axis is implemented
+(<code>migrations/148_bitemporal_learnings.sql:9-17</code>). With
+<code>MARVIS_TEMPORAL_MEMORY</code> on, every learnings read appends
+<code>AND invalid_at IS NULL</code> — exclusion, never down-weighting,
+as the docstring argues (<code>learnings.py:186-212</code>). The flag
+defaults to false (<code>core/api/config.py:528-530</code>).</p>
+<p><strong>Turning the flag on does not make anything stop being
+believed</strong>, because the one writer of <code>invalid_at</code>,
+<code>temporal_write.apply_supersede</code>
+(<code>core/api/services/temporal_write.py:426-458</code>), is
+unreachable four ways:</p>
+<ol type="1">
+<li>The write-time gate reads the new learning's vector from the
+document mirror (<code>learnings.py:698-702</code>;
+<code>temporal_write.py:160-185</code>). Both surfaces embed
+<em>after</em> the use case returns — the MCP tool awaits
+<code>mcp_embed_learning</code> at
+<code>core/api/mcp/tools/learnings.py:178</code>, the router schedules
+it at <code>core/api/routers/learnings.py:354</code> — so a brand-new id
+has no mirror, the vector is <code>None</code>, and every create is a
+plain ADD.</li>
+<li>The auto-apply band goes through
+<code>get_tiebreak_resolver()</code>, which returns
+<code>NoopResolver</code>, whose verdict is always
+<code>UNDECIDED</code>
+(<code>core/api/services/temporal_tiebreak.py:109-121</code>,
+<code>:164-172</code>).</li>
+<li>The nightly <code>run_dream_cycle_shadow</code> that would catch the
+misses (<code>core/api/services/dream_cycle.py:134</code>) has no caller
+in the tree.</li>
+<li>Approving a <code>supersede_candidate</code> proposal returns
+guidance only — <em>"manual Edit"</em> with a <code>target_path</code>
+the write-time proposal never sets
+(<code>core/api/services/brain/memory_ops.py:1608-1618</code>) — and
+nothing on the approval path calls <code>apply_supersede</code>.</li>
+</ol>
+<p>So the binary live filter filters on a column with no producer. The
+history walk (<code>learnings.py:520-573</code>) and the
+<code>as_of</code> point-in-time reads are correct code over chains
+nobody can create.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a learning becomes live, the two ways it changes, and the supersede path that never reaches invalid_at</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a learning becomes live, the two ways it changes, and the supersede path that never reaches invalid_at
+flowchart TD
+    W[&quot;create_learning&lt;br/&gt;(MCP or HTTP, operator role)&quot;] --&gt; INS[&quot;INSERT live row,&lt;br/&gt;frequency 1, commit&quot;]
+    INS --&gt; F{&quot;MARVIS_TEMPORAL_MEMORY?&quot;}
+    F -- &quot;off (default)&quot; --&gt; LIVE[&quot;live learning&quot;]
+    F -- &quot;on&quot; --&gt; V{&quot;vector in document&lt;br/&gt;mirror yet?&quot;}
+    V -- &quot;no: embed runs after&lt;br/&gt;the use case returns&quot; --&gt; LIVE
+    V -. &quot;yes: never on create&quot; .-&gt; BAND{&quot;cosine band&quot;}
+    BAND -. &quot;&gt;0.97&quot; .-&gt; NOOP[&quot;bump neighbour,&lt;br/&gt;delete new row&quot;]
+    BAND -. &quot;0.80-0.97&quot; .-&gt; RES{&quot;tiebreak resolver&quot;}
+    RES -- &quot;NoopResolver: UNDECIDED&quot; --&gt; PROP[&quot;pending supersede_candidate&lt;br/&gt;in brain_memory_operations&quot;]
+    RES -. &quot;apply: unreachable&quot; .-&gt; APPLY[&quot;apply_supersede:&lt;br/&gt;set invalid_at&quot;]
+    DREAM[&quot;run_dream_cycle_shadow&lt;br/&gt;(no caller)&quot;] -. &quot;would propose&quot; .-&gt; PROP
+    PROP --&gt; APR[&quot;approve: agent MCP tool&lt;br/&gt;or operator HTTP route&quot;]
+    APR --&gt; GUIDE[&quot;guidance: manual Edit,&lt;br/&gt;no apply path&quot;]
+    LIVE --&gt; UPD[&quot;update_learning:&lt;br/&gt;overwrite in place&quot;]
+    LIVE --&gt; DEL[&quot;delete_learning:&lt;br/&gt;hard delete + prune mirrors&quot;]
+    LIVE --&gt; READ[&quot;reads: workspace_id = caller,&lt;br/&gt;invalid_at IS NULL when flag on&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Marvis runs as a Python package (<code>marvisx-cli</code>, version
+0.4.8 in <code>pyproject.toml</code>) whose MCP server calls the same
+<code>core/api/use_cases</code> the FastAPI routers call, with identity
+carried as a <code>CallerContext</code> instead of a FastAPI dependency
+(<code>core/api/use_cases/_context.py:1-17</code>). Locally the server
+runs over stdio against one SQLite file with no HTTP layer; the hosted
+shape adds the API, a Next.js console and agent tokens, from a Docker
+Compose template in <code>deploy/_template/</code>.</p>
+<p>Storage is that one database. <code>learnings</code> is a plain table
+from migration 028 with <code>workspace_id</code> added in 041. Three
+derived copies follow it: a <code>learnings_fts</code> FTS5 table kept
+current by triggers
+(<code>migrations/080_kg_fts5_extended.sql:162-228</code>), a
+<code>documents</code> row keyed <code>learning:</code> plus the id with
+a <code>vec_documents</code> embedding, and — when
+<code>populate_artifacts</code> runs — a <code>learning</code> node in
+<code>graph_nodes</code>.</p>
+<p>Embeddings default to IBM Granite-Embedding-97m via ONNX in process;
+<code>docs/SEARCH-QUALITY.md</code> states the retrieval-quality cost of
+that choice and publishes its own overlap figures against a managed
+provider.</p>
+<p>The brain cycle is scheduled by default
+(<code>brain_scheduler_enabled</code>, <code>config.py:160</code>) and
+turns events into findings and memory-operation proposals; its LLM
+polish calls a gateway, or <code>claude -p</code> as a subprocess, and
+degrades to a deterministic baseline.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Locally, <code>pip install marvisx-cli &amp;&amp; marvis init</code>
+needs nothing running: SQLite, an in-process ONNX embedder and the MCP
+server over stdio. No API key is needed to store or recall a learning.
+The brain's narrative polish wants an LLM and falls back without one.
+The store is a SQLite file, readable with any client, and a wrong
+learning is fixed with <code>update_learning</code> or the console. The
+hosted stack is a compose file plus secrets.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> MCP <code>create_learning</code>
+(<code>core/api/mcp/tools/learnings.py:143-191</code>) resolves the
+caller and visible projects, opens the single writer, calls
+<code>learnings_uc.create_learning</code>, releases the writer, then
+awaits <code>mcp_embed_learning</code>, which writes the
+<code>documents</code> mirror and its vector. The HTTP route builds a
+context with <code>is_human_session=False</code> and schedules the embed
+in the background
+(<code>core/api/routers/learnings.py:333-366</code>).</p>
+<p><strong>Recall before work.</strong> <code>check_learnings</code> →
+<code>_search_learning_rows</code> (<code>learnings.py:271-335</code>):
+a <code>LIKE</code> on the whole query over title, description, tags,
+module and prevention, ordered by frequency, severity and recency,
+capped at 20. When that returns nothing it splits the query into at most
+eight non-stopword terms, ORs them, and re-sorts by term-occurrence
+count. The workspace predicate is in both passes.</p>
+<p><strong>Hybrid search.</strong>
+<code>use_cases/search.py:303-390</code> calls
+<code>kg/hybrid_search.hybrid_search</code> (<code>:744</code>), which
+runs six retrievers in a task group and fuses them with weighted RRF;
+learnings get 0.10 of the weight
+(<code>hybrid_search.py:147-154</code>). With the temporal flag on, a
+post-fusion probe drops learning hits that are not live
+(<code>:48-115</code>).</p>
+<p><strong>Cold start.</strong> <code>session_brief</code>
+(<code>core/api/mcp/tools/projects.py:243-266</code>) →
+<code>get_session_brief</code>
+(<code>core/api/use_cases/projects.py:859-1100</code>) assembles
+identity text, open tasks, the newest handoff's first 500 characters,
+five learnings for the project or with no project, five high-salience
+documents, task counts and a KG context bundle.</p>
+<p><strong>Correct and forget.</strong> <code>update_learning</code> and
+<code>delete_learning</code> (<code>learnings.py:805-992</code>). Delete
+calls <code>_prune_search_index</code> (<code>:891-946</code>), which
+removes the <code>documents</code> row (firing the FTS delete trigger),
+the <code>vec_documents</code> row and any <code>salience_boosts</code>,
+in the caller's transaction.</p>
+<p><strong>Proposals.</strong> <code>brain_memory_operations</code>
+(<code>migrations/129_brain_memory_operations.sql</code>) holds
+proposals with a CHECK that <code>requires_approval = 1</code>, a
+lifecycle in <code>brain_memory_operation_states</code>, and a trigger
+refusing deletion of applied rows. <code>apply_lifecycle_patch</code>
+moves a proposal along <code>_ALLOWED_TRANSITIONS</code>
+(<code>memory_ops.py:1421-1430</code>, <code>:1454-1520</code>);
+<code>get_apply_guidance</code> returns a next-action envelope and
+writes nothing (<code>:1654-1680</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>UUID</td>
+</tr>
+<tr>
+<td><code>title</code>, <code>description</code>,
+<code>prevention</code></td>
+<td>free text; title capped at 200 characters on the MCP tool</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>one of seven: deploy, migration, auth, testing, architecture,
+security, performance</td>
+</tr>
+<tr>
+<td><code>severity</code></td>
+<td>low, medium, high, critical</td>
+</tr>
+<tr>
+<td><code>tags</code>, <code>module</code>, <code>session</code></td>
+<td>JSON array, a path-like string, an integer</td>
+</tr>
+<tr>
+<td><code>project</code></td>
+<td>project slug; NULL means every project in the workspace</td>
+</tr>
+<tr>
+<td><code>workspace_id</code></td>
+<td>scope key, <code>ws_default</code> locally</td>
+</tr>
+<tr>
+<td><code>frequency</code>, <code>last_occurrence</code></td>
+<td>recurrence counter and timestamp, bumped by
+<code>bump_learning</code></td>
+</tr>
+<tr>
+<td><code>valid_from</code>, <code>invalid_at</code>,
+<code>superseded_by</code>, <code>supersede_reason</code></td>
+<td>migration 148; system time only</td>
+</tr>
+<tr>
+<td><code>status</code>, <code>consolidated_from</code></td>
+<td>migration 049 post-hook; <code>status</code> defaults to
+<code>active</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>status</code> and <code>consolidated_from</code> were added for
+a <em>"draft lifecycle"</em> (<code>core/api/db.py:2940-2948</code>). No
+query reads or writes either column outside that migration, and
+<code>_row_to_learning</code> does not expose them
+(<code>learnings.py:220-241</code>). The draft state is a schema
+comment.</p>
+<p>There is no author on a learning. The MCP context is a fixed
+<code>local</code> identity, and nothing records which principal wrote
+or changed a row. Provenance is the free-text <code>description</code>
+and the optional <code>session</code> integer.</p>
+<p><strong>Scope is a key, not a partition.</strong>
+<code>workspace_id</code> is on the row, and the project slug adds a
+second key that <code>visible_projects</code> enforces for hosted
+callers. A learning with no project is company-wide inside its
+workspace.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three read shapes reach an agent. <code>check_learnings</code> is
+lexical and deterministic: substring <code>LIKE</code> with an
+occurrence-count re-rank in the fallback, no stemming, no embeddings.
+The fallback widens the <em>text</em> match only; the workspace and
+module predicates stay (<code>learnings.py:280-304</code>).</p>
+<p><code>search</code> fuses semantic KNN over the document mirror, BM25
+over <code>learnings_fts</code>, <code>tasks_fts</code>,
+<code>inbox_items_fts</code> and <code>documents_fts</code>, and BM25
+over <code>graph_nodes_fts</code>, then merges twins of the same
+learning reached by two lanes and sums their scores
+(<code>hybrid_search.py:941-980</code>). A structural one-hop graph lane
+exists behind <code>MARVIS_GRAPH_LANE</code>, off by default
+(<code>config.py:501-503</code>).</p>
+<p>The KG lane is the one without a workspace clause:
+<code>kg_full_text_search</code> matches <code>graph_nodes_fts</code>
+with no predicate at all (<code>hybrid_search.py:319-370</code>), and
+<code>graph_nodes</code> has no workspace column. For a remote caller,
+<code>access_grants.filter_search_grouped</code> then drops hits from
+projects the caller cannot read; the local account skips that filter
+(<code>core/api/services/access_grants.py:938-968</code>).</p>
+<p><code>session_brief</code> returns five learnings ordered by
+<code>last_occurrence</code>, which only <code>bump_learning</code>
+moves after creation, so the brief favours what recurs rather than what
+is relevant to the task.</p>
+<p>The temporal probe's docstring says it fails open; on an
+<code>OperationalError</code> it sets the learning bucket to empty
+(<code>hybrid_search.py:104-109</code>), which is fail closed.</p>
+<p>Injection is bounded: the three shapes cap at 20, 50 and 5 rows.
+Nothing is pushed into a prompt by a hook; the agent pulls the brief
+with a tool call.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A learning is written only when an agent or a person calls
+<code>create_learning</code>. No model extracts learnings from
+transcripts. The brain cycle can emit a
+<code>compression_candidate</code> whose apply guidance names
+<code>mcp__marvis__create_learning</code> with prefilled arguments
+(<code>memory_ops.py:1619-1631</code>), so the agent remains the
+writer.</p>
+<p><strong>Deduplication is designed and does not run.</strong> The
+two-band gate (ADD below 0.80, NOOP above 0.97, propose between;
+<code>temporal_write.py:59-60</code>) would bump the existing row and
+delete the new one on a near-duplicate. Section 2 shows why it always
+sees no vector. Without it, two identical learnings are two rows, and
+<code>frequency</code> grows only through an explicit
+<code>bump_learning</code>.</p>
+<p><strong>Update is in place and unversioned.</strong> A PATCH replaces
+the listed columns and stamps <code>updated_at</code>; the old text is
+gone. <strong>Delete is hard</strong>, and the use case's own docstring
+says there is <em>"no soft-delete column on
+<code>learnings</code>"</em>.</p>
+<p>Agent-written content is not filtered. Category and severity are
+closed sets; the text fields are free.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous SQL insert. On MCP with the local Granite backend
+the embed is awaited inline after the writer lock is released, so a
+learning is searchable by meaning when the tool returns; on HTTP the
+embed is background and the row is lexically searchable at once and
+semantically a moment later.</li>
+<li>Background: the brain cycle reads events in a window; the dream
+cycle would re-scan every live learning nightly and is not
+scheduled.</li>
+<li>Read: bounded per call, pulled by tool, never injected into a cached
+prefix.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server exposes 91 tools (README) with long
+Italian-and-English descriptions carrying <em>QUANDO USARLO / QUANDO NON
+USARLO / RESTITUISCE</em> blocks. The guidance tool tells agents to call
+<code>session_brief(slug)</code> before project work and
+<code>check_learnings(q)</code> <em>"before code, push, deploy,
+refactor, reindex or destructive work"</em>
+(<code>core/api/mcp/guidance.py:121-122</code>). The learning verbs on
+that surface are check, create, update, list, get and delete; the brain
+verbs include <code>brain_memory_operations_patch</code>, which
+approves, dismisses or rejects a proposal
+(<code>core/api/mcp/tools/brain.py:488-517</code>).</p>
+<p>The Claude Code plugin that wires hooks and skills lives in a
+separate repository, <code>emiliomartucci/marvisx-oss</code>, which was
+not read. The hooks this tree installs
+(<code>core/cli/marvis_hooks.py:79-91</code>) are PreToolUse governance
+scripts: dangerous-bash, worktree enforcement, a direct-DB-write block,
+secret scan. None injects memory.</p>
+<p>Adapting it to another agent is cheap at the MCP level and expensive
+otherwise: learnings are one table, but the cold-start bundle assumes
+Marvis's project directories, tasks and graph.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope is strong on the use-case layer and open on one
+lane.</strong> Every learnings use-case read binds
+<code>workspace_id</code> from a context that fails closed when a hosted
+identity lacks one (<code>_context.py:260-275</code>). The derived
+copies follow: the FTS lane joins back to the base row for its predicate
+(<code>hybrid_search.py:418-425</code>), and the semantic lane fetches
+documents by workspace (<code>embedding_service.py:1796-1800</code>).
+The KG mirror is the exception named in section 6, and it decides the
+mark.</p>
+<p><strong>No record of who changed what.</strong> The README's
+append-only audit log, made immutable by triggers in migration 145,
+receives rows from tasks, teams, todos, tokens and grants. No learnings
+use case, router or MCP tool writes one. An HTTP middleware logs method,
+path and status for <code>/api/v1/learnings</code>
+(<code>core/api/middleware/tool_call_audit.py:33-42</code>), which does
+not cover the MCP surface the agent uses and does not record
+content.</p>
+<p><strong>The approval queue does not gate memory.</strong> A pending
+supersede proposal does not hide either learning, and approving it
+changes no learning.</p>
+<p><strong>Prompt-injected learnings</strong> go live on write, are
+injected by the brief with no qualifier, and carry no author.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>scope_enforced</code> — withheld. <code>workspace_id</code> is
+on every learning and bound on every use-case read
+(<code>learnings.py:281-282</code>, <code>:430-431</code>;
+<code>projects.py:987-995</code>), but <code>kg_full_text_search</code>
+runs <code>MATCH</code> over <code>graph_nodes_fts</code>, which mirrors
+learning titles, with no workspace predicate
+(<code>hybrid_search.py:319-370</code>). The project-grant filter after
+the query (<code>access_grants.py:938-968</code>) is not a predicate on
+the read, and the local account skips it.</li>
+<li><code>trust_state</code> — no state on learnings is read.
+<code>status</code> has no reader; the proposal
+<code>approval_state</code> withholds nothing from retrieval.</li>
+<li><code>bitemporal</code> — <code>valid_from</code> and
+<code>invalid_at</code> are both system time, as migration 148 says, and
+<code>invalid_at</code> has no reachable producer. KG edges carry
+<code>first_seen_at</code>, <code>last_seen_at</code> and
+<code>valid_until</code>, all observation time.</li>
+<li><code>tombstone</code> — nothing is keyed on a rejected value. A
+superseded row would be keyed on its id; a rejected proposal is keyed on
+the id pair.</li>
+<li><code>audit_log</code> — withheld for the reason above.
+<code>brain_memory_operation_states</code> is an append-only lifecycle
+record of proposals, not of learning mutations.</li>
+<li><code>human_review</code> — the approve verb is on the agent's own
+MCP surface, and the HTTP route accepts any operator token, which agent
+users are normalised to (<code>core/api/db.py:2917-2922</code>). The
+decision workflow in
+<code>core/api/services/governed_decisions.py</code> is the near miss:
+<code>accept_decision</code> needs the admin role plus a human session
+or a persisted delegation minted from a human JWT
+(<code>:1002-1003</code>; <code>_context.py:214-236</code>), but no
+search, brief or lens read consults a decision's lifecycle.</li>
+<li><code>negative_eval</code> — no committed case asserts that a
+learning is absent from a result. The two learnings test files assert a
+match and a pre-148 insert.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was installed, built or run for this report; everything below
+is from reading the tests at the pin. The public tree carries 629 Python
+test functions and 549 TypeScript test cases; the commit history credits
+a mirror account, which suggests the full suite lives in a private
+upstream.</p>
+<p>For learnings,
+<code>core/api/tests/test_learnings_check_search.py</code> asserts the
+term fallback finds one seeded row, and
+<code>test_learnings_create_pre148.py</code> asserts a create works
+without the 148 columns when the flag is off and writes
+<code>valid_from</code> when it is on — with
+<code>_decide_write_time</code> stubbed to a no-op, so the write-time
+gate is not exercised.</p>
+<p><code>test_session_brief_temporal.py</code> covers only the two
+counts in the brief's <code>temporal</code> block. The CHANGELOG entry
+that <code>session_brief</code> excludes superseded learnings (issue 14)
+has no test in this tree. <code>test_kg_trust_write_path.py</code>
+covers the KG node-verify and edge-supersede tools behind the flag.</p>
+<p>No test was found for workspace isolation of learnings, for the
+supersede proposal path, for <code>apply_supersede</code>, or for the
+MCP approve tool.</p>
+<p><code>docs/SEARCH-QUALITY.md</code> reports a Jaccard@5 of 0.31
+against a managed embedding baseline and an estimated 0.41–0.46 for the
+hybrid stack, citing an audit file under <code>docs/audits/</code> that
+is not in this tree. The README links an architectural preprint on
+Zenodo (<a
+href="https://doi.org/10.5281/zenodo.20341860">10.5281/zenodo.20341860</a>,
+22 May 2026); its record lists six contributions and a feature
+comparison, and names no evaluation of the memory. Only the record's
+abstract was read.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One use-case layer under every transport.</strong> The scope
+predicate is written once per read and both surfaces inherit it; a test
+that runs the HTTP suite green proves the MCP surface too.</li>
+<li><strong>Exclude, do not down-weight, a retracted memory.</strong>
+The temporal filter's argument — a down-weighted tombstone can still be
+cited — is the right one, and the filter is applied on every read shape
+including the cold-start bundle.</li>
+<li><strong>Prune every derived index in the delete
+transaction.</strong> FTS by trigger, vectors and reinforcement rows
+explicitly, on the caller's writer.</li>
+<li><strong>State the measured quality cost of a self-hosted
+embedder</strong> in a page the user reads before installing.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A dedupe gate that reads a mirror the same call has not
+written yet.</strong> Order the embed before the decision, or pass the
+vector in.</li>
+<li><strong>A proposal queue whose approval has no apply.</strong> If
+the approver's yes does not reach the column the read filter consults,
+the queue is a list.</li>
+<li><strong>An approve verb registered beside the producer's write
+verb.</strong></li>
+<li><strong>Schema for a state nothing writes.</strong>
+<code>status</code> and the draft lifecycle cost a reader time and buy
+nothing until a writer exists.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer or small team that already runs Marvis
+for project management and wants agents to consult a scoped list of
+incident rules before risky work. The learnings layer is a modest CRUD
+store with good scope hygiene inside a large product. A reader who needs
+memory that can be corrected with history, reviewed before it is
+believed, or audited should treat the temporal design as a specification
+to finish, not as shipped behaviour. The BSL terms rule out reselling it
+as a hosted service.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the private upstream carry tests for the supersede path,
+workspace isolation of learnings, or the MCP approve tool?</li>
+<li>Does the MCP approve tool run at all?
+<code>brain_memory_operations_patch</code> passes
+<code>user=None</code>, and <code>apply_lifecycle_patch</code> reads
+<code>user.user_id</code> when it records the state row
+(<code>memory_ops.py:1505-1519</code>); this was read, not run.</li>
+<li>Does the <code>marvisx-oss</code> plugin add a SessionStart hook
+that injects the brief?</li>
+<li>Is a tiebreak resolver or a dream-cycle schedule wired in the hosted
+MarvisX product?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage/schema:</strong>
+<code>migrations/028_learnings.sql</code>,
+<code>041_workspaces.sql</code>, <code>080_kg_fts5_extended.sql</code>,
+<code>129_brain_memory_operations.sql</code>,
+<code>148_bitemporal_learnings.sql</code>,
+<code>174_salience_reinforcement.sql</code>;
+<code>core/api/db.py:2914-2955</code>.</li>
+<li><strong>Write path:</strong>
+<code>core/api/use_cases/learnings.py</code>,
+<code>core/api/services/temporal_write.py</code>,
+<code>core/api/services/temporal_tiebreak.py</code>,
+<code>core/api/mcp/_adapter.py:810-860</code>.</li>
+<li><strong>Retrieval path:</strong>
+<code>core/api/use_cases/learnings.py</code>,
+<code>core/api/use_cases/search.py</code>,
+<code>core/api/services/kg/hybrid_search.py</code>,
+<code>core/api/services/embedding_service.py:1706-1840</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>core/api/use_cases/projects.py:824-1100</code>,
+<code>core/api/services/kg/lens.py</code>.</li>
+<li><strong>Background workers:</strong>
+<code>core/api/services/brain/memory_ops.py</code>,
+<code>core/api/services/brain/jobs.py</code>,
+<code>core/api/services/dream_cycle.py</code>.</li>
+<li><strong>MCP/API/SDK:</strong>
+<code>core/api/mcp/tools/learnings.py</code>,
+<code>core/api/mcp/tools/brain.py</code>,
+<code>core/api/mcp/tools/projects.py</code>,
+<code>core/api/routers/learnings.py</code>,
+<code>core/api/use_cases/_context.py</code>,
+<code>core/api/services/access_grants.py</code>.</li>
+<li><strong>Tests/evals:</strong>
+<code>core/api/tests/test_learnings_check_search.py</code>,
+<code>test_learnings_create_pre148.py</code>,
+<code>test_session_brief_temporal.py</code>,
+<code>test_kg_trust_write_path.py</code>;
+<code>docs/SEARCH-QUALITY.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run at the root of the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'apply_supersede|invalid_at\s*=' -g '!**/tests/**' --type py</code>
+— the definition in <code>temporal_write.py:426</code>, the auto-apply
+branch at <code>learnings.py:754</code>, and docstrings; no
+approval-path caller.</li>
+<li><code>rg -n 'run_dream_cycle_shadow' --type py</code> — the
+definition and its own docstring only.</li>
+<li><code>rg -n 'get_tiebreak_resolver|class NoopResolver' --type py</code>
+— one caller (<code>learnings.py:748</code>); the getter returns the
+module default.</li>
+<li><code>rg -n -i "learnings[^\n]*\bstatus\b" --type py -g '!**/tests/**'</code>
+— only the migration-049 post-hook in <code>db.py:2941-2945</code>.</li>
+<li><code>rg -n "consolidated_from" --type py -g '!**/tests/**'</code> —
+only <code>db.py:2940-2948</code>.</li>
+<li><code>rg -n 'log_audit|audit_chain' core/api/use_cases/learnings.py core/api/routers/learnings.py core/api/mcp/tools/learnings.py</code>
+— no match.</li>
+<li><code>rg -n 'workspace_id' migrations/ | rg -i 'graph_nodes'</code>
+— no match; <code>graph_nodes</code> has no workspace column.</li>
+<li><code>rg -n "lifecycle" core/api/use_cases/search.py core/api/services/embedding_service.py core/api/services/kg/hybrid_search.py core/api/services/kg/lens.py</code>
+— one comment in <code>embedding_service.py</code>; no read consults a
+decision's lifecycle.</li>
+<li><code>rg -n 'SessionStart|PreCompact|UserPromptSubmit|additionalContext' -g '!**/tests/**' -g '!*.json'</code>
+— a session-state hook and an enum; no memory injection.</li>
+<li><code>rg -n -i 'learning' core/api/tests core/cli/tests scripts -g '*.py' -l</code>
+— four test files and two surface validators; none asserts an
+absence.</li>
+<li><code>rg -n -i -l 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' .</code>
+— the Zenodo DOI in <code>README.md</code>, plus code comments citing
+other work; no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/emiliomartucci/marvis/commit/166c4466c72c991e0bd5154f2d30540f911835a6"><code class="commit-id" title="166c4466c72c991e0bd5154f2d30540f911835a6">166c4466…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 22
+September 2026. No mark; <code>scope_enforced</code> is withheld on the
+knowledge-graph search lane. Screened before reading: no auto-run
+surface, no build-time execution point, nothing inside the cooldown (a
+depth-1 clone dates every file to the tip, 11 days before the screen),
+four unpinned surfaces (two npm manifests with lockfiles,
+<code>core/mcp-pir/package.json</code> and <code>pyproject.toml</code>
+without), and <code>AGENTS.md</code> and <code>CLAUDE.md</code> recorded
+as data. Nothing installed, built or run. The licence is BSL 1.1 with no
+rider on analysis.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

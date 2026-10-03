@@ -294,6 +294,15 @@ reaches the model unmarked.
 
 [Agent Memory Engine](../../systems/agent-memory-engine/) detects and never disposes. `ConflictService` flags a conflict on a confidence gap of more than 0.15 or on five keyword pairs such as `must`/`may`, and `PromotionService` then sets the *existing* node to `needs_review` and records the candidate with the same status. No MCP tool, CLI command or HTTP route lists, approves or rejects either. `_fill_bucket` does not skip the status, so the flagged memory keeps reaching the agent — labelled `non-authoritative` in its trace provenance — while the README lists it as excluded; the problem statement above, verbatim.
 
+[Marvis](../../systems/marvis/) is the case where the disposition exists and has
+no hand to carry it out. Write-time and nightly passes would file a
+`supersede_candidate` into an approval queue, and the queue has a proper
+lifecycle — pending, approved, rejected, applied, reverted — with an append-only
+state table. Approval returns guidance reading "manual Edit" and a target path
+the proposal never sets, and nothing on the approval path calls the one function
+that retires the old learning, so an approved supersession changes nothing a
+reader sees.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval
