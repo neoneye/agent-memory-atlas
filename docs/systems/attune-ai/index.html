@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code plugin whose Stop
+hook stashes model-extracted findings, whose SessionStart hook injects
+the newest, and whose human verdicts label curated memories without
+filtering.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Attune AI — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code plugin whose
+Stop hook stashes model-extracted findings, whose SessionStart hook
+injects the newest, and whose human verdicts label curated memories
+without filtering.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Attune AI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code plugin whose
+Stop hook stashes model-extracted findings, whose SessionStart hook
+injects the newest, and whose human verdicts label curated memories
+without filtering.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Attune AI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Attune AI",
+      "description": "A Claude Code plugin whose Stop hook stashes model-extracted findings, whose SessionStart hook injects the newest, and whose human verdicts label curated memories without filtering.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Stash, recall and curated memory for Claude
+Code</p>
+          <h1>Attune AI</h1>
+          <p class="document-deck">A Claude Code plugin whose Stop hook
+stashes model-extracted findings, whose SessionStart hook injects the
+newest, and whose human verdicts label curated memories without
+filtering.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Smart-AI-Memory/attune-ai">
+              <span>Source</span>
+              <strong>Smart-AI-Memory/attune-ai</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Smart-AI-Memory/attune-ai/commit/2e3e4f1b50c490b106cc7d5737db5965e36abdfb" title="2e3e4f1b50c490b106cc7d5737db5965e36abdfb">
+              <span>Analyzed revision</span>
+              <code>2e3e4f1b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Smart-AI-Memory--attune-ai" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Smart-AI-Memory--attune-ai</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>215,226
+lines of Python in src/, attune_redis/ and plugin/ outside tests;
+src/attune/memory/ is 24,753 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4,139
+commits on main by 8 contributors (four of them bots), 13 October 2025 –
+1 October 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>24,947
+Python test functions in 407,098 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Attune AI is a Claude Code plugin and Python package whose memory
+suite stashes findings a local model extracts from each session, injects
+the newest ones at the next session start, and keeps a curated Markdown
+tier that a person reviews. Around it sit workflows, an MCP server with
+dozens of tools and a lessons file retrieved at the prompt that needs
+it.</p>
+<p>What is notable is the discipline at the boundaries. A write reports
+success only when a readback proves it landed. Every recalled body
+passes one renderer that frames it as untrusted evidence. A human
+verification is bound to a digest of the text it verified.</p>
+<p>What is weak is that the strongest machinery labels rather than
+decides. The session-start block takes other projects' findings when the
+current one has few. The review-gated promotion into the curated tier is
+never called. A verdict of <code>wrong</code> leaves the memory
+served.</p>
+<p>The repository contains four memory surfaces, and this report covers
+the three an agent writes to:</p>
+<ul>
+<li><strong>The raw stash.</strong> Findings the Stop hook extracts with
+a local Ollama model, in a JSONL file by default or the <a
+href="../redis-agent-memory-server/">Redis Agent Memory Server</a> when
+reachable.</li>
+<li><strong>The curated tier.</strong> Markdown under
+<code>~/.attune/memory</code>, written by
+<code>personal_memory_capture</code> and reviewed by an interactive
+verdict loop.</li>
+<li><strong>The unified pattern store.</strong> JSON files written by
+the <code>memory_store</code> MCP tool, with classification, encryption
+and an audit log.</li>
+</ul>
+<p>The fourth, a lessons file under <code>.claude/</code> retrieved on
+each prompt, is described in section 6 and carries no mark.</p>
+<p>Two marks. <code>audit_log</code> is on the pattern store's
+append-only event file. <code>negative_eval</code> is on file-stash
+tests that an expired and a forgotten finding stay out of the read the
+session-start hook injects from. Section 9 names the five withheld, and
+two of them are deliberate refusals the code documents.</p>
+<p>The licence is Apache-2.0.
+<code>LICENSE_CHANGE_ANNOUNCEMENT.md</code>, dated 28 January 2026,
+records the move from Fair Source 0.9. The CHANGELOG names the project's
+former name, Empathy Framework.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A raw finding becomes memory without review and stops being one by
+age, deletion or a resolved reference. A curated memory becomes memory
+when someone writes the file, and a person's verdict afterwards changes
+its label, not its standing. A pattern is memory from the moment
+<code>memory_store</code> persists it.</p>
+<p><strong>A raw finding is a model's paraphrase of the
+session.</strong> The Stop hook asks <code>llama3.1:8b</code> for at
+most five findings, each typed, one sentence, with a required
+confidence. The prompt restricts it to what the assistant concluded or
+the user decided in this session
+(<code>plugin/hooks/session_stash.py:281-298</code>). Tool results are
+replaced by a marker before extraction, so a file the session read
+cannot be restated as a user's claim (<code>:214-248</code>). Without
+Ollama a keyword heuristic takes marker-bearing lines as
+<code>note</code> findings (<code>:461-484</code>).</p>
+<p><strong>It dies four ways.</strong> It expires 30 days after it was
+written (<code>src/attune/memory/file_stash.py:37</code>,
+<code>:134-156</code>). A person drops it by id through
+<code>/recall drop</code> or <code>/recall review</code>. At session
+start, a finding citing <code>PR #N</code> is forgotten when every PR it
+cites reports <code>MERGED</code> or <code>CLOSED</code>
+(<code>plugin/hooks/session_recall.py:126-160</code>). Or it is promoted
+into the curated tier, which section 7 shows is not wired.</p>
+<p><strong>A curated memory carries an epistemic tier as a
+label.</strong> The tier is <code>settled</code>,
+<code>check-before-acting</code> or <code>suspect</code>, computed from
+days since verification times a per-type volatility
+(<code>src/attune/memory/curated_audit.py:506-531</code>). A
+<code>wrong</code> verdict makes the age basis <code>tombstoned</code>,
+which forces <code>suspect</code> (<code>:390-391</code>). An edit since
+the verdict makes it <code>invalidated</code>, because the recorded
+digest no longer matches (<code>:396-398</code>). Decision D1 forbids
+acting on the label: <em>"Nothing here may filter a memory out of a
+result on the basis of age"</em> (<code>:15-18</code>). Recall annotates
+each hit with the label and returns it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a finding enters the raw stash and reaches the next session, and how a curated memory's label moves without changing what is served</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a finding enters the raw stash and reaches the next session, and how a curated memory&#39;s label moves without changing what is served
+flowchart TD
+    STOP[&quot;Stop hook, once per session&quot;] --&gt; EXT{&quot;local Ollama&lt;br/&gt;reachable?&quot;}
+    EXT -- &quot;yes&quot; --&gt; LLM[&quot;up to 5 typed findings&lt;br/&gt;with confidence&quot;]
+    EXT -- &quot;no&quot; --&gt; HEU[&quot;marker-line heuristic,&lt;br/&gt;type note&quot;]
+    TRAP[&quot;PostToolUse: pre-commit or&lt;br/&gt;pytest failure&quot;] --&gt; GATE
+    MCPW[&quot;session_memory_capture&quot;] --&gt; GATE
+    LLM --&gt; GATE{&quot;PII scrub and&lt;br/&gt;secrets gate&quot;}
+    HEU --&gt; GATE
+    GATE -- &quot;secret found&quot; --&gt; REF[&quot;refused&quot;]
+    GATE -- &quot;clean&quot; --&gt; RAW[&quot;raw finding: text, type,&lt;br/&gt;session_id, cwd, ts&quot;]
+    RAW --&gt; SS{&quot;SessionStart:&lt;br/&gt;newest 5&quot;}
+    SS -- &quot;every cited PR&lt;br/&gt;merged or closed&quot; --&gt; FGT[&quot;forgotten&quot;]
+    SS -- &quot;otherwise&quot; --&gt; INJ[&quot;untrusted-evidence envelope,&lt;br/&gt;same-cwd first, other&lt;br/&gt;projects fill the rest&quot;]
+    RAW -- &quot;30 days&quot; --&gt; EXP[&quot;pruned&quot;]
+    RAW -- &quot;/recall drop or review&quot; --&gt; FGT
+    RAW -. &quot;promote: no caller&lt;br/&gt;outside tests&quot; .-&gt; CUR
+    PCAP[&quot;personal_memory_capture&quot;] --&gt; CUR[&quot;curated Markdown file&quot;]
+    CUR --&gt; VER{&quot;verdict loop,&lt;br/&gt;TTY only&quot;}
+    VER -- &quot;keep or sharper&quot; --&gt; LAB1[&quot;label: verified,&lt;br/&gt;digest-bound&quot;]
+    VER -- &quot;wrong&quot; --&gt; LAB2[&quot;label: suspect,&lt;br/&gt;judged WRONG&quot;]
+    LAB1 --&gt; SERVE[&quot;recall returns it,&lt;br/&gt;label attached&quot;]
+    LAB2 --&gt; SERVE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The plugin is a directory of Python hook scripts registered in
+<code>plugin/hooks/hooks.json</code>, each run as a fresh process on its
+event. They import the <code>attune</code> package when it is installed
+and degrade to a silent no-op when it is not. The package is a library,
+a CLI and an MCP server (<code>src/attune/mcp/server.py</code>). The AMS
+integration is a bundled plugin package, <code>attune_redis/</code>,
+registered through the <code>attune.memory_backends</code> entry
+point.</p>
+<p><strong>Backend resolution is per call.</strong>
+<code>resolve_backend</code> loads every registered backend, skips any
+whose <code>is_connected()</code> fails, prefers a connected upgrade
+over the file fallback, and honours a recorded <code>file</code>
+preference (<code>src/attune/memory/session_stash.py:120-181</code>).
+<code>backend_status</code> reports which tier answered and whether an
+upgrade is unreachable, and the session-start hook prints a warning line
+when it is (<code>plugin/hooks/session_recall.py:350-377</code>).</p>
+<p><strong>Three stores, three locations.</strong> The raw stash is
+<code>~/.attune/session_stash/findings.jsonl</code> and a sibling
+<code>kv.json</code>. Curated memory is Markdown under
+<code>~/.attune/memory/</code>, project-local
+<code>.attune/memory/</code>, and <code>~/.attune/memory/curated/</code>
+for promoted nodes. Patterns are one JSON file per id under
+<code>~/.attune/memdocs_storage</code>
+(<code>src/attune/memory/storage_backend.py:30-42</code>).</p>
+<p><strong>A fourth serving layer is out of tree.</strong>
+<code>recall_digest.py</code> reads curated nodes from a Redis Function,
+<code>FCALL recall_digest</code>, that a SessionStart hydration hook
+loads (<code>src/attune/memory/recall_digest.py:32-34</code>). The hook
+and its <code>functions.lua</code> live in an
+<code>attune-agent-memory</code> checkout that
+<code>tests/unit/memory/test_session_hydrate_fail_open.py</code> calls
+<em>"personal infra, not tracked in this repo"</em>. Its repository was
+not found on GitHub on 3 October 2026, so the digest's filtering is
+unverified here.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install attune-ai</code> and the plugin are enough for the
+raw stash, the curated tier and the pattern store, all as local files.
+Model extraction needs a local Ollama with <code>llama3.1:8b</code>;
+without it the heuristic runs. Semantic recall needs a Redis Agent
+Memory Server; <code>agent-memory-client</code> 0.14.0 is locked in
+<code>uv.lock</code>. Curated and lessons ranking come from the
+separately published <code>attune-rag</code> package, locked at 1.2.0,
+which this reading did not open. No API key is needed to store or recall
+anything. Every store is readable by hand, and the curated tier is meant
+to be edited.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture, Stop hook.</strong> <code>main</code>
+(<code>plugin/hooks/session_stash.py:781-879</code>) skips a session
+already marked done (<code>:794-796</code>) and one below a 0.05
+utilisation gate (<code>:798-807</code>). It extracts with Ollama or the
+heuristic (<code>:827-834</code>) and writes through
+<code>_stash_findings</code> (<code>:660-701</code>). It then emits the
+stashed findings as Stop-hook <code>additionalContext</code> with short
+ids and the review commands (<code>:732-778</code>).</p>
+<p><strong>Capture, the write contract.</strong>
+<code>stash_entry</code>
+(<code>src/attune/memory/session_stash.py:326-372</code>) runs
+<code>_sanitize</code>, which turns on PII scrubbing and secret
+detection explicitly and refuses the write if a secret is found or the
+gate cannot load (<code>:300-323</code>). It writes through
+<code>backend.remember</code> and diverts to the file tier when the
+upgrade cannot confirm the write (<code>:375-398</code>).
+<code>AMSMemoryBackend.remember</code> passes
+<code>deduplicate=False</code> and returns True only after
+<code>_readback</code> fetches the id it wrote
+(<code>attune_redis/memory.py:451-481</code>).</p>
+<p><strong>Other writers of the stash.</strong>
+<code>trap_stash.py</code> stashes pre-commit rejections and pytest
+failures as <code>bug</code> findings
+(<code>src/attune/telemetry/lessons/__init__.py:26-68</code>). The MCP
+tool <code>session_memory_capture</code> stashes what the agent passes
+(<code>attune_redis/mcp_tools.py:640-702</code>). Handoffs are stashed
+by <code>src/attune/handoff/memory_link.py:68</code>.</p>
+<p><strong>Recall at session start.</strong>
+<code>session_recall.main</code>
+(<code>plugin/hooks/session_recall.py:327-430</code>) skips
+<code>source == "compact"</code>, calls
+<code>recent_entries(top_k=5, cwd=cwd)</code>, reconciles PR references,
+and renders each surviving finding through
+<code>render_recall_for_context</code> within a 1,400-character budget
+(<code>:184-236</code>).</p>
+<p><strong>Recall on demand.</strong> <code>recall_entries</code>
+(<code>session_stash.py:401-433</code>) calls
+<code>target.search(query, limit=top_k)</code> and then sorts same-cwd
+results first. The <code>/recall</code> skill also queries
+<code>LessonsIndex</code>
+(<code>plugin/skills/recall/SKILL.md:16-28</code>).</p>
+<p><strong>Correction.</strong> <code>forget_entries</code>
+(<code>session_stash.py:494-542</code>) is the single deletion
+chokepoint and emits one <code>memory_feedback</code> event with
+<code>verdict="rejected"</code> and a count.
+<code>forget_by_prefix</code> (<code>:545-599</code>) resolves short ids
+against the most recent records and skips any prefix matching zero or
+more than one.</p>
+<p><strong>Curated write and recall.</strong>
+<code>PersonalMemory.capture</code>
+(<code>src/attune/memory/personal.py:193-240</code>) gates secrets,
+builds a skeleton, polishes it, and atomically writes
+<code>root/topic/kind.md</code>, replacing any file already there.
+<code>query</code> (<code>:242-326</code>) ranks both roots through
+attune-rag, then annotates each hit with staleness, status and
+provenance.</p>
+<p><strong>Curated review.</strong>
+<code>scripts/review_curated_memory.py</code> sweeps the corpora, queues
+the top three by risk, and records <code>keep</code>, <code>wrong</code>
+or <code>sharper</code> (<code>:114-166</code>). It refuses to prompt
+when stdin is not a TTY (<code>:205-212</code>).</p>
+<p><strong>Pattern store.</strong> <code>memory_store</code> with a
+<code>pattern_type</code> calls
+<code>UnifiedMemory.persist_pattern</code>
+(<code>src/attune/mcp/memory_handlers.py:63-124</code>;
+<code>src/attune/memory/mixins/long_term_mixin.py:36-98</code>), which
+reaches <code>SecureMemDocsIntegration.store_pattern</code>
+(<code>src/attune/memory/long_term_integration.py:145-293</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Unit</th>
+<th>Fields</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Raw finding</td>
+<td><code>id</code>, <code>session_id</code>, <code>cwd</code>,
+<code>timestamp</code>, <code>type</code> (decision, pattern, bug,
+reference, note), <code>content</code> up to 500 characters,
+<code>tags</code>, <code>ttl_days</code></td>
+<td><code>SessionStashEntry</code>,
+<code>session_stash.py:56-117</code></td>
+</tr>
+<tr>
+<td>File-stash record</td>
+<td><code>id</code>, <code>text</code>, <code>session_id</code>,
+<code>topics</code>, <code>cwd</code>, <code>ts</code></td>
+<td><code>file_stash.py:190-197</code></td>
+</tr>
+<tr>
+<td>Curated memory</td>
+<td>frontmatter <code>name</code>, <code>description</code>,
+<code>metadata.type</code>, optional <code>verified</code>; body</td>
+<td><code>curated_audit.py:42-46</code>, <code>:104-125</code></td>
+</tr>
+<tr>
+<td>Verdict</td>
+<td><code>stem</code>, <code>verdict</code> (keep, wrong, sharper),
+<code>digest</code>, <code>who</code>, <code>at</code></td>
+<td><code>verdict_log.py:50-83</code></td>
+</tr>
+<tr>
+<td>Promoted node</td>
+<td>adds <code>node_id</code>, <code>status: active</code>,
+<code>promoted_from_stash_id</code>, <code>review_verdict</code>,
+<code>review_response_id</code></td>
+<td><code>promotion.py:186-212</code></td>
+</tr>
+<tr>
+<td>Pattern</td>
+<td>content, <code>created_by</code>, <code>classification</code>,
+<code>workspace</code>, retention, encryption flag</td>
+<td><code>long_term_pipelines.py:220-266</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Typed annotations ride as tags.</strong> Extractor confidence
+and an optional <code>source_ref</code> are stored as
+<code>confidence:0.9</code> and <code>source_ref:…</code> strings in
+<code>tags</code>, so the entry schema stays fixed
+(<code>plugin/hooks/session_stash.py:673-682</code>). A refs-v2 binder
+that checks each cited file, PR or spec against the session's own tool
+calls ships behind <code>ATTUNE_MEMORY_REFS_V2</code>, off by default
+(<code>:371-378</code>, <code>:607-657</code>).</p>
+<p><strong>The verdict key is the filename stem within a corpus
+root.</strong> <code>sweep</code> binds a root's latest verdict to every
+memory under that root whose stem matches
+(<code>curated_audit.py:808-814</code>), and
+<code>PersonalMemory._latest_verdict_for</code> does the same
+(<code>personal.py:386-397</code>). Personal memory files are named
+<code>&lt;topic&gt;/&lt;kind&gt;.md</code>, so every
+<code>decision</code> under one root shares the stem
+<code>decision</code>. A <code>wrong</code> verdict on one topic's
+decision therefore labels every topic's decision
+<code>suspect · judged WRONG</code>, and a <code>keep</code> verdict
+reads on siblings as <code>invalidated</code>, since their digests
+differ. This was read, not reproduced.</p>
+<p><strong>Time.</strong> Raw findings carry one creation time. Curated
+memories carry a <code>verified</code> date and file mtime. No field
+records when a fact held.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Raw stash, file tier.</strong> <code>search</code> scores
+token overlap plus a recency term with a 3-day half-life, and adds 1.0
+when the record's cwd equals a <code>cwd</code> filter
+(<code>file_stash.py:219-253</code>). <code>recall_entries</code> never
+passes that filter, so on this path the boost is dead: it calls
+<code>target.search(query, limit=top_k)</code> and sorts same-cwd
+results first only within the top_k it got back
+(<code>session_stash.py:424</code>, <code>:431-432</code>). A
+same-project finding ranked just below the cut is not recovered.</p>
+<p><strong>Raw stash, AMS tier.</strong> <code>search</code> runs
+semantic search filtered to one namespace, <code>attune</code> unless
+<code>AMS_NAMESPACE</code> is set
+(<code>attune_redis/memory.py:533-541</code>;
+<code>attune_redis/config.py:31</code>). The namespace is per install,
+not per project.</p>
+<p><strong>Session start.</strong> Five findings, newest first, with
+same-cwd findings sorted ahead (<code>file_stash.py:255-281</code>).
+When the current project has fewer than five, other projects' findings
+fill the block. The block is headed <em>"Recent findings from this
+project"</em> (<code>session_recall.py:225-230</code>). Each body is
+wrapped in
+<code>&lt;recalled_memory … trust="untrusted-evidence"&gt;</code> with
+any instruction-shaped text flagged
+(<code>src/attune/memory/provenance.py:167-210</code>). If the renderer
+cannot be imported, nothing is injected
+(<code>session_recall.py:68-71</code>, <code>:202-203</code>).</p>
+<p><strong>Lessons.</strong> <code>lesson_recall.py</code> runs on every
+prompt at least 20 characters long that is not a slash command. It
+retrieves from <code>.claude/lessons.md</code> through attune-rag's
+keyword retriever and injects only above a score floor of 8.0, once per
+lesson per session (<code>plugin/hooks/lesson_recall.py:11-20</code>,
+<code>:70</code>, <code>:86-88</code>, <code>:147</code>).
+<code>jit_recall.py</code> injects rules from a static map keyed on tool
+name before <code>AskUserQuestion</code>, <code>Bash</code> and
+<code>Edit</code> (<code>plugin/hooks/jit_recall.py:1-30</code>).</p>
+<p><strong>Curated.</strong> Both roots are ranked by attune-rag and
+merged, with project hits winning ties by 0.001
+(<code>personal.py:271-308</code>). Nothing reorders or drops on
+status.</p>
+<p><strong>Patterns.</strong> <code>memory_retrieve</code> reads by key
+with an access check; <code>memory_search</code> scores every pattern
+file by keyword without one (section 9).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The Stop hook acts once per session and never blocks: every path
+exits 0. The hook's timeout is 15 seconds while the Ollama call's
+default timeout is 40, so on a cold model the runner can kill the hook
+before extraction returns (<code>plugin/hooks/hooks.json:64-65</code>;
+<code>session_stash.py:255-258</code>). A finding is recallable as soon
+as the append lands, and the hook also surfaces it into the next turn of
+the current session.</p>
+<p><strong>Deduplication is by id only.</strong> The file tier appends
+every finding. The AMS tier upserts on a caller id or a content hash and
+turns off the server's semantic merge, because it <em>"silently MERGES
+distinct-but-similar findings"</em>
+(<code>attune_redis/memory.py:425-436</code>).</p>
+<p><strong>Malformed output is dropped whole.</strong> A finding with
+control characters, a frontmatter delimiter line or role and tool-call
+tokens is discarded before it is stored
+(<code>session_stash.py:95-112</code>). Prose such as <em>"ignore
+previous instructions"</em> is kept and flagged at recall instead.</p>
+<p><strong>Promotion is designed and unwired.</strong>
+<code>promotion.py</code> drafts candidates from the stash, renders one
+Promote or Skip decision per candidate, and writes a curated file with
+<code>review_verdict: promote</code> and the stash id
+(<code>src/attune/memory/promotion.py:41-224</code>). Its docstring says
+<em>"this module has no promote-all path"</em>. Nothing outside tests
+calls <code>promote</code>, <code>promotion_candidates</code> or
+<code>promotion_form_dict</code>. The <code>/remember</code> command the
+<code>/recall</code> skill points at is a 15-line prompt offering store,
+retrieve, search and forget
+(<code>src/attune/commands/remember.md</code>).</p>
+<p><strong>Curated writes bypass review.</strong>
+<code>personal_memory_capture</code> lets the agent write
+<code>~/.attune/memory/&lt;topic&gt;/&lt;kind&gt;.md</code> directly,
+overwriting a previous capture under the same topic and kind
+(<code>personal.py:228-236</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: one local-model call per session at Stop, bounded at 40
+seconds; no hosted model; the agent never waits on it.</li>
+<li>Lag: none once the append lands.</li>
+<li>Background: no pass rewrites the store; TTL pruning rewrites the
+JSONL under a lock after a session's stash.</li>
+<li>Read: at most 1,400 characters of finding text at session start,
+plus up to three PR lookups through <code>gh</code> with a 4-second
+timeout each; lesson injection per prompt only above the floor.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>hooks.json</code> registers <code>session_recall.py</code> on
+SessionStart, <code>session_stash.py</code> on Stop,
+<code>jit_recall.py</code> on PreToolUse, <code>trap_stash.py</code> on
+PostToolUse and <code>lesson_recall.py</code> on UserPromptSubmit
+(<code>plugin/hooks/hooks.json:44</code>, <code>:64</code>,
+<code>:76</code>, <code>:158</code>, <code>:169</code>).</p>
+<p>The agent holds every memory verb. The MCP server registers
+<code>memory_store</code>, <code>memory_retrieve</code>,
+<code>memory_search</code>, <code>memory_forget</code> and four
+<code>personal_memory_*</code> tools
+(<code>src/attune/mcp/server.py:390-397</code>). The bundled plugin adds
+five <code>session_memory_*</code> tools, five
+<code>redis_memory_*</code> tools and <code>redis_health_check</code>
+(<code>attune_redis/mcp_tools.py:58-283</code>). No tool records a
+verdict.</p>
+<p>The <code>/recall</code> skill routes by transport: MCP tools when
+present, in-process Python from a trusted host, and an honest refusal
+otherwise (<code>plugin/skills/recall/SKILL.md:30-50</code>). Its review
+mode asks the user one multi-select question and deletes what they pick
+(<code>:165-174</code>).</p>
+<p>The session-start hook skips compaction restarts, so after a
+compaction the model keeps only what survived in the summary
+(<code>session_recall.py:335-337</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is stamped, not enforced.</strong> Raw findings
+are <code>machine-extracted</code> and curated ones
+<code>human-curated</code>, and both reach the model as untrusted
+evidence (<code>session_stash.py:436-464</code>;
+<code>personal.py:328-351</code>). The provenance module states the
+limit: the envelope is <em>"the weakest known"</em> defence and must
+pair with raw-tier quarantine (<code>provenance.py:13-19</code>). In
+this tree the quarantine is the absence of a promotion caller; raw
+findings are injected every session.</p>
+<p><strong>The pattern store's access model has a documented
+hole.</strong> <code>check_access</code> grants PUBLIC to all, INTERNAL
+only from the workspace that stored it, and SENSITIVE only to the
+creator
+(<code>src/attune/memory/long_term_classification.py:142-236</code>).
+<code>memory_retrieve</code> applies it. <code>memory_search</code> and
+<code>search_patterns</code> do not, and say so: <em>"This is an
+UNGOVERNED read path"</em>, left that way by a ruling dated 20 August
+2026 because <code>user_id</code> is the OS login
+(<code>src/attune/mcp/memory_handlers.py:227-235</code>;
+<code>long_term_mixin.py:311-323</code>).</p>
+<p><strong>Silent degradation is surfaced.</strong> A dead AMS prints a
+warning at session start, a write the AMS acknowledged but cannot read
+back diverts to the file tier, and a stash that wrote nothing is logged
+to <code>stash.log</code> (<code>session_stash.py:849-852</code>).</p>
+<p><strong>Privacy.</strong> Raw writes are PII-scrubbed and refused on
+secrets. Curated captures raise on a secret before any model call
+(<code>personal.py:105-138</code>). SENSITIVE patterns are encrypted
+when <code>cryptography</code> is installed. Deleted raw findings leave
+the JSONL on rewrite.</p>
+<p><strong>The verdict loop records before it stamps.</strong>
+<code>keep</code> appends the verdict, then sets <code>verified:</code>
+(<code>scripts/review_curated_memory.py:135-142</code>). A file with no
+frontmatter makes <code>set_verified</code> raise, and the loop prints
+<em>"no verdict recorded"</em> while the <code>keep</code> record is
+already in the log (<code>:222-227</code>;
+<code>src/attune/memory/verdict_log.py:201-205</code>). Personal-memory
+skeletons carry no frontmatter block
+(<code>personal.py:59-102</code>).</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>audit_log</code> — awarded on the pattern store; evidence in
+the frontmatter. <code>.verdicts.jsonl</code> is a second append-only
+record, of verdicts only.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>scope_enforced</code> — withheld. Raw findings store
+<code>cwd</code>, and every stash read, including the session-start
+hook, uses it to sort and never to exclude. The pattern store's
+workspace predicate is on <code>memory_retrieve</code>, and
+<code>memory_search</code> reads the same files without it.</li>
+<li><code>trust_state</code> — withheld, and the reason is a written
+rule. The tiers <code>settled</code>, <code>check-before-acting</code>,
+<code>suspect</code> and the <code>tombstoned</code> basis are discrete,
+human-driven states, and D1 forbids every read path from dropping on
+them. Recall attaches them as labels
+(<code>personal.py:353-384</code>).</li>
+<li><code>tombstone</code> — withheld. A <code>wrong</code> verdict is
+keyed on the file stem and keeps a digest of the rejected text, which is
+the key a value tombstone needs. <code>canonical_digest</code> is read
+only by the audit; no capture, stash or promotion path consults the
+log.</li>
+<li><code>human_review</code> — withheld. The verdict loop passes the
+actor test: it needs a TTY and no tool records a verdict. But nothing
+waits for it. Curated memories are served before review and after a
+<code>wrong</code> verdict, and the per-candidate promotion gate has no
+caller.</li>
+<li><code>bitemporal</code> — no validity time on any unit.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below was read
+at the pin. The CI workflow runs
+<code>pytest -m "not network and not integration"</code>
+(<code>.github/workflows/tests.yml:213</code>).</p>
+<p><strong>The negative cases.</strong>
+<code>test_ttl_prunes_expired_on_search</code> writes a fresh and a
+31-day-old record with the same text and asserts search returns the
+first and not the second
+(<code>tests/unit/memory/test_file_stash.py:147-164</code>).
+<code>test_forget_removes_by_id</code> stores three findings, forgets
+two, and asserts <code>recent()</code> returns exactly the third
+(<code>:435-440</code>). Both assert the included record, so an empty
+result fails.</p>
+<p><strong>A scope boundary, tested on the governed path only.</strong>
+<code>test_internal_pattern_is_invisible_from_another_checkout</code>
+stores an INTERNAL pattern from one checkout and asserts
+<code>retrieve_pattern</code> raises from another, and a sibling test
+asserts the storing checkout can read it
+(<code>tests/unit/memory/test_workspace_scoping.py:65-101</code>). No
+test covers <code>search_patterns</code> across workspaces.</p>
+<p><strong>Audit.</strong>
+<code>test_audit_log_created_on_pattern_store</code> stores through the
+real integration and asserts <code>store_pattern</code> and the user
+appear in the JSONL
+(<code>tests/unit/memory/test_long_term_security.py:254-276</code>).
+<code>test_delete_success_writes_audit_event</code> asserts one
+<code>delete_pattern</code> event against a fake logger
+(<code>tests/memory/test_long_term_operations.py:158-166</code>).</p>
+<p><strong>Evaluations without assertions.</strong>
+<code>scripts/memory_recall_eval.py</code> captures a corpus through
+<code>PersonalMemory</code> and runs positive queries and five negative
+ones, such as <em>"What's the office WiFi password?"</em>, then reports
+the negative queries' top scores without a threshold
+(<code>:183-210</code>, <code>:254-281</code>). The lessons benchmark
+scores a golden query file against the real index for P@1 and P@3
+(<code>scripts/phase0/lessons_rag_benchmark.py:1-75</code>). The
+README's 96% P@3 is stated in the CHANGELOG, and no result file is
+committed.</p>
+<p><strong>A committed live pilot.</strong>
+<code>benchmarks/trap_battery_results_2026-07-13.md</code> records 30
+headless sessions across three traps with memory on and off. Its own
+verdict calls the scale a pilot whose numbers are not quotable.</p>
+<p><strong>Not covered.</strong> No test asserts the session-start block
+excludes another project's findings, because it does not. No test drives
+the verdict loop against a personal-memory layout with two topics. No
+paper or citation block describes this system; the only arXiv references
+are in an unrelated research note on parallel lanes.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Prove the write before reporting it.</strong> A remote
+memory server that acknowledges before persisting is common; read the id
+back, and divert to a local tier when the readback fails.</li>
+<li><strong>One renderer for every recall surface,</strong> with the
+instruction scan inside it so a caller cannot forget it, and fail closed
+when it cannot load.</li>
+<li><strong>Bind a verification to a digest of what was
+verified.</strong> Normalise whitespace, separate fields, and keep the
+date outside the digest, so an edit voids the verification and a
+reformat does not.</li>
+<li><strong>Expire notes by their referent.</strong> A note about an
+open PR is stale when the PR closes; checking the referent at read time
+beats a longer TTL.</li>
+<li><strong>Refuse ambiguous deletion.</strong> Resolve short ids
+against a bounded recent set and skip any prefix with zero or several
+matches.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A header that states a scope the query does not
+enforce.</strong> If a block says "from this project", filter by
+project, or change the header.</li>
+<li><strong>Labels where a filter is needed.</strong> Rejecting
+suppression by age is sound; extending the rule to a person's explicit
+<code>wrong</code> verdict leaves the rejected claim in every
+recall.</li>
+<li><strong>Keying review state on a name the layout repeats.</strong> A
+filename stem is an identity only when filenames are unique within the
+root.</li>
+<li><strong>A review gate the write path can walk around.</strong> A
+per-candidate promotion form means little while the agent can write the
+curated tier directly.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer on Claude Code who wants findings carried
+between sessions with no infrastructure and is willing to read what is
+injected. The engineering around failure is careful, and the reasoning
+is written down in the code. It does not suit anyone who needs project
+isolation, a review gate that holds memories back, or a small surface:
+the memory sits beside an MCP server with many tools, and several memory
+surfaces overlap. A reader wanting only the stash-and-recall loop would
+do better to copy <code>session_stash.py</code>,
+<code>file_stash.py</code> and <code>provenance.py</code> than to adopt
+the package.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the out-of-tree hydrator honour <code>wrong</code> verdicts,
+and does <code>recall_digest</code> filter on
+<code>status: active</code> as <code>promotion.py</code> says?</li>
+<li>How often does the 15-second Stop-hook timeout cut off a cold Ollama
+extraction in practice, and does the heuristic then run at all?</li>
+<li>How does attune-rag 1.2.0's keyword retriever score, and what does
+the 8.0 lesson floor correspond to?</li>
+<li>Is the stem collision visible in real personal corpora, or do users
+keep one kind per topic?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Raw stash:</strong>
+<code>src/attune/memory/session_stash.py</code>,
+<code>src/attune/memory/file_stash.py</code>,
+<code>attune_redis/memory.py</code>,
+<code>attune_redis/config.py</code>,
+<code>src/attune/telemetry/lessons/__init__.py</code>.</li>
+<li><strong>Hooks:</strong> <code>plugin/hooks/hooks.json</code>,
+<code>plugin/hooks/session_stash.py</code>,
+<code>plugin/hooks/session_recall.py</code>,
+<code>plugin/hooks/lesson_recall.py</code>,
+<code>plugin/hooks/jit_recall.py</code>,
+<code>plugin/hooks/trap_stash.py</code>,
+<code>plugin/hooks/_memory_verdicts.py</code>.</li>
+<li><strong>Curated tier:</strong>
+<code>src/attune/memory/personal.py</code>,
+<code>src/attune/memory/curated_audit.py</code>,
+<code>src/attune/memory/verdict_log.py</code>,
+<code>src/attune/memory/promotion.py</code>,
+<code>src/attune/memory/recall_digest.py</code>,
+<code>scripts/review_curated_memory.py</code>.</li>
+<li><strong>Trust framing:</strong>
+<code>src/attune/memory/provenance.py</code>.</li>
+<li><strong>Pattern store:</strong>
+<code>src/attune/mcp/memory_handlers.py</code>,
+<code>src/attune/memory/mixins/long_term_mixin.py</code>,
+<code>src/attune/memory/long_term_integration.py</code>,
+<code>src/attune/memory/long_term_operations.py</code>,
+<code>src/attune/memory/long_term_classification.py</code>,
+<code>src/attune/memory/security/audit_logger.py</code>.</li>
+<li><strong>MCP and skills:</strong>
+<code>src/attune/mcp/server.py</code>,
+<code>attune_redis/mcp_tools.py</code>,
+<code>plugin/skills/recall/SKILL.md</code>,
+<code>src/attune/commands/remember.md</code>.</li>
+<li><strong>Tests and evals:</strong>
+<code>tests/unit/memory/test_file_stash.py</code>,
+<code>tests/unit/memory/test_workspace_scoping.py</code>,
+<code>tests/unit/memory/test_long_term_security.py</code>,
+<code>tests/memory/test_long_term_operations.py</code>,
+<code>scripts/memory_recall_eval.py</code>,
+<code>scripts/phase0/lessons_rag_benchmark.py</code>,
+<code>benchmarks/trap_battery_results_2026-07-13.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n 'stash_entry\(|recall_entries\(|recent_entries\(|forget_entries\(|forget_by_prefix\(' --type py -g '!tests/**'</code>
+— callers in <code>plugin/hooks/</code>,
+<code>attune_redis/mcp_tools.py</code>,
+<code>src/attune/handoff/memory_link.py</code>,
+<code>src/attune/telemetry/lessons/__init__.py</code> and
+<code>promotion.py</code>.</li>
+<li><code>rg -n 'promotion\.promote\(|import promote\b|promote\(proposal|promotion_form_dict|promotion_candidates' -g '!tests/**'</code>
+— definitions in <code>promotion.py</code>, a CHANGELOG line and an
+archived spec; no caller.</li>
+<li><code>rg -n 'append_verdict|latest_verdicts|load_verdicts|tombston' --type py -g '!tests/**'</code>
+— <code>append_verdict</code> is called only by
+<code>scripts/review_curated_memory.py</code>; the memory readers are
+<code>curated_audit.py</code>, <code>personal.py</code> and
+<code>session_recall.py</code>.</li>
+<li><code>rg -n 'canonical_digest|\.verdicts\.jsonl|VERDICTS_FILENAME' -g '!tests/**' -g '!docs/**' -g '!website/**' -g '!CHANGELOG.md'</code>
+— the memory digest is read only in <code>curated_audit.py</code>; the
+other hits are an unrelated function of the same name in
+<code>src/attune/elicitation/</code>.</li>
+<li><code>rg -n -i 'approve|verdict' src/attune/mcp/tool_schemas.py attune_redis/mcp_tools.py</code>
+— two hits about workspace edits; no verdict tool.</li>
+<li><code>rg -n 'valid_from|valid_to|valid_at|valid_until|event_time|t_valid|invalid_at' src attune_redis plugin --type py</code>
+— no validity field on a memory unit.</li>
+<li><code>rg -n -i 'quarantin' --type py -g '!tests/**'</code> —
+comments in <code>provenance.py</code> and
+<code>session_recall.py</code>, and a corpus string in
+<code>scripts/memory_recall_eval.py</code>; no quarantine filter.</li>
+<li><code>find . -path ./.git -prune -o -name 'functions.lua' -print</code>
+— no match;
+<code>gh api repos/Smart-AI-Memory/attune-agent-memory</code> returned
+404 on 3 October 2026.</li>
+<li><code>find . -path ./.git -prune -o -iname '*remember*' -print</code>
+— <code>src/attune/commands/remember.md</code> and two readback
+tests.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=website</code>
+— one hit, <code>docs/research/parallel-lane-execution.md</code>, about
+parallel agent lanes; no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/Smart-AI-Memory/attune-ai/commit/2e3e4f1b50c490b106cc7d5737db5965e36abdfb"><code class="commit-id" title="2e3e4f1b50c490b106cc7d5737db5965e36abdfb">2e3e4f1b…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 1
+October 2026. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>. Screened before reading: 4 auto-run surfaces
+(<code>.claude-plugin/</code>, <code>.claude/settings.json</code> with
+SessionStart, Stop, PreToolUse and PostToolUse hooks,
+<code>.devcontainer/devcontainer.json</code>, <code>.mcp.json</code>),
+17 build-time execution points, 12 dependency files inside the cooldown
+— every file in a depth-1 clone dates to the tip — and 6 unpinned
+surfaces; <code>AGENTS.md</code> and <code>CLAUDE.md</code> were treated
+as data. Read with <code>grep</code>, <code>sed</code> and
+<code>rg</code>; nothing installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

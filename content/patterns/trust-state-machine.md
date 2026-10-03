@@ -414,6 +414,8 @@ visible only in the data.
 
 [AlphaOne ai-memory](../../systems/alphaonedev-ai-memory/) puts its one trust state on a lifecycle column built for work items, and earns the mark on the filter rather than the vocabulary. `quarantined` is system-only — refused as caller input and absent from every caller transition — and is set by federation receive on a relayed write whose author signature did not verify, when `AI_MEMORY_FED_QUARANTINE_UNATTRIBUTED` is on. Reads admit only an allow-list of five other states, so the row is stored but invisible until a signed copy of the same id verifies and a raw update returns it to `open`. Local writes never enter the state, and the knob defaults off.
 
+[Attune AI](../../systems/attune-ai/) builds the states and then forbids using them. Curated memories resolve to `settled`, `check-before-acting` or `suspect` from a human verdict log, with `wrong` forcing a `tombstoned` basis and a substantive edit voiding a verification through a content digest. Its decision D1 — *"Nothing here may filter a memory out of a result on the basis of age"* — is applied to every recall surface, so a memory a person judged wrong is returned with the label `suspect · judged WRONG`. The rule is right about age and over-applied to an explicit rejection, which is the distinction the mark turns on.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

@@ -905,6 +905,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 [Tree Ring Memory](../../systems/tree-ring-memory/) puts the key on the row and then gives its two read paths different owners. The automatic startup brief takes the project from the configured root and the agent, workflow and session from the harness hook payload, rejects a payload that tries to supply a root or store id, and compiles `project IN (?, ?)` plus an own-identity clause for private scopes into SQL before the candidate cap, pinned by a set-equality test and a 300-row starvation test. Explicit `recall` applies whichever keys the caller passes and none otherwise, and `export` takes no project at all; the README calls the fields partitions, not read ACLs.
 
+[Session Recall](../../systems/session-recall/) is a counterexample at the boundary between a raw layer and a derived one. Its transcript chunks carry `cwd`, and both retrieval arms apply a boundary-safe prefix predicate inside the vector prefilter. The distilled meta docs entries are indexed into the same table with `cwd=""`, so every scoped search excludes them. The bundled skill also tells the agent to retry globally when a scoped result is thin. A derived record has to inherit the scope key its reads filter on, or the scope silently drops it.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

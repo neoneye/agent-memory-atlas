@@ -303,6 +303,8 @@ the proposal never sets, and nothing on the approval path calls the one function
 that retires the old learning, so an approved supersession changes nothing a
 reader sees.
 
+[MGI-Mind](../../systems/mgi-mind/) resolves every contradiction automatically, and shows what happens when the resolver's inputs have no producer. A fact on a `Single` or `TemporalSingle` predicate duels the strongest visible rival and ends `active`, `contested` or `quarantine_candidate`, with the loser retired `stale` or `superseded` under a cross-process lock. Entrenchment's dependants term is written only by a migration command, so on the live path the disposition is decided by age, and any rival under about nine months old loses. It also misses requirement 5: re-adding a retired triple rebuilds its row with a fresh duel, so the old value can win the rematch.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

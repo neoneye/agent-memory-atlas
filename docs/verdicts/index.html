@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 715 reports.</strong></p>
+<p><strong>This page covers all 718 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -29762,6 +29762,124 @@ proposal queue — to finish rather than copy.</li>
 <li>Do not copy when: you need correction to work today, review before
 belief, or an audit trail of memory edits. Learnings go live on insert,
 update overwrites, delete is hard, and none of it is recorded.</li>
+</ul>
+<h3 id="attune-ai"><a
+href="../systems/attune-ai/"><code>attune-ai</code></a></h3>
+<ul>
+<li>Best idea: <strong>make a write prove itself before reporting
+success.</strong> <code>AMSMemoryBackend.remember</code> returns True
+only after <code>_readback</code> fetches the id it just wrote, because
+the server acknowledges before Redis persists; an unconfirmed write
+diverts to the local file tier and reports whether that landed. One
+renderer, <code>render_recall_for_context</code>, frames every recalled
+body as untrusted evidence and fails closed when it cannot load.</li>
+<li>Biggest risk: <strong>scope is a sort order.</strong> Every raw
+finding stores <code>cwd</code>, and every read uses it only to put
+same-project findings first, so when a project has fewer than five
+findings the SessionStart block, headed <em>"Recent findings from this
+project"</em>, fills with other projects'. On the pattern store,
+<code>memory_search</code> skips the workspace and owner check that
+<code>memory_retrieve</code> applies, by a documented ruling.</li>
+<li>Most reusable component:
+<code>src/attune/memory/verdict_log.py</code> with
+<code>resolve_age_basis</code> in <code>curated_audit.py</code> — an
+append-only verdict log whose whitespace-normalised digest voids a
+verification on substantive edit and survives a reformat.</li>
+<li>Second risk: <strong>review changes labels, never what is
+served.</strong> Decision D1 forbids any read from dropping a memory on
+its tier, so a person's <code>wrong</code> verdict yields
+<code>suspect · judged WRONG</code> on a memory still returned. The
+verdict is keyed on the filename stem, which personal memory's
+<code>&lt;topic&gt;/&lt;kind&gt;.md</code> layout repeats across topics,
+and the per-candidate promotion gate from stash to curated tier has no
+caller outside tests.</li>
+<li>Maturity impression: Apache-2.0, 215,226 lines of Python outside
+tests, of which the memory package is 24,753; 4,139 commits on main by 8
+contributors, four of them bots, between 13 October 2025 and 1 October
+2026; 24,947 Python test functions. Two marks: <code>audit_log</code> on
+the pattern store's append-only event file, <code>negative_eval</code>
+on file-stash tests that an expired and a forgotten finding stay out of
+search and <code>recent()</code>. A 30-session trap-battery pilot is
+committed and labelled not quotable; the README's P@3 figure has no
+committed result file.</li>
+<li>Study when: you want a zero-infrastructure Claude Code memory loop
+with model extraction at Stop, untrusted-evidence framing at injection,
+and write paths that refuse to report success they cannot prove.</li>
+<li>Do not copy when: findings must stay inside a project, a person's
+rejection must stop a memory being served, or review must happen before
+a memory takes effect.</li>
+</ul>
+<h3 id="session-recall"><a
+href="../systems/session-recall/"><code>session-recall</code></a></h3>
+<ul>
+<li>Best idea: <strong>refuse to mix embedding spaces, and say so at the
+tool boundary.</strong> Every indexed unit's signature carries provider,
+model and dimension. One index-wide marker goes to <code>mixed</code>
+when any unit disagrees, and <code>recall_search</code> then returns
+literal matches with a <code>degraded</code> reason instead of ranking
+noise.</li>
+<li>Biggest risk: <strong>distilled claims are believed on
+write.</strong> The meta docs agent creates and edits entries straight
+into the store from untrusted dialogue, and they reach every later
+unscoped search. Git commits are the only review, after indexing.</li>
+<li>Most reusable component: the distiller's tool server:
+<code>create</code> refused until <code>search</code> has run in the
+process, and a secret scanner on create and edit before the byte
+lands.</li>
+<li>Second risk: <strong>the derived layer falls outside the scope it is
+meant for.</strong> Entries are indexed with <code>cwd=""</code>, so a
+repository-scoped search never returns them, and
+<code>source="metadocs"</code> is rejected by the validator.</li>
+<li>Maturity impression: MIT, 62 commits on main by three contributors
+between 26 June and 14 September 2026, 9,592 lines of Python, 450 pytest
+functions run in CI on two operating systems; no retrieval eval; one
+mark, <code>negative_eval</code>.</li>
+<li>Study when: you index several coding agents' transcripts into one
+local store and want the hybrid prefilter, orphan guards and degrade
+reporting.</li>
+<li>Do not copy when: deletions or corrections must be accountable.
+Store the reason the delete verb demands, and index derived entries with
+the key the scoped read filters on.</li>
+</ul>
+<h3 id="mgi-mind"><a
+href="../systems/mgi-mind/"><code>mgi-mind</code></a></h3>
+<ul>
+<li>Best idea: <strong>derive the database filter from the visibility
+rule.</strong> <code>EntryStatus::hidden_wire_strings</code> builds the
+Qdrant <code>must_not</code> set from <code>is_default_visible</code>,
+so the fact query and the duel's rival set agree on what is current, and
+its comment records the two leaks (<code>stale</code>, then
+<code>quarantine_candidate</code>) that taught it. The fact duel runs
+under a per-axis mutex and a cross-process file lock.</li>
+<li>Biggest risk: <strong>the duel reduces to recency, and a value never
+stays rejected.</strong> A live write earns entrenchment only from age,
+so in the default mode any contradicted fact under about nine months old
+flips. Re-adding the loser's triple rebuilds its payload with
+<code>valid = "true"</code> and a fresh duel, so an invalidated or
+dampened value returns.</li>
+<li>Most reusable component: <code>src/knowledge.rs:87-207</code> — the
+seven-state <code>EntryStatus</code>, <code>is_default_visible</code>,
+and the derived <code>must_not</code> builder, small enough to lift into
+any store that filters by status.</li>
+<li>Second risk: <strong>library scope is enforced on search and not on
+recall.</strong> A library-scoped HTTP token is refused
+<code>/fact/query</code> and <code>/procedure/recall</code> and served
+both through JSON <code>/memory/recall</code>. The session briefing
+hand-rolls its status check and admits
+<code>quarantine_candidate</code>, and <code>mind_history</code> lists
+quarantined memories.</li>
+<li>Maturity impression: Apache-2.0, 25,368 lines of Rust before the
+inline test modules, 297 commits from one contributor between 28 May and
+13 September 2026, 432 unit tests and 24 integration tests. Three marks:
+<code>trust_state</code>, <code>audit_log</code>, and
+<code>negative_eval</code> on two CI-run duel tests; the HTTP scope
+canary never runs in CI. Published LongMemEval-S recall recomputes
+exactly from the committed files.</li>
+<li>Study when: you want a contradiction rule with its formulas, locks
+and filter derivation written out and tested, or a quarantine that keeps
+rejected candidates recoverable and counted.</li>
+<li>Do not copy when: a fact must survive a newer wrong assertion, or a
+token's library must bound everything it reads.</li>
 </ul>
         </article>
       </div>

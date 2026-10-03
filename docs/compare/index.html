@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-715, generated from each report's frontmatter —
+718, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-715, generated from each report's frontmatter —
+718, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-715, generated from each report's frontmatter —
+718, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 715, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 718, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-715, generated from each report's frontmatter —
+718, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 715 systems by the seven mechanisms
+filters all 718 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -2946,6 +2946,55 @@ lessons asserted out of recall</td>
 <td>Large surface on by default with its evaluation results gitignored;
 model votes reach deletion; three timestamp columns that always carry
 the same value, so the history is versions rather than validity</td>
+</tr>
+<tr>
+<td><a href="../systems/attune-ai/"><code>attune-ai</code></a></td>
+<td>Three units. A raw finding of at most 500 characters with type,
+session id and cwd, extracted at session end; a curated Markdown file
+per topic and kind, or per promoted node; a classified pattern record in
+the unified store</td>
+<td>Raw stash in ~/.attune/session_stash/findings.jsonl, or the Redis
+Agent Memory Server when reachable; curated Markdown under
+~/.attune/memory with a per-corpus .verdicts.jsonl; patterns as JSON
+files in ~/.attune/memdocs_storage</td>
+<td>Raw stash by keyword overlap plus a 3-day recency half-life, or AMS
+semantic search; SessionStart injects the newest five by recency.
+Curated recall by keyword ranking through attune-rag; lessons by keyword
+ranking above a score floor on each prompt</td>
+<td>A Stop hook asks a local Ollama model for up to five findings once
+per session, falls back to a keyword heuristic, runs a PII and secrets
+gate, and appends. Agents also write through session_memory_capture,
+personal_memory_capture and memory_store</td>
+<td>Raw findings expire after 30 days, are deleted by id from /recall
+drop or review, and are forgotten at session start when every PR they
+cite has merged or closed. Curated files are overwritten in place or
+deleted by topic. No tombstone keyed on a value</td>
+<td>cwd is stored on every raw finding and used only to sort
+same-project findings first, so other projects' findings fill the
+session-start block. AMS reads filter one install-wide namespace.
+Pattern retrieve checks workspace and owner; pattern search does
+not</td>
+<td>Claude Code plugin hooks on SessionStart, Stop, PreToolUse,
+PostToolUse and UserPromptSubmit; an MCP server with memory_<em>,
+personal_memory_</em> and session_memory_* tools; a /recall skill and an
+attune CLI</td>
+<td>None scheduled. The Stop hook extracts once per session, prunes
+expired findings and scores the session's surfaced memories as acted_on,
+ignored or wrong for telemetry; a weekly SessionStart nudge names
+curated memories due for review</td>
+<td>Every recalled body is wrapped as untrusted evidence with
+instruction-shaped text flagged. Curated memories carry a settled,
+check-before-acting or suspect label from age, type volatility and the
+latest human verdict; a wrong verdict labels and never withholds</td>
+<td>Writes report False unless a readback proves persistence; one
+envelope renderer for every recall surface; a digest binds each
+verification to the text it verified; deletion by short id refuses
+ambiguous prefixes; PR-referencing notes expire when the PR closes</td>
+<td>The session-start block is headed as this project's findings and
+includes other projects'; the review-gated stash-to-curated promotion
+has no caller outside tests; pattern search bypasses the access check
+retrieve applies; verdicts are keyed on filename stem, which collides
+across personal-memory topics</td>
 </tr>
 <tr>
 <td><a
@@ -18211,6 +18260,63 @@ the Inbox approve verb is on the same CLI the agent runs; model
 confidence alone chooses promoted</td>
 </tr>
 <tr>
+<td><a href="../systems/mgi-mind/"><code>mgi-mind</code></a></td>
+<td>Three kinds in one Qdrant instance: a memory chunk of up to 500
+characters keyed by a UUIDv5 of library and content; a vectorless fact
+triple keyed by a UUIDv5 of subject, predicate and object with a
+lifecycle status; and procedures and skills stored as typed points in
+the memories collection</td>
+<td>A local Qdrant the binary downloads and starts on loopback: a
+memories collection with dense and sparse vectors, a _kg_facts
+collection, a predicate registry and a procedure-stats side collection.
+Files under MGIMIND_HOME hold the audit log, session logs, pinned
+blocks, an access journal and an encrypted vault</td>
+<td>Memories: dense multilingual-e5-base and a sparse term-frequency arm
+fused by RRF in one Qdrant query, then a bge-reranker-base cross-encoder
+over the top 20, filtered by optional library, author, source and date.
+Facts: full-text match on subject, predicate or object with the hidden
+statuses excluded. Procedures and skills: dense plus sparse over their
+own type</td>
+<td>Explicit tools: mind_add writes directly; mind_ingest runs a secret
+scan, a cheap relevance gate, a token-novelty check and a near-duplicate
+check, routing rejects to quarantine; mind_fact add runs the duel rule
+under a per-axis and a cross-process lock. An optional local Qwen
+extractor is behind a cargo feature that is off by default</td>
+<td>Memories: content-addressed upsert, delete by id, soft archive and
+restore, quarantine promote and expire. Facts: the duel marks a loser
+stale or superseded with valid_until; invalidate sets valid false;
+re-adding the same triple rewrites the whole payload, reviving an
+invalidated or stale value. No tombstone</td>
+<td>A library key on every memory, applied as an optional caller filter
+on MCP and enforced only for library-scoped HTTP tokens, whose JSON
+recall still returns facts and procedures from outside the allowlist.
+Facts, procedures, skills and sessions are global</td>
+<td>MCP over stdio, which the README counts at 29 live tools plus
+deprecated aliases; a loopback HTTP API with per-agent tokens and a
+library allowlist; a CLI; a loopback viewer with delete, edit and
+promote; a Python client. No host hook; AI_INSTRUCTIONS.md asks the
+model to call mind_session and mind_context at session start</td>
+<td>Inside the warm MCP process an hourly, load-aware re-test loop
+recomputes confidence_score on up to 50 entrenched facts per tick and
+moves the doubt counter; access counts flush to a journal; consolidate,
+archive and prune are CLI-only</td>
+<td>Fact status filters stale, superseded and quarantine_candidate from
+the fact query and the duel's rival set; memory quarantine is excluded
+from search; the doubt window ships in shadow mode and only reorders;
+the inheritance discount has no producer</td>
+<td>One status-visibility function drives both the Rust gate and the
+Qdrant filter; per-axis plus cross-process locking around the fact duel;
+a falsifiable library-scope canary test with positive controls; audit
+lines chained by BLAKE3; benchmark figures that recompute exactly from
+committed per-question files</td>
+<td>On the default path the duel flips any contradicted fact younger
+than about nine months, and re-adding an old value flips it back; JSON
+recall leaks global facts and procedures to a library-scoped token; the
+briefing admits quarantine_candidate facts; mind_history shows
+quarantined memories; the advertised bi-temporal model has one time
+axis</td>
+</tr>
+<tr>
 <td><a href="../systems/midas/"><code>midas</code></a></td>
 <td>A verbatim turn or statement with a kind, an importance 1-5, a
 provenance and an actor — never an LLM rewrite</td>
@@ -26227,6 +26333,65 @@ generation, so one judge outage discards up to 300 failures; the paper's
 157-skill seed bank ships nowhere in the tree</td>
 </tr>
 <tr>
+<td><a
+href="../systems/session-recall/"><code>session-recall</code></a></td>
+<td>Two kinds. A transcript chunk: one user prompt or one assistant text
+block, verbatim, with session, uuid, cwd, branch, timestamp and byte
+offsets into the source file. A meta docs entry: one Markdown file with
+id, project, category (bugs, actions, decisions or user), title, body,
+PR list, source session keys and created and updated dates</td>
+<td>One SQLite file under the data directory with a chunks table, a
+sqlite-vec vec0 table and an FTS5 table; transcripts stay in place on
+disk and Cursor is snapshotted to JSONL. Meta docs entries are files in
+a git repository the user picks, also indexed into the same SQLite
+file</td>
+<td>recall_search runs sqlite-vec KNN and FTS5 bm25 with the same
+metadata prefilter, collapses identical content by hash, and reranks
+with Voyage when configured, else keeps KNN order. grep streams every
+indexed transcript. expand_around and step read raw turns by session and
+uuid. recent_sessions groups chunks by session</td>
+<td>Background and incremental: a SessionStart hook runs sync, which
+re-indexes changed transcripts in one transaction per file and reuses
+vectors by content hash. Meta docs: a daily job hands each session's new
+dialogue to a caged claude or codex agent holding four MCP verbs,
+search, create, edit and delete; create is refused until search has
+run</td>
+<td>Transcript rows are replaced when the file changes and pruned when
+it disappears. Entries are edited in place or deleted by the distiller
+with a reason of at least ten characters that is returned to the model
+and not stored; each run ends in one git commit per changed project. No
+tombstone</td>
+<td>A cwd column filtered by a boundary-safe prefix predicate when the
+caller passes scope_cwd; it is optional, the bundled skill says to retry
+globally when a scoped result is thin, and expand_around and step take
+no scope. Meta docs entries are indexed with an empty cwd, so every
+scoped search excludes them. The team hub pools every member's history
+with owner as attribution only</td>
+<td>A stdio MCP server with five tools for Claude Code, Codex and Cursor
+plugins; SessionStart hooks that background a sync; UserPromptSubmit and
+Stop hooks that push to a team hub when one is configured; a CLI; a
+peer-to-peer ask with owner approval</td>
+<td>The SessionStart sync; a launchd or systemd timer for the meta docs
+run, one run at a time under flock, sessions oldest-first with
+per-session watermarks that advance only after a successful call; a hub
+indexer on its own timer</td>
+<td>None on stored material. Transcript chunks are records of what was
+said; meta docs entries are written straight into the store and served
+without a status. The pending, approved and rejected states belong to
+outbound peer answers</td>
+<td>An embedding-space fingerprint that turns semantic ranking off
+rather than mixing vector spaces, and says so in a degraded field;
+orphan guards on both retrieval arms; one delete criterion inside the
+write transaction; a distiller whose dedup and secret checks are server
+mechanics rather than prompt requests; no transcript left behind by
+distiller or composer runs</td>
+<td>Distilled entries reach every future unscoped search with no review
+step; the delete reason the tool demands is discarded; meta docs entries
+are invisible to scoped search and cannot be filtered by source; a peer
+grant is matched on a repository basename; the codex composer keeps read
+access to the disk</td>
+</tr>
+<tr>
 <td><a href="../systems/shellbrain/"><code>shellbrain</code></a></td>
 <td>An immutable typed text record (problem, solution, failed_tactic,
 fact, preference, change) citing episode events, plus concept graph
@@ -31331,7 +31496,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>64 of 715:</em> <a
+<p><em>64 of 718:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -31399,7 +31564,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>184 of 715:</em> <a
+<p><em>185 of 718:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -31510,6 +31675,7 @@ href="../systems/memspec/"><code>memspec</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/mengram/"><code>mengram</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
+href="../systems/mgi-mind/"><code>mgi-mind</code></a>, <a
 href="../systems/mind-mem/"><code>mind-mem</code></a>, <a
 href="../systems/mindcache/"><code>mindcache</code></a>, <a
 href="../systems/mnemo-cortex/"><code>mnemo-cortex</code></a>, <a
@@ -31591,7 +31757,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>121 of 715:</em> <a
+<p><em>121 of 718:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -31720,7 +31886,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>319 of 715:</em> <a
+<p><em>319 of 718:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -32055,7 +32221,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>243 of 715:</em> <a
+<p><em>245 of 718:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -32081,6 +32247,7 @@ href="../systems/areev/"><code>areev</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
 href="../systems/artesian/"><code>artesian</code></a>, <a
 href="../systems/athena/"><code>athena</code></a>, <a
+href="../systems/attune-ai/"><code>attune-ai</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
 href="../systems/autobot-ai/"><code>autobot-ai</code></a>, <a
@@ -32198,6 +32365,7 @@ href="../systems/mentisdb/"><code>mentisdb</code></a>, <a
 href="../systems/merchantbench/"><code>merchantbench</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
 href="../systems/mex/"><code>mex</code></a>, <a
+href="../systems/mgi-mind/"><code>mgi-mind</code></a>, <a
 href="../systems/midas/"><code>midas</code></a>, <a
 href="../systems/mimir/"><code>mimir</code></a>, <a
 href="../systems/mind-mem/"><code>mind-mem</code></a>, <a
@@ -32308,7 +32476,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>94 of 715:</em> <a
+<p><em>94 of 718:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
@@ -32406,7 +32574,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>426 of 715:</em> <a
+<p><em>429 of 718:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -32451,6 +32619,7 @@ href="../systems/argo/"><code>argo</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
 href="../systems/artesian/"><code>artesian</code></a>, <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
+href="../systems/attune-ai/"><code>attune-ai</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/aurora/"><code>aurora</code></a>, <a
 href="../systems/autobot-ai/"><code>autobot-ai</code></a>, <a
@@ -32663,6 +32832,7 @@ href="../systems/mentisdb/"><code>mentisdb</code></a>, <a
 href="../systems/merchantbench/"><code>merchantbench</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
 href="../systems/mex/"><code>mex</code></a>, <a
+href="../systems/mgi-mind/"><code>mgi-mind</code></a>, <a
 href="../systems/midas/"><code>midas</code></a>, <a
 href="../systems/mimir/"><code>mimir</code></a>, <a
 href="../systems/mind-mem/"><code>mind-mem</code></a>, <a
@@ -32781,6 +32951,7 @@ href="../systems/second-brain-cloudflare/"><code>second-brain-cloudflare</code><
 <a href="../systems/selmem/"><code>selmem</code></a>, <a
 href="../systems/selvedge/"><code>selvedge</code></a>, <a
 href="../systems/semantica/"><code>semantica</code></a>, <a
+href="../systems/session-recall/"><code>session-recall</code></a>, <a
 href="../systems/shellbrain/"><code>shellbrain</code></a>, <a
 href="../systems/shisad/"><code>shisad</code></a>, <a
 href="../systems/sibyl-memory/"><code>sibyl-memory</code></a>, <a
@@ -32866,8 +33037,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-426 repositories of
-715 assert that particular material must
+429 repositories of
+718 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -32940,7 +33111,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 715 is the real figure for the second kind, and
+of 718 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

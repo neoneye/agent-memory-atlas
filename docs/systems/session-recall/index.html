@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local SQLite index over Claude
+Code, Codex and Cursor transcripts, plus a nightly distiller that keeps
+bugs, procedures and decisions as Markdown in git.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Session
+Recall — Agent Memory Atlas">
+    <meta property="og:description" content="A local SQLite index over
+Claude Code, Codex and Cursor transcripts, plus a nightly distiller that
+keeps bugs, procedures and decisions as Markdown in git.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Session
+Recall — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local SQLite index over
+Claude Code, Codex and Cursor transcripts, plus a nightly distiller that
+keeps bugs, procedures and decisions as Markdown in git.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Session Recall — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Session Recall",
+      "description": "A local SQLite index over Claude Code, Codex and Cursor transcripts, plus a nightly distiller that keeps bugs, procedures and decisions as Markdown in git.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A shared transcript index with a distilled
+project memory beside it</p>
+          <h1>Session Recall</h1>
+          <p class="document-deck">A local SQLite index over Claude
+Code, Codex and Cursor transcripts, plus a nightly distiller that keeps
+bugs, procedures and decisions as Markdown in git.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AbsoluteMode/session-recall">
+              <span>Source</span>
+              <strong>AbsoluteMode/session-recall</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AbsoluteMode/session-recall/commit/0f3600bc3a96cba94ce092ed728e6f64a34d1fcf" title="0f3600bc3a96cba94ce092ed728e6f64a34d1fcf">
+              <span>Analyzed revision</span>
+              <code>0f3600bc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/AbsoluteMode--session-recall" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>AbsoluteMode--session-recall</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>9,592
+lines of Python in 57 files under src/; the meta docs layer is about
+1,400 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>62
+commits on main by three contributors, 26 June – 14 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>450
+pytest functions in 40 files, 7,001 lines; three are deselected by
+default (one live Voyage case, two embedding smoke cases that CI runs in
+a separate job)</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Session Recall is a local Python MCP server that indexes every Claude
+Code, Codex and Cursor transcript on a machine into one SQLite file and
+serves it through five tools. Beside the index sits <em>meta docs</em>,
+a nightly distiller that turns each session's dialogue into Markdown
+entries — bugs, procedures, decisions and a map of where the user's data
+lives — in a git repository, and indexes them into the same store. What
+is notable is the engineering of the index: an embedding-space
+fingerprint that refuses to mix vectors, and a distiller whose
+invariants are enforced by its tool server. What is weak is that
+distilled entries reach every later session unreviewed, and cannot be
+scoped or filtered by source.</p>
+<p>The transcript index alone would not meet the atlas's bar: a chunk is
+a verbatim record of what was said and cannot turn out to be false. The
+meta docs entries can. An entry stating that a bug was fixed by a given
+change is a claim an agent wrote, which a later session may contradict,
+and the distiller is told to edit or delete it when that happens
+(<code>src/session_recall/metadocs/distill.py:67-74</code>). That layer
+places the system in scope, and most of sections 2, 7 and 9 are about
+it.</p>
+<p>The transcript side is careful in ways that matter to an operator. A
+model swap that keeps the dimension still changes the vector space, so
+the index stores a fingerprint and turns semantic ranking off until
+every source is re-embedded, reporting the reason in a
+<code>degraded</code> field rather than returning noise
+(<code>src/session_recall/retrieve.py:76-90</code>). Both retrieval arms
+carry an orphan guard, and a file's three deletes share one criterion
+inside the write transaction
+(<code>src/session_recall/store.py:142-159</code>).</p>
+<p>The meta docs side is where the gaps are. The distiller writes
+directly into the store; git is the only review surface, after the fact.
+The <code>delete</code> tool demands a reason and says <em>"deletions
+are audited"</em>, but the reason goes back to the model and nowhere
+else. Entries are indexed with an empty <code>cwd</code>, so a scoped
+search never returns them, and <code>source="metadocs"</code> is refused
+by the validator its own docstring tells callers to use.</p>
+<p>One mark, <code>negative_eval</code>: a committed case asserts the
+distiller's search leaves out another project's entry while returning
+the global user map, and another asserts a scoped recall leaves out a
+second repository after a global positive control. Section 9 names the
+six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are two stores of belief, and they behave differently.</p>
+<p><strong>A transcript chunk is evidence, not a claim.</strong> It is
+one user prompt or one assistant text block, copied verbatim with its
+session, <code>uuid</code>, <code>cwd</code> and byte offsets
+(<code>src/session_recall/extract.py:54-94</code>). It becomes
+retrievable when the indexer embeds it, and stops being retrievable when
+the source file changes (the file's rows are deleted and re-extracted)
+or disappears (<code>prune</code>). Reminder blocks the host harness
+injects into user turns are stripped before embedding
+(<code>src/session_recall/extract.py:19-47</code>).</p>
+<p><strong>A meta docs entry is a claim, written by an agent.</strong>
+The daily run reads only <code>user</code> and <code>assistant</code>
+rows from the index, newer than each session's watermark, and hands them
+to a distiller agent session by session
+(<code>src/session_recall/metadocs/collect.py:86-113</code>). The
+distiller decides what is durable and writes it through four verbs. An
+entry is believed from the moment <code>create</code> writes the file.
+There is no candidate state, no confidence and no second reader before
+the next search can return it.</p>
+<p><strong>An entry stops being believed in three ways.</strong> The
+distiller <code>edit</code>s it in place, replacing or appending to the
+body; <code>delete</code>s the file when the dialogue proves it wrong or
+obsolete; or a person edits or reverts the git repository. Each run
+commits once per changed project
+(<code>src/session_recall/metadocs/run.py:87-91</code>), so the prior
+text survives in git history, not in the store. Nothing records that a
+value was rejected: a later session that restates it can create it
+again.</p>
+<p><strong>The distiller treats the dialogue as data.</strong> Its
+prompt says so, and asks that injection attempts be recorded as a bugs
+entry titled <em>"suspicious content"</em>
+(<code>src/session_recall/metadocs/distill.py:83-85</code>). The
+guarantees that do not rely on the model sit in the tool server:
+<code>create</code> refuses until a <code>search</code> has run for that
+category in the process, and <code>create</code> and <code>edit</code>
+run a regex secret scanner and refuse a flagged body
+(<code>src/session_recall/metadocs/agent_server.py:39-75</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a session becomes evidence in the index and a claim in meta docs, and how each stops being returned</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a session becomes evidence in the index and a claim in meta docs, and how each stops being returned
+flowchart TD
+    T[&quot;transcript on disk:&lt;br/&gt;Claude JSONL, Codex rollout,&lt;br/&gt;Cursor snapshot&quot;] --&gt; X[&quot;extract: user prompts and&lt;br/&gt;assistant text, harness tags stripped&quot;]
+    X --&gt; C[&quot;chunk row + vector + FTS row,&lt;br/&gt;one transaction per file&quot;]
+    T -- &quot;file changed&quot; --&gt; RE[&quot;delete_file, re-extract,&lt;br/&gt;reuse vectors by hash&quot;]
+    RE --&gt; C
+    T -- &quot;file gone&quot; --&gt; PR[&quot;prune_deleted:&lt;br/&gt;rows removed&quot;]
+    C --&gt; W{&quot;daily meta docs run:&lt;br/&gt;dialogue newer than&lt;br/&gt;the session watermark?&quot;}
+    W -- &quot;yes&quot; --&gt; D[&quot;distiller agent,&lt;br/&gt;four MCP verbs&quot;]
+    D --&gt; S[&quot;search: project dir&lt;br/&gt;plus USER map&quot;]
+    S --&gt; CR{&quot;create:&lt;br/&gt;searched first?&lt;br/&gt;secret scan clean?&quot;}
+    CR -- &quot;yes&quot; --&gt; E[&quot;entry file written,&lt;br/&gt;believed at once&quot;]
+    CR -- &quot;no&quot; --&gt; REF[&quot;refused, model sees why&quot;]
+    D --&gt; ED[&quot;edit: body replaced or appended,&lt;br/&gt;session added to sources&quot;]
+    D --&gt; DEL[&quot;delete: reason of 10+ chars,&lt;br/&gt;returned to the model only&quot;]
+    ED --&gt; E
+    DEL --&gt; GONE[&quot;file removed&quot;]
+    E --&gt; G[&quot;one git commit&lt;br/&gt;per changed project&quot;]
+    GONE --&gt; G
+    E --&gt; IX[&quot;indexed as source metadocs,&lt;br/&gt;cwd empty&quot;]
+    IX --&gt; Q{&quot;recall_search&lt;br/&gt;with scope_cwd?&quot;}
+    Q -- &quot;no&quot; --&gt; HIT[&quot;returned beside transcripts&quot;]
+    Q -- &quot;yes&quot; --&gt; MISS[&quot;excluded: empty cwd&lt;br/&gt;fails the prefix predicate&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The product is one Python package with five entry points: the
+<code>session-recall</code> CLI, the <code>session-recall-mcp</code>
+stdio server, the meta docs agent server spawned per distill call, a
+team hub HTTP service, and a peer-to-peer share worker.</p>
+<ul>
+<li><strong>Index.</strong> <code>Store</code> opens one SQLite file,
+loads <code>sqlite-vec</code>, and keeps a <code>chunks</code> table, a
+<code>vec0</code> table fixed at the configured dimension, an FTS5
+table, an <code>indexed_files</code> table of per-file signatures and a
+<code>meta</code> table for the embedding fingerprint
+(<code>src/session_recall/store.py:62-100</code>). The store refuses to
+open at a different dimension and names the fix
+(<code>src/session_recall/store.py:44-60</code>).</li>
+<li><strong>Embedders.</strong> A bundled ONNX model picked by
+interaction language, Ollama, LM Studio, Voyage, OpenAI or any
+<code>/v1/embeddings</code> endpoint; a reranker only with Voyage or the
+inference gateway (<code>README.md</code>, <em>Embedding
+providers</em>).</li>
+<li><strong>Meta docs.</strong> A git repository of Markdown entries
+(<code>src/session_recall/metadocs/entries.py:1-14</code>), a scheduler
+writing a launchd plist or systemd units, a flock-guarded runner, and a
+distiller that shells out to <code>claude -p</code> or
+<code>codex exec</code>.</li>
+<li><strong>Team hub.</strong> A stdlib HTTP server behind nginx, one
+transcript tree per member, a timer-driven indexer that reuses
+<code>index_corpus</code>, and bearer keys stored as SHA-256
+(<code>src/session_recall/hub/app.py:1-22</code>,
+<code>src/session_recall/hub/auth.py:1-20</code>). When a machine has
+joined a hub, the MCP tools proxy to it and the local index is not read
+(<code>src/session_recall/server.py:29-44</code>).</li>
+<li><strong>Share.</strong> End-to-end encrypted envelopes over a folder
+or a blind relay, a worker that drafts answers into an outbox, and an
+approval step before anything is sent.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running beyond the MCP server the host starts. The
+default embedder downloads a model once into the data directory and runs
+on CPU, so no API key is needed to store or search anything; a hosted
+embedder is opt-in. Install is <code>pipx install</code> plus a host
+plugin. The index is a SQLite file and can be deleted and rebuilt from
+the transcripts, which stay where the hosts put them. Meta docs needs
+the <code>claude</code> or <code>codex</code> CLI on the path and a
+subscription; its store is plain Markdown in git, readable and
+repairable by hand. The hub needs a server, nginx for TLS, and an
+operator issuing keys.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> The SessionStart hook backgrounds
+<code>session-recall sync</code> under a <code>pgrep</code> guard
+(<code>hooks/hooks.json:4-14</code>). <code>sync</code> runs
+<code>index</code> on a solo install and pushes to the hub otherwise
+(<code>src/session_recall/cli.py:134-148</code>).
+<code>index_corpus</code> walks Claude and Codex roots; per file it
+compares a signature, snapshots vectors by content hash, deletes the
+file's rows, re-extracts, embeds only the missing hashes and commits
+(<code>src/session_recall/index.py:91-193</code>). Cursor follows, then
+<code>index_metadocs</code> when meta docs is configured
+(<code>src/session_recall/cli.py:170-195</code>).</p>
+<p><strong>Retrieval.</strong> <code>recall_search</code> checks the
+stored fingerprint, embeds the query, runs <code>Store.knn</code> and
+<code>Store.fts</code> with the same filters, drops rows that vanished
+mid-search, collapses identical <code>content_hash</code>es and reranks
+(<code>src/session_recall/retrieve.py:64-154</code>). The filter builder
+adds the scope, source and date predicates
+(<code>src/session_recall/store.py:184-207</code>).</p>
+<p><strong>Navigation.</strong> <code>expand_around</code> and
+<code>step</code> resolve a session and <code>uuid</code> to candidate
+files and stream to the anchor, keeping a bounded window
+(<code>src/session_recall/retrieve.py:156-294</code>). <code>grep</code>
+streams every indexed file and filters per event
+(<code>src/session_recall/retrieve.py:296-373</code>).</p>
+<p><strong>Distillation.</strong> <code>run_once</code> migrates the old
+one-file-per-category format if present, then per project takes pending
+sessions oldest-first, splits marathon sessions into chapters, calls the
+distiller, advances watermarks after each successful chapter, and halts
+the project on the first failure
+(<code>src/session_recall/metadocs/run.py:53-98</code>). The four verbs
+live in <code>src/session_recall/metadocs/agent_server.py:49-139</code>;
+the cage is in
+<code>src/session_recall/metadocs/distill.py:111-217</code>.</p>
+<p><strong>Meta docs into the index.</strong>
+<code>index_metadocs</code> turns each entry into one chunk with
+<code>session_id</code> and <code>uuid</code> set to the entry id,
+<code>role="doc"</code>, <code>cwd=""</code> and
+<code>source="metadocs"</code>, then prunes entries whose files are gone
+(<code>src/session_recall/metadocs/indexing.py:44-89</code>).</p>
+<p><strong>Peer answers.</strong> <code>build_candidate</code> searches
+the owner's index, keeps anchors whose <code>project</code> is granted
+to the peer, composes or digests an answer, scans it and writes a
+<code>pending</code> candidate
+(<code>src/session_recall/share/worker.py:100-140</code>).
+<code>approve</code> requires the exact version hash
+(<code>src/session_recall/share/approval.py:143-148</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>chunks</code> columns are <code>session_id</code>,
+<code>uuid</code>, <code>role</code>, <code>text</code>,
+<code>project</code>, <code>cwd</code>, <code>git_branch</code>,
+<code>ts</code>, <code>file_path</code>, <code>byte_offset</code>,
+<code>byte_len</code>, <code>turn_index</code>,
+<code>content_hash</code> and <code>source</code>
+(<code>src/session_recall/store.py:15-17</code>). <code>project</code>
+is the basename of the repository root, with worktrees collapsed
+(<code>src/session_recall/scope.py:60-65</code>). There is no status,
+confidence or validity column, and none is needed for a record of what
+was said.</p>
+<p>An entry is a dataclass with <code>id</code>, <code>project</code>
+(empty for the user map), <code>category</code>, <code>title</code>,
+<code>body</code>, <code>prs</code>, <code>sources</code>,
+<code>created</code> and <code>updated</code>
+(<code>src/session_recall/metadocs/entries.py:30-40</code>). The file
+path encodes project and category:
+<code>&lt;repo&gt;/&lt;project&gt;/&lt;category&gt;/&lt;id&gt;.md</code>,
+or <code>&lt;repo&gt;/USER/&lt;id&gt;.md</code>. <code>sources</code>
+holds <code>source:session_id</code> keys, set from the distill call's
+environment rather than from the model, and <code>edit</code> appends
+the current session
+(<code>src/session_recall/metadocs/agent_server.py:69-73</code>,
+<code>:95-96</code>). The dates are calendar days stamped at save; there
+is no validity time.</p>
+<p>When indexed, the entry's <code>updated</code> date becomes
+<code>ts</code>, and <code>project</code> becomes the entry's project or
+<code>user-map</code>. The <code>cwd</code> is empty
+(<code>src/session_recall/metadocs/indexing.py:44-51</code>), which is
+what removes entries from every scoped read (section 6).</p>
+<p>The hub adds an owner, derived from the bearer key and the transcript
+path, as attribution on each hit
+(<code>src/session_recall/hub/app.py:119-126</code>). It is not a
+filter.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Hybrid, with one prefilter on both arms.</strong> KNN puts
+the metadata predicate inside the <code>chunk_id IN (SELECT …)</code>
+subquery, so a small repository or source is not starved by a global
+top-k, and the unscoped form keeps the subquery as an orphan guard
+(<code>src/session_recall/store.py:209-235</code>). FTS5 ORs the quoted
+query terms, joins <code>chunks</code> and orders by <code>rank</code>
+(<code>src/session_recall/store.py:237-262</code>). With no reranker,
+the order is KNN first, then FTS-only hits with a <code>None</code>
+score rather than a fake zero
+(<code>src/session_recall/retrieve.py:146-154</code>).</p>
+<p><strong>Degradation is reported, not hidden.</strong> An unreachable
+embedder or a fingerprint mismatch produces FTS-only results with a
+<code>degraded</code> reason, and the tool description tells the agent a
+miss is then inconclusive
+(<code>src/session_recall/server.py:62-71</code>).</p>
+<p><strong>Scope is a predicate the caller may supply.</strong>
+<code>scope_clause</code> matches the root exactly or anything under
+<code>root/</code>, escaping LIKE wildcards
+(<code>src/session_recall/scope.py:38-50</code>).
+<code>recall_search</code>, <code>grep</code> and
+<code>recent_sessions</code> accept it; omitting it searches everything.
+The bundled skill tells the agent to <em>"retry globally if a scoped
+search is thin"</em>
+(<code>skills/session-recall/SKILL.md:19-20</code>), and the recall
+subagent says the same (<code>agents/recall.md:24-28</code>).
+<code>expand_around</code> and <code>step</code> take no scope at
+all.</p>
+<p><strong>Meta docs entries fall outside every scoped read.</strong> An
+entry's <code>cwd</code> is the empty string, which equals no root and
+matches no <code>root/%</code>
+(<code>src/session_recall/metadocs/indexing.py:47</code>,
+<code>src/session_recall/scope.py:49</code>). A repository-scoped
+<code>recall_search</code> therefore never returns that repository's own
+bugs or decisions, though the unscoped search does.</p>
+<p><strong>The source filter cannot select them either.</strong>
+<code>indexing.py</code> says <code>source="metadocs"</code> filters
+(<code>src/session_recall/metadocs/indexing.py:7-8</code>), but
+<code>_validate_source</code> accepts only <code>claude</code>,
+<code>codex</code>, <code>cursor</code> or nothing and raises otherwise
+(<code>src/session_recall/retrieve.py:52-56</code>); the CLI choices
+match (<code>src/session_recall/cli.py:99</code>). Unscoped
+<code>recent_sessions</code> also lists each entry as a session, since
+it groups every chunk by <code>session_id</code>
+(<code>src/session_recall/store.py:277-290</code>).</p>
+<p><strong>In hub mode the entries are out of reach.</strong>
+<code>sync</code> pushes instead of indexing, so
+<code>index_metadocs</code> never runs, and the hub indexer walks only
+member transcripts (<code>src/session_recall/cli.py:134-148</code>).</p>
+<p><strong>Within the distiller, search is lexical and fresh.</strong>
+Term overlap over title and body, title hits doubled, read straight from
+the files so an entry created seconds ago is seen
+(<code>src/session_recall/metadocs/entries.py:144-161</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Transcripts are re-derived, never edited.</strong> A changed
+file's rows are deleted and re-extracted inside one transaction with its
+signature, so a rolled-back file never looks indexed
+(<code>src/session_recall/store.py:334-340</code>). Prune runs only for
+sources whose roots were safe to scan and did not fail
+(<code>src/session_recall/index.py:181-182</code>).</p>
+<p><strong>Entries are written by an agent with four verbs.</strong> The
+distiller runs with <code>--allowedTools</code> set to the four MCP
+tools, every built-in tool disallowed by name, slash commands off, an
+empty working directory and <code>--no-session-persistence</code>; the
+codex engine disables the shell and other tool families and runs
+<code>--ephemeral</code>
+(<code>src/session_recall/metadocs/distill.py:41-50</code>,
+<code>:111-151</code>, <code>:167-217</code>). No distill transcript is
+persisted, and a filter on temp-directory project names stops older
+runs' transcripts being distilled
+(<code>src/session_recall/metadocs/collect.py:30-38</code>).</p>
+<p><strong>Dedup is mandatory, consolidation is the model's
+call.</strong> <code>create</code> refuses until <code>search</code> has
+run; whether to <code>edit</code> an existing entry instead is left to
+the model and its prompt
+(<code>src/session_recall/metadocs/distill.py:67-74</code>).</p>
+<p><strong>Delete takes a reason and keeps none.</strong>
+<code>do_delete</code> refuses a reason under ten characters with
+<em>"deletions are audited"</em>, then returns the reason in the tool
+result
+(<code>src/session_recall/metadocs/agent_server.py:101-106</code>). The
+runner captures the CLI's output and prints only a stderr tail on
+failure (<code>src/session_recall/metadocs/distill.py:135-149</code>),
+and the commit message names the project and a session count
+(<code>src/session_recall/metadocs/run.py:87-89</code>). The removed
+file is in git; the stated reason is not recorded anywhere.</p>
+<p><strong><code>edit</code> and <code>delete</code> reach across
+projects by id.</strong> <code>entries.load</code> globs
+<code>*/*/&lt;id&gt;.md</code> and <code>USER/&lt;id&gt;.md</code> with
+no project predicate
+(<code>src/session_recall/metadocs/entries.py:102-111</code>), while
+<code>search</code> lists only the current project and the user map. A
+distiller for one project can modify another's entry if it learns the
+id, and every project's distiller can edit or delete the shared user
+map.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Indexing is synchronous inside a background process the hook
+detaches; the agent never waits on it. New turns are retrievable after
+the next session start, or the next manual <code>index</code>. Only new
+content hashes are embedded. Meta docs costs one CLI agent call per
+session per day, with a 900-second timeout and a 60,000-character
+ceiling per call, and runs as long as the backlog needs
+(<code>src/session_recall/metadocs/collect.py:27-28</code>). Nothing is
+injected into the prompt by default; retrieval is tool-mediated, so the
+prompt-prefix cache is untouched.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers <code>recall_search</code>,
+<code>expand_around</code>, <code>step</code>, <code>grep</code> and
+<code>recent_sessions</code>
+(<code>src/session_recall/server.py:57-153</code>). The plugins for
+Claude Code, Codex and Cursor ship the server, a skill, a recall
+subagent and the hooks. The agent never writes memory: transcripts are
+indexed from disk, and entries are written by a separate distiller agent
+the main agent cannot reach. The SessionStart hook runs a sync and
+injects nothing.</p>
+<p>The distiller is the one model with write power, and its surface is
+small enough to adapt: four verbs, a process-local
+<code>_searched</code> set, and a scanner call. The same cage pattern is
+used for the share composer, which runs with no tools at all on the
+Claude path
+(<code>src/session_recall/share/compose.py:92-133</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Stored injection is the main risk, and it is
+acknowledged.</strong> Sessions quote untrusted text, the distiller
+reads it with write verbs, and its output is served to every later
+unscoped search with no status attached. The tool server holds the dedup
+and secret rules; nothing holds a rule about truth. The git commit per
+project makes the effect reviewable after it has already been
+indexed.</p>
+<p><strong>Peer answers are gated; memory is not.</strong> A share
+candidate is <code>pending</code> until the owner approves the exact
+version hash, and the worker cannot send
+(<code>src/session_recall/share/worker.py:1-20</code>,
+<code>src/session_recall/share/approval.py:143-148</code>). That gate
+guards what leaves the machine, not what the store believes. Peer grants
+are matched on <code>project</code>, a repository basename, so two
+repositories with the same name share a grant
+(<code>src/session_recall/share/worker.py:106-107</code>). The codex
+composer runs with <code>--sandbox read-only</code>, which its docstring
+notes does not remove reads
+(<code>src/session_recall/share/compose.py:163-167</code>).</p>
+<p><strong>The hub pools by design.</strong> Ingest writes only into the
+tree of the key's owner, with a path resolver that rejects traversal and
+re-checks symlinks
+(<code>src/session_recall/hub/storage.py:79-107</code>). Search, expand,
+grep and ask read the whole pooled index for any valid key
+(<code>src/session_recall/hub/app.py:266-327</code>). Client-side
+redaction and a hub masking map run before bytes are stored.</p>
+<p><strong>Concurrency is handled where it bit.</strong> The hub service
+opens the index read-only because a long-lived writable connection made
+the indexer's <code>sqlite-vec</code> writes fail
+(<code>src/session_recall/store.py:22-31</code>); meta docs runs and hub
+indexer runs each hold a flock
+(<code>src/session_recall/metadocs/lock.py:11-23</code>).</p>
+<p><strong>Withheld marks.</strong></p>
+<ul>
+<li><code>tombstone</code>: <code>delete</code> unlinks the file and
+keeps nothing keyed on the value; watermarks only stop the same turns
+being re-read
+(<code>src/session_recall/metadocs/entries.py:114-119</code>).</li>
+<li><code>trust_state</code>: entries have no status field. The
+<code>pending</code>, <code>approved</code>, <code>rejected</code> and
+<code>expired</code> values on <code>Candidate</code> describe outbound
+answers, not stored memory
+(<code>src/session_recall/share/worker.py:63</code>).</li>
+<li><code>bitemporal</code>: <code>created</code> and
+<code>updated</code> are save dates; there is no validity time.</li>
+<li><code>scope_enforced</code>: the <code>cwd</code> predicate is real
+and tested, but optional on every tool, and the skill and subagent tell
+the agent to widen to a global search when a scoped one is thin.
+<code>expand_around</code> and <code>step</code> read by session id with
+no scope, and the hub reads every owner's rows. The meta docs search
+partitions by directory, while <code>load</code> for <code>edit</code>
+and <code>delete</code> does not.</li>
+<li><code>audit_log</code>: the mutation record is git history in the
+entries repository, and the delete reason is discarded.</li>
+<li><code>human_review</code>: the distiller writes straight into the
+store. The approval queue holds peer answers, which are not memory.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is synthetic-fixture pytest. <code>addopts</code> deselects
+the <code>live</code> and <code>smoke</code> markers
+(<code>pyproject.toml:50-54</code>); CI runs the default suite on Ubuntu
+and macOS across three Python versions and the smoke cases in a separate
+job (<code>.github/workflows/test.yml:11-72</code>). I read the tests; I
+ran none.</p>
+<p>The store and retrieval tests cover what section 6 relies on: the
+prefix boundary against a sibling such as <code>/repo-backend</code>
+(<code>tests/test_store.py:197-217</code>), the prefilter not starving a
+small source (<code>tests/test_store.py:116</code>), orphan rows
+(<code>tests/test_store.py:220</code>), a delete racing an insert
+(<code>tests/test_store.py:265</code>), and the fingerprint degrade path
+(<code>tests/test_retrieve.py:636-665</code>). The scoped-recall case
+asserts exclusion after a global positive control
+(<code>tests/test_retrieve.py:166-184</code>).</p>
+<p><code>tests/test_metadocs.py</code> covers the four verbs and their
+invariants: create refused before search, the secret scanner at create
+and edit with nothing reaching disk, delete refusing a short reason, the
+distiller argv cages for both engines, watermark order and the
+halt-on-failure rule. The project boundary case asserts another
+project's entry is left out while the user map is returned
+(<code>tests/test_metadocs.py:102-107</code>).</p>
+<p>Missing, and wanted before trusting the meta docs layer: a case that
+a deleted entry stops appearing in <code>recall_search</code>; a case
+for a scoped search returning the repository's own entries; a case that
+<code>edit</code> refuses another project's id; and any test of the
+distiller's judgement, which no committed fixture exercises. No
+retrieval-quality eval and no benchmark are committed, and the tree
+cites no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Fingerprint the embedding space and refuse to mix
+it.</strong> Store provider, model and dimension per indexed unit,
+derive one index-wide marker that goes to <code>mixed</code> when any
+unit disagrees, and turn semantic ranking off with a stated reason until
+a full re-embed heals it.</li>
+<li><strong>Report degradation at the tool boundary.</strong> A
+<code>degraded</code> field beside the hits tells the agent that a miss
+is inconclusive, which a silent FTS fallback cannot.</li>
+<li><strong>Put the metadata predicate inside the vector
+prefilter.</strong> Filtering after a global top-k starves small scopes;
+filtering inside the <code>IN</code> subquery does not, and the same
+subquery doubles as an orphan guard.</li>
+<li><strong>Make the distiller's invariants server mechanics.</strong>
+Refuse <code>create</code> until <code>search</code> has run in this
+process, and scan before the byte lands.</li>
+<li><strong>Leave no transcript from your own model calls</strong>, or
+the memory distills its own exhaust.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A required reason that nothing stores.</strong> If a delete
+verb demands a justification, write it into the record or the commit;
+otherwise it trains the model to type ten characters.</li>
+<li><strong>Indexing a derived layer without the key the read predicate
+uses.</strong> An entry indexed with an empty <code>cwd</code> is
+excluded from every scoped query, and the scoped query is the one an
+agent is told to use first.</li>
+<li><strong>A validator and a docstring that disagree about a filter
+value.</strong></li>
+<li><strong>Lookup by id with no scope when search is scoped.</strong>
+The boundary the model sees in search results is not the boundary the
+write path enforces.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For one developer who switches between Claude Code, Codex and Cursor
+and wants grounded recall over raw history, the transcript index is a
+strong, low-cost choice: local, keyless by default, honest about
+degradation. Treat meta docs as an experimental notebook kept in git,
+and read its commits; it has no review step, its entries are invisible
+to scoped search, and its deletes leave no reason. A team that needs
+per-member or per-project boundaries should not take the hub, which
+pools everything for every key by design. The closest design read for
+comparison is <a href="../opencode-session-recall/">OpenCode Session
+Recall</a>, which derives cards from history rather than distilling
+claims.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does the distiller edit or delete an existing entry rather
+than create a twin? No fixture or log shows its behaviour on real
+sessions.</li>
+<li>Is the empty <code>cwd</code> on indexed entries intended, so that
+repository-scoped recall stays transcript-only, or an oversight?</li>
+<li>Does a deployment wrapper capture the distiller's stdout and so keep
+the delete reasons this reading found discarded?</li>
+<li>How does a Codex hub composer's read access interact with the
+service user the operator configures?</li>
+<li>The decision record for meta docs describes a file-per-category
+store with a marker protocol; the code uses entry files and four verbs.
+Is a newer record planned?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage and schema:</strong>
+<code>src/session_recall/store.py</code>,
+<code>src/session_recall/models.py</code>,
+<code>src/session_recall/config.py</code>.</li>
+<li><strong>Write path:</strong>
+<code>src/session_recall/index.py</code>,
+<code>src/session_recall/extract.py</code>,
+<code>src/session_recall/transcripts.py</code>,
+<code>src/session_recall/cursor.py</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>src/session_recall/retrieve.py</code>,
+<code>src/session_recall/scope.py</code>,
+<code>src/session_recall/rerank.py</code>,
+<code>src/session_recall/embed.py</code>.</li>
+<li><strong>MCP and hooks:</strong>
+<code>src/session_recall/server.py</code>,
+<code>hooks/hooks.json</code>, <code>hooks/hooks-cursor.json</code>,
+<code>skills/session-recall/SKILL.md</code>,
+<code>agents/recall.md</code>.</li>
+<li><strong>Meta docs:</strong>
+<code>src/session_recall/metadocs/agent_server.py</code>,
+<code>entries.py</code>, <code>distill.py</code>, <code>run.py</code>,
+<code>collect.py</code>, <code>indexing.py</code>, <code>repo.py</code>,
+<code>lock.py</code>.</li>
+<li><strong>Hub:</strong> <code>src/session_recall/hub/app.py</code>,
+<code>storage.py</code>, <code>auth.py</code>, <code>indexer.py</code>,
+<code>remote.py</code>, <code>ask.py</code>.</li>
+<li><strong>Share:</strong>
+<code>src/session_recall/share/worker.py</code>,
+<code>approval.py</code>, <code>compose.py</code>,
+<code>trust.py</code>, <code>scanner.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_store.py</code>,
+<code>tests/test_retrieve.py</code>, <code>tests/test_scope.py</code>,
+<code>tests/test_metadocs.py</code>, <code>tests/conftest.py</code>,
+<code>.github/workflows/test.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'reason' src/session_recall/metadocs/</code> — the
+delete reason appears only in <code>agent_server.py</code> (validation,
+tool result, docstrings); no write to a file, log or commit
+message.</li>
+<li><code>grep -n 'index_metadocs\|metadocs' src/session_recall/*.py src/session_recall/hub/*.py</code>
+— <code>index_metadocs</code> is called from <code>cli.py:192-193</code>
+on the local <code>index</code> path only; the hub imports only the meta
+docs lock.</li>
+<li><code>grep -n 'metadocs' src/session_recall/transcripts.py src/session_recall/retrieve.py</code>
+— no match; <code>_validate_source</code> has no <code>metadocs</code>
+value.</li>
+<li><code>grep -n -i 'scope_cwd\|metadocs\|meta docs\|approve' skills/session-recall/SKILL.md agents/recall.md commands/recall.md</code>
+— scope guidance at <code>SKILL.md:19</code> and
+<code>recall.md:16,26</code>; no meta docs or approval instruction.</li>
+<li><code>grep -c 'def test_' tests/test_live_voyage.py tests/test_smoke_embed.py</code>
+— one and two; marked <code>live</code> and <code>smoke</code>.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— no match, and no <code>CITATION</code> file.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/AbsoluteMode/session-recall/commit/0f3600bc3a96cba94ce092ed728e6f64a34d1fcf"><code class="commit-id" title="0f3600bc3a96cba94ce092ed728e6f64a34d1fcf">0f3600bc…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 14
+September 2026. One mark, <code>negative_eval</code>. Screened before
+reading: five auto-run surfaces (<code>.claude-plugin/</code>,
+<code>.mcp.json</code>, <code>mcp.json</code>, <code>hooks/</code> and
+<code>hooks/hooks.json</code> with SessionStart, UserPromptSubmit and
+Stop commands), one build-time execution point
+(<code>tests/conftest.py</code>), no file inside the cooldown, one
+unpinned surface (<code>pyproject.toml</code> with no lockfile), and
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> read as data. Read
+with <code>grep</code> and <code>sed</code>; nothing installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

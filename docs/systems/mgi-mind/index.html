@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Rust MCP memory server
+over Qdrant whose facts resolve contradictions by a duel rule, while
+memories pass a relevance gate into quarantine.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MGI-Mind — Agent Memory Atlas">
+    <meta property="og:description" content="A local Rust MCP memory
+server over Qdrant whose facts resolve contradictions by a duel rule,
+while memories pass a relevance gate into quarantine.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MGI-Mind — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Rust MCP memory
+server over Qdrant whose facts resolve contradictions by a duel rule,
+while memories pass a relevance gate into quarantine.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MGI-Mind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MGI-Mind",
+      "description": "A local Rust MCP memory server over Qdrant whose facts resolve contradictions by a duel rule, while memories pass a relevance gate into quarantine.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Local MCP memory with a duel rule over
+facts</p>
+          <h1>MGI-Mind</h1>
+          <p class="document-deck">A local Rust MCP memory server over
+Qdrant whose facts resolve contradictions by a duel rule, while memories
+pass a relevance gate into quarantine.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/madgodinc/mgi-mind">
+              <span>Source</span>
+              <strong>madgodinc/mgi-mind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/madgodinc/mgi-mind/commit/190d1db71331da42bf3ecee3400b67732c9e1de8" title="190d1db71331da42bf3ecee3400b67732c9e1de8">
+              <span>Analyzed revision</span>
+              <code>190d1db7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/madgodinc--mgi-mind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>madgodinc--mgi-mind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>25,368
+lines of Rust in src/ before the inline test modules, 32,610 with them;
+a 536-line Python client</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>297
+commits on main by 1 contributor, 28 May 2026 – 13 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>432
+inline Rust unit tests, 24 integration tests in tests/, 8 Python client
+tests</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MGI-Mind is a single Rust binary that gives an assistant long-term
+memory over MCP, backed by a local Qdrant it downloads and runs on
+loopback. It stores three things: text memories with hybrid dense and
+sparse retrieval and a cross-encoder rerank; fact triples governed by a
+<em>duel rule</em> that resolves a contradiction on a single-valued
+predicate; and error-to-fix procedures and skills. A relevance gate
+sends low-signal ingest candidates to a quarantine instead of dropping
+them.</p>
+<p>What is notable is the discipline around the fact state. One function
+decides which statuses are hidden, and the Qdrant filter is derived from
+it, so the fact query and the duel cannot disagree about what is
+current. The fact duel holds a per-axis lock and a cross-process file
+lock. The audit log is append-only and hash-chained, and the committed
+benchmark files recompute to the published recall figures exactly.</p>
+<p>What is weak is that several advertised mechanisms do less than the
+README says. On the default path every contradiction of a fact younger
+than about nine months flips it, and re-adding the old value flips it
+back. The inheritance discount has no producer, the doubt window ships
+in shadow mode, and the "bi-temporal" facts carry one time axis. Library
+scope is a caller's option on MCP. Under HTTP tokens it is enforced on
+memory search, but JSON recall still hands a scoped token the global
+facts and procedures that the route gate refuses it.</p>
+<p>Three marks: <code>trust_state</code> on the fact status,
+<code>audit_log</code> on the memory and fact-invalidation trail, and
+<code>negative_eval</code> on two CI-run duel tests. Section 9 names the
+four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are two belief stores with different admission rules, and they
+do not share a state machine.</p>
+<p><strong>A memory becomes a belief when it is written, and stays one
+until deleted or archived.</strong> <code>mind_add</code> writes
+directly. <code>mind_ingest</code> runs a secret scan, a cheap relevance
+gate on length, blacklists and decision markers, and a token novelty
+check against three neighbours (<code>src/ingest.rs:293-381</code>). A
+candidate that fails is stored with <code>quarantined = true</code> and
+a reason, and ordinary search excludes it
+(<code>src/storage.rs:351-366</code>). The same content arriving again
+promotes it, so repetition is the admission test. Nothing judges whether
+a memory is true.</p>
+<p><strong>A fact becomes current by winning a duel.</strong> A triple
+is keyed on its own value, a UUIDv5 of subject, predicate and object
+(<code>src/knowledge.rs:274-277</code>). For a predicate registered
+<code>Single</code> or <code>TemporalSingle</code>, a new object that
+differs from a visible valid one triggers
+<code>resolve_against_existing</code>. The duel compares the newcomer's
+weight with the entrenchment of the strongest rival and returns flip,
+contested or quarantine (<code>src/duel.rs:277-285</code>). A flip
+writes the newcomer <code>active</code> and retires the loser:
+<code>stale</code> for <code>Single</code>, <code>superseded</code> for
+<code>TemporalSingle</code>, each with <code>valid_until = now</code>
+(<code>src/duel.rs:400-431</code>).</p>
+<p><strong>On the default path the duel is close to
+last-writer-wins.</strong> A new fact's weight is
+<code>0.1 · log2(2) = 0.1</code> in the default <code>ChatOnly</code>
+mode (<code>src/knowledge.rs:449-456</code>;
+<code>src/install_mode.rs:57-61</code>). Entrenchment sums three log
+terms and divides by 50, and the only term a live write produces is age,
+because <code>dependants_count</code> is written only by
+<code>mgimind migrate-v14 dependants --apply</code>
+(<code>src/migrate_v14.rs:404</code>). A flip needs entrenchment below
+0.1 / 1.5, which age alone satisfies for under about nine months. Older
+facts land in <code>contested</code>, where both values stay visible.
+<code>quarantine_candidate</code> needs a dependants count nothing on
+the live path writes. This was computed from the code, not run.</p>
+<p><strong>How a fact stops being one.</strong> A loser is hidden, not
+deleted. <code>invalidate</code> sets <code>valid = false</code>.
+Neither is durable against the same value arriving again:
+<code>add_fact_core</code> rebuilds the whole payload with
+<code>valid = "true"</code> and a fresh duel status and upserts it over
+the old row (<code>src/knowledge.rs:493-518</code>). So re-asserting a
+dampened value duels the current winner, which is itself young, and
+flips back. Re-adding an invalidated triple revives it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a memory and a fact each become current in MGI-Mind, and the paths that bring a hidden value back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a memory and a fact each become current in MGI-Mind, and the paths that bring a hidden value back
+flowchart TD
+    I[&quot;mind_ingest candidate&quot;] --&gt; G{&quot;secret scan, relevance gate,&lt;br/&gt;novelty, near-duplicate&quot;}
+    G -- &quot;passes&quot; --&gt; M[&quot;live memory,&lt;br/&gt;returned by search&quot;]
+    G -- &quot;fails&quot; --&gt; Q[&quot;quarantined = true,&lt;br/&gt;hidden from search&quot;]
+    Q -- &quot;same content re-ingested,&lt;br/&gt;or agent calls promote&quot; --&gt; M
+    A[&quot;mind_add&quot;] --&gt; M
+    F[&quot;mind_fact add s,p,o&quot;] --&gt; C{&quot;predicate Single or&lt;br/&gt;TemporalSingle, and a visible&lt;br/&gt;rival with another object?&quot;}
+    C -- &quot;no&quot; --&gt; ACT[&quot;status active&quot;]
+    C -- &quot;yes&quot; --&gt; D{&quot;duel: weight 0.1 against&lt;br/&gt;entrenchment of rival&quot;}
+    D -- &quot;rival younger than&lt;br/&gt;about nine months&quot; --&gt; FLIP[&quot;newcomer active,&lt;br/&gt;rival stale or superseded&quot;]
+    D -- &quot;older rival&quot; --&gt; CON[&quot;newcomer contested,&lt;br/&gt;both visible&quot;]
+    D -- &quot;rival with dependants_count&lt;br/&gt;from a migration walk&quot; --&gt; QC[&quot;quarantine_candidate,&lt;br/&gt;hidden&quot;]
+    FLIP -- &quot;old value re-added:&lt;br/&gt;payload rewritten&quot; --&gt; F
+    INV[&quot;mind_fact invalidate&quot;] --&gt; X[&quot;valid = false, hidden&quot;]
+    X -- &quot;same triple re-added:&lt;br/&gt;valid reset to true&quot; --&gt; F</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>mgimind</code> is a CLI whose <code>mcp</code> subcommand is
+the MCP server over stdio and whose <code>serve-http</code> subcommand
+is a loopback HTTP surface over the same dispatcher
+(<code>src/mcp.rs:352</code>; <code>src/http_api.rs:1-18</code>).
+Embedding runs in process through ONNX Runtime:
+<code>multilingual-e5-base</code> by default, with a
+<code>bge-reranker-base</code> cross-encoder on by default
+(<code>src/config.rs:108-113</code>). The models stay warm for the life
+of the MCP process.</p>
+<p>Qdrant holds four collections: <code>memories</code>, with named
+dense and sparse vectors and payload indexes on library, author, source,
+type and <code>created_at</code>; <code>_kg_facts</code>, vectorless;
+<code>_kg_predicates</code>, the cardinality registry; and
+<code>_mod_procstats</code>, derived procedure statistics
+(<code>src/storage.rs:26-35</code>). Procedures and skills live in
+<code>memories</code> as typed points in the <code>_procedures</code>
+and <code>_skills</code> libraries (<code>src/storage.rs:2445</code>,
+<code>:3369</code>).</p>
+<p>Files under <code>$MGIMIND_HOME</code> hold the rest:
+<code>audit.log</code>, per-agent session logs, pinned blocks rendered
+at the top of every briefing, the access journal used by decay, and the
+AES-GCM vault, which is terminal-only.</p>
+<p>Inside the MCP process a background loop re-tests entrenched facts
+hourly by default, yields while a tool call is in flight, and caps each
+tick at 50 facts (<code>src/doubt.rs:62-71</code>;
+<code>src/mcp.rs:73-79</code>). An optional local extractor, a Qwen GGUF
+behind <code>llama-server</code>, exists only with
+<code>--features extractor</code>, which the default build leaves off
+(<code>Cargo.toml</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One binary plus what <code>doctor --fix</code> downloads: Qdrant,
+ONNX Runtime, and two quantized models the README puts at about 270 and
+280 MB, checked against pinned SHA-256 where pinned. A Docker image
+bundles everything. No API key is needed and nothing leaves the machine.
+Qdrant's store is not readable by hand; <code>export --format md</code>
+and <code>backup</code> are the repair route, and the audit log is
+grep-able NDJSON.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Memory write.</strong> <code>mind_add</code> →
+<code>storage::add_memory_authored</code>
+(<code>src/storage.rs:1295-1432</code>): refuse an unregistered library,
+refuse a secret, chunk at 500 characters with overlap, embed, keep the
+original <code>created_at</code> for an existing id, upsert, and append
+an <code>Add</code> audit row.</p>
+<p><strong>Ingest.</strong> <code>mind_ingest</code> →
+<code>ingest::run_ingest_authored</code>
+(<code>src/ingest.rs:232-514</code>). For a memory candidate: secret
+scan, <code>check_cheap</code>, then <code>top_k_neighbor_content</code>
+and <code>novelty_ratio</code> against <code>min_novelty</code>. A
+quarantine verdict first tries <code>promote_from_quarantine</code> on
+the same id, then checks for a live duplicate, then calls
+<code>add_quarantined</code>. A pass with
+<code>nearest_score ≥ 0.95</code> is skipped as a near-duplicate and
+parked in quarantine with reason <code>near_dup_drop</code>
+(<code>:391-437</code>). Fact and procedure candidates go to their own
+stores, unless a library-scoped HTTP token set
+<code>_confine_extraction</code>.</p>
+<p><strong>Memory search.</strong> <code>mind_search</code> →
+<code>storage::search_filtered</code>
+(<code>src/storage.rs:2118-2250</code>): embed the query, record it in
+the activity buffer for the doubt window, build the filter with
+<code>memory_query_filter_ex</code>, run dense and sparse prefetches
+fused by RRF, rerank, truncate to the tier, and record access counts in
+process.</p>
+<p><strong>Fact write.</strong> <code>mind_fact add</code> →
+<code>knowledge::add_fact_core</code>
+(<code>src/knowledge.rs:382-556</code>): take the per-axis mutex and a
+cross-process file lock, look up the cardinality, fetch visible rivals,
+run the duel, upsert, then <code>retire_loser</code>. The HTTP route
+returns the verdict (<code>recorded</code>, <code>won</code>,
+<code>contested</code>, <code>quarantined</code>); the MCP text path
+returns only an id.</p>
+<p><strong>Fact read.</strong> <code>mind_fact query</code> →
+<code>query_facts</code>, <code>query_fact_history</code> or
+<code>query_fact_as_of</code> (<code>src/mcp.rs:1071-1082</code>).
+<code>query_facts</code> filters <code>valid = true</code>, excludes the
+hidden statuses, matches the term as full text on any of the three
+fields, and runs the doubt-window drift check
+(<code>src/knowledge.rs:591-643</code>).</p>
+<p><strong>Unified recall.</strong> <code>mind_recall_all</code> fuses
+facts, a <code>search</code> with no library, and procedures
+(<code>src/mcp.rs:391-437</code>).</p>
+<p><strong>Session start.</strong> <code>mind_context</code> →
+<code>cli::build_context</code> (<code>src/cli.rs:2775-2942</code>): an
+operating rule, pinned blocks, the skill catalogue, the last session,
+the 20 newest facts, the library list and a quarantine digest.</p>
+<p><strong>Forget.</strong> <code>mind_delete</code> →
+<code>delete_memory</code>, with the content snapshotted into the audit
+row (<code>src/storage.rs:3199-3236</code>).
+<code>consolidate --apply</code> merges near-duplicates, then archives
+or prunes cold memories (<code>src/consolidate.rs:276-293</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Key</th>
+<th>Fields that matter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>memory point</td>
+<td>UUIDv5 of <code>library</code> and trimmed content</td>
+<td><code>content</code>, <code>hash</code>, <code>library</code>,
+<code>type</code>, <code>source</code>, <code>author</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>quarantined</code>, <code>quarantine_reason</code>,
+<code>archived</code>, <code>embed_model</code>, chunk position</td>
+</tr>
+<tr>
+<td>fact point</td>
+<td>UUIDv5 of subject, predicate, object</td>
+<td><code>valid</code> as a string, <code>status</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>valid_until</code>, <code>author</code>,
+<code>origin_context_id</code>, later <code>dependants_count</code>,
+<code>confidence_score</code>, doubt count</td>
+</tr>
+<tr>
+<td>predicate</td>
+<td>UUIDv5 of the predicate</td>
+<td>cardinality: <code>Single</code>, <code>TemporalSingle</code> or
+<code>Multi</code>, default <code>Multi</code></td>
+</tr>
+<tr>
+<td>procedure</td>
+<td>UUIDv5 of normalised error and fix</td>
+<td>trigger error, context, fix, provenance; counts in
+<code>_mod_procstats</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scope is a library on memories and nothing on facts.</strong>
+A memory carries <code>library</code>, and a query may filter on one or
+several. Facts, procedures, skills, sessions and pinned blocks are
+global (<code>src/http_api.rs:670-681</code>).</p>
+<p><strong>Time.</strong> A fact's validity interval is
+<code>[created_at, valid_until)</code>
+(<code>src/knowledge.rs:781-785</code>). Both ends are system clock
+values written at assertion and at retirement. There is no field for
+when a fact became true in the world, so <code>as_of</code> answers what
+the store held at an instant.</p>
+<p><strong>Content addressing has consequences.</strong> Editing a
+memory writes a new point and deletes the old one
+(<code>src/storage.rs:1194-1207</code>). Re-adding identical text
+upserts the same point and clears any <code>quarantined</code> or
+<code>archived</code> flag, because the payload is rebuilt.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Memory retrieval is hybrid by default: a dense arm over e5 vectors
+and a sparse arm over a hashed term-frequency vector, each limited to
+<code>rerank_top_k</code> (20) and fused with RRF inside one Qdrant
+Query API call. The cross-encoder then re-scores and sorts, and the
+score is mapped through a sigmoid
+(<code>src/storage.rs:2169-2230</code>). Tiers truncate the text to
+about 100 or 500 characters, or return it whole.</p>
+<p><strong>The base filter excludes procedures, quarantined points and
+archived points, and nothing else</strong>
+(<code>src/storage.rs:351-366</code>). Skills are typed
+<code>skill</code> in the same collection
+(<code>src/storage.rs:3369</code>), so a skill body can surface in
+<code>mind_search</code>.</p>
+<p><strong>Not every reader applies it.</strong> <code>history</code>
+scrolls the collection newest-first with no filter
+(<code>src/storage.rs:3969-4014</code>), so <code>mind_history</code>
+lists quarantined candidates, archived memories, procedures and skills
+as recent memories. <code>by_author</code> excludes quarantined points
+and not archived ones (<code>src/storage.rs:4030-4034</code>).</p>
+<p>Fact retrieval is a full-text payload match, not semantic. The doubt
+window measures, per surfaced fact, how far the current query centroid
+has drifted from the context the fact was written in, using
+corpus-mean-centred cosine. In <code>enforce</code> mode with a
+calibrated threshold it sorts doubted facts last. The default mode is
+<code>shadow</code>, which only records
+(<code>src/config.rs:15-17</code>; <code>src/doubt.rs:211-230</code>).
+Nothing is hidden by doubt in either mode.</p>
+<p>Retrieval is tool-mediated. <code>mind_should_search</code>
+classifies a query and returns advice; it cannot force a search.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is an explicit tool or CLI call; the default build calls
+no model. Memory writes block on embedding, one batched pass per add,
+and are searchable as soon as the upsert returns, since writes use
+<code>wait(true)</code>.</p>
+<p><strong>Deduplication is by identity and by neighbourhood.</strong>
+Identical text in the same library lands on the same id. Ingest also
+skips a candidate whose nearest neighbour scores at least 0.95, and
+parks it in quarantine so a later re-assertion can restore it.
+<code>mind_add</code> and HTTP <code>/memory/add</code> skip the
+relevance gate entirely, which is why HTTP adds a per-author write quota
+(<code>src/http_api.rs:492-531</code>).</p>
+<p><strong>Agent-generated content is treated like the user's.</strong>
+The relevance gate checks form, not truth. <code>mind_web</code> fetches
+a page and can save it to a library. The secret scanner refuses a
+key-like string and points at the vault, on every write path including
+quarantine (<code>src/storage.rs:1309-1319</code>,
+<code>:1456-1462</code>).</p>
+<p><strong>The inheritance discount has no producer.</strong>
+<code>doubt::mark_inherited</code> says it is <em>"Called by
+<code>mind_session(action="last")</code> and the briefing path"</em>
+(<code>src/doubt.rs:910-915</code>). Its only callers are its own unit
+tests, and <code>add_fact_core</code> hard-codes
+<code>from_live_session: true</code>
+(<code>src/knowledge.rs:449-456</code>). The README's claim that facts
+carried in from memory count at half weight describes a function nothing
+calls.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous embed and upsert; facts are vectorless and pay
+two locks and a few payload reads. No LLM on the default path.</li>
+<li>Background: one re-test pass per hour by default, at most 50 facts
+per tick, each a payload read and a <code>confidence_score</code> write.
+No whole-store rewrite runs unattended; <code>consolidate</code> is an
+operator command.</li>
+<li>Read: one embed, one fused query, and a cross-encoder pass over 20
+candidates, which the README puts at one to two seconds on CPU.
+Injection is whatever the agent asks for, at the tier it picks;
+<code>mind_context</code> is bounded by its fixed sections.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The README counts 29 live MCP tools plus deprecated aliases. The
+model holds every verb: add, ingest, search, fact add and invalidate,
+predicate registration, quarantine list, promote and expire, restore,
+delete, export and import, sessions and pinned blocks. Vault tools
+return terminal instructions, never a secret.</p>
+<p>No host hook is installed. <code>AI_INSTRUCTIONS.md</code> asks the
+assistant to call <code>mind_session(action="last")</code>,
+<code>mind_session(action="start")</code> and <code>mind_context</code>
+at the start of every session, search before answering, and close the
+session with a summary. Continuity therefore depends on the model
+following the instruction file. A separate CLI command ingests a
+finished Claude Code transcript through the same gate
+(<code>src/session_ingest.rs:1-15</code>).</p>
+<p>The HTTP surface is the multi-agent door. A token can be anonymous,
+named, or named and confined to libraries. A named token's identity
+overrides any <code>X-Agent</code> header for authorship
+(<code>src/http_api.rs:468-481</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The status filter has one source of truth, and one reader
+bypasses it.</strong> <code>hidden_wire_strings</code> derives the
+Qdrant <code>must_not</code> set from <code>is_default_visible</code>,
+and its comment records the drift that leaked <code>stale</code> and
+then <code>quarantine_candidate</code> before the derivation existed
+(<code>src/knowledge.rs:183-207</code>). <code>build_context</code> does
+not use it. It checks
+<code>status != "stale" &amp;&amp; status != "superseded"</code> by hand
+(<code>src/cli.rs:2817</code>), so a <code>quarantine_candidate</code>
+fact appears in the session-start briefing as a current fact.</p>
+<p><strong>Locking around the duel is careful.</strong> A per-(subject,
+predicate) async mutex serialises agents in one process, and
+<code>lock_facts_cross_process</code> extends it to separate
+<code>mgimind</code> processes, closing the two-winner race the comments
+name (<code>src/knowledge.rs:388-400</code>).</p>
+<p><strong>Library scope leaks through recall.</strong> For a
+library-scoped HTTP token, <code>scope_gate</code> refuses
+<code>/fact/query</code> and <code>/procedure/recall</code> because they
+span all libraries (<code>src/http_api.rs:670-696</code>).
+<code>/memory/recall</code> stays allowed, and its JSON form confines
+the memory search but also calls <code>query_facts</code> and
+<code>procedure::recall(cfg, None, …)</code> with no library predicate
+(<code>src/http_api.rs:421-465</code>). Procedures sit in the same
+<code>memories</code> collection under <code>_procedures</code>. The
+text form is refused to scoped tokens for exactly this reason
+(<code>src/http_api.rs:812-824</code>), and the JSON form inherits the
+same reads.</p>
+<p><strong>Audit gaps.</strong> The audit log covers memory mutations
+and fact invalidation. <code>FactAdd</code>, <code>ProcedureAdd</code>,
+<code>ProcedureOutcome</code> and <code>Consolidate</code> have no
+producer, so the README's line that the audit log keeps a duel's loser
+describes the store, not the log. <code>consolidate --apply</code>
+deletes merged and cold memories through <code>delete_memories</code>,
+which writes no row (<code>src/consolidate.rs:279-290</code>;
+<code>src/storage.rs:2373-2388</code>). An agent's
+<code>mind_quarantine_promote</code> is logged with actor
+<code>relevance-gate</code> (<code>src/storage.rs:1568-1572</code>).</p>
+<p><strong>Privacy.</strong> Delete removes the point and keeps the
+truncated content in <code>audit.log</code>. Backups can be encrypted
+with a passphrase.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>trust_state</code> — awarded. The fact <code>status</code>
+enum carries states that withhold a value, and the fact query and the
+duel's rival set filter on them.</li>
+<li><code>audit_log</code> — awarded, scoped to memory mutations and
+fact invalidation; the gaps are above.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>tombstone</code> — withheld. The rejected value <em>is</em>
+the key of a fact row, which is the shape the mark asks for, but the
+writer never consults it: re-adding a stale or invalidated triple
+rebuilds its payload and runs a fresh duel. A quarantined memory is
+promoted by re-assertion, the opposite of a tombstone.</li>
+<li><code>bitemporal</code> — withheld. <code>created_at</code> and
+<code>valid_until</code> are both record-time stamps; no field carries
+when a fact held in the world.</li>
+<li><code>scope_enforced</code> — withheld. On MCP and for unscoped or
+anonymous HTTP tokens the library is an optional caller filter, and
+<code>mind_recall_all</code>, <code>mind_history</code> and
+<code>mind_context</code> take none. For scoped tokens, JSON
+<code>/memory/recall</code> returns global facts and procedures from the
+shared collection without a predicate.</li>
+<li><code>human_review</code> — withheld. The agent holds
+<code>mind_quarantine_promote</code>,
+<code>mind_quarantine(action="promote"|"expire")</code> and
+<code>mind_fact_invalidate</code>, and no state waits on a person.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests and the committed result files at the pin.</p>
+<p><strong>The negative cases.</strong>
+<code>duel_rule_dampens_loser_on_single_cardinality</code> registers a
+<code>Single</code> predicate, adds <code>old_winner</code> and then
+<code>new_value_should_flip</code> over MCP, and asserts the query
+contains the new value and not the old
+(<code>tests/cli_integration.rs:829-894</code>).
+<code>temporal_single_supersedes_prior_value</code> asserts
+<code>Munich</code> present and <code>Berlin</code> absent in the
+default query, and the reverse in the history query
+(<code>:896-969</code>). Each has its positive control in the same
+response. CI's integration job sets <code>MGIMIND_IT_QDRANT</code> and
+runs this target against a Qdrant service
+(<code>.github/workflows/ci.yml:85-96</code>).</p>
+<p><strong>A falsifiable scope canary that CI never runs.</strong>
+<code>http_v2_acl_flood_verdict_contract</code> plants a canary in a
+library a scoped token cannot see, proves the admin token finds it,
+proves the scoped token finds its own content, and then asserts the
+canary is absent from search, by-agent, browse and JSON recall
+(<code>tests/http_integration.rs:709-829</code>). The suite returns
+early without three environment variables (<code>:502-510</code>). CI
+runs <code>cargo test --all</code> without them and runs only
+<code>--test cli_integration</code> with them. The case does not probe
+facts or procedures, which is where recall leaks.</p>
+<p><strong>Computed and frozen.</strong> <code>calibration.rs</code>
+runs a fixed corpus of conflict scenarios through the duel formulas with
+a match-rate floor and a frozen set of divergences. It exercises the
+formulas with synthetic entrenchment inputs, not the counts a live write
+produces.</p>
+<p><strong>Benchmarks recompute.</strong> I recomputed R@1, R@5 and R@10
+from three committed per-question files and each matched its log: 85.2,
+98.2 and 99.4% for MiniLM without rerank
+(<code>benchmark/results/2026-06-02-cpu-overnight/run01_minilm_rerank_off/raw.json</code>),
+then 91.6, 98.2 and 99.8% with rerank and 85.6, 97.6 and 99.4% without,
+on the v0.12.1 regression pods. The metric is session-level retrieval
+recall on LongMemEval-S, and <code>BENCHMARKS.md</code> says it is not
+QA accuracy. The headline row is labelled the zero-config default and
+names <code>all-MiniLM-L6-v2</code>, while
+<code>MindConfig::default</code> selects
+<code>multilingual-e5-base</code>; the committed e5 runs are FP16 on a
+GPU. The STALE belief-revision run is a partial, with the caveats the
+README states.</p>
+<p><strong>Not covered.</strong> No test re-asserts a stale or
+invalidated fact. No test exercises <code>build_context</code> with a
+<code>quarantine_candidate</code> fact. No paper belongs to the project;
+the arXiv identifiers in <code>docs/design/</code> and
+<code>src/bench_stale.rs</code> cite other work.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Derive the read filter from the visibility rule.</strong>
+One function says which statuses are hidden, and the database predicate
+is generated from it, so a new status cannot be written and left visible
+by a filter nobody updated.</li>
+<li><strong>Lock the contradiction check across processes, not just
+tasks.</strong> A per-axis mutex plus a file lock around read, decide,
+write and retire is the smallest thing that makes "one current value"
+true.</li>
+<li><strong>Quarantine instead of drop, and log why.</strong> A rejected
+candidate kept with a reason is recoverable and countable; a briefing
+that summarises the pile by reason makes the gate auditable.</li>
+<li><strong>Write the negative test with its positive control in the
+same response.</strong> The duel tests assert the winner present and the
+loser absent from one query, so an empty result fails.</li>
+<li><strong>Chain audit lines by hash</strong> and ship the verifier
+with the writer.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A contradiction rule whose weights have no live
+producer.</strong> When the only entrenchment a write can earn is age,
+the duel reduces to recency, and a re-assertion of the old value wins
+the rematch.</li>
+<li><strong>Rebuilding a keyed row's payload on re-add.</strong> If the
+key is the value, the rejected state on that row is the tombstone;
+overwrite it and the rejection is gone.</li>
+<li><strong>Hand-written status checks in secondary readers.</strong>
+The briefing, the history list and the by-author scroll each re-derive
+what to hide, and each derives something different.</li>
+<li><strong>A route gate and a composite route that disagree.</strong>
+Refusing <code>/fact/query</code> and serving facts from
+<code>/memory/recall</code> is one decision taken twice.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person running one or a few assistants on one machine
+who wants good local retrieval, explicit facts and a store that keeps
+its own audit trail, and who can tolerate a Qdrant process and about 550
+MB of models. It is a poor fit where facts must survive contradiction by
+a newer but wrong assertion, because the default duel favours whichever
+value arrived last. It is also a poor fit as a multi-tenant boundary
+until recall is confined like search. The validity model is better read
+as a well-instrumented research scaffold than as a belief system to rely
+on.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any deployment run <code>migrate-v14 dependants --apply</code>
+routinely, and how does the duel behave once dependants counts
+exist?</li>
+<li>Is <code>/memory/recall</code> returning facts and procedures to
+scoped tokens intended, given that <code>/fact/query</code> and
+<code>/procedure/recall</code> are refused?</li>
+<li>Will <code>mark_inherited</code> be wired, and to which reader?</li>
+<li>What does <code>enforce</code> mode do to fact ranking on a real
+store once <code>calibrate</code> proposes a threshold?</li>
+<li>Do the HTTP integration tests run anywhere outside a developer
+machine?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage/schema:</strong> <code>src/storage.rs</code>
+(collections, filters, memory and quarantine writes, history,
+procedures, skills), <code>src/knowledge.rs</code> (facts,
+<code>EntryStatus</code>, cardinality, history and as-of),
+<code>src/config.rs</code>.</li>
+<li><strong>Write path:</strong> <code>src/ingest.rs</code>,
+<code>src/relevance.rs</code>, <code>src/secrets.rs</code>,
+<code>src/duel.rs</code>, <code>src/install_mode.rs</code>,
+<code>src/provenance.rs</code>, <code>src/procedure.rs</code>,
+<code>src/skill.rs</code>.</li>
+<li><strong>Retrieval path:</strong>
+<code>src/storage.rs:2118-2250</code>, <code>src/reranker.rs</code>,
+<code>src/embedder.rs</code>, <code>src/doubt.rs</code>,
+<code>src/activity.rs</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>src/cli.rs:2775-2942</code>, <code>src/session.rs</code>.</li>
+<li><strong>Background workers:</strong>
+<code>src/doubt.rs:785-900</code>, <code>src/confidence.rs</code>,
+<code>src/access.rs</code>, <code>src/consolidate.rs</code>,
+<code>src/migrate_v14.rs</code>.</li>
+<li><strong>MCP/API/SDK:</strong> <code>src/mcp.rs</code>,
+<code>src/http_api.rs</code>, <code>src/viewer.rs</code>,
+<code>clients/python/mgimind/_client.py</code>.</li>
+<li><strong>Audit:</strong> <code>src/audit.rs</code>.</li>
+<li><strong>Tests/evals:</strong> <code>tests/cli_integration.rs</code>,
+<code>tests/http_integration.rs</code>, <code>src/calibration.rs</code>,
+<code>.github/workflows/ci.yml</code>, <code>BENCHMARKS.md</code>,
+<code>benchmark/results/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rn 'AuditOp::' src | grep -v '^src/audit.rs'</code> —
+producers in <code>storage.rs</code>, <code>ingest.rs</code>,
+<code>knowledge.rs</code> (invalidate only), <code>doubt.rs</code>,
+<code>viewer.rs</code>, <code>md_reconcile.rs</code>; none for
+<code>FactAdd</code>, <code>ProcedureAdd</code>,
+<code>ProcedureOutcome</code> or <code>Consolidate</code>.</li>
+<li><code>grep -n 'audit' src/consolidate.rs src/procedure.rs src/skill.rs src/duel.rs</code>
+— no audit call; <code>duel.rs</code> matches only comments.</li>
+<li><code>grep -rn 'mark_inherited\|from_live_session: false' src tests</code>
+— <code>mark_inherited</code> is called only in <code>doubt.rs</code>
+unit tests; <code>from_live_session: false</code> appears only in a
+<code>duel.rs</code> test.</li>
+<li><code>grep -rn -E '"(confirmations_count|dependants_count)"' src | grep -v '^src/duel.rs'</code>
+— <code>dependants_count</code> is written only by
+<code>migrate_v14.rs:404</code>; <code>confirmations_count</code> is
+written only to procedures (<code>migrate_v14.rs:532</code>).</li>
+<li><code>grep -rn -i -E 'valid_from|valid_at|event_time|occurred_at|observed_at' src</code>
+— only <code>fact_valid_at</code> and its tests.</li>
+<li><code>grep -n 'memory_query_filter' src/storage.rs</code> — applied
+by <code>search_filtered</code>, <code>top_k_neighbor_content</code> and
+<code>list_filtered</code>; <code>history</code> (<code>:3969</code>)
+uses none.</li>
+<li><code>grep -n 'scoped_route_allowed' -A14 src/http_api.rs</code> and
+<code>sed -n 421,465p src/http_api.rs</code> —
+<code>/memory/recall</code> allowed; its JSON body calls
+<code>query_facts</code> and
+<code>procedure::recall(cfg, None, …)</code>.</li>
+<li><code>grep -n -E 'cargo test --all|cargo test --test cli_integration' .github/workflows/ci.yml</code>
+— the integration jobs run only <code>cli_integration</code>.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
+— design notes and <code>bench_stale.rs</code> citing other papers; no
+<code>CITATION.cff</code>.</li>
+<li><code>grep -rn -i 'SessionStart\|UserPromptSubmit\|PreCompact\|settings.json' src docs AI_INSTRUCTIONS.md README.md</code>
+— no match; no host hook is installed.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/madgodinc/mgi-mind/commit/190d1db71331da42bf3ecee3400b67732c9e1de8"><code class="commit-id" title="190d1db71331da42bf3ecee3400b67732c9e1de8">190d1db7…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 13
+September 2026. Three marks: <code>trust_state</code>,
+<code>audit_log</code>, <code>negative_eval</code>. Screened before
+reading: 0 auto-run surfaces, 0 build-time execution points, 0
+dependency files inside the cooldown, 1 unpinned surface
+(<code>clients/python/pyproject.toml</code> with no lockfile), and
+<code>AGENTS.md</code> recorded as data; the clone was depth 1, so file
+dates are the tip's. Nothing was installed, built or run. Benchmark
+recall was recomputed from the committed per-question files with a
+standalone script.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
