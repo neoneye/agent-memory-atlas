@@ -2956,22 +2956,16 @@ The pilot is also seven configurations, five of them built by the authors, so th
 table is a demonstration that the protocol discriminates rather than a survey of
 deployed systems.
 
-**The failure the split scorecard exists to prevent is already in this corpus.**
-[Hillock](../systems/hillock/) publishes a *Gate Accuracy* on its README,
-described there as the rate of blocking unanswerable queries and hard negatives,
-and in the harness as a *hallucination defense rate*. Its formula is
-`(correct_blocks + correct_answers) / len(questions)` over thirty questions of
-which twenty are answerable — so it pools a positive obligation with a negative
-invariant in exactly the proportion that hides the negative one. A system that
-answered everything and blocked nothing would score 66.7% on it; a system that
-blocked everything would score 33.3%, which is *higher* than the 30.0% reported.
-The two published numbers together recover what the label does not say: with
-retrieval accuracy of 30.0% over twenty answerable questions, six answers were
-right, so the pooled 30.0% leaves three correct blocks out of ten hard negatives.
-The arithmetic is not wrong and the project is unusually forthcoming — the
-fixtures and the scorer are both committed, and all four of its scores are under
-31% on its own front page. The label is what fails, and it fails in the direction
-that reads better.
+**One small benchmark in this corpus made the split itself.** Until 23 August
+2026 [Hillock](../systems/hillock/)'s harness reported a single *Gate Accuracy*,
+`(correct_blocks + correct_answers) / len(questions)`, which pools a positive
+obligation with a negative invariant in the proportion that hides the negative
+one. Its harness reports answerable retrieval accuracy and a hard-negative block
+rate as separate figures beside the pooled one, so a gate that blocks everything
+shows a perfect block rate beside zero retrieval. What it lacks is a failing
+assertion: the harness scores and never fails, the verification suite computes
+both error counts and asserts only that the run produced rows, and no run output
+is committed.
 
 **Against the thirteen-step sequence above**, AOEP is broader and shallower on
 deletion specifically. It checks that a tombstoned value is absent from the

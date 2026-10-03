@@ -11279,37 +11279,40 @@ synthetic cases rather than the verdict itself</td>
 </tr>
 <tr>
 <td><a href="../systems/hillock/"><code>hillock</code></a></td>
-<td>A subject-predicate-object triple, plus a decaying co-activation
-weight between two entities</td>
-<td>One SQLite file with four tables — entities, relations,
-hebbian_weights and an <code>hdc_reservoirs</code> blob store for
-multi-hop path vectors; the 10,000-dimensional codebook is in-process
-only</td>
-<td>String entity linking, a one-hop SQL fetch, then cosine over bundled
-±1 hypervectors against a fixed threshold, <code>0.55</code> at this
-pin; every vector is derived from the string's character n-grams rather
-than drawn at random</td>
-<td>An LLM extracts triples from ingested text or from a conversational
-assertion; there is no admission gate</td>
-<td>Nothing is corrected. The functional-predicate <code>DELETE</code>
-is commented out under <em>"Keep all extracted candidates in DB rather
-than destructively deleting earlier valid facts"</em>, so every relation
-is now append-only with no supersession in its place;
-<code>clear_and_reinitialize</code> drops all four tables</td>
-<td>None — one database, one user, no scope key anywhere in the
-schema</td>
-<td>A local console loop against Ollama; no API, no MCP, no library
-surface</td>
-<td>None; Hebbian decay runs inline on every turn</td>
-<td>No status, no confidence, no provenance and no timestamp on a stored
-fact</td>
-<td>The refusal is a return statement — the model is never asked a
-question the symbolic layer could not answer</td>
-<td>The gate's threshold is fixed while its similarity falls with query
-length, and none of the four benchmark questions the report scores
-clears it at <code>0.72</code> or at the <code>0.55</code> that replaced
-it — a distribution the verification suite computes and does not
-assert</td>
+<td>A subject-predicate-object triple with a source-document label, plus
+a decaying co-activation weight between two entities</td>
+<td>One SQLite file in WAL mode with four tables: entities, relations
+(with source_doc, confidence and created_at columns), hebbian_weights,
+and an hdc_reservoirs blob store for multi-hop path vectors; the
+10,000-dimensional codebook is in-process only</td>
+<td>String entity linking, a one-hop SQL fetch, then a late-interaction
+score (the mean over query tokens of each token's best cosine against
+the fact's predicate, subject and object hypervectors) against a fixed
+0.55, plus a 0.35 predicate-alignment floor</td>
+<td>Document ingestion only: a local pipeline (coreference, predicate
+routing, GLiREL at a 0.30 threshold) writes triples labelled with the
+file's basename; no admission gate; nothing is written from
+conversation</td>
+<td>Append-only with no supersession; INSERT OR REPLACE on the triple
+restamps its source label; a CLI quiz after ingestion deletes a pronoun
+triple and inserts the user's replacement; reset drops all four
+tables</td>
+<td>None: one database per process, no scope key in the schema, and the
+HTTP server serves every caller from one store and one in-process
+context state</td>
+<td>A console REPL, an importable IntegratedHillock class, and an
+OpenAI-compatible FastAPI server bound to 0.0.0.0:8000 with no
+authentication; any OpenAI-compatible chat endpoint renders</td>
+<td>None; Hebbian decay runs inline on every answered turn</td>
+<td>No status. A confidence column nothing reads, a single-valued source
+label shown to the renderer, and a record timestamp nothing reads</td>
+<td>No stored fact reaches the model unless it clears the gate; in
+strict mode an unmatched question returns a fixed string and the model
+is never called</td>
+<td>The gate averages over query tokens, so a four-token question scores
+about 0.52 against its own exact triple and blocks at 0.55; the default
+mode sends every blocked question to the model with a refusal
+prompt</td>
 </tr>
 <tr>
 <td><a href="../systems/hindsight/"><code>hindsight</code></a></td>

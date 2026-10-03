@@ -3096,23 +3096,16 @@ credential-boundary case whose taint rule is file-scoped and flags a Cypher quer
 carrying no credential. A check that cries wolf is a check that gets skipped.
 
 **Hillock is the family's smallest member and the one that moves the whole trust
-decision to the read path.** 1,754 lines, AGPL-3.0, a local console against
-Ollama: facts are triples in SQLite with no timestamp, provenance, status or
-scope, so nothing about a stored row can express doubt. What carries the weight
-instead is a gate made of control flow — the model is invoked only inside the
-branch that has already matched a stored fact above threshold, and every path
-that matches nothing returns a fixed refusal without calling it at all. That is
-the difference between asking a model to decline and making the un-evidenced
-question unaskable, and it is the cleanest instance of the second in this corpus.
-Beside it sits the failure worth the reading. Its gate bundles each fact
-from exactly three components while bundling the query from all of its surviving
-tokens, so cosine falls as a question lengthens against a fixed 0.42 threshold:
-the same fact passes at six components and is blocked at eight. A system whose
-central claim is knowing when to refuse has calibrated that refusal against an
-unstated assumption about phrasing. Its correction path is the other half of the
-same shape — a `DELETE` narrowed to five named functional predicates, of which
-exactly one is ever produced by the extractor's own normaliser, so everything
-else accumulates.
+decision to the read path.** Facts are triples in SQLite with a last-writer
+source label and no status or supersession, so nothing about a stored row can
+express doubt. What carries the weight is a hypervector gate: a stored fact
+reaches the model only after clearing it, and in `STRICT` mode a question with
+nothing above it returns a fixed refusal without calling the model. The default
+`BALANCED` mode sends that question to the model with a prompt asking it to
+decline, which turns the structural property into a request. The gate itself
+averages each query token's best match against the fact, so function words
+dilute the score: a four-token question blocks against its own exact triple at
+the 0.55 threshold while a three-token negative passes.
 
 Tradeoff: structure answers questions flat stores cannot, but extraction and
 resolution mistakes have a blast radius proportional to how connected the graph

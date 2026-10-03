@@ -1,379 +1,564 @@
 ---
 title: "Hillock"
-eyebrow: "A gate that is control flow"
-description: "A small local prototype that refuses by never calling the model, publishes every version's scores including the ones that fell, and raised its gate until the benchmark's own answerable questions stopped clearing it."
+eyebrow: "A gate on what the model sees"
+description: "A local SQLite triple store whose hypervector gate picks which facts reach the model and, in strict mode only, whether the model runs at all."
 root: ../..
 page_kind: system
 source_name: "roandejager/Hillock"
 source_url: https://github.com/roandejager/Hillock
 archive_name: "roandejager--Hillock"
-revision: 94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244
-revision_url: https://github.com/roandejager/Hillock/commit/94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244
-analyzed_at: 2026-09-17
+revision: 92eebfb9caf42a75ec89a678c26e67c3c94c0845
+revision_url: https://github.com/roandejager/Hillock/commit/92eebfb9caf42a75ec89a678c26e67c3c94c0845
+analyzed_at: 2026-10-03
+licence: "AGPL-3.0; the README also sells an AGPL-exempt commercial licence and requires a CLA from contributors"
+size: "2,862 lines of Python in twelve files; the engine, store, hypervector and Hebbian modules are 1,060 of them"
+activity: "128 commits on master under three author names for one maintainer, 11 June – 3 October 2026"
+tests: "verify_hillock.py, 21 checks in 204 lines that exit non-zero on failure, and a 32-question benchmark harness that scores without failing; no CI workflow; none run for this reading"
 capabilities: "negative_eval"
 capability_evidence:
-  negative_eval: "the benchmark fixture and the gate metric | evaluate_hillock_PROTO_ish.py `generate_test_assets` (lines 77-86), `run_evaluation` | ten of the thirty generated questions carry `\"answerable\": False` and no expected triple, so the only correct behaviour is a refusal — a question about a person the corpus never mentions (`Where was Thomas Edison born?`), a predicate the subject does not carry (`What did Albert Einstein discover?`), a relation asked in the wrong direction (`Who cracked Enigma?`), and a bare identity probe (`Who is Turing?`). They are asserted against a real read path: `run_evaluation` ingests, queries each one, and counts a `HALLUCINATION_LEAK` whenever the gate admits a fact for a question that has no answer. Since v0.5 the run is unseeded — all three tables are dropped and the in-process HDC state, codebook and vocabulary book cleared — so a negative cannot be satisfied by a store that was never populated, and `verify_hillock.py`'s seventh check pins the seed-overlap arithmetic at four | the harness is the mechanism; no run output is committed, and `verify_hillock.py` check 8 computes how many negatives leak and asserts nothing with the number"
+  negative_eval: "the benchmark fixture, scored on the gate's read path | evaluate_hillock_PROTO_ish.py:79-88 (`generate_test_assets`), :191-253 (`run_evaluation`) | ten generated questions carry `\"answerable\": False` and no expected triple, so the only correct outcome is that no stored fact clears the gate: a person the corpus never mentions (`Where was Thomas Edison born?`), a predicate the subject lacks (`What did Albert Einstein discover?`), a relation asked in the wrong direction (`Who cracked Enigma?`), a bare identity probe (`Who is Turing?`). `run_evaluation` ingests into an emptied store, runs each through `link_entities`, `get_all_facts_for_entities` and `select_answering_facts` at `HDC_THRESHOLD`, and counts a `HALLUCINATION_LEAK` when any fact clears. The 22 answerable questions in the same run are the positive control, reported separately as answerable retrieval accuracy beside the hard-negative block rate (:251-253), so a gate that blocks everything shows as zero retrieval | the harness scores and never fails, needs the TALON extraction stack to populate the store, and commits no run output; `verify_hillock.py` check 8 computes `leaks` and asserts only the row count (:191-193)"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
 matrix:
-  memory_unit: "A subject-predicate-object triple, plus a decaying co-activation weight between two entities"
-  storage: "One SQLite file with four tables — entities, relations, hebbian_weights and an `hdc_reservoirs` blob store for multi-hop path vectors; the 10,000-dimensional codebook is in-process only"
-  retrieval: "String entity linking, a one-hop SQL fetch, then cosine over bundled ±1 hypervectors against a fixed threshold, `0.55` at this pin; every vector is derived from the string's character n-grams rather than drawn at random"
-  write: "An LLM extracts triples from ingested text or from a conversational assertion; there is no admission gate"
-  update_delete: "Nothing is corrected. The functional-predicate `DELETE` is commented out under *\"Keep all extracted candidates in DB rather than destructively deleting earlier valid facts\"*, so every relation is now append-only with no supersession in its place; `clear_and_reinitialize` drops all four tables"
-  scoping: "None — one database, one user, no scope key anywhere in the schema"
-  integration: "A local console loop against Ollama; no API, no MCP, no library surface"
-  background: "None; Hebbian decay runs inline on every turn"
-  trust: "No status, no confidence, no provenance and no timestamp on a stored fact"
-  strengths: "The refusal is a return statement — the model is never asked a question the symbolic layer could not answer"
-  risks: "The gate's threshold is fixed while its similarity falls with query length, and none of the four benchmark questions the report scores clears it at `0.72` or at the `0.55` that replaced it — a distribution the verification suite computes and does not assert"
+  memory_unit: "A subject-predicate-object triple with a source-document label, plus a decaying co-activation weight between two entities"
+  storage: "One SQLite file in WAL mode with four tables: entities, relations (with source_doc, confidence and created_at columns), hebbian_weights, and an hdc_reservoirs blob store for multi-hop path vectors; the 10,000-dimensional codebook is in-process only"
+  retrieval: "String entity linking, a one-hop SQL fetch, then a late-interaction score (the mean over query tokens of each token's best cosine against the fact's predicate, subject and object hypervectors) against a fixed 0.55, plus a 0.35 predicate-alignment floor"
+  write: "Document ingestion only: a local pipeline (coreference, predicate routing, GLiREL at a 0.30 threshold) writes triples labelled with the file's basename; no admission gate; nothing is written from conversation"
+  update_delete: "Append-only with no supersession; INSERT OR REPLACE on the triple restamps its source label; a CLI quiz after ingestion deletes a pronoun triple and inserts the user's replacement; reset drops all four tables"
+  scoping: "None: one database per process, no scope key in the schema, and the HTTP server serves every caller from one store and one in-process context state"
+  integration: "A console REPL, an importable IntegratedHillock class, and an OpenAI-compatible FastAPI server bound to 0.0.0.0:8000 with no authentication; any OpenAI-compatible chat endpoint renders"
+  background: "None; Hebbian decay runs inline on every answered turn"
+  trust: "No status. A confidence column nothing reads, a single-valued source label shown to the renderer, and a record timestamp nothing reads"
+  strengths: "No stored fact reaches the model unless it clears the gate; in strict mode an unmatched question returns a fixed string and the model is never called"
+  risks: "The gate averages over query tokens, so a four-token question scores about 0.52 against its own exact triple and blocks at 0.55; the default mode sends every blocked question to the model with a refusal prompt"
 ---
 
 ## 1. Executive Summary
 
-Hillock is a local, single-user memory prototype: 1,827 lines of Python across eight files, licensed AGPL-3.0 with a contributor licence agreement its README says exists to preserve the option of commercial dual-licensing later. It stores facts as triples in SQLite, tracks Hebbian co-activation weights between entities, and holds a 10,000-dimensional hypervector space for matching.
+Hillock is a local, single-user memory engine. A local extraction pipeline turns
+documents into subject-predicate-object triples in SQLite, entities that answer
+a question together gain Hebbian co-activation weights, and a 10,000-dimensional
+hypervector gate decides which stored triples may answer a question. It runs as
+a console, as an importable class, and as an OpenAI-compatible HTTP server.
 
-Two things make it interesting to this atlas, and neither is the hyperdimensional computing.
+**The gate decides what memory the model sees.** A stored fact reaches the
+render prompt only after it clears `HDC_THRESHOLD` and a predicate-alignment
+floor (`engine.py:247`). In `STRICT` mode a question with no fact above the gate
+returns a fixed string and no model is called (`engine.py:328-331`). That is a
+branch rather than a prompt, and it is the part of this repository to take.
 
-**The refusal is control flow rather than instruction.** In `main.py`, the local model is only invoked *after* the symbolic layer has matched at least one stored fact above a similarity threshold, and it is handed those facts to render. When nothing matches, the function returns a fixed string — *"I do not have verified information about that"* — and no model is called at all. Almost every system in this corpus that promises not to hallucinate does it by asking a model to say "I don't know"; this one makes the question unaskable. That is a structurally different guarantee, and it is twelve lines of `if`.
+**The default mode sends the blocked question to the model anyway.**
+`verbosity_mode` starts as `BALANCED` (`engine.py:32`). In `BALANCED` and
+`CONVERSATIONAL`, a question whose facts all fail the gate goes to the model with
+a system prompt asking it to say it does not know (`engine.py:334-338`,
+`:350-357`). No stored fact is in that prompt, so memory stays gated, and whether
+the answer comes from the model's own weights is left to the model. The HTTP
+server has no route that changes the mode. The README's claim that the gate
+stops questions before they reach the model describes `STRICT` only.
 
-**It publishes a seven-row version table including the rows where its own numbers fell.** Extraction precision 15.5%, extraction recall 50.0%, retrieval accuracy 45.0%, gate accuracy 43.3% — on the README, above the install instructions, beside every previous version's figures and a paragraph warning that the benchmark is one 32-sentence text and *"not enough to claim statistical robustness yet"*. Publishing the regressions is the creditable part and almost nothing in this corpus does it: gate accuracy peaked at 60.0% two versions earlier and retrieval accuracy at 55.0% one version earlier, and both rows are still there. The prose beneath the table is where the candour stops — it names only the two figures that rose, and the 🎉 marking "Retrieval Accuracy 45.0%" sits on a number ten points below the row above it. The harness that computes them is committed, and so is the whole benchmark: twenty answerable questions with expected subject-predicate-object and ten hard negatives each annotated with the reason it is unanswerable. What is not committed is any run output.
+**The gate's score falls as a question gets longer.** It is the mean, over query
+tokens, of each token's best cosine against the fact's components
+(`reservoir.py:261-290`), so tokens that match nothing pull it down. Under the
+subword encoder alone, the regime `verify_hillock.py` forces, *"Where was Marie
+Curie born?"* scores 0.525 against its own exact triple and blocks at 0.55. The
+three-token negative *"Who cracked Enigma?"* scores 0.682 and passes. Over a
+store holding exactly the benchmark's target facts, one answerable question
+clears the gate.
 
-**The fading-context reservoir leaves its zero state because the token is added to it directly.** `step` computes `state = decay*state + token_hv + roll(state)*token_hv`, and the middle term is what makes the recurrence go anywhere: without it every term is proportional to the state, and a zero-initialised vector maps to zero forever. Reproducing both forms in separate code, the old rule holds a norm of `0.0` across five steps and the current one climbs `8.0 → 34.4`. The added term also does more than revive the state: `get_context_fingerprint` scores the state against *unbound* codebook entity vectors, so a purely permutation-bound state would have had no component to align with them.
+**The HTTP server has no authentication and one shared context.** `api.py` binds
+`0.0.0.0:8000` (`api.py:96`) where the README says localhost, and routes every
+request to one engine over one store. Each answered question writes Hebbian
+weights, and pronoun resolution reads a reservoir state that every caller's
+tokens have advanced (`engine.py:271-291`). The server cannot ingest, delete or
+reset.
 
-Against that, two findings that reading the code produces and the README does not.
-
-The **gate's operating point is a function of how long the question is, and the threshold has been raised past the benchmark.** Facts are bundled from exactly three components — a deliberate normalization the README explains — while the query is bundled from all its tokens, and both are compared against a fixed `HDC_THRESHOLD` of `0.72`, commented *"Recalibrated gating threshold to eliminate hallucination leaks"*. Reimplementing the encoder and the bundling in separate code, all four of the benchmark's own answerable sample questions score between `0.367` and `0.450` against the exact triple they ask about, and none of them clears the gate. The README's architecture diagram prints `Passed Threshold >= 0.42`.
-
-And the **published gate accuracy does not measure gating.** `gate_acc = (correct_blocks + correct_answers) / len(questions)` pools blocking on the ten negatives with answering on the twenty positives. Read against the other published number, the pooled figure implies the gate blocked four of ten hard negatives.
+One mark, `negative_eval`: the benchmark commits ten questions that must be
+blocked beside 22 that must be answered, scored on the gate's own read path.
+Section 9 names the six withheld marks and the near-miss behind each.
 
 ## 2. Mental Model
 
-A memory here is a **triple** — `Marie_Curie → born_in → Poland` — and nothing else is durable except the strength of association between two entities.
+A memory is a **triple**, `Marie_Curie → born_in → Poland`, with a label naming
+the file it came from. The only other durable structure is the strength of
+association between two entities.
 
-A fact becomes a memory when a local model extracts it, either from an ingested document or from a sentence the user typed that parses as a declaration. There is no admission gate, no confidence, and no review: `update_relation` is called and the triple is in the store. A fact stops being a memory when a later assertion overwrites it — which happens only for five named functional predicates, `born_in`, `died_in`, `capital_of`, `place_of_birth` and `place_of_death` — or when `/reset` drops all three tables. Every other relation accumulates. There is no per-fact deletion, no status, no timestamp, and no record that anything was ever removed.
+A fact becomes a memory when `/ingest` extracts it from a `.txt` or `.pdf`
+(`ingestor.py:134-135`). Nothing is written from conversation: a declarative
+sentence typed at the console or sent to the server is not a question, so it
+reaches the refusal branch (`engine.py:295`, `:325`). A fact stops being a
+memory in two ways. The disambiguation quiz that follows an ingest deletes a
+triple whose subject or object is a pronoun and inserts the user's replacement
+(`engine.py:65-90`), and `/reset` drops all four tables. Every other triple is
+permanent, and a second `born_in` for the same person sits beside the first.
 
-So the epistemic vocabulary is thin by construction: **everything stored is treated as true**, and the entire trust decision has been moved from the store to the read path. That is a coherent position for a prototype and it puts unusual weight on the gate.
+**Everything stored is treated as true.** There is no status and no filter on
+the rows, so the whole trust decision lives in the gate on the read path.
 
-The second durable structure is associative rather than propositional. `HebbianPlasticityEngine.update_associations` takes the set of entities active on a turn and, for each pair, moves their weight toward 1.0:
+The second durable structure is associative. `update_associations` takes the
+entities active on an answered turn and moves each pair's weight toward 1.0:
 
 ```python
 new_w = current_w + self.eta * (1.0 - current_w)      # eta = 0.15
 ```
 
-then multiplies every pair *not* co-active this turn by `1 - decay` (0.01). Reinforcement is asymptotic and cannot exceed one; decay is per-turn rather than per-unit-time, so an association fades by conversational distance rather than by the calendar — which is consistent, since no row in this schema carries a time at all. These weights survive the session in SQLite. They are used to prime the renderer with related concepts, never to select which facts answer a question.
+then multiplies every pair not co-active this turn by `1 - decay`, with decay
+0.01 (`plasticity.py:37`, `:44-48`). Decay is per answered turn, not per unit of
+time. The weights prime the renderer with related concepts and never select
+which facts answer.
 
-The third structure does not survive anything. The codebook is an in-process dictionary, allocated lazily on first sight of a token, and the reservoir state is a NumPy array in memory. Both are rebuilt from scratch on every launch, and rebuilding them is free: `get_or_allocate_hypervector` routes every string through `resolve_predicate_hypervector`, which sums the character 3-, 4- and 5-grams of the padded string, each hashed with MD5 into a seeded ±1 draw. A given entity therefore resolves to the *same* hypervector in every run, and two strings sharing character n-grams resolve to correlated ones. Measuring the encoder in separate code, ten unrelated entity names average a pairwise cosine of `+0.003`, while `born` against `born_in` is `+0.32` and `discover` against `discovered` is `+0.55`. That morphological signal does real work — it is how a query token reaches a fact predicate without a synonym table. The vector layer holds no memory in the sense this atlas uses the word: nothing is stored, and every vector is a pure function of its string.
+The third structure does not survive a restart. The codebook is an in-process
+dictionary, and every vector in it is a pure function of its string:
+`resolve_predicate_hypervector` sums the MD5-seeded ±1 vectors of the string's
+character 3-, 4- and 5-grams, and adds a SimHash projection of its GloVe vector
+when one exists (`reservoir.py:228-241`). Strings that share n-grams get
+correlated vectors: `born` against `born_in` is +0.315 and `discover` against
+`discovered` is +0.551. That is how a query token reaches a stored predicate
+without a synonym table. The fading-context reservoir is a NumPy array updated
+per token as `decay*state + token + roll(state)*token` (`reservoir.py:243-248`);
+its top codebook match resolves a pronoun when no entity links.
 
 ```mermaid
-%% caption: below the cosine threshold the model is never called and a fixed refusal is returned, so the gate is a hard admission test rather than a ranking
+%% caption: a stored fact reaches the model only after clearing the gate, while in the default BALANCED mode a blocked question goes to the model with a refusal prompt
 flowchart TD
-  Q["user turn"] --> L["link_entities:<br/>string match to entity ids"]
-  L --> F["SQL: every triple where the entity<br/>is subject or object"]
-  F --> M["bundle query tokens · bundle each fact<br/>as exactly 3 components · cosine"]
-  M --> G{"cosine ≥ 0.72?"}
-  G -->|no| R["return 'I do not have verified<br/>information about that' —<br/>the model is never called"]
-  G -->|yes| H["Hebbian: strengthen every<br/>co-active pair, decay the rest"]
-  H --> P["render prompt = matched facts<br/>+ primed associations"]
-  P --> O["Ollama renders the answer"]
-  S["reservoir state"] -. "decay·state + token + roll(state)·token" .-> S
-  S -.->|"top-1 codebook match"| PR["pronoun resolution<br/>when no entity linked"]
+  Q["question: CLI, import or HTTP"] --> L["link_entities:<br/>entity id parts in the question"]
+  L --> F["SQL: every triple where a linked<br/>entity is subject or object"]
+  F --> M["late interaction: mean over query tokens<br/>of best cosine vs predicate, subject, object"]
+  M --> G{"score ≥ 0.55 and<br/>predicate alignment ≥ 0.35?"}
+  G -->|yes| H["Hebbian: strengthen co-active pairs,<br/>decay the rest"]
+  H --> P["render prompt: matched triples<br/>with source label + primed associations"]
+  P --> O["model renders the answer"]
+  G -->|no| MODE{"verbosity_mode"}
+  MODE -->|STRICT| R["fixed string returned;<br/>the model is never called"]
+  MODE -->|"BALANCED (default) or<br/>CONVERSATIONAL"| RP["model called with the question<br/>and 'no verified facts found'"]
+  S["reservoir state, one per process"] -. "pronoun with no linked entity" .-> L
 ```
 
 ## 3. Architecture
 
-A console program. `python main.py` opens a REPL against a local Ollama endpoint; there is no server, no API and no importable library boundary.
+Twelve Python modules at the repository root, installable as a package whose
+`hillock` command runs the console (`pyproject.toml:36-37`).
 
-- **`main.py`** (20 KB) — the loop, entity linking, the HDC matcher, the gate, extraction prompts, and the three verbosity modes.
-- **`database.py`** — three-table SQLite schema and all SQL.
-- **`plasticity.py`** — the Hebbian engine, also over the same SQLite file.
-- **`reservoir.py`** (236 lines) — the subword encoder, a sign-random-projection SimHash for GloVe vectors, and the fading-context reservoir.
-- **`ingestor.py`** — threaded chunking of `.txt` and `.pdf` into blocks of five sentences with two overlapping.
-- **`talon_engine.py`** (20 KB) — the CUDA relation extractor, which the README presents as stages one to three of its architecture and lists in its file overview.
-- **`evaluate_hillock_PROTO_ish.py`** (16 KB) — the benchmark.
-- **`config.py`** — every tunable constant in one place, which at this size is the right call.
+- **`engine.py`** — `IntegratedHillock`: entity linking, the gate, the refusal
+  branch, the three verbosity modes and the disambiguation helpers.
+- **`main.py`** — the console REPL and its slash commands.
+- **`api.py`** — the FastAPI server, one route that calls `execute_chat_turn`.
+- **`database.py`** — the four-table SQLite schema and all fact SQL.
+- **`plasticity.py`** — the Hebbian engine over the same file.
+- **`reservoir.py`** — the subword encoder, the SimHash projection, the reservoir,
+  bit-packed late interaction, and the GloVe loader.
+- **`ingestor.py`** and **`talon_engine.py`** — chunking and the extraction
+  pipeline: coreference, predicate routing over a fifty-relation taxonomy, and
+  GLiREL relation extraction.
+- **`export_to_onnx.py`** — exports MiniLM for an optional CPU predicate router.
+- **`evaluate_hillock_PROTO_ish.py`** and **`verify_hillock.py`** — the benchmark
+  and the verification suite.
+- **`config.py`** — every tunable constant in one place.
 
 ### Deployment and ergonomics
 
-The dependency list is `numpy`, `psutil`, `pypdf` — three lines, unpinned — and the README's setup does not agree with it: it instructs a CUDA PyTorch install from an external index before `pip install -r requirements.txt`, and lists *"NVIDIA GPU with CUDA support (8GB VRAM recommended)"* as a prerequisite. `torch` is what that command installs; `transformers`, `glirel`, `spacy`, `fastcoref` and `sentence-transformers` — the five packages `talon_engine.py` imports — are in neither the command nor the file. So the documented install produces a machine with CUDA PyTorch on it and the extraction pipeline the architecture diagram is drawn around inert.
+**The documented install puts the guard-disabling extractor on the default
+path.** `requirements.txt` and `pyproject.toml` list `torch`, `transformers`,
+`glirel`, `fastcoref`, `spacy` and `sentence-transformers`
+(`requirements.txt:8-13`), and `run.sh` installs them (`run.sh:15`).
+`talon_engine.py` replaces HuggingFace's `check_torch_load_is_safe` with a no-op
+at import time (`talon_engine.py:22-27`). That check refuses to deserialize a
+`torch.load` checkpoint, which is a pickle and so a code-execution surface.
+`main.py` imports `ingestor.py`, which imports `talon_engine.py`
+(`ingestor.py:26`), so the console runs with the guard off from startup. The
+server imports only `engine.py` and never loads the extractor.
 
-**A first run downloads 822 MB from a third-party host without asking.** `IntegratedHillock.__init__` calls `load_lightweight_glove()`, which checks for `glove.6B.50d.txt`, does not find it — the file is not in the repository and nothing in the README mentions it — and calls `urllib.request.urlretrieve("https://nlp.stanford.edu/data/glove.6B.zip", "glove.6B.zip")` before extracting the 50-dimensional table. That is the whole of the `GLOVE_PATH` story: a bare filename in the working directory, a silent fetch on the first launch, and a `~10MB RAM` footprint claimed in the docstring for the trimmed dictionary rather than the archive it arrives in.
+**A first run downloads 822 MB from a third-party host without asking.**
+`IntegratedHillock.__init__` calls `load_lightweight_glove()`, which fetches
+`glove.6B.zip` from `nlp.stanford.edu` when `glove.6B.50d.txt` is absent and
+verifies nothing about what arrives (`reservoir.py:100-107`). The server does
+this at import (`api.py:17`), so the first `python api.py` blocks on it.
 
-The store is one SQLite file of three small tables, so it is inspectable and repairable with any SQL client, and `/reset` re-seeds ten entities and seven relations so a fresh database is never empty. Nothing runs in the background; every write, decay step and query happens inline on the turn.
+**A store created before the provenance column cannot be read.** The schema is
+`CREATE TABLE IF NOT EXISTS` with no `ALTER TABLE` anywhere, and every fact read
+selects `source_doc` (`database.py:28-40`, `:188`). An existing `hillock_kg.db`
+keeps its three-column `relations` table, and the first question that names a
+stored entity raises from SQLite.
 
-**`talon_engine.py` is where the install cost changes, and it carries a hazard worth stating plainly.** It loads `jackboyla/glirel-large-v0` through HuggingFace, and to do so it disables a safety check:
+**`/inspect`, which the README offers for looking under the hood, raises on any
+entity with a fact.** It unpacks three values from rows that carry four
+(`main.py:152`), and the console loop catches only `KeyboardInterrupt`.
 
-```python
-transformers.utils.import_utils.check_torch_load_is_safe = lambda: None
-transformers.modeling_utils.check_torch_load_is_safe = lambda: None
-```
-
-That check is what refuses to deserialize a `torch.load`-format checkpoint, which is a pickle and therefore an arbitrary-code-execution surface; the comment above it calls it a "security block". Two further patches sit beside it and neither disables a guard — one supplies missing tied-weight attributes on an older `fastcoref` model class, the other defaults two keyword arguments on `GLiREL._from_pretrained` for Hub compatibility. The bypass is one patch applied to two module paths.
-
-One thing bounds the risk: `transformers` and `glirel` are absent from `requirements.txt`, so a reader following the documented install gets `TalonEngine = None` and an inert path — the import is wrapped in `try/except ImportError` and the initializer in a second `try`, so it fails closed twice — and the engine is hardcoded to `cuda:0`. What that bound does not cover is intent. The README's architecture diagram opens with the TALON engine, its prerequisites list a CUDA GPU, and its setup instructs a PyTorch install; a reader who does what the README says is aiming for the configuration in which the guard is off. Nothing in the README tells them so.
-
-**The v0.4 schema work is all on that path.** `DEFAULT_PREDICATE_TAXONOMY` (about fifty Wikidata relations), `ORIGIN_PREDICATES` with its person-to-location directionality rule, `SYMMETRIC_PREDICATES`, `get_canonical_triple_key` — which maps `(A, collaborated_with, B)` and `(B, collaborated_with, A)` onto one key — `is_inverted_asymmetric_pair` and `clean_entity_text` are defined in `talon_engine.py` and referenced in no other file. The canonical key is the exact machinery a store would need to correct a symmetric relation, and `database.py` never calls it.
+The store is one SQLite file in WAL mode, inspectable with any SQL client, and
+`/reset` re-seeds ten entities and seven relations. Nothing runs in the
+background.
 
 ## 4. Essential Implementation Paths
 
-### The gate — `main.py`, `select_answering_facts`
+### The gate — `engine.py`, `select_answering_facts`
 
-The query is bundled into one hypervector by summing the vector of every surviving token. Each candidate fact is bundled from **exactly three components**: resolved subject, resolved object, and the predicate's hypervector from `resolve_predicate_hypervector`. Cosine is taken between the two bundles and compared against `HDC_THRESHOLD`, which is `0.55` at this pin.
+The query becomes a set of components: each token, mapped through a twenty-entry
+`predicate_map` and resolved against entity ids, kept if longer than two
+characters or known (`engine.py:200-209`). Each candidate fact becomes its
+predicate's vector plus its resolved subject and object
+(`engine.py:221-235`). `hydra_late_interaction_maxsim` takes, for each query
+component, its best cosine against the fact's components, and averages those
+over the query (`reservoir.py:261-290`). A fact passes when that mean reaches
+`HDC_THRESHOLD`, 0.55, and some query component aligns with its predicate at
+0.35 or more (`engine.py:247`).
 
-The three-component rule is deliberate and the README explains it: holding every fact to the same number of components keeps a short fact from scoring higher than a long one for structural rather than semantic reasons. That reasoning is right, and it is more care than most threshold-based retrieval in this corpus receives.
+**Averaging over the query makes the score a function of question length.** A
+component that matches nothing contributes its best chance cosine, near zero,
+so two exact matches in a three-component question score about 0.68, in four
+about 0.52 and in five about 0.46. The threshold sits between the second and the
+first. Reimplementing the subword encoder and the scoring in separate code, over
+a store holding exactly the 22 target facts of the benchmark:
 
-The unhandled half is that the *query* side has no such rule. Tokens are deduplicated by resolved identity and anything of two characters or fewer is dropped unless it is a known entity, but what survives is an unbounded bundle compared against a bundle of three. Because the encoder is near-orthogonal on unrelated strings — measured at `+0.003` mean pairwise cosine — the bundle of n components has a norm proportional to `sqrt(n)`, so the score falls as the question gets longer while the threshold stays fixed. Reimplementing the encoder and the bundling in separate code, with the subject and object shared between query and fact:
-
-| Surviving query components | Cosine | Against the `0.55` in `config.py` | Against the `0.42` the README prints |
+| Question | Components | Score against its own triple | At 0.55 |
 | --- | --- | --- | --- |
-| 2 | 0.822 | pass | pass |
-| 3 | 0.663 | pass | pass |
-| 4 | 0.495 | **block** | pass |
-| 5 | 0.385 | **block** | **block** |
-| 8 | 0.217 | **block** | **block** |
+| *Where was Marie Curie born?* | 4 | 0.525 | block |
+| *Where was Bertrand Russell born?* | 4 | 0.553 | pass |
+| *What did Alan Turing crack?* | 4 | 0.518 | block |
+| *Who did Turing work with?* | 5 | 0.459 | block |
+| *Who did Bertrand Russell collaborate with?* | 5 | 0.358 | block |
+| *Who cracked Enigma?* (must block) | 3 | 0.682 | pass |
 
-Same fact, same overlap, opposite outcomes — and the window in which a shared-subject-and-object match survives is three tokens wide at `0.55`, two at the `0.72` that preceded it. Sharing all three components buys four either way: `1.000`, `0.868`, `0.691`, `0.553` at n = 3, 4, 5, 6, the last of which clears `0.55` by three thousandths.
+Twenty answerable questions have their expected triple in that store, and only
+the Russell birthplace clears the gate, by three thousandths. Eleven *"Where was X
+born?"* questions score between 0.525 and 0.553 on the same two exact matches;
+the spread is the chance cosine of `where` and `was`, 0.057 and 0.043 for Marie
+Curie. On the seed-only store that `verify_hillock.py` check 8 builds, the same
+arithmetic gives `passes` 0 and `leaks` 1.
 
-**Run the benchmark's own questions through it and none of them clears the gate.** Each scored against the exact triple it asks about:
+*These are the subword-only figures, which is what runs when the GloVe file is
+empty or missing. With GloVe loaded, `where` and `was` carry semantic vectors
+whose cosines against a fact I did not measure, so the absolute scores move; the
+mean over query components does not depend on the regime.*
 
-| Benchmark question | Cosine | `config.py` 0.55 | the 0.72 before it | README 0.42 |
-| --- | --- | --- | --- | --- |
-| *"Where was Marie Curie born?"* | 0.423 | **block** | **block** | pass |
-| *"Where was Alan Turing born?"* | 0.429 | **block** | **block** | pass |
-| *"What did Alan Turing crack?"* | 0.450 | **block** | **block** | pass |
-| *"Who did Turing work with?"* | 0.367 | **block** | **block** | **block** |
+### The refusal — `engine.py`, `execute_chat_turn`
 
-**The threshold moved 0.17 and not one of them crossed.** All four sit between
-`0.367` and `0.450`, below both settings, so a recalibration described as
-eliminating hallucination leaks changed the verdict on none of the sampled
-answerable questions. The number the change was made for is the one the
-verification suite computes and does not assert.
+The model is called inside the matched branch with the facts, each tagged with
+its source label (`engine.py:306-319`). When nothing matches, the mode decides.
+`STRICT` returns *"I do not have verified information about that"* and calls
+nothing (`engine.py:328-331`). `BALANCED` and `CONVERSATIONAL` build a prompt of
+the question and *"Memory: No verified facts found."* and call the model, falling
+back to the fixed string only if the call fails (`engine.py:334-343`). A
+question of fewer than two words takes a greeting path that also calls the
+model in `CONVERSATIONAL` (`engine.py:259-264`).
 
-The two threshold columns are both the project's own: `0.72` is what `config.py` sets and `0.42` is what the README's architecture diagram advertises, so the documentation describes a gate that admits three of these four questions and the code ships one that admits none. For a system whose central claim is refusing to answer when it should, the threshold is the most important number in the repository, and raising it *"to eliminate hallucination leaks"* is the move that trades answers for refusals without changing what the gate measures. The README's own table records the trade in the two columns that depend on it: retrieval accuracy fell from 55.0% to 45.0% and gate accuracy from 56.7% to 43.3% while precision rose. Normalising the query side the way the fact side is normalised — a fixed component budget, or dividing by the component count — is the change the fixed threshold is waiting for, and it is the change that would let the threshold be raised without paying for it in answerable questions.
+**In strict mode the property is structural; in the other two it is a request.**
+No stored fact can reach the model without clearing the gate in any mode. Only
+`STRICT` keeps the model from answering a question with no evidence behind it,
+and the default is `BALANCED`.
 
-*These figures are the subword-only regime, which is what runs when the GloVe fetch fails and what applies to any token outside GloVe's trimmed 50,000-word vocabulary. With the table loaded, a predicate or entity found in it is bundled with a SimHash projection as well, which moves the absolute numbers; the norm argument that produces the length dependence does not depend on which regime is active.*
+### Correction and provenance — `database.py`, `engine.py`
 
-### The refusal — `main.py`
+Every fact write is `INSERT OR REPLACE` on the triple's primary key with the
+file's basename as `source_doc` (`database.py:157-160`, `ingestor.py:134-135`).
+**The provenance label is last-writer-wins.** When a second document yields the
+same triple, the replace overwrites the label and resets `confidence` and
+`created_at`, so the row names one source however many produced it. Two files
+with the same basename in different directories get one label.
 
-Three `return` statements produce `DETERMINISTIC_GATED_FALLBACK`, and what matters is where they sit. The Ollama call is inside the branch that has already matched facts; every path that fails to match returns the fixed string first. The model is never given a question without evidence, so it has no opportunity to answer one from parametric knowledge.
+No supersession exists. A later `born_in` for the same subject is a second row,
+and both are candidates at the next question. The disambiguation quiz is the one
+path that removes a single fact: after `/ingest`, the console lists every triple
+whose subject or object is a pronoun and, for each, deletes it and inserts the
+user's answer with `source_doc = 'human_disambiguation'` and `confidence = 1.0`
+(`main.py:188-205`, `engine.py:65-90`). A skipped fact stays live, and a pronoun
+of three letters or more links as an entity (`engine.py:123-132`). A later
+ingest that re-extracts the clarified triple replaces the human label.
 
-That is the strongest idea here and it generalizes past the prototype. A system prompt saying "only answer from the provided context" is a request; a control-flow structure in which the un-evidenced case never reaches the model is a property. The cost is equally structural: everything the model could legitimately have contributed — paraphrase, arithmetic, combining two facts — is also unreachable, and the system's ceiling is whatever its triple extractor managed to store.
+### The HTTP server — `api.py`
 
-### Correction — `database.py`, `update_relation`
-
-```python
-# Keep all extracted candidates in DB rather than destructively deleting earlier valid facts
-                #if predicate in SINGLE_VALUED_PREDICATES:
-                #    cursor.execute("DELETE FROM relations WHERE source_id = ? AND predicate = ?", (src_key, predicate))
-cursor.execute("INSERT OR REPLACE INTO relations VALUES (?, ?, ?)", (src_key, predicate, tgt_key))
-```
-
-**Correction does not happen at all.** The functional-predicate `DELETE` is
-commented out, under a comment that gives the right reason — destroying an
-earlier valid fact to make room for a later one loses data — and puts nothing in
-its place. So a newer `born_in` no longer removes the older one, both rows
-persist, and there is no supersession pointer, no tombstone, no timestamp and no
-ordering to say which the system now believes. Both are candidates at the next
-retrieval, and the gate scores them on cosine alone.
-
-That is a real improvement on the destructive version and it is half a change.
-The comment identifies the problem with `DELETE`; the fix for it is a
-supersession row or a `valid_to`, not the absence of both.
-
-**The allowlist is the whole correction policy, and it reaches one of the predicates this system produces.** `predicate_map` in `main.py` normalises everything the extractor emits into four canonical forms — `born_in`, `collaborated_with`, `discovered`, `cracked` — of which only `born_in` appears in the set. `capital_of` exists only in the seed data; `died_in`, `place_of_birth` and `place_of_death` appear nowhere but this set, the fifty-relation taxonomy in `talon_engine.py`, and that file's `ORIGIN_PREDICATES`. Anything the model extracts under an un-normalised predicate — the README's own example of extraction noise is `[Grace_Hopper] -[became_a_pioneer]-> […]` — is append-only by construction. `talon_engine.py` does define `get_canonical_triple_key`, which folds a symmetric relation and its inverse onto one key and is precisely what would let `collaborated_with` be corrected; no code outside that file calls it.
-
-So a user who corrects "Marie Curie discovered Radioactivity" leaves both triples in the store, and both are candidates at the next retrieval. The arrangement protects multi-valued relations from data loss and makes single-valued correctness depend on a hand-maintained set of five strings meeting a predicate vocabulary that a language model invents at ingest time. A `functional` column on the predicate, or a supersession row instead of a `DELETE`, would not have that coupling.
-
-### Writes — `main.py`, conversational learning
-
-A user sentence that is not a question goes to a two-pass extraction prompt, and if it parses, `update_relation` is called immediately: *"I have recorded a new factual declaration."* There is no confirmation, no provenance, and no distinction in the store between a fact extracted from an ingested PDF and one the user asserted in passing. Everything the gate later protects rests on this being right.
-
-### Ingestion — `ingestor.py`
-
-Documents are split into blocks of five sentences with two overlapping, dispatched to worker threads (`MAX_WORKERS = 1` by default, with a comment noting the GTX 1070 it was tuned on), and each block is sent to the model for triple extraction. The overlap is a sensible cheap defence against a fact straddling a chunk boundary; the deduplication that would otherwise imply is handled by the triple primary key.
+`POST /v1/chat/completions` takes the last `user` message, drops the rest of
+the conversation, and returns `execute_chat_turn`'s reply as a chat completion
+(`api.py:42-50`). There is no authentication, no rate limit and no per-caller
+state, and `uvicorn.run` binds every interface (`api.py:96`). What a caller can
+read is any fact that clears the gate for a question it writes. What it can
+write is Hebbian weights, through every answered question (`engine.py:304`),
+and the shared reservoir state, through every question.
 
 ## 5. Memory Data Model
 
-Three tables. `entities(id, name, type)`, `relations(source_id, predicate, target_id)` with the triple as primary key and cascading foreign keys, and `hebbian_weights(entity_a, entity_b, weight)` with the pair as primary key.
+Four tables (`database.py:21-59`). `entities(id, name, type)`.
+`relations(source_id, predicate, target_id, source_doc, confidence, created_at)`
+with the triple as primary key and cascading foreign keys.
+`hebbian_weights(entity_a, entity_b, weight)` keyed on the pair.
+`hdc_reservoirs(doc_id, reservoir_vector, bound_path_count, created_at)` holds
+one int8 multi-hop path vector per ingested document, written by ingestion
+(`ingestor.py:174`) and read by no query.
 
-What is absent is easier to list than what is present: no timestamp, no provenance, no confidence, no status, no source document, no scope key, no version, no soft-delete column. A stored fact carries exactly its three strings.
+**Three of the relation columns carry less than their names suggest.**
+`source_doc` is read into every render prompt and the `BALANCED` system prompt
+asks the model to cite it (`engine.py:308`, `:372`); no read filters on it.
+`confidence` is written once, as 1.0 by the quiz, and read nowhere. `created_at`
+is a record time that a replace resets, and it is read nowhere.
 
-Two smaller observations. `PRAGMA foreign_keys = ON` is set on the connections in `_initialize_db` and `update_relation`, but SQLite applies that pragma per connection, and `plasticity.py` opens its own connections without it — so the cascade the schema declares does not apply on the writer that touches entity pairs most often. It happens not to matter, because nothing deletes an entity row outside the full reset. And `hebbian_weights` rows are decayed but never pruned, so the table grows monotonically with the number of entity pairs ever co-active.
+`PRAGMA foreign_keys = ON` is per connection in SQLite, and `plasticity.py`
+opens its own connections without it. Only the full reset and the benchmark's
+own emptying delete entities, so the cascade is never exercised.
+`hebbian_weights` rows decay and are never pruned.
 
 ## 6. Retrieval Mechanics
 
-Three stages, all on the turn. `link_entities` matches query tokens against entity ids by string; a single SQL statement fetches every triple where a linked entity is the subject *or* the object, which is a one-hop neighbourhood rather than a traversal; the HDC matcher scores and thresholds them.
+Three stages, all inline. `link_entities` matches any part longer than two
+characters of an entity id against the question's words (`engine.py:123-132`).
+One SQL statement fetches every triple where a linked entity is subject or
+object (`database.py:184-193`), a one-hop neighbourhood. The gate in section 4
+scores and thresholds them, and every passing fact goes to the prompt, sorted by
+score.
 
-`query_relation` carries a small fallback worth naming: if the exact predicate misses, it stems both sides — stripping `ed`, `ing`, `s` and collapsing separators — and accepts a substring match in either direction. It is crude and it is honest about being crude, and for a triple store whose predicates come out of a language model with no controlled vocabulary, some such tolerance is unavoidable.
+A question that names no stored entity retrieves nothing and is refused. A
+question that names an entity by a first or last name links it through the
+part match, so *"Who did Turing work with?"* finds `Alan_Turing`.
 
-The failure mode is the one the benchmark measures. Extraction produces predicates like `became_a_pioneer` where the query expects `developed`, and no amount of matcher tolerance recovers a relation the extractor never formed. Retrieval quality here is bounded above by extraction quality, and extraction recall is the lowest of the four published numbers.
+**The pass test is per fact and absolute**, so the number of facts in the prompt
+is the number above 0.55 and nothing caps it.
 
 ## 7. Write Mechanics
 
-Every write is synchronous and inline. The user waits for extraction on a conversational assertion; ingestion of a document blocks the console. There is no queue, no background pass and no re-indexing, which for a store of a few thousand triples is a reasonable trade and one the README implicitly makes by targeting a single local user.
+`/ingest` reads the file, splits it into blocks, runs coreference, routes each
+sentence to its likeliest predicates, and asks GLiREL for relations above a
+threshold of 0.30 (`talon_engine.py:421`). Span cleaners, an origin-predicate
+direction rule and a canonical key for symmetric predicates deduplicate within
+the document (`talon_engine.py:516-526`). The triples are written in one
+transaction (`database.py:146-161`), the active entities' Hebbian weights are
+updated, and multi-hop path vectors go to `hdc_reservoirs`. The extractor's
+models are unloaded after each ingest (`ingestor.py:223-224`).
 
-Deletion is `/reset` and nothing else. Conflict handling does not exist as a concept: a contradicting assertion is an overwrite, and two facts that disagree can only coexist if their predicates differ.
+There is no admission gate: whatever the extractor emits is stored and treated
+as true. The quiz in section 4 is the only human step, and it runs after the
+writes have landed.
 
 ### Operational cost
 
-- **The write path is synchronous** and dominated by a local model call per block or per assertion.
-- **The lag before a memory is retrievable is zero** — the fact is in SQLite before the turn returns.
-- **No background pass rewrites the store**, so nothing can silently undo a correction. In a corpus where most deletion claims expire at the next scheduled job, "there are no scheduled jobs" is a real property rather than a missing feature.
-- **The read path injects only matched triples plus primed associations**, so the prompt grows with the number of matching facts and nothing bounds it explicitly.
+- **Ingestion is synchronous** and blocks the console; it needs the extraction
+  stack, on CUDA when present and CPU otherwise (`ingestor.py:41-43`).
+- **The lag before a memory is retrievable is zero**: it is in SQLite before
+  `/ingest` returns.
+- **No background pass rewrites the store**, so nothing can undo the quiz's
+  replacement except another ingest of the same triple.
+- **A question costs one SQL read, the gate, and at most one model call**, plus a
+  Hebbian write when anything passes.
 
 ## 8. Agent Integration
 
-There is none, and the report should be plain about it. Hillock is a console application with a hardcoded Ollama URL; there is no MCP server, no HTTP API, no plugin contract and no packaging beyond `requirements.txt`. `/ingest`, `/mode` and `/reset` are the whole surface. Adapting it for another agent means importing `main.py`'s class and calling `execute_chat_turn`, which is possible — the return tuple carries the mode string — but nothing in the repository is arranged for that.
+Three surfaces. The console REPL, with `/ingest`, `/mode`, `/model`, `/inspect`,
+`/status`, `/debug` and `/reset`. The `IntegratedHillock` class, whose
+`execute_chat_turn` returns the reply, the primed associations, the context
+fingerprint and the outcome label. And the HTTP server, which any client that
+speaks OpenAI chat completions can point at.
+
+The model side is any OpenAI-compatible `/v1/chat/completions` endpoint,
+`LLM_BASE_URL`, defaulting to a local Ollama with `llama3.2` (`config.py:5-6`).
+There is no MCP server, no tool surface for an agent to write memory, and no
+route for ingestion. An agent that wants Hillock to remember something has to
+put it in a file and have a person run `/ingest`.
 
 ## 9. Reliability, Safety, and Trust
 
-Strengths:
+**The gate holds for memory in every mode.** No stored fact reaches a prompt
+without clearing it, and the fixed-string refusal in `STRICT` keeps the model
+out entirely.
 
-- **The un-evidenced case never reaches the model**, which is a property rather than an instruction.
-- **The benchmark's hard negatives are committed with their reasoning**, ten of them, each annotated with why the text does not support an answer.
-- **Facts are normalized to a fixed component count before comparison**, so fact length does not distort ranking.
-- **Every hyperparameter is in one file**, named, with the calibrated threshold marked as calibrated.
-- **The optional GPU path fails closed twice** — on import and on initialization.
-- **No background job can undo a correction**, because there are none.
-- **The published numbers are unflattering and prominent**, with a written account of why they are low.
+**The default mode trades that guarantee for tone.** A blocked question reaches
+the model in `BALANCED`, the mode the server always runs in.
 
-Gaps:
+**The server is open to the network.** Binding `0.0.0.0` with no authentication
+exposes every stored fact a question can reach, lets any caller shift Hebbian
+weights, and lets one caller's tokens steer another's pronoun resolution.
 
-- **The reservoir has no test.** The recurrence that revived it is one term in one line, and nothing asserts the state changes when a token is fed to it.
-- **The gate's threshold is length-sensitive**, so admission depends on phrasing in a way nothing in the repository states.
-- **The published gate accuracy pools blocking with answering**, and the pooled number is dominated by the twenty answerable questions.
-- **Correction reaches one predicate the system actually produces**, and is destructive and unrecorded where it does.
-- **Nothing stored carries provenance, time or trust**, so a user assertion and a PDF extraction are indistinguishable afterwards.
-- **No scope of any kind**, which is consistent with one local user and worth stating anyway.
-- **`talon_engine.py` disables a checkpoint-deserialization guard** on the path the README's architecture diagram and prerequisites point at.
-- **A stated capability rests on a component that does not run**, which is the general form of the first gap and the one a reader should check for themselves before adopting anything here.
+**The extraction install disables a deserialization guard** for the whole
+console process, on the install path the README recommends.
+
+**Provenance is one label per triple** and the last writer sets it.
+
+**Privacy.** Nothing leaves the machine except the first-run GloVe download and
+whatever `LLM_BASE_URL` points at.
+
+Capability marks:
+
+- `tombstone` — withheld. The quiz deletes a pronoun triple with no record of
+  the rejected value, and nothing stops the extractor from writing it again
+  (`engine.py:75`).
+- `trust_state` — withheld. `confidence` is a float that no read consults, and
+  no row carries a status (`database.py:34`).
+- `bitemporal` — withheld. `created_at` is a record time that a replace resets;
+  no column holds when a fact was true (`database.py:35`).
+- `scope_enforced` — withheld. The schema has no scope key, and the server
+  serves every caller from one store and one reservoir (`api.py:17`).
+- `audit_log` — withheld. The quiz's `DELETE` and every `INSERT OR REPLACE`
+  leave no record of what changed (`engine.py:75`, `database.py:157-160`).
+- `human_review` — withheld. The disambiguation quiz edits triples that are
+  live and retrievable, and a skipped one stays live; that is editing
+  after the write has landed.
+- `negative_eval` — awarded on the benchmark's ten must-block questions; section
+  10 gives the run and its limits.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**`verify_hillock.py` is a 20-point CPU verification suite** — the repository's
-first assertions outside the benchmark. It covers eight areas without a GPU or
-the TALON models: SQLite seed counts and single-valued predicate overwrite, the
-Hebbian strengthen and decay constants *"vs README math"*, VSA determinism,
-bipolar output and binding orthogonality, the v0.4 span cleaners and
-inverted-pair purge, coreference span replacement with character offsets, the
-ingestion path's loud halt when the TALON stack is absent, a benchmark
-seed-contamination arithmetic check, and a gate score distribution. It exits
-non-zero on any failure. Checking a decay constant against the number the README
-publishes is the right instinct, and so is asserting that the ingestion path
-halts loudly rather than degrading when its extractor is missing.
+**`verify_hillock.py` is 21 checks in eight areas** under a docstring calling it
+a 20-point suite, runnable without a GPU or the extraction models, exiting
+non-zero on any failure (`verify_hillock.py:197-201`). It covers seed counts,
+the Hebbian constants against the README's arithmetic, encoder determinism and
+binding orthogonality, the v0.4 span cleaners and canonical key, coreference
+span replacement, the ingestion path's loud halt without its extractor, the
+benchmark's seed overlap, and the gate's score distribution. No CI workflow runs
+it.
 
-**Check 8 computes the number this report is about and asserts nothing with
-it.** It builds a seed-only database, runs every benchmark question through
-`select_answering_facts` with `threshold=-1.0` — the gate disabled, so the raw
-score distribution comes back — and then:
+**Check 1 asserts an overwrite the store does not perform.** It writes
+`(Alan_Turing, born_in, Manchester)` over the seeded London and asserts that
+`query_relation` returns Manchester (`verify_hillock.py:56-58`). Both rows
+persist, and `query_relation` returns whichever row SQLite yields first, which
+through the primary-key index is London. The stem-fallback check beside it expects
+Manchester as well and meets London first. I did not run the suite.
 
-```python
-passes = sum(1 for a, m, _ in rows if a and m is not None and m >= HDC_THRESHOLD)
-leaks  = sum(1 for a, m, _ in rows if not a and m is not None and m >= HDC_THRESHOLD)
-check("gate-distribution-ran", len(rows) == 32, f"verified gate distribution on {len(rows)} queries")
-```
+**Check 8 computes the gate's two error counts and asserts neither.** It scores
+every benchmark question against a seed-only store with the gate disabled, then
+assigns `passes` and `leaks` and asserts `len(rows) == 32`
+(`verify_hillock.py:183-193`). Neither name appears again in the repository. On
+the reproduction in section 4, `passes` is 0 and `leaks` is 1.
 
-The `32` is the whole of what the file has changed since the benchmark grew:
-the fixture went from thirty questions to thirty-two, and the assertion's
-constant was updated to match. `passes` and `leaks` are each assigned once, on
-the two lines above, and appear nowhere else in the repository — the line was
-edited without the question being asked.
+**The benchmark harness carries the mark.** `generate_test_assets` writes a
+32-sentence text and 32 questions: 22 with an expected subject, predicate and
+object, and ten that must be blocked, each written to fail one way — an absent
+person, a predicate the subject lacks, a relation asked in reverse, an identity
+probe (`evaluate_hillock_PROTO_ish.py:56-89`). `run_evaluation` empties the
+store and the in-process codebooks, ingests the text, and scores every question
+through `link_entities`, `get_all_facts_for_entities` and
+`select_answering_facts` (`:113-237`). It reports answerable retrieval accuracy
+and hard-negative block rate as separate figures beside a pooled gate accuracy
+(`:251-253`).
 
-`passes` is how many answerable questions clear 0.72. `leaks` is how many baited
-ones do. Neither identifier appears again in the file. The only assertion is that
-thirty rows were produced — that the distribution *ran*, not what it said. So the
-suite reaches the exact measurement the gate's calibration turns on, computes
-both halves of it, and checks the row count instead. Two live numbers and a
-tautology, and the check's own name says so.
+That separation is the positive control: a gate that blocked everything would
+show a perfect block rate beside zero retrieval. The harness scores and does not
+fail, it needs the extraction stack to populate anything, and no run output is
+committed. The README publishes no scores at this commit; the version table it
+carried until 24 September 2026 was removed in
+[`95037d447d2b62de067d91b5b94be7df307676de`](https://github.com/roandejager/Hillock/commit/95037d447d2b62de067d91b5b94be7df307676de).
 
-The repair is one line each and needs no new machinery: `check("gate-admits-answerable", passes > 0, ...)` would fail today and is the assertion the threshold has never had.
+The negatives carry no stated reason at this commit: the inline comments that
+gave one per question were removed on 2026-08-13 in
+[`3fb3f6edfe36de2f9432403bab4ebd9f294b7e50`](https://github.com/roandejager/Hillock/commit/3fb3f6edfe36de2f9432403bab4ebd9f294b7e50).
+Without its reason, *"Who cracked Enigma?"* reads as answerable from the stored
+`Alan_Turing cracked Enigma`, and a gate that admits that triple counts a leak.
 
-**I ran nothing from this repository.** The screen found no auto-executing surfaces and no dependency inside the cooldown, but the benchmark requires a local Ollama with a pulled model and its numbers are model-dependent by construction — and a first launch would fetch 822 MB from `nlp.stanford.edu`. The reservoir, encoder and gate findings above are all reproductions: the subword encoder and the bundling arithmetic were reimplemented from `reservoir.py` and `main.py` in a separate file and run against a throwaway virtualenv holding nothing but NumPy.
+**I ran nothing from this repository.** The gate figures come from a separate
+reimplementation of `SubwordHDCEncoder`, the late-interaction score and the
+query-component rules, reproducing NumPy's seeded draws exactly in the Python
+standard library and importing nothing from the tree. Its encoder figures match
+the published ones above, `born`/`born_in` and `discover`/`discovered`.
 
-`evaluate_hillock_PROTO_ish.py` is better than its filename, and it runs
-unseeded. Rather than calling `clear_and_reinitialize()`, it deletes
-`relations`, `hebbian_weights` and `entities` outright and then clears the
-in-process HDC state, codebook and vocabulary book — *"to ensure 100% pure,
-unseeded benchmark evaluation"*. Clearing the in-memory codebook as well as the
-tables is the half that is easy to miss: a reservoir that kept its vocabulary
-would carry the seeds' encodings into a run whose database no longer held them.
-Beside it, the verification suite's seventh check asserts the contamination
-arithmetic directly — four initial seeds overlap the evaluation targets — so the
-quantity is pinned rather than argued.
-
-It writes its own fixtures, ingests, queries, and scores four metrics. Twenty questions carry an expected subject, predicate and object; ten are negatives, each with an inline comment giving the reason: *Newton is 1600s, Tesla is 1800s*; *Curie discovered radioactivity, Einstein didn't*; *Enigma is target object, testing link-routing direction*. Those ten are committed cases asserting that particular material must not be returned on a read path, which is the [negative retrieval assertion](../../patterns/rejected-value-tombstone/) this atlas counts, and annotating each with its rationale is rarer than the assertion itself.
-
-Two things are wrong with the scoring, and they are worth separating from the low scores themselves.
-
-**`gate_acc` is not a gate metric.** The formula is `(correct_blocks + correct_answers) / len(questions)` — thirty questions, of which twenty are answerable — so a system that answered every answerable question and blocked nothing would score 66.7% on a metric the script labels *"Hallucination defense rate"*. A system that blocked everything would score 33.3%, which is lower than the 43.3% reported and higher than four of the seven rows in the README's version table. Pooling a positive obligation with a negative invariant into one scalar is exactly the failure the [AOEP-v0 protocol](../../benchmarks/#aoep) separates its scorecard to avoid, and this is the clearest live instance of it in the corpus.
-
-**The two published numbers together imply the gate's actual performance.** With `retrieval_acc = correct_answers / 20 = 45.0%`, `correct_answers` is 9; with `gate_acc = (correct_blocks + 9) / 30 = 43.3%`, `correct_blocks` is 4. So the hard-negative block rate behind the headline "Gate Accuracy 43.3%" is **four of ten**, and six of the ten baited queries produced what the script itself names a `HALLUCINATION_LEAK` — after a threshold recalibration whose stated purpose was to eliminate them. The reported figure is not wrong arithmetic; it is a label that does not describe its formula, and the label is what makes the recalibration look like it worked.
-
-**No run output is committed** — no JSON, no log, no results file — so all twenty-eight numbers in the README's version table rest on the author's report of local runs. The harness and the full fixture set being committed puts this well ahead of the published-numbers-without-artifacts antipattern this atlas names elsewhere, and one committed output file would close the gap entirely.
-
-**No paper, arXiv reference or citation file exists in this repository.**
+No paper, arXiv reference or citation file is in the repository.
 
 ## 11. For Your Own Build
 
 ### Steal
 
-- **Make the refusal control flow.** If the retrieval step returns nothing, return a fixed string and do not call the model. A prompt asking a model to decline is a request; a branch that never reaches the model is a guarantee, and it costs less code than the prompt does.
-- **Normalize what you compare before you threshold it.** Holding every candidate to the same component count so length cannot inflate similarity is the right instinct — and then apply it to *both* sides, or the fixed threshold you calibrated moves under you.
-- **Commit the negatives with their reasons.** Ten unanswerable questions, each with a comment saying why the source text does not support an answer, are worth more than a hundred recall cases, and the comments are what let a later reader check the test rather than trust it.
-- **Publish the number that embarrasses you**, with the diagnosis beside it — and keep the row after it stops being your best. A seven-row version table that still shows the release where gate accuracy peaked at 60.0%, two releases before the current one, is worth more than any single figure in it. The discipline to finish is writing the prose under the table about the columns that *fell*, not only the ones that rose.
-- **Put every constant in one file and mark the ones you calibrated.** At this size it turns "what would I tune" into a five-minute question.
-- **Decay by turn when you have no clock.** If nothing in the schema carries a timestamp, decaying associations per interaction is coherent; adding a half-life in days would not be.
+- **Make the evidence gate a branch.** If no stored fact clears it, return a
+  fixed string and do not call the model. Then make that the default, or the
+  branch protects only the users who find the setting.
+- **Commit must-block cases beside must-answer ones** and report the two rates
+  separately, so a gate that blocks everything cannot score well. Keep the
+  reason each must block in the fixture; without it a case can read as wrong.
+- **Derive vectors from strings when you can.** An n-gram-seeded codebook is
+  reproducible across restarts, needs no stored index, and gives morphological
+  neighbours a shared component for the cost of a hash per n-gram.
+- **Put every constant in one file and mark the calibrated ones.**
+- **Decay by turn when nothing in the schema has a clock.**
 
 ### Avoid
 
-- **A recurrence with no additive term.** `state = decay*state + f(state, token)` is zero-preserving, and a zero-initialised state stays zero forever however long you run it. The assertion that catches it is one line — feed a token, check the norm moved — and it belongs beside any state you carry across turns.
-- **A hand-maintained list of which predicates are functional.** If the vocabulary is invented by a language model at ingest time and the list is five strings in a source file, the two will not meet. Put the property on the predicate, or supersede instead of deleting.
-- **A threshold calibrated against one input shape.** If the score depends on a property of the query the threshold does not know about — length, token count, language — the gate is measuring phrasing as much as relevance.
-- **Raising the threshold as the fix for a leak.** It is the one knob that always appears to work, because it moves both error rates in the direction the metric you are watching happens to reward. Without an assertion pinning what the gate must still admit, the version that stops the leaks is also the version that stops the answers, and only a metric that separates the two obligations will show it.
-- **A single scalar over positive and negative obligations.** Blocking what must be blocked and answering what must be answered are different jobs with opposite degenerate solutions; a pooled score hides which one you failed.
-- **Keying a correction on `(subject, predicate)` for every relation.** It silently makes them all functional, and the first multi-valued predicate you meet loses data with no error — but narrowing it to an allowlist trades that for relations nobody can correct at all. Both failures are quiet.
-- **Disabling a deserialization guard to load a model**, especially in a module the README does not list. If the optional path needs it, say so where the person installing it will read it.
+- **A mean over query tokens against a fixed threshold.** Function words dilute
+  it, so admission depends on phrasing. Score only content components, or set
+  the threshold per component count.
+- **A refusal that is a prompt in the default mode** of a system sold on not
+  hallucinating.
+- **A provenance column under `INSERT OR REPLACE`.** The replace keeps one source
+  and resets the timestamp; provenance needs its own rows.
+- **A schema change with `CREATE TABLE IF NOT EXISTS` and no migration.** Every
+  existing store breaks on its first fact read.
+- **An HTTP server on every interface with no authentication** in front of
+  personal memory, and **process-wide conversational state** behind it.
+- **A suite that computes the metric the threshold is tuned for and asserts the
+  row count.** `passes > 0` is one line.
 
 ### Fit
 
-This is a prototype and says so, so the question is not whether to deploy it but what to take from it. The gate is the answer: it is the cleanest demonstration in this atlas that "the system will not answer without evidence" can be a structural property, and it fits in a file you can read in one sitting. Take that.
-
-Do not take the storage layer. Three strings per fact with no time, no source and no status is below the floor for anything that has to be corrected later, and the destructive update makes the first multi-valued predicate a data-loss event. Anyone who wanted to build on this would be adding those columns before adding anything else — which is a compliment to how little else is in the way.
-
-The hyperdimensional layer is the part to be most careful about, and not because the idea is wrong. Gradient-free symbolic vector matching over a codebook is a real technique with a real literature, and the matcher here is a working instance of it — the subword encoder in particular earns its place, giving `born` a `+0.32` cosine against `born_in` for the cost of an MD5 per n-gram. What a reader should check is which half of any given release runs: the architecture diagram is drawn around an extraction engine whose five imports are not in `requirements.txt`, the schema and directionality work is defined in that same unreachable file, and the semantic half of the encoder depends on a table the first launch downloads without asking.
+Take the gate's control flow and the committed negatives; leave the store. A
+triple with a last-writer label and no supersession cannot be corrected later,
+and the gate's averaging needs reworking before its threshold means anything
+across phrasings. Run the server only on a loopback interface, and set `STRICT`
+in code if the refusal property is the reason you chose it.
 
 ## 12. Open Questions
 
-- Does the revived reservoir resolve pronouns correctly in practice, or does the bundle term dominate the permutation-bound term enough that word order stops mattering?
-- Is the five-predicate allowlist meant to grow with the extractor's vocabulary, and what maintains it?
-- `HDC_THRESHOLD` has been `0.42`, `0.78`, `0.68`, `0.72` and `0.55` across five releases, under a comment that has read *"Recalibrated gating threshold to eliminate hallucination leaks"* for the last two of them. What is any of them calibrated against, and could anything committed say? `leaks` is computed once per verification run and discarded, and the four questions scored in section 4 block at `0.72` and at `0.55` alike.
-- What is the intended behaviour for a genuinely multi-valued predicate — is `collaborated_with` meant to hold one target, or is the `DELETE` an oversight?
-- The README presents `talon_engine.py` as the architecture and instructs a CUDA PyTorch install, while `requirements.txt` names none of the five packages that file imports. Is the omission deliberate, and does the author know the patch disables a `torch.load` guard on the path the README points at?
-- Is the GloVe fetch — 822 MB from `nlp.stanford.edu` on first launch, unmentioned in the setup instructions — intended, or a development convenience that shipped?
-- Do the version table's rows come from one run each, and would committing those runs' outputs be acceptable given they depend on a local model?
-- What does `passes` read on a real run? The verification suite computes it and
-  discards it; the number would settle the calibration question above in one
-  line of output, and asserting it is the difference between a suite that
-  measures the gate and one that checks it.
-- The GloVe fetch survives a corrupt or truncated zip by re-downloading and
-  verifies nothing about what arrives. `hashlib` is already imported in
-  that file — for n-gram seeding — so a digest check is available where it is
-  needed.
+- What do `passes` and `leaks` read on a real run with GloVe loaded? Check 8
+  computes both on every run and discards them.
+- Is `BALANCED` the default by intent, given the README's claim about the gate?
+- Is the `0.0.0.0` bind meant, given the README's localhost URL?
+- Is `confidence` meant to be read, and by what?
+- Should *"Who cracked Enigma?"* block when the store holds who cracked it, and
+  what reason did its removed comment give?
 
 ## Appendix: File Index
 
-- Gate, matcher, entity linking, console loop: `main.py` (`select_answering_facts`, `execute_chat_turn`, `link_entities`, `resolve_entity_identity`).
-- Schema and all SQL, including the destructive correction: `database.py` (`update_relation`, `query_relation`, `get_all_facts_for_entities`).
-- Hebbian reinforcement and decay: `plasticity.py` (`update_associations`, `get_associated_priming_context`).
-- VSA context math: `reservoir.py` (`step`, `get_context_fingerprint`).
-- Document chunking and the optional GPU extractor: `ingestor.py`, `talon_engine.py`.
-- Benchmark, fixtures and metrics: `evaluate_hillock_PROTO_ish.py` (`generate_test_assets`, `run_evaluation`).
-- Hyperparameters: `config.py`.
-- Verification suite: `verify_hillock.py` (eight areas, twenty checks; check 8 holds the unasserted gate distribution).
-- Launchers: `run.sh`, `run.bat`.
+- Gate, refusal branch, modes, disambiguation helpers: `engine.py`
+  (`select_answering_facts`, `execute_chat_turn`, `_get_mode_prompts`,
+  `get_ambiguous_facts`, `resolve_ambiguous_fact`).
+- HTTP server: `api.py` (`chat_completions`).
+- Console and the quiz: `main.py` (`run_cli`).
+- Schema and fact SQL: `database.py` (`_initialize_db`, `update_relations_batch`,
+  `get_all_facts_for_entities`, `query_relation`).
+- Hebbian weights: `plasticity.py` (`update_associations`,
+  `get_associated_priming_context`).
+- Encoder, reservoir, late interaction, GloVe loader: `reservoir.py`.
+- Extraction: `ingestor.py` (`ingest_document_parallel`), `talon_engine.py`.
+- Benchmark and suite: `evaluate_hillock_PROTO_ish.py`, `verify_hillock.py`.
+- Constants: `config.py`. Packaging and launchers: `pyproject.toml`,
+  `requirements.txt`, `run.sh`, `run.bat`.
+
+### Recorded searches
+
+Checked against the checkout at the pinned revision.
+
+- `grep -rnE 'confidence|created_at' --include='*.py' .` — the two schema
+  columns, the `hdc_reservoirs` timestamp, and the quiz's insert; no read.
+- `grep -rni 'ALTER TABLE' --include='*.py' .` — no match.
+- `grep -rniE 'user_id|tenant|namespace|project_id|scope|session_id' --include='*.py' .`
+  — one match, *telescopes* in the benchmark text; no scope key.
+- `grep -niE 'auth|token|api_key|Depends|Security|Header' api.py` — only the
+  `usage` token counts in the response body.
+- `grep -rnE '\.update_relation\(|update_relations_batch\(' --include='*.py' .` —
+  ingestion and `verify_hillock.py:56`; no conversational writer.
+- `grep -rn 'DELETE' --include='*.py' .` — the quiz's delete at `engine.py:75`,
+  the benchmark's emptying at `evaluate_hillock_PROTO_ish.py:119-121`, and the
+  schema's cascade clauses.
+- `grep -rnE 'verbosity_mode\s*=' --include='*.py' .` — the `BALANCED` default
+  and the console's `/mode`; nothing in `api.py`.
+- `grep -rnwE 'passes|leaks' --include='*.py' .` — assigned at
+  `verify_hillock.py:191-192` and used nowhere else; the other match is the
+  comment on `HDC_THRESHOLD`.
+- `grep -rnE 'get_canonical_triple_key|is_inverted_asymmetric_pair' --include='*.py' .`
+  — `talon_engine.py` and `verify_hillock.py`; not `database.py`.
+- `grep -rnE 'hdc_reservoirs|save_document_reservoir' --include='*.py' .` — the
+  schema, the two drops, the writer and its one caller in `ingestor.py:174`; no
+  `SELECT`.
+- `git ls-files .github` — `FUNDING.yml` only; no workflow.
+- `git ls-files | grep -iE '\.(json|log|csv)$|result|citation'` — no match; no
+  run output and no citation file.
+- `grep -rniE 'arxiv|bibtex|@article|@misc|doi\.org' --include='*.md' .` — no
+  match.
+- `grep -nE 'hashlib|sha256|md5' reservoir.py` — only the n-gram seeding; the
+  GloVe download is not checked.
+- Every search above was run with `/usr/bin/grep`. The repository's `.gitignore`
+  lists `*PROTO*`, so a search tool that honours it skips the tracked benchmark
+  file.
+- The gate figures: a standalone reimplementation of `SubwordHDCEncoder.encode`,
+  `hydra_late_interaction_maxsim` and the component rules of
+  `select_answering_facts`, with NumPy's legacy `RandomState` draws reproduced
+  from MT19937 in the standard library, run over the seed store and over the
+  benchmark's target facts.
 
 ## History
+
+**2026-10-03** — [`92eebfb9caf42a75ec89a678c26e67c3c94c0845`](https://github.com/roandejager/Hillock/commit/92eebfb9caf42a75ec89a678c26e67c3c94c0845) — 24 commits on, v0.6.0 to v0.8.0. Screened: `pyproject.toml`, new, and `requirements.txt` inside the cooldown and unpinned; no auto-run or build-time surface; nothing installed, built or run. New: an unauthenticated HTTP server, a default mode that sends blocked questions to the model, a pronoun quiz, a last-writer provenance column, and requirements that install the guard-disabling extractor ([section 3](#3-architecture)). `negative_eval` holds, with the answerable questions as its positive control; the new columns earn no mark ([section 9](#9-reliability-safety-and-trust)). Corrected, wrong at the previous pin: the body described query bundling, replaced by late interaction in v0.6; conversational fact writes, removed on 2026-08-12; a five-predicate correction rule the previous pin had commented out; and a pooled gate metric the harness split on 2026-08-23. [Section 4](#4-essential-implementation-paths) recomputes the gate.
 
 **2026-09-17** — [`94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244`](https://github.com/roandejager/Hillock/commit/94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244) — re-pinned after 1 commit. Both anchored files are byte-identical at both commits, so the mark stands on unchanged code and every anchor here is exact at the new pin. Nothing was installed, built or run.
 

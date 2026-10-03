@@ -34,11 +34,13 @@ rather than against a constant somebody picked. The report still names the price
 it does not pay: the one number its external run leaves unpriced is how often an
 *answerable* question gets warned.
 
-[Hillock](../systems/hillock/) takes the other posture and is equally explicit
-about it: below cosine 0.72 it returns *"I do not have verified information about
-that"* and **the model is never called**. That is abstention bought at whatever
-recall a fixed floor costs, chosen deliberately, in a system whose whole design
-is that an unverified answer is worse than none.
+[Hillock](../systems/hillock/) takes the other posture in one of its three
+modes: in `STRICT`, a question whose facts all score below 0.55 gets *"I do not
+have verified information about that"* and **the model is never called**. That
+is abstention bought at whatever recall a fixed floor costs. The default
+`BALANCED` mode sends the same question to the model with a prompt asking it to
+decline, so the floor keeps stored facts out of the prompt and leaves the answer
+to the model.
 
 The reason this axis is hard to reason about is that almost nothing measures both
 directions. Waku Agent's memory arena is the exception worth copying: it scores
