@@ -296,6 +296,8 @@ is the turn. Timezone and report-phrase settings refuse outside an owner message
 turn, and `memory.save`, which writes corrections the prompt ranks above the
 runtime's own rules, does not.
 
+[Pluribus](../../systems/pluribus/) puts its strongest gate on one of four write paths. The deterministic harmful-advice screen that stores safety-negating advice as `quarantined` has one caller, the inline formation behind `record_experience`. `memory_create`, `memory_promote` and `curation_materialize` reach `memory.Service.Create` without it, and under the shipped hive defaults a governing constraint written through `memory_create` lands active at authority 4, above the enforcement binding floor of 3. A screen placed inside the shared `Create` would have covered every path at the same cost.
+
 ## Tests to require
 
 - Exercise every adapter against the same invariant suite.

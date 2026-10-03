@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 724 reports.**
+**This page covers all 725 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6559,3 +6559,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 23,121 lines of Python outside tests and 485 commits on main from 1 contributor since 16 July 2026. One mark, `negative_eval`, on a CI-run regression case asserting a node's replaced body is no longer found by its old text after a positive control. The CI runner covers write integrity in depth; retrieval quality is unmeasured.
 - Study when: you want provenance down to the transcript round, a correction trail that propagates along citations, or append-only ledgers that survive two devices editing offline.
 - Do not copy when: projects must not see each other's knowledge, several people share one vault with different rights, or you need semantic recall or a library to embed rather than an application with its own constitution.
+
+### [`pluribus`](../systems/pluribus/)
+
+- Best idea: **filter the status twice and keep the withheld rows.** Every recall lane puts `status` in its SQL, and two post-merge filters drop quarantined, deleted and rejected rows again, so a lane added later cannot leak them. Quarantine is a status the harm screen, an agent tool and authority exhaustion all write, and its false positives stay stored and releasable.
+- Biggest risk: **the quarantined text comes back through the advisory lane.** `recall_context` appends advisory experiences filtered only on `memory_formation_status <> 'rejected'`, and a quarantined or deleted lesson's advisory row stays `linked`, so the poisoned advice the screen caught is returned verbatim by the default-tier tool.
+- Most reusable component: `control-plane/internal/recall/candidate_safety_filter.go` with `lifecycle_candidates.go:127-168` — the post-merge status and date filter, and the current/historical mode split that labels superseded and archived rows with a lifecycle role instead of mixing them into current guidance.
+- Second risk: **curation by self-named agents with one vote.** `chore_min_resolvers` is 1 in the code default and the shipped config while the doctrine says 2, distinctness is a hash of a caller-supplied `agent_id`, auth is off by default, and `tools/call` runs `memory_delete` and `memory_quarantine` whatever the listed tier.
+- Maturity impression: source-available, service-restricted licence; 51,646 lines of Go outside tests, 48 commits on main by 2 contributors between 29 March and 15 September 2026, 1,067 Go test functions. Three marks: `trust_state`, `bitemporal`, and `negative_eval` on a CI-run lifecycle case whose historical-mode twin returns the row the current-mode case excludes. The semantic-filter exclusion tests are vacuous, and no test reads a quarantined lesson back through `recall_context`.
+- Study when: you want a shared pool for several coding agents with a model-free write path, a status lifecycle that withholds, and pre-change enforcement against stored constraints.
+- Do not copy when: one connected client might be hostile, memory must be partitioned by project or tenant, or a person must approve what becomes governing.
