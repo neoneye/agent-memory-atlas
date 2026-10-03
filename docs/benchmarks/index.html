@@ -4165,6 +4165,56 @@ the Tier 1 headline"</em>. Three limits stand beside that candour. The
 corpus is frozen, results exist for three adapters, one of them the
 author's, and Counterparts itself is not scored. This project has run
 none of it.</p>
+<h3 id="a-benchmark-of-harness-bugs-and-the-memory-slice-inside-it">A
+benchmark of harness bugs, and the memory slice inside it</h3>
+<p><em>AgentBug-Smith: Automatically Reproducing Real-World Harness Bugs
+in Agentic Systems</em> (<a
+href="https://arxiv.org/abs/2609.37864">arXiv:2609.37864</a>, 29
+September 2026), Cheng, Rahardja, Zhang, Chen, Chen and Lou, read at <a
+href="https://github.com/EaminC/AgentBug-Smith/commit/591607a3dedd83436c31c0f52e39921d921468d3"><code class="commit-id" title="591607a3dedd83436c31c0f52e39921d921468d3">591607a3…</code></a>.
+It mines agent repositories that already ship tests, pairs each harness
+issue with its merged pull request, builds a container, and has a model
+write a test that fails on the buggy commit and passes after the
+developer patch. <strong>Live-Harness Bench</strong> is the 200
+instances that survived, each a Dockerfile, that test and the patch.
+Asked to fix them, mini-SWE-agent, OpenHands and AutoCodeRover match the
+developer patch on 9.00%, 8.50% and 3.50%, and a distilled skill lifts
+mini-SWE-agent from 1.27% to 7.59% on 79 held-out instances.</p>
+<p><strong>The memory slice depends on which label you read.</strong>
+The README's 30.5% for context and memory comes from a five-component
+scheme whose per-instance labels I did not find in the tree; where
+<code>misc/Agent-Issues.xlsx</code> does label instances, five of the
+eleven it calls context and memory fall elsewhere in the committed
+index. That index, one gpt-4.1-mini label per instance in
+<code>rq/rq4/data/verify/issue_index_*.jsonl</code>, puts 38 instances
+in category C, the count
+<code>rq/rq4/results/split/distribution.md</code> reports; seven
+instances carry different categories in different index files, so a
+recount by file moves a repository's tally by one. Nineteen concern a
+store that persists across sessions: seven in <a
+href="../systems/crewai/">CrewAI</a>, five of them in its <a
+href="../systems/mem0/">Mem0</a> adapter, and two in the <a
+href="../systems/strands-agents/">Strands Agents</a> session manager.
+Fifteen concern context assembly, truncation or token accounting, nine
+in Strands. <a href="../systems/langgraph/">LangGraph</a>'s one concerns
+a runtime-context object, not memory.</p>
+<p><strong>A pass is regression evidence for one historical bug, not a
+measure of a memory design.</strong> Each test is model-written against
+one buggy commit and checks that the developer's patch flips it; it
+cannot say whether a store forgets, supersedes or scopes correctly.
+Eight of the nineteen store instances are feature requests, and the rest
+are rehydration, serialization, concurrency, configuration and reset
+faults. Nearest this page's concerns are two failed memory resets in
+CrewAI and an AgentScope Redis race that leaves message keys with no
+expiry. There is no licence file, so all rights are reserved by default.
+The release is a <a
+href="https://huggingface.co/buckets/EaminChan/live-harness-bench">Hugging
+Face bucket</a>; the repository holds the harness, the reproduction
+logs, the labelled index with base commits, and patch-stripped copies of
+199 instances under <code>rq/rq4/data/verify/_pool/</code>. The README
+warns that the default <code>_ISSUE_JSON</code> in
+<code>exp/end-end.py</code> is not in the tree. I read metadata only and
+ran nothing.</p>
 <h2 id="7-the-contradiction-test">7. The Contradiction Test</h2>
 <p>Forgetting has no benchmark, only <a
 href="#fifa-the-one-proposal-that-scores-deletion-compliance">a proposal

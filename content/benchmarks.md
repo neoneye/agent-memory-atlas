@@ -3277,6 +3277,49 @@ Tier 1 headline"*. Three limits stand beside that candour. The corpus is
 frozen, results exist for three adapters, one of them the author's, and
 Counterparts itself is not scored. This project has run none of it.
 
+### A benchmark of harness bugs, and the memory slice inside it
+
+*AgentBug-Smith: Automatically Reproducing Real-World Harness Bugs in Agentic
+Systems* ([arXiv:2609.37864](https://arxiv.org/abs/2609.37864), 29 September
+2026), Cheng, Rahardja, Zhang, Chen, Chen and Lou, read at
+[`591607a3dedd83436c31c0f52e39921d921468d3`](https://github.com/EaminC/AgentBug-Smith/commit/591607a3dedd83436c31c0f52e39921d921468d3).
+It mines agent repositories that already ship tests, pairs each harness issue
+with its merged pull request, builds a container, and has a model write a test
+that fails on the buggy commit and passes after the developer patch.
+**Live-Harness Bench** is the 200 instances that survived, each a Dockerfile,
+that test and the patch. Asked to fix them, mini-SWE-agent, OpenHands and
+AutoCodeRover match the developer patch on 9.00%, 8.50% and 3.50%, and a
+distilled skill lifts mini-SWE-agent from 1.27% to 7.59% on 79 held-out
+instances.
+
+**The memory slice depends on which label you read.** The README's 30.5% for
+context and memory comes from a five-component scheme whose per-instance labels
+I did not find in the tree; where `misc/Agent-Issues.xlsx` does label instances,
+five of the eleven it calls context and memory fall elsewhere in the committed
+index. That index, one gpt-4.1-mini label per instance in
+`rq/rq4/data/verify/issue_index_*.jsonl`, puts 38 instances in category C, the count `rq/rq4/results/split/distribution.md` reports; seven instances carry different categories in different index files, so a recount by file moves a repository's tally by one.
+Nineteen concern a store that persists across sessions: seven in
+[CrewAI](../systems/crewai/), five of them in its [Mem0](../systems/mem0/)
+adapter, and two in the [Strands Agents](../systems/strands-agents/) session
+manager. Fifteen concern context assembly, truncation or token accounting, nine
+in Strands. [LangGraph](../systems/langgraph/)'s one concerns a runtime-context
+object, not memory.
+
+**A pass is regression evidence for one historical bug, not a measure of a
+memory design.** Each test is model-written against one buggy commit and checks
+that the developer's patch flips it; it cannot say whether a store forgets,
+supersedes or scopes correctly. Eight of the nineteen store instances are
+feature requests, and the rest are rehydration, serialization, concurrency,
+configuration and reset faults. Nearest this page's concerns are two failed
+memory resets in CrewAI and an AgentScope Redis race that leaves message keys
+with no expiry. There is no licence file, so all rights are reserved by default.
+The release is a [Hugging Face
+bucket](https://huggingface.co/buckets/EaminChan/live-harness-bench); the
+repository holds the harness, the reproduction logs, the labelled index with
+base commits, and patch-stripped copies of 199 instances under
+`rq/rq4/data/verify/_pool/`. The README warns that the default `_ISSUE_JSON` in
+`exp/end-end.py` is not in the tree. I read metadata only and ran nothing.
+
 ## 7. The Contradiction Test
 
 Forgetting has no benchmark, only
