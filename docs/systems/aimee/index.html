@@ -107,14 +107,14 @@ and mutations sealed into an append-only chain.</p>
               <strong>RakuenSoftware/aimee</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/6cd136947f205db9610eeab02b9f8255bbfc2a7e" title="6cd136947f205db9610eeab02b9f8255bbfc2a7e">
+            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/d7cb791547e5f6354afecb53d82f768ba4f5e3e4" title="d7cb791547e5f6354afecb53d82f768ba4f5e3e4">
               <span>Analyzed revision</span>
-              <code>6cd13694…</code>
+              <code>d7cb7915…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-28</strong>
+              <strong>2026-10-03</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RakuenSoftware--aimee" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -126,18 +126,19 @@ and mutations sealed into an append-only chain.</p>
             <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0;
 NOTICE offers other terms on request</strong></div>
             <div class="meta-pill fact-pill"><span>Size</span><strong>About
-757,000 lines of C, 81,000 of headers, 245,000 of Go and 114,000 of
-Python; the Go memory module is 87,788 lines in 404 files, 41,075 of
+757,000 lines of C, 81,000 of headers, 246,000 of Go and 114,000 of
+Python; the Go memory module is 88,025 lines in 404 files, 41,259 of
 them tests</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>8,508
-commits on the testing default branch under eight author names, 8,379 of
-them under two spellings of one name, 3 June – 27 September
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>8,533
+commits on the testing default branch under eight author names, 8,383 of
+them under two spellings of one name, 3 June – 2 October
 2026</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>553
-Go test functions in 183 files under server-go/modules/memory, 2,347
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>556
+Go test functions in 183 files under server-go/modules/memory, 2,350
 across server-go, 785 C test files under src/tests; the Postgres-backed
-Go cases skip without AIMEE_KB_STORE_REPLAY_URL, which CI sets; none run
-for this reading</strong></div>
+Go cases skip without AIMEE_KB_STORE_REPLAY_URL, and the
+authenticated-role case without AIMEE_MEMORY_RUNTIME_URL, both of which
+CI sets; none run for this reading</strong></div>
           </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
@@ -161,8 +162,9 @@ placements, over one Postgres schema. A model-authored typed fact waits
 as a <code>candidate</code> until an operator approves it on a console
 the agent's tool surface does not reach, and a refused value is a keyed
 row every Go writer consults before it writes. The weak points are the
-privilege on that refusal table, which the runtime role the Go store
-connects as can <code>DELETE</code>, and a size that keeps the traced
+lift of a refusal, an <code>UPDATE</code> either runtime role can issue
+with no trigger to record it, scope on the session bundle's shared reads
+resting on row-level security alone, and a size that keeps the traced
 fraction small.</p>
 <p>There are two memory shapes and one owner. The episodic store is a
 <code>memories</code> table with tiers, an epistemic kind, a provenance
@@ -174,12 +176,29 @@ written, read and corrected by <code>server-go/modules/memory</code>.
 The native C memory layer was retired in stages, ending with <a
 href="https://github.com/RakuenSoftware/aimee/commit/606c2efdf8045e75b1cd57c0f92225a2f7249c4e"><code class="commit-id" title="606c2efdf8045e75b1cd57c0f92225a2f7249c4e">606c2efd…</code></a>
 on 27 September 2026, which routes both placements through Postgres.</p>
+<p><strong>Native memory is a delivery channel, and only its source end
+is in this tree.</strong> <em>Shared Native Memory: Expanding Knowledge
+Without Retraining</em> (<a
+href="https://doi.org/10.5281/zenodo.23120104">doi:10.5281/zenodo.23120104</a>,
+Jared Bailes, v2, 3 October 2026) reports that selected records reach a
+model as prepared key/value state rather than prompt text. The server
+side is one route, <code>POST /v1/native/primitive</code>, which
+re-projects the personal recall bundle as source rows with their
+revisions and refuses the shared store
+(<code>server_api.c:282-361</code>). The vLLM plugin that turns rows
+into tensors is in no public RakuenSoftware repository:
+<code>smoothnas-plugin-vllm</code> is a ROCm inference wrapper last
+pushed on 21 May 2026, and <code>smoothnas-plugin-aimee</code> holds
+deployment manifests only. <a href="#8-agent-integration">Section 8</a>
+traces the route and <a href="#10-tests-evals-and-benchmarks">section
+10</a> the preprint.</p>
 <p>All seven marks, each on the Go path:</p>
 <ul>
 <li><strong>tombstone</strong> —
 <code>memory_rejection_tombstones</code>, consulted by the episodic
 insert, the correction path, the fact assert and the review approve,
-with a trigger under each table.</li>
+with a trigger under each table; the fact trigger compares the identity
+the owner does.</li>
 <li><strong>trust_state</strong> — a shared serving predicate that
 admits only <code>active</code> memories and <code>persistent</code> or
 <code>promoted</code> facts.</li>
@@ -199,7 +218,7 @@ three named facts are withheld beside one that is served.</li>
 <p><strong><code>human_review</code> rests on the typed-fact lifecycle
 and an operator verb the agent cannot call.</strong> An assertion below
 rank 20 lands <code>candidate</code>
-(<code>fact_mutation.go:274-279</code>), and the serving predicate
+(<code>fact_mutation.go:258-263</code>), and the serving predicate
 admits only <code>persistent</code> and <code>promoted</code>
 (<code>fact_recall.go:64-68</code>). The <code>fact-review</code>
 operation approves, rejects or undoes, and refuses any invocation
@@ -236,31 +255,33 @@ credential rather than a person check.</p>
 <p>The episodic side has a second queue. A model edit to user-stated
 content is refused with <code>errMutationReviewRequired</code> and
 written as a pending row in <code>memory_correction_proposals</code>
-(<code>mutations.go:367-371</code>,
+(<code>mutations.go:381-385</code>,
 <code>correction_proposals.go:95-136</code>). Only a caller with
 verified user authority can approve it
 (<code>correction_proposals.go:160-163</code>), through the
-<code>memory.review_correction</code> RPC; no page in
-<code>frontend/</code> calls it.</p>
+<code>memory.review_correction</code> RPC. The Memory Center's
+correction view calls it with the proposal's digest and exact target
+revision, and disables approval when the source revision has moved
+(<code>frontend/src/pages/Memory.tsx:126-196</code>).</p>
 <p>What the report cannot claim is coverage. The trace covers the Go
 memory module's write, recall, correction and review paths, the schema's
 memory tables, the audit chain and the MCP surface. It does not cover
-the Go control plane, the Python tooling, the ingest workers, or most of
-the schema.</p>
+the Go control plane, the Python tooling, the ingest workers, most of
+the schema, or the native-memory plugin, which is not published.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Two sentences from <code>docs/KNOWLEDGE.md</code> set the intent:
-<em>"Scope is an authorization boundary. Promotion into a broader scope
-is an explicit audited write,"</em> and <em>"Raw text is not treated as
-a fact merely because a model extracted it."</em></p>
+<em>"Promotion to a broader audience needs an authorized write,"</em>
+and <em>"Confidence scores do not replace lifecycle or caller
+authority."</em></p>
 <p>The code carries the second as a rule about where authority comes
 from. <code>InsertEpistemic</code> states it at the top: <em>"Authority
 is derived by the authenticated caller and becomes durable provenance;
 it is never inferred from the memory text"</em>
-(<code>mutations.go:31-33</code>). A model write lands as
+(<code>mutations.go:32-34</code>). A model write lands as
 <code>provenance_category='agent_message'</code> with a confidence
 ceiling of 0.8, a user write as <code>user_stated</code> at 1.0, and an
 <code>L5</code> tier caps either at 0.5
-(<code>mutations.go:78-85</code>). The authority captured at store time
+(<code>mutations.go:82-89</code>). The authority captured at store time
 travels with the memory to its extraction job in
 <code>memory_fact_actors</code>
 (<code>public_store.go:15-30</code>).</p>
@@ -270,20 +291,20 @@ operator 40, each tied to one role string
 from rank and from whether its relation type is known: Class A at 1.0
 for rank 30 and above on a known relation, Class B at 0.6 for a known
 relation below it, Class C at 0.4 for a novel one
-(<code>fact_commit.go:111-118</code>). 0.4 is also the serving floor
+(<code>fact_commit.go:116-123</code>). 0.4 is also the serving floor
 (<code>pii.go:16</code>).</p>
 <p>The lifecycle then does three things with rank. Below rank 20 a new
 fact is a <code>candidate</code>. A candidate is promoted by a
 re-assertion at rank 20 or above that is not outranked by the incumbent.
 And an invalidated or superseded fact revives only when the re-asserting
 actor's rank is at least the rank recorded on the row
-(<code>fact_mutation.go:274-279</code>), so model extraction cannot
+(<code>fact_mutation.go:258-263</code>), so model extraction cannot
 revive a fact a user asserted.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — authority decides whether a fact is served — a model-authored fact waits as a candidate that only an operator verb or a higher rank clears, every writer consults the value-keyed refusal first, and every memory mutation reaches the WORM chain in its own transaction</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
 %% caption: authority decides whether a fact is served — a model-authored fact waits as a candidate that only an operator verb or a higher rank clears, every writer consults the value-keyed refusal first, and every memory mutation reaches the WORM chain in its own transaction
     STORE[&quot;memory stored&lt;br/&gt;authority from verified caller&quot;] --&gt; ACT[&quot;memory_fact_actors&lt;br/&gt;rank 10 unless verified user&quot;]
     ACT --&gt; DRAIN[&quot;memory_facts drain&lt;br/&gt;extracts triples&quot;]
-    DRAIN --&gt; TOMB{&quot;factTombstoned&lt;br/&gt;folded identity vs every&lt;br/&gt;active refusal&quot;}
+    DRAIN --&gt; TOMB{&quot;factTombstoned&lt;br/&gt;raw triple or generated&lt;br/&gt;fact_identity_v1&quot;}
     TOMB --&gt;|&quot;refused&quot;| STOP[&quot;errFactTombstoned&lt;br/&gt;nothing written&quot;]
     TOMB --&gt;|&quot;clear&quot;| RANK{&quot;actor rank &gt;= 20?&quot;}
     RANK --&gt;|&quot;no&quot;| CAND[&quot;lifecycle = candidate&lt;br/&gt;not served&quot;]
@@ -308,9 +329,9 @@ always a versioned successor: the old row becomes
 <code>superseded</code> with <code>valid_until</code> set to the
 boundary, and the new row starts <code>active</code> with
 <code>valid_from</code> at the same instant
-(<code>mutations.go:400-417</code>). A model correction to a row it did
+(<code>mutations.go:414-431</code>). A model correction to a row it did
 not author is not applied at all; it becomes a proposal
-(<code>mutations.go:367-371</code>).</p>
+(<code>mutations.go:381-385</code>).</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Three kinds of process have to run. <code>aimee-server</code> (C)
 holds one human's memory and the agent loop; <code>aimee-kb</code> (C)
@@ -332,7 +353,9 @@ the module <code>aimee_store_runtime</code> through
 (<code>scripts/compose-vault-init.py:56</code>). pgvector carries the
 dense lane, and the embedder is optional: without one, dense recall
 records itself unavailable and the lexical lanes serve
-(<code>shared_recall.go:17-30</code>).</p>
+(<code>shared_recall.go:17-30</code>). The refusal identity calls
+<code>casefold</code> under the <code>pg_unicode_fast</code> collation,
+so the schema needs PostgreSQL 18 (<code>schema.sql:155-187</code>).</p>
 <p>The KB schema file alone holds 263 <code>CREATE TABLE</code>
 statements, and the server placement adds its own families under
 <code>server-go/modules/aimee/families/</code>, including
@@ -346,20 +369,20 @@ Paths</h2>
 transaction, refuses a missing scope, screens the key and content for
 credentials and PII, fixes provenance and ceiling from authority, and
 takes an advisory lock on the <code>(scope, kind, key)</code> identity
-(<code>mutations.go:52-123</code>). An existing active row with the same
+(<code>mutations.go:53-127</code>). An existing active row with the same
 key turns the store into a correction. <code>applyKBStore</code> inserts
 only <code>WHERE NOT EXISTS</code> an active refusal for the same key,
-content and scope (<code>mutations.go:139-149</code>).</p>
+content and scope (<code>mutations.go:143-153</code>).</p>
 <p><strong>Fact extraction.</strong> <code>captureStoredFactActor</code>
 writes the store's authority into <code>memory_fact_actors</code> and
 enqueues a <code>memory_facts</code> job in the same commit
 (<code>public_store.go:13-37</code>). The drain parses candidates and
 hands each to <code>commitFactCandidate</code>, which gates the relation
 kind, screens both endpoints, canonicalizes them and assigns the class
-(<code>fact_commit.go:66-131</code>). <code>assertFact</code> then
+(<code>fact_commit.go:66-136</code>). <code>assertFact</code> then
 consults the refusals, locks the exact and functional incumbents, and
 writes the new state with a <code>fact_graph_changes</code> row and a
-sealed commit (<code>fact_mutation.go:207-412</code>).</p>
+sealed commit (<code>fact_mutation.go:186-396</code>).</p>
 <p><strong>Per-turn retraction.</strong> The
 <code>context-ingress</code> operation calls
 <code>retractContextQuery</code> before it assembles context
@@ -376,9 +399,10 @@ refusal and archives the row with <code>activation_suppressed=1</code>
 in one statement, and archives nothing if the refusal did not land
 (<code>domain.go:154-175</code>). <code>Restore</code> deactivates the
 refusal, records <code>restored_by</code>, and reactivates the row only
-when a refusal was lifted (<code>queries.go:241-259</code>); a refusal
-carrying a <code>rejected_by</code> can be lifted only by that
-actor.</p>
+when a refusal was lifted (<code>queries.go:241-259</code>). A refusal
+carrying a <code>rejected_by</code> can be lifted only by that actor, a
+rule the statement holds and the table does not (<a
+href="#7-write-mechanics">section 7</a>).</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>The <code>memories</code> row holds, among its columns,
 <code>lifecycle_state</code> (default <code>active</code>, with no
@@ -391,7 +415,7 @@ actor.</p>
 <code>owner_principal</code>, and
 <code>scope_type</code>/<code>scope_value</code>
 (<code>src/modules/kb/c/schema.sql:135-138</code>,
-<code>:649-657</code>, <code>:16025</code>, <code>:17982</code>).
+<code>:689-697</code>, <code>:16067</code>, <code>:18026</code>).
 <code>confidence</code>, <code>evidence_strength</code>,
 <code>salience</code> and <code>surprise</code> are floats and are not
 the trust state; the state is the lifecycle column.</p>
@@ -401,10 +425,13 @@ triple and the episodic tuple in one row shape,
 <code>authority_rank</code>, <code>reason</code>,
 <code>rejected_by</code>, <code>active</code>, <code>rejected_at</code>,
 <code>restored_at</code>, <code>restored_by</code>
-(<code>schema.sql:144-156</code>). Two partial unique indexes, one per
+(<code>schema.sql:144-154</code>). Two partial unique indexes, one per
 object kind and each restricted to <code>active=1</code>, make one live
-refusal per value a schema constraint
-(<code>schema.sql:157-162</code>).</p>
+refusal per value a schema constraint (<code>schema.sql:195-200</code>).
+A stored generated column, <code>fact_identity_v1</code>, holds the
+folded triple under a non-unique partial index, so equivalent refusals
+keep their own attribution and a writer cannot supply the identity
+(<code>schema.sql:190-194</code>).</p>
 <p><code>entity_edges</code> carries each typed fact with
 <code>identity_key</code> and <code>identity_subject_key</code> — the
 NFKC-folded, case-folded, whitespace-collapsed triple and
@@ -418,25 +445,28 @@ and <code>fact_graph_changes</code> record each transition with before
 and after states.</p>
 <p><code>memory_correction_proposals</code> holds a model's draft
 against a target revision, its payload digest, <code>state</code> and
-the reviewer fields (<code>schema.sql:18695-18718</code>).</p>
+the reviewer fields (<code>schema.sql:18739-18762</code>).</p>
 <p><strong>A fourth store holds decisions and schedules their
 re-examination.</strong> <code>decision_log</code> carries
 <code>subject</code>, <code>options</code>, <code>chosen</code>,
 <code>rationale</code>, <code>outcome</code>, <code>author</code>,
 <code>linked_policy_id</code>, <code>supersedes_id</code>, a
 <code>status</code> defaulting to <code>active</code>, and a
-<code>revisit_when</code> (<code>schema.sql:540-545</code>,
+<code>revisit_when</code> (<code>schema.sql:580-585</code>,
 <code>schema_sqlite.sql:115</code>). Recording a decision on a subject
 marks the previous one <code>superseded</code>
 (<code>decision_log.c:108</code>), and
 <code>kb_store_decision_log_mark_revisit_due</code> sweeps due
 <code>active</code> rows into <code>revisit_due</code>
 (<code>decision_log.c:175-187</code>), called from the curator drain
-(<code>kb_curator_drain.c:824</code>). The governance HTTP list reads
-the status (<code>kb_http_governance.c:361</code>); no file under
+(<code>kb_curator_drain.c:824</code>). The governance console opens on
+<code>revisit_due</code>, closes a review by marking the decision
+superseded, and states on the page that due decisions are not added to
+model context
+(<code>frontend/src/console/pages/Governance.tsx:48</code>,
+<code>:118-126</code>, <code>:133</code>). No file under
 <code>server-go/modules/memory</code> reads <code>revisit_due</code>, so
-a decision due for re-examination reaches whoever lists decisions and
-not the model.</p>
+a due decision reaches the operator queue and not the model.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Every current memory read shares one predicate.
 <code>currentMemorySQL</code> expands to
@@ -447,7 +477,14 @@ check, and a currency check on every derived input
 predicate that admits <code>superseded</code>, <code>archived</code> and
 <code>retired</code> versions for inspection and never rejected, revoked
 or quarantined ones, and it fails closed on unknown states
-(<code>eligibility.go:45-57</code>).</p>
+(<code>eligibility.go:45-57</code>). The session recall bundle repeats
+the lifecycle test over a validity-filtered source, and its commitments
+section reads <code>pending</code> instead:
+<code>LifecyclePending</code> sets that state on an active row with a
+TTL, so it marks an open commitment rather than a belief awaiting
+review, and the stale-commitment alerts read it too
+(<code>retrieval.go:86-114</code>, <code>recall.go:272-273</code>,
+<code>domain.go:523-530</code>, <code>alerts.go:53-58</code>).</p>
 <p>Four lanes feed recall. <code>Search</code> and
 <code>SearchVisible</code> run ILIKE and English full-text matching over
 key, content and use cases (<code>data.go:765-797</code>,
@@ -476,7 +513,7 @@ each request's transaction by writing the request's scope into
 <code>_scope_all</code> with <code>set_config(…, true)</code>
 (<code>data.go:1410-1426</code>), which
 <code>p_memories_row_scope</code> reads
-(<code>schema.sql:166-183</code>).</p>
+(<code>schema.sql:206-223</code>).</p>
 <p>One read drops the application predicate. The session recall bundle
 calls graph fusion with <code>IncludeAll: true</code>
 (<code>recall.go:241</code>), so that lane is bounded by row-level
@@ -510,63 +547,89 @@ produces previews and proposals rather than mutations.</p>
 may only be annotated, an <code>instruction</code> or
 <code>policy</code> memory requires revocation rather than replacement,
 and a model may replace only content whose origin is
-<code>agent_message</code> (<code>mutations.go:248-259</code>). A model
+<code>agent_message</code> (<code>mutations.go:254-265</code>). A model
 correction outside that rule becomes a proposal, deduplicated against
 terminal decisions so <em>"repeating a rejected draft cannot reopen
 it"</em> (<code>correction_proposals.go:93-136</code>). A model delete
 retires the row as <code>superseded</code> with <code>valid_until</code>
 set; only user authority hard-deletes, and it arms an erasure GUC in the
-same statement (<code>mutations.go:190-234</code>).</p>
+same statement (<code>mutations.go:196-240</code>).</p>
+<p>A model-authority write passes one more screen first.
+<code>screenModelMemory</code> folds each line with NFKC and refuses one
+that opens with an override phrase such as <em>ignore previous
+instructions</em> outside a code fence; quoted, blockquoted and fenced
+lines pass, and user authority is exempt
+(<code>content_gate.go:121-155</code>). The KB store, the KB correction,
+the personal store and supersede, and both rank-10 fact paths call it
+(<code>mutations.go:63-65</code>, <code>:325-332</code>,
+<code>personal_admission.go:67-71</code>,
+<code>fact_commit.go:78-82</code>,
+<code>fact_mutation.go:194-198</code>). The refusal is a typed error,
+<code>instruction_override</code>, not a quiet drop
+(<code>public_store_test.go:482-509</code>,
+<code>content_gate_test.go:64</code>).</p>
 <p><strong>Correction is a table, and refusing to admit a value is its
 own record.</strong> <code>memory_rejection_tombstones</code> holds one
 live row per refused value. The Go consults are:</p>
 <ul>
 <li>the episodic insert, <code>WHERE NOT EXISTS</code> an active refusal
-on key, content and scope (<code>mutations.go:139-149</code>);</li>
+on key, content and scope (<code>mutations.go:143-153</code>);</li>
 <li>the correction apply, which retires nothing when the successor
-content is refused (<code>mutations.go:400-403</code>);</li>
+content is refused (<code>mutations.go:414-417</code>);</li>
 <li><code>factTombstoned</code> at the head of every fact assert, the
 review approve and the maintenance promote
-(<code>fact_mutation.go:234-241</code>,
+(<code>fact_mutation.go:218-225</code>,
 <code>fact_review.go:73-76</code>,
 <code>fact_maintenance.go:68-75</code>).</li>
 </ul>
-<p><strong>The fact consult folds identity; the database backstop does
-not.</strong> <code>factTombstoned</code> pages through every active
-fact refusal 256 at a time and matches either the raw triple or the
-folded identity recomputed from the stored columns
-(<code>fact_mutation.go:171-202</code>), so a full-width or recased
-re-extraction is refused. <code>fact_mutation_test.go:154-160</code>
-asserts both. <code>fact_rejection_tombstone_guard</code> on
-<code>entity_edges</code> and
-<code>memory_rejection_tombstone_guard</code> on <code>memories</code>
-are <code>BEFORE INSERT OR UPDATE</code> triggers that compare the raw
-columns (<code>schema.sql:193-205</code>, <code>:1911-1922</code>). The
-schema states their purpose — <em>"Database backstop for writers that do
-not use the C mutation seam"</em> — and a writer that bypasses the Go
-owner meets the raw comparison only. The episodic refusal is exact on
-<code>memory_content</code> in both places.</p>
-<p><strong>The runtime role the Go store uses can delete the
-refusal.</strong> <code>schema_grants.sql:121-125</code> revokes
-<code>DELETE</code> and <code>TRUNCATE</code> on the table from
-<code>aimee_kb_runtime</code>, and
-<code>scripts/memory-governance-pg-test.sql:26-35</code> asserts that
-under <code>SET ROLE aimee_kb_runtime</code>. The
-<code>$memory_store_grants$</code> block grants
-<code>SELECT, INSERT, UPDATE, DELETE</code> on the same table, and on
-<code>memory_evidence_events</code> and <code>memory_provenance</code>,
-to <code>aimee_store_runtime</code>
-(<code>schema.sql:18855-18876</code>), which is the role compose gives
-the Go module. No production Go path deletes a refusal; the privilege is
-there, and the check that forbids it tests the other role.</p>
+<p><strong>The fact consult and the database backstop compare one
+identity.</strong> <code>memory_fact_rejection_identity_v1</code> folds
+each endpoint with NFKC, Unicode case folding and whitespace collapse,
+reduces the relation to the owner's 63-byte ASCII form, and returns an
+empty string at 1,024 bytes or more, which leaves the raw comparison
+(<code>schema.sql:155-187</code>). <code>factTombstoned</code> is one
+<code>EXISTS</code> query over the raw triple or the generated column
+(<code>fact_mutation.go:171-181</code>).
+<code>fact_rejection_tombstone_guard</code> on <code>entity_edges</code>
+runs the same disjunction for any writer, and also fires on a change of
+<code>edge_class</code> (<code>schema.sql:1951-1964</code>).
+<code>fact_mutation_test.go:154-160</code> refuses exact and full-width
+re-assertions through the owner. <code>:161-190</code> inserts exact,
+recased, full-width and whitespace variants directly, asserts the
+trigger refuses each, and checks the database identity against the Go
+one on six edge triples. The episodic refusal is exact on
+<code>memory_content</code> in the Go insert and in
+<code>memory_rejection_tombstone_guard</code>
+(<code>schema.sql:233-245</code>).</p>
+<p><strong>Neither runtime role can delete a refusal, and either can
+lift one.</strong> The <code>$memory_store_grants$</code> block grants
+<code>DELETE</code> across its table list to
+<code>aimee_store_runtime</code>, the role compose gives the Go module,
+then revokes <code>DELETE</code> and <code>TRUNCATE</code> on
+<code>memory_rejection_tombstones</code> from it and <code>PUBLIC</code>
+on every replay (<code>schema.sql:18920</code>, <code>:18951</code>).
+<code>schema_grants.sql:121-125</code> does the same for
+<code>aimee_kb_runtime</code>.
+<code>TestAuthenticatedRejectionPrivileges</code> logs in as
+<code>aimee_store_runtime</code>, which CI provisions, and asserts both
+statements are refused (<code>runtime_role_test.go:401-457</code>,
+<code>.github/workflows/ci.yml:923</code>).</p>
+<p>Both roles keep <code>UPDATE</code>, because restore is an update.
+<code>Restore</code> holds the <code>rejected_by</code> rule inside its
+statement (<code>queries.go:241-259</code>), and the refusal table
+carries no trigger of its own and no <code>evidence_*</code> trigger. A
+direct <code>UPDATE … SET active=0</code> with any
+<code>restored_by</code> therefore lifts a refusal and writes no audit
+intent; the same test does that as the runtime role to check that the
+lift takes effect.</p>
 <p><strong>Revival is gated on rank as well as on the refusal.</strong>
 <code>assertFact</code> finds the exact triple by folded identity
 without a lifecycle filter, and revives an <code>invalidated</code> or
 <code>superseded</code> row only when
 <code>in.Actor.Rank &gt;= exact.Rank</code>
-(<code>fact_mutation.go:242-278</code>). When a surviving incumbent on a
+(<code>fact_mutation.go:226-262</code>). When a surviving incumbent on a
 functional relation outranks the actor, the new value lands as a
-quarantined candidate (<code>fact_mutation.go:327-335</code>).</p>
+quarantined candidate (<code>fact_mutation.go:311-319</code>).</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>The agent's memory tools in
 <code>server_mcp_call_table.c:2149-2230</code> include
@@ -598,6 +661,47 @@ arguments separately (<code>src/kb/kb_service.c:739-770</code>). The CLI
 carries event-time reads as
 <code>aimee memory get &lt;id&gt; --as-of &lt;timestamp&gt;</code>
 (<code>src/cli_v1_routes_e.c:645-647</code>).</p>
+<p><strong>Native delivery releases personal recall rows, not
+tensors.</strong> <code>POST /v1/native/primitive</code> requires
+<code>CAP_MEMORY_READ</code>, forces <code>native_primitive</code> on
+the body and hands it to the recall handler
+(<code>server_http_routes.c:581-600</code>, <code>:1699</code>). The
+handler refuses any store but the personal one, skips working-profile
+observation, and calls the same <code>personal-recall</code> operation
+as the MCP <code>memory_recall</code> tool
+(<code>server_api.c:239</code>, <code>:268</code>,
+<code>:282-290</code>, <code>server_mcp_call_table.c:341</code>). It
+copies the <code>identity</code>, <code>preferences</code>,
+<code>active_context</code> and <code>open_commitments</code> rows, each
+with its <code>version</code>, into
+<code>{"schema":1,"records":[…]}</code>; a missing group or version
+returns 502 (<code>server_api.c:301-361</code>).</p>
+<p>Those rows come from <code>user_memories</code> under the bundle's
+predicate: <code>active</code>, or <code>pending</code> for commitments,
+and unexpired (<code>retrieval.go:86-114</code>). A recall the integrity
+gate quarantines carries no groups, so it returns 502 rather than an
+empty release (<code>server_memory.c:662-667</code>). The KB, its typed
+facts and its scope never reach this route.</p>
+<p>Each released row carries <code>owner_id</code>,
+<code>record_id</code> and <code>record_revision</code>, and a trigger
+on <code>user_memories</code> advances the revision on any material
+change (<code>version_contract.go:13-18</code>,
+<code>schema_personal_memory_changes.sql:24-42</code>). That is the key
+a cache needs to drop state for a corrected record, and a retired row
+simply leaves the next release. The preprint's rule that <em>"a new
+record revision invalidates obsolete derived state"</em> is left to the
+plugin; this tree supplies the revision.
+<code>docs/NATIVE_MEMORY_PLUGIN.md</code> describes that plugin as a
+wheel staged for a <code>native-memory-v0.2.3</code> release. On 3
+October 2026 there is no such release, no PyPI package, and no
+RakuenSoftware repository holding the plugin; the one named for vLLM,
+<code>smoothnas-plugin-vllm</code>, is an appliance container wrapper
+last pushed on 21 May 2026.</p>
+<p>This is not the inference-server cache the <a
+href="../../families/#not-in-scope-the-kv-cache">families page</a>
+excludes. The prepared state derives from records that carry identity,
+revision and lifecycle, so losing it costs a re-preparation, and
+correcting the record changes what the next release holds.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>The audit store is <code>src/modules/audit/audit_worm.c</code>, 1,117
@@ -613,16 +717,16 @@ write access can drop them) — that is the hash-chain"</em>
 <code>kb_audit_worm_submit</code> writes an immutable intent to
 <code>kb_audit_outbox</code> and notifies;
 <code>kb_audit_worm_append</code> is a compatibility name for the same
-submit (<code>schema.sql:7496-7541</code>). The outbox and the delivery
+submit (<code>schema.sql:7538-7583</code>). The outbox and the delivery
 ledger carry <code>BEFORE UPDATE</code>, <code>BEFORE DELETE</code> and
 <code>BEFORE TRUNCATE</code> triggers raising
-<code>'WORM: % is append-only'</code> (<code>schema.sql:241-262</code>).
+<code>'WORM: % is append-only'</code> (<code>schema.sql:281-302</code>).
 <code>aimee_kb_runtime</code> is <code>REVOKE ALL</code> on both tables
 and re-granted <code>SELECT</code>, with <code>EXECUTE</code> on submit
 and pending only (<code>schema_grants.sql:97-109</code>).
 <code>aimee_store_runtime</code> holds <code>EXECUTE</code> on
 <code>memory_mutation_worm_append</code>
-(<code>schema.sql:18940-18942</code>), so it can add memory intents with
+(<code>schema.sql:18987-18989</code>), so it can add memory intents with
 any action string, and cannot remove one.</p>
 <p><strong>Memory mutations reach that queue from a trigger.</strong>
 <code>evidence_memories</code> fires
@@ -630,9 +734,14 @@ any action string, and cannot remove one.</p>
 delete on <code>memories</code>, and its <code>memories</code> arm calls
 <code>memory_mutation_worm_append</code> with a content-free detail:
 <em>"Same transaction as the row mutation: a WORM failure aborts the
-memory mutation"</em> (<code>schema.sql:16480-16494</code>). The only
-<code>DELETE</code> or <code>TRUNCATE</code> on the outbox, the ledger
-or <code>audit_event</code> in the tree is in test scripts asserting the
+memory mutation"</em> (<code>schema.sql:16521-16538</code>). The intent
+names the <code>changeset_id</code> and the
+<code>evidence_event_id</code> of the detailed row, and
+<code>docs/WORM_WORKER.md:102-140</code> gives the join from intent to
+delivery receipt and to the evidence row, with a column saying whether
+that row survived erasure. The only <code>DELETE</code> or
+<code>TRUNCATE</code> on the outbox, the ledger or
+<code>audit_event</code> in the tree is in test scripts asserting the
 refusal.</p>
 <p><strong>A poison gate runs at four boundaries, and memory writes are
 not one of them.</strong> <code>integrity_ingress_decide</code> is
@@ -646,16 +755,18 @@ injection (<code>kb_doc_pdf.c:1165</code>,
 <code>ingress_preinject.c:1140</code>). The Go write path runs
 <code>screenMemoryWrite</code> instead, which rejects a key carrying a
 credential pattern and redacts credentials and national identifiers from
-content (<code>content_gate.go:9-24</code>, <code>:36-78</code>,
-<code>:112-117</code>). A stored instruction-injection string is checked
-when it is recalled, not when it is written.</p>
+content (<code>content_gate.go:12-27</code>, <code>:39-81</code>,
+<code>:115-120</code>), and, for model authority, the bounded override
+screen in <a href="#7-write-mechanics">section 7</a>. An injection
+subtler than a line opening with an override phrase is checked when it
+is recalled, not when it is written.</p>
 <p><strong>Row-level security covers the memory rows and binds only a
 non-owner.</strong> <code>memories</code> and
 <code>memory_rejection_tombstones</code> take
 <code>ENABLE ROW LEVEL SECURITY</code> and one policy each over
 <code>memory_row_scope_visible(scope_type, scope_value)</code>,
 <code>USING</code> and <code>WITH CHECK</code>
-(<code>schema.sql:166-188</code>). The comment states the default:
+(<code>schema.sql:206-228</code>). The comment states the default:
 <em>"An unset request context sees only global rows; project/workspace
 rows fail closed."</em> The fact-refusal policy exempts
 <code>object_kind='fact'</code>, which has no scope tuple.</p>
@@ -670,12 +781,12 @@ request's <code>include_all</code>, so the policy bounds a mis-scoped
 query rather than a compromised process.</p>
 <p>On <code>aimee-kb</code>, the five membership and grant tables take
 <code>ENABLE</code> and <code>FORCE</code>
-(<code>schema.sql:2694-2703</code>). Content visibility over
+(<code>schema.sql:2736-2745</code>). Content visibility over
 <code>kb_documents</code> and its children is an operator act:
 <code>kb_content_scope_enable()</code> refuses while any document,
 embedding or region is unattributed, and
 <code>kb_content_scope_disable()</code> is the way back
-(<code>schema.sql:3077-3252</code>).</p>
+(<code>schema.sql:3119-3294</code>).</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p><code>TestTypedFactRecallPolicyLivesInGo</code> is the negative case
@@ -698,36 +809,77 @@ production owner under <code>SET LOCAL ROLE aimee_store_runtime</code>.
 <code>persistent</code>, a lower-rank competitor is quarantined, and
 exact and full-width re-assertions of a refused triple both return
 <code>errFactTombstoned</code>
-(<code>fact_mutation_test.go:35-160</code>).
-<code>fact_review_test.go</code> covers the review verb, and
+(<code>fact_mutation_test.go:35-160</code>). The same function then
+drives the trigger with four direct-insert spellings and compares the
+two identity implementations (<a href="#7-write-mechanics">section
+7</a>). <code>fact_review_test.go</code> covers the review verb, and
 <code>assertion_search_test.go:105-130</code> returns the superseded
 value for a February belief instant and the current one for April. They
 run inside <code>TestFactMutationRuntimeReplay</code> and
 <code>TestMemoryRuntimeRoleReplay</code>, which skip without
 <code>AIMEE_KB_STORE_REPLAY_URL</code> unless
 <code>AIMEE_MEMORY_REPLAY_REQUIRED=1</code> turns the skip into a
-failure (<code>runtime_role_test.go:70-76</code>); CI sets the URL
-(<code>.github/workflows/ci.yml:922</code>).</p>
+failure (<code>runtime_role_test.go:70-76</code>).
+<code>TestAuthenticatedRejectionPrivileges</code> skips without
+<code>AIMEE_MEMORY_RUNTIME_URL</code>, and
+<code>TestMemoryAuditCorrelation</code> asserts that a canary insert
+yields one outbox intent joined to its evidence event and pending
+delivery (<code>runtime_role_test.go:401-488</code>). CI sets both URLs
+(<code>.github/workflows/ci.yml:922-923</code>).</p>
 <p><code>scripts/memory-governance-pg-test.sql</code>, run by
 <code>scripts/run-p1-rls-gate.sh</code>, runs as
 <code>aimee_kb_runtime</code> against Postgres. It asserts the RLS
 posture, the privilege shape on the refusal table, that project A sees
 its own and shared rows and not project B's, both trigger backstops,
 restore without a second copy, and at least five <code>memory.*</code>
-intents in the outbox. It does not test the role the Go store connects
-as.</p>
-<p><code>docs/validation/flag-rollout-readiness.md</code>, last changed
-26 August 2026, tracks every default-off flag against a six-point gate
-and sorts them into <strong>WIRED</strong> and <strong>INERT
-TOGGLE</strong>, publishing five inert toggles. Its row for
-<code>memory_lifecycle_enabled</code> and <code>_hide_archived</code>
-names <code>memory_core_helpers.inc</code> as the reader. That file is
-not in the tree, and the two accessors in
-<code>config_client_accessors_2.c</code> and <code>_3.c</code> have no
-caller outside their own files, so the pair has joined the inert column
-without the document saying so.</p>
-<p>No paper, <code>CITATION.cff</code> or DOI is in the repository. No
-benchmark result was rerun for this reading.</p>
+intents in the outbox. The Go store's own role is covered by the
+authenticated case above.</p>
+<p><code>docs/validation/flag-rollout-readiness.md</code> tracks every
+default-off flag against a six-point gate and sorts them into
+<strong>WIRED</strong> and <strong>INERT TOGGLE</strong>, publishing
+five inert toggles. A correction dated 29 September 2026 heads it: the
+reader file its lifecycle row names is absent, the two accessors have no
+production caller, and <code>currentMemorySQL</code> enforces lifecycle
+directly; the rest of the matrix is not requalified
+(<code>flag-rollout-readiness.md:14-23</code>).
+<code>docs/reviews/agent-memory-atlas-2026-09-29.md</code> records the
+PostgreSQL 18 replays the maintainers ran for the refusal identity, the
+role grants and the audit join.</p>
+<p>One case covers the native route.
+<code>test_server_http.c:1186-1197</code> stubs the recall handler,
+asserts the route sets <code>native_primitive</code>, and refuses a
+non-object body. No case asserts that a retired or superseded personal
+row is absent from a release; that exclusion rests on the bundle's
+SQL.</p>
+<p><strong>The preprint reports the native-memory results, and none of
+its artifacts is in this tree.</strong> <em>Shared Native Memory</em>
+(<a
+href="https://doi.org/10.5281/zenodo.23120104">doi:10.5281/zenodo.23120104</a>,
+v2, 3 October 2026, CC BY 4.0), summarised on the <a
+href="https://rakuensoftware.com/blog/native-memory-without-retraining">Rakuen
+blog</a> on 1 October 2026, reports a 47,065-response Gemma 4 12B
+campaign. Native and text delivery both answer 10,000/10,000 general and
+625/625 personal questions, and 625/625 at every pressure size up to 64
+records. At 64 general records text adds a median 4,580 prompt tokens
+and native none, and median time to first token is 2,565 ms against 156
+ms, with native state prepared in host RAM beforehand and preparation
+timed separately.</p>
+<p>It also reports that all 125 personal corrections changed the key and
+value tensor bytes at all 48 Gemma layers with weights fixed, that a 12B
+receiver rose from 165/480 to 276/480 on identical tasks with procedures
+validated from a 27B donor, and a vLLM plugin run on AMD and NVIDIA
+cards. Its stated limits are the ones that matter here. Records were
+explicitly addressed under research publication grants, not chosen by
+the harness's retrieval or production authorization. The implementation,
+encoding, reproduction drivers and runtime artifacts are withheld, with
+original observations in a private archive (Sections II and VI, Appendix
+A).</p>
+<p>This repository holds none of the scripts, seeds, fixtures or result
+files those sections describe, and no paper, <code>CITATION.cff</code>
+or DOI. The companion <code>RakuenSoftware/rakuen-blog</code> repository
+maps each blog figure to the preprint and states that the article
+reports no new tests. No benchmark result was rerun for this
+reading.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <p><strong>Derive write authority from the verified caller and store it
@@ -744,24 +896,30 @@ verb that refuses remote invocations, and a tool registry that carries
 no approve is a review queue the producer cannot clear. The test that
 drives all three is shorter than the code.</p>
 <p><strong>Put the refusal check in every writer, then repeat it in the
-database.</strong> The consult in the owner is where the good error
-lives; the trigger is what holds for the next writer. Compare the same
-normalized identity in both.</p>
+database on one identity.</strong> The consult in the owner is where the
+good error lives; the trigger is what holds for the next writer. aimee
+computes the folded identity once, in a versioned database function the
+owner calls and a generated column stores, so the two comparisons cannot
+drift and a writer cannot supply the key.</p>
 <p><strong>Assert a negative beside a positive on the same
 output.</strong> One extra assertion per case removes every exclusion
 test that passes because nothing came back.</p>
+<p><strong>Release source rows with their revision, and leave the
+tensors to the consumer.</strong> aimee's native route returns current
+records with <code>owner_id</code>, <code>record_id</code> and
+<code>record_revision</code>, selected by the predicate text recall
+uses, so a downstream cache has a key to invalidate on and no second
+selection policy to drift.</p>
 <h3 id="avoid">Avoid</h3>
-<p><strong>A privilege check that tests one role while another does the
-writing.</strong> The governance gate proves
-<code>aimee_kb_runtime</code> cannot erase a refusal, and the Go owner
-connects as a role granted <code>DELETE</code>. Test the role in the
-connection string.</p>
-<p><strong>A backstop keyed less canonically than the consult above
-it.</strong> A writer that bypasses the owner meets a raw comparison the
-owner itself does not use.</p>
+<p><strong>Revoking delete and leaving the lift unwatched.</strong> A
+refusal table whose rows cannot be deleted but can be deactivated by the
+same role, with no trigger recording the update, protects the record and
+not the refusal. Audit the <code>UPDATE</code> restore needs, or route
+it through a definer that writes the intent.</p>
 <p><strong>A capability document that audits code by file name.</strong>
 A readiness table naming a reader file goes stale the day the file is
-deleted, and the table cannot say so.</p>
+deleted; aimee's carries a dated correction above a row that names the
+absent file.</p>
 <h3 id="fit">Fit</h3>
 <p>This suits a team that wants correction and review to be structural
 and will run Postgres, two C services, a Go module and an audit worker
@@ -769,29 +927,32 @@ to get it. The design assumes an operator who provisions separate
 migrator and runtime roles and attends a review console. A single
 developer wanting a memory library should walk away; the value is in the
 authority model and the refusal table, which transfer without the
-runtime.</p>
+runtime. The native-memory work is a reason to watch the project rather
+than to adopt it: the server half is a re-projection of personal recall,
+and the half that prepares tensors is unpublished.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <p><strong>Coverage.</strong> This tree is over a million lines. The
 trace covers the Go memory module's write, recall, correction and review
 paths, the memory tables and triggers, the audit chain and the MCP
 surface. It does not cover the Go control plane, the Python tooling, the
 ingest workers, the server placement's <code>user_memories</code>
-families beyond their proposal gate, or most of the schema.</p>
-<p><strong>Which role a production deployment gives the Go
-owner.</strong> Compose and CI hand it <code>aimee_store_runtime</code>,
-which holds <code>DELETE</code> on the refusal table. Whether any
-deployment path runs it as <code>aimee_kb_runtime</code>, which the
-governance gate tests, is not settled by reading the tree.</p>
-<p><strong>What an auditor does with two ledgers.</strong> A memory
-mutation writes a detailed row to <code>memory_evidence_events</code>
-and a content-free intent to the WORM outbox through the same trigger
-function. The evidence table is updated by that function after insert,
-granted <code>DELETE</code> to the store runtime, and deleted from by
-<code>kb_document_retention_reap</code> and
-<code>kb_subject_erasure_begin</code> (<code>schema.sql:7633</code>,
-<code>:7825</code>), while the chain keeps its content-free row. Nothing
-read here joins a <code>changeset_id</code> to a chain
-<code>seq</code>.</p>
+families beyond their proposal gate and the recall bundle the native
+route reads, or most of the schema.</p>
+<p><strong>What the plugin does with a record that leaves the
+release.</strong> The route hands over current rows with revisions.
+Whether prepared banks for a record that was retired, deleted or
+superseded are dropped, rather than only re-prepared when a revision
+changes, is decided in a binary this reading could not inspect. The
+preprint's pilot reports deleted and withdrawn records answering
+<em>unknown</em> (Appendix B-A), under its research driver rather than
+this route.</p>
+<p><strong>What the erased half of the audit join proves.</strong> The
+evidence table is granted <code>DELETE</code> to the store runtime and
+reaped by <code>kb_document_retention_reap</code> and
+<code>kb_subject_erasure_begin</code> (<code>schema.sql:7675</code>,
+<code>:7867</code>). The WORM guide says the chain keeps the identifiers
+and cannot reconstruct the content; what an auditor may conclude from an
+intent whose evidence row is gone is not stated.</p>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -861,14 +1022,14 @@ normalization</td>
 <tr>
 <td><code>server-go/modules/memory/public_store.go</code>,
 <code>public_facts.go</code>, <code>content_gate.go</code></td>
-<td>Captured fact authority, <code>facts.retract</code>, write
-screening</td>
+<td>Captured fact authority, <code>facts.retract</code>, write screening
+and the model override screen</td>
 </tr>
 <tr>
 <td><code>src/modules/kb/c/schema.sql</code>,
 <code>schema_grants.sql</code></td>
-<td>Memory tables, refusal triggers, RLS, outbox, audit triggers,
-grants</td>
+<td>Memory tables, the refusal identity function, refusal triggers, RLS,
+outbox, audit triggers, grants</td>
 </tr>
 <tr>
 <td><code>src/modules/audit/audit_worm.c</code></td>
@@ -889,10 +1050,39 @@ grants</td>
 <td>The agent's MCP memory tools, verb map and scope handling</td>
 </tr>
 <tr>
+<td><code>src/server/server_http_routes.c</code>,
+<code>server_api.c</code>, <code>server_memory.c</code></td>
+<td>The native primitive route, its projection of personal recall, and
+the recall integrity gate</td>
+</tr>
+<tr>
+<td><code>server-go/modules/memory/retrieval.go</code>,
+<code>version_contract.go</code>,
+<code>server-go/modules/aimee/families/schema_personal_memory_changes.sql</code></td>
+<td>The personal recall source and the record revision the native
+release carries</td>
+</tr>
+<tr>
+<td><code>docs/NATIVE_MEMORY_PLUGIN.md</code></td>
+<td>The plugin install guide; the plugin is not in the tree</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/Memory.tsx</code>,
+<code>frontend/src/console/pages/Governance.tsx</code></td>
+<td>The correction-review view and the due-decision queue</td>
+</tr>
+<tr>
 <td><code>server-go/modules/memory/fact_recall_test.go</code>,
 <code>fact_mutation_test.go</code>, <code>fact_review_test.go</code>,
 <code>assertion_search_test.go</code></td>
-<td>The negative case, lifecycle, review and time-axis tests</td>
+<td>The negative case, lifecycle, refusal-identity, review and time-axis
+tests</td>
+</tr>
+<tr>
+<td><code>server-go/modules/memory/runtime_role_test.go</code>,
+<code>docs/WORM_WORKER.md</code></td>
+<td>The authenticated refusal-privilege and audit-join cases; the
+intent-to-chain query</td>
 </tr>
 <tr>
 <td><code>scripts/memory-governance-pg-test.sql</code></td>
@@ -901,14 +1091,15 @@ grants</td>
 </tr>
 <tr>
 <td><code>docs/validation/flag-rollout-readiness.md</code></td>
-<td>The six-point flip gate and the WIRED / INERT TOGGLE audit</td>
+<td>The six-point flip gate, the WIRED / INERT TOGGLE audit and its 29
+September 2026 correction</td>
 </tr>
 </tbody>
 </table></div>
 <h3 id="searches-behind-the-absence-claims">Searches behind the absence
 claims</h3>
 <p>Run from the repository root at
-<code class="commit-id" title="6cd136947f205db9610eeab02b9f8255bbfc2a7e">6cd13694…</code>; each returned
+<code class="commit-id" title="d7cb791547e5f6354afecb53d82f768ba4f5e3e4">d7cb7915…</code>; each returned
 only what is described beside it.</p>
 <pre class="sh"><code># the agent&#39;s MCP memory surface: six mutate verbs, no approve, restore or review
 sed -n &#39;10,29p&#39; src/server/server_mcp_memory_gate.c
@@ -923,9 +1114,12 @@ git grep -n -i -E &#39;auto_promote|promote_threshold&#39; -- server-go src &#39
 # the C fact assert: one caller, a compatibility upsert that nothing outside its header calls
 git grep -n &#39;kb_store_fact_mutation_assert\|kb_store_entity_edge_upsert_semantic&#39; -- src &#39;:!src/tests/*&#39;
 
-# no production delete of a refusal, and the store role&#39;s DELETE grant
+# no production delete of a refusal (empty output); both runtime roles lose DELETE and TRUNCATE on it
 git grep -n &#39;DELETE FROM memory_rejection_tombstones&#39; -- src server-go scripts &#39;:!*_test.go&#39; &#39;:!src/tests/*&#39;
-sed -n &#39;18855,18876p&#39; src/modules/kb/c/schema.sql
+grep -n &#39;REVOKE DELETE, TRUNCATE ON memory_rejection_tombstones&#39; src/modules/kb/c/schema.sql src/modules/kb/c/schema_grants.sql
+
+# no trigger on the refusal table: the two RLS policy lines only
+git grep -n -i -E &#39;ON (public\.)?memory_rejection_tombstones( FOR|;|$)&#39; -- src server-go scripts
 
 # delete or truncate of the audit tables: test and probe scripts asserting refusal, nothing else
 git grep -n -i -E &#39;DELETE FROM (public\.)?(audit_event|kb_audit_outbox|kb_audit_delivery)|TRUNCATE (TABLE )?(public\.)?(audit_event|kb_audit_outbox|kb_audit_delivery)&#39; -- src server-go scripts
@@ -946,12 +1140,48 @@ grep -n -i &quot;lifecycle_state.*CHECK&quot; src/modules/kb/c/schema.sql
 # RLS on memories and refusals is ENABLE without FORCE
 grep -n -i &#39;ROW LEVEL SECURITY&#39; src/modules/kb/c/schema.sql | grep -E &#39;memories|memory_rejection&#39;
 
-# no UI calls the correction review RPC (empty output)
-git grep -n -E &#39;review_correction|correction-review&#39; -- frontend control-web
+# the correction review RPC: one caller, the Memory Center&#39;s correction view
+git grep -n -E &#39;review_correction|correction-review&#39; -- frontend control-web &#39;:!*.test.tsx&#39;
 
 # no paper, citation file or DOI (empty output)
-git grep -n -i -E &#39;arxiv|@article|@misc|bibtex|CITATION\.cff|\bdoi\b&#39; -- README.md MANUAL.md docs/KNOWLEDGE.md</code></pre>
+git grep -n -i -E &#39;arxiv|@article|@misc|bibtex|CITATION\.cff|\bdoi\b&#39; -- README.md MANUAL.md docs/KNOWLEDGE.md docs/NATIVE_MEMORY_PLUGIN.md
+
+# native delivery: the route, its handler and the OpenAPI entry, nothing else; one test file
+git grep -n -E &#39;native/primitive|native_primitive&#39; -- src server-go api &#39;:!src/tests/*&#39;
+git grep -n -l -E &#39;native_primitive|native/primitive&#39; -- &#39;src/tests/*&#39; &#39;*_test.go&#39; &#39;tests/*&#39; &#39;scripts/*&#39;
+
+# the plugin and the preprint: named only in the install guide
+git grep -n -i -E &#39;zenodo|Shared Native Memory|aimee_vllm|aimee-native (connect|serve)&#39;
+git ls-files | grep -i -E &#39;vllm|native.?mem&#39;
+
+# the preprint&#39;s seeds and record counts: one unrelated backup name
+git grep -n -w -E &#39;20260922|20260923|2026092412|2026092417|47,065|249,105&#39;
+
+# outside the tree, 3 October 2026: the plugin wheel&#39;s name in this repository only, no native release, no PyPI package
+gh search code --owner RakuenSoftware aimee_vllm
+gh api orgs/RakuenSoftware/repos --paginate --jq &#39;.[] | .name + &quot; &quot; + .pushed_at&#39; | grep -i -E &#39;vllm|native&#39;
+gh api repos/RakuenSoftware/aimee/releases --paginate --jq &#39;.[].tag_name&#39; | grep -c native
+curl -s -o /dev/null -w &#39;%{http_code}\n&#39; https://pypi.org/pypi/aimee-vllm/json</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-10-03</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/d7cb791547e5f6354afecb53d82f768ba4f5e3e4"><code class="commit-id" title="d7cb791547e5f6354afecb53d82f768ba4f5e3e4">d7cb7915…</code></a>
+— 25 commits on <code>testing</code>, from PR #3000 (branch
+<code>fix/atlas-memory-boundaries</code>, with
+<code>docs/reviews/agent-memory-atlas-2026-09-29.md</code>) and PR
+#3001. The refusal trigger and the Go consult share a generated
+identity, and <code>aimee_store_runtime</code> loses <code>DELETE</code>
+on refusals under an authenticated CI test; the lift stays an unaudited
+<code>UPDATE</code> (<a href="#7-write-mechanics">section 7</a>).
+Model-authored override lines are refused at write. PR #3001 adds
+<code>POST /v1/native/primitive</code>, the source end of the
+native-memory preprint; the plugin is unpublished (<a
+href="#8-agent-integration">section 8</a>, <a
+href="#10-tests-evals-and-benchmarks">section 10</a>). All seven marks
+hold; the route refuses the KB, so <code>scope_enforced</code> is
+untouched. One claim was wrong at the previous pin, in the awarding
+direction: <code>pending</code> rows do enter a current read, as open
+commitments. Screened first: the previous pin's surfaces, cooldown hits
+inflated by a depth-1 clone. Nothing installed, built or run.</p>
 <p><strong>2026-09-28</strong> — <a
 href="https://github.com/RakuenSoftware/aimee/commit/6cd136947f205db9610eeab02b9f8255bbfc2a7e"><code class="commit-id" title="6cd136947f205db9610eeab02b9f8255bbfc2a7e">6cd13694…</code></a>
 — 514 commits on <code>testing</code>. <a

@@ -1807,7 +1807,8 @@ embeddings, graph fusion and assertion search, all behind one shared
 current-eligibility predicate; typed facts are assembled into a separate
 block gated on confidence and PII sensitivity</td>
 <td>Stores are synchronous transactions with the audit intent in the
-same transaction; fact extraction is an asynchronous
+same transaction; a model-authored line that opens with an instruction
+override is refused at admission; fact extraction is an asynchronous
 <code>memory_facts</code> job; per-turn retraction runs at model
 authority before context is assembled</td>
 <td>Every correction writes a successor and retires the old row as
@@ -1819,9 +1820,12 @@ refusal</td>
 graph fusion, with row-level security on <code>memories</code> reading
 transaction-local GUCs underneath; an MCP call without scope queries an
 impossible tenant</td>
-<td>An MCP server, a CLI, a KB operator console, and a two-placement
-split — <code>aimee-server</code> for one human, <code>aimee-kb</code>
-for a team corpus — with every memory decision in the Go module</td>
+<td>An MCP server, a CLI, a KB operator console, a two-placement split —
+<code>aimee-server</code> for one human, <code>aimee-kb</code> for a
+team corpus — with every memory decision in the Go module, and a
+native-delivery route that releases personal recall rows with their
+revisions to an inference host; the plugin that prepares attention state
+from them is not in the tree</td>
 <td>The <code>memory_facts</code> extraction drain, re-embedding and
 index maintenance, the decision revisit sweep, and hygiene previews that
 queue proposals rather than mutate</td>
@@ -1829,18 +1833,18 @@ queue proposals rather than mutate</td>
 from the verified caller and never from text; a model-authored fact is a
 candidate until an operator approves it or a higher rank re-asserts it;
 a confidence floor of 0.4 and a PII gate on the fact block</td>
-<td>A refused value is a keyed row every Go writer consults, with a
-normalized comparison on the fact path and a trigger under both; an
-approve verb exists and the agent's tool surface does not carry it;
-memory mutations reach an append-only hash chain from a trigger in the
-same transaction</td>
-<td>The Go store's runtime role holds DELETE on the refusal table, and
-the privilege check that forbids it tests a different role; the trigger
-backstop compares the raw triple while the Go consult compares a folded
-identity; the session recall bundle's graph lane drops the application
-scope predicate and relies on row-level security, which is ENABLE
-without FORCE on <code>memories</code>; at over a million lines the
-traced fraction is small</td>
+<td>A refused value is a keyed row every Go writer consults, compared on
+the fact path through one database-generated identity that the trigger
+under it shares; an approve verb exists and the agent's tool surface
+does not carry it; memory mutations reach an append-only hash chain from
+a trigger in the same transaction</td>
+<td>Both runtime roles can lift a refusal with an UPDATE and any
+restored_by, and no trigger on the refusal table records it; the session
+recall bundle's graph lane drops the application scope predicate and
+relies on row-level security, which is ENABLE without FORCE on
+<code>memories</code>; the native path from a corrected record to
+changed attention state runs through an unpublished plugin; at over a
+million lines the traced fraction is small</td>
 </tr>
 <tr>
 <td><a href="../systems/aipass/"><code>aipass</code></a></td>
