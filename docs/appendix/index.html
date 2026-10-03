@@ -13940,54 +13940,109 @@ system code;
 <code>grep -n -i -E 'memory|keyframe|recall|remember|vlm|astra|skill'</code>
 over <code>docs/scripts/*.js</code> matches only figure markup.
 Re-examine when the code is published.</li>
-<li><strong><code>mcn92/pikelet</code> was examined and has no report,
-because nothing that happens after the build can contradict what it
-holds.</strong> Apache-2.0 (Matthew Noonan), 61,585 lines of JavaScript,
-Rust and Python over 244 files at <a
-href="https://github.com/mcn92/pikelet/commit/9f81ad79a6d9b52bb956125c7271c89021588edb"><code class="commit-id" title="9f81ad79a6d9b52bb956125c7271c89021588edb">9f81ad79…</code></a>,
-created 20 April 2026. It compiles a corpus into a single self-contained
-<code>.pikelet</code> file — source text, semantic index, keyword index,
-query encoder, integrity commitments, retrieval calibration and
-evaluation fixtures in one artifact — served over HTTP Range reads from
-static storage and mounted for an agent as an MCP <code>search</code>
-tool. The exclusion is structural rather than incidental, and the
-project states it as a rule:
-<code>spec/SEARCH_ARTIFACT_CONTRACT.md:104-110</code> says an artifact
-"is immutable after publication", that readers "MUST NOT mutate artifact
-bytes as part of query execution", and that a producer superseding an
-old artifact emits one with "a new identity"; section 8 adds that
-"Immutability is a feature of the contract." The README draws the same
-boundary from inside, listing "your corpus has heavy online writes" and
-"you need transactional mutation" under <em>don't use it</em>. There is
-no write path to be wrong on a second reading, which is the
-document-index case this atlas's scope section excludes by name.
-Recorded rather than dropped for one reason. Its ablation experiment is
-the shape this atlas asks for and rarely finds: a pack was rebuilt
-byte-for-byte identical except for the record carrying one fact, the
-retrieval result moved from <code>matchQuality: strong</code> at
-confidence 0.915 to <code>none</code> at 0.136, a third pack changed the
-same source record's value and the grounded answer followed it. Two
-details make it worth citing. The README separates what is reproducible
-from what is not —
-<code>examples/05-one-file-search/web/public/reproduce-ablation.mjs</code>
+<li><strong><code>mcn92/pikelet</code> was examined and has no report:
+its records can now be retired and replaced by id, but only by whoever
+compiles the corpus, and nothing an agent learns can reach
+them.</strong> Apache-2.0 (Matthew Noonan), 74,482 lines of JavaScript,
+Rust and Python over 270 files at <a
+href="https://github.com/mcn92/pikelet/commit/d00f50acbc4c768d8942af903794e403bc401211"><code class="commit-id" title="d00f50acbc4c768d8942af903794e403bc401211">d00f50ac…</code></a>
+(the 0.9.2 release, 1 October 2026), created 20 April 2026. It compiles
+a corpus into a single self-contained <code>.pikelet</code> file —
+source text, semantic and keyword indexes, query encoder, integrity
+commitments, retrieval calibration and evaluation fixtures — served over
+HTTP Range reads from static storage and mounted for an agent over MCP.
+The artifact rule is unchanged
+(<code>spec/SEARCH_ARTIFACT_CONTRACT.md:106-110</code>: an artifact "is
+immutable after publication", and a superseding one has a new identity).
+What releases 0.9.0 to 0.9.2 add is the layered profile,
+<code>LAYERED_PROFILE.md</code>, which keeps every file immutable and
+makes the corpus mutable by chaining files. <code>pikelet append</code>
+writes a small layer over a parent: new records chunked from
+<code>--source</code> documents, a cumulative tombstone bitset over
+global record ids from <code>--remove</code>, and
+<code>(oldId, newId)</code> supersession edges from
+<code>--supersede &lt;oldId&gt;=&lt;sourcePath&gt;</code>.
+<code>compact</code> folds a chain back into one base whose lineage
+segment translates old citations forward, and <code>rebase</code>
+replays only the deletions a layer itself introduced onto another head.
+The read side is careful. The mask is applied before candidate
+selection, and a tombstoned record stays hydratable by id "because an
+agent may have cited it" (decision 4,
+<code>LAYERED_PROFILE.md:142-152</code>). MCP <code>get_record</code>
+returns it with <code>tombstoned: true</code> and its
+<code>currentSuccessor</code>, fields the result whitelist in
+<code>provenanced()</code>
+(<code>packages/pikelet/src/mcp.mjs:145-168</code>) had been dropping,
+which, per the comment there, turned a tombstoned record into a live one
+on its way to the model; <code>test/mcp_conformance.mjs</code> does not
+mention the field. Two things keep it outside. The first is who writes.
+The MCP server dispatches four tools, <code>search</code>,
+<code>list_packs</code>, <code>verify_pack</code> and
+<code>get_record</code>
+(<code>packages/pikelet/src/mcp.mjs:872-875</code>), and none of them
+writes. <code>appendLayer</code>, <code>compactChain</code> and
+<code>rebaseLayer</code> are called from
+<code>packages/pikelet/src/cli.mjs:27-39</code> and the tests and
+nowhere else, and the profile's non-goals open with "Readers never
+write" (<code>LAYERED_PROFILE.md:1617</code>). A layer's input is a
+document path run through the base's declared chunker, so
+<code>--supersede</code> swaps a corpus chunk for a re-ingested file: a
+publisher shipping a corrected manual, not an agent revising a
+conclusion. The second is what a correction is. A tombstone is a bit on
+a row id, un-deletion is a non-goal, and decision 9
+(<code>LAYERED_PROFILE.md:184-187</code>) gives records "identity within
+a history, not content identity", so appending bytes equal to a removed
+record creates a new live id that nothing suppresses. That is the
+hide-a-row correction, chosen deliberately for a corpus in which
+re-publishing a document is meant to bring it back. A versioned document
+index with an honest update path is still the document-index case. The
+profile's status line (<code>LAYERED_PROFILE.md:6</code>) still reads
+"not implemented" while the CLI ships it and
+<code>test/layered_profile.mjs</code> is in the <code>npm test</code>
+chain; its section 13 records BEIR measurements of what layering costs,
+with the result files under <code>benchmarks/beir/results/</code>.
+Recorded rather than dropped for two findings that still hold at this
+pin. The ablation experiment is the shape this atlas asks for and rarely
+finds: a pack was rebuilt byte-for-byte identical except for the record
+carrying one fact, the retrieval result moved from
+<code>matchQuality: strong</code> at confidence 0.915 to
+<code>none</code> at 0.136, and a third pack changed the same record's
+value and the grounded answer followed it
+(<code>docs/veyra-ablation.md</code>). The write-up separates what is
+reproducible from what is not —
+<code>examples/one-file-search/web/public/reproduce-ablation.mjs</code>
 re-derives the retrieval-side numbers, while the paired model sessions
 are marked "a described observation rather than a reproducible result" —
 and it refuses the overclaim the experiment invites, stating that this
 "does <strong>not</strong> mean Pikelet can prevent an LLM from
-hallucinating." The limit on citing it as evidence is that the script
-prints rather than asserts, and the packs it reads are release assets
-rather than committed files, so the check does not fail in CI when the
-numbers move. The part that does run is the committed abstention
-fixture:
+hallucinating." The limit on citing it is that the script prints rather
+than asserts, and the packs it reads are release assets fetched by
+<code>npm run demo:veyra</code>, so nothing fails in CI when the numbers
+move. The part that does run is the committed abstention fixture:
 <code>test/fixtures/encoder-conformance/abstention-golden.json</code>
-holds ten labelled queries, five of them labelled <code>none</code>,
-<code>test/complete_profile.mjs:848-856</code> requires all ten to
-reproduce their label and requires a query labelled <code>none</code> to
-return zero results, and that file is in the <code>npm test</code>
-chain. A ten-query set where the negatives must come back empty beside
-positives that must not is the store-level must-not-retrieve assertion
-this atlas looks for, built here for a search index rather than a
-memory.</li>
+holds ten labelled queries, five of them labelled <code>none</code>, and
+<code>test/complete_profile.mjs:848-855</code> requires all ten to
+reproduce their label and a query labelled <code>none</code> to return
+zero results, inside the <code>npm test</code> chain
+(<code>package.json:23</code>). That is the store-level
+must-not-retrieve assertion this atlas looks for, built for a search
+index. It holds for the library call, whose default withholds results
+under <code>none</code>; the MCP <code>search</code> tool ships them by
+default (<code>showAbstained</code>,
+<code>packages/pikelet/src/mcp.mjs:202</code>), so what an agent sees is
+the verdict, not an empty list. Searches run at this pin:
+<code>git grep -nE "appendLayer|compactChain|rebaseLayer"</code> (the
+CLI, the three definitions and <code>test/layered_profile.mjs</code>);
+<code>grep -n "toolName ===" packages/pikelet/src/mcp.mjs</code> (four
+read tools);
+<code>git grep -nE "request\.method|method === 'POST'" -- packages</code>
+(the two Worker templates, whose only POST routes are
+<code>/search</code> and <code>/reset_cache</code>). The admin-gated
+<code>/add</code> and <code>/delete</code> routes in
+<code>examples/legacy/reference-worker/worker.js</code> are an HNSW
+index service already present at the first examination, <a
+href="https://github.com/mcn92/pikelet/commit/9f81ad79a6d9b52bb956125c7271c89021588edb"><code class="commit-id" title="9f81ad79a6d9b52bb956125c7271c89021588edb">9f81ad79…</code></a>,
+and no MCP tool reaches them.</li>
 <li><strong><code>veersaraf/forgetting-bench</code> was examined and has
 no report, because it measures the thing rather than being it — and its
 measurements are worth carrying anyway.</strong> MIT, Python, 3,304
