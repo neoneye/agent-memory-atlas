@@ -11693,35 +11693,41 @@ rejection is a pure no-op: <em>"the original file is left byte-for-byte
 untouched and the only side effect is a <code>condense-abort</code> log
 line."</em></li>
 <li>Biggest risk: <strong>the gate is the one thing the test suite does
-not reach.</strong> 110 test files sit under <code>test/</code>, several
+not reach.</strong> 124 test files sit under <code>test/</code>, several
 of them leading with must-not cases of exactly the kind this gate calls
-for, and none loads <code>reflect.ts</code>. <code>verify()</code> is
-exported, pure, and takes a plain argument object — the easiest function
-in the repository to pin. Nothing runs the suite on the way in either:
-<code>test:focused</code> is named in <code>CONTRIBUTING.md</code> and
-the pull-request template, and in no workflow. Underneath that,
-compaction is the only lifecycle: nothing can mark a line wrong, so a
-false claim is not corrected but eventually summarised, possibly
-surviving in compressed form.</li>
+for. One loads <code>reflect.ts</code>, and it pins the model-reply
+parser one step before the gate; nothing calls <code>verify()</code>,
+which is exported, pure, and takes a plain argument object — the easiest
+function in the repository to pin. Nothing runs the suite on the way in
+either: <code>test:focused</code> is named in
+<code>CONTRIBUTING.md</code> and the pull-request template, and in no
+workflow. Underneath that, compaction is the only lifecycle: nothing can
+mark a line wrong, so a false claim is not corrected but eventually
+summarised, possibly surviving in compressed form.</li>
 <li>Most reusable component: <code>src/main/reflect.ts</code> — about
-400 lines for the three-region file, the eviction, the summarizer prompt
+530 lines for the three-region file, the eviction, the summarizer prompt
 that hands the pinned block over <em>"for context only — do not rewrite
-it"</em>, and the gate. Transferable to any design where something will
-eventually rewrite an agent's markdown in place.</li>
-<li>Maturity impression: MIT, 666 commits, ~52,000 lines of TypeScript
-across an Electron desktop app that wraps a dozen terminal coding CLIs
-as a messaging hive; version 0.4.3, self-badged a working prototype. Two
-marks. <code>audit_log</code>, for an append-only <code>log.jsonl</code>
+it"</em>, a framed reply parser that fails closed on a partial frame,
+and the gate. Transferable to any design where something will eventually
+rewrite an agent's markdown in place.</li>
+<li>Maturity impression: MIT for the source, 1,364 commits, 66,751 lines
+of TypeScript and TSX under <code>src/</code>, an Electron desktop app
+that wraps a dozen terminal coding CLIs as a messaging hive.
+<code>package.json</code> reads 0.4.6, and releases from v0.5.2 on are
+binaries-only, so whatever the shipped Pro tier adds is not in this
+tree; nothing under <code>src/</code> checks a licence. One mark,
+<code>audit_log</code>, for an append-only <code>log.jsonl</code>
 carrying <code>condense</code>, <code>condense-abort</code>,
-<code>compact</code>, <code>archive</code> and <code>drop</code>; and
-<code>negative_eval</code>, for committed cases asserting what must not
-happen — a secret in provider output must never reach that log, a
-message nobody received must not read as delivered, and the palace
-reaper must never take a live collection directory. Semantic recall is
-delegated to the <a href="../systems/mempalace/">MemPalace</a> CLI over
-a shared palace and <em>"degrades silently to no-op"</em> when that
-binary is absent. Six blog posts about agent memory are prose, not
-evidence.</li>
+<code>compact</code>, <code>archive</code> and <code>drop</code>.
+<code>negative_eval</code> is withheld: the committed must-not cases — a
+secret in provider output must never reach that log, a message nobody
+received must not read as delivered, the palace reaper must never take a
+live collection directory, a partial model reply must not parse into a
+summary — guard writes, deletions and a parser, and none asserts what a
+query must not return. Semantic recall is delegated to the <a
+href="../systems/mempalace/">MemPalace</a> CLI over a shared palace and
+<em>"degrades silently to no-op"</em> when that binary is absent. Six
+blog posts about agent memory are prose, not evidence.</li>
 <li>Study when: you keep agent memory as markdown and something will
 compress it — the gate is the part worth copying, and the macOS TCC note
 explaining why the loop runs in the Electron main process rather than
