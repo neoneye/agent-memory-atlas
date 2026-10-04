@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Paper code where six updaters
+learn a simulated user's preferences from checker complaints and inject
+the whole memory into each AppWorld episode.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Harness Evolution as
+Learning — Agent Memory Atlas">
+    <meta property="og:description" content="Paper code where six
+updaters learn a simulated user's preferences from checker complaints
+and inject the whole memory into each AppWorld episode.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Harness Evolution as
+Learning — Agent Memory Atlas">
+    <meta name="twitter:description" content="Paper code where six
+updaters learn a simulated user's preferences from checker complaints
+and inject the whole memory into each AppWorld episode.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Harness Evolution as Learning — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Harness Evolution as Learning",
+      "description": "Paper code where six updaters learn a simulated user's preferences from checker complaints and inject the whole memory into each AppWorld episode.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Learned preference memory as the controlled
+variable</p>
+          <h1>Harness Evolution as Learning</h1>
+          <p class="document-deck">Paper code where six updaters learn a
+simulated user's preferences from checker complaints and inject the
+whole memory into each AppWorld episode.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ZyGan1999/self-evolving-harness-as-learning">
+              <span>Source</span>
+              <strong>ZyGan1999/self-evolving-harness-as-learning</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ZyGan1999/self-evolving-harness-as-learning/commit/9f7e8178588513f30296cd965a9923c17f5ff98c" title="9f7e8178588513f30296cd965a9923c17f5ff98c">
+              <span>Analyzed revision</span>
+              <code>9f7e8178…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-04</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ZyGan1999--self-evolving-harness-as-learning" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ZyGan1999--self-evolving-harness-as-learning</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>None:
+no LICENSE file, no licence named in the README or requirements.txt, and
+GitHub reports none, so all rights reserved by default</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>5,174
+lines of Python in 34 files; the updaters are about 930 of
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>7
+commits on main by 1 contributor, 2 September 2026 – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>None
+committed; .gitignore excludes /tests/, /pytest.ini and two local rerun
+scripts</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This repository is the experiment code for <a
+href="https://arxiv.org/abs/2609.36892">arXiv:2609.36892</a>,
+<em>Harness Evolution as Learning</em> (Gan, Gong and Liu, submitted 29
+September 2026). It extends AppWorld with personas whose preferences are
+executable checkers, and runs a personal agent through a stream of
+tasks. After each rejected training episode an updater turns the
+simulated user's complaint into memory, and the whole memory goes into
+the next episode's system prompt.</p>
+<p>What is notable is the shape of the comparison. Six update recipes
+share one two-method interface, <code>observe</code> and
+<code>render_memory</code>, so the paper can hold the model, actuator,
+persona and feedback fixed and vary only how memory is written. Two
+recipes give memory units an identity that can be corrected: ACE bullets
+carry a content-hash id the model can <code>modify</code>, and TEPA
+precedents are keyed by attribute and revoked rather than deleted.</p>
+<p>What is weak is durability and verification. The memory lives in one
+Python process and starts empty in every run; checkpoint snapshots are
+written for analysis and nothing reads them back. ACE's deduplication
+keeps the older of two similar bullets even when the newer one negates
+it. No test and no result file is committed, so none of the paper's
+figures recomputes from the tree.</p>
+<p>There is no licence file, so the code is all rights reserved by
+default: it can be read, and copying it needs the authors'
+permission.</p>
+<p>Two marks, both on the TEPA baseline: <code>trust_state</code> for
+its active flag and <code>audit_log</code> for its mutation history.
+Section 9 names the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a statement about one user's preferences, written by the
+agent's own model from a complaint. It becomes a belief the moment an
+updater returns: nothing is held as a candidate, and the next episode
+reads it as <em>"What you remember about this user"</em>
+(<code>appworld_p/agent.py:56</code>). It stops being one when a later
+update overwrites, revokes, deduplicates or evicts it, or when the
+process ends.</p>
+<p><strong>The complaint is the only evidence, and a checker generates
+it.</strong> <code>make_feedback</code> turns each violated rule into a
+line; the <code>instance</code> tier used for Q2 and Q3 quotes the
+checker's detail without the target value, and the
+<code>corrective</code> tier hands over the rule's correction template
+(<code>appworld_p/feedback.py:95-151</code>). Accepted episodes produce
+no update in any recipe. Which rule produced which complaint line is
+kept in <code>Feedback.provenance</code> for scoring and is never shown
+to the learner (<code>feedback.py:18</code>).</p>
+<p><strong>Each recipe answers "how does a wrong memory die"
+differently.</strong></p>
+<ul>
+<li><em>ACE</em>: a <code>modify</code> delta rewrites a bullet by id; a
+near-duplicate is dropped in favour of whichever bullet came first;
+above 12 bullets the oldest go
+(<code>appworld_p/ace_updater.py:146-173</code>).</li>
+<li><em>TEPA</em>: a new precedent under the same attribute key revokes
+the active one, which stays archived with <code>revoked_at</code> and
+<code>revoked_by</code>; writing the archived text again re-activates it
+(<code>appworld_p/baseline_updaters.py:225-264</code>).</li>
+<li><em>TRACE</em>: a compiled check is evicted FIFO above 12, and it is
+also enforced by retrying the episode in a fresh world when it fails
+(<code>baseline_updaters.py:417-420</code>;
+<code>appworld_p/driver.py:274-299</code>).</li>
+<li><em>Reflexion</em>: the fourth reflection pushes out the first
+(<code>baseline_updaters.py:90-93</code>).</li>
+<li><em>Full rewrite</em>: the model rewrites the whole memory,
+truncated at <code>max_memory_chars</code>
+(<code>appworld_p/updaters.py:141-145</code>).</li>
+<li><em>Q1 learned arm</em>: nothing dies; the memory is the top-L of a
+fixed bank of oracle statements, ranked by how often their correction
+template appeared (<code>updaters.py:62-98</code>).</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one training episode in the harness — how a checker complaint becomes memory under the ACE and TEPA recipes, and how that memory reaches the next episode</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one training episode in the harness — how a checker complaint becomes memory under the ACE and TEPA recipes, and how that memory reaches the next episode
+flowchart TD
+    MEM[&quot;current memory&lt;br/&gt;updater.render_memory()&quot;] --&gt; INJ[&quot;system prompt:&lt;br/&gt;&#39;What you remember about this user&#39;&quot;]
+    INJ --&gt; EP[&quot;agent runs one AppWorld task&quot;]
+    EP --&gt; CHK[&quot;persona checkers score&lt;br/&gt;each applicable rule&quot;]
+    CHK --&gt; ACC{&quot;any violation?&quot;}
+    ACC -- &quot;no&quot; --&gt; SKIP[&quot;no update&quot;]
+    ACC -- &quot;yes&quot; --&gt; FB[&quot;complaint text;&lt;br/&gt;rule provenance kept driver-side&quot;]
+    FB --&gt; REC{&quot;recipe&quot;}
+    REC -- &quot;ACE&quot; --&gt; DEL[&quot;model proposes JSON deltas&quot;]
+    DEL --&gt; ADD[&quot;add: id = md5(text)[:6],&lt;br/&gt;skipped if id already present&quot;]
+    DEL --&gt; MOD[&quot;modify: rewrite text of&lt;br/&gt;bullet whose id matches;&lt;br/&gt;id keeps the old hash&quot;]
+    ADD --&gt; DED[&quot;trigram cosine above 0.85:&lt;br/&gt;later bullet dropped&quot;]
+    MOD --&gt; DED
+    DED --&gt; CAP[&quot;more than 12: oldest evicted&quot;]
+    REC -- &quot;TEPA&quot; --&gt; KEY[&quot;model emits key and sentence;&lt;br/&gt;key snapped to vocabulary&quot;]
+    KEY --&gt; SAME{&quot;same key and text&lt;br/&gt;already stored?&quot;}
+    SAME -- &quot;archived&quot; --&gt; REACT[&quot;re-activate it,&lt;br/&gt;revoke the current one&quot;]
+    SAME -- &quot;active&quot; --&gt; DUP[&quot;logged as duplicate&quot;]
+    SAME -- &quot;no&quot; --&gt; REV[&quot;revoke active precedent&lt;br/&gt;under that key, append new&quot;]
+    CAP --&gt; MEM
+    REACT --&gt; MEM
+    REV --&gt; MEM
+    MEM --&gt; END[&quot;process exit: snapshot to JSON,&lt;br/&gt;never loaded again&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>appworld_p/</code> is a library the runner scripts import.
+<code>SessionDriver</code> owns one persona, one updater, one
+<code>SessionHistory</code> and one LLM client, and runs a list of
+training tasks with evaluations at checkpoints
+(<code>appworld_p/driver.py:151-183</code>, <code>:400-468</code>). Each
+episode opens a fresh <code>AppWorld</code> world, so tasks share no
+environment state; the updater object is the only thing that carries
+learning from one episode to the next.</p>
+<p>Persistence is a set of artifacts under <code>outputs/</code>, which
+<code>.gitignore</code> excludes. Per run the driver writes a memory
+snapshot at each checkpoint, a transcript per episode,
+<code>episodes.jsonl</code>, <code>manifest.json</code> and
+<code>history.json</code> (<code>driver.py:257-263</code>,
+<code>:430</code>, <code>:470-490</code>), and
+<code>run_q3_evolve.py</code> adds <code>updater_final.json</code>
+(<code>scripts/run_q3_evolve.py:159-160</code>). Of the memory
+artifacts, only the Q2 assertion pool crosses a process boundary:
+<code>run_exp2_pool.py</code> writes it and
+<code>run_exp2_arms.py</code> loads it
+(<code>scripts/run_exp2_pool.py:51-58</code>,
+<code>scripts/run_exp2_arms.py:17-19</code>).
+<code>SessionHistory.load</code> exists and nothing calls it
+(<code>appworld_p/history.py:69-74</code>).</p>
+<p>Two agents consume the memory. <code>FunctionCallAgent</code> allows
+one API call with literal arguments per turn, which the paper uses so
+the model cannot hand arithmetic to an interpreter;
+<code>ReactCodeAgent</code> runs model-written Python. Both place memory
+and harness statistics in separate system-prompt sections
+(<code>appworld_p/agent.py:89-94</code>, <code>:234-239</code>). LLM
+access is raw HTTP through <code>httpx</code> to Anthropic- or
+OpenAI-compatible endpoints (<code>appworld_p/llm.py</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>An experiment needs Python 3.11, <code>appworld==0.1.3.post1</code>
+with its downloaded data, an API key, and a task pool built by
+<code>scripts/build_task_pool.py</code>, which the README says scans
+AppWorld metadata for about 30 minutes on first run. No database or
+service runs. The memory itself is a Python object for the length of one
+run; the snapshots are readable Markdown and JSON, but editing one
+changes nothing, because no run loads them.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>SessionDriver.run</code> runs each
+training task, scores it with <code>Persona.check</code>, builds
+feedback with <code>make_feedback</code>, then calls
+<code>self.updater.observe(ep, feedback)</code> and
+<code>self.history.update(ep)</code> in that order
+(<code>driver.py:447-466</code>). The episode record carries every
+non-rejected API call with resolved app and API names
+(<code>driver.py:248-250</code>;
+<code>appworld_p/episode.py</code>).</p>
+<p><strong>Extraction, per recipe.</strong></p>
+<ul>
+<li>ACE: <code>DELTA_PROMPT</code> with the rendered bullets and the
+complaint, at temperature 0.7, parsed by
+<code>_extract_json_array</code>, which tolerates code fences and
+surrounding prose (<code>ace_updater.py:16-34</code>,
+<code>:78-96</code>, <code>:113-131</code>).</li>
+<li>TEPA: <code>TEPA_WRITE_PROMPT</code> with a redacted action summary,
+the complaint and a fixed 23-key attribute vocabulary; off-vocabulary
+keys are snapped by prefix and substring
+(<code>baseline_updaters.py:115-147</code>, <code>:180-209</code>).</li>
+<li>TRACE: <code>TRACE_COMPILE_PROMPT</code> asks for an API, argument,
+predicate and value per complaint; values over 24 characters are refused
+except for <code>equals</code>
+(<code>baseline_updaters.py:290-319</code>, <code>:390-410</code>).</li>
+<li>Reflexion: one or two sentences per rejected episode
+(<code>baseline_updaters.py:51-61</code>, <code>:77-95</code>).</li>
+<li>Full rewrite: <code>SELF_EVOLVE_PROMPT</code> returns a new memory
+file (<code>updaters.py:105-145</code>).</li>
+<li>Q2 pool: <code>induce_assertion</code> turns one complaint line into
+one standing preference sentence, and <code>AssertionCollector</code>
+keeps execution memory empty while it collects
+(<code>appworld_p/summarize.py:61-109</code>).</li>
+</ul>
+<p><strong>Injection.</strong> <code>_current_memory</code> picks the
+updater's render, nothing, the oracle statements, a fixed block, or the
+oracle plus the full habit log, according to <code>memory_mode</code>
+(<code>driver.py:193-209</code>). A self-gate or verifier report is
+appended to it for the retry (<code>driver.py:215-217</code>).</p>
+<p><strong>Correction.</strong> ACE <code>modify</code>
+(<code>ace_updater.py:146-153</code>); TEPA <code>_revoke_key</code> and
+re-activation (<code>baseline_updaters.py:225-264</code>). No recipe
+exposes deletion as an action; everything else leaves by eviction or
+rewrite.</p>
+<p><strong>Background.</strong> None. Every update is synchronous at the
+end of a training episode.</p>
+<p><strong>Tests.</strong> None in the tree (section 10).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Recipe</th>
+<th>Unit</th>
+<th>Identity</th>
+<th>Fields beyond text</th>
+<th>Leaves by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ACE</td>
+<td><code>Bullet</code></td>
+<td>md5 of the text at add, 6 hex</td>
+<td><code>helpful</code>, <code>harmful</code> (never written)</td>
+<td>modify, dedup, cap 12</td>
+</tr>
+<tr>
+<td>TEPA</td>
+<td><code>Precedent</code></td>
+<td>md5 of key and content, 6 hex</td>
+<td><code>key</code>, <code>active</code>, <code>added_at</code>,
+<code>revoked_at</code>, <code>revoked_by</code></td>
+<td>revocation (archived)</td>
+</tr>
+<tr>
+<td>TRACE</td>
+<td><code>TraceRule</code></td>
+<td>md5 of API, argument, predicate and value</td>
+<td><code>fired</code>, <code>failed</code></td>
+<td>FIFO above 12</td>
+</tr>
+<tr>
+<td>Reflexion</td>
+<td>string</td>
+<td>position</td>
+<td>none</td>
+<td>FIFO above 3</td>
+</tr>
+<tr>
+<td>Full rewrite</td>
+<td>one string</td>
+<td>none</td>
+<td>none</td>
+<td>rewrite, truncation</td>
+</tr>
+<tr>
+<td>Q1 learned</td>
+<td><code>Candidate</code></td>
+<td>rule name</td>
+<td><code>alpha</code>, <code>beta</code></td>
+<td>never</td>
+</tr>
+<tr>
+<td>Q2 pool</td>
+<td><code>Assertion</code></td>
+<td>none</td>
+<td><code>rule_name</code>, <code>episode_index</code>,
+<code>complaint</code></td>
+<td>never</td>
+</tr>
+</tbody>
+</table></div>
+<p>(<code>ace_updater.py:37-43</code>;
+<code>baseline_updaters.py:149-158</code>, <code>:336-346</code>;
+<code>updaters.py:12-22</code>; <code>summarize.py:39-46</code>.)</p>
+<p><strong>The ACE id is the hash of the text the bullet was born
+with.</strong> <code>modify</code> changes <code>b.text</code> and
+recomputes the embedding but keeps <code>b.id</code>
+(<code>ace_updater.py:148-153</code>). So a later <code>add</code> of
+the original wording collides with the live bullet's id and is skipped
+(<code>:140-142</code>). That works as a value-keyed block on the
+superseded text for exactly as long as the bullet survives deduplication
+and the cap.</p>
+<p><strong><code>helpful</code> and <code>harmful</code> are declared
+and unwired.</strong> They appear only in the <code>Bullet</code>
+dataclass (<code>ace_updater.py:42-43</code>); no line increments them,
+the prompt never shows them, and the eviction rule does not consult
+them. In <a href="../agentic-context-engine/">Agentic Context
+Engine</a>, the system this recipe adapts, the counters exist and are
+maintained; the paper calls its version a mechanism-level
+adaptation.</p>
+<p><strong><code>beta</code> never moves.</strong> The Q1
+<code>Candidate</code> starts at Beta(1, 3) and only <code>alpha</code>
+is incremented (<code>updaters.py:67-79</code>), so the posterior mean
+is a monotone count of complaints mentioning that rule.</p>
+<p><strong>Time</strong> is an update counter: TEPA's
+<code>added_at</code> and <code>revoked_at</code> are
+<code>self.updates</code> at the moment of the write. There is no
+wall-clock field and no valid-time field on any unit.</p>
+<p><strong>Scope</strong> is the process. A run loads one persona, and
+nothing on a memory unit names a user, persona or task.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval. Every recipe renders everything it holds, and
+the agent receives it inside <code>&lt;memory&gt;</code> tags in the
+system prompt for the whole episode (<code>agent.py:56</code>,
+<code>:236</code>). TEPA renders active precedents only, with their keys
+in brackets (<code>baseline_updaters.py:266-271</code>); ACE renders
+each bullet with its id so the model can target a <code>modify</code>
+(<code>ace_updater.py:46-50</code>).</p>
+<p><strong>Q2 builds its block offline, by rule.</strong>
+<code>rank_within_rule</code> deduplicates case-insensitive repeats and
+orders each rule's assertions by mean Jaccard overlap with the others,
+so the most central paraphrase leads
+(<code>appworld_p/exp2.py:12-36</code>). <code>build_arm_memory</code>
+takes one line per rule round-robin until every rule is covered, then
+more lines in the same order, then recycles them to reach
+<code>L</code>, and shuffles with a seed derived from the evaluation
+seed and <code>L</code> (<code>appworld_p/arms.py:31-71</code>).</p>
+<p><strong>The recycling can start earlier than the paper says.</strong>
+<code>cap_distinct</code> limits the lines added after coverage to 55
+distinct texts, and the README's Q2 command passes
+<code>--cap-distinct 55</code> (<code>arms.py:43-48</code>). The paper
+says the pool is recycled when <code>L</code> exceeds the number of
+distinct learner assertions. With one line per rule covered first, a
+block holds at most 55 more distinct lines, so the two descriptions
+agree only if each pool held few enough assertions. The pools are not
+committed, so whether the cap binds is not checkable here.</p>
+<p><strong>Bounding</strong> differs by recipe: 12 ACE bullets, 12 TRACE
+checks, 3 Reflexion entries and 1,200 characters for the rewrite arm in
+the Q3 runner (<code>scripts/run_q3_evolve.py:114-118</code>). TEPA has
+no cap; its active set is bounded by the key vocabulary plus any
+<code>other.</code> keys the model invents.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>ACE merges deterministically after a model proposes.</strong>
+Adds are appended at the end; modifies edit in place. Deduplication then
+walks the list in order and drops any bullet whose trigram vector has
+cosine above 0.85 with one already kept, so the earlier bullet always
+wins (<code>ace_updater.py:155-165</code>). The cap then removes from
+the front (<code>:167-173</code>).</p>
+<p><strong>That ordering decides contradictions by age.</strong>
+<code>embed_text</code> hashes character trigrams into 1,000 binary
+buckets (<code>ace_updater.py:63-71</code>). I re-implemented those nine
+lines in a scratch script, without importing the repository, and scored
+sentence pairs. <em>"Text messages should end with my first name."</em>
+against the same sentence with <em>"not"</em> inserted scores 0.931. A
+correcting <code>add</code> that negates an existing bullet is therefore
+dropped and the old bullet stays; only <code>modify</code> can correct
+it. A public-to-private flip scored 0.836, just under the threshold.</p>
+<p><strong>The history over-reports ACE adds.</strong>
+<code>applied_here</code> records an add before deduplication runs, and
+the dedup and cap steps log only counts
+(<code>ace_updater.py:145</code>, <code>:164</code>, <code>:171</code>,
+<code>:176-178</code>). An add that deduplication discarded appears in
+the history as applied.</p>
+<p><strong>TEPA replaces by key and keeps the loser.</strong> A write
+under an existing key revokes the active precedent and appends the new
+one; an exact repeat of an archived precedent re-activates it and
+revokes the current one (<code>baseline_updaters.py:241-264</code>). Key
+snapping matches by prefix and by the attribute name appearing as a
+substring, so a novel key can be folded into a vocabulary key and revoke
+a precedent about a different detail (<code>:202-207</code>).</p>
+<p><strong>TRACE writes enforcement, not only text.</strong>
+<code>check</code> evaluates each learned predicate against the
+episode's recorded calls, and the driver re-runs the task in a fresh
+world with the failures appended, up to three attempts, in both training
+and evaluation (<code>baseline_updaters.py:426-448</code>;
+<code>driver.py:274-299</code>). A check whose API or argument is absent
+counts as inapplicable.</p>
+<p><strong>Credential redaction</strong> applies to the TEPA, TRACE and
+Reflexion prompts, which drop authentication calls and replace
+secret-named arguments with a placeholder
+(<code>baseline_updaters.py:21-48</code>). ACE's prompt receives no
+action summary, and the full-rewrite prompt receives the first 40 calls
+unredacted (<code>updaters.py:137-138</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Each rejected training episode costs one extra model call,
+synchronous, before the next episode starts. Nothing rereads the store
+in the background. Injection is bounded per recipe as in section 6, and
+the memory sits in the system prompt, which is constant within an
+episode and changes only between episodes, so a provider prefix cache is
+invalidated at most once per update. The TRACE gate multiplies agent
+cost by up to three on every episode it rejects.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent has no memory tool. It cannot read, write or correct memory
+during a task; it only reads what the driver put in its prompt. The
+updater uses the same model in a separate call with its own system
+prompt (<code>ace_updater.py:120-124</code>).</p>
+<p>The harness-side state that is not memory is kept apart on purpose.
+<code>SessionHistory</code> counts payments, card choices and emails
+across episodes as ground truth for the state-class rules, and its
+docstring says it is <em>"NOT visible to the agent unless a harness
+explicitly injects it"</em> (<code>appworld_p/history.py:1-6</code>).
+The <code>external</code> arm does inject it, as a
+<code>&lt;stats&gt;</code> section separate from
+<code>&lt;memory&gt;</code> (<code>driver.py:218-221</code>).
+<code>SpendTotalAutofill</code> rewrites the payment note's running
+total in the action itself and commits to its ledger only after the API
+confirms success (<code>appworld_p/autofill.py:1-5</code>,
+<code>:88-95</code>).</p>
+<p>Adapting a recipe is cheap: each updater depends on an
+<code>EpisodeRecord</code>, a <code>Feedback</code> and an LLM client,
+and nothing else.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance stops at the driver.</strong> Every complaint line
+maps to the rule that produced it, and the Q2 pool stores
+<code>rule_name</code> beside each induced sentence
+(<code>summarize.py:39-46</code>). No memory unit in the Q3 recipes
+records which episode or complaint produced it, except TEPA's
+<code>added_at</code> counter.</p>
+<p><strong>Nothing survives the process.</strong> A run starts with an
+empty updater, and the end-of-run JSON is an archive for the analysis
+scripts. A person cannot inspect and correct a learned memory before the
+next run uses it, because no run uses it.</p>
+<p><strong>Injected memory is unqualified.</strong> Except TEPA's
+filter, every recipe hands its full contents to the agent as what it
+remembers. The paper's Q2 result, in which more relevant learned lines
+raise violations past <code>L=10</code>, measures one cost of that
+design.</p>
+<p><strong>Marks.</strong></p>
+<ul>
+<li><code>trust_state</code> — <strong>awarded</strong> to TEPA's
+<code>active</code> flag. It is stored, moved by later writes in both
+directions, and filters the only read path. It records supersession by
+attribute key rather than verification: a newer wrong precedent revokes
+an older right one.</li>
+<li><code>audit_log</code> — <strong>awarded</strong> to TEPA's
+<code>history</code>, which logs every mutation of the precedent list
+with the ids involved. ACE's list of the same name does not qualify
+alone, because dedup and capacity evictions are logged as counts.</li>
+<li><code>tombstone</code> — withheld. The nearest thing is ACE's id
+collision in section 5, which blocks re-adding a modified bullet's
+original text, but it lives inside the live bullet and disappears when
+that bullet is evicted. TEPA does the opposite on purpose: an exact
+repeat of a revoked precedent re-activates it.</li>
+<li><code>bitemporal</code> — withheld. <code>added_at</code> and
+<code>revoked_at</code> are update counters, both recording when the
+system changed, not when a preference held.</li>
+<li><code>scope_enforced</code> — withheld. One persona per process; no
+key on any unit.</li>
+<li><code>human_review</code> — withheld. The user is a programmatic
+checker, and every update takes effect before the next episode with
+nothing waiting.</li>
+<li><code>negative_eval</code> — withheld. No test is committed (section
+10).</li>
+</ul>
+<p><strong>Secrets.</strong> <code>llm.py</code> loads <code>.env</code>
+with <code>override=True</code>, so a key in the file replaces one set
+in the environment (<code>appworld_p/llm.py:12</code>).</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No test is committed.</strong> <code>git ls-files</code>
+lists no test file, and <code>.gitignore</code> excludes
+<code>/tests/</code>, <code>/pytest.ini</code>,
+<code>scripts/test_llm.py</code> and
+<code>scripts/rerun_running_total.py</code> under <em>"Local validation
+and rerun utilities"</em> (<code>.gitignore:41-45</code>). A suite
+existed locally and was kept out of the release. The plotting and
+paper-figure scripts are excluded the same way
+(<code>:22-25</code>).</p>
+<p><strong>What the paper reports</strong>, all with
+<code>claude-haiku-4-5-20251001</code> and the function-call
+actuator:</p>
+<ul>
+<li><em>Q1, approximation.</em> Stating the preference cuts
+private-note-format and SMS-sign-off violations from 1.00 to 0.07 and
+0.00. Checksum, habitual card and running total stay at 0.50, 0.78 and
+0.44 with stated context; the harness that computes the value reaches
+0.17, 0.00 and 0.00.</li>
+<li><em>Q2, generalization.</em> The pooled violation rate falls from
+about 0.77 at <code>L=0</code> to 0.20 at <code>L=10</code>, then rises
+to 0.25–0.27 for <code>L</code> from 20 to 150.</li>
+<li><em>Q3, optimization.</em> No memory scores 0.881 and the oracle
+0.071. ACE and TEPA finish near 0.48, TRACE near 0.57, Reflexion close
+to no memory; the full-rewrite and corrective diagnostics finish near
+0.69 and 0.78.</li>
+</ul>
+<p><strong>What is committed to reproduce them</strong> is the code,
+five persona files, the frozen splits for Q1, Q2 and Q3
+(<code>configs/experiments/</code>), and the command lines in the
+README. The split sizes match the README: Q3 trains on nine tasks from
+three template families and evaluates on six from two others. Not
+committed: the task pool, the Q2 assertion pools, any
+<code>outputs/</code> run, and the figure scripts. <strong>No headline
+recomputes from the tree</strong>, and I ran nothing that calls a
+model.</p>
+<p><strong>Two reading notes on the Q3 design.</strong> The 24-episode
+stream samples with replacement from nine tasks, so training tasks recur
+(<code>appworld_p/streams.py:6-14</code>). And the corrective diagnostic
+uses the full-rewrite updater, not ACE
+(<code>run_q3_evolve.py:55-59</code>), so it tests the information
+channel for that recipe; its 0.78 sits beside the rewrite arm's 0.69,
+not beside ACE's 0.48. The paper states that the Q3 instance feedback
+withholds the category tag and the initials format, so part of the
+oracle gap is unreachable by construction.</p>
+<p><strong>Missing tests to want before trusting a recipe:</strong> that
+a <code>modify</code> followed by a re-add of the original text is
+refused; that a negating <code>add</code> is not silently dropped; that
+a revoked TEPA precedent is absent from <code>render_memory</code> while
+another key's precedent is present.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep the rule-to-complaint mapping outside what the learner
+sees.</strong> Storing provenance driver-side lets you score whether a
+learned line is about the right preference without leaking the answer
+into the memory.</li>
+<li><strong>Revoke by key and keep the revoked entry.</strong> One
+active value per attribute, with <code>revoked_at</code> and
+<code>revoked_by</code>, gives a render path a filter and an analyst a
+history for the price of a boolean.</li>
+<li><strong>Put the memory and the harness statistics in separate prompt
+sections.</strong> A count maintained by code is a different kind of
+claim from a sentence the model wrote, and the prompt can say so.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Resolving near-duplicates by insertion order.</strong> A
+similarity threshold cannot see polarity; when a newer item negates an
+older one, the newer is the likely correction, and keeping the older
+inverts the update.</li>
+<li><strong>An id that outlives the text it hashes.</strong> Either
+re-hash on modify or make the id opaque; a stale content hash blocks the
+old value by accident and stops doing so the moment the bullet is
+evicted.</li>
+<li><strong>Declaring outcome counters the eviction rule never
+reads.</strong> Either wire <code>helpful</code> and
+<code>harmful</code> into the cap or remove them, so the dataclass does
+not describe a mechanism the code lacks.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a research harness, and its value is the comparison: six
+write recipes under one feedback protocol, with frozen splits. Study it
+to choose a write recipe for preference memory, or to borrow the
+checker-as-user protocol for your own evaluation. Do not adopt it as
+memory for a product: nothing persists, there is no scope, and the
+licence does not grant reuse.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How many distinct assertions did each Q2 pool hold, and did the
+55-line <code>cap_distinct</code> bind at <code>L=60</code> and
+<code>L=150</code>?</li>
+<li>How often did ACE deduplication drop a newer bullet that
+contradicted an older one, and did that contribute to the ACE plateau?
+The per-run <code>updater_final.json</code> would show it, and none is
+committed.</li>
+<li>What did the excluded <code>/tests/</code> suite cover?</li>
+<li>Do TEPA key snaps fold distinct preferences into one key in
+practice? The <code>key_snaps</code> counter is archived per run and not
+committed.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Driver and episode loop:</strong>
+<code>appworld_p/driver.py</code>, <code>appworld_p/episode.py</code>,
+<code>appworld_p/streams.py</code>,
+<code>appworld_p/config.py</code>.</li>
+<li><strong>Updaters:</strong> <code>appworld_p/ace_updater.py</code>,
+<code>appworld_p/baseline_updaters.py</code>,
+<code>appworld_p/updaters.py</code>,
+<code>appworld_p/summarize.py</code>.</li>
+<li><strong>Q2 memory construction:</strong>
+<code>appworld_p/arms.py</code>, <code>appworld_p/exp2.py</code>.</li>
+<li><strong>Feedback and preferences:</strong>
+<code>appworld_p/feedback.py</code>, <code>appworld_p/persona.py</code>,
+<code>appworld_p/rules/base.py</code>,
+<code>appworld_p/rules/pool_a.py</code>,
+<code>appworld_p/rules/pool_b.py</code>,
+<code>appworld_p/rules/api_map.py</code>.</li>
+<li><strong>Harness-side state:</strong>
+<code>appworld_p/history.py</code>, <code>appworld_p/habit.py</code>,
+<code>appworld_p/autofill.py</code>.</li>
+<li><strong>Agents and model access:</strong>
+<code>appworld_p/agent.py</code>, <code>appworld_p/llm.py</code>.</li>
+<li><strong>Runners and analysis:</strong>
+<code>scripts/run_exp1.py</code>, <code>scripts/run_exp1b.py</code>,
+<code>scripts/run_exp2_pool.py</code>,
+<code>scripts/run_exp2_arms.py</code>,
+<code>scripts/run_q3_evolve.py</code>,
+<code>scripts/aggregate_s1_seeds.py</code>,
+<code>scripts/compare_q3_arms.py</code>,
+<code>scripts/gate_elimination_ceiling.py</code>,
+<code>scripts/build_task_pool.py</code>.</li>
+<li><strong>Configuration:</strong>
+<code>configs/personas/*.yaml</code>,
+<code>configs/experiments/*.json</code>, <code>.gitignore</code>,
+<code>requirements.txt</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision. In this shell
+<code>grep</code> and <code>rg</code> honour the subject's
+<code>.gitignore</code>, so these use <code>git grep</code> and
+<code>git ls-files</code>;
+<code>git ls-files -i -c --exclude-standard</code> returns nothing.</p>
+<ul>
+<li><code>git grep -nE 'read_text|\.load\(|json\.load|open\(|\.save\(|write_text|memory_n'</code>
+— every load and save of run state; <code>SessionHistory.load</code> and
+the memory snapshots have no reader, and <code>updater_final.json</code>
+is only written.</li>
+<li><code>git grep -n 'SessionHistory.load\|History.load\|\.load('</code>
+— only <code>Persona.load</code>.</li>
+<li><code>git grep -nE 'helpful|harmful'</code> —
+<code>ace_updater.py:42-43</code> only.</li>
+<li><code>git grep -nw 'beta'</code> — the field and the
+<code>mean</code> property in <code>updaters.py</code>; no writer.</li>
+<li><code>git grep -n 'history' appworld_p/ace_updater.py appworld_p/baseline_updaters.py</code>
+— each list is initialised once and otherwise only appended to.</li>
+<li><code>git grep -nE 'ACEStyleUpdater|TepaUpdater|TraceUpdater|ReflexionUpdater|SelfEvolveUpdater|AssertionTopL|AssertionCollector' -- scripts</code>
+— every updater has a runner that constructs it.</li>
+<li><code>git grep -nE 'def test_|pytest|unittest'</code> and
+<code>git ls-files | grep -iE 'test|spec'</code> — no test file;
+<code>pytest</code> appears only in <code>.gitignore</code>.</li>
+<li><code>git ls-files | grep -iE 'output|result|\.jsonl|\.csv'</code> —
+no committed result.</li>
+<li><code>git grep -nE 'arxiv|bibtex|@article|@misc|doi.org|CITATION'</code>
+— no citation block; the baselines cite arXiv ids in a docstring
+(<code>baseline_updaters.py:3</code>), and the paper links this
+repository.</li>
+<li><code>git grep -niE 'licen'</code> — no match; no LICENSE file.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-04</strong> — <a
+href="https://github.com/ZyGan1999/self-evolving-harness-as-learning/commit/9f7e8178588513f30296cd965a9923c17f5ff98c"><code class="commit-id" title="9f7e8178588513f30296cd965a9923c17f5ff98c">9f7e8178…</code></a>
+— first reading, at the head of <code>main</code>, a commit dated 25
+September 2026, against <a
+href="https://arxiv.org/abs/2609.36892">arXiv:2609.36892</a>. Two marks,
+<code>trust_state</code> and <code>audit_log</code>, both on the TEPA
+baseline. Screened before reading on a full clone: 2 files scanned, 0
+RUNS, 0 EXEC, 0 FRESH, 0 FLOAT; no agent instruction file is committed.
+No licence file. Read with <code>git grep</code> and <code>sed</code>;
+nothing installed, built or run. The trigram similarity scores in
+section 7 come from a standalone re-implementation of
+<code>embed_text</code>, not from the repository's code.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -307,6 +307,8 @@ reader sees.
 
 [IHMT](../../systems/ihmt-memory/) disposes of a contradiction on the wrong record. Thirteen regexes put six attributes on a dated timeline, and a newer value demotes the older fact to `HISTORICAL`, closes its validity interval, and writes a persisted notice into the old fact's source leaf. The leaf itself stays `ACTIVE` and the navigator never reads the fact timeline, so the old and new statements rank on their words alone. A question about the current value then returns `AMBIGUOUS` between them, which the project's roadmap records. **A disposition that lands on the derived fact and not on the text the reader retrieves is a label, not a resolution.**
 
+[Harness Evolution as Learning](../../systems/harness-evolution/) shows the disposition being chosen by list position. Its ACE-style updater detects near-duplicate bullets by character-trigram cosine above 0.85 and always keeps the earlier one, so when a newer bullet negates an older one — *"Text messages should not end with my first name."* scores 0.931 against the positive form — the correction is the one discarded, and the history still records the add as applied. The TEPA baseline in the same repository resolves the same situation the other way: one active precedent per attribute key, the newer write revokes the older, and the revoked entry stays archived with `revoked_at` and `revoked_by`.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

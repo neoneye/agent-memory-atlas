@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 727 reports.</strong></p>
+<p><strong>This page covers all 728 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -30249,6 +30249,44 @@ cannot supply.</li>
 must not see each other, the store will grow past what a per-query load
 of every embedding can serve, or you cannot run a nightly LLM
 cycle.</li>
+</ul>
+<h3 id="harness-evolution"><a
+href="../systems/harness-evolution/"><code>harness-evolution</code></a></h3>
+<ul>
+<li>Best idea: <strong>rule-to-complaint provenance kept on the driver
+side.</strong> Every complaint line maps to the checker rule that
+produced it, and the Q2 pool stores <code>rule_name</code> beside each
+induced sentence, so the harness can score whether a learned line is
+about the right preference while the learner never sees the answer.</li>
+<li>Biggest risk: <strong>ACE resolves near-duplicates by age.</strong>
+Deduplication keeps the first of two bullets whose trigram cosine
+exceeds 0.85, and a sentence with <em>not</em> inserted scores 0.931
+against the original, so a correcting <code>add</code> that negates an
+older bullet is dropped and the history still lists it as applied.</li>
+<li>Most reusable component:
+<code>appworld_p/baseline_updaters.py:225-271</code> —
+<code>_revoke_key</code>, <code>_apply_one</code> and
+<code>render_memory</code>: one active precedent per attribute key,
+revoked entries archived with <code>revoked_at</code> and
+<code>revoked_by</code>, and a render path that emits the active set
+alone.</li>
+<li>Second risk: <strong>nothing persists past the process.</strong>
+Each run starts with an empty updater; checkpoint snapshots and
+<code>updater_final.json</code> are written and never read, so a learned
+memory cannot be inspected or corrected before reuse.</li>
+<li>Maturity impression: no licence file, so all rights reserved by
+default; 5,174 lines of Python in 34 files; 7 commits on main by 1
+contributor, 2 September – 25 September 2026; no tests committed, and
+<code>.gitignore</code> excludes a local <code>/tests/</code> suite. Two
+marks: <code>trust_state</code>, <code>audit_log</code>, both on the
+TEPA baseline. No result is committed, so none of the paper's figures
+recomputes; nothing was installed or run.</li>
+<li>Study when: you are choosing a write recipe for learned preference
+memory, or want a checker-as-user evaluation protocol with frozen splits
+and a feedback tier that withholds the target value.</li>
+<li>Do not copy when: you need memory that survives a restart, is scoped
+to a user, or can be reviewed before it takes effect — or you need to
+reuse the code, which carries no licence.</li>
 </ul>
         </article>
       </div>

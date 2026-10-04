@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 727 reports.**
+**This page covers all 728 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6589,3 +6589,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 117,215 lines of Python in the engine plus 37,084 in the pinned core; 33 commits on main by 1 contributor, 17 August – 4 October 2026, each a squashed release export; 6,805 test functions. Five marks: `tombstone`, `trust_state`, `audit_log`, `human_review`, `negative_eval`. A LongMemEval headline of 0.804 that recomputes from committed per-question records. Two auto-run surfaces and two build-time execution points at this pin; nothing was installed or run.
 - Study when: you want contradictions kept and queued for a person instead of resolved by recency, a value tombstone that survives re-extraction, or agent writes whose trust-bearing fields the agent cannot supply.
 - Do not copy when: several people or projects share one engine and must not see each other, the store will grow past what a per-query load of every embedding can serve, or you cannot run a nightly LLM cycle.
+
+### [`harness-evolution`](../systems/harness-evolution/)
+
+- Best idea: **rule-to-complaint provenance kept on the driver side.** Every complaint line maps to the checker rule that produced it, and the Q2 pool stores `rule_name` beside each induced sentence, so the harness can score whether a learned line is about the right preference while the learner never sees the answer.
+- Biggest risk: **ACE resolves near-duplicates by age.** Deduplication keeps the first of two bullets whose trigram cosine exceeds 0.85, and a sentence with *not* inserted scores 0.931 against the original, so a correcting `add` that negates an older bullet is dropped and the history still lists it as applied.
+- Most reusable component: `appworld_p/baseline_updaters.py:225-271` — `_revoke_key`, `_apply_one` and `render_memory`: one active precedent per attribute key, revoked entries archived with `revoked_at` and `revoked_by`, and a render path that emits the active set alone.
+- Second risk: **nothing persists past the process.** Each run starts with an empty updater; checkpoint snapshots and `updater_final.json` are written and never read, so a learned memory cannot be inspected or corrected before reuse.
+- Maturity impression: no licence file, so all rights reserved by default; 5,174 lines of Python in 34 files; 7 commits on main by 1 contributor, 2 September – 25 September 2026; no tests committed, and `.gitignore` excludes a local `/tests/` suite. Two marks: `trust_state`, `audit_log`, both on the TEPA baseline. No result is committed, so none of the paper's figures recomputes; nothing was installed or run.
+- Study when: you are choosing a write recipe for learned preference memory, or want a checker-as-user evaluation protocol with frozen splits and a feedback tier that withholds the target value.
+- Do not copy when: you need memory that survives a restart, is scoped to a user, or can be reviewed before it takes effect — or you need to reuse the code, which carries no licence.
