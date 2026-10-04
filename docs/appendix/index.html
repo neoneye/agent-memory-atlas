@@ -6482,6 +6482,52 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong><code>Blooshoo/BlooRecall</code> was examined and has no
+report: it is a search index over a person's own notes, the agent's only
+verb is search, and every stored row is a snapshot that the next refresh
+rebuilds from disk.</strong> MIT (Bloo), 2,355 lines of Python under
+<code>bloorecall/</code> with 65 <code>unittest</code> methods in three
+files, two commits by one author on 4 October 2026 (UTC), read at <a
+href="https://github.com/Blooshoo/BlooRecall/commit/6a7ee8e5c73fa5a1567e77f53ea3c2c7b3ad47dc"><code class="commit-id" title="6a7ee8e5c73fa5a1567e77f53ea3c2c7b3ad47dc">6a7ee8e5…</code></a>.
+<code>refresh</code> walks configured roots, chunks Markdown by heading,
+embeds each chunk through a local Ollama model and writes
+<code>sources</code>, <code>chunks</code> and <code>vectors</code>
+tables to SQLite (<code>bloorecall/store.py:15-52</code>); search blends
+BM25 with cosine similarity. The MCP server registers one tool,
+<code>bloorecall_search</code>
+(<code>bloorecall/mcp_server.py:31-48</code>), which opens the index
+with <code>mode=ro</code> (<code>bloorecall/store.py:95-98</code>,
+<code>bloorecall/search.py:57</code>). The only write connection is
+opened in <code>indexer.refresh</code>
+(<code>bloorecall/indexer.py:98</code>), reached from the CLI
+<code>refresh</code> command (<code>bloorecall/cli.py:99-104</code>) and
+a cron wrapper. The default exclusions skip path parts named
+<code>memory</code>, <code>memories</code>, <code>sessions</code> and
+<code>conversations</code> (<code>bloorecall/config.py:80</code>), and a
+query containing "personal memory" is refused
+(<code>bloorecall/search.py:31</code>). The part that transfers is the
+read-time check: before results leave, <code>verify_hits</code>
+re-hashes each hit's file against the hash stored at index time and
+labels it <code>strong</code>, <code>rebuilt</code>, <code>weak</code>
+or <code>stale</code> (<code>bloorecall/trust.py:83-137</code>,
+<code>bloorecall/search.py:128-150</code>). It is the per-hit verdict <a
+href="../systems/heimdall/">Heimdall</a> computes, credited in the
+module docstring, with one difference: Heimdall sorts by verdict first,
+while here ranking finishes before verification and nothing re-sorts or
+drops a <code>stale</code> hit
+(<code>bloorecall/search.py:363-372</code>), so the verdict annotates
+and withholds nothing. A drifted file is corrected by re-indexing what
+the person wrote, which is the document-index case. Searches run at this
+pin with <code>git grep</code>:
+<code>-nE "@server\.tool|\.tool\("</code> (one registration);
+<code>-nE "connect_write"</code> (one caller);
+<code>-nEi "remember|forget|supersed|tombstone|retract|correct"</code>
+over <code>bloorecall</code>, <code>scripts</code> and <code>bin</code>
+(nothing);
+<code>-nEi "arxiv|bibtex|@article|@misc|doi\.org|CITATION"</code>
+(nothing). Screened before reading: no auto-run or build-time surface,
+one FRESH and one FLOAT finding, both on <code>pyproject.toml</code>;
+nothing was installed, built or run.</li>
 <li><strong>The Hillock report described several mechanisms that had
 changed before the pin it was published at.</strong> At <a
 href="https://github.com/roandejager/Hillock/commit/94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244"><code class="commit-id" title="94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244">94e6ae1b…</code></a>
