@@ -6508,6 +6508,38 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong><code>facebookresearch/context-language-models</code> was
+examined and has no report: the context it manages lives for one task,
+and the one artifact that outlives a run is an instruction tuned
+offline.</strong> Read at <a
+href="https://github.com/facebookresearch/context-language-models/commit/18dc11115f50f261233c5bba7937834491e307e8"><code class="commit-id" title="18dc11115f50f261233c5bba7937834491e307e8">18dc1111…</code></a>,
+9,150 lines of Python, CC BY-NC 4.0, the code for <em>Context Language
+Models</em> (<a
+href="https://arxiv.org/abs/2609.37725">arXiv:2609.37725</a>, Shao et
+al., 29 September 2026). A CLM keeps its working context as a file it
+may rewrite without restriction, <code>LIVE_CTX_MAIN.txt</code> under
+<code>/tmp/.live_ctx</code> inside the task sandbox
+(<code>clm/clm_harness/context_env/paths.py:23-24</code>), mirrored to a
+host temporary file (<code>context_env/env.py:113-125</code>). The only
+path that reads a context back is <code>resume_from</code>, a warm
+restart of the same interrupted trial from its own directory
+(<code>clm_agent/harness.py:232-235</code>,
+<code>utils/resume.py:6-30</code>); nothing carries a context into
+another task. What does outlive a run is <code>clm_icl/evolve.py</code>:
+a command-line loop in which a proposer model writes candidate
+<code>SKILL.md</code> files from contrastive rollouts, scores them on
+development tasks, and gates one in as the incumbent, marking the rest
+<code>rejected</code> and the old one <code>retired</code>
+(<code>evolve.py:280-312</code>). That is offline optimisation of one
+context-management instruction, run by a researcher, not memory an agent
+writes while it works, so it sits with <a
+href="../families/#not-in-scope-conversation-window-management">conversation-window
+management</a>. The paper names the risk this atlas cares about from the
+other side: an editable context is another channel through which a
+prompt injection or a self-written instruction can persist across turns.
+Screened before reading: no auto-run or build-time surface, two
+<code>pyproject.toml</code> files inside the cooldown with unpinned
+ranges; nothing was installed, built or run.</li>
 <li><strong><code>Blooshoo/BlooRecall</code> was examined and has no
 report: it is a search index over a person's own notes, the agent's only
 verb is search, and every stored row is a snapshot that the next refresh
@@ -12820,7 +12852,16 @@ here. The remaining hits for <em>memory</em> are the honest kind: a
 Fargate <code>task_memory</code> in MiB in the gateway Terraform, and
 prose in plugin READMEs describing the feature. Recorded by name because
 a reader meeting the best-known coding agent in a list of memory
-candidates deserves to find out which half of it is public.</li>
+candidates deserves to find out which half of it is public. The
+product's documentation names the two memories that outlive a session:
+<code>CLAUDE.md</code> files the user writes, and auto memory, learnings
+the agent saves as it works, of which the first 200 lines or 25 KB of
+<code>MEMORY.md</code> load at the start of each session; sessions
+themselves are stored as JSONL under <code>~/.claude/projects/</code>
+and compaction clears old tool output before summarising (<a
+href="https://code.claude.com/docs/en/how-claude-code-works">How Claude
+Code works</a>, read 4 October 2026). Neither memory is implemented in
+this tree.</li>
 <li><strong><code>sentrux/sentrux</code> was examined and has no report:
 everything it keeps is re-derived from the code it reads.</strong> MIT,
 33,722 lines of Rust with 77 tree-sitter query files, read at <a
