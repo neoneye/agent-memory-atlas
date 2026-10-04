@@ -518,6 +518,8 @@ report withholds `audit_log` on that ground.
 
 **[Mnemo](../../systems/mnemo/) has the table and no writer.** Migration `mem_003` creates `memory_audit` with `memory_id`, `prev_state_hash`, `new_state_hash`, `operation`, `commit_sha` and `occurred_at`, and a test asserts its columns and index. No statement under `src/` inserts into it, while the README's comparison table claims an audit trail with state hashes and the `knowledge-audit` skill tells the agent to treat a memory with no audit row as an out-of-band write — a query that, at this commit, returns every memory in the store. The mutations themselves leave `[AUDIT]` lines in the loguru process log and closed rows with `superseded_by` in the table, which is a version chain, not an event record.
 
+**[Graft](../../systems/graft/) audits one door and leaves the others open.** `maintenance_log` is appended inside the same `BEGIN IMMEDIATE` transaction as every `maintain resolve` transition and dismissal, each apply-safe purge writes its own `purge` row, and the `nodes` column is text with no foreign key, so a row outlives the node it names and records its removal. No statement updates or deletes a row. A plain insert, `graft delete`, the viewer's supersession, sync and expiry pruning write nothing, and the actor is a string the caller supplies, so the log explains every curation decision and none of the writes that bypass curation.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

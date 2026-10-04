@@ -778,6 +778,17 @@ commit, returns every memory in the store. The mutations themselves
 leave <code>[AUDIT]</code> lines in the loguru process log and closed
 rows with <code>superseded_by</code> in the table, which is a version
 chain, not an event record.</p>
+<p><strong><a href="../../systems/graft/">Graft</a> audits one door and
+leaves the others open.</strong> <code>maintenance_log</code> is
+appended inside the same <code>BEGIN IMMEDIATE</code> transaction as
+every <code>maintain resolve</code> transition and dismissal, each
+apply-safe purge writes its own <code>purge</code> row, and the
+<code>nodes</code> column is text with no foreign key, so a row outlives
+the node it names and records its removal. No statement updates or
+deletes a row. A plain insert, <code>graft delete</code>, the viewer's
+supersession, sync and expiry pruning write nothing, and the actor is a
+string the caller supplies, so the log explains every curation decision
+and none of the writes that bypass curation.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

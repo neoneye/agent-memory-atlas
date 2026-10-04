@@ -309,6 +309,8 @@ reader sees.
 
 [Harness Evolution as Learning](../../systems/harness-evolution/) shows the disposition being chosen by list position. Its ACE-style updater detects near-duplicate bullets by character-trigram cosine above 0.85 and always keeps the earlier one, so when a newer bullet negates an older one — *"Text messages should not end with my first name."* scores 0.931 against the positive form — the correction is the one discarded, and the history still records the add as applied. The TEPA baseline in the same repository resolves the same situation the other way: one active precedent per attribute key, the newer write revokes the older, and the revoked entry stays archived with `revoked_at` and `revoked_by`.
 
+[Graft](../../systems/graft/) wires detection to resolution and then lets one disposition fall out of both. A scan caches candidates with deterministic ids, `maintain resolve` applies one verb per candidate with the transition, a dismissal keyed on an evidence digest and an audit row in one transaction, and `restore` inverts every verb. Two edges are missing. The highest-priority kind, `contradiction`, reads `CONTRADICTS` edges that only a test fixture writes. And `stale`, the disposition the skill recommends when the agent is unsure, leaves the note in every search while every scan selects `state = 0`, so a stale note is never offered for resolution again.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

@@ -26681,38 +26681,42 @@ disagree.</strong> <code>mg_op_query</code> takes ten vector candidates,
 scores each against its title with trigram overlap, and returns title
 and body only on <code>STRONG</code>; a <code>WEAK</code> hit carries
 the title with <code>body: nil</code>, so the agent decides whether to
-open it. The opt-in prompt hook injects a <code>MISS</code> as a bare
-marker and deliberately withholds the fallback list.</li>
-<li>Biggest risk: <strong>sync resurrects deletions and drops
-supersessions.</strong> Pull inserts every shared node missing locally
-with <code>INSERT OR IGNORE</code>, so a note deleted on one client
-returns at the next sync. Push copies only local-origin nodes, so a
-superseded state never reaches the shared file, and every other client
-keeps retrieving the old note.</li>
-<li>Most reusable component: <code>src/storage/storage.c</code>
-<code>build_scoped_fts_query</code> plus the state and expiry predicate
-repeated in <code>topk_scan</code>, <code>mg_storage_fts_search</code>
-and <code>mg_storage_neighbors</code> — per-token quoting that closes
-FTS column breakout, and one lifecycle filter carried by all three read
-arms including the graph walk.</li>
-<li>Second risk: <strong>the agent cannot supersede, and a re-assertion
-hides.</strong> The CLI and MCP insert send no <code>supersedes</code>,
-and the skill says delete then insert. The duplicate check ignores
-state, so re-inserting a superseded note's exact text returns its id as
-a successful duplicate while every search filters it out.</li>
-<li>Maturity impression: Apache-2.0, 13,452 lines of C and 162 commits
-on master from 4 contributors between 6 May and 25 September 2026. One
-mark, <code>negative_eval</code>, on a storage test asserting an expired
-neighbour stays out of a graph read while the live one is returned. The
-ops are tested only for argument rejection, and CI runs
-<code>ctest</code> only on release branches.</li>
+open it. The plugin's prompt hook injects only a <code>STRONG</code>
+note, under a line telling the model to check it against the code.</li>
+<li>Biggest risk: <strong><code>STALE</code> withholds nothing.</strong>
+The maintenance loop's softest verdict is written by
+<code>maintain resolve --action stale</code>, every search arm selects
+<code>state IN (0,1)</code>, no query or hook output carries the state,
+and every maintenance scan selects <code>state = 0</code>. A note the
+agent doubted keeps answering <code>STRONG</code> and is never offered
+for retirement again.</li>
+<li>Most reusable component: <code>src/storage/maintain_store.c</code>
+<code>apply_unlocked</code> — state transitions checked against the
+current state, a <code>keep</code> dismissal keyed on an evidence
+digest, and the <code>maintenance_log</code> row, all in one
+<code>BEGIN IMMEDIATE</code> transaction, with <code>restore</code> as
+the inverse of every transition.</li>
+<li>Second risk: <strong>sync resurrects deletions and carries no
+state.</strong> Pull inserts every shared node missing locally, so a
+deleted note, or a retired one apply-safe purged, returns at the next
+sync. Push copies only local-origin rows with
+<code>INSERT OR IGNORE</code>, so a supersession, retirement or stale
+mark never reaches another client.</li>
+<li>Maturity impression: Apache-2.0, 21,039 lines of C and 229 commits
+on master from 4 contributors between 6 May and 5 October 2026. Two
+marks, <code>audit_log</code> on the append-only maintenance log and
+<code>negative_eval</code> on a retire test bracketed by visibility
+checks. CI runs <code>ctest</code> on Linux and Windows on every push,
+and a committed benchmark recomputes to 0.823 <code>STRONG</code>
+precision and 40% false <code>STRONG</code> on held-out negatives.</li>
 <li>Study when: you want a retrieval gate that returns less when unsure,
-a single-binary local store with in-process embeddings, or a small C
-codebase showing supersession done atomically.</li>
-<li>Do not copy when: memory is shared across machines, corrections must
-survive replication, or the answer usually lives in the body. The
-profile sync has no deletion record, and only the title is embedded or
-gated.</li>
+a correction loop where every verb is reversible and audited in the same
+transaction, or file provenance that flags notes whose source
+changed.</li>
+<li>Do not copy when: memory is shared across machines, a person must
+stand between the agent and a change, or "doubtful" has to mean
+something at retrieval time. Contradiction detection reads an edge kind
+nothing in the product writes.</li>
 </ul>
 <h3 id="mind-mem"><a
 href="../systems/mind-mem/"><code>mind-mem</code></a></h3>

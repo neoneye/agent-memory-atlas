@@ -416,6 +416,8 @@ visible only in the data.
 
 [Attune AI](../../systems/attune-ai/) builds the states and then forbids using them. Curated memories resolve to `settled`, `check-before-acting` or `suspect` from a human verdict log, with `wrong` forcing a `tombstoned` basis and a substantive edit voiding a verification through a content digest. Its decision D1 — *"Nothing here may filter a memory out of a result on the basis of age"* — is applied to every recall surface, so a memory a person judged wrong is returned with the label `suspect · judged WRONG`. The rule is right about age and over-applied to an explicit rejection, which is the distinction the mark turns on.
 
+**[Graft](../../systems/graft/) writes a doubt state and spends it nowhere.** `STALE` is set by `maintain resolve --action stale` in an audited transaction, and the skill offers it for a note the agent could not confirm. Every search arm selects `state IN (0,1)`, so it filters nothing; the query and hook outputs carry no state, so it labels nothing; and every maintenance scan selects `state = 0`, so it drops the note out of the one process that would revisit it. A test pins *"stale nodes stay searchable"*. `SUPERSEDED` and `RETIRED` do filter, and both mean replaced or removed rather than disbelieved, so the report withholds `trust_state`.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.
