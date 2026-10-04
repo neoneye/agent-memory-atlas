@@ -32,6 +32,15 @@ matrix:
 
 ## 1. Executive Summary
 
+**The source of this report no longer exists upstream.** `eanai-ro/ean-agentos`
+returns 404 with no rename redirect, and the account holds no public
+repository. The atlas holds a copy: the fork at
+[`agent-memory-atlas-archive/eanai-ro--ean-agentos`](https://github.com/agent-memory-atlas-archive/eanai-ro--ean-agentos)
+carries the pinned commit, so every file path below is readable there. GitHub
+has moved the fork's parent link to another user's fork of the same project.
+Links in the body point at the dead upstream because that is where the reading
+happened; the archive is the working route.
+
 EAN AgentOS is a shared memory across four coding CLIs — Claude Code, Gemini CLI,
 Codex and Kimi — installed by merging hooks into each one's settings file. MIT
 licensed, 37,791 lines of Python, 51 commits between 16 and 19 March 2026. It has
@@ -415,6 +424,8 @@ work" heading would keep their value and remove the ambiguity.
 | `mcp-server/kimi_memory_server.py` | MCP surface |
 
 ## History
+
+**2026-10-04** — the upstream repository stopped resolving. `eanai-ro/ean-agentos` returns 404 to an authenticated request with no rename redirect, the `eanai-ro` account lists no public repository, and GitHub reparented the archive fork onto another user's fork. The pin is not moved: [`0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6`](https://github.com/agent-memory-atlas-archive/eanai-ro--ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6) is in the archive fork, and section 1 says where to read it. Nothing else in the report changed.
 
 **2026-09-18** — [`0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6`](https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6) — re-read at the same commit, and it moved a mark in each direction.
 

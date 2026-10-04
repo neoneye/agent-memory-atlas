@@ -4,11 +4,11 @@ eyebrow: "Verify the rewrite, not the model"
 description: "A multi-agent harness whose per-agent markdown memory is condensed by a headless model behind a six-check gate that keeps pinned lines, requires the newest sections to round-trip byte-for-byte, and leaves the original untouched on any failure."
 root: ../..
 page_kind: system
-source_name: "chaitanyagiri/munder-difflin"
-source_url: https://github.com/chaitanyagiri/munder-difflin
-archive_name: "chaitanyagiri--munder-difflin"
+source_name: "HarnessMD/munder-difflin"
+source_url: https://github.com/HarnessMD/munder-difflin
+archive_name: "HarnessMD--munder-difflin"
 revision: c7c8921f4491104d342861e32fa214e486442304
-revision_url: https://github.com/chaitanyagiri/munder-difflin/commit/c7c8921f4491104d342861e32fa214e486442304
+revision_url: https://github.com/HarnessMD/munder-difflin/commit/c7c8921f4491104d342861e32fa214e486442304
 analyzed_at: 2026-09-19
 capabilities: "audit_log, negative_eval"
 capability_evidence:
@@ -32,6 +32,10 @@ matrix:
 ---
 
 ## 1. Executive Summary
+
+The repository moved from `chaitanyagiri/munder-difflin` to the `HarnessMD`
+organisation; the old address redirects there, and the pinned commit resolves
+at the new one.
 
 Munder Difflin is an Electron desktop harness that runs several terminal coding
 CLIs — Claude Code, Codex, Gemini, Grok, Kimi, Qwen, OpenCode and others — as a
@@ -373,6 +377,8 @@ claim about the test suite survived all three.
 | Nothing records a correction | `grep -rn "correct\|retract\|supersede" src/main/reflect.ts src/main/memory.ts` | Nothing. Condensation is the only rewrite |
 
 ## History
+
+**2026-10-04** — the repository moved from `chaitanyagiri/munder-difflin` to `HarnessMD/munder-difflin`; the old address answers with a 301 to the new one. `source_name`, `source_url`, `revision_url` and `archive_name` follow the move, the archive fork is renamed to match, and the pin [`c7c8921f4491104d342861e32fa214e486442304`](https://github.com/HarnessMD/munder-difflin/commit/c7c8921f4491104d342861e32fa214e486442304) is unchanged; older entries keep their original links, which redirect. The repository has new commits since the pin, which this entry does not read.
 
 **2026-09-19** — [`c7c8921f4491104d342861e32fa214e486442304`](https://github.com/chaitanyagiri/munder-difflin/commit/c7c8921f4491104d342861e32fa214e486442304) — re-pinned 20 commits on. Screened again: no auto-run surface, one build-time execution point, three unpinned surfaces and nothing inside the cooldown; nothing was installed and nothing was run. `src/main` and `test/` are byte-identical to the previous pin by tree hash, so nothing about this system changed — **the reading did.** Three previous readings of this repository stated that it contains no tests. It contains 110, in a top-level `test/` directory, at every one of those pins. The claim was load-bearing: it stood in the executive summary, in the risks field, in section 9 as the counterweight to the condensation gate, and as the whole of section 10.
 
