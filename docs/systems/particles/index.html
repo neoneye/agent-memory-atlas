@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local claim ledger where
+LLM-extracted and agent-asserted beliefs carry provenance and status,
+contradictions are quarantined for review, and a retracted value cannot
+silently return.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Particles — Agent Memory Atlas">
+    <meta property="og:description" content="A local claim ledger where
+LLM-extracted and agent-asserted beliefs carry provenance and status,
+contradictions are quarantined for review, and a retracted value cannot
+silently return.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Particles — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local claim ledger where
+LLM-extracted and agent-asserted beliefs carry provenance and status,
+contradictions are quarantined for review, and a retracted value cannot
+silently return.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Particles — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Particles",
+      "description": "A local claim ledger where LLM-extracted and agent-asserted beliefs carry provenance and status, contradictions are quarantined for review, and a retracted value cannot silently return.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An append-only claim ledger with a
+quarantine and a value tombstone</p>
+          <h1>Particles</h1>
+          <p class="document-deck">A local claim ledger where
+LLM-extracted and agent-asserted beliefs carry provenance and status,
+contradictions are quarantined for review, and a retracted value cannot
+silently return.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/LinkedParticles/particles-engine-py">
+              <span>Source</span>
+              <strong>LinkedParticles/particles-engine-py</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/LinkedParticles/particles-engine-py/commit/a2533495cf9f2072bde1167467f080494d9ef954" title="a2533495cf9f2072bde1167467f080494d9ef954">
+              <span>Analyzed revision</span>
+              <code>a2533495…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-04</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/LinkedParticles--particles-engine-py" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>LinkedParticles--particles-engine-py</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>117,215
+lines of Python in particles/ over 333 files, plus 37,084 in the pinned
+linkedparticles-core 1.172.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>33
+commits on main by 1 contributor, 17 August – 4 October 2026, one
+squashed commit per release</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>6,805
+test functions in 137,308 lines; 363 more in
+linkedparticles-core</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Particles is a single-operator belief store for agents: sources go
+into an append-only corpus, an LLM extracts claim-granular
+<em>particles</em> from them, and agents assert, supersede or retract
+their own particles over MCP. A particle is never edited. It changes
+status, and recall reads only the <code>ACTIVE</code> ones, ranked by a
+confidence that trust, recency and use adjust at read time.</p>
+<p>What is notable is how contradiction and correction are handled. A
+claim that contradicts a stored one is kept, quarantined, behind an
+<code>INCONSISTENCY</code> record until a person rules on it. A claim
+whose exact text was retracted or superseded by a judgment is held the
+same way when a source says it again. The trust-, status- and
+identity-bearing fields of an agent's write are built by the server,
+never taken from the call.</p>
+<p>What is weak is the boundary between projects and between callers.
+The project observer is off unless the MCP server is launched bound to a
+directory, and every scoped tool takes an <code>all_projects</code>
+argument that lifts it. With the default <code>dev-key</code>, a
+loopback HTTP engine accepts operator mutations and review resolutions
+with no credential, while comments beside those routes say it never
+does.</p>
+<p>The engine is one of three repositories. It pins
+<code>linkedparticles-core==1.172.0</code>
+(<code>pyproject.toml:72</code>), which ships the schema, the status
+table, the scoring formulas and the extractor into the same
+<code>particles</code> import package; this report reads it at <a
+href="https://github.com/LinkedParticles/particles-core-py/commit/16543c081fd59b0e37481527728f48ac9d90d5d6"><code class="commit-id" title="16543c081fd59b0e37481527728f48ac9d90d5d6">16543c08…</code></a>,
+tag <code>v1.172.0</code>, and cites it as <em>core</em>. The
+specification lives in <a
+href="https://github.com/LinkedParticles/particles-standard">particles-standard</a>,
+read at <a
+href="https://github.com/LinkedParticles/particles-standard/commit/bf3528f48b32f1103366b3b33eba222facf5e08c"><code class="commit-id" title="bf3528f48b32f1103366b3b33eba222facf5e08c">bf3528f4…</code></a>.
+The public history is an export: one squashed commit per release,
+starting at version 1.130.0, stamped <em>"from the development upstream
+at export time"</em> (<code>pyproject.toml:17-18</code>).</p>
+<p>Five marks: <code>tombstone</code>, <code>trust_state</code>,
+<code>audit_log</code>, <code>human_review</code> and
+<code>negative_eval</code>. Section 9 names the two withheld,
+<code>bitemporal</code> and <code>scope_enforced</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A particle becomes a belief when it is written <code>ACTIVE</code>.
+Two producers do that. Extraction reads a deposited corpus snapshot with
+an LLM and proposes claims; an agent calls <code>particle_assert</code>
+with one sentence, a subject list, a self-reported confidence and an
+excerpt that is deposited as the claim's source. Both go through the
+same router before anything is written.</p>
+<p><strong>Every candidate is routed in a fixed order</strong>
+(<code>particles/ingest/routing.py:96-107</code>). An exact twin of an
+<code>ACTIVE</code> claim is suppressed into it, with the new source
+appended as provenance. Otherwise a twin of a claim retired by judgment
+sends the candidate to a hold. Otherwise a conflicting
+<code>ACTIVE</code> claim sends it to the conflict ladder. Otherwise it
+is inserted <code>ACTIVE</code>. Identity is the normalised text, the
+resolved subject set and the stance holder (core
+<code>particles/core/duplicate_key.py:58-92</code>).</p>
+<p><strong>The ladder can resolve a conflict without a person, or hold
+it.</strong> Rungs for a superseding document, a source-trust
+differential and a strictly newer claim from the same source lineage
+demote the loser to <code>PROVENANCE_STALE</code> with a reason. A
+confirmed contradiction they do not resolve is written as an
+<code>INCONSISTENCY</code> record naming both sides, and the newcomer is
+stored in full, born <code>PROVENANCE_STALE</code> with reason
+<code>CONFLICT_PENDING</code>. Agent writes run the ladder fail-closed,
+so an unverifiable contradiction is held too
+(<code>particles/operations/agent_write.py:327-330</code>).</p>
+<p><strong>A belief stops being one by status, never by edit.</strong>
+<code>SUPERSEDED</code> and <code>RETRACTED</code> are terminal except
+for one reversible edge, un-merging an automatic duplicate merge (core
+<code>particles/core/status.py:71-108</code>).
+<code>PROVENANCE_STALE</code> covers expiry of a
+<code>valid_until</code>, a missing source, a retracted dependency and
+the demotions above. Review resolves a hold: <code>PREFER_A</code> keeps
+the incumbent; <code>PREFER_B</code> and <code>BOTH_VALID</code> mint a
+fresh <code>ACTIVE</code> particle from a quarantined side;
+<code>DISCARD</code> retracts both; <code>DEFER</code> leaves it
+open.</p>
+<p><strong>The tombstone is the retired row itself.</strong> A
+retraction or an explicit supersession is a judgment, so the retired
+particle stays in the store and its identity becomes a key the router
+consults. When a source restates it, the candidate is held behind an
+<code>INCONSISTENCY</code> record marked as a retired-value record, and
+only Review lifts it
+(<code>particles/ingest/pipeline.py:2288-2330</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a candidate claim becomes a belief in Particles, how it is held, and how it stops being one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a candidate claim becomes a belief in Particles, how it is held, and how it stops being one
+flowchart TD
+    X[&quot;extractor: LLM claims from a snapshot&quot;] --&gt; R{&quot;router: same identity as...&quot;}
+    A[&quot;agent: particle_assert over MCP&lt;br/&gt;status, label, identity built server-side&quot;] --&gt; R
+    R -- &quot;an ACTIVE claim&quot; --&gt; SUP[&quot;suppressed: provenance appended&lt;br/&gt;to the ACTIVE twin&quot;]
+    R -- &quot;a judgment-retired claim&quot; --&gt; HOLD[&quot;held: PROVENANCE_STALE / CONFLICT_PENDING&lt;br/&gt;plus retired-value INCONSISTENCY&quot;]
+    R -- &quot;neither; a conflicting claim exists&quot; --&gt; L{&quot;conflict ladder&quot;}
+    R -- &quot;neither; no conflict&quot; --&gt; ACT[&quot;ACTIVE&quot;]
+    L -- &quot;document, trust or same-lineage rung&quot; --&gt; DEM[&quot;loser to PROVENANCE_STALE&lt;br/&gt;with a reason&quot;]
+    L -- &quot;confirmed, unresolved&quot; --&gt; Q[&quot;newcomer held CONFLICT_PENDING&lt;br/&gt;plus INCONSISTENCY record&quot;]
+    Q --&gt; REV{&quot;Review: CLI or POST /review&quot;}
+    HOLD --&gt; REV
+    Q -- &quot;nightly second reading&lt;br/&gt;no longer confirms&quot; --&gt; MINT
+    REV -- &quot;PREFER_B or BOTH_VALID&quot; --&gt; MINT[&quot;fresh ACTIVE particle,&lt;br/&gt;held row SUPERSEDED&quot;]
+    REV -- &quot;PREFER_A&quot; --&gt; KEEP[&quot;hold stays stale,&lt;br/&gt;reason CONFLICT_RESOLVED&quot;]
+    REV -- &quot;DISCARD&quot; --&gt; DIS[&quot;both sides RETRACTED,&lt;br/&gt;CONFLICT_RESOLVED: not a tombstone&quot;]
+    MINT --&gt; ACT
+    ACT -- &quot;agent or operator retract, explicit supersede&quot; --&gt; RET[&quot;RETRACTED or SUPERSEDED:&lt;br/&gt;terminal, becomes a retired-value key&quot;]
+    ACT -- &quot;lint: valid_until passed&quot; --&gt; STALE[&quot;PROVENANCE_STALE / VALIDITY_EXPIRED&quot;]
+    RET -. &quot;same identity restated&quot; .-&gt; R</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The engine is a library with four surfaces over it: a Typer CLI, a
+FastAPI server (<code>particles engine serve</code>), a stdio MCP
+server, and the Claude Code hooks (<code>ARCHITECTURE.md</code>). Every
+surface reaches the operations through one <code>Backend</code> seam,
+local in-process or HTTP to a remote engine, so a laptop agent can write
+into a shared engine
+(<code>particles/mcp/tools/write.py:9-14</code>).</p>
+<p><strong>Persistence is SQLAlchemy over SQLite by default, Postgres by
+URL</strong> (<code>particles/db.py</code>). The particle store, subject
+store, trust store, relation graph and operator event log are tables in
+one database per store handle, migrated by alembic. The corpus is a
+content-addressed blob store on disk plus entry and snapshot rows. The
+service is declared single-writer, and a cross-process file lock
+serialises SQLite writers.</p>
+<p><strong>Retrieval loads every <code>ACTIVE</code> embedding on each
+query.</strong> The loader selects every <code>ACTIVE</code> row with an
+embedding, deserialises the JSON vector, skips vectors from a different
+embedding model, and scores in NumPy
+(<code>particles/store/particle_store.py:1260-1302</code>). There is no
+vector index. Embeddings come from a local
+<code>sentence_transformers</code> model in core; extraction, the second
+reading, the natural-language answer and consolidation call the
+Anthropic API.</p>
+<p><strong>Background work is a nightly consolidation cycle</strong> run
+from cron or the resident daemon, and each run is recorded as a
+<code>CONSOLIDATION_RUN</code> event
+(<code>particles/operations/consolidation.py:6-30</code>). Its passes
+are extract catch-up, a reconcile sweep, a contradiction census with an
+LLM second reading, disclosure records, a curation queue, utility mining
+and a <code>MEMORY.md</code> projection.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install linkedparticles</code> brings both distributions;
+<code>particles db init</code> creates a SQLite store and nothing else
+needs to run for recall. An <code>ANTHROPIC_API_KEY</code> is required
+to extract, to answer a question in prose and to run the census;
+deposit, agent assertion, the digest and structural queries make no
+model call. The store is not hand-repairable as text, but
+<code>particles events</code>, <code>lint</code>, <code>review</code>,
+<code>particle show</code>, exporters to Obsidian, Logseq and JSONL, and
+an <code>--as-of</code> lens make it inspectable. A container image and
+a chart live under <code>deploy/</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Agent write.</strong> <code>particle_assert</code>
+(<code>particles/mcp/tools/write.py:87-142</code>) checks the store
+against <code>mcp.write.enabled_stores</code>, default empty, and calls
+the backend. <code>assert_belief</code>
+(<code>particles/operations/agent_write.py:441-503</code>) constructs
+the particle in <code>_construct_and_insert</code>
+(<code>:185-331</code>). That applies a granularity gate on length and
+sentence count, resolves subjects, and deposits the excerpt as a
+<code>CONVERSATION</code> entry tagged with the server-bound project key
+(<code>:126-182</code>). Confidence is clamped to
+<code>max_asserted_confidence</code> and labelled
+<code>AGENT_ASSERTED</code>, and <code>asserted_by</code> is the
+configured identity. It then calls
+<code>reconcile_and_insert(..., fail_closed=True)</code> and records
+<code>PARTICLE_ASSERTED</code>.</p>
+<p><strong>Routing and the hold.</strong>
+<code>reconcile_and_insert</code>
+(<code>particles/ingest/pipeline.py:1737</code>) builds the duplicate
+index and the retired-value index for the one candidate
+(<code>:1805-1818</code>) and routes it. The extraction pass does the
+same per snapshot (<code>:1161-1169</code>, <code>:1282-1300</code>).
+<code>_hold_retired_reassertion</code> (<code>:2288-2330</code>) appends
+the observation to an open hold or writes the quarantined candidate and
+a retired-value record.</p>
+<p><strong>Supersede and retract.</strong> <code>supersede_belief</code>
+(<code>agent_write.py:506-618</code>) loads the target through
+<code>_load_mutable_target</code> (<code>:390-438</code>), which refuses
+a non-<code>ACTIVE</code> target, a <code>HUMAN_REVIEW</code>-calibrated
+one, and another principal's unless <code>allow_cross_asserter</code>;
+it retires the predecessor with <code>EXPLICIT_SUPERSESSION</code>,
+asserts the successor with <code>supersedes</code> set, and records
+<code>PARTICLE_SUPERSEDED</code>. <code>retract_belief</code>
+(<code>:690-732</code>) does the same with
+<code>EXPLICIT_RETRACTION</code>.</p>
+<p><strong>Status changes.</strong> <code>update_particle_status</code>
+(<code>particles/store/particle_store.py:546-615</code>) validates
+against the core table, enforces the reason gate on the one reversible
+edge, stamps a write-once <code>retired_at</code> on leaving
+<code>ACTIVE</code>, and drops a retracted particle from its
+co-evidential groups.</p>
+<p><strong>Query.</strong> <code>query</code> in
+<code>particles/operations/query/main.py</code> loads candidates
+(<code>:204-208</code>), applies the document-meta, non-asserted,
+stance, tag, structured claim and recency filters, then the observer
+(<code>:312-325</code>), then scores. The MCP <code>query</code> tool
+marks each hit contested when an open <code>INCONSISTENCY</code> names
+it.</p>
+<p><strong>Session start.</strong> The <code>SessionStart</code> hook
+and the <code>particles://digest/{store}</code> resource reach
+<code>build_digest_located</code>
+(<code>particles/operations/digest.py:63-145</code>): every
+<code>ACTIVE</code> particle, an optional observer, ranked, capped by
+<code>digest_max_beliefs</code>, contested ones badged. No model
+call.</p>
+<p><strong>Review.</strong> <code>particles review</code>
+(<code>particles/api/cli/review.py:22-140</code>) and
+<code>POST /review/{id}</code>
+(<code>particles/api/app.py:1535-1565</code>) call <code>resolve</code>
+in <code>particles/operations/review.py</code>, which promotes, demotes
+or retracts, writes a trust statement for a <code>PREFER</code> ruling,
+closes the wrapper and records <code>REVIEW_RESOLVED</code>.</p>
+<p><strong>Hard delete.</strong> <code>delete_entry</code>
+(<code>particles/operations/corpus_delete.py:152-200</code>) deletes the
+entry and every particle whose only source it was, strips its refs from
+the rest, and records <code>CORPUS_ENTRY_DELETED</code> with counts
+only.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>ParticleRow</code>
+(<code>particles/store/particle_store.py:89-220</code>) carries
+<code>content</code>, a confidence value with variance and calibration
+source, <code>uncertainty_nature</code> (<code>EPISTEMIC</code> or
+<code>ALEATORY</code>), <code>asserted_by</code>,
+<code>asserted_at</code>, <code>status</code> and
+<code>status_reason</code>. Beside those sit <code>particle_type</code>,
+<code>assertion_modality</code>, <code>valid_until</code>,
+<code>supersedes</code>, <code>retired_at</code>,
+<code>born_retired</code> and <code>content_norm_hash</code>. Provenance
+refs, the extractor reference and provider model, the embedding and its
+model id, subject ids, properties, tags and an optional structured claim
+complete the row.</p>
+<p><strong>Provenance is mandatory.</strong> An agent assertion with
+neither an excerpt nor an existing corpus entry is refused
+(<code>agent_write.py:167-170</code>), and a
+<code>ProvenanceEdgeRow</code> indexes particle to corpus entry and
+snapshot. The corpus keeps every snapshot of a source, so a claim points
+at the bytes it came from.</p>
+<p><strong>Time is one axis with an expiry on it.</strong>
+<code>asserted_at</code> and <code>retired_at</code> are transaction
+time, and the <code>--as-of</code> lens evaluates what the store
+believed at an instant
+(<code>particles/operations/query/as_of.py</code>).
+<code>valid_until</code> is a world boundary an extractor may emit; lint
+retires the claim when it passes, and the as-of lens dates that
+retirement from <code>valid_until</code> (<code>as_of.py:180</code>).
+There is no validity start.</p>
+<p><strong>Scope is not on the particle.</strong> A project key is a
+<code>project:</code> tag on a corpus entry, and a belief's observer
+scope is derived at read time from the entries its provenance names,
+through co-evidential groups and derivation premises (core
+<code>particles/core/observer_scope.py:1-24</code>;
+<code>particles/store/observer_scope_join.py:1-35</code>). An entry with
+no key is global unless a harness tagged it, in which case it is
+unattributed and in view for no project. The agent cannot name the key:
+<code>_scope_tags</code> drops any caller <code>project:</code> tag and
+adds the server's own, and a bound agent may cite only its own project's
+entries (<code>agent_write.py:150-182</code>).</p>
+<p><strong>Principals.</strong> <code>asserted_by</code> is the
+configured <code>mcp:claude-code</code> for every agent on a server,
+<code>mcp:memory-compat</code> for the facade, the extractor for
+extracted claims and <code>curation.operator_identity</code> for
+operator corrections. <code>SECURITY.md</code> states that there is no
+per-caller isolation on one engine.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is dense cosine over the candidate set, after filters that
+only narrow it. Hits are ranked by an effective confidence: stored
+confidence times source trust and an extractor trust weight, with a
+recency factor from the source's publication date and a utility lens
+mined from tool use. Trust is the operator's present policy even under
+<code>--as-of</code>. <code>top_k</code> defaults to 40 on the MCP tool,
+and an LLM writes the answer; the README describes a gate that admits
+only citation ids from the retrieved set.</p>
+<p>The filters that withhold rather than rank are status
+(<code>ACTIVE</code> only), document-meta and non-asserted prose, stance
+particles and, when an observer is set, project scope. A contradiction
+is disclosed, not hidden: both sides of an open
+<code>INCONSISTENCY</code> stay <code>ACTIVE</code> when the conflict
+was disclosed by the census, and each hit carries a
+<code>contested</code> id.</p>
+<p>The structural mode answers predicate, comparison and aggregate
+questions over structured claims with no embedding and no model call.
+The memory-server facade answers <code>search_nodes</code> with a
+case-insensitive substring match over an in-memory projection of
+<code>ACTIVE</code> particles.</p>
+<p><strong>Failure modes.</strong> Every query reads every
+<code>ACTIVE</code> embedding, so latency and memory scale with the
+store. A vector from another embedding model is skipped with a warning,
+so a model change makes old claims unsearchable until re-embedded. The
+digest injects up to <code>digest_max_beliefs</code> lines ranked by
+effective confidence, 200 by default (core
+<code>particles/config.py:2509</code>), regardless of the session's
+question.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction writes are batch: a session's transcript and memory files
+are harvested into the corpus at <code>SessionEnd</code>, and extraction
+runs inline only when <code>extract_inline</code> is set, otherwise in
+the nightly cycle (<code>particles/api/cli/hook.py:355-433</code>,
+<code>:675-701</code>). A harvested fact is therefore retrievable after
+the next cycle by default. Agent assertions are synchronous and
+retrievable at once. Each is one transaction that embeds the claim and
+scans every <code>ACTIVE</code> embedding for a conflict candidate
+(<code>particles/ingest/pipeline.py:1737-1790</code>); whether a model
+call follows a similar pair depends on the conflict probe, which this
+reading did not trace.</p>
+<p><strong>Deduplication is exact, never by similarity.</strong> The
+module states the reason: below identity, cosine did not order
+duplicate-likelihood, and its worst false positive sat at 0.9951
+(<code>particles/ingest/duplicate_suppression.py:28-33</code>). A
+duplicate becomes another provenance ref on the existing claim.</p>
+<p><strong>Agent-generated facts are labelled and capped.</strong>
+Calibration source <code>AGENT_ASSERTED</code>, confidence at most 0.90,
+an <code>AUTHOR</code> trust statement seeded at 0.8 and never raised
+over an operator's demotion (<code>agent_write.py:98-123</code>; core
+<code>particles/config.py:2464-2484</code>). A compound assertion is
+refused by a size gate.</p>
+<p><strong>Hostile input</strong> is fenced, not filtered: deposited
+text is wrapped in a per-call nonce fence before every model call and
+the model is given no tools (<code>README.md</code>, <em>Security
+posture</em>). Secrets in a deposit are stored verbatim
+(<code>SECURITY.md</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Agent write: synchronous, one transaction, one embedding and a scan
+of every <code>ACTIVE</code> embedding; any model call depends on the
+conflict probe.</li>
+<li>Extraction: one or more LLM calls per snapshot chunk, deferred to
+the cycle by default; lag until the next cycle.</li>
+<li>Background: the nightly cycle probes a delta window from the
+previous run's start, with capped census probes and a spend budget; it
+does not re-read the whole store each night.</li>
+<li>Read: the digest is bounded by <code>digest_max_beliefs</code> and
+rendered fresh each session start; <code>query</code> loads the whole
+<code>ACTIVE</code> set per call and may make one answer call.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>particles mcp serve</code> registers sixteen read tools always
+and eight write tools only when a store is write-enabled:
+<code>particle_assert</code>, <code>particle_supersede</code>,
+<code>particle_retract</code>, <code>deposit_text</code>,
+<code>link_add</code>, <code>link_remove</code>,
+<code>particle_tag</code>, <code>particle_untag</code>
+(<code>particles/mcp/server.py:90-121</code>, <code>:147-167</code>).
+The digest is an MCP resource, with a second template that names a
+project. <code>particles init claude-code</code> installs
+<code>SessionStart</code> and <code>SessionEnd</code> hooks, enables a
+<code>memory</code> store for writes, and leaves the observer at the
+default <code>store</code>, which is store-wide
+(<code>particles/api/cli/_claude_code.py:214-225</code>; core
+<code>particles/config.py:2608</code>).</p>
+<p>A second MCP server reproduces the reference memory server's nine
+tools over the same store, with deletes mapped to retractions and an
+entity deletion to a tombstone particle tagged on the subject
+(<code>particles/mcp/memory_compat/</code>).</p>
+<p>The bundled skill tells the agent that ruling on a contradiction
+<em>"is the operator's decision, not yours"</em>
+(<code>particles/skills/keeping-it-clean.md:23-28</code>). The tool
+surface agrees: no review verb is registered.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The agent cannot author its own standing.</strong> Status,
+calibration label, principal and project key are server-side; confidence
+is clamped; mutation is own-beliefs-only, and an operator correction
+labelled <code>HUMAN_REVIEW</code> is out of the agent's reach
+(<code>agent_write.py:390-438</code>).</p>
+<p><strong>The transition table is enforced at one seam.</strong> Every
+status write passes <code>validate_transition</code> in
+<code>update_particle_status</code>, and the one reversible edge is
+gated on its reason there too
+(<code>particle_store.py:546-615</code>).</p>
+<p><strong>A loopback engine is open to operator writes by
+default.</strong> <code>_verify_key</code> returns without checking
+credentials when the key is <code>dev-key</code> and the peer is
+loopback (<code>particles/api/auth.py:131-163</code>), and
+<code>tests/test_auth.py:52</code> pins that. The operator supersede and
+retract routes and <code>POST /review</code> depend on that check alone,
+beside comments saying they <em>"never ride the dev-key loopback
+skip"</em> (<code>particles/api/app.py:565-570</code>,
+<code>:2565-2577</code>; routes at <code>:2605-2667</code>). Read, not
+run.</p>
+<p><strong>Corpus delete outranks the tombstone.</strong> A hard delete
+removes every particle sourced only from the entry, retracted twins
+included (<code>particles/operations/corpus_delete.py:7-11</code>,
+<code>:176</code>), so re-depositing the document re-mints what had been
+retracted.</p>
+<p><strong>Links cross the project lens.</strong> <code>link_add</code>
+writes a co-evidential relation between any two ids with no ownership or
+observer check (<code>particles/api/client/local.py:673-689</code>). A
+belief's attesting entries include those of every particle it is
+co-evidential with
+(<code>particles/store/observer_scope_join.py:15-18</code>), so by
+inference a bound agent can pull another project's belief into its own
+view. Read, not run.</p>
+<p><strong>Code and specification.</strong> In the standard's
+<code>docs/spec/technical-specification.md</code>, the §6.6 table says
+an agent revision sets no reason on the superseded particle
+(<code>:403</code>). Its §6.2 field list (<code>:76</code>) and the code
+(<code>agent_write.py:571-573</code>) set
+<code>EXPLICIT_SUPERSESSION</code>; the code follows §6.2, and the
+tombstone depends on it. Core's table admits
+<code>INCONSISTENCY → PROVENANCE_STALE</code>
+(<code>particles/core/status.py:84</code>), an edge the §6.6 table does
+not list for a record, and §6.6 calls an added transition non-conformant
+(<code>:397</code>); <code>resolve</code> retracts the record instead
+(<code>particles/operations/review.py:241-243</code>). On the event log
+(<code>:2088-2099</code>) and the retired-value rule
+(<code>:1016-1056</code>) code and specification agree.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — awarded. A judgment-retired identity holds
+every restatement for review, on both write paths, by default. The test
+module's docstring takes its test list from the Agent Memory Atlas and
+names <a href="../verel/">Verel</a>'s red-team sequence
+(<code>tests/test_retired_value_quarantine.py:5-24</code>,
+<code>:207-209</code>). It is exact-text only, and <code>DISCARD</code>
+deliberately does not arm it (core
+<code>particles/core/conflict_review.py:205-216</code>).</li>
+<li><code>trust_state</code> — awarded. <code>CONFLICT_PENDING</code>,
+<code>INCONSISTENCY</code>, <code>RETRACTED</code> and
+<code>SUPERSEDED</code> are excluded by the query loader, the digest and
+the facade.</li>
+<li><code>audit_log</code> — awarded. <code>operator_events</code> is
+append-only by convention and written in the mutation's
+transaction.</li>
+<li><code>human_review</code> — awarded. The hold waits for
+<code>review</code>, which no agent tool reaches. Two limits stand:
+<code>reviewer_id</code> is a supplied string, and a general shell on
+the same host can run the CLI or call the open loopback route.</li>
+<li><code>negative_eval</code> — awarded; section 10.</li>
+<li><code>bitemporal</code> — withheld. <code>valid_until</code> is an
+expiry that lint turns into a retirement, with no validity start, and
+the README calls <code>--as-of</code> the assertion-time lens, not world
+time.</li>
+<li><code>scope_enforced</code> — withheld. The key and the predicate
+are real, and the read lens and the write gate share them. But the
+observer is unset unless the server is launched with
+<code>--project-observer cwd</code>, and the hooks read store-wide by
+default. <code>query</code>, <code>particles_list</code>,
+<code>particle_search</code> and <code>graph_view</code> each take
+<code>all_projects=True</code> from the caller
+(<code>particles/mcp/observer.py:39-41</code>), and the digest template
+accepts any project name. The subjects, lint, events and facade tools
+carry no observer.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests at the pin and ran none of them.</p>
+<p><strong>Negative retrieval.</strong>
+<code>tests/test_query_negative_retrieval.py</code> drives the real
+<code>query</code> with only the embedding model and the answer
+generator mocked, and gives every particle the same embedding so only
+filters can decide. <code>test_query_excludes_retracted_particles</code>
+asserts the retracted id absent and <code>ids == [kept.id]</code>
+(<code>:107-124</code>); the superseded and <code>INCONSISTENCY</code>
+cases have the same shape (<code>:127-173</code>); the as-of case
+asserts the later claim absent then and present without the instant
+(<code>:176-199</code>). The observer case asserts project A's view
+holds its own and global beliefs and excludes the other project's, an
+unattributed harvest and a cross-project derivation, then that the
+unscoped query returns all six (<code>:274-290</code>).</p>
+<p><strong>Tombstone.</strong>
+<code>tests/test_retired_value_quarantine.py</code> covers re-assertion
+of a retracted claim, the supersede-then-restate sequence, non-judgment
+retirements not firing, the <code>ACTIVE</code> twin winning,
+idempotence, normalisation variants, the off switch, both review
+outcomes and the trust cascade leaving the hold to a person
+(<code>:128-497</code>).</p>
+<p><strong>Conformance.</strong> Core ships a self-certification runner
+over the standard's <code>artifacts/conformance/profile.yaml</code>:
+numeric vectors for effective confidence, recency, calibration and
+noisy-or merging, and categorical vectors for the conflict-ladder
+ordering, the context fingerprint and cascade gating (core
+<code>particles/conformance/runner.py:5-34</code>). Status transitions
+and the retired-value rule are covered by unit tests, not by
+vectors.</p>
+<p><strong>LongMemEval.</strong> The README reports Recall@40 0.969 and
+end-to-end QA 0.804, against a full-context ceiling of 0.878 and a
+no-memory floor of 0.047. I recomputed each from the committed
+per-question records with a standalone script. The QA figure is the mean
+of three runs scoring 121, 121 and 120 correct in 150
+(<code>docs/benchmarks/longmemeval-s150-v2-p2-topk40-subjects-names*-2026-09-20.json</code>).
+Recall is 0.9685 over 143 non-abstention questions. The ceiling is 130
+correct in 148 and the floor 7 in 150, both from
+<code>longmemeval-s150-v2-rejudge-p2-2026-09-19.json</code>, a run two
+days before the lead row's. The benchmarks page records the arms where
+Particles loses.</p>
+<p><strong>No paper.</strong> The standard carries a whitepaper and a
+technical specification as Markdown; no arXiv, DOI or
+<code>CITATION.cff</code> is in the engine or core.</p>
+<p><strong>Missing.</strong> No test exercises an operator route under
+<code>dev-key</code> from loopback as a property to forbid; no case
+asserts that a <code>DISCARD</code>ed value re-mints or is held; no
+negative case covers the MCP tools with <code>all_projects</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the tombstone the retired row.</strong> Key
+retirement-by-judgment on the same identity the deduplicator uses,
+consult it on every write path before the conflict logic, and hold a
+match for review instead of refusing it, so the source's restatement is
+still on record.</li>
+<li><strong>Route every candidate through one ordered decision</strong>:
+duplicate of a live claim, twin of a retired one, conflict, insert. Each
+later rung can then assume the earlier ones did not fire.</li>
+<li><strong>Build trust-bearing fields on the server.</strong> Status,
+calibration label, principal and scope key never come from the agent's
+arguments.</li>
+<li><strong>Say which retirements are judgments.</strong> A list that
+excludes source withdrawal, reindex, merge and expiry keeps the
+tombstone from freezing claims that were never judged wrong.</li>
+<li><strong>Publish per-question records under every headline
+number.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A scope argument the caller can lift.</strong> An observer
+that is opt-in at launch and dropped by a boolean on each tool is a
+convenience filter.</li>
+<li><strong>Security comments the code does not enforce.</strong> A
+guard named in a comment and absent from the dependency is a finding
+waiting for a reader.</li>
+<li><strong>Leaving the strongest rejection out of the
+tombstone.</strong> If "neither side is worth keeping" does not hold the
+value, say so where the reviewer chooses it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one operator who wants claims with provenance,
+contradictions put in front of them rather than resolved by recency, and
+a record of every correction, and who will run a nightly cycle on an
+Anthropic key. It is not a multi-tenant memory: <code>SECURITY.md</code>
+rules that out, and the project scope is a lens, not a wall. At a large
+store the brute-force cosine will hurt first. A team that wants a small
+memory for coding sessions is adopting a three-repository standard, a
+specification and a curation discipline to get it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does a re-added observation through the memory-server facade, after
+a <code>delete_observations</code>, come back held rather than visible,
+and does the facade report that to its client?</li>
+<li>How large do stores get in use before the per-query load of every
+<code>ACTIVE</code> embedding dominates latency?</li>
+<li>Is the dev-key operator surface intended for loopback, with the
+comments stale, or is a second gate missing?</li>
+<li>How often does the nightly second reading withdraw a record,
+releasing a held claim without a person?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and status:</strong>
+<code>particles/store/particle_store.py</code>,
+<code>particles/store/event_store.py</code>,
+<code>particles/store/observer_scope_join.py</code>; core
+<code>particles/core/status.py</code>,
+<code>particles/core/duplicate_key.py</code>,
+<code>particles/core/observer_scope.py</code>,
+<code>particles/core/conflict_review.py</code>,
+<code>particles/config.py</code>.</li>
+<li><strong>Write path:</strong>
+<code>particles/operations/agent_write.py</code>,
+<code>particles/ingest/pipeline.py</code>,
+<code>particles/ingest/routing.py</code>,
+<code>particles/ingest/duplicate_suppression.py</code>,
+<code>particles/corpus/deposit.py</code>.</li>
+<li><strong>Correction:</strong>
+<code>particles/operations/review.py</code>,
+<code>particles/operations/_quarantine.py</code>,
+<code>particles/operations/contradiction_disclosure.py</code>,
+<code>particles/operations/corpus_delete.py</code>,
+<code>particles/operations/lint/staleness.py</code>.</li>
+<li><strong>Retrieval and context:</strong>
+<code>particles/operations/query/main.py</code>,
+<code>particles/operations/query/observer_scope.py</code>,
+<code>particles/operations/query/as_of.py</code>,
+<code>particles/operations/digest.py</code>.</li>
+<li><strong>Surfaces:</strong> <code>particles/mcp/server.py</code>,
+<code>particles/mcp/tools/</code>,
+<code>particles/mcp/observer.py</code>,
+<code>particles/mcp/resources.py</code>,
+<code>particles/mcp/memory_compat/</code>,
+<code>particles/api/app.py</code>, <code>particles/api/auth.py</code>,
+<code>particles/api/cli/review.py</code>,
+<code>particles/api/cli/hook.py</code>,
+<code>particles/api/cli/_claude_code.py</code>.</li>
+<li><strong>Background:</strong>
+<code>particles/operations/consolidation.py</code>.</li>
+<li><strong>Tests and benchmarks:</strong>
+<code>tests/test_query_negative_retrieval.py</code>,
+<code>tests/test_retired_value_quarantine.py</code>,
+<code>tests/test_auth.py</code>, <code>docs/benchmarks.md</code>,
+<code>docs/benchmarks/*.json</code>; core
+<code>particles/conformance/runner.py</code>,
+<code>artifacts/conformance/profile.yaml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the engine at the pinned revision and core at
+<code>v1.172.0</code>, with <code>git grep</code> on tracked files;
+<code>git ls-files -i -c --exclude-standard</code> lists no
+committed-but-ignored file in either.</p>
+<ul>
+<li><code>git grep -n -i -E 'arxiv|zenodo|bibtex|@article|@misc|doi\.org'</code>
+in engine and core — only a DOI URI template in the subject-authority
+registry; no <code>CITATION.cff</code>.</li>
+<li><code>git grep -nE 'delete\((OperatorEvent|operator_event)|update\((OperatorEvent)|operator_events' -- particles alembic</code>
+— the table definitions and migration <code>017</code>; no update or
+delete.</li>
+<li><code>git grep -n -i 'create trigger\|before update\|before delete' -- alembic particles</code>
+— no match.</li>
+<li><code>grep -c record_event particles/operations/lint/staleness.py</code>
+— 0.</li>
+<li><code>git grep -n 'all_projects\|observer_for\|bound_project()' -- particles/mcp</code>
+— <code>query</code>, <code>particles_list</code>,
+<code>particle_search</code> and <code>graph_view</code> take
+<code>all_projects</code>; the write tools stamp
+<code>bound_project()</code>.</li>
+<li><code>git grep -nE 'observer|project' -- particles/mcp/tools/subjects.py particles/mcp/tools/lint.py particles/mcp/tools/events.py particles/mcp/tools/links_suggest.py particles/mcp/memory_compat/</code>
+— no observer on those reads.</li>
+<li><code>git grep -n 'review_resolve(\|operations.review import' -- particles</code>
+— the CLI, the HTTP app and the curation session; no MCP tool.</li>
+<li><code>git grep -n 'promote_quarantined' -- particles</code> —
+<code>review.py</code>, <code>cascade.py</code>,
+<code>contradiction_disclosure.py</code>.</li>
+<li><code>git grep -n -i 'dev_key\|_DEV_KEY\|"dev-key"' -- particles</code>
+— <code>api/auth.py</code> and the <code>engine</code> status line only;
+no second gate on operator routes.</li>
+<li><code>git grep -n -i 'valid_from\|valid_at\|valid_time' -- particles alembic</code>
+in engine and core — no match.</li>
+<li><code>git grep -n -i 'tombstone' -- particles</code> — the facade's
+entity tombstones and a graph legend.</li>
+<li><code>git ls-files | grep -iE '(AGENTS|CLAUDE)\.md'</code> in engine
+and core — none committed.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-04</strong> — <a
+href="https://github.com/LinkedParticles/particles-engine-py/commit/a2533495cf9f2072bde1167467f080494d9ef954"><code class="commit-id" title="a2533495cf9f2072bde1167467f080494d9ef954">a2533495…</code></a>
+— first reading, at the head of <code>main</code>, release 1.172.0. Five
+marks; section 9 names the two withheld. Core read at <a
+href="https://github.com/LinkedParticles/particles-core-py/commit/16543c081fd59b0e37481527728f48ac9d90d5d6"><code class="commit-id" title="16543c081fd59b0e37481527728f48ac9d90d5d6">16543c08…</code></a>
+and the specification at <a
+href="https://github.com/LinkedParticles/particles-standard/commit/bf3528f48b32f1103366b3b33eba222facf5e08c"><code class="commit-id" title="bf3528f48b32f1103366b3b33eba222facf5e08c">bf3528f4…</code></a>.
+Screened before reading: two auto-run surfaces (<code>hooks/</code>,
+mkdocs build hooks; <code>server.json</code>, an MCP registry manifest),
+two build-time execution points, two dependency files inside the
+cooldown and two unpinned. Core: one execution point, one inside the
+cooldown from its depth-1 clone, one unpinned. No agent instruction file
+is committed. The LongMemEval figures were recomputed from committed
+JSON with a standalone script; nothing from either tree was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

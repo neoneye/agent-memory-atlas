@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 726 reports.</strong></p>
+<p><strong>This page covers all 727 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -30200,6 +30200,55 @@ near-tied matches.</li>
 <li>Do not copy when: several agents write at once, a correction must
 change the answer rather than annotate it, or memories must be found by
 meaning.</li>
+</ul>
+<h3 id="particles"><a
+href="../systems/particles/"><code>particles</code></a></h3>
+<ul>
+<li>Best idea: <strong>the tombstone is the retired row, consulted by
+the deduplicator's key.</strong> A retraction or explicit supersession
+stays in the store, and its identity (normalised text, subject set,
+stance holder) is checked on both write paths before the conflict
+ladder, so a source that restates the value produces a held candidate
+behind a retired-value record rather than a fresh <code>ACTIVE</code>
+claim. One review lifts it; the trust cascade is barred from doing
+so.</li>
+<li>Biggest risk: <strong>project scope is a lens the caller
+holds.</strong> The observer is off unless the MCP server is launched
+with <code>--project-observer cwd</code>, the Claude Code hooks default
+to the whole store, <code>query</code>, <code>particles_list</code>,
+<code>particle_search</code> and <code>graph_view</code> take
+<code>all_projects=True</code>, and <code>link_add</code> can tie any
+two particles into one co-evidential group, which widens scope by
+inference.</li>
+<li>Most reusable component:
+<code>particles/ingest/routing.py:96-107</code> with
+<code>particles/ingest/duplicate_suppression.py:147-208</code> — one
+ordered router (suppress into a live twin, hold a retired twin, run the
+ladder, insert) and an explicit list of which retirements are judgments
+about the value.</li>
+<li>Second risk: <strong>the operator surface trusts loopback.</strong>
+With the default <code>dev-key</code>, <code>_verify_key</code> returns
+for any loopback peer, so <code>POST /review</code> and the operator
+supersede and retract routes take no credential, beside comments saying
+they never ride that skip; <code>reviewer_id</code> is a supplied
+string.</li>
+<li>Maturity impression: Apache-2.0; 117,215 lines of Python in the
+engine plus 37,084 in the pinned core; 33 commits on main by 1
+contributor, 17 August – 4 October 2026, each a squashed release export;
+6,805 test functions. Five marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code>. A LongMemEval
+headline of 0.804 that recomputes from committed per-question records.
+Two auto-run surfaces and two build-time execution points at this pin;
+nothing was installed or run.</li>
+<li>Study when: you want contradictions kept and queued for a person
+instead of resolved by recency, a value tombstone that survives
+re-extraction, or agent writes whose trust-bearing fields the agent
+cannot supply.</li>
+<li>Do not copy when: several people or projects share one engine and
+must not see each other, the store will grow past what a per-query load
+of every embedding can serve, or you cannot run a nightly LLM
+cycle.</li>
 </ul>
         </article>
       </div>

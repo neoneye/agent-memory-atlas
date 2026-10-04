@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 726 reports.**
+**This page covers all 727 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6579,3 +6579,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 8,589 lines of Python outside tests and examples, 15 commits on main by 1 contributor on 30 September 2026, 191 unittest functions with the 25 MCP-server cases skipped without the SDK, no CI. No marks. Four negative cases, none with both a populated set and a positive control; the token and A/B figures in `GUIDE.md` have no committed harness.
 - Study when: you want a dependency-free memory one developer can read and repair by hand, or a retrieval that refuses to guess between near-tied matches.
 - Do not copy when: several agents write at once, a correction must change the answer rather than annotate it, or memories must be found by meaning.
+
+### [`particles`](../systems/particles/)
+
+- Best idea: **the tombstone is the retired row, consulted by the deduplicator's key.** A retraction or explicit supersession stays in the store, and its identity (normalised text, subject set, stance holder) is checked on both write paths before the conflict ladder, so a source that restates the value produces a held candidate behind a retired-value record rather than a fresh `ACTIVE` claim. One review lifts it; the trust cascade is barred from doing so.
+- Biggest risk: **project scope is a lens the caller holds.** The observer is off unless the MCP server is launched with `--project-observer cwd`, the Claude Code hooks default to the whole store, `query`, `particles_list`, `particle_search` and `graph_view` take `all_projects=True`, and `link_add` can tie any two particles into one co-evidential group, which widens scope by inference.
+- Most reusable component: `particles/ingest/routing.py:96-107` with `particles/ingest/duplicate_suppression.py:147-208` — one ordered router (suppress into a live twin, hold a retired twin, run the ladder, insert) and an explicit list of which retirements are judgments about the value.
+- Second risk: **the operator surface trusts loopback.** With the default `dev-key`, `_verify_key` returns for any loopback peer, so `POST /review` and the operator supersede and retract routes take no credential, beside comments saying they never ride that skip; `reviewer_id` is a supplied string.
+- Maturity impression: Apache-2.0; 117,215 lines of Python in the engine plus 37,084 in the pinned core; 33 commits on main by 1 contributor, 17 August – 4 October 2026, each a squashed release export; 6,805 test functions. Five marks: `tombstone`, `trust_state`, `audit_log`, `human_review`, `negative_eval`. A LongMemEval headline of 0.804 that recomputes from committed per-question records. Two auto-run surfaces and two build-time execution points at this pin; nothing was installed or run.
+- Study when: you want contradictions kept and queued for a person instead of resolved by recency, a value tombstone that survives re-extraction, or agent writes whose trust-bearing fields the agent cannot supply.
+- Do not copy when: several people or projects share one engine and must not see each other, the store will grow past what a per-query load of every embedding can serve, or you cannot run a nightly LLM cycle.

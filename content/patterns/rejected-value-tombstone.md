@@ -512,6 +512,8 @@ first row's reason and time.
 
 [FERNme](../../systems/fernme/) puts its tombstone on the suggestion layer, as Wenlan does, and derives the key from the content: `suggestion_id` is the SHA-256 of site, user, kind and the canonical-JSON payload, and `upsert_suggestion` leaves a rejected row untouched, so the refresh generator and the agent's `propose_*` tools collide with it. The key is only as stable as the payload. An alias merge names its pair as `canonical_attr` and `alias_attr`, ordered by current weight, so a reinforcement that flips the order mints a new id and the rejected merge returns as pending; the committed test holds weights fixed. And `remember` writes the rejected tag straight to the graph, which the tombstone never consults.
 
+[Particles](../../systems/particles/) keeps no separate rejection table: the retired particle is the tombstone. A row retired with `EXPLICIT_RETRACTION`, `EXPLICIT_SUPERSESSION` or a review's `CONFLICT_RESOLVED` stays in the store, and its identity — normalised text, resolved subject set, stance holder — is looked up on both the extraction and the agent-assert path before the conflict ladder runs. A match is stored quarantined behind an `INCONSISTENCY` record that only a review lifts, so the source's restatement is on record and not believed. Two edges are deliberate: a review `DISCARD` retracts with a reason outside the judgment set, so a discarded value re-mints, and the match is exact, so a paraphrase or a different subject resolution walks past.
+
 ### Sorted by what actually stops the value
 
 The mark covers four different mechanisms. The table sorts the holders this page
