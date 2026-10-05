@@ -634,6 +634,68 @@ grading design is the one this page has been asking for, and because it exists
 and is downloadable, which the hypothetical benchmark in
 [section 6](#6-does-anything-benchmark-forgetting) is not.
 
+**One 2026 benchmark scores retrieval precision against human-verified gold, and
+retrieves from a repository rather than from a memory.** *ContextBench: A
+Benchmark for Context Retrieval in Coding Agents*, Li et al.,
+[arXiv:2602.05892](https://arxiv.org/abs/2602.05892), v3 11 February 2026, with
+the evaluator at
+[EuniAI/ContextBench](https://github.com/EuniAI/ContextBench) (Apache-2.0, read
+at [`1436c28a8eb95496da4ea69ad458b9f8a8eb7d61`](https://github.com/EuniAI/ContextBench/commit/1436c28a8eb95496da4ea69ad458b9f8a8eb7d61)),
+the data at
+[Contextbench/ContextBench](https://huggingface.co/datasets/Contextbench/ContextBench),
+and a leaderboard at [contextbench.github.io](https://contextbench.github.io/),
+whose repository was read at
+[`a40dfa6b16f14cafd2b1cc46faf0969b38ef03b9`](https://github.com/ContextBench/contextbench.github.io/commit/a40dfa6b16f14cafd2b1cc46faf0969b38ef03b9).
+It takes 1,136 issue-resolution tasks from SWE-bench Verified, Multi-SWE-bench,
+SWE-PolyBench and SWE-bench Pro, a 500-task Lite subset, and gives each a gold
+context: the code regions annotators traced from the gold patch, checked by
+asking GPT-5 for five patches from that context alone, re-annotated up to twice
+when none passed, and trimmed by a second annotator. The evaluator maps what an agent
+read, and what it declares before patching, onto files, tree-sitter definitions
+and line ranges, and scores recall, precision and F1 at each.
+
+**Why it is not a memory benchmark.** A task is one issue in one checkout at one
+commit. The gold context is code the agent must find in the repository it is
+looking at, nothing carries from one task to the next, and nothing in a task
+could turn out to be false later. It measures the read side of the boundary
+below — deciding what to put in the window — with the store replaced by a
+codebase. [Repowise](../systems/repowise/) graded its own retrieval on 112
+ContextBench instances, and that is the use it fits.
+
+**What it measures that the memory benchmarks do not.** Precision is published
+beside recall at every granularity, and the paper's headline is that the two
+trade off: every model it ran *"favor[s] recall over precision"*, and on GPT-5 the bash-only
+mini-SWE-agent baseline has the highest file- and block-level F1 of five
+scaffolds. It
+also scores the trajectory — how early gold context is first seen, how much
+reading repeats, and a *usage drop*: gold code an agent inspected and then left
+out of the context it declared before patching. That last number is the
+in-session version of a consolidation failure, and the paper reports it at
+0.18 to 0.44 across four models.
+
+**What a reader has to recompute.** In the paper's tables F1 is not the harmonic
+mean of the reported recall and precision — mini-SWE-agent with GPT-5 reports
+line-level recall 0.606 and precision 0.301, whose harmonic mean is 0.402,
+beside an F1 of 0.312 — so every row is a mean of per-task scores. The
+evaluator's own aggregate is not: `aggregate_results` in
+`contextbench/evaluate.py` sums intersections and sizes across tasks, a micro
+average. On the leaderboard's top row, whose 500 eval rows are committed, line
+recall is 0.753 as a per-task mean and 0.617 micro-averaged, and line precision
+0.195 against 0.138. The board is internally consistent, since that submission
+states its macro mean, but `python -m contextbench.evaluate` prints numbers that
+are not comparable to it. Redundancy differs the same way: the paper's
+definition averages a per-step overlap ratio, and `compute_trajectory_metrics`
+computes one minus the union over the summed step sizes.
+
+**The board sorts by the metric the paper warns about.** The default ranking is
+line recall. The top row, an agent on DeepSeek-V4-Pro, leads on recall at 0.753
+and on Pass@1 at 0.604, which recomputes from its resolution log as 302 resolved Lite tasks; its line
+precision of 0.195 ties with Prometheus for lowest outside two small Qwen
+models, and by line F1 it ties for ninth of fifteen. Its submission is unusually complete — sampling settings, budgets,
+the one task the evaluator could not score and why, checksums for every log —
+and the agent ran from a private checkout, so the row's mechanism cannot be
+read.
+
 ### The boundary worth drawing
 
 A long-context benchmark asks: given all of this text in the prompt, can you
