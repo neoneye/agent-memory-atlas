@@ -251,8 +251,8 @@ indexed or mirrored. The docstring names the alternative it replaced: *"not
 merely a render-time withhold, which leaves the value sitting on disk"*. A
 committed test asserts the re-extracted sentence is absent from the checkpoint
 file itself, beside a never-forgotten twin that must be present. The read side
-repeats the check — withheld from the briefing, not carried, deleted from the
-index on rebuild — and the supersede-candidate emitter skips values already in
+repeats the check — withheld from the briefing, not carried, never written to
+the index on rebuild — and the supersede-candidate emitter skips values already in
 the ledger.
 
 **Daimon's key is canonical, not literal.** `normalize.canonical_text` folds NFKC,

@@ -1642,13 +1642,13 @@ path to a silent prune.</li>
 <li><a href="../systems/daimon/"><code>daimon</code></a>:
 <code>forget</code> deletes the item from the live checkpoint, appends a
 <code>forgotten:&lt;content-hash&gt;</code> event carrying a hash and
-never the text, re-mints the checkpoint's signed receipt, and — because
-item ids are a hash of the item's own text — deletes every row with that
-id from the search index across <em>all</em> historical checkpoints on
-the next rebuild. A later re-extraction of the same sentence is dropped
-at the checkpoint write, before it reaches disk. Weight-based expiry
-from carry is the softer path: an item below the floor simply stops
-being carried forward.</li>
+never the text, re-mints the checkpoint's signed receipt, and rebuilds
+the search index at once — a build that judges every row before
+inserting it, so no row carrying that value or that id, from
+<em>any</em> historical checkpoint, reaches the index. A later
+re-extraction of the same sentence is dropped at the checkpoint write,
+before it reaches disk. Weight-based expiry from carry is the softer
+path: an item below the floor simply stops being carried forward.</li>
 <li><a href="../systems/hindsight/"><code>hindsight</code></a>:
 bank/document/memory operations plus cascading schema relations; derived
 observations must remain consistent with source changes.</li>
@@ -2728,9 +2728,10 @@ caller-owned after listing.</li>
 auto-recall assembly in
 <code>extensions/memory-lancedb/index.ts</code>.</li>
 <li><a href="../systems/daimon/"><code>daimon</code></a>:
-<code>build()</code>, <code>withhold()</code>,
-<code>stale_carried()</code> and <code>render_plain()</code> in
-<code>plugin/daimon_briefing/briefing.py</code>; terminal output in
+<code>prepare()</code>, <code>build()</code>, <code>select()</code> and
+<code>render_plain()</code> in
+<code>plugin/daimon_briefing/briefing.py</code>, with what a reader may
+see decided in <code>view.py</code>; terminal output in
 <code>render.py</code>.</li>
 <li><a href="../systems/helm/"><code>helm</code></a>:
 <code>recallMemories()</code> in <code>index.js:490-510</code> for the
@@ -2999,7 +3000,8 @@ and doctor contracts.</li>
 <li><a href="../systems/daimon/"><code>daimon</code></a>: host hooks in
 <code>hook/</code> and <code>plugin/daimon_briefing/_hooks/</code>;
 read-only stdio MCP in <code>mcp_server.py</code> and
-<code>mcp_tools.py</code>; commands in <code>cli.py</code>.</li>
+<code>mcp_tools.py</code>; commands in the <code>cli/</code> package,
+one module per verb family.</li>
 <li><a href="../systems/helm/"><code>helm</code></a>: no MCP or SDK for
 memory — a JSON-on-stdout CLI (<code>memory.mjs</code>), two shell-out
 entries in <code>workspace/tools/registry.json</code>, and Discord,
@@ -3189,20 +3191,21 @@ the structural-loss guard that is its best idea.</li>
 far exceed implementation — 4,256 for the LanceDB extension and 2,814
 for the memory-core doctor contract; no committed retrieval
 benchmark.</li>
-<li><a href="../systems/daimon/"><code>daimon</code></a>: 6,678 tests
-across roughly 109,300 lines against 49,700 lines of source, with
-dedicated quote-verification, carry, withhold, redaction-leak, receipt,
-and host-isolation suites. Its <code>benchmark/</code> runs
-LongMemEval-S through the real serializer and answers only from
-<code>daimon recall</code>, under a written reporting policy — publish
-only self-measured numbers with the full config stamp, label third-party
-figures as their publishers' claims, never report a figure without its
-backend, and report the trade rather than the win. Two result files are
-committed; the honest one is a 52-question interim baseline at
-<strong>Recall@5 0.58 / Hit@5 0.67 / MRR 0.59</strong> (my arithmetic
-over its per-question rows — the file ships no aggregate block). The
-other is a five-question run, which the config stamp makes obvious.
-Since 1 August 2026 it also ships
+<li><a href="../systems/daimon/"><code>daimon</code></a>: 7,702 tests
+across roughly 127,100 lines against 54,500 lines of source, with
+dedicated quote-verification, carry, read-view, redaction-leak, receipt,
+and host-isolation suites, and a read census that drives every CLI verb,
+MCP tool and viewer route against a store of sentinel values. Its
+<code>benchmark/</code> runs LongMemEval-S through the real serializer
+and answers only from <code>daimon recall</code>, under a written
+reporting policy — publish only self-measured numbers with the full
+config stamp, label third-party figures as their publishers' claims,
+never report a figure without its backend, and report the trade rather
+than the win. Two result files are committed; the honest one is a
+52-question interim baseline at <strong>Recall@5 0.58 / Hit@5 0.67 / MRR
+0.59</strong> (my arithmetic over its per-question rows — the file ships
+no aggregate block). The other is a five-question run, which the config
+stamp makes obvious. Since 1 August 2026 it also ships
 <code>research/experiments/recall-replay-ab/</code>, a deterministic
 replay harness whose arm A is the shipped <code>recall.suggest()</code>
 and whose arm B is a pluggable variant, judged side-blind on the rows

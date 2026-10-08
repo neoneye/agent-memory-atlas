@@ -127,8 +127,10 @@ disappearing."*
 
 The state that withholds is a person's. A quarantine ledger folds to
 `candidate`, `active`, `dismissed` or `released` per value, and an `active`
-value is dropped from the briefing, deleted from the recall index at rebuild
-and hidden in the viewer until a human releases it. An agent may propose one
+value is withheld by one read view that the briefing, the recall index and the
+viewer all read through — never inserted into the index, and judged again on
+every hit — until a human releases it, while an unreadable ledger withholds
+every item. An agent may propose one
 and cannot confirm it. The source states the rule in one line — *"a
 human-confirmed verdict may withhold; a machine signal only ever ranks down"* —
 and the report carries `trust_state` on that ledger. Four id-addressed reads,
