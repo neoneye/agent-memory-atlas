@@ -495,6 +495,29 @@ frame and recalls them for skill selection.
   scripts; the README still says "Code coming soon."; a title search finds
   only this repository.
 
+**AIM** — agentic idea management for automated research, with a lesson
+memory gated by a Solution Auditor.
+- Examined 2026-10-08; appendix bullet opening "AIM", which links the paper.
+- Missing: code. A release alone would not bring it in: its lesson memory
+  starts empty on every run.
+- Monitor: [project page](https://imhgchoi.github.io/agentic-idea-manager/),
+  [imhgchoi](https://github.com/imhgchoi).
+- Status 2026-10-08: the account's only recent repositories are the project
+  site and `imhgchoi.github.io`; a third-party reimplementation exists
+  (`hugoskn/agentic-idea-management-auto-research`) and is per-run.
+
+**RankEvolve** — a multi-agent auto-research harness with a reconciled
+note-and-wiki knowledge layer.
+- Examined 2026-10-08; appendix bullet opening "RankEvolve", which links the paper.
+- Missing: code; Appendix B says artefacts "will be released with the
+  codebase". A release would reopen the call, since committed notes would
+  outlive a run.
+- Monitor: [arXiv:2609.39551](https://arxiv.org/abs/2609.39551),
+  `facebookresearch` repository listing. Not
+  [jmnian/RankEvolve](https://github.com/jmnian/RankEvolve), a different paper.
+- Status 2026-10-08: no project page, no Hugging Face record, every name
+  variant tried returns 404.
+
 ### Closed or hosted memory components
 
 These were excluded, or reported with a gap, because the memory is behind a

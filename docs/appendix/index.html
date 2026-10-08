@@ -14109,6 +14109,128 @@ five files were read by hand, the manifest holds a name, a description,
 the repository URL and a licence and no command, and there is no
 <code>.gitattributes</code>, <code>.gitmodules</code> or hook. Nothing
 was installed or run.</li>
+<li><strong><code>TencentCloud/Octop</code> was examined and has no
+report: its memory is <a
+href="../systems/octop-memory/"><code>octop-memory</code></a>, which it
+installs and does not reimplement.</strong> Octop is a self-hosted
+multi-user assistant, read at <a
+href="https://github.com/TencentCloud/Octop/commit/0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda"><code class="commit-id" title="0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda">0c5a46ab…</code></a>.
+Its <code>uv.lock</code> pins <code>octop-memory</code> 1.0.0 from PyPI,
+and nothing of that package is vendored. Agent turns reach it through
+<code>octop-harness</code> 1.0.1, whose middleware captures, extracts
+and recalls; Octop names the namespace <code>agent_&lt;id&gt;</code> and
+chooses the SQLite file or the PostgreSQL DSN
+(<code>src/octop/infra/agents/memory/backend.py</code>), and its
+dashboard forwards review and correction to the package's JSON-RPC
+<code>Bridge</code>
+(<code>src/octop/api/common/memory_client.py</code>). The proactive-care
+job reads the package's episodes and records which ones it pushed, and
+<code>/memory slim</code> compacts LangGraph checkpoints in the same
+file. Octop's other stores fail the bar: the knowledge base is retrieval
+over documents users upload, and the agent's only tool on it is
+<code>search_knowledge</code>; conversation history is per-thread
+transcript storage, and no tool Octop registers searches across threads;
+the <code>MEMORY.md</code> and daily-note files belong to
+<code>octop-harness</code>, and Octop only serves and deletes them. How
+Octop wires the package, including one namespace shared by every user of
+a shared agent, is in the octop-memory report, section 8. No source is
+vendored, since
+<code>git ls-files | /usr/bin/grep -E '(^|/)octop_memory/'</code>
+returns nothing, and
+<code>git grep -n -i -E 'search_history|history_search|conversation_search|recall_history|past_session|cross.session' -- src</code>
+outside the bundled expert and subagent libraries returns nothing
+either. Screened before reading, from a full clone: 1 auto-run surface
+(<code>.githooks/pre-commit</code>, inert unless
+<code>make install-hooks</code> sets <code>core.hooksPath</code>), 10
+build-time execution points (two <code>Makefile</code>s, four
+<code>conftest.py</code>, and four modules named <code>setup.py</code>
+that are an API router and three setup helpers, not packaging scripts),
+2 unpinned surfaces, and <code>pyproject.toml</code> and
+<code>uv.lock</code> inside the cooldown, changed three days before the
+pin; <code>AGENTS.md</code> was treated as data. Nothing was installed
+or run.</li>
+<li><strong>AIM (<a
+href="https://arxiv.org/abs/2609.38445">arXiv:2609.38445</a>) was
+examined and has no report: no code is released, and its lesson memory
+starts empty on every run.</strong> <em>AIM: Agentic Idea Management for
+Automated Research</em> (Choi et al., Google Cloud AI Research and
+University of Wisconsin–Madison, v1 29 September 2026) searches over
+explicit research ideas: an Agentic Surrogate clusters and ranks the
+idea pool each iteration, an Agentic Acquisition step chooses explore or
+exploit, and a Resource Planner spends a fixed branch budget. Its memory
+is a lesson set grown by union, <code>M_{t+1} = M_t ∪ ΔM_{t+1}</code> —
+effective implementation choices, open bottlenecks, and failures to
+avoid — which conditions every new idea. The part this atlas would read
+is the gate in front of that union. A Solution Auditor flags each result
+<code>trivial</code>, <code>task_mismatch</code>,
+<code>idea_mismatch</code> or <code>reward_hacking</code>; three of the
+four discard it from both the score history and lesson extraction, and
+<code>idea_mismatch</code> makes the auditor rewrite the idea to
+describe what the code actually built, so lessons attach to the
+mechanism rather than the proposal. Nothing comes after the gate: the
+paper describes no path that retracts or supersedes a lesson, and
+Algorithm 1 initialises <code>M_1 ← ∅</code> with the three runs per
+task independent, so nothing outlives a run — a second ground for
+exclusion that a release would not remove. The ablation is on one task,
+Flash Attention, where removing the auditor drops 90.5 to 87.6; that
+removal also takes out idea rewriting and the audit flags in the final
+score, so it bounds rather than isolates what unfiltered lessons cost.
+An unofficial reimplementation, <a
+href="https://github.com/hugoskn/agentic-idea-management-auto-research"><code>hugoskn/agentic-idea-management-auto-research</code></a>
+at <a
+href="https://github.com/hugoskn/agentic-idea-management-auto-research/commit/4120d5d5c2ef349ddc2887649583fd118e3921ba"><code class="commit-id" title="4120d5d5c2ef349ddc2887649583fd118e3921ba">4120d5d5…</code></a>,
+keeps the same per-run shape: <code>research_loop.py:24</code> builds a
+fresh state per run and nothing reads the saved state back. Searched on
+2026-10-08: the PDF names GitHub once, as the <a
+href="https://imhgchoi.github.io/agentic-idea-manager/">project
+page</a>, whose own repository holds only the site; the Hugging Face
+papers record has no repository; the first author's account
+<code>imhgchoi</code> has no code repository pushed since February 2026;
+and <code>imhgchoi/AIM</code>,
+<code>google-research/agentic-idea-manager</code> and four other name
+variants return 404.</li>
+<li><strong>RankEvolve (<a
+href="https://arxiv.org/abs/2609.39551">arXiv:2609.39551</a>) was
+examined and has no report: no code is released, and its knowledge layer
+is a correction design that can be read but not checked.</strong>
+<em>RankEvolve: A Reliable Multi-Agent Auto-Research Harness for
+Evolving Ranking Models</em> (Chen, Liu, Li and Yan, Meta, v1 30
+September 2026) evolves the HSTU generative recommender under a compiled
+protocol of phases and gates, with whole coding-agent products as nodes
+that review and repair each other. Its knowledge layer (§2.3, Appendix
+G) is an evidence store — per proposal, the hashes, prompt, patch, test
+output, metrics and promotion decision, with negative outcomes kept as
+leaderboard rows — and an experiential memory: append-only notes
+committed into the folder each describes, a global wiki that cites them
+and is declared the single source of truth, and an entity graph linking
+every mention. Each protocol phase retrieves candidates by hybrid
+search, graph walk and folder lookup, and a subagent picks which to
+inject. The correction design is the part to keep. A reconciliation
+agent finds conflicting notes through a shared graph node, writes a
+condition-scoped conclusion into the wiki, favours the more recent and
+better-evidenced note, demotes the other with a back-link so the reason
+it was abandoned stays visible, and flags what the evidence cannot
+settle for human review — <a
+href="../patterns/resolve-not-just-detect/">resolve, don't just
+detect</a>, described rather than shown. The paper does not say what
+<em>demoted</em> does on the read path, who clears a flagged conflict,
+whether "no local note may contradict the wiki" is enforced at write
+time or only by the reconciler's sweep, or whether a negative
+leaderboard row is injected as context or refuses a near-duplicate
+proposal. Because notes are committed to the repository they would
+outlive a run, but the paper reports one twelve-iteration deployment,
+says it ran no memory-on/off ablation, and notes a human operator also
+steered that run at the gates. Not to be confused with <a
+href="https://github.com/jmnian/RankEvolve"><code>jmnian/RankEvolve</code></a>,
+the code for a different paper. Searched on 2026-10-08: the PDF's four
+GitHub mentions are all references, and Appendix B says artefacts
+<em>"will be released with the codebase"</em> with no URL; there is no
+project page and no Hugging Face record; repository searches for
+<code>RankEvolve</code>, <code>ExecML-HSTU</code> and <em>Executable
+Operating Protocol</em> find nothing by these authors; and
+<code>facebookresearch/RankEvolve</code>,
+<code>meta-recsys/RankEvolve</code> and five other variants return
+404.</li>
 <li><strong><code>FreshHillyer/xiaoO</code> was examined and has no
 report: its long-term memory is an unpublished server behind an MCP
 client, and the memory crate in the tree has no caller.</strong> At <a

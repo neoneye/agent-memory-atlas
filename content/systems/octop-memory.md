@@ -9,7 +9,7 @@ source_url: https://github.com/TencentCloud/octop-memory
 archive_name: "TencentCloud--octop-memory"
 revision: 8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf
 revision_url: https://github.com/TencentCloud/octop-memory/commit/8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf
-analyzed_at: 2026-09-30
+analyzed_at: 2026-10-08
 licence: "MIT"
 size: "32,665 lines of Python under src/octop_memory, a LangGraph checkpoint store among them; 1,030 lines of Python and 2,581 of TypeScript in the Hermes and OpenClaw plugins"
 activity: "4 commits on main by 2 contributor accounts, all on 24 September 2026; the history opens with one commit of the whole tree"
@@ -293,6 +293,37 @@ same dispatch as `memory_search` (`handlers.py:51-61`;
 `dashboard_data.py:1143-1182`). The plugin forwards only fixed method names, so
 the model cannot reach them.
 
+**On the Octop platform.** [TencentCloud/Octop](https://github.com/TencentCloud/Octop),
+a self-hosted multi-user assistant, has no memory store of its own. At
+[`0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda`](https://github.com/TencentCloud/Octop/commit/0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda)
+its `uv.lock` pins this package at 1.0.0 from PyPI, and agent turns reach it
+through `octop-harness` 1.0.1, whose `MemoryMiddleware` captures each turn,
+injects recall before the model call, and extracts at session end or after an
+idle period, 300 seconds by Octop's default (`src/octop/api/routers/memory.py:57-66`).
+The model holds `memory_search` and `memory_get` only. Octop gives each agent
+one namespace, `agent_<id>` (`src/octop/infra/agents/manager.py:113-123`), in a
+`memory.sqlite` under the agent's workspace, or in the shared PostgreSQL schema
+when Octop's own control plane runs on PostgreSQL
+(`src/octop/infra/agents/memory/backend.py:31-50`). Its web review forwards
+approve, reject, deprecate, create and replace to the JSON-RPC `Bridge` behind an
+agent-owner check (`src/octop/api/common/memory_client.py:146-190`), so the
+approve a person uses there is `promote_candidate`, the one that supersedes the
+contradicted atom. Reject and deprecate pass a client-supplied `actor` through
+to the journal (`src/octop/api/routers/memory.py:196-203`).
+
+Two things follow from that wiring. An agent marked shared is open to every user
+of the instance (`src/octop/api/common/agent.py:26-31`) and keeps one namespace
+for all of them. The harness passes the chat user to `capture_turn`, which
+stores it on the raw event (`service.py:152-177`), and its recall call passes
+thread and session ids only (`octop_harness/middleware/memory.py:452-476`,
+`:485-512` at
+[`v1.0.1`](https://github.com/TencentCloud/octop-harness/commit/14a1cd9e22c4644ec427be0d2a3f129ac6355f0c)).
+So a fact one user states can be recalled into another user's chat. And the
+middleware's maintenance tick calls `run_gc` and `nudge_vacuum` directly and, by
+its own comment, skips `run_idle_maintenance` so that LangGraph checkpoint rows
+are never pruned from there (`:758-793`). No Python module under `src/octop` calls
+consolidation or `run_fallback_pass`.
+
 ## 9. Reliability, Safety, and Trust
 
 **The status column is out of the model's reach.** The parser assigns
@@ -421,10 +452,13 @@ a predicate.
   turn? Capture writes every message it receives with a fresh id, so the answer
   decides whether raw events duplicate each turn. The host's contract is not in
   this tree.
-- Which host drives `run_idle_maintenance`? The docstring names the
-  `octop-harness` `MemoryMiddleware`, which is not in this repository.
-- Is the source dashboard in use anywhere approvals matter, or has the JSON-RPC
-  dashboard replaced it? The README calls it source-only.
+- Does any host call `run_idle_maintenance`? The docstring names the
+  `octop-harness` `MemoryMiddleware`, and at `octop-harness` 1.0.1 that
+  middleware calls `run_gc` and `nudge_vacuum` instead (section 8). Only its
+  middleware file was read.
+- Does any deployment besides Octop resolve candidates through the source
+  dashboard? Octop's web review forwards to the JSON-RPC `promote_candidate`
+  (section 8); the README calls the source dashboard source-only.
 - What name did the project carry before the rename in `CHANGELOG.md`? The tree
   was scrubbed of it, per `docs/agent/HANDOFF.md`.
 
@@ -472,5 +506,7 @@ Checked against the checkout at the pinned revision.
 - `grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git` — no match, and no `CITATION` file.
 
 ## History
+
+**2026-10-08** — [`8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf`](https://github.com/TencentCloud/octop-memory/commit/8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf) — pin and marks unchanged; the package itself was not re-read. [Section 8](#8-agent-integration) gains how [TencentCloud/Octop](https://github.com/TencentCloud/Octop/commit/0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda) uses it: 1.0.0 locked from PyPI, reached through `octop-harness` 1.0.1 and the JSON-RPC `Bridge`, one namespace per agent, shared agents included, so one user's facts can be recalled into another's chat. Two open questions narrowed. Octop was screened and read at `0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda`, and one `octop-harness` file fetched raw at `v1.0.1`; nothing installed, built or run.
 
 **2026-09-30** — [`8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf`](https://github.com/TencentCloud/octop-memory/commit/8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf) — first reading, at the head of `main`, the 1.0.0 release merge, dated 24 September 2026. Five marks: `trust_state`, `scope_enforced`, `audit_log`, `human_review`, `negative_eval`. Screened before reading: one auto-run surface (`.githooks/pre-commit`, inert unless `make install-hooks` sets `core.hooksPath`), one build-time execution point (`Makefile`), two unpinned surfaces, five dependency files inside the cooldown — every file in a depth-1 clone dates to the tip, and the whole history is four commits that week — and `AGENTS.md` recorded as data. Read with `grep` and `sed`; nothing installed, built or run.

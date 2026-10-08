@@ -117,7 +117,7 @@ checks, and queues conflicts for a person.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-30</strong>
+              <strong>2026-10-08</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/TencentCloud--octop-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -438,6 +438,46 @@ old atom id reads a deprecated atom without a marker.</p>
 <code>memory_search</code> (<code>handlers.py:51-61</code>;
 <code>dashboard_data.py:1143-1182</code>). The plugin forwards only
 fixed method names, so the model cannot reach them.</p>
+<p><strong>On the Octop platform.</strong> <a
+href="https://github.com/TencentCloud/Octop">TencentCloud/Octop</a>, a
+self-hosted multi-user assistant, has no memory store of its own. At <a
+href="https://github.com/TencentCloud/Octop/commit/0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda"><code class="commit-id" title="0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda">0c5a46ab…</code></a>
+its <code>uv.lock</code> pins this package at 1.0.0 from PyPI, and agent
+turns reach it through <code>octop-harness</code> 1.0.1, whose
+<code>MemoryMiddleware</code> captures each turn, injects recall before
+the model call, and extracts at session end or after an idle period, 300
+seconds by Octop's default
+(<code>src/octop/api/routers/memory.py:57-66</code>). The model holds
+<code>memory_search</code> and <code>memory_get</code> only. Octop gives
+each agent one namespace, <code>agent_&lt;id&gt;</code>
+(<code>src/octop/infra/agents/manager.py:113-123</code>), in a
+<code>memory.sqlite</code> under the agent's workspace, or in the shared
+PostgreSQL schema when Octop's own control plane runs on PostgreSQL
+(<code>src/octop/infra/agents/memory/backend.py:31-50</code>). Its web
+review forwards approve, reject, deprecate, create and replace to the
+JSON-RPC <code>Bridge</code> behind an agent-owner check
+(<code>src/octop/api/common/memory_client.py:146-190</code>), so the
+approve a person uses there is <code>promote_candidate</code>, the one
+that supersedes the contradicted atom. Reject and deprecate pass a
+client-supplied <code>actor</code> through to the journal
+(<code>src/octop/api/routers/memory.py:196-203</code>).</p>
+<p>Two things follow from that wiring. An agent marked shared is open to
+every user of the instance
+(<code>src/octop/api/common/agent.py:26-31</code>) and keeps one
+namespace for all of them. The harness passes the chat user to
+<code>capture_turn</code>, which stores it on the raw event
+(<code>service.py:152-177</code>), and its recall call passes thread and
+session ids only
+(<code>octop_harness/middleware/memory.py:452-476</code>,
+<code>:485-512</code> at <a
+href="https://github.com/TencentCloud/octop-harness/commit/14a1cd9e22c4644ec427be0d2a3f129ac6355f0c"><code>v1.0.1</code></a>).
+So a fact one user states can be recalled into another user's chat. And
+the middleware's maintenance tick calls <code>run_gc</code> and
+<code>nudge_vacuum</code> directly and, by its own comment, skips
+<code>run_idle_maintenance</code> so that LangGraph checkpoint rows are
+never pruned from there (<code>:758-793</code>). No Python module under
+<code>src/octop</code> calls consolidation or
+<code>run_fallback_pass</code>.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>The status column is out of the model's reach.</strong> The
@@ -577,11 +617,15 @@ should use PostgreSQL, where the namespace is a key and a predicate.</p>
 conversation or the last turn? Capture writes every message it receives
 with a fresh id, so the answer decides whether raw events duplicate each
 turn. The host's contract is not in this tree.</li>
-<li>Which host drives <code>run_idle_maintenance</code>? The docstring
-names the <code>octop-harness</code> <code>MemoryMiddleware</code>,
-which is not in this repository.</li>
-<li>Is the source dashboard in use anywhere approvals matter, or has the
-JSON-RPC dashboard replaced it? The README calls it source-only.</li>
+<li>Does any host call <code>run_idle_maintenance</code>? The docstring
+names the <code>octop-harness</code> <code>MemoryMiddleware</code>, and
+at <code>octop-harness</code> 1.0.1 that middleware calls
+<code>run_gc</code> and <code>nudge_vacuum</code> instead (section 8).
+Only its middleware file was read.</li>
+<li>Does any deployment besides Octop resolve candidates through the
+source dashboard? Octop's web review forwards to the JSON-RPC
+<code>promote_candidate</code> (section 8); the README calls the source
+dashboard source-only.</li>
 <li>What name did the project carry before the rename in
 <code>CHANGELOG.md</code>? The tree was scrubbed of it, per
 <code>docs/agent/HANDOFF.md</code>.</li>
@@ -663,6 +707,19 @@ CI starts no database.</li>
 — no match, and no <code>CITATION</code> file.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-10-08</strong> — <a
+href="https://github.com/TencentCloud/octop-memory/commit/8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf"><code class="commit-id" title="8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf">8b6abc3b…</code></a>
+— pin and marks unchanged; the package itself was not re-read. <a
+href="#8-agent-integration">Section 8</a> gains how <a
+href="https://github.com/TencentCloud/Octop/commit/0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda">TencentCloud/Octop</a>
+uses it: 1.0.0 locked from PyPI, reached through
+<code>octop-harness</code> 1.0.1 and the JSON-RPC <code>Bridge</code>,
+one namespace per agent, shared agents included, so one user's facts can
+be recalled into another's chat. Two open questions narrowed. Octop was
+screened and read at
+<code class="commit-id" title="0c5a46ab5f82e5ad9d1a56fa09b00e542f042fda">0c5a46ab…</code>, and one
+<code>octop-harness</code> file fetched raw at <code>v1.0.1</code>;
+nothing installed, built or run.</p>
 <p><strong>2026-09-30</strong> — <a
 href="https://github.com/TencentCloud/octop-memory/commit/8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf"><code class="commit-id" title="8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf">8b6abc3b…</code></a>
 — first reading, at the head of <code>main</code>, the 1.0.0 release
