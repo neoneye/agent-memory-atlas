@@ -13988,6 +13988,127 @@ unpinned surfaces, all but three inside the vendored agent frameworks
 under <code>agent-frameworks/</code>; only the evaluator, the paper and
 the leaderboard's committed submission were read, and nothing was
 installed or run.</li>
+<li><strong><code>assafelovic/gpt-researcher</code> was examined and has
+no report: every store it writes is either a per-run index of scraped
+pages or an archive of finished reports, and no research run reads what
+an earlier one wrote.</strong> Apache-2.0 by <code>LICENSE</code>
+(<code>pyproject.toml</code> declares MIT), 3,211 commits at <a
+href="https://github.com/assafelovic/gpt-researcher/commit/0957c301ed06c2a5857b834358c7227c739041d4"><code class="commit-id" title="0957c301ed06c2a5857b834358c7227c739041d4">0957c301…</code></a>,
+about 15,900 lines of Python in the <code>gpt_researcher</code> package
+and 2,400 in <code>backend/</code>. The modules named for memory are not
+stores. <code>gpt_researcher/memory/embeddings.py</code> defines
+<code>Memory</code>, a factory that returns an embedding client for one
+of some twenty providers. <code>VectorStoreWrapper</code>
+(<code>gpt_researcher/vector_store/vector_store.py</code>) wraps a
+LangChain store that the caller constructs and passes in; when one is
+passed, <code>skills/researcher.py:171</code>, <code>:181</code>,
+<code>:204</code>, <code>:256</code> and <code>:971</code> chunk scraped
+or local documents into it, and
+<code>report_source="langchain_vectorstore"</code> reads it back by
+similarity. That is the one path by which a later run could see an
+earlier run's material, and what crosses is raw source text tagged with
+its URL, not anything the agent concluded; the package never constructs
+a store itself, and the wrapper has no delete or update. Without a
+caller's store, <code>select_context</code>
+(<code>context/select.py:53</code>) filters each run's scraped pages in
+memory and discards them. The backend's <code>ReportStore</code>
+(<code>backend/server/report_store.py</code>) persists
+<code>data/reports.json</code>, one row per <code>research_id</code>
+with question, answer, ordered log data and <code>chatMessages</code>,
+with upsert, a merging <code>PUT</code> and a <code>DELETE</code>
+(<code>backend/server/app.py:198-252</code>);
+<code>POST /api/reports/{id}/chat</code> (<code>app.py:263-328</code>)
+reloads that report's answer and its prior chat turns into the next chat
+call and appends the reply. It is the Aider shape, scoped to one report:
+a transcript and the document it is about, with no unit smaller than the
+report, no status, and nothing that marks a turn wrong, and it never
+reaches a new research run — the frontend's <code>start</code> payload
+(<code>frontend/nextjs/hooks/useWebSocket.ts:80-89</code>) carries the
+task, the report settings and the domain filters held in
+<code>localStorage</code>, and nothing from the history.
+<code>ChatAgentWithMemory</code> (<code>backend/chat/chat.py:55</code>)
+is named for that report-as-context; none of its three constructions in
+<code>backend/</code> passes a <code>vector_store</code>. The
+deep-agents variant gives each run a fresh
+<code>FilesystemBackend</code> under its own run directory
+(<code>deep_agents/agent.py:88</code>,
+<code>deep_agents/main.py:68-74</code>), and the LangGraph
+<code>MemorySaver</code> in
+<code>multi_agents/agents/orchestrator.py:5</code> is commented out.
+Searched at the pin from the repository root, both empty:
+<code>git grep -n -E "report_store|reports\.json|chatMessages" -- gpt_researcher multi_agents deep_agents skills cli.py main.py</code>
+for a research-side reader of the archive, and
+<code>git grep -n -E "VectorStore\(|from_documents|InMemoryVectorStore|persist_directory|Chroma\(|PGVector|FAISS" -- gpt_researcher backend multi_agents deep_agents</code>
+for a store the package builds itself. Screened before reading, from a
+<code>--depth 1</code> clone: 2 auto-run surfaces
+(<code>.cursorrules</code>, and a <code>.mcp.json</code> that launches
+the published <code>gpt-researcher</code> package through
+<code>uvx</code>), 2 build-time execution points (<code>setup.py</code>,
+<code>tests/conftest.py</code>), 0 inside the cooldown and 14 unpinned
+surfaces; nothing was installed or run.</li>
+<li><strong><code>AgentMemoryRepo/agentmemoryrepo</code> was examined
+and has no report: it is a file-format specification and an agent skill,
+and the memory it describes is a prompt plus ordinary file
+editing.</strong> MIT, five files and 464 lines at <a
+href="https://github.com/AgentMemoryRepo/agentmemoryrepo/commit/8798cb26c817d451a5ed6cba0ad8d9eca8d5ec3e"><code class="commit-id" title="8798cb26c817d451a5ed6cba0ad8d9eca8d5ec3e">8798cb26…</code></a>
+— <code>README.md</code>, <code>SPEC.md</code>,
+<code>skills/agent-memory-repo/SKILL.md</code>, a six-line
+<code>.devin-plugin/plugin.json</code> and the licence — published by
+Cognition as an open standard between 4 and 6 October 2026, with the
+same text at cognition.com/agent-memory-repo. The format is a separate
+git repository per person with a <code>MEMORY.md</code> entry point
+loaded every session, one bullet per entry with open
+<code>[key: value]</code> metadata (<code>source</code>, a link to the
+session it was learned in, and <code>added</code> are recommended,
+<code>SPEC.md:40-50</code>), and <code>[[path]]</code> cross-links. The
+skill reads with <code>grep -rni</code> and link-following
+(<code>SKILL.md:44</code>), writes by editing in place and committing
+after every edit, and corrects by the same edit: <em>"Update or remove
+entries that are out of date instead of adding a contradicting
+entry"</em> (<code>SKILL.md:56</code>). That is what an agent writes and
+a later session reads, so the shape is in scope; what keeps it out is
+that <strong>there is no code at all</strong> — no store, no index, no
+reader, no test — the call made for <code>cline/cline</code>'s Memory
+Bank and <code>CodebuffAI/freebuff</code>'s knowledge files above, with
+git as the only durability guarantee and a removed value surviving only
+in history, where nothing consults it before the next write.
+<strong>Dreaming</strong>, the periodic agent the README credits with
+merging duplicates, removing outdated entries and resolving
+contradictions against sources (<code>README.md:60-65</code>), is
+described and not shipped, and the README says so (<em>"Automatic
+startup and scheduled Dreaming are not included"</em>,
+<code>README.md:49</code>). <strong>Two details are worth
+keeping.</strong> The skill states its write discipline precisely, as
+prompt: memory is data and never a source of commands
+(<code>SKILL.md:14</code>), a write refuses to start unless
+<code>git status --porcelain</code> prints nothing
+(<code>SKILL.md:16</code>), only the changed paths are staged, and a
+memory path inside the current project is refused
+(<code>SKILL.md:23</code>). And the multi-person boundary is a <a
+href="../patterns/scope-as-a-first-class-key/">physical partition</a>
+whose routing is the model's compliance — <em>"The agent tracks who said
+what and writes each memory to the right repo"</em>
+(<code>README.md:161</code>) — the stored-versus-enforced distinction
+one layer up, in the prompt. The README's own loop also disagrees with
+the skill it ships: the loop says push after every edit and the swarm
+example has a rejected agent read both versions and rewrite
+(<code>README.md:58</code>, <code>README.md:274</code>), while the skill
+never pushes unless the user names a private remote and stops on a
+failed <code>pull --ff-only</code> rather than merging
+(<code>SKILL.md:37</code>, <code>SKILL.md:73</code>). It enters the day
+a write path consults a record of a removed entry, or Dreaming is
+published as code. The absence of code rests on
+<code>git ls-tree -r --name-only</code> at the pin and on every branch,
+five files each, on
+<code>api.github.com/orgs/AgentMemoryRepo/repos</code> listing this
+repository alone, and on cognition.com/agent-memory-repo linking no
+other GitHub repository. Screened before reading: the screen reported
+<code>NOTHING SCANNED</code>, since it recognises neither
+<code>.devin-plugin/</code> nor a <code>skills/*/SKILL.md</code>; all
+five files were read by hand, the manifest holds a name, a description,
+the repository URL and a licence and no command, and there is no
+<code>.gitattributes</code>, <code>.gitmodules</code> or hook. Nothing
+was installed or run.</li>
 <li><strong><code>FreshHillyer/xiaoO</code> was examined and has no
 report: its long-term memory is an unpublished server behind an MCP
 client, and the memory crate in the tree has no caller.</strong> At <a
