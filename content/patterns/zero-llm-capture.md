@@ -292,6 +292,8 @@ is the thing a deletion request has to survive.
 
 [Rust Self-Learning Memory](../../systems/rust-self-learning-memory/) has the pattern's availability property in full — reward, reflection, salient features, summaries, patterns and playbooks are all computed by rule, and no path calls a model — and shows that a deterministic gate in front of the durable write can fail as reliably as a provider outage. `complete_episode` scores quality on five weighted features before it generates the reflection and extracts the patterns that two of them read, so a fresh episode tops out at 0.64 against the 0.7 the shipped MCP server uses. The CLI and the MCP tests set the threshold to 0.0, so by that arithmetic a capture path with no model in it stores nothing through its own MCP server, and no test notices.
 
+[Cloud Alter Ego](../../systems/cloud-alter-ego/) is capture with nothing after it. Two hooks write a line for every question and answer whatever the model does (`tools/auto_journal.py:129-186`), and the model's own summary line is an optional extra; the journal then reaches a later session only if the agent follows an instruction to read the newest file. The capture side also shows the scope hazard this pattern inherits from being automatic: the destination is a machine-wide `.current-context` file reread at every write, so a hook firing for one session lands in whichever client another session last selected.
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.

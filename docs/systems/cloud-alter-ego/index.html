@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Claude Code and Codex hooks that
+journal every turn, save transcripts and push them to a private Git
+repository, with working rules injected each session.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cloud Alter
+Ego — Agent Memory Atlas">
+    <meta property="og:description" content="Claude Code and Codex hooks
+that journal every turn, save transcripts and push them to a private Git
+repository, with working rules injected each session.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cloud Alter
+Ego — Agent Memory Atlas">
+    <meta name="twitter:description" content="Claude Code and Codex
+hooks that journal every turn, save transcripts and push them to a
+private Git repository, with working rules injected each session.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cloud Alter Ego — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cloud Alter Ego",
+      "description": "Claude Code and Codex hooks that journal every turn, save transcripts and push them to a private Git repository, with working rules injected each session.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Hook-written journals synced through
+Git</p>
+          <h1>Cloud Alter Ego</h1>
+          <p class="document-deck">Claude Code and Codex hooks that
+journal every turn, save transcripts and push them to a private Git
+repository, with working rules injected each session.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/SebastiaanBoon/cloud-alter-ego">
+              <span>Source</span>
+              <strong>SebastiaanBoon/cloud-alter-ego</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/SebastiaanBoon/cloud-alter-ego/commit/37687bbb730686d72e606bd432bfca99e104f2c0" title="37687bbb730686d72e606bd432bfca99e104f2c0">
+              <span>Analyzed revision</span>
+              <code>37687bbb…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-09</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/SebastiaanBoon--cloud-alter-ego" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>SebastiaanBoon--cloud-alter-ego</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>1,070
+lines of Python in five hooks and two helpers under tools/; 1,693 lines
+of Markdown rules, runbooks and templates</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>8
+commits on main by one author, 25 September – 8 October 2026; renamed
+from alter-ugg and doppel on the first day</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>none</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cloud Alter Ego is a template repository that turns a private Git
+repo into the shared memory of every Claude Code and Codex session a
+person runs. Hooks append each question and answer to a journal for the
+active client or project, save the raw transcript at session end, and
+commit and push after every turn, so every device and every account
+pulls the same history. A session starts with the person's working rules
+injected verbatim.</p>
+<p>What is notable is that capture never depends on the model: the hooks
+write the journal whether or not the agent remembers to. What is weak is
+everything after the write. No code reads the journal back — the agent
+is asked to — and the choice of which client a line belongs to is one
+machine-wide file that any session can change.</p>
+<p>The code is five Python hooks and a note-taking helper, about a
+thousand lines with no tests. The rest of the repository is the memory
+itself as shipped defaults: 113 lines of working rules, runbooks under
+<code>skills/</code>, technical notes under <code>techniques/</code>,
+and templates for client and project folders. The closest design in this
+atlas is <a href="../claude-code-memory-setup/">Claude Code Memory
+Setup</a>, whose SessionEnd hook also files transcripts into a notes
+store.</p>
+<p>Three findings shape the rest of this report.</p>
+<ul>
+<li><strong>Client journals cross-contaminate under parallel
+sessions.</strong> The active context is one gitignored file,
+<code>.current-context</code>, and every journal write rereads it
+(<code>tools/note.py:59-65</code>,
+<code>tools/auto_journal.py:186</code>). Two sessions on one machine
+working for two clients write each other's questions and answers into
+the wrong client's journal, in a repository whose own rules say
+<em>"Never mention another client, not even as a reference"</em>
+(<code>preferences.md:86</code>).</li>
+<li><strong>Raw transcripts are pushed unfiltered.</strong>
+<code>save_session.py</code> copies the session's JSONL, tool calls and
+tool results included, then runs <code>git add -A</code>, commits and
+pushes (<code>tools/save_session.py:108</code>, <code>:116-128</code>).
+Nothing in <code>tools/</code> scans for secrets; the safeguard is a
+rule asking the person not to store any, and a warning at install time
+if the remote is public.</li>
+<li><strong>Recall is a sentence.</strong> The only memory code puts
+into context is <code>preferences.md</code>. The journal reaches the
+agent if it obeys <em>"first read its README.md and the newest file in
+its journal/ folder"</em> (<code>tools/session_start.py:168</code>),
+which is one month's file.</li>
+</ul>
+<p>No capability mark. Section 9 says why each is withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a line of text. It is written in one of two ways and
+never changes state afterwards.</p>
+<ul>
+<li><strong>The hook line.</strong> <code>UserPromptSubmit</code> writes
+the prompt, cut to 180 characters, as
+<code>[auto claude &lt;session&gt;] Q: ...</code>; <code>Stop</code>
+reads the transcript tail and writes the last assistant text, cut to
+260, as <code>... Q: (answer) | A: ...</code>
+(<code>auto_journal.py:129-159</code>, <code>:172-186</code>). A file
+holding the last line written suppresses an exact repeat
+(<code>:179-182</code>).</li>
+<li><strong>The agent line.</strong> The agent runs
+<code>note.py "&lt;what happened&gt;"</code>, which appends
+<code>- HH:MM &lt;text&gt;</code> under the day's heading
+(<code>note.py:107-124</code>). It carries no prefix, which is the only
+thing that tells it apart from a hook line.</li>
+</ul>
+<p>Both go to <code>&lt;context&gt;/journal/&lt;YYYY-MM&gt;.md</code>,
+where the context is whatever <code>.current-context</code> names when
+the line is written, and <code>clients/_unsorted/</code> when it names
+nothing valid (<code>note.py:59-65</code>, <code>:107-108</code>).</p>
+<p>Nothing becomes a belief by code. A line is a record that a turn
+happened; the agent decides whether to promote it into a context README,
+a technique or a rule, and does so by editing Markdown. The rules frame
+journal content as evidence rather than fact: <em>"Your own earlier
+conclusion (also from the journal) is not a confirmed fact"</em>
+(<code>preferences.md:64</code>). Nothing stops being believed either:
+there is no delete and no forget, and Git keeps every line on every
+clone.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a turn becomes a journal line, which file decides where it lands, and the one thing code puts back into context</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a turn becomes a journal line, which file decides where it lands, and the one thing code puts back into context
+flowchart TD
+    P[&quot;user prompt&quot;] --&gt; UPS[&quot;UserPromptSubmit hook:&lt;br/&gt;Q cut to 180 chars&quot;]
+    S[&quot;model answer&quot;] --&gt; STOP[&quot;Stop hook:&lt;br/&gt;A cut to 260 chars&quot;]
+    A[&quot;agent runs note.py&lt;br/&gt;with a summary line&quot;] --&gt; W
+    UPS --&gt; W{&quot;read .current-context&lt;br/&gt;at this moment&quot;}
+    STOP --&gt; W
+    W -- &quot;valid slug&quot; --&gt; J[&quot;clients or projects/slug/&lt;br/&gt;journal/YYYY-MM.md&quot;]
+    W -- &quot;missing or unknown&quot; --&gt; U[&quot;clients/_unsorted/&lt;br/&gt;journal&quot;]
+    X[&quot;a parallel session runs&lt;br/&gt;note.py --set other-client&quot;] -.-&gt; W
+    J --&gt; SYNC[&quot;background: git add clients projects,&lt;br/&gt;commit, pull --rebase, push&quot;]
+    END[&quot;SessionEnd hook&quot;] --&gt; T[&quot;copy raw transcript .jsonl&lt;br/&gt;and a rendered .md to sessions/&quot;]
+    T --&gt; ALL[&quot;git add -A, commit,&lt;br/&gt;pull --rebase, push&quot;]
+    SYNC --&gt; R[(&quot;private Git remote&quot;)]
+    ALL --&gt; R
+    R --&gt; SS[&quot;SessionStart: git pull,&lt;br/&gt;inject preferences.md verbatim,&lt;br/&gt;name the active context&quot;]
+    SS --&gt; ASK[&quot;prompt asks the agent to read&lt;br/&gt;README and newest journal itself&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nothing runs between sessions. Each hook is a short Python process
+started by Claude Code or by Codex's <code>notify</code>, with the Git
+working tree as its only store.</p>
+<p><strong>Installation.</strong> <code>tools/install.py</code>
+registers five hook entries in <code>settings.json</code> of every
+Claude Code config directory it finds — <code>~/.claude</code>, any
+<code>~/.claude-&lt;name&gt;</code> holding a settings file or a
+<code>projects/</code> folder, and <code>CLAUDE_CONFIG_DIR</code> —
+after copying each file to a timestamped backup
+(<code>tools/session_start.py:27-33</code>, <code>:66-99</code>,
+<code>:110-129</code>). It appends a pointer block to each global
+<code>CLAUDE.md</code>, turns off commit and PR attribution, and for
+Codex prepends <code>auto_journal.py --codex</code> to any existing
+<code>notify</code> program and appends a block to
+<code>~/.codex/AGENTS.md</code> (<code>tools/install.py:87-103</code>,
+<code>:145-169</code>). It warns when <code>gh</code> reports the remote
+as public (<code>:72-84</code>).</p>
+<p><strong>Self-repair.</strong> <code>session_start.py</code> reruns
+the same registration on every session start, so a second account on the
+machine gets the hooks the first time any account opens a session
+(<code>session_start.py:145-161</code>). That is convenient and it is
+also a writer of every Claude Code configuration on the machine, run
+from a repository the session has just pulled.</p>
+<p><strong>Sync.</strong> Session start runs
+<code>git pull --rebase --autostash</code> with a 20-second timeout and
+ignores failure (<code>session_start.py:57-63</code>). After every
+journal line <code>auto_journal.py</code> starts a detached
+<code>--sync</code> process that takes a lock file (stale after ten
+minutes), stages <code>clients/</code> and <code>projects/</code> only,
+commits, rebases and pushes, and aborts a failed rebase
+(<code>auto_journal.py:189-233</code>). SessionEnd stages everything
+with <code>git add -A</code> (<code>save_session.py:115-128</code>).
+Journals use git's built-in union merge
+(<code>.gitattributes:3</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Python 3.8 and git, a private remote, and Claude Code with hooks;
+Codex is optional and <code>tools/start_agents.ps1</code> is
+Windows-only. No package, no dependency, no service: the clone is the
+install. Every journal line costs a background commit and push, and the
+repository grows by one raw transcript per session forever. The store is
+plain Markdown a person can read and fix in any editor, and Git history
+is the only undo.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Session start.</strong> <code>main</code> pulls, re-registers
+hooks, reads the context, and prints one <code>additionalContext</code>
+block: the repository path, the active context, the instruction to read
+the context README and newest journal, the instruction to write one line
+per turn, and the whole of <code>preferences.md</code>
+(<code>session_start.py:157-187</code>). Above 9,000 characters it
+prepends a warning rather than trimming, because Claude Code cuts hook
+output above about 10,000 characters to a short preview
+(<code>:22-23</code>, <code>:179-181</code>).</p>
+<p><strong>Prompt and answer.</strong> <code>auto_journal.main</code>
+dispatches on <code>hook_event_name</code>. <code>on_prompt</code>
+stores the raw prompt in a per-session file and writes the hook line.
+<code>on_stop</code> reads up to 3 MB of the transcript tail, finds the
+last real user message and the last assistant text, and, if that user
+message is not the one <code>on_prompt</code> stored, writes a warning
+line instead that the transcript is not being written
+(<code>auto_journal.py:61-110</code>, <code>:141-159</code>).</p>
+<p><strong>Codex.</strong> <code>notify</code> passes the turn as a JSON
+argument; <code>from_codex</code> takes the last input message and
+<code>last-assistant-message</code>, and any previously configured
+notify program is started first with the same payload
+(<code>auto_journal.py:162-169</code>, <code>:242-256</code>).</p>
+<p><strong>Session end.</strong> <code>save_session.main</code> copies
+the transcript to
+<code>&lt;context&gt;/sessions/&lt;timestamp&gt;-&lt;id&gt;.jsonl</code>,
+renders a Markdown version that keeps user and assistant text and
+replaces each tool call and result with a placeholder, then commits and
+pushes (<code>save_session.py:63-89</code>, <code>:97-128</code>).</p>
+<p><strong>Contexts.</strong>
+<code>note.py --new-client|--new-project</code> copies the template
+folder, substitutes the name, adds a row to the index and makes it
+active; <code>--set</code> writes the slug to
+<code>.current-context</code> (<code>note.py:68-104</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Path</th>
+<th>Written by</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Working rules</td>
+<td><code>preferences.md</code>, reasons in
+<code>preferences-background.md</code></td>
+<td>the person or the agent, by hand</td>
+<td>SessionStart, verbatim</td>
+</tr>
+<tr>
+<td>Context README</td>
+<td><code>&lt;kind&gt;/&lt;slug&gt;/README.md</code>, kind
+<code>clients</code> or <code>projects</code></td>
+<td>template, then the agent or person</td>
+<td>the agent, when told to</td>
+</tr>
+<tr>
+<td>Journal</td>
+<td><code>&lt;slug&gt;/journal/&lt;YYYY-MM&gt;.md</code></td>
+<td>hooks and <code>note.py</code>, append</td>
+<td>the agent, newest file only</td>
+</tr>
+<tr>
+<td>Transcript</td>
+<td><code>&lt;slug&gt;/sessions/&lt;ts&gt;-&lt;id&gt;.jsonl</code> and
+<code>.md</code></td>
+<td>SessionEnd</td>
+<td>nobody in code; a runbook after a session switch</td>
+</tr>
+<tr>
+<td>Techniques, skills</td>
+<td><code>techniques/*.md</code>, <code>skills/*.md</code></td>
+<td>the agent or person</td>
+<td>the agent, when a rule or README points there</td>
+</tr>
+<tr>
+<td>Active context</td>
+<td><code>.current-context</code>, gitignored</td>
+<td><code>note.py --set</code></td>
+<td>every journal write and SessionStart</td>
+</tr>
+</tbody>
+</table></div>
+<p>A journal line has a time, an optional
+<code>[auto &lt;agent&gt; &lt;session&gt;]</code> prefix and free text.
+There is no id, no author beyond that prefix, no status and no link to
+the transcript it summarises other than the shared date and folder.</p>
+<p><strong>Scope is a folder, chosen by one local file.</strong> Every
+client and project of the person lives in one repository. The write side
+picks a folder from <code>.current-context</code>; the read side has no
+restriction at all, since the agent reads files with its own tools and
+the rules point it at whichever context is active. A client folder is a
+physical partition with no key on a line and no predicate on any
+read.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search, no index and no ranking. Code puts exactly one
+memory into context: <code>preferences.md</code>, about 7,700 characters
+at this commit, on every session start. Everything else arrives because
+the agent follows an instruction. The injected text asks it to read the
+context's README and <em>"the newest file in its journal/ folder"</em>,
+which is the current month, so on the first days of a month the journal
+it reads is nearly empty and the previous month's is one file further
+than it was asked to look. The rules add a <code>git fetch</code>,
+<code>git log</code> and journal read before any diagnosis
+(<code>preferences.md:67-68</code>).</p>
+<p>The journal it reads is mostly hook lines: a prompt cut at 180
+characters and the final assistant paragraph cut at 260, with tags and
+newlines stripped and em dashes replaced by commas
+(<code>auto_journal.py:45-49</code>). The agent's own summary line is
+the higher-value entry, and the two are interleaved with nothing but the
+<code>[auto ...]</code> prefix between them.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are automatic and synchronous at the file level, asynchronous
+at the remote. A hook line is on disk before the hook returns and on the
+remote after the detached sync's commit, rebase and push, typically
+seconds later; a second device sees it at its next session start or its
+next sync's rebase. Nothing blocks the agent: every hook swallows its
+errors into <code>.auto-journal/errors.log</code>
+(<code>auto_journal.py:52-58</code>, <code>:262-263</code>).</p>
+<p><strong>The active context is shared state.</strong>
+<code>.current-context</code> is one file per clone. A session that sets
+client B changes where every other open session on the machine writes
+next, and the Stop hook of a session working for client A appends A's
+question and answer to B's journal, which the next sync pushes. The
+SessionEnd copy of A's whole transcript lands in B's
+<code>sessions/</code> the same way (<code>save_session.py:38-42</code>,
+<code>:106</code>). A session that never sets a context writes into
+<code>_unsorted</code>. Remote Control sessions, which the README says
+rarely end, make long-lived parallel sessions the normal case rather
+than the edge.</p>
+<p><strong>Journals merge by union.</strong> <code>merge=union</code>
+keeps both sides of a conflicting hunk, which is what lets two devices
+append to the same month without stopping a rebase. It also means a line
+one device removed and another device's edit touched nearby can come
+back; that is how git's union driver behaves, inferred here and not
+exercised.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: one file append per turn plus a background
+<code>git add</code>, <code>commit</code>, <code>pull --rebase</code>
+and <code>push</code> per line; a transcript copy and a full commit at
+session end.</li>
+<li>Background: none between sessions.</li>
+<li>Read: about 7,700 characters of rules per session start, plus
+whatever the agent chooses to open.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Claude Code gets five hooks: SessionStart, UserPromptSubmit, Stop,
+SessionEnd and a PreToolUse guard on Bash and PowerShell that blocks
+commands containing an AI attribution line
+(<code>tools/block_ai_attribution.py:17-46</code>). Codex gets the
+<code>notify</code> chain and an <code>AGENTS.md</code> block telling it
+to read the rules and write journal lines itself, since it has no
+session-start hook. Neither gets a memory tool: reading is the agent's
+own file tools, writing is <code>note.py</code> through the shell.</p>
+<p>The repository also asks the agent to absorb other memory systems
+into it. <em>"Knowledge that only lives in a local agent memory file is
+invisible to other agents and devices: move it here"</em>
+(<code>preferences.md:112-113</code>), and the
+<code>context-doctor</code> runbook reads every file under
+<code>~/.claude/projects/*/memory/</code> and moves rules and procedures
+into this repository.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Privacy is a rule, not a filter.</strong> The raw transcript
+holds every tool input and output of the session — files read, command
+output, anything the agent saw — and it is committed with
+<code>git add -A</code> and pushed to a remote that every device and
+account clones.
+<code>git grep -n -i -E 'secret|redact|password|mask' -- tools</code>
+finds no filter. The README requires the remote to be private and says
+never to store secrets; the installer checks visibility once, and only
+for a GitHub remote with <code>gh</code> installed
+(<code>install.py:72-84</code>).</p>
+<p><strong>The repository runs its own code on every machine.</strong>
+Session start pulls the repository, then the next hook runs whatever
+<code>tools/*.py</code> the pull brought, and
+<code>session_start.py</code> rewrites every Claude Code
+<code>settings.json</code> on the machine to point at them. Anyone with
+push access to the private remote can change what every hook does on
+every device.</p>
+<p><strong>Failures stay quiet.</strong> Errors go to a log file and the
+hooks return success. A failed rebase is aborted in the sync and at
+session end, so the repository is not left mid-rebase by them
+(<code>auto_journal.py:223-227</code>,
+<code>save_session.py:122-127</code>); the session-start pull ignores
+its result, so a conflict there can leave a rebase in progress until one
+of those aborts runs.</p>
+<p><strong>Correction is editing.</strong> A wrong line can be edited or
+deleted in a file and stays in Git history and on every clone that
+pulled it.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — withheld. Nothing records a rejected value;
+there is no delete.</li>
+<li><code>trust_state</code> — withheld. No field; the one statement
+about trust is a rule that journal conclusions are not confirmed
+facts.</li>
+<li><code>bitemporal</code> — withheld. A line has the time it was
+written.</li>
+<li><code>scope_enforced</code> — withheld. Folders are a physical
+partition chosen on write by a shared local file, and no read is
+restricted to the active one.</li>
+<li><code>audit_log</code> — withheld. Git history is the only record of
+an edit; the journal records turns, not memory mutations.</li>
+<li><code>human_review</code> — withheld. Every line is live when
+written; a person editing a file is authoring after the fact.</li>
+<li><code>negative_eval</code> — withheld. There are no tests.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I built and ran nothing; everything here is from reading the tree at
+the pin.</p>
+<p>There is no test, no CI workflow and no evaluation: no
+<code>tests/</code> directory, no <code>.github/</code>, and
+<code>git grep -n -i -E 'pytest|unittest|def test_' -- tools</code>
+returns nothing. No paper or citation file is in the tree. The hooks'
+behaviour is documented in <code>WORKFLOW.md</code> and the changelog,
+and checked by nothing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Capture in hooks, not in the model's goodwill.</strong> A
+UserPromptSubmit and a Stop hook that write a line whatever the model
+does are the floor under every memory the agent is asked to write.</li>
+<li><strong>Inject the rules verbatim and warn when they outgrow the
+channel.</strong> A pointer to a rules file gets skipped; the length
+warning names the actual limit of the hook channel.</li>
+<li><strong>Union-merge append-only logs.</strong> It removes the
+conflict that would otherwise stop every multi-device rebase.</li>
+<li><strong>Back up a settings file before rewriting it</strong>, with a
+timestamped name, and ship an uninstall that removes exactly what the
+install added.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A machine-global "current scope" file read at write
+time.</strong> Pass the scope through the session — the hook payload
+carries a session id — or record it per session.</li>
+<li><strong><code>git add -A</code> of raw transcripts to a shared
+remote.</strong> Store the rendered text, or scrub tool results, before
+a push.</li>
+<li><strong>Recall by instruction only.</strong> If the journal matters,
+put its relevant part into the session-start context instead of asking
+the agent to go and read it.</li>
+<li><strong>A memory repository that also ships the hooks it
+runs.</strong> Pin the tools, or keep them in a repository other devices
+do not push to.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>It suits one person working alone across several machines and Claude
+accounts who wants a readable diary of every turn and a fixed set of
+rules in every session, and who will run one client at a time. It does
+not suit anyone running parallel sessions for different clients, anyone
+whose sessions read credentials or client data, or anyone who wants the
+agent to recall something it was not explicitly told to look for.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>.current-context</code> meant to be per session? The hook
+payload carries a <code>session_id</code> that would key it.</li>
+<li>Does the author intend transcripts to be scrubbed before push, or is
+the private remote the whole of the privacy model?</li>
+<li>Would a journal digest in the SessionStart context replace the
+instruction to read the newest file?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Hooks:</strong> <code>tools/session_start.py</code>,
+<code>tools/auto_journal.py</code>, <code>tools/save_session.py</code>,
+<code>tools/block_ai_attribution.py</code>.</li>
+<li><strong>Writer and contexts:</strong> <code>tools/note.py</code>,
+<code>clients/_template/README.md</code>,
+<code>projects/_template/README.md</code>.</li>
+<li><strong>Install:</strong> <code>tools/install.py</code>,
+<code>tools/start_agents.ps1</code>,
+<code>tools/sessions.example.json</code>.</li>
+<li><strong>Rules and runbooks:</strong> <code>preferences.md</code>,
+<code>preferences-background.md</code>,
+<code>skills/context-doctor.md</code>,
+<code>skills/remote-control-sessions.md</code>.</li>
+<li><strong>Merge and ignore:</strong> <code>.gitattributes</code>,
+<code>.gitignore</code>.</li>
+<li><strong>Docs:</strong> <code>README.md</code>,
+<code>WORKFLOW.md</code>, <code>CHANGELOG.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>git grep -n -i -E 'secret|redact|password|mask' -- tools</code>
+— no match; no filter on what is committed.</li>
+<li><code>git grep -n -E 'current_context\(' -- tools</code> — read in
+<code>note.py</code>, at every <code>auto_journal.py</code> write and at
+session end; nothing keys it by session.</li>
+<li><code>git grep -n -i -E 'pytest|unittest|def test_' -- tools</code>
+— no match; no tests.</li>
+<li><code>git ls-files | /usr/bin/grep -E '^(tests?/|\.github/)'</code>
+— no match.</li>
+<li><code>git grep -n -i -E 'delete|remove|forget' -- tools/note.py tools/auto_journal.py tools/save_session.py</code>
+— the lock file removal only; no verb removes a journal line.</li>
+<li><code>git grep -n -i -E 'embed|bm25|fts5|vector|sqlite|similar|grep' -- tools</code>
+— no match; no retrieval code. (<code>search</code> and
+<code>index</code> match only <code>re.search</code>, the attribution
+guard's pattern test and the README index row writer.)</li>
+<li><code>git grep -l -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION'</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-09</strong> — <a
+href="https://github.com/SebastiaanBoon/cloud-alter-ego/commit/37687bbb730686d72e606bd432bfca99e104f2c0"><code class="commit-id" title="37687bbb730686d72e606bd432bfca99e104f2c0">37687bbb…</code></a>
+— first reading, at the head of <code>main</code>. No mark. Screened
+before reading: the screen scanned one file and found nothing, since the
+hooks are installed by <code>tools/install.py</code> into the user's own
+Claude Code and Codex settings rather than declared in the tree;
+<code>tools/</code> and <code>.gitattributes</code> (a built-in
+<code>merge=union</code> driver, not a checkout filter) were read by
+hand. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

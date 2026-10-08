@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 730 reports.</strong></p>
+<p><strong>This page covers all 731 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -30383,6 +30383,41 @@ all.</li>
 people or machines, or you need correction history; notes are replaced
 or deleted whole, and one profile serves every browser on the
 machine.</li>
+</ul>
+<h3 id="cloud-alter-ego"><a
+href="../systems/cloud-alter-ego/"><code>cloud-alter-ego</code></a></h3>
+<ul>
+<li>Best idea: <strong>capture in hooks, not in the model's
+goodwill.</strong> <code>UserPromptSubmit</code> and <code>Stop</code>
+write a journal line for every question and answer whether or not the
+agent calls <code>note.py</code>, and <code>Stop</code> warns in the
+journal when the transcript it reads does not hold the prompt
+<code>UserPromptSubmit</code> saw.</li>
+<li>Biggest risk: <strong>one machine-wide scope file, reread at every
+write.</strong> <code>.current-context</code> decides which client's
+journal a line lands in, and a parallel session that sets another client
+moves every open session's next lines and its end-of-session transcript
+into that client's folder, in a repository whose own rules forbid
+mentioning one client to another.</li>
+<li>Most reusable component: <code>tools/session_start.py</code> —
+re-registers the hooks in every Claude Code config directory on the
+machine with a timestamped backup first, and injects the rules file
+verbatim with a warning when it outgrows the hook channel.</li>
+<li>Second risk: <strong>raw transcripts pushed unfiltered.</strong>
+<code>save_session.py</code> copies the session JSONL, tool results
+included, and runs <code>git add -A</code>, commit and push to a remote
+every device clones; nothing in <code>tools/</code> scans for
+secrets.</li>
+<li>Maturity impression: MIT, 1,070 lines of Python and 8 commits by one
+author between 25 September and 8 October 2026. No tests, no CI. No
+mark: recall is an instruction to read files, and nothing filters,
+scopes a read or records a correction.</li>
+<li>Study when: you want model-independent capture of every agent turn
+across devices and accounts, or a minimal installer that wires hooks
+into several Claude Code configs and Codex.</li>
+<li>Do not copy when: sessions run in parallel for different scopes,
+sessions read credentials or client data, or the agent must recall
+something it was not told to look for.</li>
 </ul>
         </article>
       </div>

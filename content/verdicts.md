@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 730 reports.**
+**This page covers all 731 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6618,3 +6618,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 52,459 lines of TypeScript and 501 commits on `main` from one author between 25 July and 8 October 2026. Two marks, `scope_enforced` and `human_review`. CI runs 109 Vitest files on every pull request and push to `main`; no test asserts that a staged map is absent from the loader, and there is no memory evaluation.
 - Study when: you let an agent write memory from untrusted pages and want a person between the write and the next prompt, or you need per-site procedural notes scoped by domain with no search stack at all.
 - Do not copy when: memory holds facts about users or is shared across people or machines, or you need correction history; notes are replaced or deleted whole, and one profile serves every browser on the machine.
+
+### [`cloud-alter-ego`](../systems/cloud-alter-ego/)
+
+- Best idea: **capture in hooks, not in the model's goodwill.** `UserPromptSubmit` and `Stop` write a journal line for every question and answer whether or not the agent calls `note.py`, and `Stop` warns in the journal when the transcript it reads does not hold the prompt `UserPromptSubmit` saw.
+- Biggest risk: **one machine-wide scope file, reread at every write.** `.current-context` decides which client's journal a line lands in, and a parallel session that sets another client moves every open session's next lines and its end-of-session transcript into that client's folder, in a repository whose own rules forbid mentioning one client to another.
+- Most reusable component: `tools/session_start.py` — re-registers the hooks in every Claude Code config directory on the machine with a timestamped backup first, and injects the rules file verbatim with a warning when it outgrows the hook channel.
+- Second risk: **raw transcripts pushed unfiltered.** `save_session.py` copies the session JSONL, tool results included, and runs `git add -A`, commit and push to a remote every device clones; nothing in `tools/` scans for secrets.
+- Maturity impression: MIT, 1,070 lines of Python and 8 commits by one author between 25 September and 8 October 2026. No tests, no CI. No mark: recall is an instruction to read files, and nothing filters, scopes a read or records a correction.
+- Study when: you want model-independent capture of every agent turn across devices and accounts, or a minimal installer that wires hooks into several Claude Code configs and Codex.
+- Do not copy when: sessions run in parallel for different scopes, sessions read credentials or client data, or the agent must recall something it was not told to look for.

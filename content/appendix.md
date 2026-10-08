@@ -431,6 +431,7 @@ page_kind: comparison
 - [`harness-evolution`](../systems/harness-evolution/)
 - [`archiver-rag`](../systems/archiver-rag/)
 - [`browsentic`](../systems/browsentic/)
+- [`cloud-alter-ego`](../systems/cloud-alter-ego/)
 
 ## Repos Inspected
 
@@ -1166,6 +1167,7 @@ page_kind: comparison
 - [ZyGan1999/self-evolving-harness-as-learning](https://github.com/ZyGan1999/self-evolving-harness-as-learning) at [`9f7e8178588513f30296cd965a9923c17f5ff98c`](https://github.com/ZyGan1999/self-evolving-harness-as-learning/commit/9f7e8178588513f30296cd965a9923c17f5ff98c) — read only, at the head of `main`, a commit dated 25 September 2026, beside [arXiv:2609.36892](https://arxiv.org/abs/2609.36892). No licence file, so all rights reserved by default. Screened before reading on a full clone: 2 files scanned, no auto-run surface, no build-time execution, nothing inside the cooldown, no unpinned surface; no agent instruction file is committed. Nothing installed, built or run; the trigram similarity check used a standalone re-implementation of one function.
 - [FernandoJRR/archiver-rag](https://github.com/FernandoJRR/archiver-rag) at [`72e6d82bb4d5ec2e978f109d5e8ffba13ba33e1e`](https://github.com/FernandoJRR/archiver-rag/commit/72e6d82bb4d5ec2e978f109d5e8ffba13ba33e1e) — read only, at the head of `main`, a documentation commit of 28 September 2026 one commit after the 0.2.2 release. MIT. Screened before reading from a full clone: no auto-run surface, one build-time execution point (`tests/conftest.py`), nothing inside the seven-day cooldown, one unpinned surface (`pyproject.toml` without a lockfile); `CLAUDE.md` and `AGENTS.md` were treated as data. Nothing was installed, built or run
 - [imshaikot/browsentic](https://github.com/imshaikot/browsentic) at [`868fd857e7b8908b3a16400675bc4d955e056570`](https://github.com/imshaikot/browsentic/commit/868fd857e7b8908b3a16400675bc4d955e056570) — read only, at the head of `main`, 17 commits past the v0.8.0 tag, dated 8 October 2026. Apache-2.0 with no rider. Screened before reading from a full clone: 1 auto-run surface (`server.json`, an MCP registry manifest naming `npx browsentic mcp`), 2 build-time execution points (a `postinstall` of `wxt prepare` and the Tauri `build.rs`), 2 dependency files inside the seven-day cooldown, and 2 floating-range surfaces against present lockfiles. Nothing was installed, built or run
+- [SebastiaanBoon/cloud-alter-ego](https://github.com/SebastiaanBoon/cloud-alter-ego) at [`37687bbb730686d72e606bd432bfca99e104f2c0`](https://github.com/SebastiaanBoon/cloud-alter-ego/commit/37687bbb730686d72e606bd432bfca99e104f2c0) — read only, at the head of `main`, a commit of 8 October 2026. MIT. Screened before reading from a full clone: the screen scanned one file and found nothing, because the hooks are installed into the user's own settings by `tools/install.py` rather than declared in the tree; `tools/` and `.gitattributes` (a built-in `merge=union` driver) were read by hand. Nothing was installed, built or run
 
 ## What the licences actually say
 
