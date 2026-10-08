@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP server over an Obsidian
+vault: agents log Markdown notes, a file watcher embeds them into Chroma
+and rewrites each note's Related links.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Archiver
+RAG — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP server over an
+Obsidian vault: agents log Markdown notes, a file watcher embeds them
+into Chroma and rewrites each note's Related links.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Archiver
+RAG — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP server over an
+Obsidian vault: agents log Markdown notes, a file watcher embeds them
+into Chroma and rewrites each note's Related links.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Archiver RAG — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Archiver RAG",
+      "description": "An MCP server over an Obsidian vault: agents log Markdown notes, a file watcher embeds them into Chroma and rewrites each note's Related links.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An Obsidian vault as shared agent
+memory</p>
+          <h1>Archiver RAG</h1>
+          <p class="document-deck">An MCP server over an Obsidian vault:
+agents log Markdown notes, a file watcher embeds them into Chroma and
+rewrites each note's Related links.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/FernandoJRR/archiver-rag">
+              <span>Source</span>
+              <strong>FernandoJRR/archiver-rag</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/FernandoJRR/archiver-rag/commit/72e6d82bb4d5ec2e978f109d5e8ffba13ba33e1e" title="72e6d82bb4d5ec2e978f109d5e8ffba13ba33e1e">
+              <span>Analyzed revision</span>
+              <code>72e6d82b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-10-08</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/FernandoJRR--archiver-rag" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>FernandoJRR--archiver-rag</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>6,901
+lines of Python in archiver_rag/; the watcher is 706 of them, the CLI
+1,042, ingest, search and rerank 343</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>61
+commits on main by 1 contributor, 27 April 2026 – 28 September 2026;
+version 0.2.2</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>446
+test functions in 32 files, 7,149 lines; CI runs all but the slow-marked
+ones on Ubuntu and macOS, Python 3.11 to 3.14; no retrieval eval or
+benchmark</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Archiver RAG is a memory server for coding agents whose store is the
+user's Obsidian vault. An agent searches it with
+<code>search_vault</code> and writes to it with <code>log_note</code>,
+which creates a Markdown file under
+<code>&lt;type&gt;/&lt;slug&gt;.md</code>. A separate watcher process
+embeds every saved note into a local Chroma collection and rewrites the
+note's <code>## Related</code> section with links to its nearest
+neighbours. The bundled instruction files tell each agent to treat the
+vault as its primary memory, ahead of its own.</p>
+<p>What is notable is that correction is ordinary editing. A wrong note
+is a file a person opens in Obsidian and fixes or deletes, and the
+watcher carries the change into the index on save. What is weak is
+everything the agent does on its own: its writes are believed on arrival
+and never deduplicated, its one mutating verb besides
+<code>log_note</code> can trash any note, and the search it relies on
+has a relevance floor that admits nearly every chunk in the index.</p>
+<p>The project is a single-author Python package published to PyPI as a
+beta. Its tests cover file mechanics, the watcher's event routing,
+placement arithmetic and the MCP surface; none runs
+<code>search_vault</code>, <code>ingest_file</code> or
+<code>prune_orphans</code> against a real collection.</p>
+<p>Five findings shape the rest of this report.</p>
+<ul>
+<li><strong>The score floor is not a floor.</strong> <code>rerank</code>
+computes <code>base_score = 1 - dist/2</code> from Chroma's cosine
+distance, which is <code>(1 + cosine) / 2</code>, and drops chunks below
+0.35, so a chunk passes at a cosine of -0.3
+(<code>archiver_rag/graph/rerank.py:35-38</code>). The skill tells the
+agent to fall back to its own memory when the score is below threshold,
+and describes the parameter as a <em>"Minimum base cosine score"</em>
+(<code>skill/claude-code/SKILL.md:19</code>, <code>:80</code>).</li>
+<li><strong>A restated memory stacks.</strong> <code>log_note</code>
+never reads the index; a title that already has a file gets
+<code>slug-1.md</code> beside it
+(<code>archiver_rag/vault/notes.py:36-47</code>). Nothing in the code or
+the skills tells the agent to edit or replace an existing note.</li>
+<li><strong>The agent can delete through
+<code>move_notes</code>.</strong> The tool checks that source and
+destination resolve inside the vault and nothing else
+(<code>archiver_rag/vault/reorganize.py:62-71</code>), so a destination
+of <code>.trash/&lt;name&gt;.md</code> removes the note from the index
+and sweeps every link to it. The CLI's <code>delete</code>, which does
+the same thing, asks for confirmation.</li>
+<li><strong>Writes and deletes need the watcher.</strong>
+<code>log_note</code> writes the file and returns; indexing happens only
+in the watcher, and the watcher does no catch-up when it starts. A note
+logged while it is down is unsearchable, and a note deleted while it is
+down stays searchable, until <code>sync</code> or
+<code>prune</code>.</li>
+<li><strong>The HTTP transport is open to the browser.</strong> It
+performs no authentication by design, and DNS-rebinding protection is
+enabled only when the operator passes <code>--allowed-host</code>
+(<code>archiver_rag/mcp/http.py:57-78</code>). On the default loopback
+bind, a rebinding page can reach <code>log_note</code>.</li>
+</ul>
+<p>No capability mark. Section 9 names the seven withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a Markdown note. It becomes a belief when the file
+exists: there is no extraction, no candidate state and no model call
+between an agent's <code>log_note</code> and the note being indexed. It
+stops being one when the file leaves the visible vault, by deletion or
+by a move into a dot-directory, and the watcher or a later
+<code>prune</code> removes its chunks. There is no other exit: no
+supersession, no expiry, no status.</p>
+<p><strong>The file is the record and the index is a cache of
+it.</strong> <code>ingest_file</code> deletes every chunk whose
+<code>source</code> is the note's vault-relative path and adds fresh
+ones (<code>archiver_rag/core/ingest.py:106-126</code>). An edit
+therefore replaces the note's whole indexed presence, and the index
+never holds two versions of one path. Identity is the path: a rename or
+a move is a delete of the old source and an ingest of the new one
+(<code>archiver_rag/watcher.py:616-640</code>).</p>
+<p><strong>Correction belongs to whoever can edit files.</strong> The
+six MCP tools include no edit and no delete
+(<code>archiver_rag/mcp/server.py:23-178</code>). A person corrects in
+Obsidian. An agent whose harness has its own file tools, as Claude Code
+does, can edit the note directly; the watcher's atomic-save handling
+exists because such saves were being missed
+(<code>archiver_rag/watcher.py:573-583</code>). An agent reached only
+over MCP can add a note, move one, or move one into
+<code>.trash/</code>.</p>
+<p><strong>Two writers share each note.</strong> The author owns the
+body; <code>linker.py</code> owns the <code>## Related</code> section
+and rewrites it after every ingest
+(<code>archiver_rag/graph/linker.py:257-299</code>). Ingest strips that
+section from the chunk text so neighbour names do not shape the
+embedding (<code>archiver_rag/core/ingest.py:83-87</code>). The
+embedding prefix, though, is built from
+<code>extract_wikilinks(raw)</code> over the unstripped file
+(<code>:69</code>, <code>:81</code>). Up to eight link targets enter
+every chunk's vector, auto-written ones included once the body's own
+links run out.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how an Archiver RAG note becomes searchable, how it is corrected or removed, and the paths that bypass the index while the watcher is down</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how an Archiver RAG note becomes searchable, how it is corrected or removed, and the paths that bypass the index while the watcher is down
+flowchart TD
+    A[&quot;agent: log_note(title, content, type)&quot;] --&gt; F{&quot;type/slug.md&lt;br/&gt;already exists?&quot;}
+    F -- &quot;yes&quot; --&gt; F2[&quot;write type/slug-1.md:&lt;br/&gt;both notes live&quot;]
+    F -- &quot;no&quot; --&gt; F1[&quot;write type/slug.md&quot;]
+    P[&quot;person: edit in Obsidian&quot;] --&gt; W
+    E[&quot;agent: native file edit&quot;] --&gt; W
+    F1 --&gt; W{&quot;watcher&lt;br/&gt;running?&quot;}
+    F2 --&gt; W
+    W -- &quot;no&quot; --&gt; U[&quot;on disk, not searchable&lt;br/&gt;until archiver-rag sync&quot;]
+    W -- &quot;yes&quot; --&gt; I[&quot;ingest: delete chunks by source,&lt;br/&gt;add 500-word chunks with prefix&quot;]
+    I --&gt; L[&quot;auto_link rewrites ## Related,&lt;br/&gt;the save fires one more ingest&quot;]
+    L --&gt; S[&quot;search_vault: top n chunks,&lt;br/&gt;floor 0.35 = cosine above -0.3,&lt;br/&gt;graph and hub boost&quot;]
+    D1[&quot;CLI delete, with confirm&quot;] --&gt; T[&quot;.trash/name.md&quot;]
+    D2[&quot;Obsidian delete&quot;] --&gt; T
+    D3[&quot;agent: move_notes to .trash/,&lt;br/&gt;no confirm&quot;] --&gt; T
+    T --&gt; W2{&quot;watcher&lt;br/&gt;running?&quot;}
+    W2 -- &quot;yes&quot; --&gt; X[&quot;chunks deleted,&lt;br/&gt;Related links swept&quot;]
+    W2 -- &quot;no&quot; --&gt; Z[&quot;chunks stay searchable&lt;br/&gt;until prune or sync&quot;]
+    D1 --&gt; X
+    D3 --&gt; X</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three kinds of process share the vault and the Chroma directory. The
+MCP server runs over stdio, spawned by each client, or as one
+streamable-HTTP daemon on <code>127.0.0.1:8077</code>. The watcher runs
+as a launchd agent or a systemd user service
+(<code>archiver_rag/service.py</code>). The CLI is a fresh process per
+command.</p>
+<p><strong>Persistence.</strong> The vault is plain Markdown wherever
+the user keeps it. The index is a Chroma <code>PersistentClient</code>
+collection named <code>obsidian_vault</code> with cosine HNSW, under
+<code>~/.local/share/archiver-rag/chroma_db</code>
+(<code>archiver_rag/core/db.py:65-73</code>).
+<code>centroids.json</code> caches one embedding per described folder
+for placement. <code>runtime.json</code> under the cache directory holds
+the watcher's last event and its counters since start
+(<code>archiver_rag/runtime.py:90-115</code>).</p>
+<p><strong>Freshness across processes.</strong> A long-lived server
+holding a <code>PersistentClient</code> does not see another process's
+writes. <code>_LazyCollection</code> stats <code>chroma.sqlite3</code>
+before each call and reconnects when its mtime or size moved,
+re-capturing the signature after its own calls so its writes do not look
+external (<code>db.py:75-125</code>); the docstring explains why the
+HNSW segment files would be the wrong thing to watch. Concurrent writes
+are a separate matter: the watcher and the MCP server both write to the
+collection, and the server's write lock is per-process by its own
+comment (<code>archiver_rag/mcp/server.py:182-192</code>).</p>
+<p><strong>Embedding.</strong> <code>sentence-transformers</code> with
+<code>all-MiniLM-L6-v2</code> on the CPU, loaded lazily and switched to
+offline mode once cached (<code>archiver_rag/core/embedder.py</code>).
+The chunker cuts 500 words with a 50-word overlap
+(<code>archiver_rag/core/chunker.py</code>). The model's published
+configuration truncates input at 256 word pieces, so most of a full
+500-word chunk, after the prefix, is stored as text and never embedded.
+That limit is read from the model card, not measured here.</p>
+<p><strong>Organisation features.</strong> Folder descriptions in
+<code>_folder.md</code> sidecars, generated by c-TF-IDF with MMR
+(<code>archiver_rag/graph/terms.py</code>), let
+<code>suggest_folder</code> place a note by cosine against each folder's
+centroid (<code>archiver_rag/graph/placement.py</code>). With
+<code>auto_cluster</code>, <code>auto_describe</code> and
+<code>auto_inbox</code> on, all three off by default at this pin, the
+watcher moves new notes, rewrites descriptions and spins inbox clusters
+out into new folders. These change where a note lives, and so its
+embedding prefix; they change nothing about whether it is believed.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pipx install archiver-rag</code> or
+<code>uv tool install</code>, then <code>archiver-rag init</code>, which
+asks for the vault path, indexes it, registers the stdio server in
+<code>~/.claude.json</code> and optionally installs the watcher at
+login. PyTorch makes the install about 1.4 GB and the model is a 90 MB
+download on first use. No API key and no network service are needed
+after that; macOS and Linux only.</p>
+<p>The store is the best part of the deployment story. It is a folder of
+Markdown the user already reads, Obsidian's own trash makes deletion
+recoverable, and removing Archiver RAG leaves a normal vault.
+<code>archiver-rag index</code> rebuilds the index from it at any
+time.</p>
+<p><code>is_hidden_path</code> treats any path component beginning with
+a dot as hidden, and the enumerations pass it absolute paths
+(<code>archiver_rag/utils.py:48-68</code>, <code>:80-100</code>;
+<code>archiver_rag/core/ingest.py:56</code>). A vault whose own path
+passes through a dot-directory therefore indexes, links and counts
+nothing.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>log_note</code>
+(<code>archiver_rag/vault/notes.py:50-108</code>) reduces
+<code>type</code> to its last path component, builds frontmatter with
+<code>type</code>, today's <code>date</code>, <code>tags</code> and a
+<code>related</code> list, takes the first free name among
+<code>slug.md</code>, <code>slug-1.md</code>, … (<code>:36-47</code>),
+writes the file, and gives an undescribed folder a description from it.
+It does not ingest. The MCP dispatcher serialises it with
+<code>move_notes</code> under one in-process lock
+(<code>server.py:355-359</code>).</p>
+<p><strong>Ingest.</strong> The watcher's <code>on_created</code>,
+<code>on_modified</code> and <code>on_moved</code> call
+<code>ingest_file</code> then <code>auto_link</code>
+(<code>archiver_rag/watcher.py:491-528</code>, <code>:627-640</code>).
+<code>ingest_file</code> parses frontmatter, extracts wikilinks and
+tags, takes <code>type</code> from frontmatter or the folder name,
+builds the prefix, chunks the body with <code>## Related</code>
+stripped, embeds, counts inbound links by reading the whole vault
+(<code>ingest.py:47-49</code>), and replaces the note's chunks
+(<code>ingest.py:52-128</code>).</p>
+<p><strong>Auto-link.</strong> <code>select_related_candidates</code>
+embeds the stripped body, queries 40 chunks, keeps each note's best
+score above 0.55 on the same <code>(1+cosine)/2</code> scale, and keeps
+every note within <code>link_margin</code> 0.05 of the top one, at most
+15 (<code>linker.py:178-254</code>). <code>_append_links_section</code>
+rebuilds <code>## Related</code> from that set, keeps links the author
+also wrote in the body, drops targets with no file, and returns the
+original string object when nothing changed so the caller skips the
+write (<code>linker.py:59-158</code>, <code>:294-299</code>).</p>
+<p><strong>Search.</strong> <code>search_vault</code>
+(<code>archiver_rag/core/search.py</code>) embeds the query and asks
+Chroma for <code>n_results</code> chunks, three times that when
+<code>tags</code> will post-filter, with an optional <code>where</code>
+on <code>type</code> (<code>:17-30</code>). <code>rerank</code> reads
+every note to build the link map (<code>rerank.py:28</code>) and drops
+chunks under <code>min_score</code>. It adds 0.10 each for an outgoing
+and an incoming link with the context note, and up to 0.10 for inbound
+links saturating at 12, then sorts and truncates
+(<code>rerank.py:33-74</code>).</p>
+<p><strong>Traverse.</strong> <code>get_connections</code> builds the
+same link map and walks it breadth-first to the requested depth,
+returning stems per layer
+(<code>archiver_rag/graph/connections.py</code>).</p>
+<p><strong>Delete.</strong> The CLI's <code>delete</code> resolves
+names, prints the impact, and asks for confirmation unless
+<code>--yes</code> (<code>archiver_rag/cli.py:373-445</code>).
+<code>delete_notes</code> then moves each file to a collision-safe name
+in <code>.trash/</code>, sweeps <code>## Related</code> in every note
+that linked to it, and prunes the index
+(<code>archiver_rag/vault/notes.py:147-204</code>). A delete in Obsidian
+reaches the watcher in one of two shapes. A move into
+<code>.trash/</code> evicts the old source and sweeps
+(<code>watcher.py:616-625</code>, <code>:668-678</code>). A delete event
+first waits up to a second for the file to reappear, because an atomic
+save reports as modify then delete, and then evicts and sweeps
+(<code>watcher.py:37-56</code>, <code>:530-570</code>).</p>
+<p><strong>Move.</strong> <code>move_notes</code>
+(<code>archiver_rag/vault/reorganize.py:49-112</code>) checks both paths
+resolve inside the vault, refuses an existing destination, and moves the
+file. When the stem changed it rewrites <code>[[old]]</code>,
+<code>[[old#h]]</code>, <code>[[old|alias]]</code> and bare YAML
+<code>related</code> entries across the vault (<code>:8-46</code>), then
+prunes.</p>
+<p><strong>Repair.</strong> <code>sync</code> re-ingests notes whose
+file mtime is newer than the indexed one and prunes; <code>prune</code>
+drops chunks whose source file is gone; <code>index</code> re-ingests
+everything (<code>ingest.py:131-203</code>). <code>health</code> and
+<code>status</code> report the index-vs-disk drift that tells a user to
+run them (<code>archiver_rag/core/index_stats.py</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Written by</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>path</td>
+<td>filesystem</td>
+<td><code>log_note</code>, a person, <code>move_notes</code>,
+placement</td>
+<td>everything; it is the identity</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>frontmatter, chunk metadata</td>
+<td><code>log_note</code> from its argument; a person</td>
+<td><code>search_vault</code>'s <code>where</code>, placement
+fallback</td>
+</tr>
+<tr>
+<td><code>date</code></td>
+<td>frontmatter</td>
+<td><code>log_note</code>, today's date</td>
+<td>nothing on the read path</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td>frontmatter and inline <code>#tag</code>, chunk metadata</td>
+<td>the writer</td>
+<td><code>search_vault</code>'s post-filter, the prefix, folder
+descriptions</td>
+</tr>
+<tr>
+<td><code>related</code></td>
+<td>frontmatter</td>
+<td><code>log_note</code> from <code>related_notes</code></td>
+<td><code>move_notes</code> rewrites it; nothing ranks on it</td>
+</tr>
+<tr>
+<td><code>## Related</code></td>
+<td>body</td>
+<td><code>log_note</code> once, then <code>auto_link</code></td>
+<td>the link map: graph boost, hub boost,
+<code>get_connections</code></td>
+</tr>
+<tr>
+<td>chunk metadata</td>
+<td>Chroma</td>
+<td><code>ingest_file</code></td>
+<td><code>source</code>, <code>folder</code>, <code>type</code>,
+<code>tags</code>, <code>links</code>, <code>incoming_count</code>,
+<code>title</code>, <code>mtime</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>No scope.</strong> No user, agent, project or session field
+exists on a note or a chunk, and <code>type</code> is the only predicate
+on the read path (<code>search.py:17</code>). The design is deliberate:
+the README's case for the project is that <em>"what one agent learns,
+the next one already knows"</em>. It also means a lesson logged while
+working on one codebase is returned while working on another, ranked by
+similarity alone.</p>
+<p><strong>No provenance beyond location.</strong> Which agent, which
+session and which source file a note came from are not recorded.
+<code>log_note</code> takes no author and the frontmatter carries none
+(<code>notes.py:22-33</code>).</p>
+<p><strong>One time field.</strong> <code>date</code> is the day the
+note was logged. Chroma's <code>mtime</code> is the file's modification
+time at ingest, used only by <code>sync</code>
+(<code>ingest.py:103</code>, <code>:194-198</code>). Nothing is
+versioned beyond what Obsidian or the user's own git does with the
+files.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Tool-mediated only.</strong> Nothing injects memory into a
+prompt. The agent calls <code>search_vault</code> because its
+instruction file says to: before answering, before reading a source
+file, before reading its own memory
+(<code>skill/claude-code/SKILL.md:34-60</code>,
+<code>AGENTS.md:568-579</code>).</p>
+<p><strong>The floor admits almost everything.</strong> Chroma's cosine
+distance is <code>1 - cosine</code>, so <code>base_score</code> is
+<code>(1 + cosine) / 2</code>. The default <code>min_score</code> of
+0.35 therefore admits a chunk at a cosine of -0.3, and
+<code>search_vault</code> returns <code>n_results</code> chunks whenever
+the index holds that many. The skill's fallback rule — <em>"Only fall
+back to the auto-memory system if the vault search returns no relevant
+results (score below threshold or vault unavailable)"</em>
+(<code>SKILL.md:19</code>) — can then fire only on an empty index or an
+error. The auto-linker's 0.55 is a cosine of 0.10 on the same scale. Its
+docstring records about 30 notes clearing it for any query, in a vault
+of roughly 80 (<code>linker.py:195-202</code>), which is why the margin
+rule exists.</p>
+<p><strong>Results are chunks, not notes.</strong> Three chunks by
+default, with no per-source deduplication, so one long note can fill the
+answer.</p>
+<p><strong>Boosts are structural and vault-wide.</strong> A chunk gains
+0.10 for each direction of link with <code>context_note</code>, and up
+to 0.10 for inbound links, most of which the auto-linker writes. The
+rerank re-reads every note on every search to build the link map
+(<code>utils.py:80-95</code>), so search cost grows with the vault.</p>
+<p><strong>Deleted notes stay searchable while the watcher is
+down.</strong> <code>search_vault</code> does not check that a returned
+<code>source</code> exists on disk. Chunks of a file removed with the
+watcher stopped are returned until a <code>prune</code> or
+<code>sync</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit. The agent decides what to log and the skills
+give it the moments: after a non-trivial problem, and when a search came
+back empty on something that matters (<code>README.md:349-352</code>).
+There is no extraction from transcripts, no summarisation pass and no
+model call on the write path.</p>
+<p><strong>No deduplication.</strong> <code>log_note</code> does not
+search before writing, and the skill tells the agent to search before
+<em>reading</em>, not before logging. A restatement of an existing
+lesson is a second file, and both are retrieved.</p>
+<p><strong>No update verb.</strong> The skill's tool reference describes
+<code>log_note</code> as <em>"Collision-safe: appends <code>-1</code>,
+<code>-2</code> if name exists"</em> (<code>SKILL.md:166</code>) and
+says nothing about editing a note that turned out to be wrong.
+Correction by an agent depends on whether its harness gives it file
+tools.</p>
+<p><strong>Agent writes are unfiltered.</strong> No content check, no
+secret scan, no length limit on <code>content</code>. A
+<code>type</code> is reduced to its last path component, which stops
+traversal; a <code>type</code> that begins with a dot writes into a
+hidden folder the indexer skips.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Write:</strong> <code>log_note</code> blocks only on a file
+write. Indexing is asynchronous in the watcher, typically seconds after
+the save. Each new note is embedded at least twice, once on create and
+once after <code>auto_link</code> rewrites it. Every ingest and every
+auto-link reads every note in the vault to count links.</li>
+<li><strong>Background:</strong> none beyond the watcher's per-event
+work. No pass re-reads the whole store on a schedule;
+<code>relink --apply</code> and <code>place --all --apply</code> are
+manual.</li>
+<li><strong>Read:</strong> one query embedding, one Chroma query, one
+full read of the vault for the link map. The response is three chunks of
+up to 500 words each with their scores, placed in context by the agent's
+own call.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Six MCP tools over stdio or HTTP (<code>server.py:20-179</code>).
+<code>search_vault</code>, <code>vault_status</code>,
+<code>get_connections</code> and <code>suggest_folder</code> read;
+<code>log_note</code> and <code>move_notes</code> write. During long
+calls the server streams log and progress notifications to the client's
+log surface, not to the model (<code>server.py:195-332</code>).</p>
+<p>The instruction files are the integration: one per agent
+(<code>skill/claude-code/SKILL.md</code>,
+<code>skill/codex/AGENTS.md</code>,
+<code>skill/opencode/AGENTS.md</code>,
+<code>skill/copilot/copilot-instructions.md</code>), each
+self-contained, each making the vault the first source of truth. The
+Claude Code version maps Claude Code's own auto-memory categories onto
+<code>log_note</code> types, <code>user</code> to <code>note</code> with
+a <code>user-profile</code> tag among them, and makes the auto-memory
+file an optional mirror (<code>SKILL.md:9-30</code>). Adopting it moves
+the agent's memory about the user into the shared vault.</p>
+<p>The model's agency is wide on organisation and narrow on content. It
+can create notes and move any file in the vault, into
+<code>.trash/</code> and out of it. It cannot edit or delete a note
+through the server.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>A person is the correction mechanism.</strong> Everything an
+agent writes lands as a plain file the user can read in Obsidian, and
+editing or trashing it there reaches retrieval within seconds while the
+watcher runs. That is a real strength over stores a user cannot open. It
+is also the only check: nothing holds an agent's note back until someone
+looks.</p>
+<p><strong>The agent's soft delete has no gate.</strong>
+<code>move_notes</code> to <code>.trash/</code> is the operation the CLI
+guards with a prompt. The file is recoverable from <code>.trash/</code>;
+the link sweep is not undone by moving it back.</p>
+<p><strong>The HTTP daemon trusts the network it is on.</strong> No
+authentication and no TLS, by design, stated in the README and the
+module docstring (<code>http.py:8-13</code>). Binding beyond loopback
+prints a warning (<code>cli.py:1002</code>). DNS-rebinding protection is
+off unless <code>--allowed-host</code> names a host
+(<code>http.py:69-70</code>), and the README presents that flag as an
+extra for remote setups. On the default bind, a web page that rebinds
+its own name to <code>127.0.0.1</code> can call every tool,
+<code>log_note</code> included, and write a note every agent treats as
+authoritative. This is inferred from the transport settings and was not
+exercised.</p>
+<p><strong>Two writers, one index, no cross-process lock.</strong> The
+watcher and the MCP server both write Chroma. The server's lock
+serialises its own mutating tools only, as its comment says
+(<code>server.py:182-192</code>).</p>
+<p><strong>Silent gaps when the watcher is down.</strong> The watcher
+does no catch-up on start (<code>watcher.py:681-700</code>).
+<code>status</code> and <code>health</code> show the drift and name the
+repair command, which is the right design and depends on someone running
+them.</p>
+<p>Capability marks:</p>
+<ul>
+<li><code>tombstone</code> — withheld. Deletion moves a file to
+<code>.trash/</code>; nothing records a rejected value, and logging the
+same text again creates a live note.</li>
+<li><code>trust_state</code> — withheld. No status field exists on a
+note or a chunk.</li>
+<li><code>bitemporal</code> — withheld. One frontmatter
+<code>date</code>, the day of logging.</li>
+<li><code>scope_enforced</code> — withheld. No scope key exists; the
+<code>type</code> filter is a taxonomy the writer picks, not a
+boundary.</li>
+<li><code>audit_log</code> — withheld. <code>runtime.json</code> keeps
+the last event and counters since the process started and is overwritten
+on every event (<code>runtime.py:90-115</code>); it is a heartbeat, not
+a record of mutations.</li>
+<li><code>human_review</code> — withheld. A note is live when written; a
+person editing it afterwards is authoring, not admitting.</li>
+<li><code>negative_eval</code> — withheld. The nearest case is
+<code>test_find_note_skips_trashed_duplicate</code>, which asserts that
+a stem lookup returns the live note and not a same-named copy in
+<code>.trash/</code>
+(<code>tests/test_folder_note_exclusion.py:122-130</code>).
+<code>find_note</code> serves <code>suggest_folder</code> and
+<code>place</code>, not search, and no test asserts that anything is
+absent from <code>search_vault</code> or from the index after a
+delete.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing. The suite was read at the pin.</p>
+<p><strong>What is tested well.</strong> The wikilink extractor (28
+cases), the <code>## Related</code> rewrite and its pruning and margin
+rules, <code>delete_notes</code> on a real temporary vault including the
+link sweep and path traversal, and the watcher's routing of create,
+modify, delete and move events including the atomic-save cases.
+Placement and term-extraction arithmetic, the lazy collection's
+reconnect against a real Chroma client (<code>tests/test_db.py</code>),
+the HTTP transport and the MCP dispatch shape are covered too.
+<code>conftest.py</code> makes <code>get_vault_path</code> raise in
+every test unless the test opts into a temporary vault, so no test can
+touch the developer's real vault.</p>
+<p><strong>What is not.</strong> <code>search_vault</code>,
+<code>ingest_file</code>, <code>prune_orphans</code> and
+<code>sync_vault</code> never run against a populated collection. The
+dispatch tests replace <code>search_vault</code> with a lambda
+(<code>tests/test_mcp_dispatch.py:201</code>, <code>:450</code>), the
+delete and move tests replace <code>prune_orphans</code>
+(<code>tests/test_delete_note.py:13-20</code>), and the watcher tests
+replace <code>ingest_file</code>. The rerank tests pass
+<code>min_score=0.0</code> (<code>tests/test_rerank.py:27</code>), so
+the floor's scale is never pinned. Whether a deleted note leaves search,
+whether an edit replaces its chunks, and whether search returns the
+right note are all untested.</p>
+<p><strong>CI.</strong> Ruff, then
+<code>pytest -m "not slow and not vault"</code> on Ubuntu and macOS for
+Python 3.11 to 3.14, on every push and pull request to <code>main</code>
+(<code>.github/workflows/test.yml</code>). The <code>slow</code> marker
+covers the 18 cases that load the embedding model; no test carries the
+<code>vault</code> marker declared in
+<code>pyproject.toml:87</code>.</p>
+<p>No benchmark and no retrieval evaluation is committed, and no paper
+or citation file is in the tree. The README's first-search latency of
+about 5 s, and about 70 ms after, has no committed artifact behind
+it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the store something the user already reads.</strong> A
+vault of Markdown files hands correction, deletion and backup to tools
+the user trusts, and the index becomes a disposable cache.</li>
+<li><strong>Replace an indexed document by its path, all at
+once.</strong> Delete every chunk for the source, then add the new ones,
+so an edit cannot leave stale chunks behind.</li>
+<li><strong>Treat a delete event as a claim until the file stays
+gone.</strong> Atomic saves report modify then delete; a one-second
+settle check stops each save from evicting the note.</li>
+<li><strong>Reconnect a long-lived index handle on an external
+change.</strong> Stat the file every write touches, and re-capture after
+your own writes.</li>
+<li><strong>Report index-vs-disk drift with the command that repairs
+it.</strong></li>
+<li><strong>Make auto-linking adaptive.</strong> Keep every neighbour
+within a margin of the best one instead of a fixed top-n, so dense
+neighbourhoods get more links and isolated notes fewer.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A relevance floor on a transformed scale.</strong> If the
+score is <code>(1 + cosine) / 2</code>, a threshold chosen as if it were
+cosine admits almost everything, and any rule built on "nothing relevant
+came back" never fires.</li>
+<li><strong>A write verb with no lookup.</strong> A collision suffix
+keeps files safe and memory wrong; the second statement of a fact should
+find the first.</li>
+<li><strong>A move tool that can reach the trash.</strong> If deletion
+needs a confirmation on one surface, a generic move on another surface
+should not reach the same destination.</li>
+<li><strong>Indexing that lives only in a daemon.</strong> If the write
+tool returns before anything is searchable, it should ingest itself or
+say that it did not.</li>
+<li><strong>Feeding generated links into the embedding.</strong> Strip
+machine-written sections from every input to the vector, the prefix
+included.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Archiver RAG suits one person who already keeps an Obsidian vault,
+works with several coding agents on one machine, and will read what the
+agents write. The cost of entry is low and the exit is free, because the
+vault stays a vault. It does not suit anyone who wants the agent to keep
+its memory correct by itself: there is no deduplication, no status and
+no update path, and the search never says it found nothing. Keep
+separate projects in separate vaults, because nothing else separates
+them. Do not expose the HTTP transport beyond loopback without the
+authenticating proxy the README asks for.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the 0.35 floor meant on the <code>(1 + cosine) / 2</code> scale,
+given that the skill calls it a cosine score and tells the agent to fall
+back below it?</li>
+<li>Should <code>log_note</code> ingest synchronously, or report that
+the watcher is not running?</li>
+<li>Is <code>move_notes</code> into <code>.trash/</code> an intended
+agent delete, or should hidden destinations be refused?</li>
+<li>Should <code>--allowed-host</code> default to the bind address on
+the HTTP transport?</li>
+<li>How have the inbox and auto-cluster features behaved on the author's
+own vault, which <code>AGENTS.md</code> lists as open monitoring
+items?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Storage:</strong> <code>archiver_rag/core/db.py</code>,
+<code>archiver_rag/paths.py</code>,
+<code>archiver_rag/runtime.py</code>,
+<code>archiver_rag/graph/centroids.py</code>.</li>
+<li><strong>Write:</strong> <code>archiver_rag/vault/notes.py</code>
+(<code>log_note</code>, <code>delete_notes</code>,
+<code>sweep_dead_links</code>),
+<code>archiver_rag/vault/reorganize.py</code>,
+<code>archiver_rag/core/ingest.py</code>,
+<code>archiver_rag/core/chunker.py</code>,
+<code>archiver_rag/core/embedder.py</code>.</li>
+<li><strong>Read:</strong> <code>archiver_rag/core/search.py</code>,
+<code>archiver_rag/graph/rerank.py</code>,
+<code>archiver_rag/graph/connections.py</code>,
+<code>archiver_rag/utils.py</code>,
+<code>archiver_rag/wikilinks.py</code>.</li>
+<li><strong>Background:</strong> <code>archiver_rag/watcher.py</code>,
+<code>archiver_rag/graph/linker.py</code>,
+<code>archiver_rag/graph/placement.py</code>,
+<code>archiver_rag/graph/terms.py</code>,
+<code>archiver_rag/graph/inbox.py</code>,
+<code>archiver_rag/vault/folder_notes.py</code>,
+<code>archiver_rag/service.py</code>.</li>
+<li><strong>MCP and CLI:</strong>
+<code>archiver_rag/mcp/server.py</code>,
+<code>archiver_rag/mcp/http.py</code>, <code>archiver_rag/cli.py</code>,
+<code>archiver_rag/core/index_stats.py</code>,
+<code>archiver_rag/report.py</code>.</li>
+<li><strong>Agent instructions:</strong>
+<code>skill/claude-code/SKILL.md</code>,
+<code>skill/codex/AGENTS.md</code>,
+<code>skill/opencode/AGENTS.md</code>,
+<code>skill/copilot/copilot-instructions.md</code>.</li>
+<li><strong>Tests:</strong> <code>tests/conftest.py</code>,
+<code>tests/test_delete_note.py</code>,
+<code>tests/test_folder_note_exclusion.py</code>,
+<code>tests/test_watcher_delete.py</code>,
+<code>tests/test_watcher_moved.py</code>,
+<code>tests/test_linker_margin.py</code>,
+<code>tests/test_rerank.py</code>, <code>tests/test_db.py</code>,
+<code>tests/test_mcp_dispatch.py</code>,
+<code>.github/workflows/test.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>git grep -n -E 'name="[a-z_]+"' -- archiver_rag/mcp/server.py</code>
+— six tools; no edit, no delete.</li>
+<li><code>git grep -n -E 'trash|is_hidden|startswith\("\."\)' -- archiver_rag/vault/reorganize.py archiver_rag/mcp/server.py</code>
+— no match; <code>move_notes</code> does not refuse a hidden
+destination.</li>
+<li><code>git grep -n -E 'ingest_file|collection\.' -- archiver_rag/vault/notes.py archiver_rag/mcp/server.py</code>
+— no match; <code>log_note</code> does not ingest.</li>
+<li><code>git grep -n -E 'sync_vault|ingest_vault|prune_orphans' -- archiver_rag</code>
+— callers are the CLI, <code>init</code>, <code>delete_notes</code> and
+<code>move_notes</code>; none on the watcher's start path.</li>
+<li><code>git grep -n -E 'where=|"where"|\$eq' -- archiver_rag</code> —
+the only read predicate is <code>type</code> at
+<code>search.py:17</code>; the rest are deletes and an existence check
+by <code>source</code>.</li>
+<li><code>git grep -n -i -E 'project|tenant|user_id|agent_id|namespace|scope' -- archiver_rag/core archiver_rag/mcp/server.py archiver_rag/vault/notes.py</code>
+— one comment about lock scope.</li>
+<li><code>git grep -n -i -E 'valid_from|valid_to|valid_until|as_of|expires|ttl|superseded|supersede' -- archiver_rag skill</code>
+— only the watcher's delete-settle constant.</li>
+<li><code>git grep -n -i -E 'audit|append-only|journal|history' -- archiver_rag</code>
+— comments and systemd's <code>StandardOutput=journal</code>; no
+mutation record.</li>
+<li><code>/usr/bin/grep -n -i -E 'correct|outdated|stale|supersed|update|edit|wrong|delete|forget|contradict' skill/*/*</code>
+— rules about <code>## Related</code> and wikilinks only; no correction
+guidance.</li>
+<li><code>git grep -n -E 'core\.search|ingest_file|prune_orphans|sync_vault' -- tests</code>
+— every use is a monkeypatch or a spy.</li>
+<li><code>git grep -n -E 'search_vault' -- tests</code> — dispatch and
+HTTP tests only, with <code>search_vault</code> replaced.</li>
+<li><code>git grep -n -E 'mark\.vault|ARCHIVER_RAG_VAULT' -- tests archiver_rag</code>
+— no match; the marker is declared in <code>pyproject.toml:87</code> and
+unused.</li>
+<li><code>git grep -n -E 'max_seq_length|truncat' -- archiver_rag</code>
+— no handling of the model's input limit.</li>
+<li><code>git grep -l -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- .</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-10-08</strong> — <a
+href="https://github.com/FernandoJRR/archiver-rag/commit/72e6d82bb4d5ec2e978f109d5e8ffba13ba33e1e"><code class="commit-id" title="72e6d82bb4d5ec2e978f109d5e8ffba13ba33e1e">72e6d82b…</code></a>
+— first reading, at the head of <code>main</code>, a documentation
+commit of 28 September 2026 one commit after the 0.2.2 release. No mark.
+Screened before reading from a full clone: no auto-run surface, one
+build-time execution point (<code>tests/conftest.py</code>), no file
+inside the cooldown, one unpinned surface (<code>pyproject.toml</code>
+with no lockfile); <code>CLAUDE.md</code>, which includes
+<code>AGENTS.md</code>, and <code>AGENTS.md</code> itself were read as
+data. Read with <code>git grep</code> and <code>sed</code>; nothing
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 728 reports.</strong></p>
+<p><strong>This page covers all 730 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -30297,6 +30297,92 @@ and a feedback tier that withholds the target value.</li>
 <li>Do not copy when: you need memory that survives a restart, is scoped
 to a user, or can be reviewed before it takes effect — or you need to
 reuse the code, which carries no licence.</li>
+</ul>
+<h3 id="archiver-rag"><a
+href="../systems/archiver-rag/"><code>archiver-rag</code></a></h3>
+<ul>
+<li>Best idea: <strong>the index is a cache of files the user already
+reads.</strong> Every agent writes Markdown into the user's Obsidian
+vault, a person corrects or trashes a note in the editor they use
+anyway, and the watcher replaces the note's chunks by path on every
+save, so the fix reaches retrieval without any memory-specific
+tool.</li>
+<li>Biggest risk: <strong>the search never says it found
+nothing.</strong> <code>rerank</code> drops chunks below 0.35 on
+<code>1 - dist/2</code>, which is <code>(1 + cosine) / 2</code>, so the
+floor sits at a cosine of -0.3; the skill tells the agent to fall back
+to its own memory only below that threshold, and calls it a cosine
+score.</li>
+<li>Most reusable component: <code>archiver_rag/core/db.py</code>
+<code>_LazyCollection</code> — a Chroma handle for a long-lived server
+that stats <code>chroma.sqlite3</code> before each call, reconnects when
+another process wrote, and re-captures the signature after its own
+writes so they do not look external.</li>
+<li>Second risk: <strong>the agent's writes stack and its move
+deletes.</strong> <code>log_note</code> never reads the index, so a
+second note on the same title is <code>slug-1.md</code> beside the
+first; <code>move_notes</code> checks only that both paths are inside
+the vault, so the agent can send any note to <code>.trash/</code> with
+none of the confirmation the CLI's <code>delete</code> asks for.</li>
+<li>Maturity impression: MIT, 6,901 lines of Python, 61 commits by one
+contributor between 27 April and 28 September 2026, version 0.2.2 on
+PyPI as a beta. 446 test functions over wikilinks, the watcher's event
+routing, placement and the MCP surface, run in CI on Ubuntu and macOS
+for Python 3.11 to 3.14; none runs search or ingest against a real
+index. No benchmark, no capability mark.</li>
+<li>Study when: you want agent memory a person can read and fix in a
+tool they already use, a watcher that tells an atomic save from a
+delete, or adaptive auto-linking by margin rather than top-n.</li>
+<li>Do not copy when: the agent must keep its own memory correct,
+projects must not see each other's notes, retrieval has to be able to
+answer "nothing relevant", or the server will be reachable from a
+browser.</li>
+</ul>
+<h3 id="browsentic"><a
+href="../systems/browsentic/"><code>browsentic</code></a></h3>
+<ul>
+<li>Best idea: <strong>stage generated memory where the loader cannot
+look.</strong> <code>stageSiteMap</code> writes a mapping run's report
+into <code>~/browsentic/skills/.staging/&lt;uuid&gt;/</code>,
+<code>readDir</code> drops every dot-prefixed entry, and
+<code>commitStaging</code> has one caller — the
+<code>activateSiteMap</code> frame a paired extension sends when a
+person presses Activate on a card showing the exact Markdown, its
+warnings and the domain it will match.</li>
+<li>Biggest risk: <strong>page-derived text is introduced as the user's
+own.</strong> <code>OVERLAY_INTRO</code> tells the model that site notes
+are <em>"the user's own words, not page content"</em> and win on facts
+about the site, and it sits above generated maps whose own first line
+says they were derived from the site's pages; the
+<code>provenance: generated</code> label orders and labels them and
+filters nothing.</li>
+<li>Most reusable component:
+<code>src/daemon/agent/site-map-store.ts</code> with
+<code>src/daemon/agent/mapping.ts</code> — a read-only, one-host gate on
+the producing run, a typed hand-in with
+<code>additionalProperties: false</code>, and a staging directory with
+commit, discard, a move-aside on replacement and a 24-hour sweep, in
+about 470 lines.</li>
+<li>Second risk: <strong>the gate covers one of two generated
+paths.</strong> A recording becomes <code>ready</code> as soon as a
+one-shot agent call returns valid steps, with no review, and up to eight
+ready recordings are listed in every run's prompt whatever the host;
+separately, deleting an uploaded skill with the Bridge offline drops the
+panel's record and leaves the file the loader reads.</li>
+<li>Maturity impression: Apache-2.0, 52,459 lines of TypeScript and 501
+commits on <code>main</code> from one author between 25 July and 8
+October 2026. Two marks, <code>scope_enforced</code> and
+<code>human_review</code>. CI runs 109 Vitest files on every pull
+request and push to <code>main</code>; no test asserts that a staged map
+is absent from the loader, and there is no memory evaluation.</li>
+<li>Study when: you let an agent write memory from untrusted pages and
+want a person between the write and the next prompt, or you need
+per-site procedural notes scoped by domain with no search stack at
+all.</li>
+<li>Do not copy when: memory holds facts about users or is shared across
+people or machines, or you need correction history; notes are replaced
+or deleted whole, and one profile serves every browser on the
+machine.</li>
 </ul>
         </article>
       </div>

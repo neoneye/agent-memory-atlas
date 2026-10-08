@@ -219,6 +219,8 @@ In [marm-memory](../../systems/marm-memory/) the bundled console is not the seco
 
 [Wordcell](../../systems/wordcell/) is the case where the editing surface *is* the store: the memory is a folder of Markdown a person opens in any editor, and every index rebuilds from it, so an edit needs no second path to take effect. Deletion is where it stops holding. No command deletes a note, the migration guide tells a user leaving Supermemory to delete the file instead, and the importer keys existing notes on `external_id` found in the vault. A deleted imported note is therefore absent from that set and re-created as `created` by the next import of the same export (`src/import-supermemory.ts:1134-1157`). An edit is protected by a stored digest; a deletion leaves nothing to compare against.
 
+**[Archiver RAG](../../systems/archiver-rag/) makes the editor the user's own note app and the index a cache of it.** Agent memory is Markdown in an Obsidian vault; a person edits or trashes a note in Obsidian, and a watcher deletes the note's chunks by path and re-adds them on every save, so the edit reaches retrieval in seconds with no memory-specific tool. The verbs the agent holds are thinner than the person's: `log_note` appends `-1` to a taken name instead of finding the note it restates, and its only other mutating tool, `move_notes`, reaches `.trash/` without the confirmation the CLI's delete asks for. **When the editing surface belongs to the person, give the agent a lookup before it writes, or every correction it attempts is a second note.**
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.

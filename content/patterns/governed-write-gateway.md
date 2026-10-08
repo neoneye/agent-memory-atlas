@@ -298,6 +298,8 @@ runtime's own rules, does not.
 
 [Pluribus](../../systems/pluribus/) puts its strongest gate on one of four write paths. The deterministic harmful-advice screen that stores safety-negating advice as `quarantined` has one caller, the inline formation behind `record_experience`. `memory_create`, `memory_promote` and `curation_materialize` reach `memory.Service.Create` without it, and under the shipped hive defaults a governing constraint written through `memory_create` lands active at authority 4, above the enforcement binding floor of 3. A screen placed inside the shared `Create` would have covered every path at the same cost.
 
+[Browsentic](../../systems/browsentic/) implements the gateway as a location rather than a status. The producing agent's only write verb stages into `.staging/<uuid>/`; the loader never reads dot-prefixed entries, so an unreviewed map is not merely unused but never opened; and the commit is a rename that only a frame from the paired extension's panel can trigger (`src/daemon/daemon.ts:491-499`). The agent side is closed structurally rather than by prompt: the mapping run's tool gate admits seventeen read actions and no page code (`src/daemon/agent/mapping.ts:21-60`), each agent CLI but Antigravity is spawned with its own file and shell tools denied, and page navigation refuses non-http(s) URLs, so the panel is out of reach. The limit is that the gate is per path: recordings reach the prompt through another door, with no review.
+
 ## Tests to require
 
 - Exercise every adapter against the same invariant suite.
