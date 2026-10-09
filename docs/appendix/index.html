@@ -14314,6 +14314,43 @@ adapter granularity</a>. Screened before reading: no auto-run surface,
 no build-time execution point, and one requirements file inside the
 seven-day cooldown with two floating ranges, PyTorch installed
 separately; nothing was installed or run.</li>
+<li><strong><code>FalkorDB/FalkorDB</code> was examined and has no
+report: it is the graph database several systems here keep their memory
+in, not a memory system itself.</strong> Source-available under the
+Server Side Public License or the Elastic License 2.0, read at <a
+href="https://github.com/FalkorDB/FalkorDB/commit/ec2448f32a21387ad82ee859ae15a1db76e3ffa1"><code class="commit-id" title="ec2448f32a21387ad82ee859ae15a1db76e3ffa1">ec2448f3…</code></a>,
+the head of <code>master</code> on 9 October 2026: a Redis module of
+about 123,000 lines of Rust and C under <code>graph/</code> that runs
+openCypher over GraphBLAS sparse matrices, with numeric, full-text and
+vector indexes. The README names agent memory as a use case, and nothing
+under <code>graph/</code> or <code>src/</code> defines a memory unit, a
+write policy, a validity interval or an entity expiry:
+<code>git grep -n -i -E '\bttl\b|expire|valid_(from|to|at)|tenant' -- graph src</code>
+matches only three Redis key-open flags in
+<code>graph/src/index/redisearch/redis.rs</code>, and tenancy is one
+graph per Redis key, a physical partition. The memory semantics belong
+to the systems that use it — <a
+href="../systems/graphiti/">Graphiti</a>, <a
+href="../systems/automem/">AutoMem</a>, <a
+href="../systems/janus-graph/">Janus-Graph</a>, <a
+href="../systems/memary/">Memary</a> and <a
+href="../systems/potpie/">Potpie</a> — and their reports carry them. One
+engine property reaches them: temporal values are deliberately kept out
+of the index, so an equality or range filter on a date or datetime
+property runs as a scan with a post-filter rather than an index lookup
+(<code>graph/src/runtime/ops/edge_by_index_scan.rs:265-283</code>,
+<code>graph/src/index/falkordb/encode.rs:26-38</code>), and a validity
+window stored as a datetime is filtered by scanning. Screened before
+reading from a shallow clone: 4 auto-run surfaces (a
+<code>.claude/settings.json</code> PostToolUse hook that runs
+<code>rustfmt --check</code> on an edited Rust file,
+<code>.devcontainer</code>, <code>.vscode</code> settings, and
+<code>.gitmodules</code> naming RediSearch, GraphBLAS and LAGraph, left
+uninitialised), 4 build-time execution points (three
+<code>build.rs</code> and <code>tests/conftest.py</code>) and 10
+dependency files inside the cooldown, which the depth-1 clone inflates;
+<code>CLAUDE.md</code> was treated as data. Nothing was installed, built
+or run.</li>
 <li><strong><code>FreshHillyer/xiaoO</code> was examined and has no
 report: its long-term memory is an unpublished server behind an MCP
 client, and the memory crate in the tree has no caller.</strong> At <a
