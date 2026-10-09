@@ -2478,45 +2478,33 @@ blocks never enter the session index. The learner's own panel, which
 edits mastery and deletes goals, writes straight into the profile the
 next turn reads, so it earns no review mark.</p>
 <p><strong><a href="../systems/bitterbot-desktop/">BitterBot Desktop</a>
-implements the biology it names, and carries two lifecycle columns whose
-mappings are not inverses.</strong> An MIT local-first personal agent at
-version 2026.2.15 — 740,633 lines of TypeScript across 1,382 test files,
-of which 127,873 lines and 156 test files sit under
-<code>src/memory</code>, alongside the skills-marketplace code that
-shares the directory. Synaptic tagging, reconsolidation, the spacing
-effect, somatic markers and hormonal scalars are each implemented with a
-citation rather than gestured at, and a dream engine grades its own
-cycles by whether their output is later retrieved. Two mechanisms are
-worth the visit. The SABM belief layer on the knowledge graph is
-properly bitemporal: relationships carry <code>valid_from</code> and
-<code>valid_until</code> distinct from the <code>created_at</code> rows
-are ordered by, supersession closes the interval instead of deleting,
-and <code>beliefHistory(entityId, { validAt })</code> deliberately drops
-the active-only guard every other read applies so a caller can "answer
-'what did I believe about X as of T?'" — with a test asserting both that
-a closed edge is absent from ordinary traversal and present in the
-history. The canonical ledger names a failure mode most retrieval-gated
-stores have and nobody states: "importance is orthogonal to similarity:
-a canonical fact is short, low-entropy, and shares no embedding mass
-with a cold conversation's first message", so it is addressed by key,
-injected unconditionally, hard-capped, and demoted by a deterministic
-score "never an LLM prose decision". The finding is in the chunk store.
-<code>chunks</code> carries both <code>lifecycle_state</code> and a
-newer <code>lifecycle</code>; the code knows —
-<code>chunk-writer.ts</code> heads the section "the tangled cluster the
-audit's C1 bug lived in" and designates <code>setChunkLifecycle</code>
-as "the single place that reconciles the two columns". The write side is
-fixed and a read is not: <code>skill-version-resolver.ts</code> filters
-both version queries on <code>lifecycle_state != 'expired'</code>, and
-<code>expired</code> belongs to the other column —
-<code>deriveLifecycleState</code> maps it to <code>archived</code> — so
-the predicate never excludes an expired skill, while SQL's three-valued
-logic makes it exclude every row whose <code>lifecycle_state</code> is
-NULL. The two mappings disagree in the other direction too: the
-migration maps <code>forgotten</code> to <code>expired</code> and the
-reconciler maps <code>expired</code> back to <code>archived</code>.
-Three marks: the lifecycle and canonical statuses, the as-of belief
-read, and the test that asserts both halves.</p>
+implements the biology it names, and checks chunk lifecycle everywhere
+except the search query.</strong> An MIT local-first personal agent
+whose memory is one SQLite database under a dream engine, a
+key-addressed canonical facts ledger and a knowledge graph, with the
+skills-marketplace code in the same <code>src/memory/</code> directory.
+Synaptic tagging, reconsolidation, the spacing effect, somatic markers
+and hormonal scalars are each implemented with a citation, and a dream
+engine grades its own cycles by whether their output is later retrieved.
+The canonical ledger is the mechanism worth the visit: "importance is
+orthogonal to similarity: a canonical fact is short, low-entropy, and
+shares no embedding mass with a cold conversation's first message", so
+it is addressed by key, injected unconditionally, hard-capped, and
+demoted by a deterministic score "never an LLM prose decision". The
+finding is in the chunk store. <code>chunks</code> carries
+<code>lifecycle</code> and <code>lifecycle_state</code>, one concept in
+two vocabularies. Commit <code>5e5a9e4f</code>, whose message cites this
+atlas's review, routes the skill resolver through one
+<code>liveChunkPredicate</code> that reads both, as the owner listing
+and the embedding backfill do; the vector and keyword search queries
+filter on model and source only, so a chunk consolidation forgets stays
+retrievable until the purge deletes its index rows. The knowledge
+graph's <code>valid_from</code> and <code>valid_until</code> are stamped
+with the insert and supersession times by every writer, so its as-of
+read answers what the graph believed rather than when a fact held. Three
+marks: the canonical status that gates injection, an append-only audit
+table that survives a full reindex, and must-not-retrieve cases on
+closed belief edges and expired skill variants.</p>
 <p><strong><a href="../systems/ox/">SageOx CLI</a> makes a team's memory
 a git repository, and when two agents' records conflict the third tier
 is an LLM.</strong> An MIT Go CLI for human-agent teams — 651,919 lines
