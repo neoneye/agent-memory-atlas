@@ -408,7 +408,8 @@ fixed yet.
   [Microsoft Agent Framework](../../systems/agent-framework/). The three carrying
   more than one mark all came out **split**, which is the point: Aeris earns
   `negative_eval` on a model-facing projection rather than on retrieval, Prime
-  Agent earns it on conversation compaction, and DeepCode's scope and audit marks
+  Agent's scope mark covers its session store while its other two cover the
+  harness, and DeepCode's scope and audit marks
   cover a SQLite conversation store that its Markdown notes never touch. Agent
   Framework carries a single mark and so cannot split, but its record says the
   thing that matters anyway — `scope_enforced` sits on an in-tree harness while

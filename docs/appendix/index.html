@@ -1429,17 +1429,21 @@ listing path applies</li>
 <li><a
 href="https://github.com/PrimeIntellect-ai/prime-agent">PrimeIntellect-ai/prime-agent</a>
 at <a
-href="https://github.com/PrimeIntellect-ai/prime-agent/commit/66abc2a604fc42a220292a1ca4cf33ee60cb5733"><code class="commit-id" title="66abc2a604fc42a220292a1ca4cf33ee60cb5733">66abc2a6…</code></a>
-— read only; no auto-run surface, seven build-time execution surfaces,
-twenty-one unpinned surfaces and eight files inside the seven-day
-cooldown, plus a <code>.husky/pre-commit</code> payload that stays inert
-until something points <code>core.hooksPath</code> at it. Nothing was
-installed and nothing was run. The repository is the artifact behind two
-papers — <a href="https://arxiv.org/abs/2608.23552">arXiv:2608.23552</a>
-for the harness and <a
+href="https://github.com/PrimeIntellect-ai/prime-agent/commit/3bf96596375007e58df24619f8c441f62bf602b2"><code class="commit-id" title="3bf96596375007e58df24619f8c441f62bf602b2">3bf96596…</code></a>
+— read only, from a depth-1 clone; no auto-run surface, one build-time
+execution surface (the Makefile), nine unpinned surfaces and 23 files
+inside the seven-day cooldown, a count the shallow clone inflates by
+dating every file to the tip. <code>AGENTS.md</code> was read as data.
+Nothing was installed and nothing was run. The TypeScript product was
+replaced by a Rust workspace in <a
+href="https://github.com/PrimeIntellect-ai/prime-agent/commit/39bc99a91d102c46474c090fdc7ae7cd5037ffcf"><code class="commit-id" title="39bc99a91d102c46474c090fdc7ae7cd5037ffcf">39bc99a9…</code></a>
+on 30 September 2026. The repository is the artifact behind two papers —
+<a href="https://arxiv.org/abs/2608.23552">arXiv:2608.23552</a> for the
+harness and <a
 href="https://arxiv.org/abs/2605.09998">arXiv:2605.09998</a> for the
 memory design — whose figures are not reproducible from anything in the
-tree. MIT</li>
+tree. MIT, with a note that the Rust code ports a TypeScript product
+originally copyright 2025 Mario Zechner under MIT</li>
 <li><a
 href="https://github.com/mnemosyne-oss/mnemosyne">mnemosyne-oss/mnemosyne</a>
 at <a
@@ -15282,6 +15286,29 @@ exclusion was attributed to a column "added by migration", which SQLite
 filled with its <code>DEFAULT 'active'</code>; no inserter wrote NULL.
 Each claim was a positive one, and each fell to a search for its
 producer, caller or importer that the reading did not run.</li>
+<li><strong>Three published claims about <a
+href="../systems/prime-agent/">Prime Agent</a> were wrong at <a
+href="https://github.com/PrimeIntellect-ai/prime-agent/commit/66abc2a604fc42a220292a1ca4cf33ee60cb5733"><code class="commit-id" title="66abc2a604fc42a220292a1ca4cf33ee60cb5733">66abc2a6…</code></a>,
+the pin they were made at, and are corrected.</strong> The report said
+every durable write went through <code>applyRefinementProposal</code>,
+with no tool that edits an entry directly; the system prompt at that pin
+advertised <code>rlm.harness.create_memory</code>,
+<code>update_memory</code>, <code>delete_memory</code> and their twins
+(<code>packages/coding-agent/src/core/prompts/rlm.ts:47</code>),
+implemented in <code>prime-agent-runtime/src/rlm/harness.py</code>,
+which writes the same state file with no snapshot or record. It said the
+harness had no search and that nothing ranked which entries reached the
+prompt; <code>harness.py</code> defined a ranked <code>search</code>
+(<code>:861</code>), and the digest was sorted by term overlap with the
+goal and recent messages (<code>agent-session.ts:9050</code>,
+<code>refinement.ts:590-610</code>). And it said a local refinement
+naming a global entry would update it; <code>_applyRefine</code> loaded
+only the target scope's file before applying
+(<code>agent-session.ts:9442</code>, <code>:9461</code>), so that edit
+was refused as <code>entry not found</code>. All three sit outside
+<code>src/core/refinement/</code>, the directory the reading treated as
+the whole mechanism; the first was in a sibling Python package, and the
+third needed the caller rather than the callee.</li>
 </ul>
 <h3 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h3>

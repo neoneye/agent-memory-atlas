@@ -1666,12 +1666,13 @@ relative to the minimalist baseline and recovers a majority of the gap to a
 hand-engineered expert harness"* on Pokémon Red and Emerald.
 
 The code is genuinely published, MIT, and read here as
-[Prime Agent](../systems/prime-agent/) — 184,000 lines with 1,519 lines of tests
-over the refinement mechanism alone. What is absent is the measurement: at
-[`9bc00557489020e4dc981bef3111cb651c5955e7`](https://github.com/PrimeIntellect-ai/prime-agent/commit/9bc00557489020e4dc981bef3111cb651c5955e7)
+[Prime Agent](../systems/prime-agent/) — a Rust workspace since 30 September
+2026, with 44 Rust and 69 Python tests over the refinement mechanism alone. What
+is absent is the measurement: at
+[`3bf96596375007e58df24619f8c441f62bf602b2`](https://github.com/PrimeIntellect-ai/prime-agent/commit/3bf96596375007e58df24619f8c441f62bf602b2)
 there is no evaluation directory, no task definitions, no result files and no run
-traces, and a search for any path containing *eval* returns nothing outside
-`node_modules`.
+traces, and the one tracked path containing *eval* is an end-to-end test of the
+autonomous-mode verifier gate.
 
 Set that beside [VISTA](../systems/vista/), which published 320 MB of per-run
 traces on 5 August 2026 and its source a month later: for that month its headline

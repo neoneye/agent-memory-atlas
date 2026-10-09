@@ -24542,46 +24542,46 @@ writes to the store</td>
 </tr>
 <tr>
 <td><a href="../systems/prime-agent/"><code>prime-agent</code></a></td>
-<td>A <code>HarnessEntry</code> — id, kind of <code>prompt</code> /
-<code>memory</code> / <code>skill</code> / <code>subagent</code>, title,
-content, path, scope, reference and argument contracts, source and a
-monotonic <code>version</code></td>
-<td><code>harness_state.json</code> written atomically through
-temp-and-rename at mode 0600, in a global directory under
-<code>~/.prime/agent/harness/</code> and a local one under the session's
-artifact directory, beside an append-only
-<code>refinements.jsonl</code></td>
-<td>No search. A capped overview is injected into the system prompt —
-six entries per kind, content truncated to 180 characters, five recent
-refinements — and labelled to the model as routing hints rather than
-full descriptions</td>
-<td>A refinement pass proposes <code>create</code> / <code>update</code>
-/ <code>delete</code> edits as JSON, each validated against a per-kind
-contract, applied against a baseline snapshot and versioned on
-write</td>
-<td><code>delete</code> removes the entry from state while its full
-<code>before</code> snapshot survives in the refinement history, so any
-refinement can be inverted into a rollback proposal — including from a
-different session</td>
-<td>Entries carry <code>local</code> or <code>global</code>; a session
-merges both and renames colliding local ids rather than shadowing, and
-session listing filters by stored working directory</td>
-<td>A <code>refine</code> skill callable from the IPython kernel, a
-<code>/refine</code> slash command, plus TUI, daemon, ACP and SDK front
-ends over the same session core</td>
-<td>An auto-refine review — a cheap model judging from the trajectory
-whether to refine at all and at which scope — followed by a planning
-call that must return parseable JSON</td>
-<td>A <code>version</code> per entry, a <code>source</code>, a stored
-scope, and a model-authored <code>evidence</code> string on each
-refinement event; no candidate, verified or rejected status</td>
-<td>Before-and-after snapshots on every applied edit, cross-session
-rollback, an optimistic-concurrency guard that refuses an edit whose
-target moved during planning, an immutable base prompt enforced in code,
-and 1,500 lines of tests over all of it</td>
-<td>Nothing is keyed on a rejected value, so a memory deleted as wrong
-can be re-derived by the next refinement; the evidence behind an edit is
-prose the model wrote about itself</td>
+<td>A HarnessEntry: id, kind of prompt, memory, skill, subagent or
+factory, title, content, path, scope, reference and argument contracts,
+metadata, source and a version counter</td>
+<td>harness_state.json per store, written by temp file, fsync and rename
+under a lock directory the Rust host and the Python kernel share; a
+global store under ~/.prime/agent/harness/ and a local one in the
+session's directory; global refinements also append to
+refinement_history.jsonl and every refinement to the session JSONL</td>
+<td>A digest at cold boundaries (session start, resume, compaction
+head): three entries per kind ranked by weighted term overlap with the
+goal and the last four messages, 140 characters each; plus a tf-idf term
+search the agent calls from the Python kernel</td>
+<td>Two paths. /refine plans create, update and delete edits as JSON,
+validates each per kind, refuses one whose target moved since a baseline
+taken before planning, and applies under the store lock with before and
+after snapshots; the kernel's rlm.harness methods create, update and
+delete entries directly</td>
+<td>A /refine delete keeps its before snapshot in the refinement record,
+so the refinement inverts into a rollback proposal by id; a kernel
+delete removes the entry and leaves no record</td>
+<td>Two files, local and global; a local refinement plans against both
+and applies only to the local file; continue and resume filter saved
+sessions by stored working directory</td>
+<td>/refine and /refine rollback in the TUI, refine.run from the IPython
+kernel, rlm.harness CRUD and search in the kernel, all served by a
+daemon with one worker process per session</td>
+<td>An automatic review after compaction, on by default with a 20-minute
+cooldown: a model decides whether to refine, then a local-only
+refinement plans and applies between turns</td>
+<td>A version per entry, a source string, a stored scope and a
+model-written rationale on each refinement; no candidate, verified or
+rejected status</td>
+<td>Before and after snapshots on every refined edit, rollback by id, a
+baseline check that refuses an edit whose target moved during planning,
+a local refinement that cannot reach the global file, and one lock
+shared by the Rust host and the Python kernel</td>
+<td>The kernel CRUD path bypasses the snapshots, the refinement log and
+the base-prompt id check; nothing is keyed on a rejected value; the Rust
+history reader ignores the refinements.jsonl the TypeScript product
+wrote</td>
 </tr>
 <tr>
 <td><a href="../systems/prism-coder/"><code>prism-coder</code></a></td>

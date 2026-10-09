@@ -5144,54 +5144,43 @@ and session deletion does not reach the notes at all.</li>
 <h3 id="prime-agent"><a
 href="../systems/prime-agent/"><code>prime-agent</code></a></h3>
 <ul>
-<li>Best idea: every applied harness edit keeps a full
-<code>before</code> and <code>after</code> snapshot, appended to a
-cross-session <code>refinements.jsonl</code>, so
-<code>rollbackProposal</code> can invert a refinement made in another
-session — the most complete undo for a self-modifying memory in this
-atlas, and tested as such.</li>
-<li>Biggest risk: nothing is keyed on a rejected value, and the scope
-rule is a prompt. Rollback answers "can I undo what it learned" and not
-"can I stop it learning that again", so a memory deleted as wrong can be
-proposed again by the next pass as a fresh create. Beside that,
-<em>"during a local refinement, global entries are read-only
-context"</em> is a line in the built-in planner's prompt string:
-<code>applyRefinementProposal</code> resolves an entry's scope as
-<code>before?.scope ?? options.scope ?? "local"</code> and never
-compares the refinement's scope with the target's, so a local refinement
-that names a global entry edits it — and the extension hook exists to
-replace the prompt that carries the rule. Rollback answers "can I undo
-what it learned" and not "can I stop it learning that again", so a
-memory deleted as wrong can be proposed again by the next pass as a
-fresh create.</li>
-<li>Second idea: <strong>the planner is replaceable and the undo is
-not.</strong> <code>session_before_refine</code> lets an extension see
-everything the built-in planner sees and skip the round or replace the
-planner outright — with edits <em>"still validated at apply time"</em>,
-so the trust boundary sits at apply rather than at propose. And one
-clause of the event's docstring closes the hole that would otherwise
-cost the whole design: <em>"Rollbacks bypass this event."</em> An
-extension may propose a change and may suppress a round; it cannot
-interpose on the undo that would correct its own bad proposal. Any
-system that exposes a hook on the write path should ask what its
-recovery path inherits.</li>
-<li>Most reusable component: the baseline check — an edit whose target
-entry changed while the model was planning is refused with
-<code>entry changed during refinement planning</code>, with the
-same-proposal case correctly excluded. A lost-update defence on a memory
-write, in about ten lines.</li>
-<li>Maturity impression: 184,000 lines of TypeScript and 4,469 commits,
-with a 1,519-line test file covering the baseline guard, the immutable
-base prompt from both directions, atomic state replacement, scope-merge
-collisions, malformed history lines, and cross-session rollback — none
-of it run for this review, because six dependency surfaces were inside
-the seven-day cooldown.</li>
+<li>Best idea: every edit <code>/refine</code> applies keeps a full
+<code>before</code> and <code>after</code> snapshot in a refinement
+record, so <code>rollback_proposal</code> turns a recorded refinement
+back into an ordinary proposal by id — from another session, for a
+global one. The most complete undo for a self-modifying memory in this
+atlas, ported intact into the Rust rewrite of 30 September 2026.</li>
+<li>Biggest risk: the undo covers one of two doors. The system prompt
+hands the agent <code>rlm.harness.create_memory</code>,
+<code>update_memory</code>, <code>delete_memory</code> and their prompt,
+skill and subagent twins, local or global, and those calls rewrite the
+same <code>harness_state.json</code> with no snapshot, no record and no
+<code>base_system_prompt</code> check. Nothing on either door is keyed
+on a rejected value, so content deleted as wrong can be written
+again.</li>
+<li>Second idea: <strong>apply against the target store only.</strong> A
+local refinement plans against local and global entries and applies to
+the local file, so the planner prompt's rule that global entries are
+read-only during a local refinement holds by construction: an edit
+naming a global id finds no entry and is recorded as refused.</li>
+<li>Most reusable component: the baseline check — the target store is
+read before the model call, and an edit whose entry changed by apply
+time is refused with
+<code>entry changed during refinement planning</code>, the same-proposal
+case excluded. One lock directory shared by the Rust host and the Python
+kernel is what lets it see a kernel write made during planning. No test
+in the tree exercises the refusal.</li>
+<li>Maturity impression: a Rust workspace of nine crates with 5,260 Rust
+test functions, 44 of them over the harness, and 69 Python tests on the
+kernel store — none run for this review. The rollback tests invert
+creations only, and the global history file the TypeScript product wrote
+has no reader in the Rust tree.</li>
 <li>Study when: you are building a background pass that edits durable
 state on model judgement and want to know what making it reversible
 actually costs.</li>
 <li>Do not copy when: you need a correction that holds against
-re-derivation; the undo is excellent and there is no refusal behind
-it.</li>
+re-derivation, or an undo that covers every write; this one has an
+ungoverned door beside it and no refusal behind it.</li>
 </ul>
 <h3 id="mnemosyne"><a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a></h3>
