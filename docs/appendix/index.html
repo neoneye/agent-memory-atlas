@@ -14293,6 +14293,27 @@ Operating Protocol</em> find nothing by these authors; and
 <code>facebookresearch/RankEvolve</code>,
 <code>meta-recsys/RankEvolve</code> and five other variants return
 404.</li>
+<li><strong><code>ModalityDance/EngramEdit</code> was examined and has
+no report: it edits a language model's conditional memory, which is
+model editing, not an agent memory system.</strong> <em>EngramEdit:
+Decoupled Knowledge Updates in LLMs through Conditional Memory</em> (Cai
+et al., <a href="https://arxiv.org/abs/2610.10533">arXiv:2610.10533</a>,
+v1 7 October 2026), read at <a
+href="https://github.com/ModalityDance/EngramEdit/commit/fb4089be4eec2575847d7e71342ff545ccb70508"><code class="commit-id" title="fb4089be4eec2575847d7e71342ff545ccb70508">fb4089be…</code></a>:
+MIT, five commits between 5 and 8 October 2026, 772 lines of Python in
+<code>EngramEdit/</code> beside ROME-style harnesses for CounterFact,
+ZsRE and MQuAKE. It changes what a LongCat-Flash-Lite model recalls
+about a subject by adding residuals to its n-gram embeddings with the
+backbone frozen. No agent writes to it, nothing is scoped to a user or
+project, and the boundary the <a href="../families/">families page</a>
+draws around the model-editing line applies. What it adds to that
+boundary, a weight-side store addressed by exact keys and the reason the
+key is still not a fact, is in <a
+href="#weights-as-memory-at-adapter-granularity">weights as memory, at
+adapter granularity</a>. Screened before reading: no auto-run surface,
+no build-time execution point, and one requirements file inside the
+seven-day cooldown with two floating ranges, PyTorch installed
+separately; nothing was installed or run.</li>
 <li><strong><code>FreshHillyer/xiaoO</code> was examined and has no
 report: its long-term memory is an unpublished server behind an MCP
 client, and the memory crate in the tree has no caller.</strong> At <a
@@ -15253,6 +15274,31 @@ deleted, and deletion is permanent"</em> — and nothing about it can be
 aimed at a fact. That is the boundary condition worth carrying: the
 finer the weight artifact, the more of this list you keep, and at zero
 granularity you keep none of it.</p>
+<p><strong>At the finest weight-side granularity yet, the key is an
+n-gram and still not a fact.</strong> EngramEdit (<a
+href="https://arxiv.org/abs/2610.10533">arXiv:2610.10533</a>, code at <a
+href="https://github.com/ModalityDance/EngramEdit/commit/fb4089be4eec2575847d7e71342ff545ccb70508"><code>ModalityDance/EngramEdit</code></a>)
+edits a DeepSeek-Engram-style conditional memory with the transformer
+frozen, and its implementation keeps the edits as a sidecar:
+<code>EngramEditEmbedding</code> maps an exact token n-gram of length 2,
+3 or 4 to a residual vector, adds it to the base embedding whenever that
+n-gram is active, and saves the map as <code>engramedit_state.pt</code>
+apart from the weights (<code>EngramEdit/memory.py:12-102</code>,
+<code>:138-142</code>). That is a key a correction could name, and it
+belongs to the subject's tokens rather than to the fact. Each batch of
+edits is solved jointly and summed into whatever a key already holds
+(<code>engramedit_main.py:410-419</code>,
+<code>memory.py:91-102</code>), and the snapshot records which request
+ids were applied but not what each added
+(<code>memory.py:104-111</code>). So the file can be discarded whole and
+a key cleared with every fact that touched it, but no single edit can be
+withdrawn, and
+<code>git grep -n -i -E 'remove|delete|undo|revert|rollback|pop\(' -- EngramEdit</code>
+finds no verb that tries. The paper treats each embedding <em>"as one
+logical vector, abstracting the finite hashed tables"</em> the
+architecture uses, and the code does exactly that, so its 5,000-edit
+results say nothing about the collisions a write into a real hashed
+table would meet.</p>
 <p><strong>The distributional escape does not work either.</strong> It
 is tempting to hold that an adapter trained for <em>shape</em> — schema,
 vocabulary, house style — stores nothing correctable and so escapes all
