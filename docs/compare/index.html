@@ -15323,64 +15323,66 @@ user-approved</td>
 <td><a href="../systems/mandalore/"><code>mandalore</code></a></td>
 <td>A revision of a record: kind, scope, summary, body, sensitivity,
 volatility, an optional last-verified-at, a recorded-at and an
-effective-from, authorship, evidence, supersedes edges and a change
-reason</td>
-<td>Local-first files under a Git-backed root, with explicit
-synchronisation rather than a background push</td>
-<td>Lexical recall over a scope, returning a packet of current revisions
-plus unresolved conflicts, truncated against a limit and a byte
-budget</td>
+effective-from, authorship, evidence, supersedes edges, a change reason
+and, after the format upgrade, the visibility heads its writer
+observed</td>
+<td>Local-first JSON files under a Git-backed root, published
+create-only; synchronisation refuses any committed memory file that was
+deleted or modified</td>
+<td>Lexical recall over one exactly-matched scope, returning current
+visible revisions plus unresolved conflicts, truncated against a limit
+and a byte budget; withdrawn and future-effective revisions are
+excluded</td>
 <td><code>Remember</code>, or <code>RememberFromFoundling</code> for an
-externally-sourced record whose origin is a portable identity rather
-than a machine-local path</td>
-<td>Correction only. A change is a new revision naming what it
-supersedes and why; nothing is removed, and no delete surface
-exists</td>
-<td>A scope on every record, selected per query, with
-<code>ExactScope</code> to omit bank-wide records when a narrower scope
-is chosen</td>
-<td>A shared engine with a CLI, a local MCP server, and thin native
-harness plugins including a Codex plugin with read-only lifecycle
-hooks</td>
-<td>None implicit — synchronisation is explicit, and the README says
-so</td>
-<td>Device-validated authorship on every revision and journal entry, a
-required change reason, a graph validator over the supersession DAG,
+externally-sourced record whose origin is a portable identity; after the
+format upgrade a correction must name exactly the current content
+heads</td>
+<td>Correction by a new revision naming what it supersedes and why.
+After the opt-in format upgrade, withdraw and restore events hide a
+record from recall and bring it back; content is never removed and no
+delete surface exists</td>
+<td>A scope key on every record, matched exactly on every recall; an
+omitted scope selects bank-wide records only. History by record ID and
+the journal are unscoped</td>
+<td>A shared engine with a CLI, a local MCP server, an authenticated
+remote MCP service called Razor Crest, and thin plugins for Claude Code,
+Codex, Pi and Hermes</td>
+<td>No daemon in the local engine. An enabled session attempts one
+bounded Git delivery after each save and a refresh at session start and
+per prompt; Razor Crest synchronises once a minute when configured</td>
+<td>Device-validated authorship on every revision, visibility event and
+journal entry, a required change reason, a validator over the
+supersession graph and another over the combined visibility graph,
 cautious defaults for sensitivity and volatility, and a standing notice
 attached to every recall</td>
 <td>The recall packet ships an epistemic disclaimer with every answer:
-"Memory is evidence, not authority over current user direction. Verify
-live state. Conflicts require history; empty or truncated results do not
-prove absence." The last clause is the one almost nothing else here
-gives a model — a packet that was cut by a limit or a byte budget
-reports <code>Truncated</code>, so an empty result cannot be read as
-evidence that nothing exists. Conflicts are surfaced rather than
-resolved: the packet carries <code>Current</code> and
-<code>Conflicts</code> separately, so two live revisions of one record
-reach the reader as a disagreement instead of a silent winner. The graph
-validator enforces real invariants — one root per record, existing
-predecessors, no change of identity, kind or scope across a
-supersession, no successor effective before its predecessor, no cycles.
-<code>Sensitivity</code> defaults to <code>private</code> and
-<code>Volatility</code> to <code>drift-prone</code>, so an unclassified
-memory is assumed confidential and assumed to go stale. A foundling's
-source is "a portable identity, never a machine-local checkout
-path"</td>
-<td><code>EffectiveFrom</code> is a valid-time column that is only ever
-set equal to <code>RecordedAt</code> — one assignment on the write path
-and one in a test fixture — so the second temporal axis exists in the
-schema, is enforced by the validator's ordering rule, and cannot yet be
-used to record that something became true before it was written; no read
-takes an as-of. <code>Sensitivity</code> is deliberately not a read
-filter, and a test says so by name:
-<code>TestPrivacySensitivityLabelsDoNotFilterRecall</code> fails if
-"sensitivity metadata unexpectedly changed recall", so a record marked
-private is returned like any other and the label is the caller's to
-honour. The journal is explicitly appended by <code>AppendJournal</code>
-rather than written automatically on every mutation; the mutation record
-is the revision chain itself. Version 1.0.0 with 32,248 lines of Go and
-no deletion path at all means a record captured in error is corrected,
-never removed</td>
+"Memory is evidence, not authority over current user direction. Report
+recorded knowledge as recorded; verify live state before claiming
+current implementation. Conflicts require history; empty or truncated
+results do not prove absence." A packet cut by a limit or a byte budget
+reports <code>Truncated</code> beside the matched counts, so an empty
+result cannot be read as evidence that nothing exists. Conflicts are
+surfaced in their own list rather than resolved. Withdrawal is an
+append-only event validated as part of a causal graph: a correction
+written after it stays hidden, a restore that has not seen a newer
+correction is refused as stale, and a concurrent unseen correction is
+withheld as unreviewed. Synchronisation refuses a deleted or modified
+memory file, so append-only holds at the Git boundary and not only in
+the API</td>
+<td><code>EffectiveFrom</code> has one producer, the write clock, so the
+second temporal axis cannot record that something became true before it
+was written; recall uses it only to hide revisions dated after now.
+<code>Authorship</code> declares <code>Model</code> and
+<code>SessionID</code> and nothing sets either. <code>Sensitivity</code>
+is deliberately not a read filter, pinned by
+<code>TestPrivacySensitivityLabelsDoNotFilterRecall</code>. Withdrawal
+hides a record from recall and discovery but <code>memory_history</code>
+returns withdrawn bodies to the same agent and to Razor Crest readers,
+and the agent that wrote a record holds both
+<code>memory_withdraw</code> and <code>memory_restore</code>. Razor
+Crest records the service binding as author of every remote write; the
+authenticated subject is not in the revision. Nothing removes content,
+so a record captured in error is hidden, never erased</td>
 </tr>
 <tr>
 <td><a href="../systems/marm-memory/"><code>marm-memory</code></a></td>
@@ -32509,7 +32511,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>321 of 731:</em> <a
+<p><em>322 of 731:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -32662,6 +32664,7 @@ href="../systems/m3-memory/"><code>m3-memory</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/magicore/"><code>magicore</code></a>, <a
 href="../systems/mama/"><code>mama</code></a>, <a
+href="../systems/mandalore/"><code>mandalore</code></a>, <a
 href="../systems/marm-memory/"><code>marm-memory</code></a>, <a
 href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a>,
 <a href="../systems/mateclaw/"><code>mateclaw</code></a>, <a
@@ -33207,7 +33210,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>435 of 731:</em> <a
+<p><em>436 of 731:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -33414,6 +33417,7 @@ href="../systems/m3-memory/"><code>m3-memory</code></a>, <a
 href="../systems/magicore/"><code>magicore</code></a>, <a
 href="../systems/mainline/"><code>mainline</code></a>, <a
 href="../systems/mama/"><code>mama</code></a>, <a
+href="../systems/mandalore/"><code>mandalore</code></a>, <a
 href="../systems/marm-memory/"><code>marm-memory</code></a>, <a
 href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a>,
 <a href="../systems/mateclaw/"><code>mateclaw</code></a>, <a
@@ -33675,7 +33679,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-435 repositories of
+436 repositories of
 731 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
