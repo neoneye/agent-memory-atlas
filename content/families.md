@@ -4436,6 +4436,21 @@ the paper's rather than one recomputed from an artifact. What it does supply is 
 number for the cost side of the boundary — 6.1M tokens to keep the conversation
 as the memory, against 122k to keep a state instead.
 
+**A third-party port persists the state per session, and stays on this side
+too.** [mega-skillstate](https://github.com/megablue/mega-skillstate), read at
+[`c1c3a75b34dc4eaba151d0caea4285da8988bcbe`](https://github.com/megablue/mega-skillstate/commit/c1c3a75b34dc4eaba151d0caea4285da8988bcbe) — MIT, one author, 2,949
+lines of TypeScript under `src/`, every commit on 10 October 2026 — ports the
+design to an OpenCode 2.0 plugin and credits the paper as its source. The model
+writes the execution state through one tool, `state_patch`, whose JSON object
+is merged into the stored state rather than replacing it, and a context
+transform swaps superseded turns for that state. Every mutation is written to
+the host's storage under `state/<sessionID>`, so a restart of the same session
+resumes where it stopped — the persistence [SALT](#salt) has — and no path
+reads another session's key: `stateKey` is only ever called with the current
+session's id (`src/state.ts:110-112`, `:136`, `:229`), and a session's
+`parentID` is consulted only to tell a subagent's session apart
+(`src/index.ts:50-70`). The authors' own code remains unreleased.
+
 Deciding what stays in the context window is a real problem. It is a different
 problem, and the test that separates it is **whether the store holds anything
 that could turn out to be false**. A system whose memory is a window has no
