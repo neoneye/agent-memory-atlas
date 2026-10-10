@@ -34,6 +34,13 @@ matrix:
 
 ## 1. Executive Summary
 
+**The source of this report is no longer reachable upstream.** `diqierjia/StrataGate-AgentMemory`
+returns 404 with no rename redirect, and the account holds no public repository. The atlas holds a copy: the fork at
+[`agent-memory-atlas-archive/diqierjia--StrataGate-AgentMemory`](https://github.com/agent-memory-atlas-archive/diqierjia--StrataGate-AgentMemory)
+carries the pinned commit, so every file path below is readable there. Links in
+the body point at the upstream because that is where the reading happened; the
+archive is the working route.
+
 StrataGate is a memory for long-running agents, written in TypeScript and
 shipped as the `stratagate-dsh` plugin for DeepSeek Harness, version 0.2.71, MIT,
 126 commits since 10 August 2026. About 12,300 lines of TypeScript sit across

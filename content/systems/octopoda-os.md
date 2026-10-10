@@ -33,6 +33,13 @@ matrix:
 
 ## 1. Executive Summary
 
+**The source of this report is no longer reachable upstream.** `RyjoxTechnologies/Octopoda-OS`
+returns 404 with no rename redirect, and the account holds no public repository. The atlas holds a copy: the fork at
+[`agent-memory-atlas-archive/RyjoxTechnologies--Octopoda-OS`](https://github.com/agent-memory-atlas-archive/RyjoxTechnologies--Octopoda-OS)
+carries the pinned commit, so every file path below is readable there. Links in
+the body point at the upstream because that is where the reading happened; the
+archive is the working route.
+
 Octopoda is a memory and observability layer for AI agents: a Python SDK, an MCP
 server, a live dashboard, and a Postgres schema with pgvector. About 42,000 lines
 of Python across `synrix`, `synrix_runtime` and `octopoda_zf`.

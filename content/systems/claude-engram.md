@@ -36,6 +36,13 @@ matrix:
 
 ## 1. Executive Summary
 
+**The source of this report is no longer reachable upstream.** `20alexl/claude-engram`
+returns 404 with no rename redirect, while the account keeps another public repository, so the repository was deleted or made private. The atlas holds a copy: the fork at
+[`agent-memory-atlas-archive/20alexl--claude-engram`](https://github.com/agent-memory-atlas-archive/20alexl--claude-engram)
+carries the pinned commit, so every file path below is readable there. Links in
+the body point at the upstream because that is where the reading happened; the
+archive is the working route.
+
 Claude Engram is a set of Claude Code hooks plus an MCP server that turns a
 coding session's own events into per-project memory. A failed tool call becomes
 a *mistake*, a sentence the user types that reads as a choice becomes a

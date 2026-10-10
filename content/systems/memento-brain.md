@@ -31,6 +31,13 @@ matrix:
 ---
 ## 1. Executive Summary
 
+**The source of this report is no longer reachable upstream.** `ddong8/memento`
+returns 404 with no rename redirect, while the account keeps its other public repositories, so the repository was deleted or made private. The atlas holds a copy: the fork at
+[`agent-memory-atlas-archive/ddong8--memento`](https://github.com/agent-memory-atlas-archive/ddong8--memento)
+carries the pinned commit, so every file path below is readable there. Links in
+the body point at the upstream because that is where the reading happened; the
+archive is the working route.
+
 Memento collects AI coding conversations from the tools and machines a person
 already uses, aggregates them on a self-hosted backend, and serves them back
 through a web interface and an MCP server. Python and Next.js over Postgres with

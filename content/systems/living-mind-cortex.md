@@ -34,6 +34,13 @@ matrix:
 
 ## 1. Executive Summary
 
+**The source of this report is no longer reachable upstream.** `NovasPlace/living-mind-cortex`
+returns 404 with no rename redirect, while the account keeps its other public repositories, so the repository was deleted or made private. The atlas holds a copy: the fork at
+[`agent-memory-atlas-archive/NovasPlace--living-mind-cortex`](https://github.com/agent-memory-atlas-archive/NovasPlace--living-mind-cortex)
+carries the pinned commit, so every file path below is readable there. Links in
+the body point at the upstream because that is where the reading happened; the
+archive is the working route.
+
 Living Mind Cortex is a single-process Python "organism" — a FastAPI service
 with a 10-second pulse loop, a nine-hormone state bus, a circadian clock, LLM
 dream synthesis and a self-mutating genome — whose memory is a Postgres

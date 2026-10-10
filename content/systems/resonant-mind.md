@@ -4,11 +4,11 @@ eyebrow: "Single-mind MCP memory with a subconscious daemon"
 description: "A single-mind MCP memory on Postgres and pgvector whose writes auto-supersede similar observations and whose 30-minute daemon archives, consolidates, dreams and proposes."
 root: ../..
 page_kind: system
-source_name: "codependentai/resonant-mind"
-source_url: https://github.com/codependentai/resonant-mind
-archive_name: "codependentai--resonant-mind"
+source_name: "nekyialabs/resonant-mind"
+source_url: https://github.com/nekyialabs/resonant-mind
+archive_name: "nekyialabs--resonant-mind"
 revision: 9a08410b538f9dc56119ee34e8de044aef867e51
-revision_url: https://github.com/codependentai/resonant-mind/commit/9a08410b538f9dc56119ee34e8de044aef867e51
+revision_url: https://github.com/nekyialabs/resonant-mind/commit/9a08410b538f9dc56119ee34e8de044aef867e51
 analyzed_at: 2026-09-26
 licence: "Codependent AI Source-Available License (personal and non-commercial use; commercial use needs a licence)"
 size: "17,088 lines of TypeScript in 105 files under src, and 1,354 lines of SQL in 23 migrations"
@@ -33,6 +33,8 @@ matrix:
 ---
 
 ## 1. Executive Summary
+
+The repository moved from `codependentai/resonant-mind` to `nekyialabs/resonant-mind`; the old address redirects there, and the pinned commit resolves at the new one.
 
 Resonant Mind is a Cloudflare Worker that gives one long-running AI a
 persistent store over Neon Postgres and pgvector: 47 MCP tools grouped into
