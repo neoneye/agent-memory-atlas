@@ -1371,7 +1371,11 @@ papers cited by arXiv id — is read from the sources linked inline.
   `grep -rli 'memory\|recall\|retriev\|forget\|supersede\|tombstone' src`
   returns nothing at the commit read, and the only store it touches is somebody
   else's, a Deep Agents LangGraph checkpoint it decodes by thread id. Reading a
-  transcript format is not keeping memory. `666ghj/MiroFish` is an AGPL-3.0
+  transcript format is not keeping memory. `666ghj/MiroFish`, read at
+  [`7657031ac01184afe2cb220f5ee3545573b5e843`](https://github.com/666ghj/MiroFish/commit/7657031ac01184afe2cb220f5ee3545573b5e843)
+  with `backend/` unchanged since
+  [`39d849138ef254f6c737ab4c4705e5545dbe31d4`](https://github.com/666ghj/MiroFish/commit/39d849138ef254f6c737ab4c4705e5545dbe31d4),
+  is an AGPL-3.0
   multi-agent simulation engine whose agents are described as having long-term
   memory; that memory is Zep Cloud, which has [its own report](../systems/zep/).
   MiroFish's own memory-adjacent code is roughly 476 lines of client policy — a
