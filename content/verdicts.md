@@ -1763,11 +1763,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`wenlan`](../systems/wenlan/)
 
 - Best idea: a dismissed mind-map node keeps its row, so its derived fingerprint stays occupied under `UNIQUE(page_id, fingerprint)` and `ON CONFLICT DO NOTHING` makes every re-proposal a no-op — with the suggestion path a separate, insert-only accessor that "can never modify, resurrect, or overwrite a pinned/active/dismissed row".
-- Biggest risk: that guarantee covers graph placement, not facts. Nothing stops the underlying claim being re-stored, and the page changelog that looks like a mutation history is a 20-entry FIFO.
+- Biggest risk: that guarantee covers graph placement, not facts. Nothing stops the underlying claim being re-stored, the page changelog that looks like a mutation history is a 20-entry FIFO, and the Space boundary is a filter the agent chooses unless a launcher pins it.
 - Most reusable component: `drift_guard.rs` — test-only teeth that parse the source with `syn` and fail CI on a documented-but-unwired flag or a duplicated definition, which is the exact class of defect several reports in this atlas exist to report.
-- Maturity impression: 485,000 lines of Rust across five crates, Apache-2.0, a thirty-module evaluation subsystem with ranking goldens, and a committed benchmark table introduced by "This is a retrieval-only snapshot, not a claim about end-to-end answer quality." Three of seven capability marks: `human_review` was withdrawn on the 2026-09-19 re-read, because `accept_refinement` and `confirm_memory` are declared MCP tools refused only over remote transport, so the agent whose supersede was staged can accept it from local MCP.
+- Maturity impression: 702,200 lines of Rust and 223,061 of TypeScript, Apache-2.0, a 36-entry evaluation subsystem with ranking goldens, and a committed benchmark table the README frames as measuring "retrieval of saved knowledge, not AI answer quality." Two capability marks. `human_review` is withheld because `accept_refinement`, `confirm_memory` and `accept_revision` are declared MCP tools refused only over remote transport, so the agent whose supersede was staged can accept it from local MCP; `scope_enforced` is withheld because an MCP recall that omits `space` resolves to `ReadScope::Global` and reads every Space.
 - Study when: you need a rejected suggestion to stay rejected and want to see it done with a database constraint instead of a policy.
-- Do not copy when: you want a component — this is a product with a desktop app, and the transferable part is 900 lines of `page_map.rs`.
+- Do not copy when: you want a component — this is a product with a desktop app, and the transferable part is about 1,600 lines of `page_map.rs`.
 
 ### [`kage`](../systems/kage/)
 
