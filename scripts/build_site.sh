@@ -160,6 +160,10 @@ render_document "$project_dir/content/tensions.md" "$output_dir/tensions/index.h
 render_document "$project_dir/content/capabilities.md" "$output_dir/capabilities/index.html"
 render_document "$project_dir/content/verdicts.md" "$output_dir/verdicts/index.html"
 render_document "$project_dir/content/contributing.md" "$output_dir/contributing/index.html"
+# A prototype view published for feedback and deliberately left out of the navigation:
+# reachable at /map/ only by its address. Its data is assets/memory-map/, rebuilt by
+# scripts/memory_map/run.sh rather than here, because the layout step needs Node.
+render_document "$project_dir/content/map.md" "$output_dir/map/index.html"
 
 for input in "$project_dir"/content/systems/*.md; do
   slug="$(basename "$input" .md)"
