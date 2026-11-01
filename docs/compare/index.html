@@ -31679,34 +31679,46 @@ whatever directory the session is in</td>
 </tr>
 <tr>
 <td><a href="../systems/tokenmizer/"><code>tokenmizer</code></a></td>
-<td>A graph node — one of fourteen types (task, decision, file, error,
-endpoint, schema, goal, test…) carrying a label, a summary and one of
-nine statuses</td>
+<td>A graph node — one of fifteen types (task, decision, file, error,
+endpoint, schema, goal, test, a summary of windowed-out constraints…)
+carrying a label, a summary and one of nine statuses; beside the graph,
+opt-in, up to twelve preference lines per principal</td>
 <td>SQLite: nodes and edges plus a separate
-<code>decision_transitions</code> table that survives graph pruning</td>
+<code>decision_transitions</code> table that survives graph pruning; a
+<code>preferences</code> table keyed on principal and key</td>
 <td><code>query()</code> over the graph, excluding superseded, archived
-and invalidated nodes; <code>to_context_block()</code> renders a resume
-block</td>
+and invalidated nodes; <code>to_context_block()</code> renders a
+budgeted resume with live decisions, contested pairs, the three latest
+transitions and invalidated decisions as do-not-use warnings, inside a
+fence that marks it a record</td>
 <td>A hybrid extractor over session messages, with an ontology and a
-validator, then a contradiction check on every decision node</td>
+validator, then a contradiction check on every decision node; a label
+that reads as an instruction to the model is refused and secrets are
+redacted before a node is stored</td>
 <td>Supersession when the evidence is clear, <code>CONTESTED</code> on
 both sides when it is not, <code>INVALIDATED</code> for explicitly
-wrong, plus pruning</td>
+wrong; a restatement hashes to the dead node and keeps its status;
+pruning deletes dead decisions once the graph passes 200 nodes</td>
 <td>A principal derived from the API key, claimed per session and
-enforced by a fail-closed dependency on every session-scoped route; no
-scope predicate inside a graph</td>
-<td>A CLI and server for coding sessions — checkpointing, compression, a
-dashboard and a visualiser</td>
-<td>Decay, pruning and compression passes, with idempotence and
-correctness suites of their own</td>
+enforced by a fail-closed dependency on every session-scoped route;
+preferences keyed on the same principal; no scope predicate inside a
+graph</td>
+<td>An OpenAI- and Anthropic-compatible proxy, a CLI, an MCP server, a
+Python <code>Memory</code> class with LangChain and LangGraph adapters,
+a dashboard and a visualiser, and a local-only mode that refuses network
+hosts the operator did not name</td>
+<td>Decay, archiving and pruning passes, with idempotence and
+correctness suites of their own; windowing replaces old turns with the
+resume block and keeps their constraint sentences as summary nodes</td>
 <td>Nine statuses — pending, in_progress, completed, failed, superseded,
 modified, invalidated, archived, contested — with the excluded four
 named in one frozenset and contested deliberately left retrievable</td>
 <td>A status for unresolved ambiguity that keeps both sides visible
-instead of guessing, and a committed ground-truth measurement of
-extraction recall</td>
-<td>The redaction functions are unit-tested in isolation and nothing
-asserts a secret fails to reach the rendered context block</td>
+instead of guessing, a supersession record the resume reads back, and a
+committed ground-truth measurement of extraction recall</td>
+<td>A dead decision's row is what stops its restatement, and pruning
+deletes that row; the redactors and the injection filter are tested, and
+nothing asserts a secret fails to reach the rendered context block</td>
 </tr>
 <tr>
 <td><a href="../systems/tracedecay/"><code>tracedecay</code></a></td>

@@ -48,7 +48,7 @@ and 1 it is sinking under gravity; at **depth 0 it is submerged — present but
 unreachable**; above 1 it is pinned. There are no status enums, no `active`
 boolean and no trust states: releasing a memory means setting a float to zero,
 and pinning means pushing it above one. That is the opposite of
-[TokenMizer](../tokenmizer/)'s eight discrete statuses, and it buys a property
+[TokenMizer](../tokenmizer/)'s nine discrete statuses, and it buys a property
 discrete states cannot — every intermediate position is expressible, so decay,
 release and promotion are the same operation at different magnitudes.
 
