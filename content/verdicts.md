@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 761 reports.**
+**This page covers all 762 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6948,3 +6948,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 265 commits, 16 – 31 October 2026; 25,096 lines of JavaScript and Python outside tests, 2,595 of them the MCP layer in `cli/mcp/`; 55 Node test scripts, 153 proxy unittest cases and 267 indexer pytest functions, not run. No marks.
 - Study when: long coding-agent sessions lose exact values to compaction and you want a searchable record of every turn instead of a summary.
 - Do not copy when: a workspace must be kept out of memory, several people share the machine, or a wrong memory has to be removed rather than outvoted.
+
+### [`textfold`](../systems/textfold/)
+
+- Best idea: **let the model choose numbers and let code copy the words.** The verbatim level is the sentences whose indices the model returns, taken from the source by `assemble`; answer citations are numbers `_cited` maps to paragraph ids, and one that names no paragraph is shown as `[[!12]]` rather than dropped.
+- Second idea: **anchor a note four ways and say when it is lost.** Unit, token range, sentence indices and a quote with context let `reanchor` find a note again on an edited text, and a note whose passage is gone is kept on its paragraph or section title with its old position in `lost`.
+- Biggest risk: **correction overwrites.** A note update replaces text and anchor, a delete removes the record, and a regenerated level replaces the previous file; only a Markdown replace keeps one superseded text in `previous/`.
+- Second risk: **grounding stops at the pointer.** Nothing checks that a written takeaway is faithful to its sentences or that a cited paragraph supports its answer sentence, and no evaluation of either is committed.
+- Third risk: the web recipes an agent writes are stored in one page's `meta.json` and read by nothing, though the docs say they are kept for the site's other pages; no CI step runs the 502 Python tests.
+- Most reusable component: `textfold/web/webmcp.js` `anchor` with `textfold/notes.py` `reanchor` — an agent-written note anchored to a quote that must occur exactly once in the source paragraph, and a re-anchoring pass that keeps what it cannot place.
+- Maturity impression: Apache-2.0, 443 commits under 22 author names, 5 – 31 October 2026; 14,901 lines of Python in `textfold/`, 636 of them `notes.py`; 502 Python test functions outside CI, not run. No marks.
+- Study when: an agent or a person files notes against documents that change, or model-written summaries must stay checkable against the words they came from.
+- Do not copy when: you need the history of a corrected note, retrieval across many documents, or memory an agent builds up from its own sessions.

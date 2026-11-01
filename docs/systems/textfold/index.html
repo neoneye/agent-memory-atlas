@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local reader that stores each
+document with model-written levels, re-anchoring notes and cited model
+answers, which a browser agent can read and annotate.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="TextFold — Agent Memory Atlas">
+    <meta property="og:description" content="A local reader that stores
+each document with model-written levels, re-anchoring notes and cited
+model answers, which a browser agent can read and annotate.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TextFold — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local reader that stores
+each document with model-written levels, re-anchoring notes and cited
+model answers, which a browser agent can read and annotate.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>TextFold — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "TextFold",
+      "description": "A local reader that stores each document with model-written levels, re-anchoring notes and cited model answers, which a browser agent can read and annotate.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A document folded into five levels, with
+notes that find their passage again</p>
+          <h1>TextFold</h1>
+          <p class="document-deck">A local reader that stores each
+document with model-written levels, re-anchoring notes and cited model
+answers, which a browser agent can read and annotate.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/chenxiachan/textfold">
+              <span>Source</span>
+              <strong>chenxiachan/textfold</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/chenxiachan/textfold/commit/5fc941dc4560ee2809c0f278da28457292c7f739" title="5fc941dc4560ee2809c0f278da28457292c7f739">
+              <span>Analyzed revision</span>
+              <code>5fc941dc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-01</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/chenxiachan--textfold" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>chenxiachan--textfold</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>14,901
+lines of Python in 49 files under textfold/, with notes.py 636,
+ladder.py 770 and the storage layer about 1,090; 10,093 lines of the
+reader's own JavaScript, HTML and CSS outside vendor/; 1,184 lines of
+TypeScript in the Claude Code and Pi plugins; version
+0.10.42</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>443
+commits on main, 5 October – 31 October 2026, under 22 author names, 360
+of them by Xia Chen; formerly PaperFold, renamed on GitHub on 9 October;
+read from a shallow clone, history from a treeless bare
+clone</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>502
+Python test functions in 65 files under tests/, five node:test files,
+and 111 plugin cases; CI runs only node --test on the five and the
+desktop link test; not run for this report</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>TextFold is a local reader for papers, web pages, office documents
+and agent replies. It shows each document at five levels, from the
+author's full text to a few words, and keeps what it made beside the
+document. Formerly PaperFold, it runs as a Python server with a browser
+UI, a desktop app and a browser extension. Its memory is a document
+library: per document, the source, the model-written levels, a reader's
+notes and the model's answers to questions about it. Agents reach it two
+ways. <code>python3 -m textfold get</code> serves a document by level.
+Fifteen WebMCP tools in the reader page let a browser agent read the
+passage in view and save, edit or delete notes.</p>
+<p>What is notable is how the design keeps model text attached to the
+source. The verbatim level is copied by sentence index, answer citations
+are numbers the code maps to paragraphs, and notes carry four anchors
+that survive an edited text. What is weak is the other direction:
+corrections leave no trace, and the agent-written web recipes have no
+reader.</p>
+<p>Four findings shape the rest of this report.</p>
+<ul>
+<li><strong>The model chooses numbers, the code copies words.</strong>
+For each paragraph the model returns the indices of one to three
+sentences as evidence (<code>textfold/ladder.py:236</code>), and
+<code>assemble</code> takes those sentences from the source
+(<code>:318-341</code>). Answers cite <code>[[12]]</code>, which
+<code>_cited</code> maps to a paragraph id or marks <code>[[!12]]</code>
+when it names none (<code>textfold/notes.py:345-362</code>).</li>
+<li><strong>A note finds its passage again or says it is lost.</strong>
+On a replaced text, <code>reanchor</code> keeps unchanged paragraphs'
+notes, finds moved ones by quote and context, and marks the rest
+<code>lost</code> with where they were (<code>notes.py:410-425</code>).
+<code>tests/test_replace.py:217-243</code> walks a deletion and its
+restoration.</li>
+<li><strong>An agent's note is anchored to source words it cannot
+invent.</strong> The WebMCP <code>anchor</code> function refuses a quote
+that does not occur exactly once in the open unit's source text
+(<code>textfold/web/webmcp.js:64-75</code>).</li>
+<li><strong>Correction overwrites.</strong> A note update replaces text
+and anchor, a delete removes the record (<code>notes.py:106-111</code>),
+and a regenerated layer replaces the previous one
+(<code>textfold/store.py:305-312</code>).</li>
+</ul>
+<p>No marks. Section 9 names each and why it is withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There is no memory record in the agent sense. There is a document,
+and three kinds of text about it, each with its own author and its own
+way of staying attached to the source.</p>
+<p><strong>Levels are the model's reading, fixed once made.</strong> A
+model samples differently on every run, so TextFold writes each
+document's ladder to <code>layers/&lt;lang&gt;.json</code> and assembles
+the reader from it with no model call (<code>store.py:1-15</code>). Of
+the five levels, Full is the source, and the verbatim level is source
+sentences picked by index. Takeaway, reason and topic are written; a
+topic is cut from inside the takeaway when the model's phrase occurs
+there verbatim (<code>ladder.py:1-14</code>, <code>:680-696</code>). A
+level stops being current when the person regenerates it, which
+overwrites the file with a new <code>version</code> stamp and model id.
+A translation records the ladder version it was built on and is listed
+as stale when that ladder changes (<code>store.py:366-390</code>).</p>
+<p><strong>Notes are the reader's, and they move with the text.</strong>
+A note's anchor holds the paragraph id, a token range, the sentence
+indices and a W3C-style quote with 40 characters either side
+(<code>docs/notes-format.md</code>). A note made on a written line also
+keeps <code>shown.exact</code>, the words as the line read then, so the
+reader can tell when a refold rewrote it.</p>
+<p><strong>Answers are the model's, with each claim pointed at a
+paragraph.</strong> An <code>ask</code> note holds a thread of turns,
+each with question, Markdown answer, one-line takeaway, cited
+paragraphs, two follow-up questions, model id and time
+(<code>notes.py:395-399</code>). The prompt asks the model to end a
+sentence that is its own inference with <code>[[?]]</code>
+(<code>notes.py:298-299</code>). Nothing checks that a cited paragraph
+says what the sentence claims.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the three kinds of text TextFold keeps about a document, how each is tied to the source, and what happens to each when the text or the reader changes it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the three kinds of text TextFold keeps about a document, how each is tied to the source, and what happens to each when the text or the reader changes it
+flowchart TD
+    D[(&quot;document directory:&lt;br/&gt;source.html, meta.json&quot;)]
+    D --&gt; L[&quot;generation: one call&lt;br/&gt;per section; model&lt;br/&gt;returns sentence&lt;br/&gt;numbers and a takeaway&quot;]
+    L --&gt; LA[(&quot;layers/lang.json:&lt;br/&gt;verbatim sentences&lt;br/&gt;copied by index,&lt;br/&gt;written takeaway,&lt;br/&gt;version stamp&quot;)]
+    LA -- &quot;regenerate&quot; --&gt; OV[&quot;overwritten:&lt;br/&gt;no earlier layer kept&quot;]
+    D --&gt; N[&quot;notes: person, or a&lt;br/&gt;browser agent with a&lt;br/&gt;quote found exactly&lt;br/&gt;once in the unit&quot;]
+    N --&gt; NS[(&quot;notes.json:&lt;br/&gt;unit, tokens, sents,&lt;br/&gt;quote with context&quot;)]
+    NS -- &quot;text replaced&quot; --&gt; RA{&quot;reanchor&quot;}
+    RA -- &quot;found&quot; --&gt; OK[&quot;kept on its&lt;br/&gt;new passage&quot;]
+    RA -- &quot;gone&quot; --&gt; LO[&quot;kept, marked lost,&lt;br/&gt;on its paragraph&lt;br/&gt;or section title&quot;]
+    NS -- &quot;update or delete&quot; --&gt; GONE[&quot;overwritten&lt;br/&gt;or removed,&lt;br/&gt;no trace&quot;]
+    D --&gt; Q[&quot;ask: paper sent&lt;br/&gt;with numbered parts&quot;]
+    Q --&gt; T[&quot;thread turn:&lt;br/&gt;numbers mapped to&lt;br/&gt;paragraph ids;&lt;br/&gt;unmapped shown as&lt;br/&gt;broken; ? for inference&quot;]
+    T --&gt; NS</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>TextFold is a Python package (<code>textfold/</code>) whose
+<code>serve</code> command runs a local HTTP server for a browser reader
+written in plain JavaScript (<code>textfold/server.py</code>,
+<code>textfold/web/</code>). The Electron app in <code>desktop/</code>
+packages the same server. Parsing covers arXiv HTML, JATS from PubMed
+Central and bioRxiv, Wikipedia, GitHub READMEs, generic web pages,
+Markdown, office files, and PDFs, the last through MinerU, an optional
+engine of about 3.4 GB installed beside the library.</p>
+<p><strong>Persistence is files behind a backend contract.</strong>
+<code>StorageBackend</code> in <code>textfold/documents.py</code>
+declares get, info, save, list, delete, trash, restore, purge and the
+library snapshot. <code>LocalDirectoryBackend</code> reads
+<code>papers/&lt;id&gt;</code> directories in place and writes only
+changed files, by atomic replacement, behind a revision check that
+raises on a stale snapshot (<code>docs/document-storage.md</code>,
+<code>textfold/storage.py</code>). It is not a multi-file transaction,
+and the lock covers one process.</p>
+<p><strong>Models are whatever the person connects.</strong>
+<code>llm.call</code> reaches Claude Code, Codex, Pi or another agent on
+the machine, or an API, and caches each reply under the first 24 hex
+digits of a SHA-256 over system prompt, prompt, schema, model and
+reasoning level (<code>textfold/llm.py:81-117</code>). A reply TextFold
+cannot parse is deleted so the next run asks again
+(<code>:134-137</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One person installs the desktop app or the Python package and
+connects a model. Nothing else has to run; the PDF engine is optional.
+The library is a folder of JSON and HTML that a person can read, back up
+or move, and its location is a setting
+(<code>docs/library-location.md</code>). The browser extension and the
+WebMCP tools reach only the local server.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Generate.</strong> <code>ladder.build</code> sends each
+section with its units to the model, in parallel, through the cache
+(<code>ladder.py:713-768</code>). For every unit the reply names,
+<code>assemble</code> keeps evidence indices that are integers inside
+the unit, at most three, falling back to sentence 0, and builds the
+written takeaway and reason, aligning their words to source tokens
+(<code>:318-341</code>). A unit missing from the reply, or a whole
+failed section, gets a local ladder built with no model
+(<code>:476</code>, <code>:765-766</code>). <code>store.save_en</code>
+writes the layer with a version stamp and the model label
+(<code>store.py:305-312</code>).</p>
+<p><strong>Read by level.</strong> <code>get</code> imports the file or
+link if it is not in the library, generates levels unless
+<code>--no-generate</code>, and prints the document at the requested
+level, or one section with <code>--section</code>
+(<code>textfold/__main__.py:36-117</code>).</p>
+<p><strong>Annotate from a browser agent.</strong>
+<code>annotation-create</code> requires the document to be open
+(<code>requireReader</code>, <code>webmcp.js:60-63</code>), builds the
+anchor from a unit id and an exact quote unique in that unit
+(<code>:64-75</code>), and puts the note through the server
+(<code>:190-194</code>). <code>annotation-update</code> replaces the
+text and, if given a new quote, the anchor (<code>:195-201</code>).</p>
+<p><strong>Ask.</strong> <code>notes.ask</code> assembles the document,
+builds a prompt with the paper in numbered parts and the last six
+answered turns, retries with a shorter prompt when the model reports the
+paper too long, maps citations, and appends the turn
+(<code>notes.py:365-406</code>).</p>
+<p><strong>Replace a text.</strong> <code>local.replace_text</code>
+moves the old layers and notes to <code>previous/</code>, keeping one
+generation back, parses the new text and calls
+<code>notes.reanchor</code>; the next generation asks the model only for
+sections whose text changed, because unchanged prompts hit the cache
+(<code>textfold/local.py:138-180</code>,
+<code>tests/test_replace.py:287</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>meta.json</code></td>
+<td>id, title, authors, language, source kind; for a kept web page, the
+recipe and snapshot kind</td>
+</tr>
+<tr>
+<td><code>layers/&lt;lang&gt;.json</code></td>
+<td><code>version</code>, <code>model</code>, <code>lang</code>, per
+unit <code>{role, ev, brief, tn, topic, model}</code>, per section a
+ladder, link edges</td>
+</tr>
+<tr>
+<td><code>layers/tr-&lt;lang&gt;.json</code></td>
+<td><code>version</code>, <code>base</code> (the ladder version it
+translates), <code>model</code>, per-unit translations</td>
+</tr>
+<tr>
+<td><code>notes.json</code></td>
+<td>format <code>textfold/notes</code> v1: <code>id</code>,
+<code>kind</code> (highlight, note, ask), <code>created</code>,
+<code>updated</code>, <code>anchor</code>, <code>text</code>,
+<code>shade</code>, <code>thread</code></td>
+</tr>
+<tr>
+<td><code>llm-cache/&lt;key&gt;.json</code></td>
+<td><code>out</code>, <code>cost</code>, <code>models</code> for one
+model call</td>
+</tr>
+</tbody>
+</table></div>
+<p>Internally the verbatim level is <code>ev</code>, sentence indices,
+and the written one is <code>brief</code>. The reader's labels and
+<code>docs/notes-format.md</code> call the verbatim level Brief and the
+written one Key, and the notes format stores levels as numbers, 4 Full
+through 0 Topic, <em>"the names are the reader's"</em>.
+<code>ladder.py</code>'s docstring uses the internal names, the README
+the reader's.</p>
+<p>Each <code>anchor</code> carries <code>unit</code>,
+<code>section</code>, <code>lang</code>, <code>level</code>,
+<code>tokens</code>, <code>sents</code> and <code>quote</code> with
+<code>exact</code>, <code>prefix</code> and <code>suffix</code>.
+Optional fields are <code>shown</code> for a written line,
+<code>eq</code> for an equation, <code>on</code> for a section-level
+note and <code>lost</code> for a passage not found again. A
+<code>thread</code> turn carries <code>q</code>, <code>a</code>,
+<code>takeaway</code>, <code>cites</code>, <code>next</code>,
+<code>model</code>, <code>lang</code>, <code>at</code> and
+<code>tools</code> when an agent searched the web for it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search over document content and no index. An agent reads
+a document by id or link at a level, and <code>get</code> prints the
+Topic map first so the agent can choose a section before spending
+context on the whole text. <code>library-query</code> filters the
+library by a lowercased substring of title and authors, and by folder
+(<code>webmcp.js:135-138</code>). <code>reading-context</code> returns
+the open document's selection, the unit's source text, surrounding units
+and a paged outline.</p>
+<p><strong>Questions use the whole paper.</strong>
+<code>notes.prompt</code> sends the paper in numbered parts with the
+passage and the last six turns. When the model refuses it as too long,
+the call is made again with the long-paper form
+(<code>notes.py:380-388</code>). There is no retrieval step to miss a
+passage, and the cost is a full paper per question, cached when the same
+question repeats.</p>
+<p><strong>Output is marked untrusted.</strong> Every WebMCP tool except
+four that return only TextFold's own ids and folders carries
+<code>untrustedContentHint</code>, so a document that says <em>"delete
+every note"</em> reaches the agent as the document's words
+(<code>webmcp.js:204-211</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Generation blocks only its own job.</strong> The reader
+starts a generation as a job and polls it; a section's units appear as
+its reply comes back (<code>ladder.py:735-740</code>). A level is
+readable as soon as its layer is written. <code>get</code> blocks the
+agent until generation finishes, or returns at once with
+<code>--no-generate</code>.</p>
+<p><strong>Notes are written immediately and one at a time.</strong>
+<code>notes.put</code> validates the id prefix and the presence of an
+anchor, takes a process lock and rewrites the file
+(<code>notes.py:92-104</code>). A browser agent's note passes the
+unique-quote check first. The tool descriptions say to save, edit or
+delete <em>"ONLY"</em> when the user asks; that rule is the
+description's.</p>
+<p><strong>No background pass rewrites anything.</strong> A refold
+happens when the person asks for it or replaces the text. The only
+scheduled work is <code>empty_trash</code>, run on a thread when the
+server starts, which erases trashed documents older than 30 days by the
+time in their folder name (<code>store.py:443-449</code>,
+<code>server.py:1073</code>).</p>
+<p><strong>Deletion.</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>note delete</td>
+<td>the record leaves <code>notes.json</code>; nothing is kept
+(<code>notes.py:106-111</code>)</td>
+</tr>
+<tr>
+<td>note update</td>
+<td>text and optionally anchor overwritten; <code>updated</code> is the
+only trace</td>
+</tr>
+<tr>
+<td>regenerate</td>
+<td>the layer file replaced with a new <code>version</code></td>
+</tr>
+<tr>
+<td>replace text</td>
+<td>old layers and notes moved to <code>previous/</code>, one generation
+deep</td>
+</tr>
+<tr>
+<td>document delete</td>
+<td>the whole directory to
+<code>papers/.trash/&lt;id&gt;-&lt;time&gt;/</code>, restorable for 30
+days (<code>storage.py:143-195</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The web recipe has a writer and no reader.</strong> The
+<code>web-adapt</code> skill has an agent write a recipe of CSS
+selectors for a site, and <code>adapt.check</code> verifies every word
+taken against the page, so a recipe <em>"can make a reading worse, never
+unfaithful"</em> (<code>docs/web-adapt.md</code>).
+<code>docs/web-adapt.md:8</code> says a recipe is <em>"kept for the
+site's other pages"</em>. <code>adapt --try --keep</code> stores the
+recipe in that one page's <code>meta.json</code>
+(<code>__main__.py:134-145</code>), and no code reads it back (Recorded
+searches). The docs mark the feature a first version.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A generation costs one model call per section, and a question a full
+paper. The reply cache makes a repeated generation free and a changed
+text cost only its changed sections. Storage grows with documents, their
+translations and the cache, which nothing prunes outside the trash.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>CLI.</strong>
+<code>python3 -m textfold get &lt;link or file&gt; [--level topic] [--section N] [--json]</code>
+is the documented agent path. It finds a model on the machine when none
+is configured (<code>tests/test_cli_get.py:32-47</code>).</p>
+<p><strong>WebMCP.</strong> Fifteen tools are registered through
+<code>document.modelContext.registerTool</code> on the landing and
+reader pages (<code>docs/webmcp.md</code>). They cover library listing
+and opening, file and Zotero import, folder management, reading context
+and navigation, annotations, and job status. The project tested them in
+Codex's in-app browser; a browser without WebMCP sees nothing.</p>
+<p><strong>Plugins.</strong> The Claude Code mod adds a style section
+asking Claude to lead each reply and paragraph with its point, and folds
+a reply to a prefix of its own sentences with no second model
+(<code>plugins/textfold/README.md</code>,
+<code>plugins/textfold/hooks/fold.ts:1-5</code>). The Pi extension
+persists only the chosen level as a session entry
+(<code>plugins/pi-textfold/extension/persist.ts</code>). Neither writes
+to the library.</p>
+<p><strong>Model runtimes.</strong> Generation and questions can run
+through Claude Code, Codex, CodeBuddy or Pi on the machine; <em>"Look it
+up on the web"</em> lets such an agent search with its own tools, and
+the turn records <code>tools: true</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Grounding by index is the strongest property.</strong> The
+verbatim level cannot contain words the source lacks, because the model
+never supplies them. The same indirection governs answer citations. A
+number outside the map is not dropped but shown as <code>[[!12]]</code>,
+so a broken citation is visible. Two limits follow from the design. A
+written level can still misstate its paragraph. A cited paragraph is
+only the one the model pointed at, with no check that it supports the
+sentence.</p>
+<p><strong>Re-anchoring keeps a note rather than guessing.</strong> A
+note on a deleted passage moves to its section's title with its old
+position in <code>lost</code> and its quote unchanged, and the next
+replace looks for it again (<code>notes.py:410-416</code>). The test
+restores the text and asserts both notes return to their words with
+<code>lost</code> removed
+(<code>tests/test_replace.py:236-243</code>).</p>
+<p><strong>Agent writes are bounded to the open document and to real
+source text.</strong> An agent cannot annotate a document the person has
+not opened, nor anchor a note to generated wording. It can rewrite or
+delete any note on that document; delete carries
+<code>consequentialHint</code>, and the rest is the description's
+<em>"ONLY on user request"</em>.</p>
+<p><strong>What is lost on correction.</strong> A note's earlier text, a
+deleted note and a regenerated layer are not kept.
+<code>previous/</code> holds one superseded text with its notes, and
+only on a Markdown replace.</p>
+<p><strong>Marks, each withheld.</strong></p>
+<ul>
+<li><strong>Tombstone — withheld.</strong> A deleted note leaves
+nothing, and no value is recorded as rejected.</li>
+<li><strong>Trust state — withheld.</strong> <code>[[?]]</code> labels a
+sentence of an answer as inference and <code>lost</code> labels a note's
+anchor; neither excludes anything from what an agent or a person reads.
+<code>meta["stale"]</code> lists a translation built on an older ladder,
+a property of a derived layer.</li>
+<li><strong>Bi-temporal — withheld.</strong> <code>created</code>,
+<code>updated</code>, <code>at</code> and <code>version</code> are
+record times.</li>
+<li><strong>Scope enforced — withheld.</strong> One directory per
+document is a physical partition, and the WebMCP check is which document
+is open, not a key on a record.</li>
+<li><strong>Audit log — withheld.</strong> Updates overwrite and deletes
+remove; nothing appends a record of either.</li>
+<li><strong>Human review — withheld.</strong> The reader shows every
+note and lets a person edit or delete it, and the agent holds the same
+verbs; an agent-written note lands with no approval step.</li>
+<li><strong>Negative eval — withheld.</strong> There is no retrieval to
+evaluate, and no case asserts that material stays out of what an agent
+is given.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I did not run any suite. The Python suite holds 502 test functions in
+65 files under <code>tests/</code>. No workflow runs it:
+<code>desktop.yml</code> runs <code>node --test</code> on
+<code>desktop/links.test.js</code> and the five
+<code>tests/*.test.cjs</code> files, and checks that the code, app and
+tag versions agree. The plugins' 111 cases, under
+<code>plugins/*/tests/</code>, are also outside CI.</p>
+<p><strong>What the tests pin for memory.</strong> Re-anchoring across
+inserted, edited, moved and deleted paragraphs, translated notes and
+section notes, plus refolding only the changed section
+(<code>tests/test_replace.py</code>, 14 tests). Trash expiry and
+restore, including a linked folder (<code>tests/test_trash.py</code>).
+The backend contract (<code>tests/test_document_backend.py</code>).
+Model discovery for <code>get</code>
+(<code>tests/test_cli_get.py</code>). Full-paper questions, model
+choice, stopping and tool use (<code>tests/test_ask_*.py</code>). WebMCP
+file import (<code>tests/webmcp-file-import.test.cjs</code>).</p>
+<p><strong>No evaluation of the levels or answers is committed.</strong>
+Nothing measures whether a takeaway is faithful to its paragraph,
+whether the chosen sentences back it, or whether a cited paragraph
+supports its answer sentence. The README makes no benchmark claim to
+check. No paper is attached to TextFold, and the README links no arXiv
+paper describing it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let the model choose indices and let code copy the
+text.</strong> Sentence numbers for extractive summaries, paragraph
+numbers for citations: the verbatim part of the output is then exact by
+construction, and a bad number is detectable.</li>
+<li><strong>Show a broken citation instead of dropping it.</strong>
+<code>[[!12]]</code> keeps the model's failure visible to the
+reader.</li>
+<li><strong>Anchor a note several ways, most precise first.</strong>
+Unit, token range, sentence indices and a quote with context let a note
+survive an edited text, and <code>lost</code> with the old position
+keeps it findable when it does not.</li>
+<li><strong>Check an agent's anchor against the source at write
+time.</strong> A quote that must occur exactly once in the open unit
+stops an agent annotating its own paraphrase.</li>
+<li><strong>Key the reply cache on everything that shapes the
+reply.</strong> It makes regeneration after a small edit cost only the
+changed sections.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Correction by overwrite.</strong> Keep the earlier text of
+an edited note and a record of a deleted one if anyone will ever ask why
+a note changed.</li>
+<li><strong>Documentation ahead of wiring.</strong> A recipe stored in
+one page's metadata is not a recipe kept for a site.</li>
+<li><strong>A test suite no CI runs.</strong> 502 Python tests pin the
+re-anchoring and storage contracts and nothing enforces them on a
+push.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>TextFold suits a person who reads many long documents and wants an
+agent to read them at a chosen depth, and to file notes against exact
+passages, on one machine. It is a careful example of keeping
+model-written text attached to its source, and of notes that survive the
+text changing. It is not an agent memory: nothing an agent learns in a
+session is stored for a later one except notes it is asked to save, and
+a team needing history on corrections, or retrieval across many
+documents, will not find either here.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will kept recipes be applied to a site's other pages, and how will a
+stale recipe be detected when the site changes?</li>
+<li>Does the reader show when a takeaway's aligned words no longer match
+its evidence sentences after a partial refold?</li>
+<li>Would an evaluation of takeaway faithfulness against the chosen
+sentences change the prompt or the model defaults?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Levels:</strong> <code>textfold/ladder.py</code>,
+<code>textfold/semantic.py</code>, <code>textfold/translate.py</code>,
+<code>textfold/pipeline.py</code>, <code>textfold/build.py</code>.</li>
+<li><strong>Storage:</strong> <code>textfold/store.py</code>,
+<code>textfold/storage.py</code>, <code>textfold/documents.py</code>,
+<code>textfold/_storage_layout.py</code>,
+<code>textfold/library.py</code>,
+<code>docs/document-storage.md</code>.</li>
+<li><strong>Notes and questions:</strong>
+<code>textfold/notes.py</code>, <code>docs/notes-format.md</code>.</li>
+<li><strong>Model calls and cache:</strong>
+<code>textfold/llm.py</code>, <code>textfold/agents.py</code>,
+<code>textfold/providers.py</code>.</li>
+<li><strong>Agent surfaces:</strong> <code>textfold/__main__.py</code>
+(<code>get</code>, <code>adapt</code>),
+<code>textfold/web/webmcp.js</code>, <code>docs/webmcp.md</code>,
+<code>textfold/skills/web-adapt/SKILL.md</code>,
+<code>textfold/adapt.py</code>, <code>docs/web-adapt.md</code>,
+<code>plugins/textfold/</code>, <code>plugins/pi-textfold/</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_replace.py</code>,
+<code>tests/test_trash.py</code>,
+<code>tests/test_document_backend.py</code>,
+<code>tests/test_cli_get.py</code>, <code>tests/test_ask_*.py</code>,
+<code>tests/*.test.cjs</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision, from the tree
+root.</p>
+<ul>
+<li><code>git grep -n -E "\[\"recipe\"\]|get\(\"recipe\"\)|'recipe'|\.recipe\b" -- textfold extension desktop ':!*vendor*'</code>
+— only <code>adapt_cmd</code>'s own argument
+(<code>__main__.py:126</code>, <code>:130</code>); no reader of a stored
+recipe.</li>
+<li><code>git grep -n -E "pytest|unittest|vitest|plugin test" -- .github</code>
+— no match; no workflow runs the Python or plugin suites.</li>
+<li><code>git grep -n "reanchor(" -- textfold</code> — the definition
+and two callers, <code>local.py:180</code> and
+<code>pdfdoc.py:446</code>.</li>
+<li><code>git grep -n -E "\.purge\(|empty_trash" -- textfold</code> —
+the backend method, <code>store.empty_trash</code> and its one caller at
+server start.</li>
+<li><code>git grep -n -i -E "tombstone|valid_from|supersed|audit" -- textfold</code>
+— one match outside vendor code, <code>JobQueue.superseded</code>
+(<code>server.py:235</code>), which stops generation jobs for a text
+about to be replaced.</li>
+<li><code>git grep -n -i -E "bibtex|@article|@misc|CITATION\.cff" -- . ':!*vendor*'</code>
+— no match, and no <code>CITATION.cff</code>; arXiv appears in the
+README as a source TextFold reads.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-01</strong> — <a
+href="https://github.com/chenxiachan/textfold/commit/5fc941dc4560ee2809c0f278da28457292c7f739"><code class="commit-id" title="5fc941dc4560ee2809c0f278da28457292c7f739">5fc941dc…</code></a>
+— first reading, at the head of <code>main</code>, 31 October 2026, from
+a shallow clone, with history from a treeless bare clone. No marks.
+Apache-2.0 with a NOTICE naming vendored fonts and libraries, no rider;
+no <code>.gitmodules</code>. Screened before reading: one auto-run
+surface, <code>.claude-plugin/marketplace.json</code>, a plugin
+marketplace entry for the reply-folding mod; no build-time execution;
+five unpinned surfaces. The screen put nine dependency surfaces inside
+the cooldown; by history five are, last changed 28 to 30 October, and
+the four last changed 15 or 19 October are not. The levels, storage,
+notes, reply cache, WebMCP tools, <code>get</code>, <code>adapt</code>
+and the plugins were read; nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
