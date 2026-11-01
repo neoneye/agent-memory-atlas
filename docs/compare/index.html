@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-757, generated from each report's frontmatter —
+758, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-757, generated from each report's frontmatter —
+758, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-757, generated from each report's frontmatter —
+758, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 757, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 758, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-757, generated from each report's frontmatter —
+758, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 757 systems by the seven mechanisms
+filters all 758 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -4870,6 +4870,62 @@ the injected index has no hard cap; session_search crosses workdirs from
 an ordinary session; model writes through MCP carry no evidence; a
 per-reply review and a working-memory ledger stay in the tree with no
 caller</td>
+</tr>
+<tr>
+<td><a href="../systems/ciris-agent/"><code>ciris-agent</code></a></td>
+<td>A typed graph node keyed by node_id and one of four scopes (local,
+identity, environment, community), with a free attribute dict and a
+version; a user is the node user/ID, a channel channel/ID, an approved
+identity change an identity_amendment node beside agent/identity. Edges
+carry a relationship and a weight</td>
+<td>The ciris-persist Rust engine through PyO3, on SQLite or Postgres:
+cirisgraph_nodes with primary key (node_id, scope) and cirisgraph_edges
+with no foreign key. No history table, no status, no expiry and no
+tenant column. Telemetry metrics are written into the same table as
+local-scope tsdb_data nodes</td>
+<td>Exact lookup by node_id and scope; a wildcard by scope and type; and
+search, which takes the newest rows of one scope by updated_at, up to
+the caller's limit (10 for the model's RECALL), and keeps those whose id
+or attribute JSON contains a query term. Edges to depth 2 on request. No
+ranking and no embeddings</td>
+<td>Explicit: action selection chooses MEMORIZE and supplies a whole
+node; a second pass shows the model the graph conventions and existing
+nodes, conscience checks run, and the handler checks consent and managed
+user attributes before an upsert that merges attributes. The context
+builder also creates user nodes for anyone it sees</td>
+<td>An upsert merges the new attributes over the stored ones under
+optimistic concurrency on version; no prior version is kept. FORGET
+hard-deletes the row and its edges in that scope. Expired consent blocks
+new writes to that user's node and starts a decay record; nothing
+deletes the data</td>
+<td>One store per agent. The four scopes are a type of memory, not a
+boundary between people: the model picks the scope on every read.
+Identity and environment writes and deletes need a verified approval.
+API OBSERVER users see only nodes whose created_by is theirs on three
+routes; the agent's own reads carry no user predicate</td>
+<td>Ten action verbs chosen by the agent's decision pipeline, three of
+them memory (MEMORIZE, RECALL, FORGET); a system snapshot injected into
+every thought with the identity, user profiles and channel; a FastAPI
+surface for memory, deferrals and consent; Discord, CLI and API
+adapters</td>
+<td>TSDB consolidation every 6 hours, weekly and monthly, summarising
+telemetry and pruning summaries; dream and solitude states that run
+consolidation thoughts. Nothing re-reads or rewrites stored memory
+content</td>
+<td>None on memory rows. Identity-scope writes are refused until a
+person with the AUTHORITY role resolves a deferral and the approval
+verifies; the approved change is stored as an amendment carrying the
+approver's id. Secrets in attributes are detected and replaced with
+references before storage</td>
+<td>Identity changes decided in code before any model judges the
+approval, with one approval per amendment where the node signs it; a
+signed hash chain over every agent action; secrets encapsulated before
+write; extensive design rationale in the code for each guard</td>
+<td>The model's RECALL search sees only the 10 most recently updated
+nodes in a scope, which telemetry floods; naming a user pulls their
+profile and messages from other channels into the thought; the approved
+amendment text is written by the model after approval; expiry and DSAR
+deletion delete nothing; admin API writes are unaudited</td>
 </tr>
 <tr>
 <td><a href="../systems/citra/"><code>citra</code></a></td>
@@ -33873,7 +33929,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>68 of 757:</em> <a
+<p><em>68 of 758:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -33945,7 +34001,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>193 of 757:</em> <a
+<p><em>193 of 758:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -34145,7 +34201,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>127 of 757:</em> <a
+<p><em>127 of 758:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -34280,7 +34336,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>318 of 757:</em> <a
+<p><em>318 of 758:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -34613,7 +34669,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>256 of 757:</em> <a
+<p><em>257 of 758:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -34654,6 +34710,7 @@ href="../systems/byterover/"><code>byterover</code></a>, <a
 href="../systems/cambium/"><code>cambium</code></a>, <a
 href="../systems/cashew/"><code>cashew</code></a>, <a
 href="../systems/caura/"><code>caura</code></a>, <a
+href="../systems/ciris-agent/"><code>ciris-agent</code></a>, <a
 href="../systems/citra/"><code>citra</code></a>, <a
 href="../systems/claude-mem/"><code>claude-mem</code></a>, <a
 href="../systems/claude-self-reflect/"><code>claude-self-reflect</code></a>,
@@ -34879,7 +34936,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>96 of 757:</em> <a
+<p><em>96 of 758:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -34979,7 +35036,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>486 of 757:</em> <a
+<p><em>486 of 758:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -35500,7 +35557,7 @@ href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
 486 repositories of
-757 assert that particular material must
+758 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -35573,7 +35630,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 757 is the real figure for the second kind, and
+of 758 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

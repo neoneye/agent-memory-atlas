@@ -81,6 +81,12 @@ GIT = "/usr/bin/git"
 TOPIC = "atlas-mirror"
 REVISION = re.compile(r"^revision:\s*\"?([0-9a-f]{40})\"?\s*$", re.M)
 
+# GitHub refuses a single push over 2 GB, and the first push of a copy carries
+# the whole history. `size` from the repository API is in KB and approximates the
+# packed history; above this the push would fail after a long clone, so the copy
+# is refused up front. CIRISAI/CIRISAgent (9.2 GB) was the first to hit it.
+MAX_HISTORY_KB = 1_800_000
+
 # SPDX ids GitHub reports for licences that grant redistribution. A copyleft
 # licence is on the list: the copy carries the LICENSE file and the source, which
 # is what those licences ask of a verbatim redistribution.
@@ -211,6 +217,10 @@ def archive_one(key: str, owner: str, repo: str, slugs: list[str], pins: set[str
     if spdx not in REDISTRIBUTABLE:
         return (f"refused-licence ({spdx}): fall back to `archive_fork.py --only {owner}/{repo}`, "
                 f"forked once and never synced")
+    size_kb = int(upstream.get("size") or 0)
+    if size_kb > MAX_HISTORY_KB:
+        return (f"refused-size ({size_kb // 1024} MB of history, over GitHub's 2 GB push limit): "
+                f"fall back to `archive_fork.py --only {owner}/{repo}`, forked once and never synced")
     if dry_run:
         status, existing, _ = af.request("GET", f"{API}/repos/{ORG}/{name}")
         if status == 200 and isinstance(existing, dict):

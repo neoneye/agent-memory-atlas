@@ -1515,6 +1515,21 @@ a tool argument on every read, and <code>memory_query</code> maps
 protocol teaches for cross-project recall and a test pins. Bare memory
 references fall back to scanning every non-hidden space, and one
 user-scope database serves every project.</p>
+<p><strong><a href="../../systems/ciris-agent/">CIRIS Agent</a> has
+scopes that are kinds of memory, and loads people's memory by
+mention.</strong> Every graph query in its Rust engine requires one of
+four scopes (local, identity, environment, community) and applies it,
+and the model names that scope on every <code>RECALL</code>
+(<code>ciris_engine/logic/handlers/memory/recall_handler.py:58</code>);
+the table carries no user or tenant key. The context builder takes user
+ids from <code>&lt;@ID&gt;</code> and <code>ID: n</code> in the thought
+text and injects each one's profile with up to three of their messages
+from other channels
+(<code>ciris_engine/logic/context/system_snapshot_helpers.py:1463-1480</code>,
+<code>:2215-2305</code>). The API's OBSERVER filter on
+<code>created_by</code> is a real per-user predicate on three routes,
+and the SQL predicate those routes cite as their first layer has no
+caller. <code>scope_enforced</code> is withheld.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

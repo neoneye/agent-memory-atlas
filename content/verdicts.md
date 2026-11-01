@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 757 reports.**
+**This page covers all 758 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6900,3 +6900,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 140 commits by 2 contributors, 27 April 2025 – 26 October 2026; 18,998 lines of TypeScript in `src/`, 7,861 of them the store, MCP and checkpoint core; 1,793 bun test cases in CI; two committed LoCoMo agent runs at 14.4% and 15.6% correct, and a README headline whose evidence is an Actions artifact. One mark: `negative_eval`.
 - Study when: you want a bounded, use-ordered working set per project with no LLM in the write path, or a lexical search that holds up without embeddings.
 - Do not copy when: projects must be kept apart from the model, corrections must stop the old value reaching the agent, or a change must stay explainable past a week.
+
+### [`ciris-agent`](../systems/ciris-agent/)
+
+- Best idea: **decide the authorisation fact in code before any model judges it.** An identity-scope `MEMORIZE` with no verified Wise Authority approval on its task becomes a `PONDER` whose text comes from code, before the memorize second pass runs; the approval has one constructor, reachable only through an AUTHORITY-role API route, and the amendment's id is derived from the approval so two approvals never overwrite each other.
+- Second idea: **give the writer the existing nodes before it writes.** After action selection picks `MEMORIZE`, a second pass lists the graph's addressing conventions and the candidate nodes, and the model re-decides instead of minting a UUID nothing reads back.
+- Biggest risk: **search is a window.** A `RECALL` that misses on exact id substring-filters the ten most recently updated nodes of one scope, the engine pages newest-first, and the telemetry service writes metric nodes into the same local scope.
+- Second risk: **a mention loads another person's memory.** The context builder enriches every `<@ID>` or `ID: n` in the thought text into a profile with up to three of that user's messages from other channels, with no check on what the speaker may see.
+- Third risk: the approved amendment text is written by the model after a person resolves the deferral; forgetting is a hard delete with no residue; consent expiry and DSAR deletion delete nothing; ADMIN API writes are unaudited.
+- Most reusable component: `ciris_engine/logic/processors/core/thought_processor/main.py` `_refuse_unapproved_identity_memorize` with `shared_helpers.py` `as_identity_amendment` — an approval gate held in code and an approval-derived amendment id.
+- Maturity impression: AGPL-3.0, 6,310 commits by 14 contributors, 22 April 2025 – 1 November 2026; 235,913 lines of Python in `ciris_engine/`, 3,645 of them the memory core, over a Rust engine pinned through a wheel; 14,113 pytest functions; no retrieval-quality eval. One mark: `audit_log`.
+- Study when: you are building an agent whose identity or policy must change only with a person's verified approval, or want a signed hash chain over every action.
+- Do not copy when: the agent must find facts among thousands, several people share one agent and must not see each other's messages, or forgetting must be provable.

@@ -937,6 +937,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[Mind](../../systems/mind/) applies the space predicate on every read and lets the model name the space, including all of them.** Each search channel, list, count, orientation preview and graph query filters on `s.name = ?` when a space is given, and a test asserts a search in one space misses identical content in another (`test/mind-store.spec.ts:701-711`). The space is a tool argument on every read, and `memory_query` maps `*` to no filter (`src/mcp/handlers/memories/query-memories.ts:86`), which the protocol teaches for cross-project recall and a test pins. Bare memory references fall back to scanning every non-hidden space, and one user-scope database serves every project.
 
+**[CIRIS Agent](../../systems/ciris-agent/) has scopes that are kinds of memory, and loads people's memory by mention.** Every graph query in its Rust engine requires one of four scopes (local, identity, environment, community) and applies it, and the model names that scope on every `RECALL` (`ciris_engine/logic/handlers/memory/recall_handler.py:58`); the table carries no user or tenant key. The context builder takes user ids from `<@ID>` and `ID: n` in the thought text and injects each one's profile with up to three of their messages from other channels (`ciris_engine/logic/context/system_snapshot_helpers.py:1463-1480`, `:2215-2305`). The API's OBSERVER filter on `created_by` is a real per-user predicate on three routes, and the SQL predicate those routes cite as their first layer has no caller. `scope_enforced` is withheld.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

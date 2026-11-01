@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 757 reports.</strong></p>
+<p><strong>This page covers all 758 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -31549,6 +31549,52 @@ embeddings.</li>
 <li>Do not copy when: projects must be kept apart from the model,
 corrections must stop the old value reaching the agent, or a change must
 stay explainable past a week.</li>
+</ul>
+<h3 id="ciris-agent"><a
+href="../systems/ciris-agent/"><code>ciris-agent</code></a></h3>
+<ul>
+<li>Best idea: <strong>decide the authorisation fact in code before any
+model judges it.</strong> An identity-scope <code>MEMORIZE</code> with
+no verified Wise Authority approval on its task becomes a
+<code>PONDER</code> whose text comes from code, before the memorize
+second pass runs; the approval has one constructor, reachable only
+through an AUTHORITY-role API route, and the amendment's id is derived
+from the approval so two approvals never overwrite each other.</li>
+<li>Second idea: <strong>give the writer the existing nodes before it
+writes.</strong> After action selection picks <code>MEMORIZE</code>, a
+second pass lists the graph's addressing conventions and the candidate
+nodes, and the model re-decides instead of minting a UUID nothing reads
+back.</li>
+<li>Biggest risk: <strong>search is a window.</strong> A
+<code>RECALL</code> that misses on exact id substring-filters the ten
+most recently updated nodes of one scope, the engine pages newest-first,
+and the telemetry service writes metric nodes into the same local
+scope.</li>
+<li>Second risk: <strong>a mention loads another person's
+memory.</strong> The context builder enriches every
+<code>&lt;@ID&gt;</code> or <code>ID: n</code> in the thought text into
+a profile with up to three of that user's messages from other channels,
+with no check on what the speaker may see.</li>
+<li>Third risk: the approved amendment text is written by the model
+after a person resolves the deferral; forgetting is a hard delete with
+no residue; consent expiry and DSAR deletion delete nothing; ADMIN API
+writes are unaudited.</li>
+<li>Most reusable component:
+<code>ciris_engine/logic/processors/core/thought_processor/main.py</code>
+<code>_refuse_unapproved_identity_memorize</code> with
+<code>shared_helpers.py</code> <code>as_identity_amendment</code> — an
+approval gate held in code and an approval-derived amendment id.</li>
+<li>Maturity impression: AGPL-3.0, 6,310 commits by 14 contributors, 22
+April 2025 – 1 November 2026; 235,913 lines of Python in
+<code>ciris_engine/</code>, 3,645 of them the memory core, over a Rust
+engine pinned through a wheel; 14,113 pytest functions; no
+retrieval-quality eval. One mark: <code>audit_log</code>.</li>
+<li>Study when: you are building an agent whose identity or policy must
+change only with a person's verified approval, or want a signed hash
+chain over every action.</li>
+<li>Do not copy when: the agent must find facts among thousands, several
+people share one agent and must not see each other's messages, or
+forgetting must be provable.</li>
 </ul>
         </article>
       </div>

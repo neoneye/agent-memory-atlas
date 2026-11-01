@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent runtime whose memory is a
+typed graph in a Rust engine, written by model-chosen MEMORIZE actions;
+identity changes need a person's verified approval.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CIRIS
+Agent — Agent Memory Atlas">
+    <meta property="og:description" content="An agent runtime whose
+memory is a typed graph in a Rust engine, written by model-chosen
+MEMORIZE actions; identity changes need a person's verified approval.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CIRIS
+Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent runtime whose
+memory is a typed graph in a Rust engine, written by model-chosen
+MEMORIZE actions; identity changes need a person's verified approval.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CIRIS Agent — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "CIRIS Agent",
+      "description": "An agent runtime whose memory is a typed graph in a Rust engine, written by model-chosen MEMORIZE actions; identity changes need a person's verified approval.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A typed memory graph behind an ethics-gated
+action loop</p>
+          <h1>CIRIS Agent</h1>
+          <p class="document-deck">An agent runtime whose memory is a
+typed graph in a Rust engine, written by model-chosen MEMORIZE actions;
+identity changes need a person's verified approval.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/CIRISAI/CIRISAgent">
+              <span>Source</span>
+              <strong>CIRISAI/CIRISAgent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/CIRISAI/CIRISAgent/commit/7de0d36eee7fda81d6415c100002fbc9663a5568" title="7de0d36eee7fda81d6415c100002fbc9663a5568">
+              <span>Analyzed revision</span>
+              <code>7de0d36e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-01</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CIRISAI--CIRISAgent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>CIRISAI--CIRISAgent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0;
+LICENSE read in full, no rider. NOTICE adds a trademark notice, a
+patent-pending notice and a CLA for contributors. The ciris-persist
+storage engine is AGPL-3.0-or-later, declared in its Cargo.toml with no
+LICENSE file</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>235,913
+lines of Python in ciris_engine/ and 66,100 in ciris_adapters/; the
+memory core (service, handlers, bus, persistence model, node schema) is
+3,645 of them. Storage is the Rust ciris-persist engine at v59.1.2,
+outside this tree, shipped in the pinned ciris-server==0.5.243
+wheel</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>6,310
+commits on main by 14 contributors, 22 April 2025 – 1 November 2026; the
+pin is the head of main, the 2.19.0 merge</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>14,113
+pytest functions in 905 test files under tests/; no retrieval-quality
+eval; the memory benchmark measures process RSS and uploads its results
+as a CI artifact</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CIRIS Agent is a Python agent runtime whose memory is a typed graph
+of nodes and edges, stored by a separate Rust engine. The agent writes
+memory by choosing a <code>MEMORIZE</code> action and supplying the
+whole node; a context builder reads parts of the graph into every
+thought. What is notable is the governance around identity: a write to
+the agent's identity is refused in code unless a person holding the
+AUTHORITY role has resolved a deferral and the approval verifies, and
+every action lands in an Ed25519-signed hash chain. What is weak is
+retrieval and forgetting. The model's search sees only the ten newest
+rows in a scope, a hard delete leaves nothing behind, and the 14-day
+consent expiry and the DSAR deletion path delete no data.</p>
+<p>The project is large and mostly not about memory. It ships a
+multi-pass decision pipeline (several decision-making passes, action
+selection, then conscience checks), a Discord moderator, mobile apps,
+federation between nodes, and localisation into 29 languages. The graph
+also holds configuration, telemetry, audit summaries and consent
+records. The licence is AGPL-3.0, and the NOTICE file asserts
+patent-pending technology and requires a CLA from contributors.</p>
+<p>Five findings shape the rest of this report.</p>
+<ul>
+<li><strong>Search reads a window, not the store.</strong> A model
+<code>RECALL</code> that misses on an exact id falls back to
+<code>search</code>, which fetches the newest rows of one scope, up to
+the recall limit of 10, and substring-filters them
+(<code>ciris_engine/logic/handlers/memory/recall_handler.py:79-92</code>,
+<code>ciris_engine/logic/services/graph/memory_service.py:744-777</code>).
+Telemetry writes metric nodes into the same local scope on every
+thought.</li>
+<li><strong>Naming someone loads their memory.</strong> The context
+builder enriches a user profile for every <code>&lt;@ID&gt;</code> or
+<code>ID: n</code> in the thought text, with up to three of that user's
+messages from other channels
+(<code>ciris_engine/logic/context/system_snapshot_helpers.py:1463-1480</code>,
+<code>:1756-1786</code>).</li>
+<li><strong>The approval and the stored text are separate
+events.</strong> A person approves a deferral; the amendment text is
+whatever the model then writes in the guidance task
+(<code>ciris_engine/logic/infrastructure/handlers/shared_helpers.py:242-302</code>).</li>
+<li><strong>Forgetting is a hard delete with no residue.</strong>
+<code>cirisgraph_delete_node</code> with <code>hard=true</code> deletes
+the row and its edges in that scope and writes no record (ciris-persist
+<code>src/graph/sqlite.rs:521-561</code>).</li>
+<li><strong>Expiry is declared, not run.</strong>
+<code>GraphNode.expires_at</code> never reaches storage, and the cleanup
+that would delete expired consent searches for a node shape no writer
+produces
+(<code>ciris_engine/logic/services/governance/consent/service.py:818-881</code>).</li>
+</ul>
+<p>One mark, <code>audit_log</code>. Section 9 names the six
+withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a node the agent decided to write. The decision pipeline
+evaluates each thought, action selection picks one of ten verbs, and
+<code>MEMORIZE</code> carries a complete <code>GraphNode</code> — id,
+type, scope and attributes — in its parameters
+(<code>ciris_engine/schemas/actions/parameters.py:106-116</code>). A
+second pass then shows the model the graph's addressing conventions and
+the nodes that already exist, and it re-decides; the code calls this a
+second opinion and refuses to rewrite the node for it
+(<code>ciris_engine/schemas/dma/msaspdma.py:1-37</code>).</p>
+<p>Once stored, a node is believed. There is no candidate state, no
+confidence field the reads consult, and no distinction between a fact a
+user stated and one the model inferred. The node's <code>version</code>
+counts upserts and the <code>updated_by</code> string names the writer,
+and nothing reads either to decide what is true.</p>
+<p>The scopes are kinds of memory, not owners. <code>local</code> holds
+what the agent learns, including user profiles and telemetry;
+<code>identity</code> holds the agent's identity and its approved
+amendments; <code>environment</code> holds deployment configuration;
+<code>community</code> is defined and rarely written
+(<code>ciris_engine/schemas/services/graph_core.py:39-45</code>). Only
+the transition into <code>identity</code> or <code>environment</code> is
+governed. A local write needs no approval, and any read may name any
+scope.</p>
+<p>A memory stops being believed in one of three ways. An upsert merges
+new attributes over the old ones and keeps no prior version.
+<code>FORGET</code> deletes the row. Expired consent blocks further
+writes to that user's node and records a decay that never completes.
+Nothing supersedes, nothing decays by age, and nothing marks a node as
+disputed.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a CIRIS memory node is written, which gate an identity write must pass, how RECALL finds it, and how FORGET removes it without a trace</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a CIRIS memory node is written, which gate an identity write must pass, how RECALL finds it, and how FORGET removes it without a trace
+flowchart TD
+    subgraph IN[&quot;What a thought starts from&quot;]
+        direction TB
+        U[&quot;A message on Discord,&lt;br/&gt;the API or the CLI&quot;]
+        E[&quot;Snapshot: user/ID for&lt;br/&gt;the speaker and for anyone&lt;br/&gt;named as @ID or ID: n,&lt;br/&gt;with 3 of their messages&lt;br/&gt;from other channels&quot;]
+        U ~~~ E
+    end
+    IN --&gt; A[&quot;Action selection picks&lt;br/&gt;one of ten verbs&quot;]
+    A --&gt;|&quot;MEMORIZE&quot;| G{&quot;Identity write&lt;br/&gt;with no verified&lt;br/&gt;approval?&quot;}
+    WA[&quot;A person with the&lt;br/&gt;AUTHORITY role resolves&lt;br/&gt;the DEFER; the guidance&lt;br/&gt;task carries the approval&quot;] -.-&gt; G
+    G --&gt;|&quot;yes&quot;| P[&quot;PONDER, text&lt;br/&gt;from code&quot;]
+    G --&gt;|&quot;no&quot;| M[&quot;Second look: graph&lt;br/&gt;conventions and the&lt;br/&gt;nodes that exist&quot;]
+    M --&gt; H[&quot;Handler: consent,&lt;br/&gt;managed attributes;&lt;br/&gt;approved text becomes&lt;br/&gt;an amendment node&quot;]
+    H --&gt; S[(&quot;cirisgraph_nodes&lt;br/&gt;key: node_id + scope&lt;br/&gt;attributes merged,&lt;br/&gt;version + 1&quot;)]
+    H --&gt; L[(&quot;Signed hash chain:&lt;br/&gt;id, type, scope,&lt;br/&gt;never the value&quot;)]
+    S --&gt; R[&quot;RECALL: exact id, else&lt;br/&gt;substring over the&lt;br/&gt;10 newest nodes&lt;br/&gt;in one scope&quot;]
+    R ~~~ F[&quot;FORGET: hard delete&lt;br/&gt;of the row and its&lt;br/&gt;edges in that scope&quot;]
+    F --&gt; X[&quot;Gone: nothing consulted&lt;br/&gt;on the next write&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The agent is one Python process with a service registry and typed
+buses; the memory bus routes <code>memorize</code>, <code>recall</code>,
+<code>search</code> and <code>forget</code> to
+<code>LocalGraphMemoryService</code>
+(<code>ciris_engine/logic/buses/memory_bus.py</code>,
+<code>ciris_engine/logic/services/graph/memory_service.py:48-70</code>).
+Since release 2.9.0 that service holds no SQL. Every graph call goes
+through <code>ciris_engine/logic/persistence/models/graph.py</code> to a
+module-level PyO3 <code>Engine</code> from the <code>ciris-server</code>
+wheel, falling back to the standalone <code>ciris_persist</code> wheel
+(<code>ciris_engine/logic/persistence/_substrate.py:22-35</code>).</p>
+<p>The engine is CIRISAI/CIRISPersist, read here at tag
+<code>v59.1.2</code>, commit
+<code class="commit-id" title="94a7b15793772543a4a987e447e0b7a1a79e48e0">94a7b157…</code>, the version
+CIRISServer <code>v0.5.243</code> pins in its <code>Cargo.toml</code>.
+It owns the schema, the paging, the delete semantics and the audit
+chain, and it runs on SQLite or Postgres. The same engine stores tasks,
+thoughts, correlations, federation rows and the audit log, so memory
+shares a database and a writer with everything else.</p>
+<p>Background work runs as services on fixed cadences. TSDB
+consolidation summarises telemetry every six hours, weekly and monthly,
+and prunes summaries past retention through
+<code>engine.tsdb_prune_summaries</code>
+(<code>ciris_engine/logic/services/graph/tsdb_consolidation/service.py:115-140</code>,
+<code>:345-375</code>). The cognitive states — wakeup, work, play,
+dream, solitude, shutdown — schedule their own thoughts; the dream
+state's consolidation edges go through <code>DreamMemorizeHandler</code>
+(<code>ciris_engine/logic/handlers/memory/memorize_handler.py:63-82</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What runs:</strong> the agent process and its embedded Rust
+engine. SQLite is the default; Postgres is supported by DSN. No vector
+service and no queue.</li>
+<li><strong>Local and offline:</strong> storage is local. Every thought
+calls an LLM several times through the decision pipeline, so nothing
+useful happens without a model endpoint, local or hosted.</li>
+<li><strong>API key:</strong> none is needed to store a node, but
+nothing stores a node without a thought, and a thought needs a
+model.</li>
+<li><strong>Install:</strong> a Python package, Docker compose files,
+installers for desktop and mobile. The engine arrives as a prebuilt abi3
+wheel; building it means building CIRISServer.</li>
+<li><strong>Repairable by hand:</strong> the store is a SQLite file with
+readable JSON attributes. The rows carry signature and hash columns that
+a hand edit does not update, but nothing in the graph code verifies them
+(ciris-persist <code>src/graph/</code> holds no verifier).</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture and write.</strong>
+<code>MemorizeHandler.handle</code> validates
+<code>MemorizeParams</code>, checks consent and managed attributes for
+user nodes, refuses identity writes without <code>wa_authorized</code>,
+converts an approved identity write into an amendment and has the node
+sign it, transforms config nodes, then calls
+<code>bus_manager.memory.memorize</code>
+(<code>ciris_engine/logic/handlers/memory/memorize_handler.py:53-158</code>).
+<code>LocalGraphMemoryService.memorize</code> replaces secrets in the
+attributes with references, then runs <code>add_graph_node</code> on a
+worker thread (<code>memory_service.py:72-91</code>,
+<code>:272-316</code>). <code>add_graph_node</code> reads the stored
+row, merges attributes, and calls <code>cirisgraph_upsert_node</code>
+with the stored version as <code>expected_version</code>
+(<code>ciris_engine/logic/persistence/models/graph.py:240-344</code>).</p>
+<p><strong>The gate before the handler.</strong> When action selection
+picks <code>MEMORIZE</code>, <code>_maybe_run_msaspdma</code> first
+refuses an identity write with no verified approval, replacing it with a
+<code>PONDER</code> whose text comes from code, and only then runs the
+second pass
+(<code>ciris_engine/logic/processors/core/thought_processor/main.py:784-911</code>).
+Conscience checks run on <code>MEMORIZE</code> and <code>FORGET</code>
+and skip <code>RECALL</code>
+(<code>ciris_engine/logic/processors/core/thought_processor/conscience_execution.py:154-161</code>).</p>
+<p><strong>Retrieval.</strong>
+<code>RecallHandler._perform_recall_query</code> tries an exact
+<code>(node_id, scope)</code> recall, then <code>search</code>, then a
+typed wildcard (<code>recall_handler.py:55-109</code>). Search parses
+<code>type:</code> and <code>scope:</code> prefixes out of the query,
+fetches nodes, and keeps those whose id or serialised attributes contain
+any term (<code>memory_service.py:744-777</code>,
+<code>:1170-1208</code>).</p>
+<p><strong>Context assembly.</strong>
+<code>build_system_snapshot_with_batch</code> gathers identity, channel
+and user profiles per thought;
+<code>_extract_user_ids_from_context</code> takes ids from the task, the
+thought context, the correlation and the thought text
+(<code>ciris_engine/logic/context/batch_context.py:794-805</code>,
+<code>system_snapshot_helpers.py:1450-1545</code>).
+<code>_enrich_single_user_profile</code> recalls <code>user/ID</code>
+with edges to depth 2 and <code>preferences/ID</code>, and creates the
+user node if it is missing
+(<code>system_snapshot_helpers.py:1789-1842</code>). Identity comes from
+<code>export_identity_context</code>, the core node plus every amendment
+(<code>memory_service.py:237-270</code>).</p>
+<p><strong>Correction and deletion.</strong> <code>ForgetHandler</code>
+refuses identity and environment scope without approval and calls
+<code>bus_manager.memory.forget</code>
+(<code>ciris_engine/logic/handlers/memory/forget_handler.py:50-107</code>),
+which calls <code>delete_graph_node</code> with <code>hard=True</code>
+(<code>graph.py:401-417</code>).</p>
+<p><strong>Schema.</strong> ciris-persist
+<code>migrations/sqlite/lens/V013__cirisgraph_nodes_edges.sql:34-79</code>;
+the agent's pydantic types in
+<code>ciris_engine/schemas/services/graph_core.py:127-178</code>.</p>
+<p><strong>Background.</strong> <code>TSDBConsolidationService</code>
+(<code>ciris_engine/logic/services/graph/tsdb_consolidation/service.py</code>);
+consent decay in
+<code>ciris_engine/logic/services/governance/consent/decay.py:55-166</code>.</p>
+<p><strong>API.</strong>
+<code>ciris_engine/logic/adapters/api/routes/memory.py</code> for store,
+query, delete, timeline, stats, visualisation and edges;
+<code>ciris_engine/logic/adapters/api/routes/wa.py:310-471</code> for
+resolving a deferral.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A node is <code>(node_id, scope)</code> with <code>node_type</code>,
+an <code>attributes</code> JSON document, <code>version</code>,
+<code>updated_by</code>, <code>updated_at</code> and
+<code>created_at</code>, plus five envelope columns for a signature and
+hashes (ciris-persist
+<code>V013__cirisgraph_nodes_edges.sql:34-54</code>). The table has no
+status, no validity interval, no expiry, no deletion marker and no owner
+or tenant key. Edges carry source, target, scope, relationship, weight
+and attributes, and have no foreign key, so an edge can outlive the node
+it names (<code>:62-79</code>).</p>
+<p>The pydantic <code>GraphNode</code> declares two fields the table
+does not have: <code>consent_stream</code>, defaulting to
+<code>TEMPORARY</code>, and <code>expires_at</code>
+(<code>graph_core.py:143-149</code>). <code>add_graph_node</code> does
+not put either in the payload (<code>graph.py:324-338</code>), and
+<code>_node_from_persist_json</code> does not read them back
+(<code>graph.py:189-208</code>). So every node returns with the
+defaults, whatever its writer set.</p>
+<p>Twenty-two node types share the table
+(<code>graph_core.py:48-73</code>). A user is <code>user/ID</code> of
+type <code>user</code>; the setup wizard's preferences are
+<code>preferences/ID</code> of type <code>concept</code>; consent
+records live under two different ids, <code>consent_user/ID</code> from
+the user-creation side effect (<code>graph.py:346-373</code>) and
+<code>consent/ID</code> from <code>ConsentService</code>
+(<code>consent/service.py:138</code>, <code>:200</code>). Telemetry
+metrics and log lines are <code>tsdb_data</code> nodes in local scope
+(<code>memory_service.py:576-630</code>, <code>:657-742</code>). Several
+user attributes are managed — <code>last_seen</code>,
+<code>trust_level</code>, <code>oauth_email</code> and others — and the
+handler refuses a write that changes one
+(<code>shared_helpers.py:357-400</code>).</p>
+<p>The engine's upsert is
+<code>INSERT … ON CONFLICT(node_id, scope) DO UPDATE … WHERE version = expected</code>
+and overwrites the row in place (ciris-persist
+<code>src/graph/sqlite.rs:384-481</code>). A soft delete exists in the
+engine (<code>hard=false</code> sets <code>attributes._deleted</code>),
+and nothing reads <code>_deleted</code>; the agent always passes
+<code>hard=True</code> (<code>sqlite.rs:551-556</code>,
+<code>graph.py:411</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is lookup and substring match. There are no embeddings, no
+lexical index and no ranking. Three paths exist.</p>
+<ul>
+<li><strong>Exact:</strong>
+<code>cirisgraph_get_node(node_id, scope)</code>.</li>
+<li><strong>Wildcard:</strong> <code>cirisgraph_query_nodes</code> with
+a scope and an optional type, paged at up to 100 rows
+(<code>graph.py:520-586</code>).</li>
+<li><strong>Search:</strong> the same paged query, cut at the caller's
+limit, then a Python substring test on the id and the attribute JSON
+(<code>memory_service.py:744-777</code>, <code>:1190-1208</code>).</li>
+</ul>
+<p>The engine pages <code>ORDER BY updated_at DESC, node_id DESC</code>
+(ciris-persist <code>src/graph/sqlite.rs:861-862</code>), so a search
+sees the most recently updated rows of one scope and nothing older. The
+model's <code>RECALL</code> passes its <code>limit</code>, default 10,
+into the search filter (<code>parameters.py:119-128</code>,
+<code>recall_handler.py:83-86</code>). The telemetry service writes
+every operational metric as a local-scope node
+(<code>ciris_engine/logic/services/graph/telemetry_service/service.py:225-230</code>),
+and the comment at <code>memory_service.py:82-84</code> puts metric
+writes at about forty per thought. Inferred from those three facts,
+without running it: on a busy agent, an untyped <code>RECALL</code> over
+local scope searches ten metric nodes. A <code>RECALL</code> naming a
+<code>node_type</code> searches the ten newest of that type, and an
+exact id works at any age.</p>
+<p>The context builder does not search. It recalls by constructed id —
+<code>user/ID</code>, <code>preferences/ID</code>,
+<code>channel/ID</code>, <code>agent/identity</code> — so what reaches
+every prompt is decided by who appears in the thought, not by relevance.
+The user ids come from four places, one of which is a regex over the
+thought text for Discord mentions and <code>ID: n</code>
+(<code>system_snapshot_helpers.py:1463-1480</code>). For each id, the
+profile carries connected nodes to depth 2 and up to three of that
+user's messages from other channels, found by paging the correlation
+store newest-first in pages of 200 and filtering tags in Python
+(<code>:1756-1786</code>, <code>:2215-2305</code>). The cost is that any
+participant who writes <code>&lt;@ID&gt;</code> in one channel places
+that user's recent messages from other channels in the thought; nothing
+checks that the speaker could see those channels.</p>
+<p>Recall bounds its output by marking a result <code>truncated</code>
+past 10,000 characters (<code>recall_handler.py:149-157</code>). The
+snapshot sits in every decision prompt and changes with every message,
+so it is outside any provider's prompt prefix cache by construction.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous inside the thought. The model
+chooses <code>MEMORIZE</code> and authors the node; the second pass, the
+conscience checks and the handler each cost an LLM call or a check
+before the upsert, and the node is retrievable by exact id as soon as
+the upsert returns. No extraction runs over conversations. The context
+builder writes too: it creates a <code>user/ID</code> node with defaults
+the first time it sees an id it cannot recall
+(<code>system_snapshot_helpers.py:1684-1753</code>), and that write
+passes no consent or managed-attribute check.</p>
+<p>An update is a merge. <code>add_graph_node</code> reads the stored
+attributes, overlays the new ones, and upserts with the stored version,
+so a write can add or change keys and cannot remove one
+(<code>graph.py:284-341</code>). Concurrent writers collide on
+<code>expected_version</code> and the second one raises. There is no
+deduplication beyond the primary key; the second pass exists because the
+model used to invent a fresh UUID for every fact, which nothing would
+ever read back (<code>msaspdma.py:12-31</code>).</p>
+<p>The writer of a fact about a user is not checked against the user.
+<code>_validate_user_node</code> checks the subject's consent and the
+managed attributes, and nothing compares the node's user to the speaker
+(<code>memorize_handler.py:252-292</code>). Consent decides whether the
+subject may be written about; it does not decide who may write.</p>
+<p>Secrets are the one input filter. Attributes are serialised and
+passed through <code>SecretsService.process_incoming_text</code>, which
+replaces detected secrets with references; they are decrypted again only
+for <code>speak</code> and <code>tool</code> actions
+(<code>memory_service.py:272-363</code>). Without a secrets service the
+write proceeds with a warning.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Synchronous:</strong> yes. A memory write is a thought's
+action, and the agent does nothing else in that thought. The write
+itself is a read and an upsert on a worker thread.</li>
+<li><strong>Lag:</strong> none for exact recall. A node is visible to
+search only while it is among the newest rows of its scope.</li>
+<li><strong>Whole-store passes:</strong> none over memory content.
+Telemetry consolidation runs every six hours over the period's
+metrics.</li>
+<li><strong>Read cost:</strong> the snapshot is built for every thought,
+including a recall per named user, a depth-2 edge walk, and a
+correlation scan that can page through the whole message history when a
+user has fewer than three messages elsewhere.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent has three memory verbs among ten and no memory tools in the
+MCP sense. <code>MEMORIZE</code>, <code>RECALL</code> and
+<code>FORGET</code> are action types the decision pipeline selects, with
+typed parameters (<code>parameters.py:106-142</code>). The model has
+full authority over local memory: it names the node, the scope, and
+every attribute. <code>ForgetParams</code> declares
+<code>no_audit</code>, and nothing reads it
+(<code>parameters.py:138</code>; the search is in the appendix).</p>
+<p>Memory reaches the model in two ways: the snapshot, assembled for
+every thought, and the follow-up thought a <code>RECALL</code> creates
+with its results. The agent identity block is the core
+<code>agent/identity</code> node with every approved amendment folded
+into its description (<code>memory_service.py:237-270</code>).</p>
+<p>People reach memory through the API. ADMIN users store and delete
+nodes directly; OBSERVER users query, browse a timeline and recall by
+id, filtered to nodes whose <code>created_by</code> is their own; any
+OBSERVER can request the visualisation and edge listings unfiltered
+(<code>routes/memory.py:328-844</code>). The <code>ciris_sdk</code>
+package wraps the same routes.</p>
+<p>Adapting the memory layer to another agent would mean taking the Rust
+engine and the graph conventions without the decision pipeline. The
+handlers assume <code>DispatchContext</code>, the thought lifecycle and
+the bus manager throughout.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Identity is the governed part, and the governance is
+real.</strong> An identity write is refused before any model judges it
+unless the task carries a <code>WAAuthorization</code>
+(<code>thought_processor/main.py:851-911</code>). That object has one
+constructor, <code>WiseAuthorityService.resolve_deferral</code>, which
+builds it only when the resolution verifies, and attaches it to a new
+guidance task
+(<code>ciris_engine/logic/services/governance/wise_authority/service.py:854-1101</code>).
+The only caller is <code>POST /wa/deferrals/{id}/resolve</code>, which
+requires the AUTHORITY role (<code>routes/wa.py:310-471</code>,
+<code>ciris_engine/logic/adapters/api/dependencies/auth.py:730</code>).
+No action parameter carries an approval, so the model cannot grant one.
+Where the node authors deferral rows, it signs
+<code>identity_amendment:v1</code> before the write and refuses a second
+amendment on one approval
+(<code>memorize_handler.py:160-223</code>).</p>
+<p><strong><code>human_review</code> is withheld, and the reason is what
+gets approved.</strong> The person resolves a deferral and writes
+guidance. The amendment text is then composed by the model in the
+guidance task — the node's <code>content</code>, or every authored
+attribute joined — and nothing compares it with what the person saw
+(<code>shared_helpers.py:242-302</code>). Every thought of that task is
+authorised
+(<code>ciris_engine/logic/utils/context_utils.py:119-126</code>).
+Without deferral rows the one-approval rule is not enforced and the
+amendment is written unsigned
+(<code>memorize_handler.py:187-201</code>). The rubric's test is whether
+a memory waits until an actor the agent cannot be resolves <em>it</em>;
+here the actor resolves the request, and the memory is written
+afterwards by the producer.</p>
+<p><strong><code>audit_log</code> holds on the action loop.</strong> The
+dispatcher audits every handler completion, failure, refusal and timeout
+(<code>ciris_engine/logic/infrastructure/handlers/action_dispatcher.py:543-599</code>),
+and <code>log_action</code> appends to the engine's
+<code>cirislens_audit_log</code>: SHA-256 entry hash,
+<code>prev_hash</code>, an Ed25519 signature from the node's key, and a
+sequence the engine requires to be tail+1
+(<code>audit_service/service.py:275-337</code>, <code>:1236-1375</code>;
+ciris-persist <code>src/audit/sqlite.rs:350-450</code>). The record
+names the node id, type and scope as the model proposed them, never the
+value (<code>shared_helpers.py:779-814</code>). Two limits matter.
+Append-only is enforced in application code with no trigger, so a direct
+<code>UPDATE</code> goes through and only <code>verify_chain</code>
+notices. And the ADMIN <code>/memory/store</code> and
+<code>DELETE /memory</code> routes call the memory service directly,
+with no audit entry. <code>cleanup_old_entries</code> would prune the
+chain and has no caller
+(<code>audit_service/service.py:877-1005</code>).</p>
+<p><strong><code>scope_enforced</code> is withheld: the scopes are not a
+boundary between people.</strong> The engine requires a scope on every
+query and applies it; the model chooses that scope on every read
+(<code>recall_handler.py:58</code>). The OBSERVER filter on the API is a
+real per-user predicate on <code>created_by</code>, applied after the
+fetch on the query, timeline and recall routes
+(<code>routes/memory.py:369-425</code>, <code>:752-824</code>).
+<code>build_user_filter_sql</code>, the "Layer 1" SQL predicate those
+routes cite, has no caller
+(<code>routes/memory_filters.py:32-55</code>). The visualisation returns
+up to 1,000 node ids, types and scopes, and the edge listing returns
+edges, with no user filter (<code>routes/memory.py:659-750</code>). The
+agent's own reads have no user predicate at all, and the snapshot pulls
+other users' messages by mention (section 6).</p>
+<p><strong><code>tombstone</code> is withheld.</strong> A hard delete
+removes the row and its edges and writes nothing; a later write of the
+same id is a fresh insert, and nothing records the forgotten value
+(ciris-persist <code>src/graph/sqlite.rs:521-561</code>). The audit
+entry for a <code>FORGET</code> keeps the id and the model's reason.</p>
+<p><strong><code>trust_state</code> and <code>bitemporal</code> are
+withheld.</strong> The table has no status column and no validity time.
+<code>version</code> counts writes, and <code>updated_at</code> is
+record time.</p>
+<p><strong>Consent expiry and deletion do not delete.</strong> On an
+expired TEMPORARY consent, the handler blocks the write and calls
+<code>revoke_consent</code> (<code>shared_helpers.py:439-452</code>),
+which starts the decay protocol: three new nodes and no deletion
+(<code>consent/decay.py:55-166</code>). The phases that would anonymise
+have no caller. <code>cleanup_expired</code> searches for
+<code>concept</code> nodes in identity scope carrying
+<code>service: consent</code>, which no consent writer produces, and
+only an admin route calls it (<code>consent/service.py:818-881</code>).
+The README and route docstrings describe a 14-day hard delete and a
+90-day anonymisation.</p>
+<p><strong>Smaller hazards.</strong> <code>delete_graph_node</code>
+reports success for a missing node, because the engine returns
+<code>false</code> rather than raising <code>NotFound</code>
+(<code>graph.py:407-417</code>). Graph <code>audit_entry</code> mirror
+nodes are local scope, so an agent <code>FORGET</code> can remove them;
+the chain row stays. An ADMIN can store any identity-scope node except
+an amendment, including over <code>agent/identity</code>
+(<code>routes/memory.py:342-350</code>).</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is large: 14,113 pytest functions in 905 files, run in CI.
+Memory coverage is mostly handler logic against mocked buses. I read the
+tests and ran nothing.</p>
+<p>The strongest negative cases do not reach a populated store.
+<code>test_filter_by_created_by</code> keeps one node and excludes
+another user's, with both in the same input, over a pure function on a
+list
+(<code>tests/ciris_engine/logic/adapters/api/routes/test_memory_filters.py:48-77</code>).
+The consent cleanup test returns two expired nodes and asserts the valid
+one absent, over a mocked bus and a node shape no production writer
+produces
+(<code>tests/ciris_engine/logic/services/governance/test_consent_service_graph_cleanup.py:129-152</code>).
+<code>test_memory_service_forget</code> uses the real engine and has no
+positive control: nothing is recalled before the delete, and
+<code>recall</code> turns any exception into <code>[]</code>
+(<code>tests/ciris_engine/logic/services/graph/test_memory_service.py:106-124</code>,
+<code>memory_service.py:110-112</code>). That is the vacuous shape, and
+it is why <code>negative_eval</code> is withheld.</p>
+<p>No test asserts that an unapproved amendment is not loaded, that a
+deleted user's data is absent from recall, or that a mention cannot pull
+another user's messages.</p>
+<p>The memory benchmark measures process RSS growth over 100 and 1,000
+messages (<code>tools/memory_benchmark.py:1-5</code>); its workflow
+uploads results as a 90-day CI artifact and commits none
+(<code>.github/workflows/memory-benchmark.yml:277-293</code>).
+<code>benchmark_results/</code> holds HE-300 ethics runs, not memory.
+Nothing measures retrieval quality. The README's paper badge links a
+Zenodo record titled <em>Coherence Collapse Analysis</em> (4 January
+2026), a risk framework for coordinating systems; it does not evaluate
+memory.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Decide authorisation facts in code before any model sees
+them.</strong> The identity gate replaces the action with a
+<code>PONDER</code> whose text is fixed, after a model, asked to judge a
+claimed approval, told the user a change had been applied
+(<code>thought_processor/main.py:851-875</code>).</li>
+<li><strong>Derive an amendment's id from the approval, not from the
+write.</strong>
+<code>agent/identity/amendment/&lt;deferral&gt;/&lt;digest&gt;</code>
+keeps two approvals side by side where model-invented ids would
+overwrite each other.</li>
+<li><strong>Compare a guarded field against what is stored, not against
+its presence.</strong> The managed-attribute check refuses a change and
+lets an unchanged value through, so a read-modify-write works
+(<code>shared_helpers.py:357-400</code>).</li>
+<li><strong>Give the writer the existing nodes before it
+writes.</strong> A second pass that lists candidate nodes stops a model
+from minting ids nothing will read.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A search that pages newest-first and filters
+afterwards.</strong> Every result older than the page is unreachable,
+and the page fills with whatever writes most. Filter in the query or
+index the text.</li>
+<li><strong>Telemetry in the memory table.</strong> Metrics written
+beside user facts compete for the same window and the same scope.</li>
+<li><strong>Loading a person's memory because their id appears in
+text.</strong> Who appears in a message is attacker-controlled; who may
+see what has to be decided by the speaker's access, not by a regex.</li>
+<li><strong>Approving a request and storing whatever comes
+next.</strong> If a person approves, bind the stored bytes to what they
+approved, or show them the bytes.</li>
+<li><strong>Declaring expiry on a model the storage layer does not
+carry.</strong> A pydantic field that the payload builder drops looks
+like a feature in every reader of the schema.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is not a memory system to adopt. It is an agent runtime with a
+firm opinion about governance, and its memory is a typed key-value graph
+serving that runtime: identity, configuration, user profiles and
+telemetry in one table. A reader building a governed agent should study
+the identity-amendment path and the action-level audit chain. A reader
+who needs recall — finding the right fact among thousands — will find no
+retrieval here to borrow. The maintenance budget is a team's: a Rust
+engine pinned through a wheel with its own release cadence, which moved
+from persist v40 to v59 between September and November 2026.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How much of local scope is telemetry on a running agent? The window
+argument in section 6 is read from code; one count of
+<code>tsdb_data</code> against other types in a live store would settle
+it.</li>
+<li>Does TSDB consolidation delete raw <code>tsdb_data</code> nodes, and
+on what cadence? The agent side prunes summaries; raw deletion would sit
+in the engine's <code>tsdb_consolidate_*</code> paths, not read
+here.</li>
+<li>What does the person resolving a deferral see — the proposed node,
+or only the agent's deferral reason?</li>
+<li>Is <code>&lt;@ID&gt;</code> enrichment intended in community
+deployments, and do the Discord adapter's channel permissions bound
+which messages the correlation store holds?</li>
+<li>Do the deployed nodes author deferral rows (persist ≥ 0.5.234), so
+that the one-approval rule is enforced in practice?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and storage:</strong>
+<code>ciris_engine/schemas/services/graph_core.py</code>,
+<code>ciris_engine/logic/persistence/models/graph.py</code>,
+<code>ciris_engine/logic/persistence/_substrate.py</code>; ciris-persist
+v59.1.2
+<code>migrations/sqlite/lens/V013__cirisgraph_nodes_edges.sql</code>,
+<code>src/graph/sqlite.rs</code>, <code>src/graph/types.rs</code>.</li>
+<li><strong>Write path:</strong>
+<code>ciris_engine/logic/handlers/memory/memorize_handler.py</code>,
+<code>ciris_engine/logic/infrastructure/handlers/shared_helpers.py</code>,
+<code>ciris_engine/logic/processors/core/thought_processor/main.py</code>,
+<code>ciris_engine/schemas/dma/msaspdma.py</code>,
+<code>ciris_engine/logic/services/graph/memory_service.py</code>.</li>
+<li><strong>Retrieval and context:</strong>
+<code>ciris_engine/logic/handlers/memory/recall_handler.py</code>,
+<code>ciris_engine/logic/context/system_snapshot_helpers.py</code>,
+<code>ciris_engine/logic/context/batch_context.py</code>,
+<code>ciris_engine/logic/context/identity_amendments.py</code>.</li>
+<li><strong>Deletion and consent:</strong>
+<code>ciris_engine/logic/handlers/memory/forget_handler.py</code>,
+<code>ciris_engine/logic/services/governance/consent/service.py</code>,
+<code>ciris_engine/logic/services/governance/consent/decay.py</code>.</li>
+<li><strong>Approval and audit:</strong>
+<code>ciris_engine/logic/services/governance/wise_authority/service.py</code>,
+<code>ciris_engine/logic/adapters/api/routes/wa.py</code>,
+<code>ciris_engine/logic/utils/context_utils.py</code>,
+<code>ciris_engine/logic/infrastructure/handlers/action_dispatcher.py</code>,
+<code>ciris_engine/logic/services/graph/audit_service/service.py</code>;
+ciris-persist <code>src/audit/sqlite.rs</code>,
+<code>src/retention/sqlite.rs</code>.</li>
+<li><strong>API:</strong>
+<code>ciris_engine/logic/adapters/api/routes/memory.py</code>,
+<code>ciris_engine/logic/adapters/api/routes/memory_filters.py</code>.</li>
+<li><strong>Background:</strong>
+<code>ciris_engine/logic/services/graph/tsdb_consolidation/service.py</code>,
+<code>ciris_engine/logic/services/graph/telemetry_service/service.py</code>.</li>
+<li><strong>Tests and benchmarks:</strong>
+<code>tests/ciris_engine/logic/adapters/api/routes/test_memory_filters.py</code>,
+<code>tests/ciris_engine/logic/services/governance/test_consent_service_graph_cleanup.py</code>,
+<code>tests/ciris_engine/logic/services/graph/test_memory_service.py</code>,
+<code>tools/memory_benchmark.py</code>,
+<code>.github/workflows/memory-benchmark.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the agent checkout at the pinned revision and the
+ciris-persist checkout at <code>94a7b15</code>, from each tree root.</p>
+<ul>
+<li>Agent: <code>git grep -n 'no_audit' -- . ':!tests'</code> — only the
+declaration, <code>parameters.py:138</code>.</li>
+<li>Agent:
+<code>git grep -n -E 'build_user_filter_sql' -- 'ciris_engine/*.py'</code>
+— only the definition, <code>memory_filters.py:32</code>.</li>
+<li>Agent:
+<code>git grep -n -E 'maintenance_prune_audit_chain|cleanup_old_entries|_cleanup_audit_graph_nodes' -- 'ciris_engine/*.py'</code>
+— the definitions, and the rate limiter's unrelated
+<code>_cleanup_old_entries</code>.</li>
+<li>Agent: <code>git grep -n -E '\.cleanup_expired\(' -- .</code> — the
+admin route, the SDK and tests.</li>
+<li>Agent:
+<code>git grep -n -E 'complete_decay_phase|cleanup_completed_decays' -- 'ciris_engine/*.py'</code>
+— the definitions only.</li>
+<li>Agent:
+<code>git grep -n -E '(expires_at|consent_stream)\s*=' -- 'ciris_engine/*.py'</code>
+— assignments on other schemas (ConsentStatus, IdentitySnapshot,
+WAPermission, tokens), none on a <code>GraphNode</code>.</li>
+<li>Agent:
+<code>git grep -n -E '"wa_authorized"|wa_authorized=' -- 'ciris_engine/*.py'</code>
+— readers, and a hard-coded <code>False</code> in database maintenance;
+no writer of <code>True</code> besides
+<code>context_utils.py:123-126</code>.</li>
+<li>Agent:
+<code>git grep -n -i -E 'audit' -- ciris_engine/logic/adapters/api/routes/memory.py ciris_engine/logic/services/graph/memory_service.py</code>
+— no match.</li>
+<li>Agent:
+<code>git grep -l -i -E 'locomo|longmemeval' -- '*.py' '*.md' '*.yml' '*.yaml' '*.json'</code>
+— an emoji table and a decision-pipeline test; no memory benchmark.</li>
+<li>Persist:
+<code>git grep -n -i -E 'deleted_at|expires_at|valid_from|valid_to|tombstone|status|tenant_id|agent_id|owner'</code>
+over the V013 and V019 migrations — no match.</li>
+<li>Persist:
+<code>git grep -n -i -E 'cirisgraph[._]?(node_)?(history|versions|tombstones?)|nodes_history|node_history'</code>
+— no match.</li>
+<li>Persist: <code>git grep -n -E '_deleted' -- src/graph</code> — the
+two soft-delete writers and a comment; no reader.</li>
+<li>Persist:
+<code>git grep -n -E '\b(CREATE TRIGGER|CREATE RULE|REVOKE (UPDATE|DELETE|ALL))\b' -- $(git grep -l -E 'audit_log' -- migrations)</code>
+— no match.</li>
+<li>Persist:
+<code>git grep -n -i -E 'verify|ed25519|verifying_key' -- src/graph</code>
+— a doc comment only.</li>
+<li>Persist:
+<code>git grep -n -E '\.archive_audit_range\(|archive_audit_range_(sqlite|pg)\('</code>
+— the engine dispatch and tests; nothing in
+<code>src/ffi/pyo3.rs</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-01</strong> — <a
+href="https://github.com/CIRISAI/CIRISAgent/commit/7de0d36eee7fda81d6415c100002fbc9663a5568"><code class="commit-id" title="7de0d36eee7fda81d6415c100002fbc9663a5568">7de0d36e…</code></a>
+— first reading, at the head of <code>main</code>, the 2.19.0 merge,
+from a shallow clone (<code>--depth 1</code>); history from the GitHub
+API. The storage engine was read at CIRISAI/CIRISPersist
+<code>v59.1.2</code>
+(<code class="commit-id" title="94a7b15793772543a4a987e447e0b7a1a79e48e0">94a7b157…</code>), the version
+CIRISServer <code>v0.5.243</code> pins. One mark,
+<code>audit_log</code>. Screened before reading: one committed git-hook
+directory, inactive since <code>core.hooksPath</code> is unset; no
+checkout filter in <code>.gitattributes</code>; seven
+<code>setup.py</code> and twenty conftest execution points; five
+dependency surfaces inside the cooldown, inflated because the shallow
+clone dates every file to the tip; five unpinned surfaces with no
+lockfile; <code>AGENTS.md</code> and <code>CLAUDE.md</code> read as
+data. The archive holds a fork, taken once: the history is 9 GB, over
+GitHub's push limit for a standalone copy. Nothing was installed, built
+or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
