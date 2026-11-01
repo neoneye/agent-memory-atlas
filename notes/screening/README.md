@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 757 of 757 screened at the report's current pin.**
+**Progress: 758 of 758 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 359 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 399 |
-| Repositories with build-time execution (`EXEC`) | 556 |
+| Repositories with an auto-run surface (`RUNS`) | 360 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 400 |
+| Repositories with build-time execution (`EXEC`) | 557 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -81,6 +81,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`caura`](../../content/systems/caura.md) | `.claude/hooks/`, `.claude/settings.json`, `.mcp.json` |
 | [`chump`](../../content/systems/chump.md) | `.claude/settings.json`, `.cursor/rules/`, `.gitmodules` |
 | [`cindy`](../../content/systems/cindy.md) | `.gitattributes`, `.githooks/` |
+| [`ciris-agent`](../../content/systems/ciris-agent.md) | `.githooks/` |
 | [`claude-engram-mlapeter`](../../content/systems/claude-engram-mlapeter.md) | `hooks/` |
 | [`claude-mem`](../../content/systems/claude-mem.md) | `.claude-plugin/` |
 | [`claude-mem-lite`](../../content/systems/claude-mem-lite.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
