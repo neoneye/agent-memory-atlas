@@ -1,20 +1,24 @@
 ---
 title: "Engram Alpha"
 eyebrow: "Time doesn't validate, exposure doesn't validate"
-description: "A Rust graph memory for coding assistants whose trust decays only when judged contradicting evidence lands, never from age alone and never from being retrieved — with the ablation row it ships labelled in its own committed benchmark data, and a fitted-as-data ontology carrying it onto a corpus it did not write."
+description: "A Rust graph memory for coding assistants whose trust falls only on judged contradicting evidence, never from age or retrieval, with its benchmark receipts committed."
 root: ../..
 page_kind: system
 source_name: "techtheist/engram"
 source_url: https://github.com/techtheist/engram
 archive_name: "techtheist--engram"
-revision: cb7a3944def40e3a39ee58f31a9b59c9f2e7171c
-revision_url: https://github.com/techtheist/engram/commit/cb7a3944def40e3a39ee58f31a9b59c9f2e7171c
-analyzed_at: 2026-09-19
+revision: ed4fe24d97f16f1c362d0c4d6b74bfe4d2caf0c3
+revision_url: https://github.com/techtheist/engram/commit/ed4fe24d97f16f1c362d0c4d6b74bfe4d2caf0c3
+analyzed_at: 2026-11-01
+licence: "MIT"
+size: "43,213 lines of Rust in the four crates' source files and 18,151 in their test files, plus a 15,838-line evaluation crate; a Vue pane, a VS Code extension and a JetBrains plugin beside them"
+activity: "259 commits by one author, 3 July – 1 November 2026; the pin is the v0.11.0 release commit"
+tests: "531 Rust test functions across the four crates and 80 in the evaluation crate, run in CI by cargo test --workspace; 206 committed result files under eval/results; not run for this report"
 capabilities: "trust_state, bitemporal, audit_log, negative_eval"
 capability_evidence:
   trust_state: "the node record and the suspects queue | crates/engram-core/src/schema.rs, engine.rs | three durable anchors on `nodes` — `confirmed_at` (*\"last deliberate act; the unapproved trust anchor\"*), `approved_at` (*\"last explicit approval; trust anchors here\"*) and `demoted_at` (*\"when contradicting evidence landed\"*) — plus `trust_override`, a pin that holds trust constant and turns decay off, and a `suspects.status` of suspected/confirmed/dismissed carrying an `nli_label` hint of contradiction/entailment/neutral beside it. Trust is computed at read time from the anchors rather than stored as a score | crates/engram-core/src/tests.rs `user_nodes_are_approved_on_creation_and_approve_restores_trust`, `claude_replaces_verdict_cannot_archive_a_pinned_node`, `decay_archives_only_stale_unapproved_claude_episodic_nodes`"
-  bitemporal: "the node and edge records, and a graph-declared event clock on search | crates/engram-core/src/schema.rs, engine.rs:1850-1853,:1754-1790, timespec.rs:84-98, store.rs:562-567 | `valid_from` and `valid_until` on both tables, distinct from `created_at`: the record axis says when the store learned it, the validity axis when it held as canon. Setting `valid_until` is the supersede flow and nothing else — the comment says so at the call — and the audit action becomes `archived`; retrieval retains only rows whose `valid_until` is none. A second validity axis is the owner's: `search` reads its `after`/`before` window against `created_at` by default, and a `date_field` selector re-aims the same window at a date-kind custom field, or at a `from..to` pair with interval-overlap semantics, so a note captured today about something that held in 2019 answers a 2019 question. `check_clock` refuses an undeclared field or a clock with no window as an error rather than a dropped filter | crates/engram-core/src/tests.rs `resolve_replaces_archives_the_older_node`, `audit_logs_supersede_and_decay_as_archived`, `date_field_clock_filters_on_the_event_clock`, `date_field_clock_is_validated_loudly`, `sealed_indexed_fields_and_event_clock_still_work`"
-  audit_log: "the store | crates/engram-core/src/schema.rs:66-81 | an insert-only `audit` table — *\"Rows are only ever inserted; `seq` is the pagination cursor\"* — one row per node or edge mutation over an eleven-value action vocabulary (created, updated, approved, unapproved, pinned, unpinned, demoted, undemoted, archived, deleted, imported), with full `before_json` and `after_json` snapshots, a `title` label that survives deletion, and the writing process stamped on the row: `origin` of pane/mcp/daemon/cli/library, `session_id`, `cwd`, `pid`, `version` | crates/engram-core/src/tests.rs `audit_journals_node_lifecycle_with_context`, `audit_journals_edges_with_sentence_labels`, `audit_logs_supersede_and_decay_as_archived`, `audit_page_keyset_pagination`, `audit_origin_stamp_and_session_fallback`, `audit_import_writes_one_summary_row`"
+  bitemporal: "the node and edge records, and a graph-declared event clock on search | crates/engram-core/src/schema.rs, engine.rs:2317-2321,:2210-2246, timespec.rs:84-98, store.rs:598-603 | `valid_from` and `valid_until` on both tables, distinct from `created_at`: the record axis says when the store learned it, the validity axis when it held as canon. Setting `valid_until` is the supersede flow and nothing else — the comment says so at the call — and the audit action becomes `archived`; retrieval retains only rows whose `valid_until` is none. A second validity axis is the owner's: `search` reads its `after`/`before` window against `created_at` by default, and a `date_field` selector re-aims the same window at a date-kind custom field, or at a `from..to` pair with interval-overlap semantics, so a note captured today about something that held in 2019 answers a 2019 question. `check_clock` refuses an undeclared field or a clock with no window as an error rather than a dropped filter | crates/engram-core/src/tests.rs `resolve_replaces_archives_the_older_node`, `audit_logs_supersede_and_decay_as_archived`, `date_field_clock_filters_on_the_event_clock`, `date_field_clock_is_validated_loudly`, `sealed_indexed_fields_and_event_clock_still_work`"
+  audit_log: "the store | crates/engram-core/src/schema.rs:66-81 | an insert-only `audit` table — *\"Rows are only ever inserted; `seq` is the pagination cursor\"* — one row per node, edge or task mutation — the schema comment lists eleven actions (created, updated, approved, unapproved, pinned, unpinned, demoted, undemoted, archived, deleted, imported) and the engine journals more through the same insert: merges, auto-tune moves, config updates, session activity and task changes — with full `before_json` and `after_json` snapshots, a `title` label that survives deletion, and the writing process stamped on the row: `origin` of pane/mcp/daemon/cli/library, `session_id`, `cwd`, `pid`, `version`, and an `op_id` grouping the rows of one operation. Undo (`engine.rs:1683-1717`, pane and HTTP only) appends `undone` rows and edits none: whether a row stands is derived from the journal at read time. A suspect dismissed by a verdict or by a link changes the suspect's status and writes no row of its own | crates/engram-core/src/tests.rs `audit_journals_node_lifecycle_with_context`, `audit_journals_edges_with_sentence_labels`, `audit_logs_supersede_and_decay_as_archived`, `audit_page_keyset_pagination`, `audit_origin_stamp_and_session_fallback`, `audit_import_writes_one_summary_row`, `an_undo_can_itself_be_undone`, `undoing_a_merge_reverts_the_whole_merge`"
   negative_eval: "the offline evaluation harness | eval/src/generate.rs, eval/src/arms.rs, eval/results/floor-100.json, floor-500.json, floor-1500.json | the generated corpus carries a control arm of *\"questions about subjects that were never written\"* — one control subject per four tested facts, with chains generated before the controls so a phantom subject can never collide with a real one — and `controls_declined` is reported at every threshold in the committed floor sweeps, so a precision gain is never published without the recall it cost | the harness is the mechanism, and the three committed floor sweeps are its runs"
 stack_storage: "tepindb, sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -24,32 +28,29 @@ matrix:
   storage: "TepinDB — one self-describing `graph.tepin` file holding documents, keyword index and vectors, the birth format of every new graph since v0.6.2 — with the SQLite driver kept behind the same trait as a migration source; nodes and edges plus a suspects table, an append-only audit journal and a meta row that records the store's own encryption state"
   retrieval: "Vectors with a reranker that votes rather than decides, a keyword weight of 0.15 over a blind BM25 index that ranks identically sealed or plain, calibrated delivery — a score floor and a knee cut whose whole tradeoff curve is committed, with the abstention line fitted per graph from unanswerable probes built out of the graph's own vocabulary — a rank demotion at the cut for a second hit from a session already delivered, and one-hop neighbours attached to every hit"
   write: "A write returns the look-alike pairs it just queued, so the assistant judges them in the same turn — detection is local, judgment is the assistant's"
-  update_delete: "`replaces` and `conflicts-with` edges, `valid_until` for archival, an atomic `merge_nodes` that rehomes edges and archives victims behind a supersession, a suspects table resolved as conflict, replaces or dismiss, a human pin that disables decay, and a hard delete that mints a `Tombstone` note carrying what was removed, its text and why — a later write near it lands with a `tombstoned` warning and is never refused"
+  update_delete: "`replaces` and `conflicts-with` edges, `valid_until` for archival, an atomic `merge_nodes` that rehomes edges and archives victims behind a supersession, a suspects table resolved as conflict, replaces or dismiss, a human pin that disables decay, and a hard delete that mints a `Tombstone` note carrying what was removed, its text and why — a later write near it, or titled as its victim was, lands with a `tombstoned` warning and is never refused; any journalled row, operation or session can be undone from the pane after a preview"
   scoping: "None inside a graph. Separation is one store per project, and a single machine-wide core process holds them all — so which project a session reads is a five-rung binding decision, not a predicate"
-  integration: "An MCP server that is always a bridge to the machine core, a JetBrains plugin and a VS Code extension published to three marketplaces, plus a standalone pane with a live browser demo; `brief` called with a `project` rebinds a session whose client will not say where it is, and `setup` writes session-start brief hooks for Claude Code, Codex, Devin CLI and Bob"
-  background: "Trust is computed at read time, so no pass has to have run for a read to be correct; a session-boundary `validate_graph` archives, retires, re-fits the two auto-tune dials and rescans, and drift scans surface for review while deliberately never demoting"
+  integration: "An MCP server that is always a bridge to the machine core, a JetBrains plugin and a VS Code extension published to three marketplaces, plus a standalone pane with a live browser demo; `brief` called with a `project` rebinds a session whose client will not say where it is, and `setup` writes session-start brief hooks for Claude Code, Codex, Devin CLI, Cursor and Bob"
+  background: "Trust is computed at read time, so no pass has to have run for a read to be correct; a session-boundary `validate_graph` archives, retires, re-fits the two auto-tune dials and rescans, and drift scans surface for review while deliberately never demoting. Consolidation is on request: a crowding index nominates subjects for an assistant-run sleep and writes nothing itself"
   trust: "Three distinct durable anchors — `confirmed_at`, `approved_at`, `demoted_at` — plus a `trust_override` pin, and a suspects status of suspected, confirmed or dismissed"
   strengths: "Retrieval stamps `last_seen` for observability only, because exposure would otherwise let a broad recurring query certify its own outputs"
-  risks: "No scope key of any kind, and a session whose workspace cannot be determined binds the home graph rather than failing; approval is an MCP call whose only guard is its own description; the retrieval half of LongMemEval is graded at session level, and the one number the external run does not price is how often an answerable question gets warned"
+  risks: "No scope key of any kind; a link between two notes settles the pending suspect between them, and the conflict-floor fit reads that as a judged verdict; approval is an MCP call whose only guard is its own description; the retrieval half of LongMemEval is graded at session level, and the one number the external run does not price is how often an answerable question gets warned"
 ---
 
 ## 1. Executive Summary
 
-Engram Alpha is graph memory for AI coding assistants: ~31,000 lines of Rust
-across four crates (~45,000 counting their test modules) plus a 12,300-line
-evaluation crate, MIT, release v0.9.1, 142 commits since 3 July 2026, shipping
-as a JetBrains plugin and a VS Code extension on three marketplaces with a
-browser demo of the real pane. **Not to be confused with
-[Engram](../engram/) — a different project of the same name, already in this
+Engram Alpha is graph memory for AI coding assistants at release v0.11.0:
+four Rust crates and an evaluation crate, shipping as a JetBrains
+plugin and a VS Code extension on three marketplaces with a browser demo of the
+real pane. **Not to be confused with
+[Engram](../engram/) — a different project of the same name, also in this
 atlas.**
 
 *Alpha* is part of the product's name, not a maturity label: the marketplace
 identifier is `techtheist.engram-alpha`, the installed binary is
 `engram-alpha`, and nothing in the README applies the word to the software's
-state. The stability claim the repository does make is its own status line —
-*"early development, heavily dogfooded, benchmark-driven — retrieval changes
-cite a measured run or they don't ship"* — and the second half of that sentence
-is the one this report can check.
+state. The README makes no stability claim at all; what it leads with is a
+benchmark table, and that is the claim this report can check.
 
 A memory is a typed node joined by typed edges — but the vocabulary is
 **per-graph configuration, not a closed enum**. `GraphConfig` (`config.rs`)
@@ -115,15 +116,30 @@ hard delete from the pane or the HTTP surface mints a `Tombstone`-role note —
 *"Removed: `<title>`"*, with the victim's type, id, the person's reason and, by
 default, the removed text in the body — and an assistant can author one and
 link it `replaces` a still-live victim. `write_warnings` then reports any
-tombstone-role node within the warning similarity of a new note, across types,
+tombstone-role node within the warning similarity of a new note, across types —
+or, at any similarity, one whose victim title matches the new note's title —
 as `{reason: "tombstoned", note: <why it was removed>}`; `search` names its
 tombstone hits, and `check_claim` files them under `retracted`. The write is
 never refused — *"models nominate, people judge"* — which is where section 9
 draws the line.
 
+**The README's headline benchmark shares the system's author.**
+[KnowledgeDrift](https://github.com/techtheist/knowledgedrift) is an offline,
+judge-free benchmark the same author publishes in a separate repository: one
+scripted world of software-project memory, rule-graded probes in families from
+stale-sibling retrieval to deletion honesty, and an additive score out of
+1,000. The README's table, at 1,883 notes and 9,008 tasks, puts Engram Alpha
+0.9.6 at 801 against 580 for a TF-IDF baseline and 359 for vector top-k, LangMem
+and Mem0 alike; on the success column alone the gap is 69% against 48%, with
+71% for the whole file in context. Its receipts live in the benchmark's own
+repository. The v1 runs against LangMem and Mem0 are committed here
+(`knowledgedrift-*`, 14 September 2026), and the eval README records that the
+bench's first run found the suspect queue raising 0 of 16 planted
+contradictions, which is what moved the logic layer onto titles (section 2).
+
 **And the benchmark data labels its own shipped row and publishes the columns
-it loses.** The current headline is the eval README's *Against every baseline*
-table, measured on 22 August 2026 on the shipped 0.8.10 stack over the enriched
+it loses.** Before KnowledgeDrift, the headline was the eval README's *Against
+every baseline* table, measured on 22 August 2026 on the shipped 0.8.10 stack over the enriched
 corpus, receipts `arms-0810-100-1500.json` and `posttune-0810-100-1500.json`.
 At 1,500 notes with every fact questioned:
 
@@ -171,6 +187,25 @@ both of its recall figures computed over the set calibrated delivery left rather
 than over a fixed ten. The 30 unanswerable questions draw **2 empty deliveries,
 28 warned, 0 unwarned**, with the weak line auto-fitted per store on 27 of 30
 graphs.
+
+A second external run grades forgetting rather than recall.
+[ForgetEval](https://arxiv.org/abs/2606.15903) inscribes facts, mutates them and
+checks by substring whether the mutated fact left the top-k. Engram passes
+supersession, purge and drift at 99–100%, and scores 0% on the two release
+families until the reader skips tombstone-role hits. The marker carries the
+removed text by default, so a reader that ignores roles counts the marker as the
+leak (section 10).
+
+**Consolidation nominates, and one of the links it writes also judges.** Release
+0.11.0 adds a *sleep*: a crowding index over the stored vectors finds piles of
+near-restatements, names them without a model, and hands each to the assistant
+to fold into one state-of note. The index writes nothing. The links the sleep
+writes do: since 0.11.0 any live link between two notes settles the pending
+conflict suspect between them, so a `builds-on` link dismisses it as surely as a
+judged `dismiss` would. Nothing on the suspect row records which one happened.
+The conflict-floor fit, which the project fences carefully against its own logic
+layer's verdicts, reads every dismissed row above its similarity fence as a
+judgment (section 9).
 
 The limits are real and the project states most of them itself: there is no
 scope key of any kind, the external run grades retrieval at *session* level
@@ -226,7 +261,10 @@ path could have raised are allowed to inform the similarity dial, because
 letting the logic layer's verdicts into that fit *"would drag the floor toward
 the NLI band it never reads."* A calibration that learns from decisions its own
 mechanism could not have produced is a slow way to drift, and this one is fenced
-against it.
+against it on one axis. The fence filters by similarity, not by who settled the
+pair, and `SuspectStatus` has three values and no settler. A dismissal by a
+person, by the assistant's verdict, or by a `builds-on` link written during a
+sleep all reach the fit as the same label (`engine.rs:1337-1357`, `:2537-2565`).
 
 **A tombstone is identified by role rather than by name.** The flag saying a
 node is a removal record *"rides on every surface"*, on the stated ground that
@@ -250,22 +288,25 @@ graphs, relative mechanisms do."*
 
 ```mermaid
 %% caption: trust moves on evidence and on people — a live conflicts-with edge demotes and its withdrawal lifts the demotion, a human pin turns decay off, and retrieval stamps last_seen without moving anything
-stateDiagram-v2
-    [*] --> Unseen: created_at only, trust starts low
-    Unseen --> Confirmed: a deliberate update or Confirm still true
-    Unseen --> Approved: explicit approval, higher start, ramps to a floor
-    Confirmed --> Demoted: a live conflicts-with edge stamps demoted_at
-    Approved --> Demoted: a live conflicts-with edge stamps demoted_at
-    Demoted --> Confirmed: the evidence is withdrawn, the demotion lifts
-    Approved --> Pinned: trust_override, decay off
-    Pinned --> Approved: only a human unpins
-    Confirmed --> Stale: trust falls below the floor, buried not deleted
-    Stale --> Confirmed: reviewed and confirmed in the pane
-    Confirmed --> Archived: valid_until set
-    Unseen --> Unseen: retrieval stamps last_seen and moves nothing
+flowchart TD
+    W["a note is written<br/>created_at only,<br/>trust starts low"] --> U["Unseen"]
+    U -- "retrieval:<br/>last_seen only" --> U
+    U -- "deliberate<br/>update" --> C["Confirmed<br/>confirmed_at<br/>restarts the clock"]
+    U -- "approval" --> A["Approved<br/>higher start,<br/>ramps to a floor"]
+    A -- "pin" --> P["Pinned<br/>trust_override:<br/>decay off,<br/>evidence skipped"]
+    P -- "human<br/>unpins" --> A
+    C -- "live<br/>conflicts-with" --> D["Demoted<br/>demoted_at<br/>stamped"]
+    A -- "live<br/>conflicts-with" --> D
+    D -- "evidence<br/>withdrawn" --> C
+    C -- "below<br/>the floor" --> S["Stale<br/>buried,<br/>not deleted"]
+    S -- "confirmed<br/>in the pane" --> C
+    C -- "valid_until<br/>set" --> X["Archived"]
+    P ~~~ D
+    D ~~~ S
+    S ~~~ X
 ```
 
-The self-loop at the bottom is the design. Retrieval touches the graph and
+The self-loop on Unseen is the design. Retrieval touches the graph and
 changes no trust, so a note cannot certify itself by being popular.
 
 
@@ -336,6 +377,10 @@ trust constants, the auto-tune bounds and their rationale; `onnx.rs` centralises
 inference-session policy (arena, thread and batch-width knobs, read from
 `ENGRAM_ONNX_*`); `redact.rs` exists at all; `cortex.rs`, `digest.rs`, `rag.rs`,
 `hub.rs` carry retrieval and briefing; `migrate.rs` handles schema movement.
+Release 0.10 and 0.11 add three: `tasks.rs`, a working list kept beside the
+graph; `crowding.rs` and `naming.rs`, which find and name the piles a sleep
+consolidates, read through `engine/review.rs`; and `laya.rs`, a second
+selectable logic-layer model behind the same three-way judge interface.
 
 **Background work.** Deliberately little, and none of it load-bearing for a
 read. Trust is a read-time computation. The suspects queue is filled
@@ -394,39 +439,45 @@ and refuted.
 
 - **Schema:** `crates/engram-core/src/schema.rs` — `nodes` (`:6`), `edges`
   (`:29`), `suspects` (`:52`), the append-only `audit` journal (`:67`), `meta`
-  (`:88`).
+  (`:88`), `tasks` (`:95`).
 - **Types and vocabularies:** `crates/engram-core/src/types.rs` — open
   string-backed name types, durability, statuses, `WriteOutcome::Created`
   returning `suspects`, `MergeOutcome`.
 - **Ontology and per-graph config:** `crates/engram-core/src/config.rs` —
   `GraphConfig`, `OntologyConfig`, `TypeRoles` / `VerbRoles` (the `tombstone`
-  role at `:298-307`), `FieldDef` / `FieldKind` (`:51-96`), the `engram`,
+  role at `:316-326`), `FieldDef` / `FieldKind` (`:70-109`), the `engram`,
   `research`, `minimal` and `general` presets, `describe_ontology`.
 - **Trust:** `crates/engram-core/src/policy.rs` — the two principles, the
   anchors, `STALE_TRUST`, `trust_override`, the `AUTO_TUNE_*` bounds.
-- **Auto-tune:** `engine.rs` — `auto_tune` (`:1235`), `fit_conflict_floor`
-  (`:1268`), `fit_weak_line` (`:1341`), called from `validate_graph` (`:1173`).
+- **Auto-tune:** `engine.rs` — `auto_tune` (`:1304`), `fit_conflict_floor`
+  (`:1337`), `fit_weak_line` (`:1415`), called from `validate_graph` (`:1190`).
 - **Contradiction:** `crates/engram-core/src/nli.rs`;
   `hub.rs:104` gates on a live edge carrying the graph's contradiction role
   with `valid_until` unset.
-- **Consolidation:** `engine.rs` — `merge_nodes` (`:3090`).
-- **Deletion and tombstones:** `engine.rs` — `delete_node` (`:1915`),
-  `delete_node_with_tombstone` (`:1947`), `write_warnings` (`:3308`),
-  `is_tombstone` (`:4854`), `tombstone_note` (`:4863`); `check_claim`'s
-  `retracted` bucket (`:3763`).
+- **Consolidation:** `engine.rs` — `merge_nodes` (`:4078`),
+  `settle_linked_suspects` (`:2537`); the sleep's reading side in
+  `engine/review.rs`, `crowding.rs` and `naming.rs`.
+- **Undo:** `engine.rs` — `undo_entry` (`:1683`), `undo_session` (`:1707`),
+  served by `engram-http` at `POST /audit/{seq}/undo` and
+  `/audit/sessions/{sid}/undo`, with no MCP route.
+- **Tasks:** `crates/engram-core/src/tasks.rs`.
+- **Deletion and tombstones:** `engine.rs` — `delete_node` (`:2382`),
+  `delete_node_with_tombstone` (`:2427`), `write_warnings` (`:4307`),
+  `is_tombstone` (`:7044`), `tombstone_note` (`:7071`); `check_claim`'s
+  `retracted` bucket (`:4878`).
 - **Stores:** `store.rs`, `store_sqlite.rs`, `store_tepin.rs`, `migrate.rs`;
   `seal.rs` for the at-rest codec.
 - **Retrieval and delivery:** `rag.rs`, `cortex.rs`, `digest.rs`;
-  `Engine::search` (`engine.rs:2581`) applies the delivery floor, the knee cut
-  and the session-diverse selection, then attaches one-hop neighbours
-  (`:2662`); `search_confidence` (`:2797`) returns `none | weak | strong`;
-  `time_filter_clocked` (`:2738`) and `check_clock` (`:1754`) are the temporal
-  grammar's boundary.
+  `Engine::search` (`engine.rs:3223`) applies the delivery floor, the knee cut
+  and the session-diverse selection (`:3282`), then attaches one-hop
+  neighbours (`:3307`); `search_confidence` (`:3668`) returns
+  `none | weak | strong`; `time_filter_clocked` (`:3609`) and `check_clock`
+  (`:2210`) are the temporal grammar's boundary.
 - **Redaction:** `redact.rs` — `scrub` and, for custom fields, `scrub_fields`.
 - **Surfaces:** `crates/engram-mcp/`, `crates/engram-http/`, `frontend/`,
   `engram-vscode/`, the JetBrains plugin.
-- **Evaluation:** `eval/src/` and `eval/results/` — 108 committed result
-  files, 66 of them JSON — plus `eval/src/longmem.rs` (the LongMemEval
+- **Evaluation:** `eval/src/` and `eval/results/` — 206 committed result
+  files, 134 of them JSON — plus `eval/src/longmem.rs` (the LongMemEval
   adapter), `eval/src/chains.rs` (the supersession-chain bench) and
   `eval/src/sessions.rs` (the multi-session coverage bench).
 
@@ -442,7 +493,7 @@ carries the same temporal pair plus `confidence`, `strength`, `note` and a
 
 **Bi-temporality is real and used, on two axes.** `valid_from` / `valid_until`
 are validity time and `created_at` is record time; `hub.rs:104` treats an edge
-as live only when `valid_until.is_none()`, and `types.rs:404` documents a
+as live only when `valid_until.is_none()`, and `types.rs:469` documents a
 neighbour as *"superseded/archived (`valid_until` set)"*. Archival is closing an
 interval rather than deleting a row. The engine's axis says when a claim held
 *as canon*; the second axis is the graph owner's and says when the thing
@@ -452,11 +503,11 @@ historic import needs when everything is captured today and happened over
 years.
 
 **Custom fields are declared in the graph and validated at the write boundary.**
-`FieldDef` (`config.rs:51-96`) names a field, a kind — `text`, `number`,
+`FieldDef` (`config.rs:70-96`) names a field, a kind — `text`, `number`,
 `bool`, `date`, `enum`, `url` — whether it is required, which types it applies
 to, whether it is `indexed` (joins the note's embedding and the keyword channel,
 with the indexed set fingerprinted so a change re-embeds exactly once) and
-whether it is shown on brief lines. `check_fields_ext` (`engine.rs:1654`) is the
+whether it is shown on brief lines. `check_fields_ext` (`engine.rs:2110`) is the
 one gate every surface passes: unknown names fail, kinds must match, required
 fields must be present, and reserved built-in names cannot be shadowed; a
 refusal is a *teaching error* that names the whole roster and the exact call
@@ -479,6 +530,17 @@ number that operation is impossible.
 graph per project directory. Coherent for an editor plugin, and it means the
 schema cannot host two projects without a migration.
 
+**Tasks sit beside the graph, never in it.** Release 0.10.0 adds a `tasks`
+table holding one JSON document per task: five statuses, one level of groups,
+and two optional rules, `wake` and `close`, each a version, a date or
+`node:<id>`, settled at read time with no scheduler. The module states the
+boundary: a task *"never enters search, the suspect scan, trust, decay or the
+eval corpora"*, and it points at memory through one-way `refs`. Every task
+change is journalled as `task_created`, `task_updated`, `task_deleted` or
+`task_auto`, closed tasks are archived rather than deleted, and hard delete is
+the pane's alone. A graph can turn tasks off, and the MCP tools then refuse with
+`TASKS_OFF`.
+
 ### What a user may reshape, and the guard on each
 
 The pane's ontology editor writes `GraphConfig` — types, verbs, the trust and
@@ -486,17 +548,17 @@ threshold constants, and the brief composition — and three of its rules are
 worth naming because each closes a way the reshape could strand data.
 
 - **A rename is the migration gesture, not a relabel.** `rename_type` and
-  `rename_verb` (`engine.rs:2473`) move the stored rows along with the name, and
+  `rename_verb` (`engine.rs:3112`, `:3144`) move the stored rows along with the name, and
   the editor's card shows how many nodes will follow.
 - **A save cannot drop a vocabulary that still holds data.** Removing a type
   that has nodes fails with *"type … still has N node(s) — rename it (bulk
-  retype) or retype them first"* (`engine.rs:2345`), and the same for verbs on
+  retype) or retype them first"* (`engine.rs:2959`), and the same for verbs on
   edges. There is no path where an edit orphans knowledge.
 - **The hard invariants survive every configuration.** Exactly one supersession
   verb and one contradiction verb must exist, or validation refuses the
   document — the graph cannot be configured into inertness. A type carrying the
   `tombstone` role may not also carry `worklist` or `anchor`
-  (`config.rs:1466-1471`), because *"a tombstone is a closed record of a
+  (`config.rs:1602-1607`), because *"a tombstone is a closed record of a
   removal — it can't be open."*
 
 Two smaller per-graph features sit in the same document. **Version tracking**
@@ -504,9 +566,10 @@ Two smaller per-graph features sit in the same document. **Version tracking**
 current working version, set by the `set_version` MCP tool, so a note records
 which release it was captured under; `Principle` and `Anchor` carry the
 `versioned: false` role in the shipped preset, because *"a value or a code
-subject transcends any single release"*, and the stamp is provenance only —
-nothing in trust or ranking reads it. And a reserved `handoff` tag
-(`config.rs:568`) gives an open worklist note guaranteed top placement in the
+subject transcends any single release"*, and the stamp is provenance for
+retrieval — nothing in trust or search ranking reads it — and since 0.11.0 the
+sleep's review queue reads it, to rank subjects that span many releases first. And a reserved `handoff` tag
+(`config.rs:633`) gives an open worklist note guaranteed top placement in the
 next session brief, which is reactive session-to-session memory without a new
 node type.
 
@@ -533,8 +596,21 @@ and 38% of answerable questions. Every operating point is priced.
 Trust multiplies the score, so a stale node is buried rather than filtered — it
 stays findable, which is what makes the review queue meaningful.
 
+**Every hit carries its standing, and near-identical hits are ordered by
+endorsement.** Since 0.9.10 a hit holds a `standing` (`types.rs:434-453`): one of
+*canon, confirmed, unverified, stale, contested, superseded, tombstone*, with a
+sentence of reason and the id of the note that contests or replaces it, so the
+assistant reads the graph's verdict rather than re-deriving it from trust
+numbers. Among delivered hits whose vectors sit within a twin band of each
+other, `order_twins` (`engine.rs:3450`) puts the endorsed one first: pinned,
+then higher trust, then the one approved or confirmed most recently. It
+re-sorts twins within the positions they already hold, so the delivered set
+does not change. An endorsement here is any `approved_at` or `confirmed_at`
+stamp, and both are reachable over MCP: through `approve_node`, and through any
+deliberate `update_node`.
+
 **Delivery is a second stage with two cuts, both reranker-gated.** `search`
-(`engine.rs:2581`) fetches wide, reranks, drops everything under
+(`engine.rs:3223`) fetches wide, reranks, drops everything under
 `policy.delivery_floor`, truncates to the limit, then applies a *knee* cut: sort
 the delivered score curve, find the largest relative drop over
 `policy.knee_cliff`, and discard the tail below it. The reasoning for gating
@@ -547,7 +623,7 @@ against keeps its full ten.
 **A third cut is about provenance, not score.** When more candidates survive
 the floor than fit the list, each additional hit from a session already holding
 a slot is demoted `policy.session_diversity_demote` rank positions before the
-final cut — two by default (`policy.rs:157`), a rank rather than a score on
+final cut — two by default (`policy.rs:192`), a rank rather than a score on
 purpose, because *"absolute score thresholds don't transfer between graphs
 while relative mechanisms do."* It changes selection and order only; scores, the
 floor, the knee and the verdict still read the cross-encoder's scale, and a
@@ -557,7 +633,7 @@ visible where it acts. The number was chosen from a committed sweep and its
 cost is measured in section 10.
 
 **The abstention line is fitted from probes the graph writes about itself.**
-`fit_weak_line` (`engine.rs:1341`) synthesises questions that have no answer —
+`fit_weak_line` (`engine.rs:1415`) synthesises questions that have no answer —
 half question-shaped templates over vocabulary borrowed from the graph's own
 node titles, half *ICT transplants*: real sentences from the store with their
 subjects coined out — then measures how high the reranker's top score climbs
@@ -582,14 +658,14 @@ read has the same membership as its relevance twin. `during_version` resolves a
 window from the audit journal's `version_switched` rows with no new storage, and
 `order: "recent"` folds a history restatement under its newest form. By default
 the window reads `created_at` — *when the knowledge was captured*, and the
-comment at `store.rs:562-567` explains why not `confirmed_at`: *"a node
+comment at `store.rs:598-603` explains why not `confirmed_at`: *"a node
 reconfirmed last week is still July's decision."* A `date_field` selector
 re-aims the same window at the **event clock** the graph's owner declared: one
 date-kind custom field matches when its value falls inside the window, and a
 `from..to` pair matches when the node's own validity span overlaps it, an absent
 `from` reading *since forever* and an absent `to` *still valid*
 (`timespec.rs:84-98`). Nodes without the field drop out, because they cannot
-answer an event-time question. `check_clock` (`engine.rs:1754-1790`) refuses an
+answer an event-time question. `check_clock` (`engine.rs:2210-2246`) refuses an
 undeclared or non-date field, and a clock without a window, as loud errors —
 *"an unaimed clock filters nothing and would silently return the default result
 while looking like an event-time answer."* The history layer has no custom
@@ -624,11 +700,25 @@ probability is a hint, not a ruling.
 
 Correction is a family of moves rather than a delete: a `replaces` edge, a
 `conflicts-with` edge that stamps `demoted_at`, closing `valid_until` to archive,
-approving, pinning, or dismissing a suspect. Every one of them appends to the
-audit journal.
+approving, pinning, or dismissing a suspect. Every one but the last appends to
+the audit journal. A `conflict` or `replaces` verdict is journalled because it
+writes an edge; a `dismiss` sets the suspect's status and writes no row
+(`engine.rs:5611-5686`), so which pairs were dismissed, and by whom, is not on
+the tape.
+
+**Since 0.11.0 a link settles a suspect too.** `add_edge` calls
+`settle_linked_suspects` (`engine.rs:2537-2565`) on every live edge: a pending
+suspect between the edge's two notes becomes `confirmed` when the verb carries
+the supersession or contradiction role and `dismissed` for any other verb. The
+committed test (`a_link_settles_the_pending_suspect_between_its_notes`) shows
+the case that matters: a pair the model hinted as a contradiction at 0.91 is
+dismissed by the assistant's `builds-on` link. The motive is stated: a
+state-of note raises suspects against every note it summarises, and its
+`builds-on` links clear them. The cost is that the edge row is the only trace,
+and it does not say that it settled anything.
 
 **Deletion leaves a trace, and the trace carries the text.**
-`delete_node_with_tombstone` (`engine.rs:1947-2029`) is the pane's default
+`delete_node_with_tombstone` (`engine.rs:2427-2513`) is the pane's default
 delete and the HTTP surface's `DELETE /nodes/{id}?tombstone=true&reason=…`: it
 mints a note of the first type carrying the `tombstone` role — title
 *"Removed: `<victim title>`"*, body *"Deleted `<type>` "`<title>`" (id …)"* with
@@ -656,7 +746,7 @@ victim how many edges moved and how many were deliberately left — already
 present on the survivor, internal to the merged set, or an *incoming*
 supersession, which is part of the victim's own story and does not travel. An
 archived survivor is refused outright. And the assistant cannot merge away a
-pinned node: with `source == Source::Claude` a pinned victim raises
+pinned node: with `source == Source::Agent` a pinned victim raises
 `Error::Pinned` carrying the instruction to *"tell the user and let them merge
 this pair in the pane"* — the same human-only boundary the pin draws everywhere
 else. Four committed tests cover the union, the pin refusal, the
@@ -668,13 +758,48 @@ The audit journal also carries events that are not node or edge mutations:
 `graph_validated` and `auto_tuned` land — so a threshold the system moved on
 itself is on the same tape as a human's approval.
 
-**The audit journal is the richest in this corpus.** One row per node or edge
-mutation, insert-only, carrying `before_json` and `after_json` in full, the
-`action` from an eleven-value vocabulary (`created | updated | approved |
-unapproved | pinned | unpinned | demoted | undemoted | archived | deleted |
-imported`), the `origin` surface (`pane | mcp | daemon | cli | library`), and the
-writing process's `session_id`, `cwd`, `pid` and `version`. `title` is snapshotted
-so it *"survives deletion"*.
+**The audit journal is the richest in this corpus.** One row per node, edge or
+task mutation, insert-only, carrying `before_json` and `after_json` in full; an
+`action` the schema comment lists as eleven values (`created | updated |
+approved | unapproved | pinned | unpinned | demoted | undemoted | archived |
+deleted | imported`) and the engine extends through the same insert with
+merges, auto-tune moves, config updates, session activity and the four `task_*`
+actions. Each row also carries the `origin` surface (`pane | mcp | daemon | cli |
+library`), the writing process's `session_id`, `cwd`, `pid` and `version`, and an
+`op_id` that groups the rows of one operation, so a merge or a delete with its
+cascade reads as one act. `title` is snapshotted so it *"survives deletion"*.
+
+**Undo is written as more journal, not as an edit to it.** Since 0.9.10 the pane
+can undo one row, the whole operation the row belongs to, or everything one
+session wrote, each after a dry-run preview (`engine.rs:1683-1717`). The undo
+appends `undone` rows carrying the reverted row's `seq`, and whether a row
+stands is derived at read time: an undo stands until one of its own writes is
+undone, so an undo can be undone. A row that changed afterwards in another
+session is skipped and reported, not overwritten. Undo is served over HTTP to
+the pane and has no MCP route, like hard delete. Undoing a hard delete restores
+the note and its links and drops the tombstone the delete minted
+(`undoing_a_hard_delete_brings_back_the_note_its_links_and_drops_the_tombstone`).
+
+**The sleep consolidates through the ordinary write tools.** 0.11.0's
+crowding index counts, for every note, the neighbours inside the cosine only
+this graph's top 1% of pairs reach (never below a fixed floor), chains close
+pairs into *subjects* of at least 2% of the notes, and re-cuts an oversized
+subject at a stricter cosine until its pieces fit (`crowding.rs`). A class
+TF-IDF over titles and tags names each subject without a model (`naming.rs`),
+and the review queue ranks subjects by size, spread across releases and age, so
+settled history comes first and this cycle's live work last.
+
+The reading side says what it is: *"Nominations only — nothing here writes a node, an edge, or
+trust"* (`engine/review.rs:1-8`). The one write is a reviewed mark, a content
+fingerprint per note in the store's key-value meta, set through
+`update_node(reviewed: true)`; it never moves trust and goes stale when the note
+changes.
+
+The consolidation itself is an `engram-sleep` skill the assistant runs,
+one subagent per subject, writing a state-of note linked `builds-on` what stays
+and `replaces` only what it fully covers, and merging restatements through
+`merge_nodes`. Every one of those writes is journalled under the session, which
+is what makes the pane's *Undo session* the sleep's rollback.
 
 Knowing which surface made a change — a human in the pane, an assistant over MCP,
 a daemon — is the distinction most audit logs here collapse, and it is exactly
@@ -697,17 +822,27 @@ workspaces; otherwise the bridge's working directory; otherwise a machine-level
 session binds the core's `/mcp` endpoint rather than dying."* Every rung is
 logged, so `mcp.log` always names the one that bound.
 
-Rung five is a deliberate trade and the report's sharpest reservation
-about the process model. A session that cannot establish its workspace
-does not fail; it reads and writes somebody else's graph — specifically
-the home one.
+Rung five is a deliberate trade, and it is guarded on the write side. A
+session that cannot establish its workspace does not fail: it reads the home
+graph. It cannot write there. Since 0.9.8 `write_engine_for`
+(`crates/engram-mcp/src/lib.rs:484-492`) refuses every write addressed to "this
+project" from a session bound by the `home` or `unwired` rung. The refusal is a
+teaching error that names the client, the reason it landed there and the one
+call that binds it. Reads keep working so the agent can find its workspace, and a write
+that names a `project` explicitly is a deliberate target and passes. What stays
+open is a read: an agent on rung five reads the home graph's memory as if it
+were its project's.
 
 The mitigation is `brief` called with a `project`: a name, an id or any
 absolute path inside a registered root rebinds the running session and
 returns that project's brief in one call
-(`crates/engram-mcp/src/lib.rs:871-897`), refusing an unregistered
+(`crates/engram-mcp/src/lib.rs:1227-1277`), refusing an unregistered
 selector *with the known roster* and leaving the binding untouched when it
-refuses, so a hallucinated path can never birth a graph.
+refuses, so a hallucinated path can never birth a graph. Since 0.9.12 a
+scoped `brief` that moves a session off a real project leads with the warning
+that the session's writes now go elsewhere and the call that goes back. The
+field case behind it is recorded: a `brief(project: eval)` had silently sent
+the next write to the eval graph.
 
 Sessions stranded on rungs four or five get a one-line hint above their
 brief pointing at it. Folding the rebind into `brief` is the field lesson
@@ -716,7 +851,8 @@ overruled a workspace rule that said `set_project` first; one tool means
 there is no wrong first call left to make. The clients that need it are
 named in the docs — Windsurf and Devin CLI advertise roots and never
 answer them — and `setup` writes each client what it can consume: a
-`SessionStart` brief hook for Claude Code, Codex, Devin CLI and Bob (Devin
+`SessionStart` brief hook for Claude Code, Codex, Devin CLI and Bob, a
+`sessionStart` hook in `.cursor/hooks.json` for Cursor (Devin
 and Codex only accept injected context inside a `hookSpecificOutput` JSON
 envelope, so the two share one wrapper), an `always_on` rule for Windsurf,
 and an `AGENTS.md` block for the rest.
@@ -731,7 +867,7 @@ place by construction and in another by instruction. It writes nodes and edges,
 and it judges the suspects the write hands back. Pinning is human-only in the
 code: no MCP tool writes `trust_override`, retrieval moves nothing, and a pinned
 node ignores the assistant's evidence entirely until a human unpins it.
-Approval is not: `approve_node` is an MCP tool (`crates/engram-mcp/src/lib.rs:1356`)
+Approval is not: `approve_node` is an MCP tool (`crates/engram-mcp/src/lib.rs:1497`)
 that restarts trust at 100%, `Engine::approve` takes no source and
 gates on nothing, and the whole restraint is the tool description — *"ONLY on
 explicit user demand or after word-by-word verification against current
@@ -745,9 +881,11 @@ do all three without installing anything.
 
 ## 9. Reliability, Safety, and Trust
 
-**`audit_log` — earned, and it sets the bar.** Insert-only, one row per
-mutation, full before and after JSON, an eleven-value action vocabulary, the
-originating surface, and process context. Deletion-surviving titles.
+**`audit_log` — earned, and it sets the bar.** Insert-only, one row per node,
+edge or task mutation, full before and after JSON, an action vocabulary the
+engine extends beyond the schema's eleven, the originating surface, process
+context, an operation id, and deletion-surviving titles. Undo appends rather
+than edits. The gap is the suspect queue: a dismissal writes no row.
 
 **`bitemporal` — earned.** `valid_from` / `valid_until` on nodes and edges
 against `created_at`, used on the read path to decide what is live; and a
@@ -760,15 +898,15 @@ the boundary refusing an unaimed or undeclared clock rather than dropping it.
 durable epistemic stamps, `confirmed_at`, `approved_at` and `demoted_at`, which
 the policy reads separately and which the audit journal names as actions.
 
-**`human_review` — withheld**, and the paragraph that used to award it contains
-the reason. Three gestures here really are human-only by construction, and they
+**`human_review` — withheld**, because approval is the one gesture that is not
+reserved. Three gestures here really are human-only by construction, and they
 are worth keeping: pinning, because no MCP tool writes `trust_override`;
 reshaping the ontology — types, verbs, custom fields — which has no MCP write
 surface at all; and `merge_nodes`, which refuses a pinned victim when the caller
 is the assistant. But none of those is a memory waiting to be admitted. A pin
 makes an existing node immune to contradicting evidence; it does not hold one
 back. What would be the admission gate is approval, and approval is the gesture
-that is not reserved: `approve_node` is an MCP tool (`crates/engram-mcp/src/lib.rs:1356`),
+that is not reserved: `approve_node` is an MCP tool (`crates/engram-mcp/src/lib.rs:1497`),
 `Engine::approve` takes no source and gates on nothing, and the whole restraint
 is the tool description — *"ONLY on explicit user demand or after word-by-word
 verification against current reality."* A sentence in a description is a request
@@ -776,6 +914,10 @@ to the model. The suspects queue points the same way: the write hands the
 look-alike pairs back so the *assistant* judges them in the same turn. The audit
 row records `origin: mcp`, so an assistant's approval is distinguishable after
 the fact; it is not preventable before it.
+
+Release 0.11.0's Review panel adds
+*Approve all* per subject for provisional notes, which is a person approving in
+bulk; it does not take the MCP tool away.
 
 **`negative_eval` — earned.** The floor sweep carries unanswerable **controls**
 at every operating point and reports `controls_declined`, so the evaluation
@@ -788,16 +930,19 @@ never-answerable questions, scored on whether an answer went out unwarned.
 the narrowest in this report.** The `Tombstone` type is a durable record of a
 removal that carries the removed text, tags and code refs, stable so it never
 decays, and it is consulted on every write: `write_warnings`
-(`engine.rs:3308-3340`) walks the new note's nearest neighbours above
+(`engine.rs:4307-4361`) walks the new note's nearest neighbours above
 `policy.warn_similarity` (0.70) and reports any tombstone-role node among them,
 across types, as a `tombstoned` warning carrying the tombstone's own account of
 why — the comment names the gap it closes, *"a Decision re-deriving a
-tombstoned Decision sailed through"*. `search` counts tombstone-role hits and
+tombstoned Decision sailed through"*. When no neighbour raised a `tombstoned`
+warning, a second channel keyed on the value runs at any similarity: a tombstone
+whose victim title, normalised, equals the new note's title warns the same way
+(`:4338-4358`, since 0.9.6). `search` counts tombstone-role hits and
 appends a `tombstone_note` so a compact scan cannot read *"Removed: X"* as a
 memory of X; `check_claim` sorts tombstone hits out by role before the NLI runs
-and files them under `retracted` (`:3763`); the write-time canon check and the
+and files them under `retracted` (`:4878`); the write-time canon check and the
 suspect recorder skip tombstones on both sides so a `replaces` verdict can never
-archive the marker (`:2997`, `:4216`). Seven committed tests cover the 0.9.2 behaviour, and the one
+archive the marker (`:3954`, `:5413`, `:5463`). Seven committed tests cover the 0.9.2 behaviour, and the one
 that matters here asserts the boundary in its own words:
 `writes_near_a_tombstone_warn_tombstoned_across_types` panics on anything but
 `Created` — *"a tombstone never blocks a write — it warns."* The definition this
@@ -814,10 +959,10 @@ the tombstone's reason instead of creating — the collided form, a nomination
 that leaves nothing live to judge later; or a note created with a `tombstoned`
 warning could be held out of the brief and ranked as stale until a person
 confirms it — the suppressed form. What is *not* a near-miss any more: the
-brief never shows tombstones (`hidden_brief()`), and the key is an embedding
-neighbourhood, so a paraphrase below 0.70 lands with no warning — a threshold
-the purge shape (`keep_text=false`) makes easier to fall under, because it
-embeds the headline alone. A dismissed suspect and a `replaces` edge remain
+brief never shows tombstones (`hidden_brief()`), and the keys are an embedding
+neighbourhood and an exact title, so a paraphrase below 0.70 under a new title
+lands with no warning — a threshold the purge shape (`keep_text=false`) makes
+easier to fall under, because it embeds the headline alone. A dismissed suspect and a `replaces` edge remain
 keyed on ids.
 
 **`scope_enforced` — not found.** No scope key on either table.
@@ -825,7 +970,7 @@ keyed on ids.
 Other observations:
 
 - **`redact.rs` drives the write path.** `redact::scrub` runs on title and body
-  in the node write paths (`engine.rs:290-291`, `:2890-2891`) and `scrub_fields`
+  in the node write paths (`engine.rs:310-311`, `:3818-3819`) and `scrub_fields`
   on every string-valued custom field: named patterns
   (PEM/AWS/JWT/GitHub/Slack/OpenAI/`key=value`) plus a high-entropy backstop
   judged per separator-delimited segment (segments under twelve chars abstain) so
@@ -849,8 +994,8 @@ Other observations:
   installations should expect their delivery and conflict thresholds to differ,
   because each was fitted to its own graph.
 - **The loop is scored against the people in it.** `Engine::nli_agreement`
-  joins each judged suspect's stored `nli_label` with the verdict a person
-  reached and reports the confusion matrix: hits, false alarms, misses, passes,
+  joins each judged suspect's stored `nli_label` with the status the pair was
+  settled to and reports the confusion matrix: hits, false alarms, misses, passes,
   and an agreement rate that is absent until a hinted pair has been judged.
   Surfaced as `GET /conflicts/agreement` and a Checkup panel block. Two
   properties make it worth naming. It counts **misses** — the judge confirmed a
@@ -863,6 +1008,18 @@ Other observations:
   Almost nothing in this corpus measures whether its automatic nomination agreed
   with the human who adjudicated it, and the systems that do usually feed the
   answer straight back into a threshold.
+- **Since 0.11.0 the judged set holds labels nobody judged.** Both the agreement
+  matrix and dial one read `suspects.status`, and a `builds-on` link written
+  during a sleep sets that status to `dismissed` exactly as a verdict does
+  (section 7). `fit_conflict_floor` (`engine.rs:1337-1357`) keeps pairs at or
+  above a 0.85 similarity and counts every confirmed or dismissed one as a
+  labelled example, so a sleep that summarises a crowded subject adds a batch
+  of high-similarity negatives in one session, and the next session boundary
+  can move the conflict floor up on them. The damping, the clamp, the minimum
+  delta and the volume gate all apply, and the move is journalled as
+  `auto_tuned`. What is missing is a settler on the row, which is the one field
+  that would let the fit, the matrix or a reader tell a judged dismissal from a
+  link's side effect.
 - **Most numbers are self-generated.** The offline suite's graphs,
   questions and controls are the project's own synthetic corpora. LongMemEval is
   the exception and it is one corpus, graded on the retrieval half only.
@@ -870,10 +1027,12 @@ Other observations:
 
 ## 10. Tests, Evals, and Benchmarks
 
-`eval/` is a first-class crate with 108 committed result files, 66 of them JSON
-— `bench-100.json`, `contradictions-500.json`, `floor-100/500/1500.json`,
-`floor-dial3-*.json`, `longmemeval-s-*.json`, `chains-200x20.json`,
-`budget-*.json`, `sessions-*.json`, `posttune-*.json` and their `.log`
+`eval/` is a first-class crate with 206 committed result files, 134 of them
+JSON, each named with its run date. Among them are `bench-100.json`, `contradictions-500.json`,
+`floor-100/500/1500.json`, `floor-dial3-*.json`, `longmemeval-s-*.json`,
+`chains-200x20.json`, `budget-*.json`, `sessions-*.json`, `posttune-*.json`,
+the `forgeteval-*` and `rake-*` runs, the `realgraph-*` judge comparison, the
+`authority-*`, `knobs-*`, `writes-*` and `sleep` receipts, and their `.log`
 companions — and this is the part of the project most worth copying.
 
 **The ablation labels its own shipped row.** `bench-100.json` holds thirteen
@@ -901,7 +1060,8 @@ without the recall it cost.
 **The process model has its own test suites**, which is the shape the rest of
 the repository has.
 `crates/engram-cli/tests/` carries `process_model.rs`, `roots_binding.rs`,
-`session_brief_hook.rs`, `setup_windsurf.rs` and `setup_devin.rs` — the binding
+`session_brief_hook.rs`, `setup_windsurf.rs`, `setup_devin.rs`,
+`setup_cursor.rs` and `install_script.rs` — the binding
 ladder, the convergence of concurrent launchers on exactly one core, and the
 per-client setup writers, tested as integration rather than asserted in a doc.
 One of them pins a case that is easy to get wrong under lazy opening: a resolved
@@ -1004,6 +1164,80 @@ the weak line re-fitted from 0.898 to 0.878; the changelog counts it as
 the abstention paragraph from a one-sided result into a priced one — on the
 corpus where it would matter most, because it is the one nobody here wrote.
 
+### Forgetting, on an external bench
+
+`eval/forgeteval/` adapts engram to
+[ForgetEval](https://arxiv.org/abs/2606.15903)'s adapter protocol over the
+local HTTP API, and the receipts are dated 12 September 2026
+(`forgeteval-template.json`, `-adversarial.json`). The bench inscribes short
+facts, applies a mutation, and checks by exact substring on the system's own
+top-k whether the mutated fact is gone and its neighbours survived; no model is
+in the path. The eval README reports each family on its own and never sums them,
+under two readers: *role-blind* returns every hit's text, *role-aware* asks for
+non-tombstone hits through the REST `types` filter.
+
+```text
+family (200 each)   role-blind   role-aware   lethe (reference)
+supersession          100%         100%          100%
+drift                  99%          99%           99%
+purge                 100%         100%          100%
+decay                   0%         100%          100%
+amnesia                 0%          92%           98%
+```
+
+The two zeros come from the marker described in section 7. The bench's *decay*
+and *amnesia* are explicit releases, which the adapter maps to a tombstoned
+delete, and the tombstone's title holds the released fact, so a reader that
+ignores roles finds it and scores a leak. The README says so and keeps both
+columns.
+
+On the 385 adversarial cases, role-aware engram passes 240 and
+the reference system 244, and both systems fail the compound,
+obfuscated-identifier and cross-lingual categories alike. Two deviations are
+disclosed in the README: the four delivery-floor knobs are zeroed on the
+bench's six-note graphs, because the calibrated floor returns nothing for a
+true only-match there, and the release target rule is ported verbatim from the
+reference adapter.
+
+The harness then adds what the bench lacks, three
+never-inscribed control probes per case, and the MCP reader passes 98% of
+3,000 of them with 0% false positives. The README reads its own result down: the
+weak verdict also fires on 99.5% of real queries on graphs that small, so the
+claim it makes instead is a threshold-free separation of 0.80–0.90 between real
+and never-inscribed questions. ForgetEval mutates through the harness and never
+writes the forgotten fact back, so it does not test the re-assertion a
+tombstone exists to catch.
+
+### What an agent does with the delivery
+
+`eval/rake/` is the one bench that grades behaviour rather than retrieval. It
+plants ten notes about an invented Python package, among them a retry-budget
+decision, a deadlock caution, a tombstone for a removed fast path and a
+superseded config decision. It then runs three coding tasks headless with
+Sonnet under a turn and dollar cap, in three arms: no memory, the same notes in
+a `CLAUDE.md`, and engram through its hook and tools. Executable oracles grade
+the diff.
+
+Phase 2 (`rake-phase2.json`, three seeds, 27 cells, $8.41) separates
+the no-memory arm from both memory arms on the retry and sync-ordering rakes,
+0/3 against 3/3 and 2/3. Engram's one miss is an oracle that could not bind a
+method-shaped implementation the transcript shows was correct, and one T3 cell
+asked a clarifying question instead of acting. Engram does not beat the curated
+file anywhere. The tombstone task does not discriminate: every arm in every
+seed left the removed path removed, and the README names it as the task that
+needs a harder fork.
+
+### The judge on a graph people judged
+
+`realgraph-laya-en-int4.json` and `realgraph-deberta-v3-small-tasksource-nli.json`
+(24 September 2026) replay both selectable logic-layer models over the
+project's own 569-note dogfood graph and its 135 judged suspects: 129
+dismissed, 3 confirmed as conflicts and 3 as `replaces`. At the shipped 0.80
+gate the multi-task model flags 24 dismissed pairs as contradictions and Laya
+flags 36; each catches 1 of the 3 conflicts. The shipped judge stays,
+on that measurement. The receipt is the first committed number from a graph
+anyone judged, and with three positives it prices false alarms, not recall.
+
 ### Sessions, measured against the recall they might cost
 
 `sessions-100-500.json` plants multi-session *clusters* on top of the regular
@@ -1087,6 +1321,24 @@ receipt also records `retired_searchable: 0.0`, `retired_fetchable: 1.0`,
 `history_reachable: 1.0`: retired generations leave the search path and stay one
 link away.
 
+### The sleep bench
+
+`--sleep` is a regression floor for the review queue's discrete mechanisms,
+not a retrieval score (`sleep.json`, 31 October 2026). It plants six piles
+about invented subjects in the generated background: half of each pile restates
+one claim across releases, half moves other claims onto the subject's name. No
+model writes and no judge reads, so a seed reproduces the run. Islands are found
+exactly at every size. Where a pile's restated half reaches the subject minimum
+it lands inside one subject, and names carry the subject at 500 notes (1.00)
+and 1,500 (0.83).
+
+The README leads with the number that does not flatter: a
+strict *found*, at least 80% of a pile at 80% purity, is 0 of 6 at every size,
+because a found subject also absorbs background notes about the same component,
+and claims that share only a name are not found at all. Nothing in the bench
+runs the sleep skill, so it measures what the queue nominates, not what a
+consolidation leaves behind.
+
 ### Levers that were tried and refuted
 
 `budget-500.json` is six configurations × four retrieval limits over a
@@ -1130,11 +1382,12 @@ described above.
 Every number in this section is read from committed receipts; the two
 LongMemEval smoke receipts agree field by field.
 
-What the evaluation does not establish: what a model *does* with any of
-these deliveries. Both halves of the corpus — synthetic and external — are
-graded on retrieval, so the numbers price what reaches the context window and
-say nothing about what an answerer makes of it. The project names that gap
-itself and reserves a section for closing it.
+What the evaluation does not establish: what a model answers from any of
+these deliveries. The synthetic and external corpora are graded on retrieval,
+and the rake test grades behaviour on three tasks with one fixture, so the
+numbers price what reaches the context window and one small sample of what an
+agent does with it. The answer-graded online half is specified in
+`eval/README.md` and marked *not yet run*.
 
 
 ## 11. For Your Own Build
@@ -1180,10 +1433,14 @@ itself and reserves a section for closing it.
 - **Publish the before/after when you fix a resource bug.** Six named stages,
   two committed JSON files, and the refuted hypotheses beside the confirmed one.
 - **Make a delete leave a record, and say what the record is not.** A
-  tombstone note with the victim's type, title, id and the reason is more than
-  most systems here keep. Then decide whether the write path reads it; here it
-  does not, and a design that says so is easier to finish than one that assumes
-  the model will.
+  tombstone note with the victim's type, title, id, reason and removed text is
+  more than most systems here keep, and here the write path reads it by
+  neighbourhood and by exact title. It warns and never refuses, and the project
+  says so in its own words, which makes the remaining step a decision rather
+  than a discovery.
+- **Write undo as more journal.** An `undone` row that names the row it
+  reverts, with standing derived at read time, makes undo auditable and lets an
+  undo be undone.
 - **Ship a knob at the top of its measured free zone.** The session-diversity
   demotion was swept from 0 to 8 with the recall columns beside the gain, the
   default sits at the last value where recall did not move, and the real-data
@@ -1210,6 +1467,10 @@ itself and reserves a section for closing it.
   human-only because no tool sets it; approval is "human-only" because a
   sentence asks the model not to. Only the first survives a model that does not
   read the sentence.
+- **Letting a side effect write a calibration label.** A link that settles a
+  suspect is a sensible ergonomic, but a status written by it is the same row
+  a threshold fit learns from. Record who or what settled a pair, or keep
+  settled-by-side-effect rows out of the fit.
 - **Comparing delivered-token counts across different delivery formats.** A
   snippet-per-hit stack against a whole-document stack is measuring two things
   at once. Say which part of the gap is fewer results and which is shorter ones.
@@ -1225,8 +1486,7 @@ graph can define its own type and verb set, which is the mechanism the external
 run exercises.
 
 It is single-project and has no scope key, so it is not a fit for a team store
-or anything multi-tenant, and the README's own status line is *"early
-development"*.
+or anything multi-tenant.
 
 Take the policy module even if you take nothing else. It is a few hundred lines
 of constants and rationale, and it is the clearest statement in this corpus of
@@ -1238,10 +1498,11 @@ which signals are allowed to change what an agent believes.
 - **What does the calibrated warning cost on LongMemEval's answerable half?**
   The harness computes the verdict only for the 30 `_abs` questions. Two
   counters over the other 470 would price it.
-- **What does a model do with these deliveries?** Every arm is graded on
-  retrieval, so the comparison between a 208-token focused delivery and a
-  2,654-token whole-turn one is a comparison of inputs, not of answers. The
-  online half is planned and reserved.
+- **What does a model answer from these deliveries?** Every corpus arm is
+  graded on retrieval, so the comparison between a 208-token focused delivery
+  and a 2,654-token whole-turn one is a comparison of inputs, not of answers.
+  The rake test grades agent behaviour on three tasks and one fixture; the
+  answer-graded online half is specified and not yet run.
 - **How much of the LongMemEval result is the fitted chat ontology?**
   `--lme-ontology default` runs the stock types beside it and the page lists
   that pair as reserved, so the type layer's contribution on this corpus is
@@ -1249,13 +1510,17 @@ which signals are allowed to change what an agent believes.
 - **How much does the encrypted history store get used in practice?** The
   transcript-harvest layer is opt-in and physically isolated from curated recall;
   whether teams enable it, and how much it grows, is not observable from the tree.
-- **What does the agreement rate read on a real graph?** The scoreboard is
-  computed and rendered; no committed result file carries a value from a graph
-  anyone actually judged, so the measure exists and its answer does not.
-- **How often does a session land on the home graph?** Rung five is logged per
-  session in `mcp.log` and the pane census shows the current binding, but nothing
-  counts the fallback, so the frequency of the failure mode the ladder was built
-  around is not observable from the tree.
+- **What does the judge's recall read on a real graph?** The real-graph
+  receipts price false alarms on 129 dismissed pairs; with 3 confirmed
+  conflicts, recall is not yet measurable from them.
+- **How many link-settled dismissals reach the conflict-floor fit?** Nothing
+  on the suspect row says how a pair was settled, so a live graph cannot tell,
+  and no committed run measures how far a sleep moves the floor.
+- **How often does a session read the home graph as its own?** Rung five is
+  logged per session in `mcp.log`, the pane census shows the current binding,
+  and writes from that rung are refused, but nothing counts the fallback, so how
+  often an agent reads the wrong project's memory is not observable from the
+  tree.
 - **What does the dial-three floor fit read on the chat register?** The project
   names the missing artifact itself — a LongMemEval floor sweep with raw score
   curves — and has said the auto-tune dial waits for it.
@@ -1264,10 +1529,12 @@ which signals are allowed to change what an agent believes.
   the model's decision and nothing in the tree counts it. The audit journal has
   the material — a `created` row with a `tombstoned` warning followed by a
   `deleted` row or not — so the number is computable from a live graph.
-- **What fraction of resurrections fall under the warning line?** The key is
-  cosine similarity to the tombstone at 0.70, and a rewrite that keeps the
-  claim and changes the words is exactly the case a value key exists for; no
-  committed probe measures the miss rate.
+- **What fraction of resurrections fall under the warning line?** The keys are
+  cosine similarity to the tombstone at 0.70 and an exact victim title, and a
+  rewrite that keeps the claim and changes the words is exactly the case a value
+  key exists for. ForgetEval never writes a forgotten fact back and the rake
+  test's tombstone task does not discriminate, so no committed probe measures
+  the miss rate.
 - **What happens to a pinned node that is genuinely wrong?** Evidence events skip
   it by design; contradictions surface for review, and nothing forces the review.
 
@@ -1277,13 +1544,21 @@ which signals are allowed to change what an agent believes.
 **Schema and types**
 - `crates/engram-core/src/schema.rs`, `types.rs`, `id.rs`
 
+**Tasks, sleep and undo**
+- `crates/engram-core/src/tasks.rs` — the working list beside the graph
+- `crowding.rs`, `naming.rs`, `engine/review.rs` — the sleep's subjects, names
+  and review queue
+- `engine.rs` — `undo_entry`, `undo_session`, `settle_linked_suspects`,
+  `order_twins`, `node_standing`
+- `skills/engram/sleep/SKILL.md` — the consolidation the assistant runs
+
 **Ontology and per-graph configuration**
 - `config.rs` — `GraphConfig`, `OntologyConfig`, `TypeRoles` (including the
   `tombstone` role), `VerbRoles`, `FieldDef`, `FieldKind`, `presets()`,
   `describe_ontology`
 
 **Trust, judgment and calibration**
-- `crates/engram-core/src/policy.rs`, `nli.rs`, `hub.rs`; `engine.rs` —
+- `crates/engram-core/src/policy.rs`, `nli.rs`, `laya.rs`, `hub.rs`; `engine.rs` —
   `auto_tune`, `fit_conflict_floor`, `fit_weak_line`, `validate_graph`
 
 **Stores**
@@ -1313,15 +1588,19 @@ which signals are allowed to change what an agent believes.
 - `docs/runtime.md`, `docs/multi-project.md` — the process map and the binding
   ladder
 - `crates/engram-cli/tests/` — `process_model.rs`, `roots_binding.rs`,
-  `session_brief_hook.rs`, `setup_windsurf.rs`, `setup_devin.rs`, `e2e.rs`,
+  `session_brief_hook.rs`, `setup_windsurf.rs`, `setup_devin.rs`,
+  `setup_cursor.rs`, `install_script.rs`, `e2e.rs`,
   `e2e_wiring.rs`, `e2e_encryption.rs`
 - `install.sh`, `install.ps1`, `hooks/` — the fetch-and-stop installers and
   the portable brief hook scripts
 
 **Evaluation**
 - `eval/src/` — `longmem.rs` (LongMemEval adapter), `chains.rs` (supersession
-  chains), `sessions.rs` (multi-session coverage), `generate.rs`, `arms.rs`,
+  chains), `sessions.rs` (multi-session coverage), `sleep.rs` (the sleep
+  bench), `authority.rs`, `shapes.rs`, `writes.rs`, `generate.rs`, `arms.rs`,
   `run.rs`, `ollama.rs`
+- `eval/forgeteval/`, `eval/rake/`, `eval/CONTRADICTIONS.md` — the forgetting
+  adapter, the behaviour bench and the logic layer's measurement history
 - `eval/LONGMEMEVAL.md`, `eval/README.md`
 - `eval/results/` — `bench-100.json`, `contradictions-500.json`,
   `floor-100/500/1500.json`, `longmemeval-s-full.json`,
@@ -1334,30 +1613,50 @@ which signals are allowed to change what an agent believes.
   `mem-daemon-before/after.json` and logs
 - `scripts/mem-probe.sh`, `scripts/screenshots.sh`
 
-**Searches that ground the absence claims above** (run at the pinned commit):
-- `rg -n 'is_tombstone|roles.tombstone' crates/engram-core/src/engine.rs` —
-  `write_warnings` (`:3325`), the canon check (`:2997`), `check_claim`
-  (`:3769`), answer candidacy (`:3965`), `suspects_near` (`:4216`, `:4232`),
-  and the helper (`:4854`); no site refuses, collides or hides a write on a
+**Searches that ground the absence claims above** (run at the pinned commit,
+from the repository root):
+- `git grep -n -E 'is_tombstone|roles\.tombstone' -- crates/engram-core/src/engine.rs crates/engram-core/src/engine/review.rs`
+  — fourteen hits in `engine.rs` and two in `review.rs`: `write_warnings`
+  (`:4323`, and the title channel at `:4338-4344`), the canon candidates
+  (`:3954`), `check_claim` (`:4878`), the suspect recorder (`:5413`, `:5463`),
+  the edge propagation skips (`:2601`, `:2633`), the search and standing
+  labels (`:3316`, `:3335`), the two Checkup sweeps (`:5056`, `:5150`) and
+  the helper (`:7044`). No site refuses, collides or hides a write on a
   tombstone match — every consumer warns, labels, or skips.
-- `rg -n 'trust_override|set_trust_override' crates/engram-mcp/src/lib.rs` —
-  one hit, the read-only `pinned` filter in `list_nodes`; no tool sets it.
-- `rg -n 'async fn approve_node' crates/engram-mcp/src/lib.rs` — one hit.
-- `rg -n 'set_graph_config|rename_field|rename_type|PUT /config'
-  crates/engram-mcp/src/lib.rs` — test-module hits only; no ontology or
-  field-definition write tool.
-- `rg -l agreement eval/results/` — empty; no committed value for
-  `nli_agreement`.
-- `rg -n -i 'arxiv|bibtex|@article|doi\.org' README.md docs/ eval/` — the
-  TAA-k citation in the eval README and LongMemEval; no paper for engram
-  itself, and no `CITATION.cff`.
-- `rg -n '^fn .*tombston' crates/engram-core/src/tests.rs` — twelve cases;
-  the two that write a claim after its tombstone
+- `git grep -n -E 'trust_override|set_trust_override' -- crates/engram-mcp/src/lib.rs`
+  — one hit, the read-only `pinned` filter in `list_nodes` (`:1745`); no tool
+  sets it.
+- `git grep -n 'async fn approve_node' -- crates/engram-mcp/src/lib.rs` — one
+  hit (`:1497`).
+- `git grep -n -E 'set_graph_config|rename_field|rename_type|PUT /config' -- crates/engram-mcp/src/lib.rs`
+  — four hits, all inside the test module that opens at `:4466`; no ontology
+  or field-definition write tool.
+- `git grep -n -E 'async fn (undo|audit_undo)|/audit/.*undo' -- crates/engram-mcp/src/lib.rs`
+  — empty; undo has no MCP route.
+- `git grep -n 'set_suspect_status' -- crates/engram-core/src ':!*tests.rs'` —
+  the trait and its two stores, and two engine callers: `settle_linked_suspects`
+  (`engine.rs:2557`) and `resolve_suspect` (`:5683`); neither writes an audit
+  row beside the status.
+- `git grep -n -E 'settled_by|settler|SuspectSource' -- crates` — empty; no
+  suspect row records who or what settled it.
+- `git grep -l -E 'nli_agreement|agreement_rate' -- eval/results` — empty; the
+  real-graph receipts carry flag counts per gate, not the agreement matrix.
+- `git grep -n -i -E 'arxiv|bibtex|@article|doi\.org' -- README.md docs/ eval/ ':!eval/results'`
+  — five arXiv ids in all: the TAA-k and Adaptive-k citations in the eval
+  README and `run.rs`, ForgetEval
+  ([arXiv:2606.15903](https://arxiv.org/abs/2606.15903)) in the eval README and
+  `eval/forgeteval/`, a similarity finding the eval README reproduces, and one
+  citation in `eval/CONTRADICTIONS.md`; no paper for engram itself, and no
+  `CITATION.cff`.
+- `git grep -c -E '^fn .*tombston' -- crates/engram-core/src/tests.rs` —
+  sixteen cases; the two that write a claim after its tombstone
   (`writes_near_a_tombstone_warn_tombstoned_across_types`,
   `an_authored_tombstone_that_replaces_its_victim_buries_it_traceably`) assert
   `Created` with a `tombstoned` warning, never a refusal.
 
 ## History
+
+**2026-11-01** — re-pinned to [`ed4fe24d97f16f1c362d0c4d6b74bfe4d2caf0c3`](https://github.com/techtheist/engram/commit/ed4fe24d97f16f1c362d0c4d6b74bfe4d2caf0c3), release v0.11.0. No mark moves. New upstream: tasks beside the graph, audit undo written as `undone` rows, a standing verdict on every hit, and the sleep, whose links settle pending suspects that the conflict-floor fit then reads as judgments ([section 9](#9-reliability-safety-and-trust)). Six claims were wrong at the previous pin and are corrected. A home-bound session has refused writes since 0.9.8. A suspect dismissal writes no audit row. The tombstone check also matches an exact victim title. The quoted README status line had been removed. The README's headline is KnowledgeDrift, the author's own bench, and ForgetEval was missing ([sections 1](#1-executive-summary) and [10](#10-tests-evals-and-benchmarks)). Line anchors are re-verified. The archive fork was not synced. Screened again first; nothing was installed or run.
 
 **2026-09-19** — re-pinned to [`cb7a3944def40e3a39ee58f31a9b59c9f2e7171c`](https://github.com/techtheist/engram/commit/cb7a3944def40e3a39ee58f31a9b59c9f2e7171c). `human_review` is **withdrawn**, on the evidence the awarding paragraph already set out beside it. What the code reserves to a person is real and stays in the report: no MCP tool writes `trust_override`, the ontology has no MCP write surface, and `merge_nodes` refuses a pinned victim from the assistant. None of those holds a memory back pending a decision — a pin makes an existing node immune to contradiction. The gesture that would be the gate is approval, and `approve_node` is an MCP tool whose entire restraint is a sentence in its own description, re-verified at this pin at `crates/engram-mcp/src/lib.rs:1356`; the suspects queue is handed back for the assistant to judge in the same turn. The previous record's `lib.rs:1102-1109` anchor no longer resolves and has been corrected. The other four marks stand. Screened again first; nothing was installed and no suite was run.
 
