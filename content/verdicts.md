@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 758 reports.**
+**This page covers all 759 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6912,3 +6912,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, 6,310 commits by 14 contributors, 22 April 2025 – 1 November 2026; 235,913 lines of Python in `ciris_engine/`, 3,645 of them the memory core, over a Rust engine pinned through a wheel; 14,113 pytest functions; no retrieval-quality eval. One mark: `audit_log`.
 - Study when: you are building an agent whose identity or policy must change only with a person's verified approval, or want a signed hash chain over every action.
 - Do not copy when: the agent must find facts among thousands, several people share one agent and must not see each other's messages, or forgetting must be provable.
+
+### [`librarian-agents`](../systems/librarian-agents/)
+
+- Best idea: **put the sources in the header of every derived file.** Each synthetic file opens with `DIRECT_SOURCE_RAW_DOCS` and `DIRECT_SOURCE_SYNTHETIC_FILES`, and `load_snapshot` refuses a workspace whose files cite a document outside the corpus or form a parent cycle.
+- Second idea: **price the structure with a content-preserving ablation.** Flattening every parent edge keeps accuracy (57.70% against 55.86%) and costs 1,862 more navigation tokens per question; shuffling placement drops 4.14 points, all from committed per-question rows.
+- Biggest risk: **write-once.** `save_snapshot` has one caller, at the builder's terminal step, and the answerer can only list and read, so a wrong summary stays for every question until the whole workspace is rebuilt.
+- Second risk: **the fallback is never served.** Every committed config and runner sets `synthetic_only`, the raw-read count is zero in all 100 reuse rows, and the file headers point at `raw_docs/` paths the answerer's workspace does not contain.
+- Third risk: a delete only hides a file from the answerer; `create_cluster` accepts `history/` paths, so deleted text can be cited into a new active file. The 33-point BrowseComp-Plus headline is a stored aggregate with no per-question rows.
+- Most reusable component: `environments/synthetic_fs/workspace.py` `SyntheticFilesystemState` with `from_snapshot` and `materialize_final_workspace` — a record format with provenance and soft delete, a strict loader, and a materialiser any file-reading agent can browse.
+- Maturity impression: MIT; 20,385 lines of Python outside tests, 6,005 of them the workspace, environment and reward; 13 commits, 4 – 16 October 2026; 33 pytest functions, 14 of which skip without `tinker-cookbook`; no CI; the reuse, BRIGHT and ablation tables recompute from committed rows. No marks; nothing was installed or run.
+- Study when: many questions will be asked of one fixed corpus and you want a precomputed, navigable reading surface with traceable summaries.
+- Do not copy when: memory must grow from use, absorb new documents, or be corrected after a wrong answer.

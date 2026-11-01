@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Research code that trains a
+builder model with GRPO to write a hierarchical file workspace once per
+corpus, which a frozen answerer browses read-only.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Librarian
+Agents — Agent Memory Atlas">
+    <meta property="og:description" content="Research code that trains a
+builder model with GRPO to write a hierarchical file workspace once per
+corpus, which a frozen answerer browses read-only.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Librarian
+Agents — Agent Memory Atlas">
+    <meta name="twitter:description" content="Research code that trains
+a builder model with GRPO to write a hierarchical file workspace once
+per corpus, which a frozen answerer browses read-only.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Librarian Agents — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Librarian Agents",
+      "description": "Research code that trains a builder model with GRPO to write a hierarchical file workspace once per corpus, which a frozen answerer browses read-only.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A workspace written once per corpus and
+read by every later question</p>
+          <h1>Librarian Agents</h1>
+          <p class="document-deck">Research code that trains a builder
+model with GRPO to write a hierarchical file workspace once per corpus,
+which a frozen answerer browses read-only.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/teresaz05/librarian-agents">
+              <span>Source</span>
+              <strong>teresaz05/librarian-agents</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/teresaz05/librarian-agents/commit/27c9d86391b5da9c04e88b920076fa3867782bb9" title="27c9d86391b5da9c04e88b920076fa3867782bb9">
+              <span>Analyzed revision</span>
+              <code>27c9d863…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-01</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/teresaz05--librarian-agents" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>teresaz05--librarian-agents</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>20,385
+lines of Python outside tests, of which the workspace, environment and
+reward code in environments/synthetic_fs/ is 6,005, the training driver
+1,920 and the seven retrieval and baseline modules in
+experiments/inference/ 6,756</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>13
+commits on main under three author names, 4 – 16 October 2026; read from
+a shallow clone, history from the GitHub API</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>33
+pytest functions in 9 files; the 14 in test_synthetic_fs.py skip unless
+tinker-cookbook is installed; no CI configuration</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Librarian Agents is the code for a paper that trains a builder model
+to turn a document corpus into a hierarchical workspace of synthetic
+files before any question is known. A frozen answering agent then
+browses that workspace, read-only, for every question asked about the
+corpus. The workspace is the memory this report is about: model-written
+files with source lists, persisted as one snapshot per corpus and read
+by many later questions.</p>
+<p>What is notable is the shape of a file and the shape of a delete.
+Every synthetic file names the raw documents and synthetic files it was
+built from, and a delete keeps the record with its round and a reason.
+Loading a snapshot refuses broken parent chains and citations to
+documents outside the corpus. What is weak is everything after
+construction. Nothing writes to a snapshot once the builder stops, and
+no committed run lets the answerer reach the raw corpus the source lists
+point to.</p>
+<p>Five findings shape the rest of this report.</p>
+<ul>
+<li><strong>The workspace is written once.</strong>
+<code>save_snapshot</code> has one caller, at the builder's terminal
+step, and the answerer's tool class has two methods,
+<code>list_files</code> and <code>read_file</code>
+(<code>environments/synthetic_fs/reward.py:665-666</code>;
+<code>environments/synthetic_fs/workspace.py:1184-1236</code>).</li>
+<li><strong>A delete hides a file from the answerer and not from the
+builder.</strong> The record stays under <code>history/</code>, and
+<code>create_cluster</code> accepts <code>history/</code> paths as
+inputs, so deleted content can be cited into a new active file
+(<code>workspace.py:1067-1097</code>, <code>:619-651</code>,
+<code>:1575</code>).</li>
+<li><strong>The raw-document fallback is off in every committed
+run.</strong> The paper's <em>Faithful Fallback</em> desideratum and its
+Figure 7 recovery need <code>synthetic_plus_raw</code>. Every config,
+build script and evaluation runner sets <code>synthetic_only</code>, and
+the raw-read count is 0.0 in all 100 rows of the committed reuse ledger
+(<code>configs/paper_browsecomp.json:65</code>).</li>
+<li><strong>The headline numbers have different footing.</strong> The
+reuse, BRIGHT and hierarchy tables recompute from committed rows, and I
+recomputed them. The 33-point BrowseComp-Plus headline comes from a
+stored aggregate with no per-question rows
+(<code>results/browsecomp_cross_answerer.json</code>).</li>
+<li><strong>The dense reward is gated on structure.</strong> The paper
+probes answerability every eight turns with no structure shaping. The
+code also skips a probe unless that step built something and a
+filesystem-maturity score reaches 0.45
+(<code>environments/synthetic_fs/message_env.py:560-564</code>).</li>
+</ul>
+<p>No marks. Section 9 names each one and the reason it is withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a synthetic file the builder asked for and an executor
+model wrote. It comes into being during one construction episode per
+corpus, and the episode is the only time anything can change it.</p>
+<ol type="1">
+<li><strong>Browse.</strong> The builder sees <code>raw_docs/</code>,
+<code>synthetic_fs/</code> and <code>history/</code> through
+<code>list_files</code>, <code>read_file</code> and
+<code>read_many</code>. The question the episode is scored on sits in a
+privileged directory the builder never lists
+(<code>environments/synthetic_fs/prompts.py:11-60</code>;
+<code>workspace.py:100-115</code>).</li>
+<li><strong>Create.</strong> <code>create_cluster</code> takes a title,
+input paths and short instructions. The executor,
+<code>Qwen/Qwen3.5-35B-A3B</code> in the paper config, writes the text
+from up to 16,000 characters of the cited sources, and the record stores
+those sources as <code>direct_raw_doc_paths</code> and
+<code>direct_synthetic_ids</code> (<code>workspace.py:1287-1328</code>,
+<code>:981-1013</code>, <code>:1572-1601</code>;
+<code>scripts/train_browsecomp_plus.sh:73</code>).</li>
+<li><strong>Merge.</strong> <code>merge_clusters</code> writes a summary
+record over active children and reassigns each child's
+<code>parent_id</code> in place
+(<code>workspace.py:1015-1065</code>).</li>
+<li><strong>Delete.</strong> <code>delete</code> sets
+<code>active = False</code>, <code>deleted_round</code> and an optional
+<code>delete_reason</code>; a deleted merge's children move up to its
+parent (<code>workspace.py:1067-1097</code>).</li>
+<li><strong>Stop.</strong> At <code>STOP</code>, a reply with no tool
+call, or turn 32, the terminal reward runs and the state is saved as a
+snapshot (<code>reward.py:413-666</code>).</li>
+<li><strong>Read.</strong> Each later question loads the snapshot,
+materialises the active records into a temporary directory and runs the
+answerer over it
+(<code>experiments/inference/browsecomp_hierarchy_ablation.py:145-165</code>).</li>
+</ol>
+<p><strong>Nothing is doubted after the builder stops.</strong>
+<code>active</code> is the only status, and only <code>delete</code>
+changes it, inside the episode. Executor text is admitted when it is not
+an empty or placeholder string; nothing compares it with the sources
+listed in its header (<code>workspace.py:906-910</code>,
+<code>:1326</code>, <code>:1368</code>). A wrong summary stays in the
+workspace for every question that reaches it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how one construction episode writes a Librarian workspace, what a delete keeps, and how each later question reads the snapshot</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how one construction episode writes a Librarian workspace, what a delete keeps, and how each later question reads the snapshot
+flowchart TD
+    C[&quot;corpus directory:&lt;br/&gt;raw_docs/ for one task&quot;] --&gt; B[&quot;builder,&lt;br/&gt;Qwen3.5-4B LoRA:&lt;br/&gt;up to 32 turns&quot;]
+    B --&gt; T{&quot;tool call&quot;}
+    T -- &quot;create or merge&quot; --&gt; EX[&quot;frozen executor writes&lt;br/&gt;text from cited sources&quot;]
+    T -- &quot;delete&quot; --&gt; DL[&quot;active = False,&lt;br/&gt;deleted_round, reason&quot;]
+    EX --&gt; ST[(&quot;in-process state:&lt;br/&gt;records by node_id,&lt;br/&gt;parent, source lists&quot;)]
+    DL --&gt; ST
+    ST -. &quot;history/ paths:&lt;br/&gt;deleted text re-citable&quot; .-&gt; B
+    ST -- &quot;on STOP or&lt;br/&gt;turn cap&quot; --&gt; SNAP[(&quot;snapshot JSON:&lt;br/&gt;every record,&lt;br/&gt;deleted ones kept&quot;)]
+    SNAP --&gt; LOAD[&quot;load_snapshot per question:&lt;br/&gt;checks parents, cycles,&lt;br/&gt;cited documents&quot;]
+    LOAD --&gt; MAT[&quot;materialise README and&lt;br/&gt;active records only;&lt;br/&gt;raw_docs/ never copied&lt;br/&gt;in synthetic_only&quot;]
+    MAT --&gt; ANS[&quot;frozen answerer:&lt;br/&gt;root files preloaded,&lt;br/&gt;list_files, read_file&quot;]
+    ANS --&gt; J[&quot;Gemini judge&lt;br/&gt;against the gold answer&quot;]
+    J -. &quot;training only:&lt;br/&gt;GRPO update&quot; .-&gt; B</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The repository is a Python package with shell launchers and no
+service. The builder is trained through Tinker, a hosted post-training
+API, as a rank-32 LoRA on <code>Qwen/Qwen3.5-4B</code>. The executor
+runs behind an OpenAI-compatible endpoint, which the README hosts on
+Modal. The answerer, the judge and the builder-history compactor are
+<code>gemini-3.1-flash-lite-preview</code>
+(<code>configs/paper_browsecomp.json</code>;
+<code>experiments/training/train.py</code>).</p>
+<p>The workspace lives in one object,
+<code>SyntheticFilesystemState</code>, while an episode runs. Its
+snapshot goes to
+<code>&lt;filesystem_snapshot_dir&gt;/&lt;question_id&gt;/trajectory_NN.json</code>,
+one per corpus and trajectory
+(<code>environments/synthetic_fs/dataset.py:259-264</code>). The
+snapshot deliberately leaves the corpus out: the docstring says the
+caller supplies <code>raw_doc_root</code> again at load, so one
+workspace can be reused without copying source text into result
+artifacts (<code>workspace.py:225-244</code>). The evaluation runners
+hash each snapshot into the input fingerprint of every answer they
+record (<code>browsecomp_hierarchy_ablation.py:135-143</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Reproducing a construction needs three model services, set by
+<code>TINKER_API_KEY</code>, <code>GEMINI_API_KEY</code> and the
+executor's base URL
+(<code>scripts/build_browsecomp_filesystems.sh</code>). The baselines
+need a CUDA machine for vLLM, FAISS and PyLate. The trained checkpoints
+are named by step in <code>CHECKPOINTS.md</code> and supplied by
+environment variable; no weights are in the tree. The workspace format
+itself needs only a filesystem. A snapshot is readable JSON, and a
+materialised workspace is plain text files a person can open.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Construction.</strong>
+<code>experiments/training/train.py</code> drives episodes, with
+<code>eval_only=true</code> and <code>learning_rate=0.0</code> for the
+evaluation builds
+(<code>scripts/build_browsecomp_filesystems.sh</code>).
+<code>message_env.py</code> runs the turns, the compaction and the probe
+schedule. <code>BuilderFilesystemTools</code> exposes the builder's
+tools (<code>workspace.py:1373-1760</code>).</li>
+<li><strong>Write.</strong>
+<code>SyntheticFilesystemState.create_cluster</code>,
+<code>merge_clusters</code> and <code>delete</code>
+(<code>workspace.py:981-1097</code>); the executor's two prompts
+(<code>workspace.py:1287-1370</code>).</li>
+<li><strong>Persist.</strong> <code>to_snapshot</code>,
+<code>from_snapshot</code>, <code>save_snapshot</code>,
+<code>load_snapshot</code> (<code>workspace.py:225-322</code>); the one
+save site (<code>reward.py:665-666</code>).</li>
+<li><strong>Read.</strong> <code>materialize_final_workspace</code>,
+<code>answerer_bootstrap_entries</code> and
+<code>ReadOnlyAnswererWorkspaceTools</code>
+(<code>workspace.py:1141-1236</code>);
+<code>SyntheticFilesystemReward._run_answerer</code>
+(<code>reward.py:1021-1280</code>); the answerer prompts
+(<code>prompts.py:206-268</code>).</li>
+<li><strong>Reward.</strong> <code>answerability_progress_probe</code>
+and <code>__call__</code> (<code>reward.py:340-666</code>); the judge
+(<code>reward.py:878-930</code>).</li>
+<li><strong>Ablation.</strong> <code>flatten_snapshot</code> and
+<code>shuffle_snapshot</code> with <code>validate_transforms</code>
+(<code>analysis/hierarchy_ablation.py:221-296</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>SyntheticFileRecord</code> has twelve fields:
+<code>node_id</code>, <code>kind</code> (<code>cluster</code> or
+<code>merge_summary</code>), <code>title</code>, <code>slug</code>,
+<code>content</code>, <code>created_round</code>,
+<code>parent_id</code>, <code>direct_raw_doc_paths</code>,
+<code>direct_synthetic_ids</code>, <code>active</code>,
+<code>deleted_round</code> and <code>delete_reason</code>
+(<code>workspace.py:118-131</code>). Ids are <code>cluster_NNNN</code>
+and <code>merge_NNNN</code> from per-state counters.
+<code>created_round</code> and <code>deleted_round</code> count
+operations, not time.</p>
+<p>A cluster renders at
+<code>synthetic_fs/&lt;ancestors&gt;/&lt;node_id&gt;__&lt;slug&gt;.txt</code>
+and a merge as a directory holding <code>summary.txt</code>; every
+record also has a flat <code>history/</code> path
+(<code>workspace.py:370-413</code>). The rendered file opens with
+<code>TITLE</code>, <code>KIND</code>,
+<code>DIRECT_SOURCE_RAW_DOCS</code> and
+<code>DIRECT_SOURCE_SYNTHETIC_FILES</code>, then the body under
+<code>CLUSTER_TEXT</code> or <code>MERGE_SUMMARY</code>
+(<code>workspace.py:653-679</code>).</p>
+<p>The snapshot is schema version 1: the corpus id, the visible raw
+paths, both counters, the operation round and every record sorted by id
+(<code>workspace.py:205-244</code>). <code>from_snapshot</code> is
+strict. It rejects a missing field, an unknown kind, a duplicate id, an
+unknown parent or synthetic source, a raw path that is absolute or
+contains <code>..</code>, a raw path outside the visible set, and a
+parent cycle (<code>workspace.py:218-305</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search. <code>materialize_final_workspace</code> writes a
+fixed <code>README.md</code> and one file per active record into a
+temporary directory, and copies <code>raw_docs/</code> only when the
+mode is <code>synthetic_plus_raw</code>
+(<code>workspace.py:1141-1164</code>). The root-level records are
+preloaded into the answerer's first message, and from there it emits one
+JSON action per turn, <code>list_files</code> or <code>read_file</code>,
+for up to 32 turns (<code>workspace.py:1172-1182</code>;
+<code>prompts.py:206-255</code>). The tool class refuses any path that
+resolves outside the workspace root
+(<code>workspace.py:1188-1195</code>).</p>
+<p>In <code>synthetic_only</code> the system prompt drops the
+raw-document line and the user prompt says <em>"Answer using only the
+synthetic workspace."</em> The file headers still list
+<code>raw_docs/</code> paths, which do not exist in that workspace
+(<code>prompts.py:215-226</code>, <code>:257-268</code>). The builder's
+own prompt tells it the answerer will <em>"use raw_docs/ only as
+fallback"</em> (<code>prompts.py:20</code>).</p>
+<p>What the hierarchy buys is measured. On 435 questions over 49
+completed workspaces, flattening every parent edge leaves accuracy at
+57.70% against 55.86% for the original and costs 1,862 more navigation
+tokens per question. Shuffling placement while keeping the depth profile
+drops accuracy by 4.14 points at the same cost (<code>RESULTS.md</code>;
+<code>results/hierarchy_per_question.jsonl</code>). Hierarchy reduces
+navigation cost; placement carries the accuracy.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Construction is synchronous and offline. Each
+<code>create_cluster</code> or <code>merge_clusters</code> call blocks
+the builder's turn on an executor request, run through
+<code>asyncio.to_thread</code> (<code>workspace.py:1378-1410</code>). A
+file is visible to the answerer only after the snapshot is saved at the
+terminal step, so the lag is the whole episode. In training, a probe
+materialises the partial state to score it. No background pass touches a
+workspace, and a snapshot is never reopened for writing.</p>
+<p>The budget is 32 builder turns, 1,024 tokens a turn and 60,000 a
+trajectory (<code>configs/paper_browsecomp.json</code>). In the
+committed reuse ledger the trained builder spends a mean of 147,634
+tokens per corpus and the base builder 126,012. Fourteen of the base
+builder's 50 corpora end as <code>max_token_capped_failure</code> and
+score zero; none of the trained builder's do
+(<code>results/browsecomp_per_corpus.jsonl</code>).</p>
+<p>The reward is GRPO over groups of four with batch size 8. The
+terminal score is the judge's correctness on a hidden training question,
+averaged over four answerer runs. A probe adds the change in that score
+since the last probe, with deltas under 0.25 set to zero, at most four
+times an episode (<code>reward.py:340-411</code>;
+<code>configs/paper_browsecomp.json:42-62</code>). Every structure, cost
+and penalty scale in the paper config is 0.0.</p>
+<p>The probe is not periodic in the sense the paper states.
+<code>message_env.py</code> skips it unless eight turns have passed, the
+step made a construction call, and the maturity score reaches 0.45
+(<code>message_env.py:545-590</code>). That score is a weighted mix of
+raw-document coverage, file count, branching and merges
+(<code>reward.py:679-740</code>). It earns no reward of its own and
+decides when the answerability reward can be paid.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The memory has no surface outside the method. The builder's tools are
+<code>tinker-cookbook</code> <code>@tool</code> functions bound to one
+state object, and the answerer's are a JSON action protocol parsed by
+the reward class (<code>workspace.py:1373-1760</code>;
+<code>reward.py:1294-1313</code>). The snapshot is the integration point
+a builder of another system would use. It is a self-describing JSON file
+with a validating loader and a materialiser that writes a browsable
+directory any file-reading agent can be pointed at.</p>
+<p>The intended reuse is many questions over one fixed corpus. The
+BRIGHT evaluation builds one workspace per domain and serves all 50 of
+that domain's questions from it; the reuse evaluation serves 443
+questions from 50 workspaces
+(<code>data_processing/prepare_bright_frozen_construction.py</code>;
+<code>data/splits/browsecomp_amortized50.jsonl</code>). A corpus that
+changes means a new construction episode, since no path adds a document
+to an existing snapshot.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks.</strong> Each is withheld for a stated reason.</p>
+<ul>
+<li><strong>Tombstone — withheld.</strong> A delete is keyed on a
+<code>node_id</code>, and it does not reject anything.
+<code>resolve_synthetic_node</code> returns an inactive record for a
+<code>history/</code> path, <code>_partition_input_paths</code> accepts
+it, and the executor reads its text, so a deleted file can be cited into
+a new active one within the same episode
+(<code>workspace.py:619-651</code>, <code>:951-979</code>,
+<code>:681-713</code>).</li>
+<li><strong>Trust state — withheld.</strong> <code>active</code> is a
+lifecycle flag that removes a record from the answerer's view, which the
+rubric classes with archival. There is no candidate or verified state,
+and the executor's text enters on a non-placeholder check.</li>
+<li><strong>Bi-temporal — withheld.</strong> The only ordering fields
+are operation counters; no timestamp exists in <code>workspace.py</code>
+(appendix search).</li>
+<li><strong>Scope enforced — withheld.</strong> One snapshot per corpus
+is a physical partition. The loader checks that cited documents are in
+the visible set of the directory it was given, which guards integrity,
+not a scope key.</li>
+<li><strong>Audit log — withheld, and it is close.</strong> The snapshot
+keeps every deleted record with its round and reason, which answers
+<em>what was removed and why</em>. It does not record mutations: a merge
+rewrites each child's <code>parent_id</code> in place and leaves no
+trace of the old parent (<code>workspace.py:1054-1055</code>).</li>
+<li><strong>Human review — withheld.</strong> No surface lets a person
+inspect or approve a file before the answerer reads it.</li>
+<li><strong>Negative eval — withheld.</strong>
+<code>test_raw_documents_are_materialized_only_in_fallback_mode</code>
+asserts <code>raw_docs/</code> is absent in <code>synthetic_only</code>,
+with the fallback mode as a positive control. It guards the user's
+corpus rather than a memory, and no test exercises <code>delete</code>
+(<code>tests/test_synthetic_fs.py:190-200</code>).</li>
+</ul>
+<p>The contamination guards point the right way. The builder never sees
+an evaluation question, and a test checks that the BRIGHT construction
+prompt contains none of them
+(<code>tests/test_bright_construction.py:8-36</code>). Snapshot paths
+are validated against traversal at load, and the answerer cannot read
+outside its workspace.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I read the tests and did not run them. There are 33 pytest functions
+in 9 files. The 14 in <code>tests/test_synthetic_fs.py</code>, which
+hold every test of the workspace itself, open with
+<code>pytest.importorskip("tinker_cookbook")</code>. A run without the
+<code>builder</code> extra skips them and reports green. No CI
+configuration is committed.</p>
+<ul>
+<li><code>test_snapshot_round_trip_preserves_materialized_filesystem</code>
+asserts that a saved and reloaded workspace materialises to identical
+files (<code>tests/test_synthetic_fs.py:133-155</code>).</li>
+<li>Two merge tests assert that a child or descendant cannot become its
+parent and that the state is unchanged after the refusal
+(<code>:54-97</code>).</li>
+<li><code>test_bundled_ledger_reproduces_report</code> and
+<code>test_bundled_scores_reproduce_paper_table</code> pin 107 and 282
+correct of 443 and a BRIGHT macro pass@1 of 0.52 from the committed rows
+(<code>tests/test_browsecomp_analysis.py:59-68</code>;
+<code>tests/test_bright_qa.py:81-100</code>).</li>
+<li><code>check_reported_aggregates</code> asserts that the stored
+aggregate files equal constants written in the same script, which checks
+a file against itself
+(<code>analysis/reproduce_results.py:136-156</code>).</li>
+</ul>
+<p><strong>What recomputes.</strong> I wrote my own script over the
+committed JSONL, imported nothing from the repository, and ran it with
+<code>python3 -I</code>. The reuse ledger gives 107 correct answers
+(24.15%) for the base builder and 282 (63.66%) for the trained one, over
+443 questions, with 14 capped base corpora. The BRIGHT rows give every
+cell of the <code>RESULTS.md</code> table for all nine methods. The
+hierarchy rows give 55.86%, 57.70% and 51.72% with the stated token
+means.</p>
+<p><strong>What does not.</strong> The paper's abstract claims a
+33-point gain on BrowseComp-Plus over the strongest baseline. That is
+the mean of 0.75 − 0.44 for the Qwen answerer and 0.77 − 0.42 for
+Gemini, in a JSON file of rounded values with no per-question rows. Its
+Table 1 and Tables 4–6 are stored the same way, which
+<code>results/README.md</code> says.</p>
+<p>The 31-point BRIGHT average recomputes: 0.520 against the dense
+baseline's 0.208. By domain it is uneven. Against each domain's best
+baseline the gain is 3.0 points on AOPS, 15.0 on Biology and 74.0 on
+Stack Overflow, where the Librarian scores 0.855 and no baseline passes
+0.115. Each BRIGHT domain corpus holds every selected question's gold
+documents plus distractors, up to 50 documents in all, shared by every
+method (<code>REPRODUCING.md</code>).</p>
+<p>The paper is <a
+href="https://arxiv.org/abs/2610.22273">arXiv:2610.22273</a>, submitted
+15 October 2026. Its description matches the code on the action space,
+with batch variants added in code; on a delete that never touches raw
+documents; and on the executor, the compactor and the GRPO settings. It
+differs on the fallback, on the probe gate, and on its training curve:
+<code>results/training_reward.csv</code> covers steps 0 to 53, while the
+reported checkpoints are steps 55 and 89
+(<code>CHECKPOINTS.md</code>).</p>
+<p><strong>Related reports.</strong> <a
+href="../../systems/agent-memory-distillation/">Agent Memory
+Distillation</a> is the nearest shape in the atlas: a store built
+offline from a corpus of trajectories and frozen at inference. A
+source-grounded wiki that is maintained rather than built once is <a
+href="../../systems/llm-wiki-cli/">LWC</a>. The boundary on the other
+side is an index with no agent-written content, which the <a
+href="../../appendix/#known-limitations">known limitations</a> record
+for <code>FastBuilderAI/memory</code>. The Librarian's files are
+model-written claims that can be wrong, so they fall inside it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A source list in every derived file's header.</strong>
+<code>DIRECT_SOURCE_RAW_DOCS</code> and
+<code>DIRECT_SOURCE_SYNTHETIC_FILES</code> make each summary traceable
+to what it was written from, and a transitive walk gives coverage for
+free.</li>
+<li><strong>A delete that keeps the record and its reason.</strong>
+Serve the active view to the reader and the full history to the writer,
+and the store can explain what it removed.</li>
+<li><strong>Validate a persisted derived store against its source set at
+load.</strong> Refuse unknown parents, cycles and citations outside the
+corpus before anything is served.</li>
+<li><strong>Price structure with a content-preserving ablation.</strong>
+Flatten and shuffle the same payloads, check the payloads are unchanged,
+and measure accuracy and navigation separately.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A fallback the reader is never given.</strong> Provenance
+that points at files the answering workspace does not contain is a
+citation nobody can follow.</li>
+<li><strong>A delete the writer can undo by citation.</strong> If a
+removed file was wrong, keep it out of the inputs as well as the output
+view.</li>
+<li><strong>A derived memory with no refresh path.</strong> Once
+construction ends, a wrong summary can only be fixed by rebuilding the
+whole workspace.</li>
+<li><strong>A reproduction check that compares a file with
+constants.</strong> It confirms the file was not edited, not that the
+number was computed.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Librarian Agents is a research instrument for one question: whether a
+trained policy can build a better reading surface for a fixed corpus
+than retrieval can. It suits a reader with a stable corpus, many
+questions per corpus, and the budget to train or host a builder and an
+executor. It does not suit anyone whose memory must accumulate from use,
+absorb new documents, or be corrected after a wrong answer. Nothing here
+does any of that. The part that transfers without the training stack is
+the workspace format and its loader.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Which configuration produced the paper's Figure 7 recovery through
+provenance links, given that every committed run sets
+<code>synthetic_only</code>?</li>
+<li>Are the per-question rows behind the cross-answerer table, the
+source of the 33-point headline, to be released?</li>
+<li>How were checkpoints 55 and 89 selected, and what does the reward
+curve look like past step 53?</li>
+<li>Is a workspace meant to be extended when its corpus grows, or always
+rebuilt?</li>
+<li>Should <code>history/</code> paths be valid inputs to
+<code>create_cluster</code> after a delete?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Workspace and snapshot:</strong>
+<code>environments/synthetic_fs/workspace.py</code>
+(<code>SyntheticFileRecord</code>,
+<code>SyntheticFilesystemState</code>,
+<code>ReadOnlyAnswererWorkspaceTools</code>,
+<code>FrozenSyntheticFileExecutor</code>,
+<code>BuilderFilesystemTools</code>).</li>
+<li><strong>Episode and reward:</strong>
+<code>environments/synthetic_fs/message_env.py</code>,
+<code>environments/synthetic_fs/reward.py</code>,
+<code>environments/synthetic_fs/dataset.py</code>,
+<code>environments/synthetic_fs/coverage.py</code>.</li>
+<li><strong>Prompts:</strong>
+<code>environments/synthetic_fs/prompts.py</code>.</li>
+<li><strong>Training and builds:</strong>
+<code>experiments/training/train.py</code>,
+<code>scripts/train_browsecomp_plus.sh</code>,
+<code>scripts/build_browsecomp_filesystems.sh</code>,
+<code>scripts/build_bright_filesystems.sh</code>,
+<code>configs/paper_browsecomp.json</code>.</li>
+<li><strong>Evaluation:</strong>
+<code>experiments/inference/browsecomp_hierarchy_ablation.py</code>,
+<code>experiments/inference/bright_frozen_filesystem.py</code>,
+<code>analysis/hierarchy_ablation.py</code>,
+<code>analysis/reproduce_results.py</code>.</li>
+<li><strong>Results:</strong> <code>results/</code>,
+<code>RESULTS.md</code>, <code>REPRODUCING.md</code>,
+<code>CHECKPOINTS.md</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_synthetic_fs.py</code>,
+<code>tests/test_bright_construction.py</code>,
+<code>tests/test_browsecomp_analysis.py</code>,
+<code>tests/test_bright_qa.py</code>,
+<code>tests/test_hierarchy_ablation.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git grep</code> in the clone,
+<code>PIN=27c9d86391b5da9c04e88b920076fa3867782bb9</code>, from the tree
+root.</p>
+<ul>
+<li><code>git grep -n -E 'save_snapshot\(' ${PIN} -- .</code> — the
+definition, <code>reward.py:666</code> and one test; no other writer of
+a snapshot.</li>
+<li><code>git grep -n -E '    def [a-z_]+\(' ${PIN} -- environments/synthetic_fs/workspace.py</code>,
+lines 1184–1237 — <code>__init__</code>, <code>_resolve</code>,
+<code>list_files</code>, <code>read_file</code>; the answerer has no
+write method.</li>
+<li><code>git grep -n -E 'synthetic_plus_raw' ${PIN} -- configs scripts experiments/inference analysis</code>
+— no match; no committed run enables the raw-document fallback.</li>
+<li><code>git grep -n -E 'datetime|created_at|valid_from|valid_until|timestamp' ${PIN} -- environments/synthetic_fs/workspace.py</code>
+— no match.</li>
+<li><code>git grep -n -i -E 'audit|event_log|mutation_log|journal' ${PIN} -- environments experiments</code>
+— no match.</li>
+<li><code>git grep -n -i -E 'tombstone|blocklist|denylist|rejected_value' ${PIN} -- .</code>
+— no match.</li>
+<li><code>git grep -n -E 'history/' ${PIN} -- environments/synthetic_fs/workspace.py</code>
+— <code>:1575</code>, <code>create_cluster</code> accepts
+<code>history/</code> inputs; <code>:1747</code>, only
+<code>delete</code> refuses them.</li>
+<li><code>git grep -n -i -E 'approve|human|reviewer' ${PIN} -- environments experiments analysis</code>
+— no match.</li>
+<li><code>git grep -n -E '\.delete\(' ${PIN} -- tests</code> — no match;
+no test exercises a delete.</li>
+<li><code>git grep -n -E 'importorskip|skipif|pytest.skip' ${PIN} -- tests</code>
+— <code>test_synthetic_fs.py:11</code> only.</li>
+<li><code>git ls-files | grep -E '^\.github|\.gitlab|ci\.yml'</code> —
+no match; no CI configuration.</li>
+<li><code>git grep -n -E 'cross_answerer|reported_aggregates' ${PIN} -- . ':!results'</code>
+— <code>RESULTS.md</code> and
+<code>analysis/reproduce_results.py:138-140</code> only; nothing
+generates the stored aggregates.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|@article|CITATION' ${PIN} -- README.md</code>
+— the badge and citation block for <a
+href="https://arxiv.org/abs/2610.22273">arXiv:2610.22273</a>; no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-01</strong> — <a
+href="https://github.com/teresaz05/librarian-agents/commit/27c9d86391b5da9c04e88b920076fa3867782bb9"><code class="commit-id" title="27c9d86391b5da9c04e88b920076fa3867782bb9">27c9d863…</code></a>
+— first reading, at the head of <code>main</code>, 16 October 2026, from
+a shallow clone; history from the GitHub API. No marks. LICENSE read in
+full: MIT with no rider. Screened before reading: no auto-run surface,
+no build-time execution, nothing inside the cooldown, one unpinned
+surface, <code>pyproject.toml</code> with no lockfile; no
+<code>.gitmodules</code> and no agent-instruction file. The paper's
+method, appendix and tables were read from the arXiv PDF. The committed
+result rows were recomputed with a script of my own; the repository's
+code was not installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

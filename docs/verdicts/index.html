@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 758 reports.</strong></p>
+<p><strong>This page covers all 759 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -31595,6 +31595,52 @@ chain over every action.</li>
 <li>Do not copy when: the agent must find facts among thousands, several
 people share one agent and must not see each other's messages, or
 forgetting must be provable.</li>
+</ul>
+<h3 id="librarian-agents"><a
+href="../systems/librarian-agents/"><code>librarian-agents</code></a></h3>
+<ul>
+<li>Best idea: <strong>put the sources in the header of every derived
+file.</strong> Each synthetic file opens with
+<code>DIRECT_SOURCE_RAW_DOCS</code> and
+<code>DIRECT_SOURCE_SYNTHETIC_FILES</code>, and
+<code>load_snapshot</code> refuses a workspace whose files cite a
+document outside the corpus or form a parent cycle.</li>
+<li>Second idea: <strong>price the structure with a content-preserving
+ablation.</strong> Flattening every parent edge keeps accuracy (57.70%
+against 55.86%) and costs 1,862 more navigation tokens per question;
+shuffling placement drops 4.14 points, all from committed per-question
+rows.</li>
+<li>Biggest risk: <strong>write-once.</strong>
+<code>save_snapshot</code> has one caller, at the builder's terminal
+step, and the answerer can only list and read, so a wrong summary stays
+for every question until the whole workspace is rebuilt.</li>
+<li>Second risk: <strong>the fallback is never served.</strong> Every
+committed config and runner sets <code>synthetic_only</code>, the
+raw-read count is zero in all 100 reuse rows, and the file headers point
+at <code>raw_docs/</code> paths the answerer's workspace does not
+contain.</li>
+<li>Third risk: a delete only hides a file from the answerer;
+<code>create_cluster</code> accepts <code>history/</code> paths, so
+deleted text can be cited into a new active file. The 33-point
+BrowseComp-Plus headline is a stored aggregate with no per-question
+rows.</li>
+<li>Most reusable component:
+<code>environments/synthetic_fs/workspace.py</code>
+<code>SyntheticFilesystemState</code> with <code>from_snapshot</code>
+and <code>materialize_final_workspace</code> — a record format with
+provenance and soft delete, a strict loader, and a materialiser any
+file-reading agent can browse.</li>
+<li>Maturity impression: MIT; 20,385 lines of Python outside tests,
+6,005 of them the workspace, environment and reward; 13 commits, 4 – 16
+October 2026; 33 pytest functions, 14 of which skip without
+<code>tinker-cookbook</code>; no CI; the reuse, BRIGHT and ablation
+tables recompute from committed rows. No marks; nothing was installed or
+run.</li>
+<li>Study when: many questions will be asked of one fixed corpus and you
+want a precomputed, navigable reading surface with traceable
+summaries.</li>
+<li>Do not copy when: memory must grow from use, absorb new documents,
+or be corrected after a wrong answer.</li>
 </ul>
         </article>
       </div>
