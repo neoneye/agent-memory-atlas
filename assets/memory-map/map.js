@@ -41,6 +41,9 @@
   };
 
   const fmt3 = d3.format(".3f");
+  const ordinal = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+  const marksText = (r) => `${r.n_marks} mark${r.n_marks === 1 ? "" : "s"}`;
+  const rankText = (r) => r.rank ? `${ordinal(r.rank)} most unusual of ${num(ranked.length)}` : "not ranked: a thin profile";
   const num = d3.format(",");
   const state = { color: "quadrant", deploy: "", lang: "", integ: "", sort: { key: "rank", dir: 1 }, pinned: null };
   let rows = [], bySlug = new Map(), ranked = [];
@@ -156,7 +159,7 @@
       tip.append("div").append("b").text(d.title);
       tip.append("div").attr("class", "k").text(d.eyebrow);
       tip.append("div").text(`${d.quadrant} · ${d.family}`);
-      tip.append("div").text(`${d.n_marks} mark${d.n_marks === 1 ? "" : "s"} · isolation ${fmt3(d.isolation)}${d.rank ? " · rank " + d.rank : ""}`);
+      tip.append("div").text(`${rankText(d)} · ${marksText(d)}`);
       const bw = el.clientWidth, sx = bw / W, px = x(d.x) * sx, py = y(d.y) * sx;
       tip.style("visibility", "visible");
       const tw = tip.node().offsetWidth, th = tip.node().offsetHeight;
@@ -176,7 +179,7 @@
       a.href = `../systems/${r.slug}/`;
       a.textContent = r.title;
       const line = document.createElement("div");
-      line.textContent = `${r.eyebrow} · ${r.quadrant} · ${r.n_marks} mark${r.n_marks === 1 ? "" : "s"}${r.marks ? " (" + r.marks.replaceAll("_", " ") + ")" : ""} · isolation ${fmt3(r.isolation)}`;
+      line.textContent = `${r.eyebrow} · ${r.quadrant} · ${marksText(r)}${r.marks ? " (" + r.marks.split(" ").map((m) => m.replaceAll("_", " ")).join(", ") + ")" : ""} · ${rankText(r)}, isolation ${fmt3(r.isolation)}`;
       const parts = [a, line];
       if (r.why) { const w = document.createElement("p"); w.className = "mm-why"; w.textContent = `${r.kind}. ${r.why}`; parts.push(w); }
       const feats = document.createElement("code");
