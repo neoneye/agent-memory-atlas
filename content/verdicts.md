@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 760 reports.**
+**This page covers all 761 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6936,3 +6936,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 20,385 lines of Python outside tests, 6,005 of them the workspace, environment and reward; 13 commits, 4 – 16 October 2026; 33 pytest functions, 14 of which skip without `tinker-cookbook`; no CI; the reuse, BRIGHT and ablation tables recompute from committed rows. No marks; nothing was installed or run.
 - Study when: many questions will be asked of one fixed corpus and you want a precomputed, navigable reading surface with traceable summaries.
 - Do not copy when: memory must grow from use, absorb new documents, or be corrected after a wrong answer.
+
+### [`openmem`](../systems/openmem/)
+
+- Best idea: **trim the request, keep the transcript.** A context proxy writes every message of every request into a per-session SQLite file with FTS5 and optional vectors, drops old turns from the request without a summary, and points the model at `smart_compact_search` before it answers about what was dropped.
+- Second idea: **make the trim byte-stable.** The cut, the in-turn gap and the reasoning-strip point are stored with fingerprints, so every later request renders the same prefix until the next trim and the prompt cache keeps hitting.
+- Biggest risk: **the workspace policy has no writer.** Hooks read `~/.config/personal-memory/coding-agent.json`, nothing in the tree writes it, and a missing file allows every workspace; setup seeds `optInOnly: true` with an empty list into `~/.hindsight/coding-agent.json`, which only the indexer reads.
+- Second risk: **the session store is outside every policy.** Denied workspaces are still stored for 30 days and stay readable by session id, and compressed tool results in `blobs/` are never swept.
+- Third risk: `memory_forget` drops a whole Hindsight bank on a model-named argument; mem0 writes go in with `infer: false`, so mem0's own reconciliation never runs; correction is a new memory beside the old one.
+- Most reusable component: `cli/mcp/context-store.mjs` with `cli/mcp/context-sql-runner.mjs` — hybrid search over a verbatim session database and one model-written SELECT behind a keyword check, a read-only connection, a SQLite authorizer and a killable child process.
+- Maturity impression: Apache-2.0, 265 commits, 16 – 31 October 2026; 25,096 lines of JavaScript and Python outside tests, 2,595 of them the MCP layer in `cli/mcp/`; 55 Node test scripts, 153 proxy unittest cases and 267 indexer pytest functions, not run. No marks.
+- Study when: long coding-agent sessions lose exact values to compaction and you want a searchable record of every turn instead of a summary.
+- Do not copy when: a workspace must be kept out of memory, several people share the machine, or a wrong memory has to be removed rather than outvoted.

@@ -239,6 +239,14 @@ on how to write one.
   the old notes. The cost is that turn two onward sees the breadcrumbs only
   through conversation history.
 - **[dsh-auto-memory](../../systems/dsh-auto-memory/)** — stability bought by rounding rather than by anchoring. The injected index is ordered by importance times a recency decay counted in whole days, so a ranking that moves with use changes the text at most once a day. A read bumps its counter on disk and rebuilds the index only when it revives a hidden memory, leaving the new order for the next write (`src/store.ts:298-308`, `:432-448`). An empty store injects nothing at all.
+- **[OpenMem](../../systems/openmem/)** — the constraint applied to removal
+  rather than injection. Its context proxy adds one constant standing
+  instruction to every system prompt from the first request on, so trimming
+  never changes the cached prefix. It stores each cut, in-turn gap and
+  reasoning-strip point with fingerprints, so later requests render the same
+  bytes until the next trim. Stripping signed reasoning from each former
+  latest message as newer ones arrived rewrote the trimmed history to the
+  cache on every turn that thought, so the strip point moves only at a trim.
 
 Note that [MemOS](../../systems/memos/)'s "activation memory: KV/prefix cache" is
 a *different* mechanism — reusing model state rather than positioning text — and

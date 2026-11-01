@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-760, generated from each report's frontmatter —
+761, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-760, generated from each report's frontmatter —
+761, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-760, generated from each report's frontmatter —
+761, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 760, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 761, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-760, generated from each report's frontmatter —
+761, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 760 systems by the seven mechanisms
+filters all 761 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -24271,6 +24271,58 @@ state stay on the device that wrote them; French-keyed attribute and
 glue lists</td>
 </tr>
 <tr>
+<td><a href="../systems/openmem/"><code>openmem</code></a></td>
+<td>Two: a provider memory written through memory_add (a Hindsight bank
+item, a mem0 memory with infer false, a Cognee dataset entry), and a
+session-store row, one per content block of a proxied message, chained
+by fingerprint and kept verbatim</td>
+<td>Provider memory is delegated to one active Hindsight, mem0 or Cognee
+server, Hindsight pinned by image digest. The session store is one
+SQLite file per session in WAL mode with FTS5 over messages and lines,
+float32 vectors, and a shared blobs directory of full tool results</td>
+<td>Provider recall is the provider's, reached by bank. The session
+store runs FTS5 BM25 fused by reciprocal rank with brute-force cosine
+over embedded heads, or a regex scan, over up to 20 sessions registered
+to the same repository, plus one read-only SELECT under a SQLite
+authorizer</td>
+<td>SessionStart and prompt hooks recall; the Stop hook retains up to
+12,000 characters of new transcript text per turn into the project bank,
+async on Hindsight. The proxy writes every message of every request it
+handles into the session store before forwarding; agents call memory_add
+directly</td>
+<td>No update verb. memory_forget deletes a mem0 memory by id or drops a
+whole Hindsight bank, and is refused on Cognee; the skill tells agents
+to correct by adding a new memory. The indexer deletes documents whose
+source file disappeared. Session files expire after 30 days; blobs never
+do</td>
+<td>A bank string resolved from the workspace's git root through
+index.yml, then two JSON mappings, then coding-agent:: plus the
+repository name. Hooks pass it; the memory_* tools take any bank the
+model names. Session reads default to sessions registered under the same
+repository and accept any explicit session id</td>
+<td>A stdio MCP server with 19 tools, session hooks for Claude Code,
+Codex and Cursor, plugins for OpenCode 1 and 2, a LiteLLM pre-call hook
+as context proxy, an indexer container, a setup wizard and a shipped
+skill</td>
+<td>The indexer polls git repositories and watches vaults and note
+trees, retaining changed documents and deleting vanished ones; it turns
+Hindsight auto-consolidation off on banks it prepares. Session rows are
+embedded in the background, trimmed rows first; a daily sweep deletes
+expired session files</td>
+<td>None as state. Recalled text is wrapped in an escaped untrusted-data
+frame on every injection path, and the trim pointer tells the model to
+search before answering about removed turns</td>
+<td>A verbatim, searchable record of every proxied turn instead of a
+lossy summary, with a byte-stable trim; defence in depth on
+model-written SQL; one recall frame shared by every injection path;
+per-cell benchmark means from which both README headlines recompute</td>
+<td>The hook access policy is read from a file nothing in the tree
+writes, while setup seeds an opt-in list into a second file only the
+indexer reads; the session store ignores the policy; memory_forget can
+drop a whole Hindsight bank; mem0 writes skip extraction; blobs outlive
+the TTL</td>
+</tr>
+<tr>
 <td><a href="../systems/openmemory/"><code>openmemory</code></a></td>
 <td>An immutable, content-addressed <code>HydroNode</code> with a facet,
 a world, provenance, a reasoning contract and five timestamps; mutable
@@ -34029,7 +34081,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>68 of 760:</em> <a
+<p><em>68 of 761:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -34101,7 +34153,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>193 of 760:</em> <a
+<p><em>193 of 761:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -34301,7 +34353,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>127 of 760:</em> <a
+<p><em>127 of 761:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -34436,7 +34488,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>319 of 760:</em> <a
+<p><em>319 of 761:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -34770,7 +34822,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>258 of 760:</em> <a
+<p><em>258 of 761:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -35038,7 +35090,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>96 of 760:</em> <a
+<p><em>96 of 761:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -35138,7 +35190,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>487 of 760:</em> <a
+<p><em>487 of 761:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -35660,7 +35712,7 @@ href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
 487 repositories of
-760 assert that particular material must
+761 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -35733,7 +35785,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 760 is the real figure for the second kind, and
+of 761 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

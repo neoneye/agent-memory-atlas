@@ -388,6 +388,15 @@ day. A read bumps its counter on disk and rebuilds the index only when
 it revives a hidden memory, leaving the new order for the next write
 (<code>src/store.ts:298-308</code>, <code>:432-448</code>). An empty
 store injects nothing at all.</li>
+<li><strong><a href="../../systems/openmem/">OpenMem</a></strong> — the
+constraint applied to removal rather than injection. Its context proxy
+adds one constant standing instruction to every system prompt from the
+first request on, so trimming never changes the cached prefix. It stores
+each cut, in-turn gap and reasoning-strip point with fingerprints, so
+later requests render the same bytes until the next trim. Stripping
+signed reasoning from each former latest message as newer ones arrived
+rewrote the trimmed history to the cache on every turn that thought, so
+the strip point moves only at a trim.</li>
 </ul>
 <p>Note that <a href="../../systems/memos/">MemOS</a>'s "activation
 memory: KV/prefix cache" is a <em>different</em> mechanism — reusing

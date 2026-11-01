@@ -397,6 +397,20 @@ Server</a> and <a href="../../systems/openviking/">OpenViking</a> — have
 far richer internal scope and lifecycle models than the interfaces
 mounting them can express, which is the clearest evidence that the
 contract, not the backend, is the limiting factor.</p>
+<p><strong><a href="../../systems/openmem/">OpenMem</a> is the contract
+seen from the agent's side, and it shows what a facade cannot
+normalise.</strong> It is not a host interface but a set of
+<code>memory_*</code> MCP tools that route to whichever of Hindsight,
+mem0 or Cognee is active, so the agent keeps the same verbs across a
+provider switch. Scope crosses as a <code>bank</code> string the model
+supplies. Deletion crosses under one name at three granularities:
+<code>memory_forget</code> deletes one mem0 memory by id, drops an
+entire Hindsight bank, and is refused on Cognee. Semantics do not cross
+at all. mem0 is called with <code>infer: false</code>, so its
+reconciliation never runs, and Cognee writes stay invisible to graph
+search until <code>cognify</code>. A stable verb over providers whose
+delete, update and visibility differ is a stable name, not a stable
+behaviour.</p>
 <h3 id="the-vendor-neutral-contract-nobody-signed-up-for">The
 vendor-neutral contract nobody signed up for</h3>
 <p>Every interface above is a host's, and each was designed by people

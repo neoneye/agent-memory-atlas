@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 760 reports.</strong></p>
+<p><strong>This page covers all 761 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -31686,6 +31686,49 @@ want a precomputed, navigable reading surface with traceable
 summaries.</li>
 <li>Do not copy when: memory must grow from use, absorb new documents,
 or be corrected after a wrong answer.</li>
+</ul>
+<h3 id="openmem"><a
+href="../systems/openmem/"><code>openmem</code></a></h3>
+<ul>
+<li>Best idea: <strong>trim the request, keep the transcript.</strong> A
+context proxy writes every message of every request into a per-session
+SQLite file with FTS5 and optional vectors, drops old turns from the
+request without a summary, and points the model at
+<code>smart_compact_search</code> before it answers about what was
+dropped.</li>
+<li>Second idea: <strong>make the trim byte-stable.</strong> The cut,
+the in-turn gap and the reasoning-strip point are stored with
+fingerprints, so every later request renders the same prefix until the
+next trim and the prompt cache keeps hitting.</li>
+<li>Biggest risk: <strong>the workspace policy has no writer.</strong>
+Hooks read <code>~/.config/personal-memory/coding-agent.json</code>,
+nothing in the tree writes it, and a missing file allows every
+workspace; setup seeds <code>optInOnly: true</code> with an empty list
+into <code>~/.hindsight/coding-agent.json</code>, which only the indexer
+reads.</li>
+<li>Second risk: <strong>the session store is outside every
+policy.</strong> Denied workspaces are still stored for 30 days and stay
+readable by session id, and compressed tool results in
+<code>blobs/</code> are never swept.</li>
+<li>Third risk: <code>memory_forget</code> drops a whole Hindsight bank
+on a model-named argument; mem0 writes go in with
+<code>infer: false</code>, so mem0's own reconciliation never runs;
+correction is a new memory beside the old one.</li>
+<li>Most reusable component: <code>cli/mcp/context-store.mjs</code> with
+<code>cli/mcp/context-sql-runner.mjs</code> — hybrid search over a
+verbatim session database and one model-written SELECT behind a keyword
+check, a read-only connection, a SQLite authorizer and a killable child
+process.</li>
+<li>Maturity impression: Apache-2.0, 265 commits, 16 – 31 October 2026;
+25,096 lines of JavaScript and Python outside tests, 2,595 of them the
+MCP layer in <code>cli/mcp/</code>; 55 Node test scripts, 153 proxy
+unittest cases and 267 indexer pytest functions, not run. No marks.</li>
+<li>Study when: long coding-agent sessions lose exact values to
+compaction and you want a searchable record of every turn instead of a
+summary.</li>
+<li>Do not copy when: a workspace must be kept out of memory, several
+people share the machine, or a wrong memory has to be removed rather
+than outvoted.</li>
 </ul>
         </article>
       </div>

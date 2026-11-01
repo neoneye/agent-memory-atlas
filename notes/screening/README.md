@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 760 of 760 screened at the report's current pin.**
+**Progress: 761 of 761 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 360 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 401 |
-| Repositories with build-time execution (`EXEC`) | 557 |
+| Repositories with an auto-run surface (`RUNS`) | 361 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 402 |
+| Repositories with build-time execution (`EXEC`) | 558 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -291,6 +291,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |
 | [`openkb`](../../content/systems/openkb.md) | `.claude-plugin/` |
 | [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
+| [`openmem`](../../content/systems/openmem.md) | `server.json` |
 | [`opensre`](../../content/systems/opensre.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
 | [`openviking`](../../content/systems/openviking.md) | `.claude-plugin/` |
 | [`orgtree`](../../content/systems/orgtree.md) | `.gitmodules` |
