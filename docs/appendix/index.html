@@ -15372,6 +15372,83 @@ accounts <code>JensLehmann</code> and <code>S6savahd</code>; orgs
 <code>NIMI-research</code>, <code>TIBHannover</code>,
 <code>SmartDataAnalytics</code> and <code>tu-dresden</code>. The screen
 parsed nothing in this non-git tree; nothing was installed or run.</li>
+<li><strong><code>fabio-rovai/open-ontologies</code> was examined and
+has no report: its triple store holds the ontology a user ships, which
+an agent edits like source code, and nothing in it records what an agent
+learned.</strong> MIT, about 97,000 lines of Rust under
+<code>src/</code> in a tree of 2,917 tracked files, read from a shallow
+clone at <a
+href="https://github.com/fabio-rovai/open-ontologies/commit/cefe5997d04553ac495873e8aa1046c1d6b85f7d"><code class="commit-id" title="cefe5997d04553ac495873e8aa1046c1d6b85f7d">cefe5997…</code></a>,
+a merge dated 30 October 2026. It is an MCP server and CLI that loads
+RDF/OWL into Oxigraph and puts a Terraform loop in front of changes to
+it. <code>onto_plan</code> diffs a proposed Turtle against the store
+with a blast radius, a risk score, locked-IRI violations and a
+conservativity check, and <code>onto_apply</code> writes the delta. The
+store is a working copy. <code>src/config.rs:292-295</code> makes
+<code>"memory"</code> the default, in which <em>"every restart starts
+empty"</em>, and RocksDB persistence is opt-in. The production artefact
+is the file <code>onto_save</code> writes, and the README says <em>"This
+is not an ontology editor"</em>: the tool runs on a change before it
+ships. The 23 SQLite tables the tree creates hold that loop's
+bookkeeping. They are plans, whole-store N-Quads snapshots for
+<code>onto_version</code> and <code>onto_rollback</code>, IRI locks,
+monitor watchers, an operation log, embeddings, a redaction vault, and
+calibration from accepted or dismissed lint, enforce and alignment
+findings. The rest are specifications the agent may register for the
+ontology's own planner and gates: action schemas, default laws,
+invariants and ARGOS-style policy rules. None of them holds an
+observation, a preference or a decision about a user or a task. The
+nearest thing is <code>onto_support_verdict</code>, which stores a
+model-supplied <code>supported</code>, <code>refuted</code> or
+<code>unrelated</code> per graph claim. Its only readers count verdicts
+and skip claims already judged (<code>src/support.rs:261</code>,
+<code>src/support.rs:291</code>), and nothing filters the graph on it.
+The governance is real, it sits entirely on the artefact side, and even
+there the agent holds every verb. <code>onto_plan</code>,
+<code>onto_apply</code> with a <code>force</code> mode that skips the
+monitor gate, <code>onto_rollback</code> and <code>onto_lock</code>
+share one tool surface (<code>src/server.rs:2548</code>,
+<code>src/server.rs:2612</code>, <code>src/server.rs:1051</code>,
+<code>src/server.rs:2635</code>). The <em>"Append-only audit trail of
+all lifecycle operations"</em> that <code>docs/lifecycle.md</code>
+describes is <code>lineage_events</code>, written at ten sites in
+<code>src/server.rs</code>. It records <code>apply</code> with its mode
+and no triples, and <code>onto_version</code>,
+<code>onto_rollback</code>, <code>onto_load</code> and
+<code>onto_ingest</code> write no row. The Lean, Isabelle, Rocq, Dafny
+and Aeneas directories certify inferences and checker soundness, not any
+stored belief. The paper is <a
+href="https://arxiv.org/abs/2605.09184">arXiv:2605.09184</a> (9 May
+2026), on LLM-driven ontology construction and stable-matching alignment
+over OAEI tracks, and its abstract describes no agent memory. Screened
+before reading: two auto-run surfaces, both harmless, since
+<code>.mcp.json</code> launches
+<code>./target/release/open-ontologies serve</code>, which does not
+exist without a build, and <code>.claude-plugin/plugin.json</code> is
+metadata. The screen also found three build-time execution points
+(<code>Makefile</code>, <code>python/tests/conftest.py</code>,
+<code>studio/src-tauri/build.rs</code>), 22 dependency files inside the
+cooldown with every file in the depth-1 clone dated to the tip, and 12
+floating surfaces. <code>.gitattributes</code> carries only
+<code>eol</code> rules, and <code>CLAUDE.md</code> was treated as data.
+The tree commits a 39 MB macOS binary at
+<code>studio/src-tauri/binaries/open-ontologies-aarch64-apple-darwin</code>
+and a bundled
+<code>studio/src-tauri/sidecars/agent/dist/index.js</code>, and neither
+was run. Nothing was installed or run. The searches behind the absence
+claims ran at the tree root. Tables:
+<code>git grep -n -o -E 'CREATE TABLE IF NOT EXISTS [a-z_]+' -- src</code>.
+Vocabulary:
+<code>git grep -c -i -E 'remember|recall' -- src studio/src studio/src-tauri python</code>,
+whose hits in <code>src/</code> are retrieval-metric names, and
+<code>git grep -n -i -E '\bmemor(y|ies)\b' -- src</code>, every hit
+being RAM, the storage mode or a WASM plugin's linear memory. Lineage
+writers:
+<code>git grep -n -E 'lineage\(\)\.record\(' -- src/server.rs</code>.
+Verdict readers: <code>git grep -n -E 'support_verdicts' -- src</code>.
+Studio persistence:
+<code>/usr/bin/grep -rn -E 'localStorage|sessionStorage|indexedDB' studio/src</code>,
+which returns nothing.</li>
 <li><strong><code>assafelovic/gpt-researcher</code> was examined and has
 no report: every store it writes is either a per-run index of scraped
 pages or an archive of finished reports, and no research run reads what
