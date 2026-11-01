@@ -381,6 +381,27 @@ synthesis pages; a report body names no corpus count at all.
 
 `scripts/test_site.sh` derives its expected report and pattern counts from `content/`, so it needs no count edits; only touch it when adding a new required file or invariant.
 
+## Archive the source
+
+Every report gets a copy of its source in `agent-memory-atlas-archive`, named `<owner>--<repo>` (the report's `archive_name`, which `check_archive_names.py` re-derives from `source_url`). Since 2026-11-01 that copy is a **standalone repository, not a fork**:
+
+```sh
+GITHUB_TOKEN=$(gh auth token) python3 scripts/archive_mirror.py --only <owner>/<repo>
+```
+
+Do not fork a new repository. A fork shares its parent's network, so GitHub resolves a short `#969` in the fork's commit messages to the upstream's issue, and every time the fork's branch moves, each commit naming an issue or a squash-merged pull request adds "neoneye added a commit to agent-memory-atlas-archive/… that referenced this issue" to that upstream thread. Seventeen sync runs did that across the archive before the Wenlan maintainer asked about it on wenlan-app/wenlan#969. A copy outside the network has no such link.
+
+What the script does, and what to check in its output:
+
+- **It refuses a repository whose licence does not grant redistribution** (no licence, or one it does not recognise), because a copy outside GitHub's fork mechanism is a redistribution. The fallback is `python3 scripts/archive_fork.py --only <owner>/<repo>`: a fork taken once and never synced. Creating a fork writes nothing upstream; moving it later is what does.
+- **It switches GitHub Actions off on the copy and reads that back before pushing**, so the upstream's `on: push` workflows never run in the archive organisation. It also turns off issues, projects and wiki, and tags the copy `atlas-mirror`.
+- **It pushes every branch and tag plus `refs/tags/atlas-pin-<sha>` for each pinned revision**, then reads each pin back through the API. A `failed:` line means the archive does not hold the pin. Say so in the completion summary; do not publish an `archive_name` pointing at nothing.
+- **It leaves an existing fork of the same name alone.** That fork already holds its fork-time pins.
+
+One gap is untested: a commit message that writes a full reference (`owner/repo#969`) or an issue URL still cross-references from any repository. That is rarer than a short reference, and nobody has measured it.
+
+Never run `archive_sync.py` to bring a fork up to date as part of adding or integrating a report. It refuses to move a branch without `--allow-upstream-references`, and that flag is the person's decision, not a step in this workflow.
+
 ## Build and validate
 
 From the atlas root, run:

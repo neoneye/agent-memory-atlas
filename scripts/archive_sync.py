@@ -44,10 +44,21 @@ Scope: the default branch is tracked. Every other branch is captured once, at
 fork time, and divergence in them is reported rather than followed — mirroring
 every branch of every repository is a different and much more expensive job.
 
+**Moving a fork writes into the upstream's tracker.** GitHub resolves a short
+`#969` in a fork's commit messages to the parent's issue, so every commit this
+script brings into a fork that names an issue or a squash-merged pull request
+adds "neoneye added a commit to agent-memory-atlas-archive/... that referenced
+this issue" to that upstream thread. Seventeen runs between 2026-09-13 and
+2026-10-28 did that across the archive, and the Wenlan maintainer asked about it
+on wenlan-app/wenlan#969. A run that changes anything therefore needs
+`--allow-upstream-references`; `--dry-run` does not. Repositories added from
+2026-11-01 on are standalone copies made by `archive_mirror.py`, which carry no
+such link, and this script skips them.
+
 Usage:
     python3 scripts/archive_sync.py --dry-run
-    python3 scripts/archive_sync.py
-    python3 scripts/archive_sync.py --only owner/repo
+    python3 scripts/archive_sync.py --allow-upstream-references
+    python3 scripts/archive_sync.py --allow-upstream-references --only owner/repo
 
 Set GITHUB_TOKEN with `repo` scope and write access to the organisation.
 """
@@ -190,6 +201,8 @@ def classify_parent(fork_name: str, parent: str) -> tuple[str, str | None]:
 def sync_one(fork: dict, dry_run: bool) -> dict:
     name = fork["name"]
     fork_full = f"{ORG}/{name}"
+    if fork.get("fork") is False and "atlas-mirror" in (fork.get("topics") or []):
+        return {"fork": fork_full, "status": "mirror-skipped"}
     parent = (fork.get("parent") or {}).get("full_name")
     if not parent:
         return {"fork": fork_full, "status": "no-parent"}
@@ -303,7 +316,14 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--only", action="append", default=[], metavar="FORK_NAME_OR_UPSTREAM")
     ap.add_argument("--sleep", type=float, default=0.3)
+    ap.add_argument("--allow-upstream-references", action="store_true",
+                    help="move fork branches even though each moved commit that names an "
+                         "issue or pull request appears in that upstream thread")
     args = ap.parse_args()
+    if not args.dry_run and not args.allow_upstream_references:
+        sys.exit("Moving a fork's branch adds a cross-reference line to every upstream issue or "
+                 "pull request its new commits name (see the docstring). Pass --dry-run to "
+                 "look, or --allow-upstream-references to accept that.")
 
     forks = paged(f"{API}/orgs/{ORG}/repos?type=all")
     if not forks:

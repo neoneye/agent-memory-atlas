@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """Fork every repository the atlas cites into the archive organisation.
 
+**Superseded for new repositories on 2026-11-01 by `archive_mirror.py`,** which
+makes a standalone copy instead: a fork's commit messages cross-reference the
+upstream's issues whenever its branch moves, and a copy's do not. This script
+remains the fallback for a repository whose licence does not grant
+redistribution, and such a fork is taken once and never synced — creating it
+writes nothing upstream; `archive_sync.py` moving it later is what does.
+
 Every claim in this atlas is pinned to a commit in somebody else's repository,
 which means every claim depends on that repository continuing to exist. It does
 not always. The 2026-09-09 drift run found `Renkasha/Sovereign` returning 404 on

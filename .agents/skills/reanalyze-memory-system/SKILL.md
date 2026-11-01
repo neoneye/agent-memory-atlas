@@ -203,9 +203,10 @@ not see them; read section 10 for them by hand.
 **The code is gone.** The upstream deleted the implementation, or rewrote history
 past it. Do not re-pin: a pin to a tree with nothing in it makes every section of
 the report false, and the reading it records was of real code. Keep `revision`
-where it is, fetch the pinned commit from the atlas's archive fork by full sha
+where it is, fetch the pinned commit from the atlas's archive copy by full sha
 (`git init` a scratch dir, `git remote add`, `git fetch --depth 1 <remote> <sha>`
-— the fork keeps the objects after upstream drops them), and re-read from there.
+— the archive keeps the objects after upstream drops them; a standalone copy
+also carries the tag `atlas-pin-<sha>`), and re-read from there.
 Bump `analyzed_at` if you actually re-read the whole report, and leave the
 screening ledger record alone: it is keyed to the pinned revision, which has not
 moved. Say the deletion plainly and early in the body — a reader who goes looking
@@ -311,6 +312,31 @@ Then add what the report cannot get from the claim alone: whether a committed
 test covers the property, whether the reporter's paraphrase matches the code
 they quoted, and what the adjacent unasserted case is. Credit the reporter in
 place, with a link to the issue. Remove the open question the finding answers.
+
+## Archive the new pin
+
+A re-pin moves `revision`, and the archive should hold the new commit too. What
+to do depends on what the archive holds, which the repository's `fork` field
+says (`gh api repos/agent-memory-atlas-archive/<owner>--<repo> --jq .fork`):
+
+- **A standalone copy** (`false`, topic `atlas-mirror`): run
+  `GITHUB_TOKEN=$(gh auth token) python3 scripts/archive_mirror.py --only <owner>/<repo>`.
+  It pushes `refs/tags/atlas-pin-<sha>` for the new pin, pushes branches
+  without force so a history upstream rewrote stays in the copy, and reads the
+  pin back.
+- **A fork** (`true`, every repository archived before 2026-11-01): do not sync
+  it. Moving a fork's branch adds a cross-reference line to every upstream issue
+  and pull request the new commits name, and `archive_sync.py` refuses to move
+  one without `--allow-upstream-references`. The old pins stay in the fork. The
+  new pin is held upstream only. Say that in the completion summary, and leave the
+  decision to sync that one fork to the person.
+
+If the upstream changed owner or name, `archive_name` has to follow
+`source_url`, so rename the archive repository to the new `<owner>--<repo>`
+(`gh api -X PATCH repos/agent-memory-atlas-archive/<old> -f name=<new>`). GitHub
+redirects the old name, a fork keeps its saved branches, and the History entry
+records the rename. Wenlan's 2026-09-13 and 2026-11-01 entries are the
+precedent.
 
 ## A project that renamed itself
 

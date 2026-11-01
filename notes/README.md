@@ -8,6 +8,13 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-11-01-archive-copies-not-forks.md](2026-11-01-archive-copies-not-forks.md) —
+  why repositories added to the archive from 2026-11-01 are standalone copies
+  made by `archive_mirror.py`, not forks: moving a fork's branch put a
+  cross-reference line into every upstream issue and pull request its new commits
+  named (wenlan-app/wenlan#969). What the copy script checks, the
+  `--allow-upstream-references` guard on `archive_sync.py`, and what is deferred:
+  converting the existing forks, full references, and following upstream heads.
 - [2026-10-18-bdi-against-the-marks.md](2026-10-18-bdi-against-the-marks.md) —
   the belief–desire–intention model laid over the atlas's marks and patterns.
   Beliefs map to trust state and resolution, intentions to the prospective-memory
