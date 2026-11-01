@@ -47,7 +47,11 @@ issue tracker, which is switched off. The script:
   organisation. Until then a re-pin of a forked repository leaves the new pin
   held upstream only, unless the person chooses to sync that one fork.
 - **Full references.** A commit message that writes `owner/repo#969` or an issue
-  URL cross-references from any repository, copy or fork. Not measured.
+  URL cross-references from any repository, copy or fork, and the atlas's own
+  repository is one: commit `93cb59a69e499703eef3e44c33bdae5decb3799b`, which made
+  this decision, wrote the Wenlan reference in full in its message and added a
+  line to that issue at 01:06:42 UTC on 2026-11-01. The skill now forbids it.
+  How often upstream commit messages do it has not been measured.
 - **Keeping copies current.** `archive_mirror.py` adds pins when it is re-run;
   nothing follows an upstream's default branch between re-reads. That is the
   part of the old sync this decision gives up.

@@ -400,6 +400,8 @@ What the script does, and what to check in its output:
 
 One gap is untested: a commit message that writes a full reference (`owner/repo#969`) or an issue URL still cross-references from any repository. That is rarer than a short reference, and nobody has measured it.
 
+The atlas's own commit messages are such a repository. **Never write `owner/repo#N`, or a URL to an upstream issue or pull request, in a commit message here**: it adds a line to that upstream thread the moment it is pushed. The commit that introduced this section wrote `wenlan-app/wenlan#969` in its message and put a line on that issue within a minute. Name the project and the number in words instead ("Wenlan's issue 969"). File contents, the published pages and the notes do not cross-reference; commit messages, issues, pull requests and comments do.
+
 Never run `archive_sync.py` to bring a fork up to date as part of adding or integrating a report. It refuses to move a branch without `--allow-upstream-references`, and that flag is the person's decision, not a step in this workflow.
 
 ## Build and validate
