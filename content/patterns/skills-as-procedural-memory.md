@@ -194,6 +194,8 @@ It also ships the test this page asks for. `test_an_unrelated_query_gets_nothing
 
 [Cindy](../../systems/cindy/) holds a one-off approach back until it recurs. The nightly routine puts a skill draft first seen in an owner conversation into a candidate list that no prompt loads, promotes it only when a later night cites a new occurrence as evidence or a person presses promote, and drops it for good when a person declines (`apps/desktop/src/main/maker-ipc/botNightlyLearning.ts:532-575`, `:634-647`). The gate is recurrence, not execution: a promoted skill has been seen twice and never run against an outcome, and the teammate's own `save_teammate_skill` tool writes skills directly when the owner asks.
 
+[dsh-superagent](../../systems/dsh-superagent/) keeps team skills as configuration a person writes, and versions it. Skills, team sections and overrides of built-in parts save together as one immutable numbered snapshot with its predecessor, timestamp and origin, and a rollback is a new revision (`src/app/versions.ts:18-29`, `src/app/prompts.ts:202-215`). Every model request registers the current revision's skills and appends that revision to the Session's own record, which gates which old revisions a worker may read (`src/app/sessions.ts:329-338`). Nothing distils a skill from the work: the only writers are the panel and the main Session's `orchestrator_prompts_save`, and the second is gated by its tool description alone, so the router that reads untrusted messages can rewrite the skills every Session loads.
+
 ## Tests to require
 
 - Store a skill, then execute the retrieved copy in a fresh context and assert it still succeeds — generality, not just recorded success.

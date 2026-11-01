@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 759 reports.</strong></p>
+<p><strong>This page covers all 760 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -31595,6 +31595,50 @@ chain over every action.</li>
 <li>Do not copy when: the agent must find facts among thousands, several
 people share one agent and must not see each other's messages, or
 forgetting must be provable.</li>
+</ul>
+<h3 id="dsh-superagent"><a
+href="../systems/dsh-superagent/"><code>dsh-superagent</code></a></h3>
+<ul>
+<li>Best idea: <strong>version what the agents are told, and record who
+ran under which version.</strong> Every save of the team sections, team
+skills and part overrides is an immutable numbered snapshot with its
+predecessor, timestamp and origin, a rollback is a new revision, and
+each Session's list of revisions it ran under decides which old versions
+a worker may read.</li>
+<li>Second idea: <strong>bind the worker's scope when its tools are
+built.</strong> The ticket id is captured in the closure that builds the
+worker's <code>orchestrator_read</code>, and each resource checks it
+against stored Subscriptions, follows and Inputs, so no argument can
+widen what a worker reads of the shared ledger.</li>
+<li>Biggest risk: <strong>the router can rewrite its own instructions
+and admission list.</strong> <code>orchestrator_prompts_save</code> and
+<code>orchestrator_settings_save</code> sit on the main Session's tool
+surface; the only code guard refuses non-panel changes to the execution
+environment and Source accounts, so team skills, allowed lists, rules
+and the accept mode save from the tool behind a prose-only
+explicit-request rule.</li>
+<li>Second risk: <strong>nothing forgets.</strong> No path deletes a
+Trigger, Thread, Decision, Ticket or prompt revision, and report
+previews and skills reach later model calls with no age or state.</li>
+<li>Third risk: the worker boundary binds the model-facing tool only;
+workers run unapproved shell commands as the operator's user, beside the
+state directory that holds the SQLite file.</li>
+<li>Most reusable component: <code>src/app/versions.ts</code> with
+<code>src/app/sessions.ts</code> <code>promptFor</code> and
+<code>mayRead</code> — numbered configuration snapshots behind a
+pointer, plus a per-Session record of the revisions it ran under.</li>
+<li>Maturity impression: MIT research prototype, one commit by the
+DeepSeek Harness Team on 31 October 2026; 15,587 lines of TypeScript in
+<code>src/</code>, 2,021 of them the Store, prompts, versions,
+resources, settings, sessions and tool registries; 59 Vitest spec files
+holding 794 cases, not run. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you are building a resident agent whose workers share
+one ledger and must each see only their own work item, or want an
+auditable history of the instructions agents ran under.</li>
+<li>Do not copy when: the agent that reads untrusted messages must not
+change its own instructions, people may ask for their messages to be
+forgotten, or you need memory the agent learns from.</li>
 </ul>
 <h3 id="librarian-agents"><a
 href="../systems/librarian-agents/"><code>librarian-agents</code></a></h3>

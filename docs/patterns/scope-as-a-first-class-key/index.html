@@ -1530,6 +1530,21 @@ from other channels
 <code>created_by</code> is a real per-user predicate on three routes,
 and the SQL predicate those routes cite as their first layer has no
 caller. <code>scope_enforced</code> is withheld.</p>
+<p><strong><a href="../../systems/dsh-superagent/">dsh-superagent</a>
+binds the scope when it builds the tools.</strong> Each worker's
+<code>orchestrator_read</code> closes over its Ticket's id
+(<code>src/app/runtime.ts:124</code>,
+<code>src/app/tools/executor.ts:23-27</code>), and every worker-readable
+resource checks it against the stored Subscriptions, follows and Inputs,
+stripping other Tickets and Decisions from a shared thread
+(<code>src/app/resources.ts:97-104</code>, <code>:133-147</code>,
+<code>:235-239</code>). A test accepts two Tickets on one thread and
+asserts the worker's pages lack the other Ticket and the Decision while
+the main Session's pages of the same records carry both
+(<code>tests/tools.spec.ts:445-463</code>). The predicate binds the
+model-facing tool only: the same worker runs unapproved shell commands
+as the operator's user beside the SQLite file, and no case reads another
+Ticket's <code>ticket/</code> page.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

@@ -554,6 +554,19 @@ declines
 promoted skill has been seen twice and never run against an outcome, and
 the teammate's own <code>save_teammate_skill</code> tool writes skills
 directly when the owner asks.</p>
+<p><a href="../../systems/dsh-superagent/">dsh-superagent</a> keeps team
+skills as configuration a person writes, and versions it. Skills, team
+sections and overrides of built-in parts save together as one immutable
+numbered snapshot with its predecessor, timestamp and origin, and a
+rollback is a new revision (<code>src/app/versions.ts:18-29</code>,
+<code>src/app/prompts.ts:202-215</code>). Every model request registers
+the current revision's skills and appends that revision to the Session's
+own record, which gates which old revisions a worker may read
+(<code>src/app/sessions.ts:329-338</code>). Nothing distils a skill from
+the work: the only writers are the panel and the main Session's
+<code>orchestrator_prompts_save</code>, and the second is gated by its
+tool description alone, so the router that reads untrusted messages can
+rewrite the skills every Session loads.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Store a skill, then execute the retrieved copy in a fresh context

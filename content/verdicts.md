@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 759 reports.**
+**This page covers all 760 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6912,6 +6912,18 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, 6,310 commits by 14 contributors, 22 April 2025 – 1 November 2026; 235,913 lines of Python in `ciris_engine/`, 3,645 of them the memory core, over a Rust engine pinned through a wheel; 14,113 pytest functions; no retrieval-quality eval. One mark: `audit_log`.
 - Study when: you are building an agent whose identity or policy must change only with a person's verified approval, or want a signed hash chain over every action.
 - Do not copy when: the agent must find facts among thousands, several people share one agent and must not see each other's messages, or forgetting must be provable.
+
+### [`dsh-superagent`](../systems/dsh-superagent/)
+
+- Best idea: **version what the agents are told, and record who ran under which version.** Every save of the team sections, team skills and part overrides is an immutable numbered snapshot with its predecessor, timestamp and origin, a rollback is a new revision, and each Session's list of revisions it ran under decides which old versions a worker may read.
+- Second idea: **bind the worker's scope when its tools are built.** The ticket id is captured in the closure that builds the worker's `orchestrator_read`, and each resource checks it against stored Subscriptions, follows and Inputs, so no argument can widen what a worker reads of the shared ledger.
+- Biggest risk: **the router can rewrite its own instructions and admission list.** `orchestrator_prompts_save` and `orchestrator_settings_save` sit on the main Session's tool surface; the only code guard refuses non-panel changes to the execution environment and Source accounts, so team skills, allowed lists, rules and the accept mode save from the tool behind a prose-only explicit-request rule.
+- Second risk: **nothing forgets.** No path deletes a Trigger, Thread, Decision, Ticket or prompt revision, and report previews and skills reach later model calls with no age or state.
+- Third risk: the worker boundary binds the model-facing tool only; workers run unapproved shell commands as the operator's user, beside the state directory that holds the SQLite file.
+- Most reusable component: `src/app/versions.ts` with `src/app/sessions.ts` `promptFor` and `mayRead` — numbered configuration snapshots behind a pointer, plus a per-Session record of the revisions it ran under.
+- Maturity impression: MIT research prototype, one commit by the DeepSeek Harness Team on 31 October 2026; 15,587 lines of TypeScript in `src/`, 2,021 of them the Store, prompts, versions, resources, settings, sessions and tool registries; 59 Vitest spec files holding 794 cases, not run. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you are building a resident agent whose workers share one ledger and must each see only their own work item, or want an auditable history of the instructions agents ran under.
+- Do not copy when: the agent that reads untrusted messages must not change its own instructions, people may ask for their messages to be forgotten, or you need memory the agent learns from.
 
 ### [`librarian-agents`](../systems/librarian-agents/)
 
