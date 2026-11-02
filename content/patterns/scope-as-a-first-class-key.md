@@ -342,9 +342,10 @@ which pointers a read may consult and an `Admit` naming which payloads it may
 return, decided by the payload's own project stamp rather than by which pointer
 produced it. The comment on the deletion says why a boolean was the wrong
 type: *"fallback named a mechanism while callers reasoned about a policy."*
-The rule stops at the agent's own tools: the shipped MCP recall and brief
-tools take a cross-project slug or `all_projects` from the model, refused only
-under a host flag that is off by default, which is why Daimon carries no
+The rule stops at the agent's shell. The MCP tools send every selector to one
+decision that refuses a foreign project unless the host grants it, but the CLI
+grants every request off tenant scope, and the shipped skill tells the agent to
+pass `--all-projects` from a shell — which is why Daimon carries no
 `scope_enforced` mark.
 
 Its handling of the permitted fallback is the second idea. Rather than printing

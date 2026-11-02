@@ -7,20 +7,20 @@ page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
 archive_name: "Daily-Nerd--daimon"
-revision: 7aca1e946a12bd778a260e1a28ef81db24579cf9
-revision_url: https://github.com/Daily-Nerd/daimon/commit/7aca1e946a12bd778a260e1a28ef81db24579cf9
-analyzed_at: 2026-10-22
+revision: b6c46c5ccac07b243a8018902b5e4cda5b695d2f
+revision_url: https://github.com/Daily-Nerd/daimon/commit/b6c46c5ccac07b243a8018902b5e4cda5b695d2f
+analyzed_at: 2026-11-02
 licence: "Apache-2.0"
-size: "244,410 lines of Python in 587 files: 66,909 in the plugin/daimon_briefing/ package, 152,358 under plugin/tests/, the rest in hook scripts, a viewer and research/ experiments; 2,726 lines of TypeScript and JavaScript"
-activity: "809 commits on main, 769 by one author, 33 by the github-actions bot and 7 by a commit-signing bot, 3 July – 21 October 2026 (UTC)"
-tests: "9,315 test functions in 355 files under plugin/tests/, counted by `def test_` lines; none run for this reading"
+size: "256,023 lines of Python in 608 files: 69,935 in the plugin/daimon_briefing/ package, 160,822 under plugin/tests/, the rest in hook scripts, a viewer and research/ experiments; 2,741 lines of TypeScript and JavaScript; release 0.63.1"
+activity: "1,015 commits on main, 965 by one author, 3 by a second contributor and the rest by the github-actions, commit-signing and Dependabot bots, 3 July – 31 October 2026 (UTC)"
+tests: "9,732 test functions in 373 files under plugin/tests/, counted by `def test_` lines; none run for this reading"
 capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
-  tombstone: "checkpoint store, write boundary and forget path | plugin/daimon_briefing/store.py:1864-1884, :1992, :3313-3333, plugin/daimon_briefing/policy.py:95-108, :343-363, plugin/daimon_briefing/forget.py:145-182, :237-259, plugin/daimon_briefing/cli/lifecycle.py:812-854 | `daimon forget` appends, in one write, a tombstone on the item id, on every sibling id that held the value and on a random key ref of its own, each carrying a content hash and never the text, before the rewrite; `append_event` refuses a `forgotten:` status from any other caller. Every `write_checkpoint` reads the events ledger once through `admission_gate`, refuses the admission when that ledger cannot be proven instead of reading it as holding no tombstones, and runs `policy.admit_checkpoint`, whose `drop_forgotten` removes any item whose canonical text hashes into the standing set before it is stamped, signed, indexed or mirrored. A reopen on an item id cannot reach the key ref, so only `daimon unforget` lifts a forget: it requires a terminal, has no agent channel, appends a lift on every standing ref and restores nothing. The index build and the read view withhold a forgotten value or id, and the supersede-candidate emitter skips values already in the ledger. A ledger append — a refutation, a quarantine's reason, a request's ask or title — does not consult the set at write; every read of such a row withholds a forgotten whole value through the view | plugin/tests/test_forget_reassertion_e2e.py:81, plugin/tests/test_forget_tombstones.py:144, plugin/tests/test_write_checkpoint_posture.py:68, plugin/tests/test_unforget.py:65, plugin/tests/test_forget_refutations.py, plugin/tests/test_recall_judged.py:101"
-  trust_state: "human quarantine ledger over checkpoint values, applied by one read view on every surface | plugin/daimon_briefing/trust.py:48-49, :288-361, plugin/daimon_briefing/view.py:420-439, :896-925, :1476, :1696, :2064-2085, plugin/daimon_briefing/briefing.py:773-841, plugin/daimon_briefing/recall.py:1220-1279, :1577-1613, plugin/daimon_briefing/inspector.py:450, plugin/daimon_briefing/refutation_guard.py:22-94, plugin/daimon_briefing/checks_sync.py:69-110, plugin/daimon_ui/reader.py:1-9 | `trust.jsonl` folds to `candidate`, `active`, `dismissed` or `released` per kind, project and value key, and `active` withholds. `view.classify` returns `Visible` or a `Withheld` that carries no text, closed first, then forgotten, then a quarantine of the field's kind. Every briefing host opens the checkpoint through it (`briefing.prepare`); the recall build judges each row before inserting it and every hit is judged again; `why`, `blame`, `diff` and `/api/why` answer through `view.lineage` and `view.lookup_many`; `resolve`, `forget` and `reverify` bind through `view.match`; every ledger prose printer, the MCP `requests_inbox` tool included, prints through `view.masked`; the refutation guard and `refute search` match only the values the view judged visible, and the armed-check manifest is built from rulings read through it, so a withheld anchor or check pattern fires nothing and arms nothing; an unreadable trust ledger withholds every item. The project's read census drives every CLI leaf, MCP tool, viewer route and Hermes hook against sentinel values and asserts that none leaks, with a person at a terminal reading a quarantine's evidence as the declared exemption. Only a human channel reaches `active`, and a release returns the value. An active quarantine is also published to the team sidecar as a hash-only row, and a teammate's claim withholds in every snapshot on the reader's machine. Supersession and contradiction stay rank-only | plugin/tests/test_view_classify.py, plugin/tests/test_recall_judged.py:94, :118, plugin/tests/test_recall.py:2139, :2183, plugin/tests/test_mcp_server.py:530, plugin/tests/test_hooks.py:696, plugin/tests/test_read_sentinel.py:743, plugin/tests/test_foreign_quarantines.py:79, plugin/tests/test_enforcement_reads_through_view.py, plugin/tests/test_refute_search_masking.py"
-  audit_log: "events.jsonl, with forget's whole-value redaction as its one documented carve-out | plugin/daimon_briefing/store.py:3346-3366, :3368-3396, :3467-3545, plugin/daimon_briefing/forget.py:145-182, plugin/daimon_briefing/jsonl.py:208-252, :718-757 | `append_event` and `append_events` write one row per lifecycle event — `ts`, `kind`, `item_ref`, `status`, `source` — through `_event_row`, the ledger's one row builder, and `jsonl.append_lines`, which judges the ledger's health under its lock before each write. No production path removes, adds or reorders a parsed row. Limits: the one exception is `scrub_event_fields` (#599), called only by forget after its tombstone lands, which replaces an `item_text`, `status` or `note` whose whole value folds to the forgotten key with a marker, under the lock `append_event` takes, and keeps every row and every other byte. The tombstone rows are the record of that redaction: they carry the content key, a timestamp and, on the id row, the reason, while their `source` is the constant `cli` and they name no channel or author. The corroboration docstring's *\"append-only and never rewritten\"* (`capture.py:299`) is contradicted by that carve-out, which `append_event`'s own docstring documents. Forget drops every row of a matched refutation, amendment, request or relation record and redacts a quarantine's prose in place; those are memory ledgers, not the mutation log | plugin/tests/test_store.py, plugin/tests/test_forget_tombstones.py, plugin/tests/test_ledger_split_rows.py, plugin/tests/test_ledger_repair.py, plugin/tests/test_deletion_durability_protocol.py"
-  human_review: "refutation, relation and quarantine ledgers, reverify and unforget — authority observed from the channel, with a flag that can only narrow it | plugin/daimon_briefing/channels.py:41-46, plugin/daimon_briefing/refutations.py:74, plugin/daimon_briefing/cli/_ledger.py:253-268, plugin/daimon_briefing/cli/ruling.py:180-183, plugin/daimon_briefing/relations.py:60-62, plugin/daimon_briefing/trust.py:492-500, plugin/daimon_briefing/cli/trust.py:43-60, plugin/daimon_briefing/cli/lifecycle.py:40-52 | `CHANNEL_AUTHORITY` maps five channels to three authorities — `cli-agent` to agent, `cli-tty`, `ui` and `signed` to human, `mechanical` to mechanical — and activation, overturn and ruling ratification require a human one. What makes it a producer test rather than a label is `_refute_channel`, and its docstring is the clearest statement of the rule this atlas has found in any tree: *\"`--by agent` is a self-declaration of the NARROWER authority … A human path has to show an interactive terminal, and the CLI can mint nothing stronger: `ui` and `signed` are in-process-only, because a channel an agent can reach by shelling out is the deleted `--by human` renamed.\"* So the only flag available lowers your authority; the human path is the absence of that flag plus `sys.stdin.isatty()`, refused with a message naming the missing terminal; and the two strongest channels cannot be reached from a shell at all, by deletion of the flag that once could. `CHANNEL_LABEL` then renders each tier honestly — `agent-proposed`, `ratified (interactive)`, `ratified (ui)`, `ratified (signed)` — never *\"human-ratified\"* unqualified. The fold holds the rule a second time on its own: a `ratified` row that applies a pending agent revision to an already-active ruling requires a human channel *in the fold*, not only at the writer, *\"because the fold is the authority for a row that reaches the ledger another way\"*, so a correctly pinned agent-channel row stays inert and arms nothing. The quarantine ledger repeats the shape on the four shared channels: `trust propose --by agent` folds to `candidate` and withholds nothing, `confirm`, `dismiss`, `release` and `republish` raise unless the channel is human, the fold skips a lifecycle row from any other channel, and no MCP tool writes the ledger. The limit is the general shell, which the mark does not count against: an agent that can run arbitrary commands can allocate a pseudo-terminal or append a row naming a human channel to the file itself, and the project names that ceiling — *\"Nothing local is unforgeable\"* | plugin/tests/test_refutations.py:71-74 (`test_agent_cannot_self_ratify` asserts both the `requires a human channel` refusal and that `records()` is still empty), plugin/tests/test_refutation_authority.py, plugin/tests/test_trust.py:121-125, :440, plugin/tests/test_trust_cli.py:58-71, plugin/tests/test_unforget.py:65"
-  negative_eval: "refutation guard read path, the judged recall index, the quarantine read paths, the enforcement readers and the read census | plugin/tests/test_refutations.py, plugin/tests/test_recall_judged.py, plugin/tests/test_recall.py, plugin/tests/test_mcp_server.py, plugin/tests/test_read_sentinel.py, plugin/tests/test_enforcement_reads_through_view.py | `test_guard_fires_on_exact_issue_anchor_not_broad_topic` asserts a broad topical query must not surface an active guard; `test_a_quarantined_row_is_never_inserted` and `test_a_forgotten_value_is_never_inserted` assert the index holds exactly the visible row and the other withheld one, and `test_no_withheld_byte_reaches_the_index_file` reads the database bytes; `test_search_notices_a_quarantine_confirmed_after_the_index_was_built` asserts the hit before the confirmation and its absence after; `test_brief_tool_withholds_a_quarantined_value` asserts the MCP brief omits the value and renders an unrelated item; `test_the_drive_runs_and_nothing_unexpected_leaks` asserts no sentinel reaches any output or written byte of any read surface; `test_guard_does_not_match_a_forgotten_anchor` and its quarantined twin run beside `test_guard_still_matches_a_visible_anchor` | plugin/tests/test_refutations.py:133, plugin/tests/test_recall_judged.py:94, :101, :118, plugin/tests/test_recall.py:2183, plugin/tests/test_mcp_server.py:530, plugin/tests/test_read_sentinel.py:743, plugin/tests/test_enforcement_reads_through_view.py:148, :173, :184"
+  tombstone: "checkpoint store, write boundary and forget path | plugin/daimon_briefing/store.py:1966-1986, :2094, :3435-3455, plugin/daimon_briefing/policy.py:95-108, :343-363, plugin/daimon_briefing/forget.py:145-182, :237-259, plugin/daimon_briefing/cli/lifecycle.py:812-854 | `daimon forget` appends, in one write, a tombstone on the item id, on every sibling id that held the value and on a random key ref of its own, each carrying a content hash and never the text, before the rewrite; `append_event` refuses a `forgotten:` status from any other caller. Every `write_checkpoint` reads the events ledger once through `admission_gate`, refuses the admission when that ledger cannot be proven instead of reading it as holding no tombstones, and runs `policy.admit_checkpoint`, whose `drop_forgotten` removes any item whose canonical text hashes into the standing set before it is stamped, signed, indexed or mirrored. A reopen on an item id cannot reach the key ref, so only `daimon unforget` lifts a forget: it requires a terminal, has no agent channel, appends a lift on every standing ref and restores nothing. The index build and the read view withhold a forgotten value or id, and the supersede-candidate emitter skips values already in the ledger. A ledger append — a refutation, a quarantine's reason, a request's ask or title — does not consult the set at write; every read of such a row withholds a forgotten whole value through the view | plugin/tests/test_forget_reassertion_e2e.py:81, plugin/tests/test_forget_tombstones.py:144, plugin/tests/test_write_checkpoint_posture.py:68, plugin/tests/test_unforget.py:65, plugin/tests/test_forget_refutations.py, plugin/tests/test_recall_judged.py:101"
+  trust_state: "human quarantine ledger over checkpoint values, applied by one read view on every surface | plugin/daimon_briefing/trust.py:49-50, :289-362, plugin/daimon_briefing/view.py:574-593, :1052-1081, :1680, :1900, :2268-2289, plugin/daimon_briefing/briefing.py:864-960, plugin/daimon_briefing/recall.py:1220-1279, :1597-1633, plugin/daimon_briefing/inspector.py:450, plugin/daimon_briefing/refutation_guard.py:22-94, plugin/daimon_briefing/checks_sync.py:69-110, plugin/daimon_ui/reader.py:1-9 | `trust.jsonl` folds to `candidate`, `active`, `dismissed` or `released` per kind, project and value key, and `active` withholds. `view.classify` returns `Visible` or a `Withheld` that carries no text, closed first, then forgotten, then a quarantine of the field's kind. Every briefing host opens the checkpoint through it (`briefing.prepare`); the recall build judges each row before inserting it and every hit is judged again; `why`, `blame`, `diff` and `/api/why` answer through `view.lineage` and `view.lookup_many`; `resolve`, `forget` and `reverify` bind through `view.match`; every ledger prose printer, the MCP `requests_inbox` tool included, prints through `view.masked`; the refutation guard and `refute search` match only the values the view judged visible, and the armed-check manifest is built from rulings read through it, so a withheld anchor or check pattern fires nothing and arms nothing; an unreadable trust ledger withholds every item. The project's read census drives every CLI leaf, MCP tool, viewer route and Hermes hook against sentinel values and asserts that none leaks, with a person at a terminal reading a quarantine's evidence as the declared exemption. Only a human channel reaches `active`, and a release returns the value. An active quarantine is also published to the team sidecar as a hash-only row, and a teammate's claim withholds in every snapshot on the reader's machine. Supersession and contradiction stay rank-only | plugin/tests/test_view_classify.py, plugin/tests/test_recall_judged.py:94, :118, plugin/tests/test_recall.py:2139, :2183, plugin/tests/test_mcp_server.py:530, plugin/tests/test_hooks.py:706, plugin/tests/test_read_sentinel.py:745, plugin/tests/test_foreign_quarantines.py:79, plugin/tests/test_enforcement_reads_through_view.py, plugin/tests/test_refute_search_masking.py"
+  audit_log: "events.jsonl, with forget's whole-value redaction as its one documented carve-out | plugin/daimon_briefing/store.py:3468-3488, :3490-3518, :3589-3667, plugin/daimon_briefing/forget.py:145-182, plugin/daimon_briefing/jsonl.py:208-252, :718-757 | `append_event` and `append_events` write one row per lifecycle event — `ts`, `kind`, `item_ref`, `status`, `source` — through `_event_row`, the ledger's one row builder, and `jsonl.append_lines`, which judges the ledger's health under its lock before each write. No production path removes, adds or reorders a parsed row. Limits: the one exception is `scrub_event_fields` (#599), called only by forget after its tombstone lands, which replaces an `item_text`, `status` or `note` whose whole value folds to the forgotten key with a marker, under the lock `append_event` takes, and keeps every row and every other byte. The tombstone rows are the record of that redaction: they carry the content key, a timestamp and, on the id row, the reason, while their `source` is the constant `cli` and they name no channel or author. The corroboration docstring's *\"append-only and never rewritten\"* (`capture.py:325`) is contradicted by that carve-out, which `append_event`'s own docstring documents. Forget drops every row of a matched refutation, amendment, request or relation record and redacts a quarantine's prose in place; those are memory ledgers, not the mutation log | plugin/tests/test_store.py, plugin/tests/test_forget_tombstones.py, plugin/tests/test_ledger_split_rows.py, plugin/tests/test_ledger_repair.py, plugin/tests/test_deletion_durability_protocol.py"
+  human_review: "refutation, relation and quarantine ledgers, reverify and unforget — authority observed from the channel, with a flag that can only narrow it | plugin/daimon_briefing/channels.py:41-46, plugin/daimon_briefing/refutations.py:81, plugin/daimon_briefing/cli/_ledger.py:266-281, plugin/daimon_briefing/cli/ruling.py:180-183, plugin/daimon_briefing/relations.py:60-62, plugin/daimon_briefing/trust.py:493-501, plugin/daimon_briefing/cli/trust.py:43-60, plugin/daimon_briefing/cli/lifecycle.py:40-52 | `CHANNEL_AUTHORITY` maps five channels to three authorities — `cli-agent` to agent, `cli-tty`, `ui` and `signed` to human, `mechanical` to mechanical — and activation, overturn and ruling ratification require a human one. What makes it a producer test rather than a label is `_refute_channel`, and its docstring is the clearest statement of the rule this atlas has found in any tree: *\"`--by agent` is a self-declaration of the NARROWER authority … A human path has to show an interactive terminal, and the CLI can mint nothing stronger: `ui` and `signed` are in-process-only, because a channel an agent can reach by shelling out is the deleted `--by human` renamed.\"* So the only flag available lowers your authority; the human path is the absence of that flag plus `sys.stdin.isatty()`, refused with a message naming the missing terminal; and the two strongest channels cannot be reached from a shell at all, by deletion of the flag that once could. `CHANNEL_LABEL` then renders each tier honestly — `agent-proposed`, `ratified (interactive)`, `ratified (ui)`, `ratified (signed)` — never *\"human-ratified\"* unqualified. The fold holds the rule a second time on its own: a `ratified` row that applies a pending agent revision to an already-active ruling requires a human channel *in the fold*, not only at the writer, *\"because the fold is the authority for a row that reaches the ledger another way\"*, so a correctly pinned agent-channel row stays inert and arms nothing. The quarantine ledger repeats the shape on the four shared channels: `trust propose --by agent` folds to `candidate` and withholds nothing, `confirm`, `dismiss`, `release` and `republish` raise unless the channel is human, the fold skips a lifecycle row from any other channel, and no MCP tool writes the ledger. The limit is the general shell, which the mark does not count against: an agent that can run arbitrary commands can allocate a pseudo-terminal or append a row naming a human channel to the file itself, and the project names that ceiling — *\"Nothing local is unforgeable\"* | plugin/tests/test_refutations.py:71-74 (`test_agent_cannot_self_ratify` asserts both the `requires a human channel` refusal and that `records()` is still empty), plugin/tests/test_refutation_authority.py, plugin/tests/test_trust.py:121-125, :440, plugin/tests/test_trust_cli.py:58-71, plugin/tests/test_unforget.py:65"
+  negative_eval: "refutation guard read path, the judged recall index, the quarantine read paths, the enforcement readers and the read census | plugin/tests/test_refutations.py, plugin/tests/test_recall_judged.py, plugin/tests/test_recall.py, plugin/tests/test_mcp_server.py, plugin/tests/test_read_sentinel.py, plugin/tests/test_enforcement_reads_through_view.py | `test_guard_fires_on_exact_issue_anchor_not_broad_topic` asserts a broad topical query must not surface an active guard; `test_a_quarantined_row_is_never_inserted` and `test_a_forgotten_value_is_never_inserted` assert the index holds exactly the visible row and the other withheld one, and `test_no_withheld_byte_reaches_the_index_file` reads the database bytes; `test_search_notices_a_quarantine_confirmed_after_the_index_was_built` asserts the hit before the confirmation and its absence after; `test_brief_tool_withholds_a_quarantined_value` asserts the MCP brief omits the value and renders an unrelated item; `test_the_drive_runs_and_nothing_unexpected_leaks` asserts no sentinel reaches any output or written byte of any read surface; `test_guard_does_not_match_a_forgotten_anchor` and its quarantined twin run beside `test_guard_still_matches_a_visible_anchor` | plugin/tests/test_refutations.py:133, plugin/tests/test_recall_judged.py:94, :101, :118, plugin/tests/test_recall.py:2183, plugin/tests/test_mcp_server.py:530, plugin/tests/test_read_sentinel.py:745, plugin/tests/test_enforcement_reads_through_view.py:148, :173, :184"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -28,14 +28,14 @@ matrix:
   memory_unit: "Trust-classed checkpoint item: open question, decision, belief, uncertainty"
   storage: "Per-project JSON checkpoints plus a disposable SQLite FTS5 index"
   retrieval: "Automatic session-start injection; FTS5/BM25 for `recall`, ranked by importance x decay, with contradiction and supersession as tiers applied before the weighting on both read paths — demotion keys and never filters; a forgotten value and a human-confirmed quarantine are judged out before a row is indexed and again on every hit"
-  write: "Detached LLM extraction at session end, then deterministic quote and outcome gates"
+  write: "Detached LLM extraction at session end, or a bounded `daimon import` of past transcripts through the same capture, then deterministic quote and outcome gates"
   update_delete: "A value-keyed tombstone on the item id, every sibling id and a key ref of its own, appended before the rewrite and consulted at every checkpoint write, so a re-extracted forgotten value is dropped before it reaches disk and an unreadable ledger refuses the write; also consulted by the supersede-candidate emitter and the index build; forget runs every registry step, reports each surface it could not reach, rebuilds the index, purges the chunk cache and redacts every ledger, keeping a quarantine's verdict; only a human unforget lifts it"
-  scoping: "Per-project bucket on every unaddressed read, each latest-read naming a route and an admit rule; cross-project reads by explicit slug, all_projects, a host-declared allowlist, or a ruling layer — an ancestor directory outside every git working tree whose own bucket claims it by name, read-only and never written from below. The slug and all_projects are arguments the model passes to the shipped MCP recall and brief tools, refused only when the host sets the tenant-scoped flag, which also returns no layers"
-  integration: "Host hooks (Claude Code plugin, Windsurf, Codex), opt-in delivery of cross-project asks into a running session at its next turn boundary, rulings ratified once at a directory above a set of repositories and rendered into each one at brief time, a CLI split into subcommand family modules behind one render seam, a read-only stdio MCP whose recall rows name a stale item in plain words, an in-process host API that renders the machine briefing with a state and plans or launches a serialize repair, and a local read-only viewer with search-as-recall"
+  scoping: "Per-project bucket on every unaddressed read, each latest-read naming a route and an admit rule; cross-project reads by explicit slug, all_projects, a host-declared allowlist, or a ruling layer — an ancestor directory outside every git working tree whose own bucket claims it by name, read-only and never written from below. The MCP tools refuse every selector that leaves the own bucket unless the host sets a cross-project grant; the CLI grants every one off tenant scope, and the shipped agent skill tells the agent to use `--slug` and `--all-projects` in a shell"
+  integration: "Host hooks (Claude Code plugin, Windsurf, Codex), opt-in delivery of cross-project asks into a running session at its next turn boundary, rulings ratified once at a directory above a set of repositories and rendered into each one at brief time, a CLI split into subcommand family modules behind one render seam, a read-only stdio MCP that reads only its own project unless the host grants more and whose recall rows name a stale item in plain words, an in-process host API that renders the machine briefing with a state and plans or launches a serialize repair, and a local read-only viewer with search-as-recall"
   background: "A pre-action hook runs a human-armed ruling check before a matching shell action, fail-open under a five-second budget, and logs every firing; a check armed at a ruling layer re-arms in every repository below it on a machine that never synced the layer directly; detached serialize child, retry ledger with self-heal and a serial heal of every healable session under one machine-wide lock, index rebuild"
   trust: "verbatim vs inferred as a stored field, verified by code against the transcript, with corroboration as a separate axis that can never become a trust class; a candidate/active/overturned ledger carrying both polarities, whose authority is read off the observed write channel and whose polarity is derived from the founding event name rather than any writable field; a candidate/confirmed/rejected relation ledger in shadow mode with no mechanical channel at all; a human quarantine ledger whose active state one read view withholds from every read surface, closing outright when the ledger cannot be read, proposed by an agent and confirmed or released only through a human channel, and published to teammates as a hash-only row; and a contradiction slot on the recall index that only receipt, file, branch and PR probes may write, each cure bound to its own claim and recorded rather than erased"
   strengths: "Authority derived from the observed write channel rather than a caller-set flag, with the strongest channels unreachable from the CLI; a surface registry where every file shape declares its delete strategy and a guard refuses an undeclared one; a residue auditor whose third exit code separates cannot-prove from clean; a placebo arm that has refuted the project's own features; one value-keyed human verdict that withholds where every machine signal only ranks, through one read view and a census asserting no surface leaks it"
-  risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value; the negative-knowledge guard is agent-invoked and advisory, and nothing reaps its ledger by age; world evidence reaches the contradiction slot only from a `daimon brief` run with worldcheck on, so the MCP and Hermes briefing paths record none and a dependency-version contradiction moves no rank; the team sidecar's write access is the trust boundary for a published quarantine, so a member who can write it can forge a row that over-suppresses or one that lifts a teammate's claim; one ratification at a ruling layer arms a shell-blocking check in every repository beneath it, and only `ruling propose` carries the guard against a directory resolving to a layer the caller did not name; the MCP recall and brief tools read any project the model names unless the host sets the tenant flag; forget redacts whole-value event fields in place, leaving the tombstone rows, which name no channel or author, as the record of the redaction, and drops every row of a matched refutation, amendment, request or relation record"
+  risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value; the negative-knowledge guard is agent-invoked and advisory, and nothing reaps its ledger by age; world evidence reaches the contradiction slot only from a `daimon brief` run with worldcheck on, so the MCP and Hermes briefing paths record none and a dependency-version contradiction moves no rank; the team sidecar's write access is the trust boundary for a published quarantine, so a member who can write it can forge a row that over-suppresses or one that lifts a teammate's claim; one ratification at a ruling layer arms a shell-blocking check in every repository beneath it, and only `ruling propose` carries the guard against a directory resolving to a layer the caller did not name; an agent with a shell reads any project through `daimon recall --slug` or `--all-projects`, which the shipped skill tells it to do, unless the host sets the tenant flag; forget redacts whole-value event fields in place, leaving the tombstone rows, which name no channel or author, as the record of the redaction, and drops every row of a matched refutation, amendment, request or relation record"
 ---
 
 ## 1. Executive Summary
@@ -50,7 +50,7 @@ that one loop.
 The design commitment is this: **every memory item
 carries a trust class, and the trust class is not taken on the model's word.**
 The extraction prompt asks for `trust: "verbatim"` plus an exact `quote`, and
-then `serializer.verify_quotes` (`plugin/daimon_briefing/serializer.py:1227`)
+then `serializer.verify_quotes` (`plugin/daimon_briefing/serializer.py:1342`)
 greps that quote against the rendered transcript. A miss is not a warning — the
 item is *downgraded* to `inferred`, the failure is logged, and a pointer to it is
 appended to a rejection ledger. Plenty of systems in this atlas store a
@@ -60,7 +60,7 @@ model's own trust label as a claim to be falsified before it is stored.
 A second gate goes further, and is the most interesting thing here. Quote
 verification certifies *transcription*, not truth: the model can conclude "the
 tests pass", be wrong, and the transcript will faithfully record it saying so.
-`ground_outcomes` (`serializer.py:1656`) narrows that gap by lexicon — if an
+`ground_outcomes` (`serializer.py:1799`) narrows that gap by lexicon — if an
 item's text asserts a completed outcome (merged, deployed, tests green) and the
 item cites no tool-result message as evidence, the item is downgraded to
 `inferred` even though its quote verified. The comment in the source states the
@@ -85,9 +85,10 @@ confirm it (`trust.py`, `view.py`, section 2).
 Weakest parts: the live working set is **one checkpoint per project**, so
 anything not carried forward is reachable only through a lexical FTS5 index with
 no semantic component; and the retrieval numbers the repo does commit are modest
-and small-sample. Nor is the project boundary held against the agent: the
-shipped MCP recall and brief tools take a slug or `all_projects` from the
-model, and only a host-set tenant flag refuses them (section 5). The codebase is mature
+and small-sample. Nor is the project boundary held against the agent: the MCP tools
+refuse a foreign project unless the host grants it, but the shipped skill tells
+the agent to pass `--all-projects` or `--slug` to the CLI from a shell, and only
+a host-set tenant flag refuses those (section 5). The codebase is mature
 by the measures that can be checked — tests outweigh source roughly two to one,
 every non-obvious invariant carries the issue number and the failure that forced
 it, and defeated approaches are written down as scar files rather than quietly
@@ -109,11 +110,11 @@ one of six fields, with a trust class and a provenance trail.
 | `epistemic_snapshot.contradictions_flagged` | no | no dedicated scoring rules, and its item shape varies — it may be a bare string |
 
 Three of six carry, and the column is not decoration: `carries` is the last field
-of `ItemField` (`schema.py:47`), and `carry.merge` reads it rather than
+of `ItemField` (`schema.py:63`), and `carry.merge` reads it rather than
 consulting a list of its own.
 
 Which fields carry is declared once, in `schema.ITEM_FIELDS`
-(`plugin/daimon_briefing/schema.py:63`), and every consumer — store, serializer,
+(`plugin/daimon_briefing/schema.py:79`), and every consumer — store, serializer,
 recall, carry — derives its view from that table. The module docstring records
 why: the four hand-maintained copies had drifted, and one field was silently
 skipping first-seen stamping.
@@ -158,7 +159,7 @@ verified receipt records whether it happened anyway.
 `quote_provenance.stitching`
 carries `cross_message` and `cross_role`, each true only when *no* single
 message, or no single role's messages joined in transcript order, can account
-for every matched fragment (`_stitching_flags`, `serializer.py:1038`). The
+for every matched fragment (`_stitching_flags`, `serializer.py:1106`). The
 necessity semantics are the careful part: a flat scan that happened to satisfy
 a fragment across a boundary it did not need to cross is not a stitch. It is
 recording only. The verification outcome is untouched, the format version moved
@@ -193,7 +194,7 @@ id, which is why widening the id could not break it.
 Lifecycle is *not* stored on the item. The checkpoint is append-only in
 practice — `last_verified` is stamped in exactly one place and the docstring
 forbids any other writer — and liveness is a **fold over an event log at read
-time** (`store.resolutions`, `store.py:3576`; `store.is_resolved`, `store.py:3668`):
+time** (`store.resolutions`, `store.py:3698`; `store.is_resolved`, `store.py:3790`):
 
 | Latest event for an id | Effect at read |
 | --- | --- |
@@ -206,15 +207,15 @@ time** (`store.resolutions`, `store.py:3576`; `store.is_resolved`, `store.py:366
 Statuses are free-form by design and readers prefix-match, so an unknown status
 resolves rather than vanishes — the writer bothered to record a lifecycle fact.
 Same-second ties break on event *content*, never file order, so a reordered log
-folds identically (`_tie_wins`, `store.py:3564`).
+folds identically (`_tie_wins`, `store.py:3686`).
 
 A forget is the one status a reopen on the item cannot undo. `forget.write_tombstones`
 appends, in one write, the tombstone on the item id, one on every sibling id
 that held the same value, and one on a **key ref** of its own — a random
 `forgotten-key:` token that carries nothing of the key and that no item id can
-equal (`forget.py:145-182`, `store.py:3278`). The item fold never returns a key
+equal (`forget.py:145-182`, `store.py:3400`). The item fold never returns a key
 ref, and `store.standing_tombstones` is the one parser that reads both kinds
-(`store.py:3313-3333`). A reopen replaces only its own id's latest event, so the
+(`store.py:3435-3455`). A reopen replaces only its own id's latest event, so the
 value stays withheld through the key ref; the lift is `daimon unforget`, which
 appends `reopened:unforget` on every standing ref that carries the key
 (`forget.py:237-257`). A tombstone written before the key ref existed is a
@@ -222,17 +223,17 @@ single id row, and `forget --resume` gives it one.
 
 One more withholding outcome comes from a different ledger. An item whose text
 or quote matches an active quarantine is withheld before any row of this table
-is consulted (`view.classify`, `view.py:896-925`); *The quarantine ledger*
+is consulted (`view.classify`, `view.py:1052-1081`); *The quarantine ledger*
 below describes it.
 
 Three actors can move an item, and the code is explicit about which is which.
 **Code** downgrades trust classes and emits supersede *candidates*. **The
 model** proposes items and typed `supersedes` links but never writes the
-code-owned fields — `strip_code_owned_keys` (`serializer.py:2451`) deletes any
+code-owned fields — `strip_code_owned_keys` (`serializer.py:2604`) deletes any
 the model emits. **A human** resolves, forgets, and re-opens. An agent's
 `resolve --by agent --evidence` writes a `resolving-candidate`, which withholds
 nothing until capture finds the quoted evidence in the session transcript and
-appends `resolved-agent-verified` (`capture.py:359`, `:386-427`).
+appends `resolved-agent-verified` (`capture.py:385`, `:412-453`).
 
 Re-opening a resolved item requires evidence: either the item's code anchor
 still checks out live, or an explicit `--evidence` string. `_cmd_reverify`
@@ -268,7 +269,7 @@ channel it arrived through — `cli-agent`, `cli-tty`, `ui`, `signed`,
 `mechanical` — and `CHANNEL_AUTHORITY` maps that to agent, human or mechanical.
 The four shared channels live in `channels.py:41-46`, which three ledgers
 import after two hand-kept copies of the table *"had drifted"*, and
-`refutations.py:74` adds `mechanical`. The comment says what was deleted and
+`refutations.py:81` adds `mechanical`. The comment says what was deleted and
 why:
 
 > `--by human` was a flag whose only function was to let the caller assert its
@@ -373,7 +374,7 @@ nothing.
 Since 0.41.0 a ruling can carry a **check**: a script body of at most 8,192
 bytes and a command pattern of at most 200, stored in the row so the check
 travels with the ruling, with an intent of `enforce`, `warn` or `record-only`
-(`refutations.py:129-167`). Its hash is computed by the writer over the stored
+(`refutations.py:136-174`). Its hash is computed by the writer over the stored
 bytes and *"never accepted from a caller"*, the way `verdict_key` pins the rule
 text. A body naming a host-local path — `~/`, `$HOME/`, `/Users/`, `/home/` —
 is refused at propose time, line by line, because such a script *"travels to
@@ -395,7 +396,7 @@ how many it skipped and nothing else about them (`checks_sync.py:69-110`).
 The same judgment stamps every ruling row with `as_ratified`, false when an
 enforcement value was withheld, and the briefing tags such a rule
 `[not as ratified]` rather than render a shortened anchor set as the one a
-person signed (`view.py:2054-2058`, `briefing.py:1437-1440`). Until 0.59.0
+person signed (`view.py:2258-2262`, `briefing.py:1557-1560`). Until 0.59.0
 the manifest was built from the raw ledger (#1208).
 
 **The bug this shipped with is the more instructive half, and the project wrote
@@ -418,7 +419,7 @@ unscoped call impossible to write.
 
 A ruling holds for one project bucket, which makes a rule a person means for
 every repository under `~/work` a thing they re-ratify per repository.
-`config.layer_scopes` (`config.py:1021`) resolves that by naming **ruling
+`config.layer_scopes` (`config.py:1065`) resolves that by naming **ruling
 layers**: the ancestors of a project's resolved root, nearest first, that a
 child may inherit active rulings from. It is the only place that knows the
 shape, and the three conditions it applies are the mechanism.
@@ -486,7 +487,7 @@ on the briefing's own `active` filter.
 
 ### A third store and a fourth
 
-`relations.py` (607 lines) is a project-scoped **typed relation ledger** —
+`relations.py` (552 lines) is a project-scoped **typed relation ledger** —
 `revision-of`, `answers`, `supersedes`, `reclassified-from` — folded from
 `proposed`/`confirmed`/`rejected`/`retracted` events into the matching states.
 It ships in **shadow mode**: recall, lifecycle, corroboration, carry and the
@@ -503,7 +504,7 @@ be able to carry item text**. And there is no mechanical channel at all in v1,
 confirmation"* — a negative experimental result spent on removing a capability
 rather than on qualifying it.
 
-`amendments.py` (616 lines) records that a briefed item's state advanced while
+`amendments.py` (630 lines) records that a briefed item's state advanced while
 the item stays open — approved, unblocked, rescoped — *"the verb between"* a
 resolution and a reverify. Its header is an argument against reusing the store
 that was already there, on three counts. `events.jsonl`'s `source` field is
@@ -520,7 +521,7 @@ reason not to extend it is rarer than either store.
 
 ### The quarantine ledger, where one state withholds
 
-`trust.py` (573 lines) is a project-scoped ledger of human quarantines over
+`trust.py` (761 lines) is a project-scoped ledger of human quarantines over
 checkpoint *values*. Its header states the rule every other signal follows and
 the exception this module makes. Stale, superseded and contradicted all rank an
 item down, and *"none of them withholds it"* — the wrong answer, it says, for
@@ -531,43 +532,43 @@ ever ranks down"*.
 
 A record is keyed on the value, the way a forget tombstone is. `value_key` runs
 the redacted, whitespace-collapsed text through `normalize.content_key`, and
-the record id hashes kind, project slug and that key (`trust.py:165-191`). A
+the record id hashes kind, project slug and that key (`trust.py:166-192`). A
 carried or re-extracted copy under a new item id stays covered, and the
 `item_id` on the row *"is never the gate"*. Text under 20 characters is
 refused, because *"a short, generic value risks quarantining unrelated items
 that canonicalize the same"*. Four events — `quarantined`, `confirmed`,
 `dismissed`, `released` — fold to `candidate`, `active`, `dismissed` or
-`released` (`trust.py:48-49`, `:288-361`).
+`released` (`trust.py:49-50`, `:289-362`).
 
 Authority is the refutation ledger's, on the four shared channels.
 `daimon trust propose --by agent` writes a candidate, which withholds nothing.
 The same verb from an interactive terminal lands `active` at once. `confirm`,
 `dismiss` and `release` raise unless the channel is human
-(`_human_transition`, `trust.py:492-500`), and the fold skips a lifecycle row
+(`_human_transition`, `trust.py:493-501`), and the fold skips a lifecycle row
 from any other channel: *"no agent channel moves state, whatever the event
-says"* (`:347-349`). There is no mechanical tier — *"there is no automatic
+says"* (`:348-350`). There is no mechanical tier — *"there is no automatic
 quarantine signal, by design"* — and a dismissed or released value can be
 proposed again.
 
-**`active` withholds through one read view.** `view.py` (2,131 lines) decides
+**`active` withholds through one read view.** `view.py` (2,385 lines) decides
 *"what a reader may see of a project"* for every reader that shows a checkpoint
 value.
 `snapshot` reads the bucket's ledgers once, and `_trust_index` folds
 `trust.jsonl` through `trust.records` and keeps the `active` pairs
-(`view.py:420-439`). `classify` returns `Visible` or `Withheld` by canonical
+(`view.py:574-593`). `classify` returns `Visible` or `Withheld` by canonical
 value over `text`, `quote` and `scene`, in a fixed order: a closed snapshot
 withholds everything, then a forgotten value or id, then a quarantine of the
-field's kind (`view.py:896-925`). `Withheld` has no text, quote or scene
+field's kind (`view.py:1052-1081`). `Withheld` has no text, quote or scene
 attribute, so a refused value cannot be printed from it by accident. The topic
 singleton and a bare-string contradiction go through the same call.
 
 | Read | How it reaches the view |
 | --- | --- |
-| `daimon brief` in every shape (including `--team` and the global fallback), `daimon loops`, MCP `daimon_brief`, the Hermes `pre_llm_call` hook | `briefing.prepare` opens the checkpoint with `view.open` (`briefing.py:773-841`), and the rulings, request, owed and verdict panels take their rows through `view.masked` |
-| `search`, `suggest`, `lookup_item`, MCP `daimon_recall`, both recall hooks, the viewer's search | the build judges each row before it is inserted (`recall.py:1220-1279`); `query`, `find` and `suggest` judge every hit again and rebuild when one is dropped (`:1577-1613`) |
-| `why`, `blame`, `diff` and the viewer's `/api/why` | `view.lineage` and `view.lookup_many` answer an exact id from the pointer window, the recall index as a locator, then the hints (`view.py:1476`, `:1696`); `inspector.inspect_item` composes from the lineage and reads no session file itself (`inspector.py:450`) |
+| `daimon brief` in every shape (including `--team` and the global fallback), `daimon loops`, MCP `daimon_brief`, the Hermes `pre_llm_call` hook | `briefing.prepare` opens the checkpoint with `view.open` (`briefing.py:864-960`), and the rulings, request, owed and verdict panels take their rows through `view.masked` |
+| `search`, `suggest`, `lookup_item`, MCP `daimon_recall`, both recall hooks, the viewer's search | the build judges each row before it is inserted (`recall.py:1220-1279`); `query`, `find` and `suggest` judge every hit again and rebuild when one is dropped (`:1597-1633`) |
+| `why`, `blame`, `diff` and the viewer's `/api/why` | `view.lineage` and `view.lookup_many` answer an exact id from the pointer window, the recall index as a locator, then the hints (`view.py:1680`, `:1900`); `inspector.inspect_item` composes from the lineage and reads no session file itself (`inspector.py:450`) |
 | `resolve`, `forget`, `reverify` binding by id or query | `view.match` and `view.label`; a candidate list prints a withheld row as a marker, and an exact id that is withheld is refused off a terminal |
-| every ledger prose printer — the `refute`, `ruling`, `request`, `trust` and `amend` verbs, `decide`, MCP `requests_inbox`, `/api/refutations`, `/api/relations` | `view.masked` judges every declared prose string as a whole value, plus every string leaf of a folded record (`view.py:2064-2085`) |
+| every ledger prose printer — the `refute`, `ruling`, `request`, `trust` and `amend` verbs, `decide`, MCP `requests_inbox`, `/api/refutations`, `/api/relations` | `view.masked` judges every declared prose string as a whole value, plus every string leaf of a folded record (`view.py:2268-2289`) |
 | `refute guard`, `refute search` and the armed-check manifest | `view.masked_rows` and `view.masked`: a match runs over the visible values alone, and a ruling with a withheld anchor, check pattern or body arms nothing (`refutation_guard.py:22-94`, `checks_sync.py:69-110`) |
 | `status --suppressed`, `daimon projects`, MCP `daimon_projects` | `view.suppressed`, `view.projects`; a quarantine prints its id, kind and `[withheld: quarantine tr-…]`, never its text |
 | every viewer route | `daimon_ui/reader.py`, which imports nothing from the package but `api`, `schema` and `view` |
@@ -592,7 +593,7 @@ three quarantined by a human and three forgotten through `daimon forget`. It
 drives every CLI leaf, every MCP tool, every viewer route and both Hermes
 hooks against it, in text and `--json`, and scans everything each run printed
 and every byte it wrote. The assertion is that the set of leaks is empty
-(`test_read_sentinel.py:743`). A second scan looks for the forgotten values'
+(`test_read_sentinel.py:745`). A second scan looks for the forgotten values'
 content keys and key refs, because a raw tombstone status printed by a reader
 names the value it hashes.
 
@@ -618,11 +619,11 @@ a transcript window cannot hand one back.
 active or is released, the trust verbs append a row to
 `authors/<me>/quarantines.jsonl` in every team sidecar clone, carrying the
 kind, the value key, the state, an order, an event id and the author — no
-value, no slug, no text (`store.publish_quarantine`, `store.py:1137`). On a
+value, no slug, no text (`store.publish_quarantine`, `store.py:1207`). On a
 teammate's machine one walk reads both published ledgers per author and folds
 them as a union. A pair stays withheld while any author holds it active, and
 one author's release never lifts another's (`view.machine_sets`,
-`view.py:362-371`).
+`view.py:516-525`).
 
 The foreign set joins every snapshot machine-wide, the way
 forgotten keys do. A teammate's quarantine shows as `[withheld: quarantine]`
@@ -640,7 +641,7 @@ around. Mirrored checkpoint bytes are untouched: a quarantine withholds on read
 and never rewrites.
 
 **A forget redacts a quarantine and keeps it.** `trust.redact_content_key`
-(`trust.py:643-712`) is the trust ledger's step in the surface registry
+(`trust.py:692-761`) is the trust ledger's step in the surface registry
 (`surfaces.py:505-509`), which `forget.run` walks for both forget and `ledger
 repair`. A `reason` or one `evidence` entry
 whose value is the forgotten one becomes the marker the events scrub writes; a
@@ -778,7 +779,7 @@ Attachments are where hooks write their output, daimon's own injected briefing
 among them, and a summary is text the model wrote that is *"never credited to
 the person"*. Until 0.56.0 only the first two were skipped.
 
-**Extraction.** `serializer.serialize_strict` (`serializer.py:2620`) gates on
+**Extraction.** `serializer.serialize_strict` (`serializer.py:2815`) gates on
 `min_messages` (10 by default; tool rows do not count), renders the transcript,
 and chunks it at 1,200 lines with 100 lines of overlap. Chunks run concurrently
 through the D-019 prompt, each cached by content hash under
@@ -812,11 +813,11 @@ runs after the provenance strips on purpose, since carry's freeze prefers
 `verbatim` and a model-claimed verbatim this path can never check must not beat
 extracted prior content.
 
-**Retrieval.** `recall.query` (`recall.py:1649`), behind `search`, runs an FTS5 `MATCH`, AND-joined
+**Retrieval.** `recall.query` (`recall.py:1669`), behind `search`, runs an FTS5 `MATCH`, AND-joined
 first, retrying OR-joined when AND matches nothing, ordered by
 `invalidated_by IS NOT NULL`, then `superseded_by IS NOT NULL`, then bm25, then
 a silent `frontier` recency tiebreak, and judges every hit before returning it.
-`recall.suggest` (`recall.py:1918`) is the
+`recall.suggest` (`recall.py:1939`) is the
 proactive path behind
 `UserPromptSubmit`, gated hard toward silence: unknown project, fewer than two
 salient terms, or fewer than two distinct shared terms with a matched session all
@@ -842,7 +843,7 @@ reading the surface again, and one that raises is reported by its exception
 type and never its message, which could carry the value. Any plaintext surface
 left unreached moves the exit code to 4 and names its cure, and `forget
 --resume` finishes every phase for every standing tombstone. Among those steps
-`scrub_event_fields` (`store.py:3467`) redacts a field whose whole value is the
+`scrub_event_fields` (`store.py:3589`) redacts a field whose whole value is the
 forgotten one and removes no row.
 
 **MCP.** `mcp_server.py` is a hand-rolled stdio JSON-RPC server — no SDK,
@@ -850,12 +851,12 @@ because zero runtime dependencies is a product claim — exposing five read-only
 tools (`daimon_recall`, `daimon_brief`, `daimon_projects`, `daimon_status`,
 `requests_inbox`) through thin shims in `mcp_tools.py`. `daimon_brief` and the
 in-process `api.render_briefing` share one body, `briefing.machine_brief`
-(`briefing.py:1847`).
+(`briefing.py:1969`).
 
-**Tests.** 9,315 test functions in 355 Python files under `plugin/tests/`,
-which holds 373 Python files and 152,358 lines in all. The count is
-`grep -E '^\s*def test_'`, so methods on test classes are included; 9,230 sit
-at column 0. The source is 66,909 lines in `plugin/daimon_briefing/`, 62,493
+**Tests.** 9,732 test functions in 373 Python files under `plugin/tests/`,
+which holds 391 Python files and 160,822 lines in all. The count is
+`grep -E '^\s*def test_'`, so methods on test classes are included; 9,647 sit
+at column 0. The source is 69,935 lines in `plugin/daimon_briefing/`, 65,511
 outside its `_hooks/` directory. All are raw `wc -l` counts at the pin.
 
 ## 5. Memory Data Model
@@ -882,12 +883,12 @@ An item carries: `text`, `trust` (`verbatim` | `inferred`), `quote`, `because`,
 the form `{type: "supersedes", target}`.
 
 **The contract for every one of those fields is one table.** `field_table.py`
-(745 lines) declares, per field of the envelope and of an item, the JSON type,
+(866 lines) declares, per field of the envelope and of an item, the JSON type,
 whether it may be absent or null, who owns it — model or code — and what
 happens to an out-of-contract value: reject, clamp, drop, pass or strip
-(`ITEM_RULES`, `field_table.py:86`). The serializer's validator and its
+(`ITEM_RULES`, `field_table.py:90`). The serializer's validator and its
 normalizers are generated from that table, and the same table renders
-`docs/checkpoint-schema.json` (705 lines), versioned by `format_version`, so a
+`docs/checkpoint-schema.json` (766 lines), versioned by `format_version`, so a
 consumer that cannot import daimon can test its own normalizers against the
 producer's contract.
 
@@ -904,7 +905,7 @@ live serializer constants and to the real on-disk corpus.
 touch.** It records whose statement an item is, distinct from
 `author`, the machine identity that wrote the checkpoint, and it is derived by
 code from the host's per-message speaker joined through the item's validated
-`source_message_ids` (`derive_stated_by`, `serializer.py:793`).
+`source_message_ids` (`derive_stated_by`, `serializer.py:861`).
 
 The rule is unanimity: bindings naming two speakers, or one speaker and one unattributed
 message, yield nothing, because *"picking a winner would manufacture exactly
@@ -938,14 +939,14 @@ contradiction evidence with its timestamp rather than an interval (section 6).
 The briefing says which clock it is reading. A carried item whose text names a
 PR, an issue, a branch, a file or a dependency version renders with a suffix
 such as `(noted 2026-10-16 09:30Z, re-check before acting)`, taken from
-`first_seen` (`briefing.stamp_noted`, `noted_suffix`, `briefing.py:689-738`).
+`first_seen` (`briefing.stamp_noted`, `noted_suffix`, `briefing.py:692-741`).
 A missing, unparseable or future stamp prints nothing, since a clamped one
 *"would state a capture time nobody recorded"*, and the suffix is dropped when
 worldcheck answered that claim in the same brief. The docstring ends on the
 classification this page makes: *"The time is capture, not state."* The
 worldcheck outcome ledger beside it keeps the first confirmed and the first
 contradicted probe result per note (`store.append_world_outcomes`,
-`store.py:2910`), which is an observation time.
+`store.py:3032`), which is an observation time.
 
 **Scope** is the project slug: every character outside Python's Unicode `\w`
 and `-` becomes `-` (`/Users/x/proj` → `-Users-x-proj`, `store.py:53`). It is
@@ -958,10 +959,10 @@ The slug is a directory name, a stamped column in the index, and a
 read-path filter in both. **Every latest-read names two things**: a
 `Route` — the project's own pointer only, or own-then-global — and an
 `Admit` rule — any payload, or only one whose stamp is this project's or
-nobody's (`store.py:2390`, `:2402`). Both are required keywords with no
+nobody's (`store.py:2511`, `:2523`). Both are required keywords with no
 default, *"so an omitted argument is a TypeError instead of a silently
 unsafe answer"*, and the one reader the persist path uses,
-`read_own_stream_latest` (`store.py:2410`), takes no policy argument at
+`read_own_stream_latest` (`store.py:2531`), takes no policy argument at
 all: nothing an environment variable can reach may change what carry
 writes.
 
@@ -973,7 +974,7 @@ with another project's checkpoint on its first session, on the one path
 with no human reader (#784). The injection route falls back to the global
 pointer only when the project is unknown or the operator opted in with
 `DAIMON_BRIEF_GLOBAL_FALLBACK` (`briefing.injection_read_route`,
-`briefing.py:397`). A refused foreign payload leaves behind a `Marker`
+`briefing.py:401`). A refused foreign payload leaves behind a `Marker`
 of exactly two header fields, slug and created, *"and NOTHING more"*.
 Stdout inside an agent session is checkpoint input, so a wider marker
 would copy foreign content into this project's checkpoint (scar 0055).
@@ -987,19 +988,19 @@ display path keeps its old shape: a header saying activity is in another project
 never a hundred foreign lines under a warning.
 
 **Tenant scope is a host decision, not a caller's.** `DAIMON_TENANT_SCOPED`
-(`config.py:609`) makes every caller-chosen cross-project address a refusal:
-`--slug` and `--all-projects` on the CLI, `slug` and `all_projects` on the MCP
-tools, and `daimon projects`, MCP `daimon_projects` and the viewer's project
+(`config.py:616`) makes every caller-chosen cross-project address a refusal:
+`--slug`, `--all-projects` and a `--project` naming another bucket on the CLI,
+the same three selectors on the MCP tools, and `daimon projects`, MCP `daimon_projects` and the viewer's project
 list show only the caller's own bucket, through one enumeration
-(`view.buckets`). One layer down, `view.read_scopes` narrows an in-process
-`all_projects` request to the caller's own slug plus the host allowlist
-(`view.py:336-359`). The reasoning
+(`view.buckets`). One layer down, `view.read_scope` ignores an in-process
+`all_projects` request under tenant scope and returns the caller's own slug
+plus the host allowlist (`view.py:405-430`). The reasoning
 is that for a host running one daimon home with a project directory per
 person, those surfaces are *"cross-tenant read and enumerate primitives, one
 prompt injection away from every tenant's memory"*.
 
 `DAIMON_EXTRA_READ_SLUGS`
-(`config.py:631`) is the host declaring, out of band, which other buckets a
+(`config.py:667`) is the host declaring, out of band, which other buckets a
 session may read ambiently; an entry that is not slug-shaped is dropped rather
 than widened into a path, and no write path takes a slug. The refusal is loud
 by design: *"a caller who asked for a scope and silently got their own instead
@@ -1008,24 +1009,33 @@ process, one home, one `author` string — and the flag is read from the process
 environment, so it is exactly as strong as the host's control of that
 environment.
 
-**The boundary is not held against the agent, so `scope_enforced` is
-withheld.** The tenant flag is off by default, and without it the
-cross-project address is the model's to choose on the surface built for the
-model. The shipped MCP server declares `all_projects` and `slug` on
-`daimon_recall` and `slug` on `daimon_brief` (`mcp_server.py:44-53`, `:75`).
-The handlers pass them to `recall.query` and `briefing.machine_brief` and
-refuse them only under `config.tenant_scoped()` (`mcp_tools.py:65-87`,
-`:120-130`). `all_projects` removes the scope clause, and a search whose
-project resolves to no slug applies none (`view.py:350-354`).
+**The MCP surface holds the boundary; the shell the skill points at does
+not.** One function decides every read scope: `view.read_scope` returns
+`Own`, `Named`, `All` or `Denied`, and a project with no slug is `Denied` and
+reads nothing (`view.py:405-430`). Two callers put a grant in front of it,
+through one comparison, `_decide`, which asks whether the request leaves the
+own bucket — another `slug`, `all_projects`, the global pointer, or a
+`project` path whose bucket is not the server's own (`view.py:465-482`).
+`model_read`, which every MCP handler reaches through `mcp_tools._read`,
+refuses such a request out loud unless the host set
+`DAIMON_MODEL_CROSS_PROJECT`, and never under tenant scope
+(`view.py:485-497`, `config.py:638-647`, `mcp_tools.py:60-70`). Without the
+grant the tool schemas do not declare the selectors at all, and
+`daimon_projects` lists only the own bucket (`mcp_server.py:32-59`,
+`mcp_tools.py:156-168`). `test_mcp_model_scope.py` walks every declared tool
+argument and fails one that is neither a classified selector nor a listed
+non-selector, and asserts that every selector is refused without the grant.
 
-The tool description says cross-project search happens *"only via all_projects/slug —
-never implicit"*, which is accurate, and the agent is the one that sets them;
-`daimon recall --slug` and `--all-projects` give an agent's shell the same
-reach. The flag's docstring states the design position — *"A single person's
-machine never needs this"* — and on one person's machine a slug is a
-convenience; the mark asks whether the agent can lift the scope, and here it
-can. Every unaddressed read holds the bucket, the stamped column and the
-route-and-admit rule.
+`cli_read` is the same comparison with the other grant: *"The CLI is the
+human's own shell, so off tenant scope every request is granted"*
+(`view.py:500-513`). The shipped skill is read by the agent, not the human,
+and it says *"In a shell, add `--all-projects` when the work may have happened
+in another project. Over MCP only the host can allow that"*, and lists
+`daimon recall <query> --slug <slug>` under context switching
+(`skill_content.py:178-180`, `:301-302`). So **`scope_enforced` is
+withheld**: the agent can lift the scope, by the route its own instructions
+name. Every unaddressed read holds the bucket, the stamped column
+and the route-and-admit rule.
 
 **Team memory** (opt-in) adds a second axis: checkpoints mirror into
 `<team_dir>/<remote>/projects/<segments>/authors/<author>/*.json`. Only immutable
@@ -1034,7 +1044,7 @@ makes the git merges conflict-free by construction. Teammates' items are
 attributed and never merged into yours.
 
 **Staleness** has a dedicated read-time signal. `briefing.stamp_stale_carried`
-(`briefing.py:643`) stamps carried items whose effective last-verified age
+(`briefing.py:646`) stamps carried items whose effective last-verified age
 exceeds seven days, and they are the first items the budget drops. The
 threshold's docstring states the reasoning: a fresh checkpoint restating a
 carried item **is not corroboration**, because both sources trace back to the
@@ -1076,7 +1086,7 @@ evidence can never brand a teammate's mirrored copy.
 
 Four check classes may write the slot: `receipt`, `file-exists`,
 `branch-state` and `pr-state` (`_INVALIDATION_CHECKS`, `recall.py:888`;
-`store.WORLD_CHECKS`, `store.py:2961`). Capture-time rejection rows describe
+`store.WORLD_CHECKS`, `store.py:3083`). Capture-time rejection rows describe
 the capture rather than later disproof, and a model-flagged contradiction has
 no path to the slot at all — *"derived world evidence writes the slot, or
 nothing does"*. A dependency-version contradiction stays a transient
@@ -1086,7 +1096,7 @@ annotation on the briefing (`_WORLD_LEDGER_CLASSES`, `worldcheck.py:214`).
 `worldcheck._claim_key` (`worldcheck.py:217-222`) hashes the probe class, the
 target and the expected assertion, so the ledger row carries no raw target.
 `latest_world_verdicts` keeps the latest verdict per item, class and claim key.
-`latest_invalidation_verdicts` (`store.py:3064`) then summarises the item for
+`latest_invalidation_verdicts` (`store.py:3186`) then summarises the item for
 the index under one rule: *"ANY outstanding contradiction wins"*. Scar 0117
 records the bug this prevents — taking the
 latest verdict across a whole item *"lets a receipt confirmation erase
@@ -1106,7 +1116,7 @@ supersession secondary within each half. That mirrors `search`'s `ORDER BY`
 literally, while `search` keeps a three-way split inside the superseded half
 that puts a person's recorded resolution below a model-authored link. The tier
 has to bind before the fetch and not only at the end: the candidate window is
-256 rows (`_SUGGEST_CANDIDATE_LIMIT`, `recall.py:1889`), and a wall of strongly-matching demoted rows can fill it on its
+256 rows (`_SUGGEST_CANDIDATE_LIMIT`, `recall.py:1910`), and a wall of strongly-matching demoted rows can fill it on its
 own and truncate a weaker, better-tiered row away before the Python sort ever
 sees it.
 
@@ -1115,7 +1125,7 @@ multiplies by 0.4 for contradiction, 0.7 for a supersession the
 model's typed link wrote and 0.5 for one a human resolution wrote, stacking
 because the axes are independent — a replaced decision was still right at the
 time, whereas contradiction says a check disagreed with the claim itself
-(`_suggest_weight`, `recall.py:1892`, `_RESOLVED_WEIGHT`). The read side
+(`_suggest_weight`, `recall.py:1913`, `_RESOLVED_WEIGHT`). The read side
 demotes in the order the write side already keeps, the resolution fold
 overwriting the link fold, and an unattributed row — legacy, or a writer the
 fold could not name — takes the model-link rate, *"the weaker claim, never the
@@ -1152,10 +1162,10 @@ contradicted appends a cure row — `receipt-ok`, or the world check's name with
 *"challenged and survived"* indistinguishable from *"never questioned"*.
 
 A cure row is written only when it changes something (`append_receipt_cure`,
-`store.py:3092`; `append_world_cure`, `store.py:3079`). The rejection ledger
+`store.py:3214`; `append_world_cure`, `store.py:3201`). The rejection ledger
 therefore stays a ledger of problems found rather than work done, and
 `verification_counts` excludes cures — *"a cure is not a catch"*. One ordering,
-`_latest_verification_verdicts` (`store.py:3012`), serves both cure gates and
+`_latest_verification_verdicts` (`store.py:3134`), serves both cure gates and
 the index fold, because *"a recorder deriving from a different view than the
 verifier is the failure this codebase keeps paying for"*.
 
@@ -1216,9 +1226,27 @@ artifact. On Claude Code the transcript is serialized once, at session end. On
 Codex and Kimi a `Stop` hook also serializes mid-session, throttled by default
 to one run per 300 seconds (`hook/daimon-codex-stop.py`,
 `hook/daimon-kimi-stop.py`). Proactive recall excludes the current session
-(`recall.py:1966-1967`), so a mid-session checkpoint reaches the session that
+(`recall.py:1988-1989`), so a mid-session checkpoint reaches the session that
 wrote it only through an explicit `daimon recall`. That is a deliberate scope
 choice, and it means daimon cannot remember something said thirty seconds ago.
+
+**A second door fills the store from past sessions.** `daimon import` plans a
+bounded run before it spends anything (`importer.py:1-44`). Each transcript
+must stat and name one session, and it must belong to the project by its
+recorded working directory. It must not be captured already, by the ledger or
+by a success line in `serialize.log`. It must not be the live session — the
+host's session id, or a file modified inside 600 seconds (`importer.py:56`).
+It must also clear the too-short gate. The planned call count comes from the
+serializer's own chunk arithmetic, and discovery takes the five newest
+transcripts unless told otherwise (`:60`). Each session then goes through the
+live capture, `capture.run`, to `store.write_checkpoint`, so the forget and
+admission gates are the same ones (`cli/serialize.py:240`, `capture.py:114-122`).
+The import door stamps the code-owned `capture_door: "import"` after the
+model's keys are stripped, and the briefing prints an imported-history note
+off that stamp. A checkpoint that lands behind the live latest keeps the
+pointer where it is, and its items do not inherit the newer session's birth
+stamps (`store.py:363-370`). The first failed session stops the run, and heal
+never retries an import attempt (`ledger.py:519-520`).
 
 **Background passes** are bounded. There is no consolidation sweep over the
 whole store: carry touches exactly the previous checkpoint, and the only
@@ -1245,7 +1273,7 @@ item's id, across every historical checkpoint, is never written to the index,
 and it runs with `secure_delete` on.
 
 **A re-extraction is refused at the write.** `write_checkpoint` runs every
-checkpoint through `policy.admit_checkpoint` (`store.py:1992`). Its
+checkpoint through `policy.admit_checkpoint` (`store.py:2094`). Its
 `drop_forgotten` removes any item whose canonical text hashes into the
 forgotten set before the item is stamped, signed, indexed or mirrored
 (`policy.py:95-108`). The docstring names what that buys over a filter on the
@@ -1257,7 +1285,7 @@ beside a never-forgotten twin that must be present
 
 The gate cannot be satisfied by an empty set. `write_checkpoint` reads the
 project's `events.jsonl` once, through `admission_gate`, for the forgotten keys
-and the ledger's health together (`store.py:1864-1884`). A ledger that is
+and the ledger's health together (`store.py:1966-1986`). A ledger that is
 transient or unreadable refuses an admission or a human write with
 `jsonl.Refused` before a byte lands; a degraded one is proven, its good lines
 the set. A refused capture lands in `serialize.log` as `admission refused`, is
@@ -1342,22 +1370,22 @@ does not decide to recall at session start.
   message is zeroed, because *"even the count is enumeration."* The same body
   serves the in-process `api.render_briefing`, which returns the text with a
   state — `briefing`, `closed`, `no-checkpoint`, `empty` or `unavailable` —
-  and never raises (`briefing.py:1847-1916`).
+  and never raises (`briefing.py:1969-2044`).
 - **Skills:** two, in `skills/`, teaching the agent when to call `resolve` and
   how to end a session. They are procedural instructions *about* daimon, not
   procedural memory in the Voyager sense. The packaged skill text also teaches
   `daimon trust propose --by agent`, and says `confirm`, `dismiss` and
   `release` are human-only: *"print the command, never run it"*
-  (`skill_content.py:265-277`).
+  (`skill_content.py:273-285`).
 
 **The human's half has a surface.** `daimon decide` lists what is waiting on a
 person: undecided asks, quote-verified amendments awaiting confirmation, and
 agent-proposed rulings, refutations and quarantines awaiting a human verdict.
-Its composer (`pending.py`, 703 lines) is a pure reader with a structural
+Its composer (`pending.py`, 913 lines) is a pure reader with a structural
 admission rule: *"A record belongs here only when some verb's write path
 REFUSES a non-human channel… No guard, no entry"*. That test is checkable, and
 it is why an agent's own proposal cannot promote itself onto the queue. A
-candidate quarantine enters through `_trust_rows` (`pending.py:292-319`) with
+candidate quarantine enters through `_trust_rows` (`pending.py:295-322`) with
 its `confirm` and `dismiss` commands, and its headline is the reason, cut to
 one line through the shared display helper, never the quarantined value.
 
@@ -1443,7 +1471,7 @@ restates a claim, a namespaced pointer row records *who agreed* — status
 `corroborated-by:<session>`, source `serializer`, and **no `item_text`, ever**.
 The docstring gives the reason: *"this log is append-only and never rewritten, so
 a value written here outlives every deletion the user can ask for"*
-(`capture.py:299-300`).
+(`capture.py:325-326`).
 
 That rule keeps the corroboration rows out of the conflict between an audit and
 a right to erasure, which most systems in this atlas either ignore or discover
@@ -1481,19 +1509,19 @@ recall. A downgraded item must stay visible and merely read as inferred.
 production path removes, adds or reorders a parsed row. `append_event`'s
 docstring names the exception, `scrub_event_fields` (#599), *"forget's
 redaction-in-place, which replaces a field VALUE but never drops, adds, or
-reorders rows"* (`store.py:3368-3396`). It runs only after the forget's
+reorders rows"* (`store.py:3490-3518`). It runs only after the forget's
 tombstone lands, replaces an `item_text`, `status` or `note` whose whole value
 folds to the forgotten key with a marker, and holds the ledger lock
-`append_event` takes (`store.py:3467-3545`).
+`append_event` takes (`store.py:3589-3667`).
 
 The tombstone rows are the record of that redaction. Each carries the content
 key and a timestamp, and the id row carries the reason; the `source` is the
-constant `cli`, and no row names a channel or an author (`store.py:3346-3366`,
+constant `cli`, and no row names a channel or an author (`store.py:3468-3488`,
 `forget.py:145-182`). The memory ledgers beside it are erased differently: the
 refutation, amendment, request and relation ledgers lose every row of a
 matched record, and a quarantine's prose is redacted in place
-(`refutations.py:864`, `amendments.py:591`, `requests.py:2078`,
-`relations.py:548`, `trust.py:709`). No production path rewrites
+(`refutations.py:871`, `amendments.py:591`, `requests.py:2078`,
+`relations.py:548`, `trust.py:758`). No production path rewrites
 `verification.jsonl`, and it records checker rejections and cures rather than
 lifecycle mutations.
 
@@ -1796,7 +1824,7 @@ docstring says which.
 
 ## 10. Tests, Evals, and Benchmarks
 
-9,315 tests across 355 files, a little over twice the source in lines. Coverage tracks the
+9,732 tests across 373 files, a little over twice the source in lines. Coverage tracks the
 design claims closely: `test_quote_verification.py`, `test_carry.py`,
 `test_briefing.py` (liveness semantics, including
 `test_id_bearing_item_never_fuzzy_closed`), `test_store.py`,
@@ -1848,7 +1876,7 @@ the hit before the confirmation and its absence after, with no manual rebuild
 
 The MCP brief case and the Hermes hook case each assert the quarantined text is
 missing and an unrelated live item still renders (`test_mcp_server.py:530`,
-`test_hooks.py:696`). A candidate, a dismissed and a released quarantine are
+`test_hooks.py:706`). A candidate, a dismissed and a released quarantine are
 each asserted to withhold nothing (`test_recall.py:2083`, `:2098`). Authority
 is tested at the library, the fold and the CLI:
 `test_agent_channel_cannot_confirm` (`test_trust.py:121`),
@@ -2208,11 +2236,12 @@ letting the two be confused.
   the n+1 language remains an invisible no-op. If your gate can only ever be
   extended by enumeration, count the enumeration as the contract and say what is
   outside it.
-- **A scope argument on the agent's own tool.** Daimon's read path is careful
-  everywhere a host or a person addresses it, and its MCP recall tool takes
-  `all_projects` from the model. If the boundary matters, make the
-  widening a host setting, as `DAIMON_TENANT_SCOPED` does, and have the tool
-  refuse it by default.
+- **A grant on one agent surface and an instruction on the other.** Daimon's
+  MCP tools refuse a foreign project unless the host grants it, and its skill
+  tells the agent to cross projects with the CLI, which grants every request
+  off tenant scope. If the boundary matters, put the grant on the read, not
+  on the surface, and do not write a skill that teaches the agent the route
+  you closed elsewhere.
 - **Trusting a benchmark's headline sample size.** Five questions is not a
   result. The repo is more honest about this than most; readers still have to
   look at the config stamp.
@@ -2280,7 +2309,7 @@ they stop working.
 - **What stops a forged team quarantine?** Sidecar write access is the trust
   boundary, as it is for tombstones. `team sync` warns when a published ledger
   changed under a git author other than its owner, and its own docstring calls
-  that *"Hygiene, never proof"* (`teamsync.py:327`). The published row shape at
+  that *"Hygiene, never proof"* (`teamsync.py:446`). The published row shape at
   this pin carries no signature.
 - **Can a forget reach a value that lives only in a quarantine?** `forget`
   picks its target from checkpoint items, so a value that appears only in a
@@ -2374,7 +2403,7 @@ they stop working.
 **Integration**
 - `hook/` and `plugin/daimon_briefing/_hooks/` — per-host adapters and the shared stdlib helper
 - `plugin/daimon_briefing/mcp_server.py`, `mcp_tools.py` — read-only stdio MCP,
-  whose recall and brief tools take a cross-project slug and `all_projects`
+  whose every selector reaches `view.model_read` through `_read`
 - `plugin/daimon_briefing/api.py`, `testing.py` — the in-process host surface
   (`render_briefing`, `heal_plan`, `heal_all`, `serializes`) and the sandbox
   and seeders a host test runs against
@@ -2395,7 +2424,7 @@ they stop working.
 - `plugin/daimon_briefing/harvest.py` — zero-LLM scar-candidate drafting
 
 **Tests and evals**
-- `plugin/tests/` — 9,315 tests across 355 files, including
+- `plugin/tests/` — 9,732 tests across 373 files, including
   `test_read_sentinel.py`, the read census
 - `benchmark/` — LongMemEval-S harness, reporting policy, committed results
 - `research/experiments/recall-replay-ab/` — the replay A/B rig, its placebo
@@ -2436,10 +2465,10 @@ with a control that returns hits.
 - **A published quarantine row carries no text.** `grep -n -A1
   '^_QUARANTINE_FIELDS' plugin/daimon_briefing/store.py` lists `version`, `ts`,
   `order`, `event_id`, `quarantine_id`, `kind`, `value_key`, `state` and
-  `author`, and `_publishable` keeps those keys alone (`store.py:1113-1127`).
+  `author`, and `_publishable` keeps those keys alone (`store.py:1183-1197`).
 - **`trust.active_value_keys` has no caller.**
   `grep -rn 'active_value_keys(' --include='*.py' plugin/daimon_briefing plugin/daimon_ui hook`
-  returns its definition alone, `trust.py:372`. Control: `grep -n
+  returns its definition alone, `trust.py:373`. Control: `grep -n
   redact_content_key plugin/daimon_briefing/surfaces.py` returns two lines, the
   trust row's comment and its forget step at `:509`.
 - **`ledger repair` is on no MCP or skill surface.**
@@ -2462,27 +2491,32 @@ with a control that returns hits.
   lists nine files, and `recall.py`, `carry.py`, `briefing.py` and `view.py`
   are not among them. `view.py` imports the module as `relation_ledger`, and
   `grep -n 'relation_ledger\.' plugin/daimon_briefing/view.py` returns six
-  lines, all inside `view.relations` (`view.py:2118-2154`), the projection
+  lines, all inside `view.relations` (`view.py:2322-2358`), the projection
   behind `relations list`, `relations show` and `/api/relations`.
-- **The agent's MCP tools take the cross-project address.**
-  `git grep -n -E '"all_projects"|"slug"' -- plugin/daimon_briefing/mcp_server.py`
-  returns `:50`, `:52` and `:75`. Control: `git grep -n 'config.tenant_scoped()'
-  -- plugin/daimon_briefing/mcp_tools.py` returns the two refusals, `:71` and
-  `:125`.
+- **One MCP call site decides scope, and the CLI grant has no agent check.**
+  `git grep -n 'model_read(' -- plugin/daimon_briefing ':!plugin/daimon_briefing/view.py'`
+  returns one line, `mcp_tools.py:65`. `git grep -n 'granted=' --
+  plugin/daimon_briefing/view.py` returns two, `:496` (the host grant) and
+  `:512` (`not config.tenant_scoped()`).
+- **The skill tells the agent to widen in a shell.**
+  `git grep -n -e '--all-projects' -- plugin/daimon_briefing/skill_content.py`
+  returns `:179`, `:302`, `:397` and `:444`.
 - **Forget rewrites the ledgers in place.**
   `git grep -n -E 'jsonl\.rewrite\(' -- plugin/daimon_briefing` returns seven
-  call sites: `store.py:3544` inside `scrub_event_fields`, the four ledgers'
-  forget deleters, `trust.py:709` and `ledger_repair.py:91`; none names
+  call sites: `store.py:3666` inside `scrub_event_fields`, the four ledgers'
+  forget deleters, `trust.py:758` and `ledger_repair.py:91`; none names
   `verification.jsonl`.
 - **The noted suffix prints capture time.**
   `git grep -n 'capture, not state' -- plugin/daimon_briefing` returns
-  `briefing.py:731`.
+  `briefing.py:734`.
 - **Nothing in the product's suite or its workflows references the replay
   harness.** `grep -rln -E 'replay_ab|recall-replay-ab' plugin/tests .github`
   returns nothing. Control: the same pattern over `research/` lists
   `recall-replay-ab/verify.py` among its hits.
 
 ## History
+
+**2026-11-02** — [`b6c46c5ccac07b243a8018902b5e4cda5b695d2f`](https://github.com/Daily-Nerd/daimon/commit/b6c46c5ccac07b243a8018902b5e4cda5b695d2f) — 206 commits on, releases 0.59.2 to 0.63.1. Screened again: the same three auto-run surfaces, three build-time paths and one unpinned manifest, and two files in cooldown; nothing installed or run. No mark moved. The MCP tools refuse a foreign project unless the host sets `DAIMON_MODEL_CROSS_PROJECT` (#1223). That refusal covers the brief tool's `project` path, which at the previous pin passed even the tenant check. `scope_enforced` is withheld on the CLI instead: it grants every request off tenant scope, and the shipped skill tells the agent to pass `--all-projects` from a shell ([section 5](#5-memory-data-model)). New write door: `daimon import`, through the same capture ([section 7](#7-write-mechanics)). The size figures for six files were stale at the previous pin. 104 citations re-resolved.
 
 **2026-10-22** — [`7aca1e946a12bd778a260e1a28ef81db24579cf9`](https://github.com/Daily-Nerd/daimon/commit/7aca1e946a12bd778a260e1a28ef81db24579cf9) — 107 commits on, releases 0.56.0 to 0.59.1. `scope_enforced` withdrawn, wrong at the previous pin on identical code: the shipped MCP recall and brief tools take `slug` and `all_projects` from the model, and only a host-set tenant flag refuses them ([section 5](#5-memory-data-model)). `audit_log` holds: forget's in-place redaction of whole-value event fields keeps every row, and the tombstone is its record, which names no actor ([section 9](#9-reliability-safety-and-trust)). `tombstone`, `trust_state`, `human_review` and `negative_eval` hold, and `bitemporal` is absent across the tree. Overtaken: the refutation guard, `refute search` and the armed-check manifest match only values a reader may see, and a ruling missing one reads `[not as ratified]` ([section 2](#2-mental-model)). Captures skip attachment and compaction rows. Screened: three auto-run surfaces and two manifests in cooldown, changed only in version; nothing installed, built or run.
 
