@@ -2410,58 +2410,63 @@ outbox</td>
 <td>Two arms that never meet — FTS5 <code>bm25</code> or tsvector
 <code>ts_rank</code> across five domains in <code>MemorySearch</code>,
 mapped monotonically to <code>q/(1+q)</code> and merge-sorted; and a
-brute-force in-process cosine scan over
+brute-force in-process cosine scan over the agent's and the global
 <code>memory_file_chunks.embedding</code> in the prompt assembler, with
 keyword counting as the degraded fallback</td>
-<td>Nothing writes memory except a tool call, an admin request or a boot
-repair. The scheduler opens a <code>consolidation:intake:</code> session
-and the LLM must call <code>consolidation</code> with
-<code>action: "create"</code>; the pipeline never parses the model's
-text and infers the count by comparing row totals before and after</td>
+<td>Observations are written only by a tool call, an admin request or a
+boot repair; the ontology reconciler writes properties from parsed JSON.
+The scheduler opens a <code>consolidation:intake:</code> session and the
+LLM must call <code>consolidation</code> with
+<code>action: "create"</code>; the intake text reply is discarded, and
+the created rows are found by diffing the layer's ids before and
+after</td>
 <td><code>revise</code> is copy-on-write with <code>superseded_by</code>
-on the old row; <code>retire</code> sets <code>Deprecated</code>;
-<code>merge</code> deprecates its sources; a boot pass retires the newer
-of two identical live observations. Archive is a hard
+on the old row and lifts same-text tombstones; <code>retire</code> sets
+<code>Deprecated</code> and leaves a row the create path consults by
+exact text within one layer; <code>merge</code> deprecates its sources
+without superseding them; a boot pass supersedes the newer of two
+identical live observations. Archive is a hard
 <code>DELETE FROM observations</code> when the model says demote on the
-bottom layer, and its audit row does not carry the text.
+bottom layer, with the full row in the mutation log.
 <code>ontology:delete</code> removes an entity with a logged motivation;
 nothing removes or moves a single property</td>
-<td><code>agent_id</code> on layers, observations, entities, properties
-and diary entries; the layer is the enforced boundary on every
-observation read path, the ontology arm of unified search has no agent
-predicate, and the ontology's unique key omits the agent</td>
+<td><code>agent_id</code> on layers, observations, entities, properties,
+ontology search docs and diary entries; the layer is the enforced
+boundary on every observation read path, the ontology's unique key and
+search arm carry the agent, and a Lua script runs as its VM's bound
+agent</td>
 <td>One <code>animusd</code> binary — Drogon HTTP API, a Vue 3 admin SPA
 compiled into the executable, Lua channel adapters, a Lua 5.4 scripting
 runtime, two agent-facing tools (<code>memory</code>,
 <code>consolidation</code>) and an <code>ActiveMemoryProvider</code> at
 priority 30 in the prompt</td>
-<td>Cron schedules registered per agent and per layer at startup —
-hourly intake into <code>day</code>, a review pass per layer from every
-two hours to yearly, and a session-report pass; <code>millennium</code>
-is excluded from both; a federation pull loop when peers are
+<td>Cron schedules per agent and per layer, re-registered on any layer
+change — hourly intake into <code>day</code>, a review pass per layer
+from every two hours to yearly, and a session-report pass 30 minutes
+after intake, with <code>millennium</code> excluded. At boot, a sweep
+for live twins of retired rows; a federation pull loop when peers are
 configured</td>
 <td><code>MemoryState { New, Current, Deprecated }</code> on an
 observation and on the ontology property linked to it, filtered out of
-the assembled prompt, the review batch and unified search; an ontology
+the assembled prompt, the review batch and unified search; a retired row
+makes the same text in the same layer arrive deprecated; an ontology
 property in a selected entity is printed whatever its state</td>
 <td>A discrete epistemic state spent on withholding rather than
-discounting, on four read paths; two append-only mutation logs, one of
-which snapshots the row before and after; a perspective pass that
-refuses to run on a layer with nothing live in it; write receipts taken
-from <code>INSERT ... RETURNING</code> rather than store-global row
-counts; and an admin surface that shows the reviewer the assembled
-context block itself</td>
-<td>Default-layer seeding by fixed id leaves every agent after the first
-with no layers; the tool dispatcher executes any registered handler by
-name without checking what the session was offered, and the
-consolidation tool applies no action whitelist outside its three session
-prefixes; the Lua tool bridge never injects <code>__agent_id</code>, so
-a script names its own; the intake phase discards the LLM response it
-asks for; <code>ReconcileOntologyFromObservations</code> is always
-handed an empty vector; the ontology namespace and its search arm are
-global across agents; and agent deletion runs
-<code>DELETE FROM ontology_properties WHERE agent_id=?</code> against a
-column nothing writes</td>
+discounting, on four read paths, and a retired row consulted on create
+so re-extraction lands deprecated. Two append-only mutation logs that
+both snapshot the row; one predicate for which tools a session is
+offered and may call; a perspective pass that refuses to run on nothing;
+write receipts from <code>INSERT ... RETURNING</code>; a migration tool
+that aborts on any column mismatch</td>
+<td><code>merge</code> retires its sources in the tombstone shape, so a
+merge that keeps a source's wording loses the value at the next boot.
+The Lua bridge skips the session-type gate and reaches every
+consolidation verb on its own agent. A revised-away wording is not a
+tombstone and comes back live on re-derivation. <code>source</code> is
+model-supplied; deprecated ontology properties are searchable and
+printed; ontology correction is entity-level only; on PostgreSQL a
+property whose evidence is deleted keeps its state; federation applies a
+peer's outbox as written</td>
 </tr>
 <tr>
 <td><a
@@ -22320,23 +22325,27 @@ relations and a per-concept audit log</td>
 knowledge</td>
 <td>SQL <code>LIKE</code> over the event JSON,
 <code>difflib.SequenceMatcher</code> over the newest 500 rows, and graph
-walks over <code>is_a</code>/<code>part_of</code>/<code>causes</code> —
-no embeddings anywhere</td>
+walks over <code>is_a</code>/<code>part_of</code>/<code>causes</code>;
+no embedding on any read path, where a MiniLM score only proposes
+relations</td>
 <td>Event-bus fan-in with a 50-event/5-second buffer; a relation from a
-typed sentence waits for a typed yes, while auto-extraction and
-Wikipedia append unverified edges without asking</td>
+typed sentence waits for a typed yes, relations proposed by spaCy over
+Wikipedia or by embedding similarity wait for a numbered choice, while
+auto-extraction and a first Wikipedia store append unverified edges
+without asking</td>
 <td><code>weerleg</code> marks a sense, concept or relation
 <code>rejected</code>; reasoning ignores rejected rows while
 <code>get_senses()</code> shows them; <code>add_sense</code> tests the
 rejected status first and returns a <code>blocked</code> signal, with
-re-admission behind a typed yes/no that writes its own audit entry; a
-placeholder upgrade that runs first bypasses the check, and a Wikipedia
-refresh replaces a sense's relations; a hard delete is refused until
-everything is rejected first</td>
+re-admission behind a typed yes/no that writes its own audit entry;
+declining a proposed relation stores it rejected; a hard delete is
+refused until everything is rejected first; for preferences,
+<code>vergeet</code> ends one into a dated history and
+<code>wis definitief</code> erases it</td>
 <td>None — a single named user, no scope key anywhere</td>
 <td>An in-process event bus; a Linux daemon in Docker with a Windows
-client over an unauthenticated WebSocket; a 24/7 loop that decides when
-to speak unprompted</td>
+client over a token-authenticated, fail-closed WebSocket; a 24/7 loop
+that decides when to speak unprompted</td>
 <td>Six-hourly maintenance — RAM trim, 90-day archival, 365-day gzip,
 vacuum, backup rotation, health check; four-hourly classifier
 retraining; a 15-minute contradiction sweep that reports conflicts to
@@ -22345,15 +22354,15 @@ the user</td>
 <code>unverified</code>, <code>confirmed</code>, <code>rejected</code> —
 set from the source and filtered on four reasoning reads, beside
 <code>source</code>, <code>confidence</code> and a per-concept audit
-log; nothing promotes an unverified relation</td>
+log; a person promotes or rejects an unverified relation from a numbered
+list</td>
 <td>A rejection keyed on the definition text that no automatic source
 can lift and a person lifts only by answering for that value, negative
 cases with positive controls, and an audit log on the concept
 itself</td>
-<td>The refusal matches definition text exactly and is skipped when a
-placeholder sense is upgraded first; a Wikipedia refresh resets a
-confirmed sense and replaces its relations, rejected ones included,
-unaudited; and a licence that forbids reuse</td>
+<td>The refusal matches definition text exactly; two automatic relation
+writers append without an audit entry; preference validity dates are the
+dates they were recorded; and a licence that forbids reuse</td>
 </tr>
 <tr>
 <td><a href="../systems/npcpy/"><code>npcpy</code></a></td>
@@ -34245,10 +34254,11 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>68 of 764:</em> <a
+<p><em>69 of 764:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
+href="../systems/animus/"><code>animus</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/cass-memory-system/"><code>cass-memory-system</code></a>,

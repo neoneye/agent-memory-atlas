@@ -126,7 +126,7 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 68 systems of
+recurs across the corpus. 69 systems of
 764 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
@@ -291,7 +291,7 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>68 systems of
+<p><strong>69 systems of
 764 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -640,7 +640,7 @@ rows, and the status branch below it promoted only when
 refusal and left it standing — but a person re-teaching the same
 sentence set <code>confirmed</code> and lifted it with nothing recorded
 and nothing asked.</p>
-<p><code>core/semantic.py:204</code> now tests the rejected status
+<p><code>core/semantic.py:207</code> tests the rejected status
 <em>first</em> and returns <code>{"blocked": "rejected", …}</code>
 without touching the stored sense. The signal is carried up to the layer
 holding the chat bus, where an automatic source is reported and never
@@ -649,12 +649,14 @@ rejected this — do you really want to confirm it again?"</em> whose
 <code>ja</code> writes a <code>sense_reactivated</code> audit entry.
 Seven cases in <code>tests/test_tombstone.py</code> hold each link, and
 the one covering re-assertion says in its docstring that it replaced a
-test pinning the previous behaviour. The check lives in
-<code>add_sense</code>, and <code>TeachEngine.teach</code> calls
-<code>upgrade_unknown_sense</code> before it: on a concept that also
-holds an <code>unknown</code> placeholder, a refuted definition typed
-again fills the placeholder as <code>confirmed</code> without the
-question, and no test covers that order.</p>
+test pinning the previous behaviour. The same check sits in
+<code>upgrade_unknown_sense</code>, which <code>TeachEngine.teach</code>
+calls before <code>add_sense</code>. Until 24 October 2026 it did not,
+and a refuted definition typed again could fill an <code>unknown</code>
+placeholder as <code>confirmed</code> without the question (Nova's bug
+47);
+<code>test_47_upgrade_unknown_sense_blokkeert_weerlegde_definitie</code>
+covers that order.</p>
 <p>That is the whole argument of this page, run once by somebody who had
 the shape already: <strong>the property falls out of writing dedup
 against content and rejection against the same record, and it is

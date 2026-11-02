@@ -4806,21 +4806,18 @@ after the user answers a typed question — "may I remember that X is a
 kind of Y?" — with sense disambiguation asked first, and a refuted
 definition the user types again is re-admitted only after a second
 question, as an audited event.</li>
-<li>Biggest risk: the refusal holds only on the paths that consult it.
-<code>TeachEngine.teach</code> upgrades an <code>unknown</code>
-placeholder sense before <code>add_sense</code> checks for a rejected
-one, and a <code>wiki</code> refresh resets a confirmed Wikipedia sense
-to <code>unverified</code> and replaces its relation list, rejected
-edges included, with no audit entry. Every rejection runs through the
-user, and none records a reason.</li>
+<li>Biggest risk: the refusal is exact-text, so a paraphrase of a
+refuted definition is a new string. Every rejection runs through the
+user, and the <code>weerleg</code> verb records no reason. The two
+automatic relation writers still append without an audit entry.</li>
 <li>Most reusable component: a refusal keyed on the definition text that
 <code>add_sense</code> tests before any other branch and returns as a
 <code>blocked</code> signal, so each caller has to choose between
 reporting it, for automatic sources, and asking, for the user.</li>
 <li>Maturity impression: one author's carefully documented Python with a
-detailed changelog, five capability marks, and 807 pytest functions,
-seven of them pinning the refusal on <code>add_sense</code>; the write
-paths that go around it are untested.</li>
+detailed changelog, five capability marks, and 2,520 pytest functions;
+the paths that once went around the refusal were each fixed with its own
+test, and a 29-case answer benchmark is committed with its run log.</li>
 <li>Study when: you want to see what correction machinery looks like
 when there is no model to blame; every epistemic decision here had to be
 written down because nothing could be delegated to a language
@@ -13905,17 +13902,14 @@ refuses to regenerate a layer's narrative when nothing in it is live,
 because generating from a retired layer means <em>"the LLM invents
 narratives from training context rather than reflecting on
 data"</em>.</li>
-<li>Biggest risk: the boundaries around the memory are looser than its
-comments say. The default layers are seeded at fixed ids 1 to 7 through
-a lookup that does not compare the agent, so every agent after the first
-gets none. The dispatcher runs any registered tool the model names, the
-consolidation tool's action whitelist applies only under its three
-session prefixes, and the Lua bridge never injects
-<code>__agent_id</code>. Beside them, intake discards the LLM response
-it asked for, <code>createdObservations</code> is never filled so the
-ontology reconciler returns on its first line, and
-<code>ontology_properties.agent_id</code> has no writer while agent
-deletion runs <code>DELETE … WHERE agent_id=?</code> against it.</li>
+<li>Biggest risk: the consolidation verbs that route around the guards.
+<code>merge</code> creates its result without the tombstone check and
+retires its sources in the tombstone shape, so a merged text that keeps
+a source's wording is retired again at the next boot and the value is
+lost. The Lua bridge calls the tool handler directly and skips the
+session-type gate. A wording replaced by <code>revise</code> is not a
+tombstone and comes back live when intake re-derives it, and
+<code>source</code> is a field the model fills.</li>
 <li>Most reusable component:
 <code>src/kernel/consolidation/ConsolidationPipeline.cpp</code> — the
 two guards that stop a summary being regenerated from nothing — beside
@@ -13923,26 +13917,24 @@ the session-typed action whitelist in
 <code>src/kernel/tools/ConsolidationTool.cpp</code>, where the run that
 ingests untrusted text gets <code>create</code> and not
 <code>retire</code> and the curating run gets the reverse.</li>
-<li>Maturity impression: Apache-2.0, v0.4.6, 693 commits from a 12 July
-2026 squashed import, about 109,000 lines of C++ plus a 47,840-line Vue
-SPA compiled into the binary, with optional replication of the memory
-tables between nodes. Four of seven capability marks. No paper, no
-<code>CITATION.cff</code>, no eval or benchmark directory, and no
-committed measurement behind the memory rows the README marks Live. The
-memory suites do carry a search case asserting that retired and
-superseded observations stay out, and a curation case for ontology
-deletion.</li>
+<li>Maturity impression: Apache-2.0, tagged v0.4.7, 765 commits from a
+12 July 2026 squashed import, 110,783 lines of C++ plus a 47,851-line
+Vue SPA compiled into the binary, with optional replication of the
+memory tables between nodes. Five of seven capability marks. No paper,
+no <code>CITATION.cff</code>, no eval or benchmark directory. The memory
+suites carry a search case asserting that retired and superseded
+observations stay out, an ontology search case asserting another agent's
+documents stay out, and a create case asserting a re-extracted retired
+sentence lands deprecated.</li>
 <li>Study when: you want a single self-hosted binary running a
 long-lived agent with memory that distinguishes reviewed-and-kept from
 written-and-unexamined from retired, and a worked example of layering an
 LLM review loop over a time-ordered store.</li>
-<li>Do not copy when: you run agents for other people, or more than one
-agent of your own. The ontology namespace is global across tenants, its
-search arm has no agent filter, its per-agent cleanup deletes nothing,
-default layers serve the first agent only, and the Lua bridge lets any
-in-process script name whichever agent it likes —
-<code>ToolExecutionService</code> overwrites <code>__agent_id</code>,
-and <code>LuaToolProxyCall</code> never calls it.</li>
+<li>Do not copy when: you need correction finer than exact text in one
+layer, or ontology correction below the entity. A retired sentence
+reworded by the extractor is a new value, deprecated ontology properties
+are still searched and printed, and federation applies a peer's outbox
+as written.</li>
 </ul>
 <h3 id="ragflow"><a
 href="../systems/ragflow/"><code>ragflow</code></a></h3>

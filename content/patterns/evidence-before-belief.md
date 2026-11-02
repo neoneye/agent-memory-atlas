@@ -273,9 +273,10 @@ question asked in plain language — *"Mag ik onthouden dat 'X' is een soort van
 'Y'?"* — with the sense disambiguated first, by number, if the word has more than
 one. An unparseable answer re-asks rather than defaulting. The boundary covers
 the user's own sentences only: `_auto_extract_is_a` and the Wikipedia teacher
-append `unverified` edges from definitions without asking, and nothing promotes
-one later, because confirming an edge that is already stored is a no-op the
-gate announces as success. With no model to distrust, the pattern here is the
+append `unverified` edges from definitions without asking. A person promotes
+one later from the uncertainty list, which numbers unverified relations and
+confirms or rejects one per typed answer, and relations proposed from Wikipedia
+or by embedding similarity are stored only when the user picks them. With no model to distrust, the pattern here is the
 recognition that a parse and a belief are different objects, and it costs one
 conversational turn taken at the moment the user still has the context to
 answer.

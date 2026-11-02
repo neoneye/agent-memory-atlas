@@ -2604,7 +2604,7 @@ carries <code>MemoryState { New, Current, Deprecated }</code> beside a
 separate <code>weight</code> float, and the state is used to exclude
 rather than to rank. <code>AppendEpisodic</code> skips a
 <code>Deprecated</code> row before it can enter the assembled episodic
-block (<code>src/kernel/context/ActiveMemoryProvider.cpp:258</code>),
+block (<code>src/kernel/context/ActiveMemoryProvider.cpp:259</code>),
 unified search drops it in SQL with
 <code>memory_state &lt;&gt; 2</code>,
 <code>ListObservationsDueForReview</code> will not put one in front of
@@ -2616,29 +2616,19 @@ data"</em>. The same codebase declines to apply the rule to ontology
 properties, and says so: <em>"Deprecated properties may still be
 relevant context for the agent."</em> Seven layers named for durations
 decide <em>when</em> a review fires; the model decides what moves, and a
-verdict of <em>demote</em> on the bottom layer is a hard
-<code>DELETE</code> whose audit row keeps the reason and not the
-text.</p>
-<p>Around that state, the scope key is declared everywhere and enforced
-on the observation path only. <code>MemorySearch</code> carries
-<code>ml.agent_id=?</code> into the SQL on both dialects, and the diary,
-memory-file and session arms filter too. The ontology arm carries no
-agent predicate, <code>ontology_entities</code> is uniquely keyed on
-<code>(root_category, full_path)</code> with no agent in the key, and
-<code>ontology_properties.agent_id</code> is
-<code>NOT NULL DEFAULT 'default'</code> with no writer, while agent
-deletion runs
-<code>DELETE FROM ontology_properties WHERE agent_id=?</code> against
-it. The seven default layers are seeded at fixed ids 1 to 7 through a
-lookup that does not compare the agent, so every agent after the first
-gets no layers. And two call paths step around the tool boundary. The
-dispatcher runs any registered handler the model names, whatever the
-session was offered, and the consolidation tool's action whitelist
-applies only under its three session prefixes.
-<code>LuaToolProxyCall</code> marshals a script's own table into
-<code>call.arguments</code> without passing through
-<code>ToolExecutionService</code>, so a script naming whichever agent it
-likes satisfies the ownership check. See <a
+verdict of <em>demote</em> on the bottom layer deletes the row after the
+mutation log has captured it whole.</p>
+<p>A retired row is also the tombstone. The create path looks for a
+retired, never-revised row with the same agent, layer and text, and
+files a re-extracted match as <code>Deprecated</code> with an
+<code>observation_auto_deprecated</code> mutation; only
+<code>revise</code> brings the wording back. The key is exact text
+within one layer, and <code>merge</code> goes around it: it creates its
+result without the check and retires its sources in the tombstone shape,
+so a merge that keeps a source's wording is lost at the next boot. The
+scope key is enforced on the observation and ontology read paths alike,
+with the agent in the ontology's unique key and search arm, and a Lua
+script runs as its VM's bound agent. See <a
 href="../systems/animus/">Animus</a>.</p>
 <p><strong>RAGFlow is the family's case of memory as a feature inside a
 much larger product, and it is instructive on both halves.</strong> The

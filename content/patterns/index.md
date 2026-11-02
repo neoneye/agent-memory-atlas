@@ -178,7 +178,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Explicit trust state | 194 of 764 |
 | Bi-temporal validity | 127 of 764 |
 | Human review surface | 96 of 764 |
-| Rejected-value tombstone | 68 of 764 |
+| Rejected-value tombstone | 69 of 764 |
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are: PLACEHOLDER_PATTERN_HUMAN_REVIEW_COUNT

@@ -107,14 +107,14 @@ and refuses re-asserted refuted definitions.</p>
               <strong>Whooptie/NOVA_AI</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Whooptie/NOVA_AI/commit/802a3218f2d99b2216258e23feb68893217cb54b" title="802a3218f2d99b2216258e23feb68893217cb54b">
+            <a class="meta-pill revision-pill" href="https://github.com/Whooptie/NOVA_AI/commit/1211abfcad0175488641a671570468cbd9a00d6c" title="1211abfcad0175488641a671570468cbd9a00d6c">
               <span>Analyzed revision</span>
-              <code>802a3218…</code>
+              <code>1211abfc…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-28</strong>
+              <strong>2026-11-02</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Whooptie--NOVA_AI" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -126,17 +126,18 @@ and refuses re-asserted refuted definitions.</p>
             <div class="meta-pill fact-pill"><span>Licence</span><strong>All
 rights reserved; LICENSE.txt is titled Viewable, Not
 Reusable</strong></div>
-            <div class="meta-pill fact-pill"><span>Size</span><strong>34,789
-lines of Python in 93 files outside tests and the vendored Stockfish
-engine; core/semantic.py is 2,496 of them and core/memory.py
-870</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>180
-commits on main by one author, 30 June – 26 September 2026; every commit
+            <div class="meta-pill fact-pill"><span>Size</span><strong>53,311
+lines of Python in 136 files outside tests and the vendored Stockfish
+engine; core/semantic.py is 3,250 of them and core/memory.py
+948</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>251
+commits on main by one author, 30 June – 2 November 2026; every commit
 after 1 July was rewritten once to remove the event
 database</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>807
-pytest functions and 1,313 assert lines in 54 test files; 12 print-only
-scripts under tests/manual tests</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,520
+pytest functions and 4,171 assert lines in 146 test files; 12 print-only
+scripts under tests/manual tests; a 29-case answer benchmark with its
+run log committed</strong></div>
           </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
@@ -159,11 +160,13 @@ its defining constraint is stated in the README: <strong>no LLM in the
 core, no cloud AI</strong>. Nothing on a running path calls a model.
 <code>core/llm_bridge.py</code>, an Ollama client, has no caller outside
 a manual script. Its refusal of a refuted belief is keyed on the value
-and consulted first on the main write path, and two other writes go
-around it.</p>
-<p>That constraint puts every epistemic decision in the code. Nova has
-no embedding to supply similarity and no model to supply judgement, so
-string matching, a hand-built concept graph and rules do all of it.</p>
+and consulted on every write path that can store a definition.</p>
+<p>That constraint puts every epistemic decision in the code. A MiniLM
+embedding model and spaCy run as bounded specialists that
+<em>propose</em> relations, and nothing they propose is stored until the
+user picks it from a numbered list. No model answers a question or
+decides what is true, so string matching, a hand-built concept graph and
+rules do all of it.</p>
 <p><strong>Its knowledge memory is a concept graph with provenance on
 every edge.</strong> A concept is a word; a word has senses carrying
 <code>sense_id</code>s; a sense has relations (<code>is_a</code>,
@@ -171,8 +174,12 @@ every edge.</strong> A concept is a word; a word has senses carrying
 <code>antonym</code>) and each relation carries a <code>source</code>, a
 <code>confidence</code>, a <code>status</code> and a
 <code>created_at</code>. The committed <code>concepts.json</code> holds
-299 concepts and 258 relations: 236 from the user, 15 from Wikipedia and
-7 extracted from definitions.</p>
+1,234 concepts and 4,569 relations: 4,372 with source <code>user</code>,
+174 <code>embedding</code>, 17 <code>wikipedia</code> and 6
+<code>auto_extract</code>. Of those, 4,359 are confirmed, 198 rejected
+and 12 unverified. A relation a person confirms from a list takes source
+<code>user</code> and keeps the original in
+<code>oorspronkelijke_bron</code>.</p>
 <p><strong>A relation parsed from the user's sentence passes a typed
 confirmation gate.</strong> Before storing it, Nova asks <em>"Mag ik
 onthouden dat 'X' is een soort van 'Y'?"</em> — may I remember that X is
@@ -180,15 +187,18 @@ a kind of Y — and writes only on <code>ja</code>. If the subject has
 more than one known sense it asks which one first, by number. The gate
 is a turn in the conversation at the terminal prompt. Two automatic
 writers do not pass it: <code>_auto_extract_is_a</code> and the
-Wikipedia teacher append <code>unverified</code> edges without
-asking.</p>
+Wikipedia teacher's first store append <code>unverified</code> edges
+without asking. Those edges have an exit: <em>"wat weet je niet
+zeker?"</em> — what are you unsure of — lists them by number, and
+<code>bevestig N</code> or <code>wijs af N</code> confirms or rejects
+one (<code>modules/knowledge/uncertainty.py:424-434</code>).</p>
 <p><strong>Every concept carries its own audit log.</strong>
 <code>ensure_concept</code> seeds an <code>audit_log</code> array, and
 sense creation, upgrade, confidence change, relation add, rejection and
 reactivation append to it, with <code>old_value</code> and
 <code>new_value</code> where a value changed. Only concept creation and
 hard deletes are mirrored to <code>logs/concepts.jsonl</code>
-(<code>core/semantic.py:81</code>, <code>:438</code>).</p>
+(<code>core/semantic.py:84</code>, <code>:459</code>).</p>
 <p><strong>The refusal is consulted before the write on the main
 path.</strong> <code>weerleg</code> — refute — sets
 <code>status = "rejected"</code> on a sense, a concept's every sense, or
@@ -201,22 +211,22 @@ use.</p>
 <p><code>reject_sense</code>, <code>reject_relation</code> and
 <code>reject_concept</code> take a <code>reason</code>, and none of the
 three <code>weerleg</code> handlers passes one
-(<code>core/intent_router.py:504</code>, <code>:575</code>,
-<code>:636</code>). The two refutations in the committed graph carry no
+(<code>core/intent_router.py:619</code>, <code>:690</code>,
+<code>:751</code>). The two refutations in the committed graph carry no
 reason.</p>
 <p>What makes it a tombstone rather than a soft delete is the
 deduplication loop in <code>add_sense</code>
-(<code>core/semantic.py:188</code>). It matches an incoming definition
+(<code>core/semantic.py:191</code>). It matches an incoming definition
 against existing senses by definition text, and its
 <strong>first</strong> test on a match is the rejected status
-(<code>:204</code>). A hit returns not a sense but a signal —
+(<code>:207</code>). A hit returns not a sense but a signal —
 <code>{"blocked": "rejected", "sense": …, "attempted_source": …}</code>
 — and the stored sense is not touched at all.</p>
 <p>The signal is threaded up rather than swallowed.
 <code>TeachEngine.teach</code> passes it through untouched and skips
 <code>_auto_extract_is_a</code> on that path — <em>"er is niets nieuws
-om relaties uit te halen"</em> (<code>:1634</code>).
-<code>SemanticConceptsModule.teach</code> (<code>:2146</code>) holds the
+om relaties uit te halen"</em> (<code>:2162</code>).
+<code>SemanticConceptsModule.teach</code> (<code>:2735</code>) holds the
 chat bus and splits on the source. A non-user source —
 <code>wikipedia</code>, <code>auto_extract</code> — is only reported,
 never applied.</p>
@@ -227,7 +237,7 @@ already rejected '<code>&lt;word&gt;</code>' →
 again?"</em> Answering <code>nee</code> leaves the rejection standing.
 Answering <code>ja</code> sets <code>confirmed</code> and writes a
 <code>sense_reactivated</code> audit entry carrying the previous status
-and <em>"Kevin bevestigde expliciet opnieuw"</em> (<code>:2211</code>).
+and <em>"Kevin bevestigde expliciet opnieuw"</em> (<code>:2800</code>).
 The committed graph holds one such round trip, <code>gitaar#1</code>,
 rejected and reactivated on 8 August 2026.</p>
 <p>So the value-keyed refusal is durable against automatic
@@ -235,17 +245,26 @@ re-derivation, and lifting it requires a person to answer a question
 about that value, as an audited event. That is the <a
 href="../../patterns/rejected-value-tombstone/">rejected-value
 tombstone</a> built with string equality and a dict.</p>
-<p><strong>Three limits.</strong> The match is
+<p><strong>The limit is exactness.</strong> The match is
 <code>s.get("definition") == definition</code>, so a paraphrase is a
-different string and is not blocked. <code>TeachEngine.teach</code>
-calls <code>upgrade_unknown_sense</code> before <code>add_sense</code>
-(<code>:1601</code>), and that upgrade consults no rejected sense. On a
-concept that also holds an <code>unknown</code> placeholder, a re-typed
-refuted definition fills the placeholder as <code>confirmed</code>, with
-no question. And a <code>wiki &lt;word&gt;</code> refresh of a
-Wikipedia-sourced sense sets it <code>unverified</code> and replaces its
-relation list, rejected edges included, without an audit entry
-(<code>modules/knowledge/wikipedia_teacher.py:329-330</code>).</p>
+different string and is not blocked. The other writers of a definition
+consult the same status. <code>upgrade_unknown_sense</code>, which
+<code>TeachEngine.teach</code> and the Wikipedia teacher call before
+<code>add_sense</code>, returns the same <code>blocked</code> signal
+(<code>core/semantic.py:297</code>). A <code>wiki &lt;word&gt;</code>
+refresh returns before touching a rejected or a user-confirmed Wikipedia
+sense. It keeps every existing relation and adds only new ones, and it
+writes a <code>wikipedia_refresh</code> audit entry with the old
+definition and status
+(<code>modules/knowledge/wikipedia_teacher.py:335</code>,
+<code>:367</code>).</p>
+<p>Relations get the same refusal by a different route. Declining a
+proposed relation — <code>laat N vallen</code> for a Wikipedia
+extraction, <code>negeer N</code> for an embedding match — stores it as
+<code>rejected</code> with a reason
+(<code>modules/knowledge/similarity_proposals.py:457-468</code>).
+<code>add_relation</code> then refuses that type and target on the
+sense, and the proposal lists skip the pair.</p>
 <p><code>hard_delete</code> sits behind the refusal as a second step: it
 refuses while any sense is still unrejected, so physical removal
 requires the refusal first.</p>
@@ -259,20 +278,19 @@ lifted.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Nova has two memories that never touch. Events are what happened;
 concepts are what is held true. The refusal is keyed on a sense's
-definition text, so the diagram follows a sense, including the two
-writes that go around the refusal.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — a sense's status in the concept graph, with the placeholder upgrade and the Wikipedia refresh that bypass the rejected check</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a sense&#39;s status in the concept graph, with the placeholder upgrade and the Wikipedia refresh that bypass the rejected check
+definition text, so the diagram follows a sense.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a sense's status in the concept graph; every automatic write of a definition checks the rejected status first, and only a typed yes re-admits one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a sense&#39;s status in the concept graph; every automatic write of a definition checks the rejected status first, and only a typed yes re-admits one
 stateDiagram-v2
     [*] --&gt; Placeholder: unknown word, or the plural of a known one
     Placeholder: sense with definition &quot;unknown&quot;&lt;br/&gt;confidence 0.1, never offered as a meaning
     [*] --&gt; Confirmed: the user teaches a new definition
     [*] --&gt; Unverified: Wikipedia adds a sense
     Placeholder --&gt; Unverified: Wikipedia fills it
-    Placeholder --&gt; Confirmed: the user types a definition&lt;br/&gt;no rejected sense is consulted
+    Placeholder --&gt; Confirmed: the user types a definition&lt;br/&gt;blocked if that text was rejected
     Unverified: status unverified&lt;br/&gt;used by reasoning
     Confirmed: status confirmed
     Unverified --&gt; Confirmed: the user teaches the same text
-    Confirmed --&gt; Unverified: wiki refresh of a Wikipedia sense&lt;br/&gt;relations replaced, no audit entry
+    Unverified --&gt; Unverified: wiki refresh&lt;br/&gt;relations kept, audited
     Unverified --&gt; Rejected: weerleg
     Confirmed --&gt; Rejected: weerleg
     Rejected: status rejected&lt;br/&gt;kept in concepts.json, filtered from reasoning
@@ -287,46 +305,44 @@ automatic source can re-admit a refuted definition, and a person
 re-admits one only by answering for it. That matters because
 <code>is_a_chained</code> walks inference chains, and a wrong edge left
 in place would be reasoned through confidently forever.</p>
-<p>The placeholder edge is how the refusal leaks.
-<code>auto_learn</code> runs on nouns in unmatched sentences, normalises
-a plural to an existing singular
-(<code>core/semantic.py:1562-1571</code>) and adds an
-<code>unknown</code> sense beside that concept's real ones.
-<code>werk#3</code> in the committed graph has that shape: source
-<code>auto</code>, created 24 September 2026 beside two confirmed
-senses. A later typed teach of a refuted definition for such a word
-fills the placeholder rather than reaching <code>add_sense</code>.</p>
-<p>The refresh edge breaks the monotonicity the trust-state comments
-promise. In <code>add_sense</code> an automatic match never downgrades a
-confirmed sense (<code>:217-225</code>). For a word with no user-sourced
-sense, the Wikipedia refresh branch
-(<code>modules/knowledge/wikipedia_teacher.py:317-334</code>) sets its
-Wikipedia sense back to <code>unverified</code> and replaces its
-relation list when the new extraction returns any. <code>gitaar#1</code>
-is confirmed with source <code>wikipedia</code>, and <code>hond#1</code>
-holds the graph's one rejected relation.</p>
+<p>Placeholders come from <code>auto_learn</code>, which runs on nouns
+in unmatched sentences, normalises a plural to an existing singular
+(<code>core/semantic.py:2085-2094</code>) and adds an
+<code>unknown</code> sense beside that concept's real ones. Filling a
+placeholder goes through <code>upgrade_unknown_sense</code>, which
+checks the rejected status before it writes, so a placeholder is not a
+way around the refusal.</p>
+<p>Status is monotone under automatic sources. In <code>add_sense</code>
+an automatic match never downgrades a confirmed sense, and the Wikipedia
+refresh returns early on a Wikipedia sense the user confirmed. It
+touches only an unverified one, which it leaves unverified.</p>
 <p>Relations have a smaller machine. A relation parsed from a typed
 sentence waits in <code>pending_relation</code> until <code>ja</code>
 and is stored <code>confirmed</code> — <a
 href="../../patterns/evidence-before-belief/">evidence before belief</a>
 in a system with no model to distrust. <code>weerleg</code> rejects a
-relation. Nothing promotes an <code>unverified</code> edge or lifts a
-rejected one: <code>add_relation</code> returns early on any existing
-type and target (<code>core/semantic.py:776-778</code>), and
-<code>handle_confirm</code> announces <em>"Oké, ik onthoud nu…"</em>
-without reading that return (<code>:2062-2068</code>).</p>
+relation. <code>confirm_relation</code> promotes an
+<code>unverified</code> one from the uncertainty list or a proposal
+list, sets source <code>user</code> and confidence 1.0, writes a
+<code>relation_confirmed</code> audit entry, and refuses a rejected
+relation or one under a rejected sense
+(<code>core/semantic.py:1075</code>). Nothing lifts a rejected relation:
+<code>add_relation</code> returns early on any existing type and target
+(<code>:998-1000</code>). <code>handle_confirm</code> reads that return
+and says why nothing was stored — already rejected, already known, or
+failed.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>One process on one host. <code>main.py</code> builds an in-process
 <code>EventBus</code>, loads modules from <code>core/</code>,
 <code>modules/</code> and <code>identity/</code>, and reads the user's
-turns from a terminal prompt (<code>main.py:436</code>). Storage is
+turns from a terminal prompt (<code>main.py:796</code>). Storage is
 <code>data/</code>: <code>interactions.db</code> and
 <code>interactions.jsonl</code> for events, <code>concepts.json</code>
 for knowledge, and a dozen smaller JSON files for the profile, learned
 patterns, chess state and classifier models.</p>
 <p><code>core/</code> carries the infrastructure —
-<code>memory.py</code> (870 lines), <code>semantic.py</code> (2,496),
-<code>intent_router.py</code> (4,485), <code>event_bus.py</code>,
+<code>memory.py</code> (948 lines), <code>semantic.py</code> (3,250),
+<code>intent_router.py</code> (5,887), <code>event_bus.py</code>,
 <code>response_engine.py</code>, <code>module_loader.py</code>.
 <code>modules/</code> is the surface area: knowledge, learning, weather,
 chess, math, activity, preferences, context, chat, network, time.
@@ -338,14 +354,18 @@ the tested platform. The <code>Dockerfile</code> installs Python 3.11.9
 and Stockfish only; code and data are mounted as a volume, so the image
 holds no memory. <code>requirements.txt</code> adds
 <code>python-chess</code>, scikit-learn for the intent classifier,
-MediaPipe and <code>websockets</code>. No database server, no vector
-store, no API key, and no network call is required for the memory itself
-to work.</p>
+MediaPipe and <code>websockets</code>, spaCy for sentence parsing and
+<code>sentence-transformers</code> for the optional embedding
+specialist, which caches vectors in
+<code>data/embeddings_cache.npz</code> and switches itself off when the
+package is absent. No database server, no vector store, no API key, and
+no network call is required for the memory itself to work.</p>
 <p>A Windows companion client, not in this tree, streams activity, focus
 and presence labels to <code>modules/network/client_bridge.py</code>.
-The bridge listens on <code>0.0.0.0</code> with no authentication,
-relying on Tailscale by its own docstring (<code>:212</code>), and sends
-whitelisted open-app and open-URL commands back. None of its five
+The bridge requires a shared token in the first message, compared with
+<code>hmac.compare_digest</code>, and refuses every connection when no
+token is configured (<code>:126-134</code>, <code>:297-327</code>). It
+sends whitelisted open-app and open-URL commands back. None of its five
 message types is a chat turn, so it cannot answer the confirmation
 gate.</p>
 <p>The cost is that it is one person's machine. There is no scope key
@@ -370,20 +390,18 @@ can answer:</p>
 <code>ja</code>/<code>yes</code>/<code>y</code>, discards on
 <code>nee</code>/<code>no</code>/<code>n</code>, and on anything else
 re-asks rather than guessing. It is reached from
-<code>core/intent_router.py:4465-4467</code> only when the whole turn is
+<code>core/intent_router.py:5867-5869</code> only when the whole turn is
 <code>ja</code> or <code>nee</code> and no earlier pending question
 claimed it. Senses whose definition is <code>"unknown"</code> are
-excluded from the numbered list (<code>core/semantic.py:1965</code>,
-<code>:1982</code>); rejected senses are not, so a person can be offered
-a refuted meaning and attach an edge that <code>get_relations</code>
-then ignores.</p>
+excluded from the numbered list (<code>core/semantic.py:2506</code>,
+<code>:2523</code>).</p>
 <p>The gate is the only path from the user's sentence to a stored
 relation. It is not the only path to a stored relation:
 <code>_auto_extract_is_a</code> derives an <code>is_a</code> from a
 taught definition that matches one of its patterns and appends it
 <code>unverified</code> with source <code>auto_extract</code>
-(<code>:1742</code>), and the Wikipedia teacher appends the edges it
-extracts (<code>modules/knowledge/wikipedia_teacher.py:440</code>).
+(<code>:2270</code>), and the Wikipedia teacher appends the edges it
+extracts (<code>modules/knowledge/wikipedia_teacher.py:501</code>).
 Neither goes through <code>add_relation</code>, so neither writes an
 audit entry.</p>
 <h3 id="the-correction-that-is-kept-out-of-the-ground-truth">The
@@ -420,7 +438,7 @@ exists only in RAM for the duration of a training run.</p>
 categories, rather than being forced onto the nearest existing label — a
 refusal to guess, recorded rather than discarded. Both files are
 <strong>empty at this commit</strong>: the machinery is wired to a
-four-hourly retrain in <code>main.py</code> (<code>:192</code>) and
+four-hourly retrain in <code>main.py</code> (<code>:321</code>) and
 documented as confirmed end-to-end in the changelog, but the live
 corrections are not committed, so what ships is the mechanism without
 the data.</p>
@@ -429,11 +447,11 @@ is not</h3>
 <p><code>memory.search</code> is
 <code>SELECT * FROM interactions WHERE data LIKE ?</code> over the event
 JSON, newest first, with an optional <code>recent_weeks</code> cutoff
-(<code>core/memory.py:328</code>). <code>find_similar</code> pulls the
+(<code>core/memory.py:391</code>). <code>find_similar</code> pulls the
 newest 500 rows and scores them with
-<code>difflib.SequenceMatcher</code> (<code>:569</code>). The intent
+<code>difflib.SequenceMatcher</code> (<code>:632</code>). The intent
 router calls both for memory questions
-(<code>core/intent_router.py:2624</code>, <code>:2643</code>). The
+(<code>core/intent_router.py:3771</code>, <code>:3790</code>). The
 docstring draws the boundary itself:</p>
 <blockquote>
 <p>"Dit is PUUR symbolisch (difflib, standaard in Python) — GEEN ML,
@@ -462,10 +480,10 @@ parents against three hardcoded incompatible groups —
 <code>{dier, plant, meubel, voertuig, gebouw, apparaat, voedsel}</code>,
 <code>{levend, niet-levend}</code>, <code>{vloeibaar, vast, gas}</code>
 — and returns a list with a readable reason per conflict
-(<code>core/semantic.py:1154</code>).</p>
+(<code>core/semantic.py:1545</code>).</p>
 <p><code>modules/knowledge/contradiction_checker.py</code> is its
 caller: a sweep every 15 minutes of <code>main.py</code>'s background
-loop (<code>main.py:203</code>), walking the whole knowledge graph,
+loop (<code>main.py:332</code>), walking the whole knowledge graph,
 collecting conflicts, and raising them with the user through
 <code>layer4_response</code> <strong>with a concrete
 <code>weerleg:</code> proposal per conflict</strong> so the refusal is
@@ -495,10 +513,10 @@ is still found (<code>core/memory.py</code>,
 <code>tests/test_memory_archief_search.py</code>). An
 <code>ignore_types</code> set keeps loop-inducing types out, including
 <code>memory:interaction_added</code> — memory listens to everything,
-including itself (<code>:44</code>). The SQLite file and
-<code>data/backups/</code> are gitignored and in no commit on
-<code>main</code>; the JSONL mirror and two rotated archives of it are
-committed.</p>
+including itself (<code>:49</code>). The SQLite file,
+<code>data/backups/</code>, the JSONL mirror and its rotated archives
+are gitignored and in no commit at this pin; the mirror and two archives
+were tracked until 13 October 2026.</p>
 <p><strong>Concepts.</strong> <code>concepts.json</code>, keyed by
 lowercased word. <code>hond</code> at this commit:</p>
 <pre class="json"><code>&quot;hond&quot;: {
@@ -527,7 +545,7 @@ lowercased word. <code>hond</code> at this commit:</p>
 Every sense also carries an <code>audit_log</code> array, and no writer
 appends to it: <code>_audit_sense</code> and
 <code>_audit_relation</code> write to the concept's list
-(<code>core/semantic.py:164</code>, <code>:736</code>).</p>
+(<code>core/semantic.py:167</code>, <code>:958</code>).</p>
 <p>Provenance sits per edge, which is the right grain — a concept
 assembled from a Wikipedia definition and three user-supplied relations
 records which is which. The <code>status</code> field is the trust
@@ -542,7 +560,7 @@ confidence bump. At 299 concepts that is affordable, and the write is
 atomic — a temporary file in the same directory, <code>flush</code> plus
 <code>os.fsync</code>, then <code>os.replace</code>, with the PID in the
 temporary name and the orphaned file cleaned up if the write fails
-(<code>core/semantic.py:31</code>). An interrupted write leaves the
+(<code>core/semantic.py:34</code>). An interrupted write leaves the
 previous graph intact rather than truncating it. The cost is still
 O(graph) per mutation; the failure mode is not.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
@@ -563,17 +581,18 @@ and rejected senses.</li>
 event is searchable, and a comment notes that <code>_flush_buffer</code>
 is deliberately called outside the caller's lock because it takes its
 own.</p>
-<p>The absence of fusion is not the usual gap here — there is no
-semantic arm to fuse with. What a reader should take is the shape: <a
-href="../../patterns/hybrid-retrieval-fusion/">hybrid retrieval
-fusion</a> assumes an embedding arm that misses exact tokens. Nova is
-the other half of that trade running alone — exact and near-exact
-matching only, with meaning handled by an explicit graph rather than by
-proximity in a vector space.</p>
+<p>The absence of fusion is not the usual gap here — no read path has a
+semantic arm to fuse with. The embedding specialist scores word pairs
+for the proposal list and nothing else. What a reader should take is the
+shape: <a href="../../patterns/hybrid-retrieval-fusion/">hybrid
+retrieval fusion</a> assumes an embedding arm that misses exact tokens.
+Nova is the other half of that trade running alone — exact and
+near-exact matching only, with meaning handled by an explicit graph
+rather than by proximity in a vector space.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Events arrive on the bus and land in a write buffer; an arriving
 event flushes it when 50 are buffered or 5 seconds have passed since the
-last flush (<code>core/memory.py:61-62</code>), and
+last flush (<code>core/memory.py:66-67</code>), and
 <code>append_to_disk</code> retries up to three times. Writes do not
 block the conversation; because both search paths force a flush first,
 the lag is not observable through them. <code>atexit</code> and signal
@@ -584,17 +603,18 @@ and <code>add_relation</code> is called from the gate with its defaults,
 what a confirmed answer is. <code>add_relation</code> deduplicates on
 <code>(type, target)</code> within a sense, appends the relation, stamps
 <code>metadata.updated_at</code>, writes an audit entry, and saves the
-whole file (<code>core/semantic.py:751</code>).</p>
+whole file (<code>core/semantic.py:973</code>).</p>
 <p>The two automatic relation writers skip that function.
 <code>_auto_extract_is_a</code> appends an <code>is_a</code> with
 <code>confidence 0.9</code>, source <code>auto_extract</code> and status
-<code>unverified</code> directly to the sense (<code>:1742</code>), and
+<code>unverified</code> directly to the sense (<code>:2270</code>), and
 the Wikipedia teacher appends its extracted edges the same way
-(<code>wikipedia_teacher.py:440</code>). Each dedups by target against
+(<code>wikipedia_teacher.py:501</code>). Each dedups by target against
 every existing edge on the sense, rejected ones included, so a refuted
 target is not appended again on that sense. Neither writes an audit
 entry, so the log answers "who told me" only for edges that came through
-the gate.</p>
+<code>add_relation</code> — the gate, a proposal list, or a confirmation
+from the uncertainty list.</p>
 <h3 id="operational-cost">Operational cost</h3>
 <p>No model calls, so there is no token cost and no provider latency
 anywhere in the memory path. The background loop runs maintenance every
@@ -613,7 +633,7 @@ integration surface is the <code>EventBus</code>: modules publish and
 subscribe, <code>MemoryModule.on_event</code> records everything not in
 <code>ignore_types</code>, and <code>intent_router.py</code> decides
 what a message meant and which module answers. <code>chat_message</code>
-has one publisher, the terminal loop (<code>main.py:498</code>).</p>
+has one publisher, the terminal loop (<code>main.py:873</code>).</p>
 <p>The unusual integration is temporal. Nova runs continuously and
 decides on her own initiative whether <em>now</em> is a reasonable
 moment to speak, using <code>interruption_tracker.py</code> against a
@@ -632,6 +652,10 @@ reactivation, with old and new values.</li>
 <li><strong>A confirmation gate</strong> as the only path from the
 user's sentence to a stored relation, with sense disambiguation asked
 first.</li>
+<li><strong>A review queue for what Nova is unsure of</strong> — the
+uncertainty list numbers unverified relations and confirms or rejects
+one per typed answer, and the two proposal lists store nothing until a
+person picks.</li>
 <li><strong>Per-edge provenance, confidence and status</strong> in the
 schema, with real, differing sources in the committed data.</li>
 <li><strong>Corrections quarantined from the curated training
@@ -649,32 +673,26 @@ health check, shutdown flush, and an atomic graph save.</li>
 </ul>
 <p>Gaps:</p>
 <ul>
-<li><strong>Two writes go around the refusal.</strong> The placeholder
-upgrade in <code>TeachEngine.teach</code> runs before
-<code>add_sense</code> and checks no rejected sense; the Wikipedia
-refresh resets a confirmed sense to <code>unverified</code> and replaces
-its relation list, rejected edges included, with no audit entry.</li>
+<li><strong>Two automatic relation writers stay unaudited.</strong>
+<code>_auto_extract_is_a</code> and the Wikipedia teacher's first store
+append directly to the sense.</li>
 <li><strong>A rejection only a person can make.</strong> Every path to
 <code>rejected</code> runs through <code>weerleg</code>; nothing lets
 the system refuse its own bad inference, so a contradiction sits until
 someone answers the prompt.</li>
-<li><strong>A rejection with no reason.</strong> The <code>reason</code>
-parameter exists on all three reject functions and no caller fills
-it.</li>
-<li><strong>The unverified backlog has no exit for relations.</strong>
-Four reasoning reads filter on <code>rejected</code>; nothing counts
-<code>unverified</code>, and nothing in the running system sets a
-relation to <code>confirmed</code> after it is stored — a confirmation
-through the gate is a no-op that reports success.</li>
+<li><strong>A refutation with no reason.</strong> The three
+<code>weerleg</code> handlers pass none
+(<code>core/intent_router.py:619</code>, <code>:690</code>,
+<code>:751</code>); the proposal lists and the uncertainty list do.</li>
 <li><strong>The whole graph is rewritten on every save</strong>, though
 atomically.</li>
 <li><strong><code>tombstone</code> — earned, by design and pinned by
 tests.</strong> The record is keyed on the definition text; the reasoner
 filters it; and <code>add_sense</code>'s dedup loop tests the rejected
 status before anything else, returning a <code>blocked</code> signal and
-leaving the stored sense untouched. The Wikipedia path checks it too. No
-automatic source reaches the placeholder bypass: it takes a typed
-teach.</li>
+leaving the stored sense untouched. <code>upgrade_unknown_sense</code>
+and the Wikipedia refresh check it too, and a declined proposal is
+stored rejected.</li>
 <li><strong><code>negative_eval</code> — earned, with a positive
 control.</strong>
 <code>test_part_of_chained_na_weerlegging_is_false</code> asserts that a
@@ -689,31 +707,41 @@ cannot come from retrieval being broken.</li>
 <code>rejected</code> on every sense and relation, set from
 <code>source</code> at write time, and <code>rejected</code> excluded by
 <code>get_best_definition</code>, <code>detect_sense</code>,
-<code>get_relations</code> and <code>get_all_relations</code>.</li>
+<code>get_relations</code> and <code>get_all_relations</code>. A person
+moves a relation from <code>unverified</code> to <code>confirmed</code>,
+and no path moves one out of <code>rejected</code>.</li>
 <li><strong>No scope key</strong>, by design, which makes the schema
 single-user rather than merely deployed that way.</li>
 </ul>
 <h3 id="the-asymmetry-in-forgetting">The asymmetry in forgetting</h3>
 <p>Nova can forget two kinds of thing, with verbs that differ in kind.
-The preference store implements <code>vergeet: &lt;woord&gt;</code>:
-<code>remove_preference</code> deletes a word, or with a
-<code>bron</code> argument removes only the automatic or only the
-explicit sub-block and leaves the word standing under the other, then
-publishes <code>preference_forgotten</code>
-(<code>modules/preferences/kevin_profile.py:323</code>). That is a
-source-aware forget, the way a correction should be.</p>
-<p>It applies to what Kevin likes, and <code>weerleg</code> applies to
-what Nova knows. <code>vergeet</code> deletes a preference outright, and
-<code>weerleg</code> leaves the refuted knowledge in the file where a
-person can still see it while the reasoner cannot use it. Deleting a
-taste is harmless; deleting a belief loses the record that it was ever
-held and refuted.</p>
+For preferences, <code>vergeet: &lt;woord&gt;</code> calls
+<code>beeindig_preference</code>, which moves every current block for
+the word into a <code>historiek</code> with a <code>valid_until</code>
+and removes it from the current set
+(<code>modules/preferences/kevin_profile.py:450</code>).
+<code>wis definitief</code> erases the word and its history. A change of
+sentiment within one source closes the old block into the history
+instead of overwriting it.</p>
+<p>The commit calls this bi-temporal, and the dates are the dates of
+recording. <code>add_preference</code> sets <code>valid_from</code> to
+today on a new or changed block, and the one product caller of
+<code>beeindig_preference</code> passes no <code>datum</code>, so
+<code>valid_until</code> is today too
+(<code>core/intent_router.py:309</code>). Validity time is not separate
+from record time, so <code>bitemporal</code> is withheld; a history of
+when a taste was recorded and when it was ended is more than most
+preference stores keep.</p>
+<p><code>weerleg</code> applies to what Nova knows. It leaves the
+refuted knowledge in the file where a person can still see it while the
+reasoner cannot use it, so the record that a belief was held and refuted
+survives.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><code>tests/</code> holds 54 <code>test_*.py</code> files carrying
-<strong>807 test functions and 1,313 assert lines</strong>, and they are
-pytest cases that fail rather than exploration scripts whose output a
-person reads. Twelve print-only scripts sit apart in
+<p><code>tests/</code> holds 146 <code>test_*.py</code> files carrying
+<strong>2,520 test functions and 4,171 assert lines</strong>, and they
+are pytest cases that fail rather than exploration scripts whose output
+a person reads. Twelve print-only scripts sit apart in
 <code>tests/manual tests/</code>. <code>conftest.py</code> in the
 repository root makes pytest treat the root as <code>rootdir</code>; it
 runs at collection, before any test. I ran none of them.</p>
@@ -732,25 +760,45 @@ real <code>concepts.json</code>.</p>
 <p>The rejected-sense case asserts an empty list with no positive
 assertion before the rejection; the two relation cases carry one.
 <code>test_reactivatie_flow.py</code> drives the typed reactivation
-question through <code>SemanticConceptsModule</code> and the Wikipedia
-teacher's rejected-sense guard.
+question and the Wikipedia teacher's rejected-sense guard.
 <code>test_hard_delete_en_atomic_save.py</code> covers
 <code>hard_delete</code>'s refusal while any sense is unrejected, and
 that an interrupted <code>save</code> leaves the previous graph
 intact.</p>
-<p>What is unasserted follows the gaps in section 9. No test teaches a
-refuted definition to a concept that holds a placeholder, so the bypass
-through <code>upgrade_unknown_sense</code> is uncovered. No test
-refreshes a Wikipedia sense that carries a rejected relation or a
-confirmed status. A test pins that a second <code>add_relation</code> on
-a stored edge is refused and keeps the first version
-(<code>tests/test_add_relation_source.py</code>); none drives
-<code>handle_confirm</code> on such an edge, where the refusal is
-announced as success. Nothing asserts that a retrain leaves
-<code>training_data.json</code> byte-identical, the invariant the most
-carefully reasoned code in the repository exists to preserve. There is
-no retrieval-quality benchmark, which for a store with no embeddings is
-a smaller gap than it sounds.</p>
+<p><code>test_bugs_47_48_49.py</code> covers the three paths that once
+went around the refusal or misreported it:</p>
+<ul>
+<li><code>test_47_upgrade_unknown_sense_blokkeert_weerlegde_definitie</code>
+and the Wikipedia variant assert that a placeholder is not filled with a
+refuted definition, beside controls asserting that a different
+definition still upgrades it.</li>
+<li><code>test_48_refresh_behoudt_weerlegde_en_bevestigde_relaties</code>
+and <code>test_48_refresh_schrijft_audit_entry</code> assert that a
+refresh keeps rejected and confirmed relations and is audited.</li>
+<li><code>test_49_weerlegde_relatie_wordt_eerlijk_gemeld_en_blijft_weerlegd</code>
+drives the real <code>handle_confirm</code> on a refuted edge.</li>
+</ul>
+<p><code>test_retrain_vanuit_bestanden_laat_training_data_json_schoon</code>
+asserts that a retrain leaves the curated example count unchanged and
+writes no Layer 0 example into <code>training_data.json</code>. That is
+the quarantine's invariant by count and by marker, not byte
+identity.</p>
+<p><strong>A small answer benchmark is committed with its run
+log.</strong> <code>tools/run_benchmark.py</code> copies the project to
+a temporary directory, restores <code>concepts.json</code> before every
+question, compares a hash of the real graph before and after, and checks
+the routed events and the answer text.
+<code>tests/benchmark/benchmark_cases.json</code> has 29 fixed cases in
+11 categories. Three are <code>afgewezen_feit</code>: asked whether a
+dog is furniture, an <code>is_a</code> the graph holds as rejected, the
+answer must not contain <em>ja</em>.
+<code>data/benchmark_resultaten.jsonl</code> records the history: those
+three failed at the answer level on 26 October and pass from 29 October,
+and the fixed set reached 29 of 29 on 30 October after changes made
+against it. A ten-case <em>ongezien</em> (unseen) set scored 8 of 10 and
+then 10 of 10 seven minutes later, so it is no longer unseen. The check
+is whole-word matching on Dutch answer text, and the run is the
+author's, not mine.</p>
 <p><code>README.md</code> cites no paper and there is no
 <code>CITATION.cff</code>. The changelog records live end-to-end
 confirmations with dates and documents bugs found while building —
@@ -784,19 +832,20 @@ decide between reporting and asking.</li>
 <h3 id="avoid">Avoid</h3>
 <ul>
 <li><strong>A refusal on one write path when another runs
-first.</strong> The rejected check lives in <code>add_sense</code>, and
-the placeholder upgrade that precedes it in the same function's caller
-never asks. Put the check where every writer of that value passes.</li>
-<li><strong>A refresh that replaces a record's children
-wholesale.</strong> Overwriting a relation list erases the rejections
-and confirmations on it, and with them the only record that they
-happened.</li>
+first.</strong> Nova's rejected check lived in <code>add_sense</code>
+while the placeholder upgrade before it never asked, and a Wikipedia
+refresh replaced relation lists wholesale. The project closed each with
+its own fix and test (bugs 32, 47 and 48). Put the check where every
+writer of that value passes, and the next writer cannot forget it.</li>
 <li><strong>A confirmation that cannot tell a write from a
 no-op.</strong> Announcing "remembered" when the store returned
 <code>False</code> teaches the user that the gate worked when nothing
-changed.</li>
-<li><strong>A reason parameter nothing fills.</strong> A rejection
-record without a reason is half of what a person reviewing it later
+changed; bug 49 was exactly that.</li>
+<li><strong>Calling record dates validity dates.</strong> A history
+whose <code>valid_from</code> is the day it was written answers "since
+when have I known", not "since when was it true".</li>
+<li><strong>A reason parameter the main verb never fills.</strong> A
+refutation without a reason is half of what a person reviewing it later
 needs.</li>
 </ul>
 <h3 id="fit">Fit</h3>
@@ -819,13 +868,13 @@ refuted definition is a different string, and a store with no embedding
 has no cheap way to close that — <code>difflib.SequenceMatcher</code>,
 which <code>find_similar</code> in <code>core/memory.py</code> uses,
 would be the obvious candidate.</li>
-<li>What happens to the <code>unverified</code> backlog? Nothing counts
-it or offers it for confirmation, and a stored relation has no path to
-<code>confirmed</code>, so it grows as Wikipedia and auto-extraction
-run.</li>
-<li>Is the Wikipedia refresh's reset of a confirmed sense intended? The
-comment beside it assumes Kevin never confirmed the sense, and
-<code>gitaar#1</code> is one he did.</li>
+<li>Will <code>vergeet</code> ever take a date?
+<code>beeindig_preference</code> accepts one and no caller passes it,
+which is the one change that would make the preference history
+bi-temporal.</li>
+<li>Does the embedding specialist's similarity score reach anything
+beyond the proposal list? At this commit it does not, and an answer-time
+use would be the first model judgement on a read path.</li>
 <li>Are <code>gecorrigeerde_voorbeelden.jsonl</code> and
 <code>onbekende_correcties.jsonl</code> empty because they are
 runtime-only, or because the flow rarely fires?</li>
@@ -845,7 +894,7 @@ no scope key exists?</li>
 <code>SenseEngine.add_sense</code>, <code>upgrade_unknown_sense</code>,
 <code>reject_sense</code>, <code>hard_delete_concept</code>,
 <code>RelationEngine.add_relation</code>, <code>reject_relation</code>,
-<code>get_relations</code>,
+<code>confirm_relation</code>, <code>get_relations</code>,
 <code>ReasoningEngine.find_contradictions</code>,
 <code>is_a_chained</code>, <code>explain_is_a</code>,
 <code>TeachEngine.teach</code>, <code>_auto_extract_is_a</code>,
@@ -858,6 +907,10 @@ no scope key exists?</li>
 (<code>_teach_word</code>),
 <code>modules/chat/response_pipeline.py</code>
 (<code>_auto_learn_from_sentence</code>).</li>
+<li>Proposals and review: <code>modules/knowledge/uncertainty.py</code>,
+<code>knowledge_proposals.py</code>, <code>knowledge_extractor.py</code>
+(spaCy), <code>similarity_proposals.py</code>,
+<code>embedding_specialist.py</code> (MiniLM).</li>
 <li>Refutation commands: <code>core/intent_router.py</code>
 (<code>handle_weerleg</code>).</li>
 <li>Contradictions:
@@ -870,7 +923,8 @@ no scope key exists?</li>
 <code>modules/learning/word_associations_learner.py</code>.</li>
 <li>Preferences and their forget path:
 <code>modules/preferences/kevin_profile.py</code>
-(<code>remove_preference</code>).</li>
+(<code>add_preference</code>, <code>beeindig_preference</code>,
+<code>wis_definitief</code>, <code>get_historiek</code>).</li>
 <li>Routing and integration: <code>core/intent_router.py</code>,
 <code>core/event_bus.py</code>, <code>core/response_engine.py</code>,
 <code>main.py</code>,
@@ -882,8 +936,13 @@ from <code>tests/manual tests/manual_llm_bridge.py</code>).</li>
 <li>Tests: <code>tests/test_tombstone.py</code>,
 <code>tests/test_reactivatie_flow.py</code>,
 <code>tests/test_hard_delete_en_atomic_save.py</code>,
+<code>tests/test_bugs_47_48_49.py</code>,
+<code>tests/test_kevin_profile_historiek.py</code>,
 <code>tests/test_memory_archief_search.py</code>.</li>
-<li>Committed state: <code>data/concepts.json</code> (299 concepts),
+<li>Benchmark: <code>tools/run_benchmark.py</code>,
+<code>tests/benchmark/</code>,
+<code>data/benchmark_resultaten.jsonl</code>.</li>
+<li>Committed state: <code>data/concepts.json</code> (1,234 concepts),
 <code>logs/concepts.jsonl</code>, <code>data/training_data.json</code>,
 <code>data/gecorrigeerde_voorbeelden.jsonl</code> (empty),
 <code>data/onbekende_correcties.jsonl</code> (empty).</li>
@@ -894,23 +953,38 @@ from <code>tests/manual tests/manual_llm_bridge.py</code>).</li>
 <h3 id="recorded-searches">Recorded searches</h3>
 <p>Run from the repository root at the pinned commit.</p>
 <pre class="sh"><code>git grep -n -E &#39;llm_bridge|genereer_zin&#39; -- core modules identity main.py &#39;:!core/llm_bridge.py&#39;   # nothing: the Ollama client has no caller
-git grep -n -i -E &#39;embedding|sentence_transformers|faiss|chromadb&#39; -- &#39;*.py&#39; &#39;:!engines&#39; &#39;:!tests&#39;   # one docstring saying there are none
+git grep -l -i -E &#39;embedding|sentence_transformers&#39; -- core   # core/intent_router.py (routing to the proposal list) and core/memory.py (a docstring saying search has none)
 git grep -n -E &#39;user_id|tenant|scope&#39; -- core/memory.py core/semantic.py   # nothing: no scope key
-git grep -n -E &#39;publish\(&quot;chat_message&quot;&#39; -- &#39;*.py&#39; &#39;:!tests&#39;   # main.py:498 only
+git grep -n -E &#39;publish\(&quot;chat_message&quot;&#39; -- &#39;*.py&#39; &#39;:!tests&#39;   # main.py:873 only
 git grep -n -E &#39;reject_(sense|relation|concept)\(&#39; -- core/intent_router.py   # three calls, none passing reason
 git grep -n -E &#39;unverified&#39; -- &#39;*.py&#39; &#39;:!tests&#39; &#39;:!core/semantic.py&#39; &#39;:!scripts&#39;   # wikipedia_teacher.py writes it; nothing reads it
-git grep -n -E &#39;rel\[&quot;status&quot;\] *=&#39; -- &#39;*.py&#39; &#39;:!tests&#39; &#39;:!scripts&#39;   # core/semantic.py:835 only, the rejection
-git grep -n -E &#39;relations&quot;?\]?\)?\.append\(|setdefault\(&quot;relations&quot;&#39; -- core modules   # writers at :796, :1742 and wikipedia_teacher.py:440, plus :241 building a list; only :796 is followed by an audit entry
+git grep -n -E &#39;rel\[&quot;status&quot;\] *=&#39; -- &#39;*.py&#39; &#39;:!tests&#39; &#39;:!scripts&#39;   # core/semantic.py:1057 (reject) and :1100 (confirm)
+git grep -n -E &#39;relations&quot;?\]?\)?\.append\(|setdefault\(&quot;relations&quot;&#39; -- core modules   # writers at :1018, :2270 and wikipedia_teacher.py:501, plus :253 building a list; only :1018 is followed by an audit entry
 git grep -n -E &#39;_write_log\(|_append_audit\(&#39; -- &#39;*.py&#39;   # mirror writers: concept creation and the three hard deletes
-git grep -n -E &#39;upgrade_unknown_sense|&quot;unknown&quot;&#39; -- tests/test_tombstone.py tests/test_reactivatie_flow.py   # nothing: no placeholder case
-git grep -n -E &#39;retrain_vanuit_bestanden&#39; -- tests   # nothing: the quarantine is untested
-git grep -n -E &#39;handle_confirm\(&#39; -- tests   # a stub in test_intent_router_reactivatie_en_woordmatch.py; no test drives the real one
-git grep -n -E &#39;setdefault\(&quot;audit_log&quot;&#39; -- &#39;*.py&#39; &#39;:!tests&#39;   # four appends, each to the concept&#39;s list; none to a sense&#39;s
-git grep -n -E &#39;\.(reject_sense|reject_relation|reject_concept)\(&#39; -- &#39;*.py&#39; &#39;:!tests&#39;   # the three weerleg handlers and their wrappers only
+git grep -n -E &#39;setdefault\(&quot;audit_log&quot;&#39; -- &#39;*.py&#39; &#39;:!tests&#39;   # six appends, each to the concept&#39;s list; none to a sense&#39;s
+git grep -n -E &#39;\.(reject_sense|reject_relation|reject_concept)\(&#39; -- &#39;*.py&#39; &#39;:!tests&#39;   # the three weerleg handlers and their wrappers, plus the two proposal lists and the uncertainty list, each passing a reason
+git grep -n -E &#39;beeindig_preference\(&#39; -- &#39;*.py&#39; &#39;:!tests&#39;   # core/intent_router.py:309, passing no datum
 git grep -n -E &#39;bericht_type ==&#39; -- modules/network/client_bridge.py   # five message types, none a chat turn
 git grep -n -i -E &#39;arxiv|bibtex|@article|@misc|doi\.org&#39; -- README.md   # nothing: no paper
 git log --format=%h origin/main -- data/interactions.db data/backups   # nothing: no commit on main holds the database</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-11-02</strong> — <a
+href="https://github.com/Whooptie/NOVA_AI/commit/1211abfcad0175488641a671570468cbd9a00d6c"><code class="commit-id" title="1211abfcad0175488641a671570468cbd9a00d6c">1211abfc…</code></a>
+— 71 commits on, no history rewrite. All five marks hold, and the
+published gaps are closed upstream. The placeholder upgrade checks the
+rejected status (bug 47). A Wikipedia refresh keeps relations, spares a
+confirmed sense and is audited (17 October and bug 48).
+<code>handle_confirm</code> reports a refused edge honestly (bug 49),
+and all three are tested. New: an uncertainty list and two proposal
+lists, spaCy and MiniLM, through which a person confirms or declines
+relations, a decline being stored rejected (<a
+href="#1-executive-summary">section 1</a>); a token-authenticated
+bridge; a 29-case answer benchmark with its run log (<a
+href="#10-tests-evals-and-benchmarks">section 10</a>). Preferences
+gained <code>valid_from</code>/<code>valid_until</code> set to record
+dates, so <code>bitemporal</code> stays withheld (<a
+href="#9-reliability-safety-and-trust">section 9</a>). Screened: no
+auto-run surface, three build-time points; nothing run.</p>
 <p><strong>2026-09-28</strong> — re-pinned to <a
 href="https://github.com/Whooptie/NOVA_AI/commit/802a3218f2d99b2216258e23feb68893217cb54b"><code class="commit-id" title="802a3218f2d99b2216258e23feb68893217cb54b">802a3218…</code></a>.
 The previous pin left <code>main</code> because its history was

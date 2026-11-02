@@ -321,9 +321,9 @@ history, which is the placement NOOA argues for. The cost is visible in the same
 file: the store is one JSON document rewritten in full, atomically, on every
 save, so the history that makes a concept auditable is also what a single
 confidence bump rewrites. The log's coverage stops at `add_relation`: the
-auto-extractor and the Wikipedia teacher append edges directly and log nothing,
-and a Wikipedia refresh replaces a sense's relations, rejected ones included,
-without an entry. The edges with the weakest provenance are the ones the log
+auto-extractor and the Wikipedia teacher's first store append edges directly
+and log nothing, while a Wikipedia refresh keeps a sense's relations and writes
+its own entry. The edges with the weakest provenance are the ones the log
 cannot explain.
 
 [memU](../../systems/memu/) is the clean separation of the two halves, one of

@@ -434,7 +434,7 @@ promoted only when `source == "user"`. Automatic re-derivation landed on the
 refusal and left it standing — but a person re-teaching the same sentence set
 `confirmed` and lifted it with nothing recorded and nothing asked.
 
-`core/semantic.py:204` now tests the rejected status *first* and returns
+`core/semantic.py:207` tests the rejected status *first* and returns
 `{"blocked": "rejected", …}` without touching the stored sense. The signal is
 carried up to the layer holding the chat bus, where an automatic source is
 reported and never applied, and a person's re-assertion becomes a typed
@@ -442,10 +442,11 @@ reported and never applied, and a person's re-assertion becomes a typed
 `ja` writes a `sense_reactivated` audit entry. Seven cases in
 `tests/test_tombstone.py` hold each link, and the one covering re-assertion says
 in its docstring that it replaced a test pinning the previous behaviour. The
-check lives in `add_sense`, and `TeachEngine.teach` calls `upgrade_unknown_sense`
-before it: on a concept that also holds an `unknown` placeholder, a refuted
-definition typed again fills the placeholder as `confirmed` without the
-question, and no test covers that order.
+same check sits in `upgrade_unknown_sense`, which `TeachEngine.teach` calls
+before `add_sense`. Until 24 October 2026 it did not, and a refuted definition
+typed again could fill an `unknown` placeholder as `confirmed` without the
+question (Nova's bug 47); `test_47_upgrade_unknown_sense_blokkeert_weerlegde_definitie`
+covers that order.
 
 That is the whole argument of this page, run once by somebody who had the shape
 already: **the property falls out of writing dedup against content and rejection
