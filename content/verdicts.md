@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 764 reports.**
+**This page covers all 765 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6981,3 +6981,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; a memory subsystem of 16,919 lines inside 2,234,753 lines of Rust, 145 commits since April 2026, 114 memory tests against real SQLite and a mock model server, not run here. No marks: the one discrete state is on the source session, and the tested exclusions stop at the consolidator's input.
 - Study when: you want an agent to learn a user's habits and project facts from its own transcripts with no write tool and no extra infrastructure.
 - Do not copy when: memory must be correctable on demand, separated between projects or clients, or explained after a change.
+
+### [`understand-anything`](../systems/understand-anything/)
+- Best idea: **refuse to publish an update that lost a symbol.** After a commit, `prepare-incremental.mjs` classifies each file by structural fingerprint, sends only structurally changed files to a model, and the merged graph replaces the old one only if every symbol the source still defines at both commits is accounted for; one targeted retry, then the old graph stays.
+- Second idea: cosmetic, deleted, ignored and generated-only changes cost no model call, and the commit marker in `meta.json` advances only after the graph and fingerprints are written.
+- Biggest risk: **the checked layer is not the one the agent reads.** Structure is verified; summaries are model output nothing compares with the code, and incremental updates skip the reviewer agents a full run uses.
+- Second risk: both hooks tell the agent to rewrite the graph after a commit or at session start *"Do not ask the user for confirmation — just do it"*, and nothing records what a rewrite changed.
+- Most reusable component: `understand-anything-plugin/skills/understand/prepare-incremental.mjs` with `validate-incremental-symbols.mjs` and `finalize-incremental.mjs` — plan, gate and ordered save.
+- Maturity impression: MIT; 43,213 lines of TypeScript, JavaScript and Python, 866 commits from 85 author names since 14 March 2026, 1,500 vitest cases and 106 pytest functions concentrated on the update machinery, not run here. No marks. An embedding search class is exported and never constructed.
+- Study when: you keep a derived index of a codebase for an agent and need it to stay current per commit without paying a model for every change.
+- Do not copy when: the memory must hold what the code does not say, or a wrong summary must be correctable and stay corrected.
+

@@ -465,6 +465,7 @@ page_kind: comparison
 - [`textfold`](../systems/textfold/)
 - [`master-agent-system`](../systems/master-agent-system/)
 - [`openai-codex`](../systems/openai-codex/)
+- [`understand-anything`](../systems/understand-anything/)
 
 ## Repos Inspected
 
@@ -1234,6 +1235,7 @@ page_kind: comparison
 - [chenxiachan/textfold](https://github.com/chenxiachan/textfold) at [`5fc941dc4560ee2809c0f278da28457292c7f739`](https://github.com/chenxiachan/textfold/commit/5fc941dc4560ee2809c0f278da28457292c7f739) — read only, at the head of `main`, 31 October 2026, from a shallow clone; history from a treeless bare clone. Formerly PaperFold; the old GitHub name redirects here. Apache-2.0, LICENSE and NOTICE read in full, no rider; no `.gitmodules`. Screened before reading: one auto-run surface, `.claude-plugin/marketplace.json`; no build-time execution; five unpinned surfaces; five dependency surfaces inside the cooldown by history, four more inflated by the shallow clone. The levels, storage backend, notes and re-anchoring, reply cache, WebMCP tools, the `get` and `adapt` commands and both plugins were read; nothing was installed, built or run
 - [9fpqm4vqvq-ops/agent-creator-master](https://github.com/9fpqm4vqvq-ops/agent-creator-master) at [`e1e94d17ed29c6de3514021098c742f9ea4c01c9`](https://github.com/9fpqm4vqvq-ops/agent-creator-master/commit/e1e94d17ed29c6de3514021098c742f9ea4c01c9) — read only; no auto-run or build-time surface, two agent-instruction files read as data, four dependency manifests inside the seven-day cooldown and one unpinned surface, so nothing was installed, built or run. The vault, freshness auditor and QA review were read from `agent_hub/memory.py`, `agent_hub/freshness.py` and `agent_hub/core.py` against `tests/test_v03.py` and `tests/test_v04.py`; the four packages under `vendor/` were noted and not read as the subject
 - [openai/codex](https://github.com/openai/codex) at [`0a2d5f556de6e3b2c340d7f0635a1daf4040c30a`](https://github.com/openai/codex/commit/0a2d5f556de6e3b2c340d7f0635a1daf4040c30a) — read only, from a shallow clone; one auto-run surface, ten build-time execution paths, three unpinned surfaces and every dependency file inside the seven-day cooldown. Nothing was built and nothing was run. Apache-2.0
+- [Egonex-AI/Understand-Anything](https://github.com/Egonex-AI/Understand-Anything) at [`4e6d3299017a7432da15957874992837a315c5b4`](https://github.com/Egonex-AI/Understand-Anything/commit/4e6d3299017a7432da15957874992837a315c5b4) — read only; one auto-run surface flagged (the `.claude-plugin/` marketplace manifest; the plugin's own `hooks/hooks.json`, which registers a `SessionStart` and a `PostToolUse` hook, sits under `understand-anything-plugin/` and was found by reading), one build-time script, five unpinned manifests and nothing inside the cooldown. Nothing was built and nothing was run. MIT
 
 ## What the licences actually say
 

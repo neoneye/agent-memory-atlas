@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 764 reports.</strong></p>
+<p><strong>This page covers all 765 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -31853,6 +31853,41 @@ facts from its own transcripts with no write tool and no extra
 infrastructure.</li>
 <li>Do not copy when: memory must be correctable on demand, separated
 between projects or clients, or explained after a change.</li>
+</ul>
+<h3 id="understand-anything"><a
+href="../systems/understand-anything/"><code>understand-anything</code></a></h3>
+<ul>
+<li>Best idea: <strong>refuse to publish an update that lost a
+symbol.</strong> After a commit, <code>prepare-incremental.mjs</code>
+classifies each file by structural fingerprint, sends only structurally
+changed files to a model, and the merged graph replaces the old one only
+if every symbol the source still defines at both commits is accounted
+for; one targeted retry, then the old graph stays.</li>
+<li>Second idea: cosmetic, deleted, ignored and generated-only changes
+cost no model call, and the commit marker in <code>meta.json</code>
+advances only after the graph and fingerprints are written.</li>
+<li>Biggest risk: <strong>the checked layer is not the one the agent
+reads.</strong> Structure is verified; summaries are model output
+nothing compares with the code, and incremental updates skip the
+reviewer agents a full run uses.</li>
+<li>Second risk: both hooks tell the agent to rewrite the graph after a
+commit or at session start <em>"Do not ask the user for confirmation —
+just do it"</em>, and nothing records what a rewrite changed.</li>
+<li>Most reusable component:
+<code>understand-anything-plugin/skills/understand/prepare-incremental.mjs</code>
+with <code>validate-incremental-symbols.mjs</code> and
+<code>finalize-incremental.mjs</code> — plan, gate and ordered
+save.</li>
+<li>Maturity impression: MIT; 43,213 lines of TypeScript, JavaScript and
+Python, 866 commits from 85 author names since 14 March 2026, 1,500
+vitest cases and 106 pytest functions concentrated on the update
+machinery, not run here. No marks. An embedding search class is exported
+and never constructed.</li>
+<li>Study when: you keep a derived index of a codebase for an agent and
+need it to stay current per commit without paying a model for every
+change.</li>
+<li>Do not copy when: the memory must hold what the code does not say,
+or a wrong summary must be correctable and stay corrected.</li>
 </ul>
         </article>
       </div>
