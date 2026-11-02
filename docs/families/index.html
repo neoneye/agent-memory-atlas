@@ -169,7 +169,28 @@ href="../systems/cortexdb/"><code>cortexdb</code></a>, <a
 href="../systems/fernme/"><code>fernme</code></a>, <a
 href="../systems/fluctlightdb/"><code>fluctlightdb</code></a>, <a
 href="../systems/gambletan-cortex/"><code>gambletan-cortex</code></a>,
-<a href="../systems/hy-memory/"><code>hy-memory</code></a></p>
+<a href="../systems/hy-memory/"><code>hy-memory</code></a>, <a
+href="../systems/7layermem/"><code>7layermem</code></a>, <a
+href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
+<a
+href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
+<a href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
+href="../systems/cognicore/"><code>cognicore</code></a>, <a
+href="../systems/cognitive-spatial-memory/"><code>cognitive-spatial-memory</code></a>,
+<a href="../systems/contextdb/"><code>contextdb</code></a>, <a
+href="../systems/feltstate/"><code>feltstate</code></a>, <a
+href="../systems/genome/"><code>genome</code></a>, <a
+href="../systems/habitus-ai/"><code>habitus-ai</code></a>, <a
+href="../systems/membukkit/"><code>membukkit</code></a>, <a
+href="../systems/memlayer/"><code>memlayer</code></a>, <a
+href="../systems/memv/"><code>memv</code></a>, <a
+href="../systems/neuroca/"><code>neuroca</code></a>, <a
+href="../systems/recallweave/"><code>recallweave</code></a>, <a
+href="../systems/sage-novelty-gate/"><code>sage-novelty-gate</code></a>,
+<a href="../systems/telemem/"><code>telemem</code></a>, <a
+href="../systems/truememory/"><code>truememory</code></a>, <a
+href="../systems/veracium/"><code>veracium</code></a>, <a
+href="../systems/wax/"><code>wax</code></a></p>
 <p>Called from an application that owns the agent loop. Easy to adopt;
 weak authority over when memory is written or how recall is used.</p>
 <p><strong>AI Workflow Workspace is the family's clearest case of
@@ -859,6 +880,170 @@ utilities, and it holds no benchmark harness. Two marks,
 <code>audit_log</code> and <code>negative_eval</code>;
 <code>scope_enforced</code> is withheld because the shipped OpenClaw
 tools take the user from the model.</p>
+<p><strong><a href="../systems/7layermem/">7layermem</a> routes each
+write to one of seven typed stores and ranks recall by the store, not
+the search.</strong> A LangChain memory framework over two SQLite
+tables, five Chroma collections and an optional Neo4j graph: a regex on
+the text picks the destination, and <code>AgentMemory.recall</code> fans
+out to five stores and orders hits by a constant chosen per store,
+discarding the similarity rank. Nothing promotes, expires or demotes
+between the seven, and <code>thread_id</code> is the one scope key.</p>
+<p><strong><a href="../systems/agent-memory-techniques/">Agent Memory
+Techniques</a> teaches thirty memory techniques as runnable notebooks,
+and its forgetting curve gets right what the paper it cites got
+backwards.</strong> Notebook 19 parameterises decay as a half-life in
+hours and archives what it prunes, where MemoryBank multiplies by
+strength instead of dividing; notebook 30's <code>delete_user</code>
+fans out across hot, warm, cold and graph tiers and appends an audit
+entry per tier. There is no package, API or test, and its contradiction
+rate divides by every pair it never compared.</p>
+<p><strong><a href="../systems/alma-memory/">ALMA</a> stores why a
+pattern was wrong and what to do instead, and refuses a matching write
+on one path of six.</strong> A five-table learning memory of heuristics,
+outcomes, domain facts, anti-patterns and preferences, scoped by
+<code>project_id</code> and <code>agent</code> in SQL on every read.
+<code>check_write_guard</code> matches candidate text against stored
+anti-patterns by substring or token overlap and raises
+<code>ScopeViolationError</code>, but its single call site is
+<code>learn()</code>; the extractor, consolidation and other writers
+reach the store without it.</p>
+<p><strong><a href="../systems/cognicore/">CogniCore</a> admits a memory
+as <code>candidate</code> and counts whether the agent used or ignored
+it.</strong> A Python memory library behind swappable SQLite, Chroma,
+graph and hybrid backends, at the centre of a research programme with an
+OpenEnv manifest and a benchmark harness. Each <code>memory_entry</code>
+carries a state, provenance columns and a utility ledger separating
+retrieved, used and ignored; <code>ScopedMemory.search</code> discards a
+caller's scope and forwards its own, while <code>get_by_category</code>
+over-fetches and filters scope in Python.</p>
+<p><strong><a href="../systems/cognitive-spatial-memory/">Cognitive
+Spatial Memory</a> ranks recall by gravity around a moving attention
+centre rather than by cosine.</strong> <a
+href="../systems/helix-agi/">Helix AGI</a>'s spatial engine as a
+standalone library: each memory is projected into a fixed 8D manifold,
+given a mass from confidence and affect and a temperature that cools on
+a Lorentzian curve, and recalled from a KD-tree neighbourhood by
+<code>temperature * mass / (d * d)</code>. Recency is a force, not a
+cutoff. The package has no delete, forget, supersede or compact path, no
+scope key and no tests.</p>
+<p><strong><a href="../systems/contextdb/">contextdb</a> enforces
+declared state transitions in the engine, and a sync conflict policy
+cannot overrule them.</strong> An embedded single-file Rust database
+unifying relational rows, bounded graph traversal and vector similarity
+under one MVCC snapshot, with PostgreSQL-compatible SQL and WebSocket
+sync between instances. It holds no memory model of its own; the schema
+belongs to the system built on it. When an <code>EdgeWins</code> merge
+would force an illegal transition, the synced row is skipped and
+recorded as a conflict rather than applied.</p>
+<p><strong><a href="../systems/feltstate/">feltstate</a> gives a
+companion's memory four distinct exits, and a ledger that alarms when a
+row leaves by none of them.</strong> A Python character engine on
+line-delimited JSON, its 5W1H facts decay on read, <code>correct</code>
+supersedes, <code>retract</code> marks, and <code>reaper</code> runs an
+fsynced cascade that removes rows from the live stores and every
+snapshot. <code>chain.py</code> hash-links each patrol and checks a
+missing row against <code>legal_death</code> tombstones. Retracted
+entries are ignored when matching, so retract-then-readd yields a fresh
+active fact.</p>
+<p><strong><a href="../systems/genome/">GENOME</a> calls no model on the
+write path, and that determinism lets its journal replay the store
+exactly.</strong> A Python memory layer with a CLI, FastAPI and MCP
+servers and LangChain and LlamaIndex adapters, it embeds locally with
+<code>all-MiniLM-L6-v2</code> over SQLite or Postgres. A bi-temporal
+fact log answers <code>facts_valid_at(entity, T)</code>, low provenance
+tiers are withheld from search, and a hash-chained journal records every
+mutation. Deletion is the weak point: <code>forget</code> removes the
+row while the journal keeps the text.</p>
+<p><strong><a href="../systems/habitus-ai/">Habitus AI</a> makes
+canonical records immutable in the database rather than by
+convention.</strong> A zero-dependency Python library on one SQLite
+file, it aborts every UPDATE and DELETE on records with triggers, tested
+both ways, and expresses a correction as a new record with
+<code>supersedes_id</code>. Edge weights are a checked invariant summing
+to 1.0, and <code>reinforce_edges</code> returns unless the outcome is
+verified. The default embedding is a hash, the audit tables have no
+reader, and no query filters on <code>source_id</code>.</p>
+<p><strong><a href="../systems/membukkit/">MemBukkit</a> answers as of a
+date by superseding facts rather than deleting them, without the
+record-time axis that claim needs.</strong> A Python long-term memory
+library with a CLI, GUI, HTTP service and MCP server over the same
+stores, it distills turns into atomic facts beside the verbatim turn and
+links supersessions by cosine. <code>is_active_as_of</code> drops
+superseded facts from the evidence pool, each write returns a receipt
+with <code>noop</code> for an empty extract, and a GUI delete revives
+what the removed fact superseded.</p>
+<p><strong><a href="../systems/memlayer/">Memlayer</a> decides what to
+store by embedding similarity to hand-written prototype sentences, and
+one salient prototype is an API key.</strong> A wrapper that adds memory
+to OpenAI, Claude, Gemini and Ollama calls over ChromaDB and a NetworkX
+graph, it scores incoming text against salient and noise prototype lists
+after a regex fast path for greetings and acknowledgements. The decision
+boundary is readable, editable data rather than a model call, and no
+scope key was found on the read path in the inspected code.</p>
+<p><strong><a href="../systems/memv/">memv</a> extracts what a model
+failed to predict.</strong> A Python memory library over a bitemporal
+SQLite or Postgres store with vector and BM25 search, its
+<code>PredictCalibrateExtractor</code> has the model predict an episode
+from existing knowledge and extracts the gap against the original
+messages, behind a 0.7 confidence floor and a 0.8 near-duplicate check.
+Nothing in the tree measures the criterion: no extraction rate, no
+discard count, and the committed benchmark run omits the ablation the
+harness carries a preset for.</p>
+<p><strong><a href="../systems/neuroca/">NeuroCA</a> ships its memory
+tiers with every durable-backend integration test skipped.</strong> A
+three-tier memory system for LLMs with a lymphatic consolidator, an
+annealing optimizer and weighted tubules over pluggable in-memory,
+SQLite and vector backends, it opens two integration test files with a
+module-level <code>pytest.skip</code> because they 'use the old memory
+architecture', and the third skips Redis and SQLite. At the pinned
+commit no integration test exercises the memory system against a durable
+backend.</p>
+<p><strong><a href="../systems/recallweave/">RecallWeave</a> treats a
+hash-chained append-only log as the source of truth and replays current
+state from it.</strong> A dependency-free Rust engine and CLI, it writes
+three event variants — assert, tombstone with a reason, supersede — and
+composes tombstoned, superseded and expired into one
+<code>is_live</code> predicate that listing filters on; its lexical
+conflict detectors never mutate state. The dedupe consult compares a
+content fingerprint against live memories of the same kind, so a
+tombstoned fact asserted again is admitted as new.</p>
+<p><strong><a href="../systems/sage-novelty-gate/">SAGE Novelty Gate</a>
+decides what to write with a von Mises-Fisher novelty score instead of a
+per-write LLM call.</strong> A fork of <a
+href="../systems/mem0/">mem0</a>, it keeps extraction and replaces the
+ADD/UPDATE/DELETE/NOOP routing prompt with a kernel-density score
+against an adaptive per-scope threshold, reserving a merge prompt for
+the ambiguous UPDATE band. Per-question judge output for both arms is
+committed, and the headline macro accuracy recomputes offline, with SAGE
+1.3 points behind mem0 on that measure and level on the raw count.</p>
+<p><strong><a href="../systems/telemem/">TeleMem</a> publishes an
+evaluation charter that exempts its own README results.</strong> A mem0
+drop-in (<code>import telemem as mem0</code>), local by default on Qwen
+and FAISS, it refuses an <code>add()</code> without a scope id and
+applies <code>user_id</code>, <code>agent_id</code> and
+<code>run_id</code> as filters on write and search.
+<code>docs/evaluation.md</code> requires full-context and keyword-grep
+baselines, adversarial judge validation with shuffled answers, and
+multi-seed intervals, and states that it governs new evaluation runs
+rather than the existing published results.</p>
+<p><strong><a href="../systems/truememory/">TrueMemory</a> publishes
+three-run means with the individual runs, ranks a rival above itself,
+and prints its lowest category score.</strong> A Python memory layer
+over one SQLite file with an MCP server, hooks and a paper, it appends
+messages and derives <code>fact_timeline</code>, summaries and entity
+profiles by consolidation. Its LoCoMo leaderboard places it second, with
+the pre-computed-retrieval caveat under the table and the lenient rubric
+disclosed; BEAM shows 'Event ordering 19.5%'. <code>entity_scope</code>
+is written into <code>fact_timeline</code> and never read back.</p>
+<p><strong><a href="../systems/wax/">Wax</a> proves its single-file
+commit protocol by killing a forked writer at named checkpoints and
+asserting the exact frame count on reopen.</strong> A Swift memory
+engine for iOS and macOS keeping documents, embeddings and a fact tier
+with two time intervals in one <code>.wax</code> file with
+double-buffered headers, a TOC, a footer and a WAL ring, its
+<code>WaxCrashHarness</code> fails if the child does not crash and
+checks surviving frames by content. Repo and project raise a result's
+score and never remove one.</p>
 <h2 id="hosted-and-service-memory">Hosted and service memory</h2>
 <p><a href="../systems/openlore/"><code>openlore</code></a>, <a
 href="../systems/honcho/"><code>honcho</code></a>, <a
@@ -905,7 +1090,33 @@ href="../systems/synapse-layer/"><code>synapse-layer</code></a>, <a
 href="../systems/remembra/"><code>remembra</code></a>, <a
 href="../systems/elephantasm-core/"><code>elephantasm-core</code></a>,
 <a href="../systems/screenpipe/"><code>screenpipe</code></a>, <a
-href="../systems/hyperconsciousness/"><code>hyperconsciousness</code></a></p>
+href="../systems/hyperconsciousness/"><code>hyperconsciousness</code></a>,
+<a href="../systems/agentictrading/"><code>agentictrading</code></a>, <a
+href="../systems/anda-brain/"><code>anda-brain</code></a>, <a
+href="../systems/anolisa-agent-memory/"><code>anolisa-agent-memory</code></a>,
+<a href="../systems/brain-db/"><code>brain-db</code></a>, <a
+href="../systems/core-redplanet/"><code>core-redplanet</code></a>, <a
+href="../systems/diffmem/"><code>diffmem</code></a>, <a
+href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
+href="../systems/kleos/"><code>kleos</code></a>, <a
+href="../systems/marsnme/"><code>marsnme</code></a>, <a
+href="../systems/mem9/"><code>mem9</code></a>, <a
+href="../systems/memento-brain/"><code>memento-brain</code></a>, <a
+href="../systems/memini/"><code>memini</code></a>, <a
+href="../systems/memorybear/"><code>memorybear</code></a>, <a
+href="../systems/mengram/"><code>mengram</code></a>, <a
+href="../systems/muse-brain/"><code>muse-brain</code></a>, <a
+href="../systems/nocturne-memory/"><code>nocturne-memory</code></a>, <a
+href="../systems/octopoda-os/"><code>octopoda-os</code></a>, <a
+href="../systems/second-brain-cloudflare/"><code>second-brain-cloudflare</code></a>,
+<a href="../systems/shodh-memory/"><code>shodh-memory</code></a>, <a
+href="../systems/stash/"><code>stash</code></a>, <a
+href="../systems/virtual-context/"><code>virtual-context</code></a>, <a
+href="../systems/weave/"><code>weave</code></a>, <a
+href="../systems/weknora/"><code>weknora</code></a>, <a
+href="../systems/yantrikdb/"><code>yantrikdb</code></a>, <a
+href="../systems/yourmemory/"><code>yourmemory</code></a>, <a
+href="../systems/zep/"><code>zep</code></a></p>
 <p><strong>Statewave answers the family's hardest question by refusing
 to ask it at read time.</strong> Apache-2.0, 462 commits from April to
 September 2026 by thirteen authors, 26,041 lines of Python over
@@ -1511,6 +1722,214 @@ agent skill lists before its MCP tools, reads the local store with no
 grant and no retraction filter. Three marks:
 <code>scope_enforced</code>, <code>audit_log</code>,
 <code>negative_eval</code>.</p>
+<p><strong><a href="../systems/agentictrading/">AgenticTrading</a>
+stamps <code>agent_id</code> on every memory node and filters on it only
+when a caller asks.</strong> Inside a multi-agent trading research
+stack, a Neo4j memory service fronted by an MCP server and an A2A server
+serves alpha, risk, execution and cost agents from one graph. The
+primary search matches <code>CONTAINS</code> over content, summary and
+keywords with no scope predicate, and <code>agent_id</code> is one
+optional key in a <code>filters</code> dict. A node carries no status,
+confidence, validity interval or supersession pointer.</p>
+<p><strong><a href="../systems/anda-brain/">Anda Brain</a> is a
+cognitive service whose code states what its deployment cannot
+do.</strong> A Rust layer over the KIP 2.0 graph from <a
+href="../systems/anda-db/">anda-db</a>, adding Spaces, an authorization
+prelude that the HTTP and MCP channels run identically, a budgeted
+recall agent that returns <code>budget_insufficient</code> without
+calling the provider, and deterministic KIP writes that treat
+<code>OutcomeUnknown</code> as neither success nor licence to retry. Its
+settlement response says in words that no skill evaluation was performed
+rather than returning zeros.</p>
+<p><strong><a href="../systems/anolisa-agent-memory/">ANOLISA Agent
+Memory</a> lets the kernel enforce its sandbox, and tests an escape on
+the filesystem rather than on the error.</strong> A Rust component of an
+agentic operating system serving filesystem memory over MCP, with
+BM25-plus-vector search, git versioning and one mount and index per
+namespace. Content-opening paths resolve through <code>openat2</code>
+with <code>RESOLVE_BENEATH</code> and <code>RESOLVE_NO_SYMLINKS</code>
+against a root descriptor opened at startup, closing the check-then-swap
+symlink race; <code>mkdir</code>, <code>remove</code> and listing get a
+pre-syscall check the docstring calls best-effort.</p>
+<p><strong><a href="../systems/brain-db/">Brain</a> puts the tenant in
+the key, so a range scan cannot physically reach another tenant's
+rows.</strong> A Rust memory database server spoken to over a binary
+CBOR wire protocol, holding Memory, Entity, Statement and Relation
+records, where every secondary index leads with namespace and space
+bytes. A statement carries four timestamps on object and record axes;
+supersession and tombstoning are record-axis state that the default read
+drops and an as-of query overrides, including for a row tombstoned today
+but alive at the named instant.</p>
+<p><strong><a href="../systems/diffmem/">DiffMem</a> keeps only the
+current view in markdown and lets the commit graph hold every prior
+state.</strong> A memory backend with no index: a writer agent edits
+entity files in a per-user git worktree, and a retrieval LLM explores
+them with <code>grep</code>, <code>git log</code>, <code>git diff</code>
+and <code>git blame</code> beside a fixed baseline.
+<code>command_router.py</code> validates each quote-aware segment
+against a command allowlist and a second <code>git</code> subcommand
+allowlist, then executes the string with <code>shell=True</code>, so a
+single <code>&amp;</code> or newline starts a command nothing
+validated.</p>
+<p><strong><a href="../systems/kleos/">Kleos</a> withholds a pending
+memory from every listed read path, behind an MCP dispatcher that
+resolves the approve route whether or not it was advertised.</strong> A
+self-hosted Rust server on SQLite with FTS5, a vector index and an
+entity graph, it resolves review status once before the write by a pure
+function over source, importance and gate config, and the gate is off by
+default. <code>tools/call</code> does not dispatch from the curated tool
+list, so the producing agent can reach <code>inbox.approve</code>.</p>
+<p><strong><a href="../systems/marsnme/">MarsNMe</a> lets one agent
+leave an addressed note that another agent's boot delivers once and
+marks read.</strong> A memory backend over Postgres on Supabase with
+sixteen MCP tools for Claude, Cursor, Perplexity and Warp, it adds
+<code>recipient_body</code>, <code>note</code> and <code>read_at</code>
+columns and an unread-notes index to the memory table. Every chunk's
+origin must pass a database CHECK allowlist, and on board posts the
+addressee's read filter is written and then discarded.</p>
+<p><strong><a href="../systems/mem9/">mem9</a> commits an end-to-end
+suite for tombstone revival and write-id idempotency against an API the
+repository does not contain.</strong> A Go memory service over Postgres
+with pgvector, TiDB and a third backend, with plugins for OpenClaw,
+Claude Code, OpenCode and Codex, it resolves a database per tenant from
+the route. <code>e2e/crdt-e2e-tests.sh</code> specifies revival by
+dominating vector clock, but the endpoints, the <code>tombstone</code>
+field and the clock appear in no Go file.</p>
+<p><strong><a href="../systems/memento-brain/">Memento</a> scopes every
+read through one shared device filter whose empty case matches
+nothing.</strong> A self-hosted collector that ships AI coding
+conversations from each device's tools to Postgres with pgvector, served
+through a web interface and an MCP server, it resolves the caller's
+machine ids once in <code>user_machine_ids</code> and filters on
+<code>machine_id</code>, with admin and owner bypassing the filter. No
+committed case asserts that one user cannot see another's documents.</p>
+<p><strong><a href="../systems/memini/">memini</a> restricts every
+recall cascade leg past the primary namespace to durable tiers, while
+five MCP tools accept any namespace the model names.</strong> A Go
+memory service that MCP-capable agents share, over SQLite or Postgres
+behind one conformance-tested <code>Store</code> interface, it
+classifies an untiered write by a raise-only regex heuristic that
+defaults to the 72-hour <code>working</code> tier. Recall, briefing and
+answer take no namespace argument; list, get, history, update and forget
+do, and API keys carry no namespace grant.</p>
+<p><strong><a href="../systems/memorybear/">MemoryBear</a> forgets by
+fusing rather than deleting.</strong> A Neo4j and FastAPI memory service
+with a web console, it computes ACT-R base-level activation from each
+node's access history; below a threshold,
+<code>forgetting_strategy.py</code> fuses low-activation
+Statement-Entity pairs into a <code>MemorySummary</code> node with
+<code>DERIVED_FROM</code> edges and the original ids before removing the
+originals. <code>forgetting_cycle_history</code> records each run per
+user, including a <code>failed_count</code> of fusions that did not
+complete.</p>
+<p><strong><a href="../systems/mengram/">Mengram</a> regression-tests a
+procedure revision against every procedure that shares its
+surface.</strong> A Postgres memory service with Python and npm SDKs, an
+MCP server and a hosted console, it separates facts, episodes and
+procedures that evolve from failures.
+<code>cloud/regression_gate.py</code> checks a revision's newly added
+preconditions against dependents; a detected break lands the revision
+with <code>status = 'needs_review'</code> and <code>is_current</code>
+false, skips retiring the old version, and leaves the last known-good
+procedure current.</p>
+<p><strong><a href="../systems/muse-brain/">MUSE Brain</a> binds the
+tenant to the storage client at construction.</strong> The Postgres
+memory service behind a pair of companion agents, deployed as a
+Cloudflare Worker with MCP tools and consolidating daemons, it validates
+the tenant against DNS-label rules in the client constructor, so no call
+shape reads another tenant. A cross-tenant read clears a deployment
+allowlist and a per-project <code>visibility</code> flag, both
+defaulting closed. Lifecycle statuses withhold nothing: the list query's
+status filter defaults to null.</p>
+<p><strong><a href="../systems/nocturne-memory/">Nocturne Memory</a>
+lets an edit land after the model retypes the text it quotes.</strong>
+An MCP long-term memory server over SSE and HTTP framed around persona
+continuity, it addresses nodes as URIs such as
+<code>core://domain/topic</code> beside generated
+<code>system://boot</code> and
+<code>system://index/&lt;domain&gt;</code> views.
+<code>backend/text_patch.py</code> falls back to a match that normalises
+curly quotes, dash variants and whitespace when <code>old_string</code>
+misses, keeping a position map so the replacement lands in the original
+bytes.</p>
+<p><strong><a href="../systems/octopoda-os/">Octopoda</a> enforces
+tenant isolation with Postgres row-level security instead of a
+remembered WHERE clause.</strong> A memory and observability layer with
+a Python SDK, an MCP server and a dashboard, whose proprietary native
+engine is not in the tree, it ships <code>init.sql</code> with
+<code>USING</code> and <code>WITH CHECK</code> policies on five tables
+against a per-transaction <code>app.tenant_id</code>. Its per-tenant
+SHA-256 hash-chained audit lives inside the <code>nodes</code> table
+because the app role cannot create a table.</p>
+<p><strong><a href="../systems/second-brain-cloudflare/">Second
+Brain</a> sets each memory's recency floor by the kind of fact it is, so
+age breaks ties instead of gating.</strong> A personal memory layer on
+Cloudflare Workers, D1 and Vectorize, run in the user's own account and
+reached over MCP, it classifies text as durable, state or volatile by
+regex and returns <code>null</code> when unsure; the floors are 0.9, 0.6
+and 0.15. Capture runs contradiction detection that deprecates the loser
+and deletes its vectors, and <code>workspace_id</code> is a read-path
+predicate.</p>
+<p><strong><a href="../systems/stash/">Stash</a> keeps an inferred
+hypothesis out of the fact table until it is confirmed or
+rejected.</strong> A Go memory service on Postgres with pgvector and an
+MCP server, it gives hypotheses their own table with a
+<code>proposed</code>/<code>testing</code>/<code>confirmed</code>/<code>rejected</code>
+status, a <code>verification_plan</code>, <code>source_fact_ids</code>,
+and on resolution a <code>confirmed_fact_id</code> or a
+<code>rejection_reason</code>; recall reads facts, and hypotheses have
+their own MCP tools. Contradiction detection is keyed on the same entity
+and property, and <code>namespace_id</code> is a WHERE clause on every
+brain query.</p>
+<p><strong><a href="../systems/virtual-context/">virtual-context</a>
+writes every accept and reject of a fact into a ledger that a database
+trigger makes immutable.</strong> A proxy between an agent and its model
+provider, it keeps every turn verbatim, compacts older turns by topic
+into summaries and subject/verb/object facts, and forwards a bounded
+window with paging tools. An LLM tagger maintains a self-reorganising
+tag vocabulary with reuse, canonicalisation and splitting. Nothing reads
+<code>fact_decisions</code> back, and the bundled MCP server's tag
+listing and topic resource read every conversation in the store.</p>
+<p><strong><a href="../systems/weknora/">WeKnora</a> holds an inferred
+memory item as <code>pending</code>, unreachable by any prompt until a
+person confirms it.</strong> A memory subsystem inside Tencent's Go
+enterprise RAG framework, served over REST and MCP, it writes explicit
+items <code>active</code> and inferred ones <code>pending</code>;
+prompt-assembly queries filter <code>status = active</code>, the manager
+shows both, and <code>POST /memory/items/:id/confirm</code> moves an
+item across. Deletion leaves a content fingerprint in a tombstone table
+the extractor checks before writing, and one <code>scoped()</code>
+helper composes <code>tenant_id</code> and <code>subject_id</code> into
+every statement.</p>
+<p><strong><a href="../systems/yantrikdb/">YantrikDB</a> withdraws four
+published benchmark conclusions in a CORRECTIONS file because its
+'structured memory' condition was a simulator.</strong> A Rust memory
+database server over SQLite with a per-tenant commit log and pack files,
+wrapped around the <a href="../systems/yantrikdb-engine/">YantrikDB
+engine</a> pinned by tag, it appends four write routes to one commit
+substrate idempotent on <code>op_id</code>; the applier wires four of
+seven mutation variants and refuses three by name.
+<code>namespace</code> is the engine's recall predicate, and a tenant is
+its own SQLite file.</p>
+<p><strong><a href="../systems/yourmemory/">YourMemory</a> keeps decay
+out of the ranking formula and uses it to decide what to prune.</strong>
+A persistent memory service in FastAPI over Postgres, SQLite or DuckDB
+with an MCP server and hook templates, it scores candidates on BM25,
+vector similarity and a temporal boost, and lets type-dependent
+Ebbinghaus decay drive the 24-hour pruning job and graph node scores.
+Its audit chain logs memory ids and never their content, and the formula
+printed in <code>BENCHMARKS.md</code> omits the temporal term the
+service adds.</p>
+<p><strong><a href="../systems/zep/">Zep</a> is the client half of a
+closed hosted temporal knowledge graph, and its committed LoCoMo runs
+grade retrieval sufficiency apart from answer correctness.</strong> The
+repository holds framework integrations, a Go MCP server of read tools
+and an <code>ingestion/</code> library for Zep Cloud, with the
+deprecated Community Edition in <code>legacy/</code>; extraction,
+invalidation and ranking happen behind an HTTP call, and the open engine
+is <a href="../systems/graphiti/">Graphiti</a>. Writes are asynchronous
+end to end, and an episode submitted without a timestamp is dated to
+ingestion time.</p>
 <h2 id="agent-runtime-memory">Agent-runtime memory</h2>
 <p><a href="../systems/humans/"><code>humans</code></a>, <a
 href="../systems/letta/"><code>letta</code></a>, <a
@@ -1597,7 +2016,34 @@ href="../systems/browsentic/"><code>browsentic</code></a>, <a
 href="../systems/resonant/"><code>resonant</code></a>, <a
 href="../systems/maka/"><code>maka</code></a>, <a
 href="../systems/cindy/"><code>cindy</code></a>, <a
-href="../systems/ciris-agent/"><code>ciris-agent</code></a></p>
+href="../systems/ciris-agent/"><code>ciris-agent</code></a>, <a
+href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
+href="../systems/agentos-framerslab/"><code>agentos-framerslab</code></a>,
+<a
+href="../systems/ai-agent-automation/"><code>ai-agent-automation</code></a>,
+<a href="../systems/aipass/"><code>aipass</code></a>, <a
+href="../systems/always-on-memory-agent/"><code>always-on-memory-agent</code></a>,
+<a href="../systems/arcon/"><code>arcon</code></a>, <a
+href="../systems/autoresearchclaw/"><code>autoresearchclaw</code></a>,
+<a href="../systems/echo-agent/"><code>echo-agent</code></a>, <a
+href="../systems/hexis/"><code>hexis</code></a>, <a
+href="../systems/kaisen/"><code>kaisen</code></a>, <a
+href="../systems/matrix-os/"><code>matrix-os</code></a>, <a
+href="../systems/minecontext/"><code>minecontext</code></a>, <a
+href="../systems/mira/"><code>mira</code></a>, <a
+href="../systems/munder-difflin/"><code>munder-difflin</code></a>, <a
+href="../systems/open-webui/"><code>open-webui</code></a>, <a
+href="../systems/opencompany/"><code>opencompany</code></a>, <a
+href="../systems/openexecutive/"><code>openexecutive</code></a>, <a
+href="../systems/openhands-sdk/"><code>openhands-sdk</code></a>, <a
+href="../systems/orbital/"><code>orbital</code></a>, <a
+href="../systems/reasonix/"><code>reasonix</code></a>, <a
+href="../systems/redcell/"><code>redcell</code></a>, <a
+href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
+href="../systems/swarmai/"><code>swarmai</code></a>, <a
+href="../systems/trueforge/"><code>trueforge</code></a>, <a
+href="../systems/windieos/"><code>windieos</code></a>, <a
+href="../systems/xiaoo/"><code>xiaoo</code></a></p>
 <p><strong>ShisaD makes trust a lookup rather than an assertion, which
 is the cleanest answer in this family to <em>who said
 this</em>.</strong> Apache-2.0, 2,114 commits from five authors since
@@ -1938,24 +2384,24 @@ reversal explicitly refused as corroboration. And the new gap is one
 predicate wide: the superseded wording is kept on the row as
 <code>previous_content</code> and consulted by nothing, so re-asserting
 an overwritten value supersedes back.</p>
-<p><strong>agent-afk answers the criticism this atlas ends the Helm
-report on.</strong> Helm computes a provisional-confidence cap, earns
-increases through corroboration, and then formats the surviving facts as
-<code>- (kind) key: value</code> under <em>"use these, never contradict
-them"</em> — the number stripped off before the model sees it. agent-afk
-does the cheap version and does not drop it: a <code>convention</code>
-fact written without a provenance citation is recalled with an
-<strong><code>[unverified]</code> marker in the text the model
-reads</strong>, and the write warns. The gate is category-aware —
-preferences never require file evidence, a <code>learning</code> is not
-treated as factual codebase knowledge — and supersession has four tested
-outcomes, including carrying a prior citation forward <em>with a
-staleness warning</em> when no fresh evidence is supplied. A system that
-computes trust and ships it as a string has closed the boundary this
-atlas keeps finding open. The limit is what the string does:
-<code>applyUnverifiedTag</code> prefixes the content and returns it, so
-the uncited fact is recalled and ranked like any other and the tag is
-the whole of the enforcement.</p>
+<p><strong><a href="../systems/agent-afk/">agent-afk</a> answers the
+criticism this atlas ends the Helm report on.</strong> Helm computes a
+provisional-confidence cap, earns increases through corroboration, and
+then formats the surviving facts as <code>- (kind) key: value</code>
+under <em>"use these, never contradict them"</em> — the number stripped
+off before the model sees it. agent-afk does the cheap version and does
+not drop it: a <code>convention</code> fact written without a provenance
+citation is recalled with an <strong><code>[unverified]</code> marker in
+the text the model reads</strong>, and the write warns. The gate is
+category-aware — preferences never require file evidence, a
+<code>learning</code> is not treated as factual codebase knowledge — and
+supersession has four tested outcomes, including carrying a prior
+citation forward <em>with a staleness warning</em> when no fresh
+evidence is supplied. A system that computes trust and ships it as a
+string has closed the boundary this atlas keeps finding open. The limit
+is what the string does: <code>applyUnverifiedTag</code> prefixes the
+content and returns it, so the uncited fact is recalled and ranked like
+any other and the tag is the whole of the enforcement.</p>
 <p><strong>Helm is the family's floor, and it shows how little a working
 epistemic model costs.</strong> One SQLite file opened through Node's
 built-in <code>node:sqlite</code>, no service, no key required to store
@@ -2997,6 +3443,238 @@ user in a message pulls their profile and messages from other channels
 into the thought; and the amendment a person approves is composed by the
 model afterwards. Forgetting is a hard delete with no residue, and
 consent expiry deletes nothing. One mark, <code>audit_log</code>.</p>
+<p><strong><a href="../systems/agentos-framerslab/">AgentOS</a>
+implements ten mechanisms from the cognitive literature on a stack its
+documented agent path never reaches.</strong> A TypeScript agent
+framework with two memory stacks sharing a SQL schema: the
+<code>Memory</code> facade that <code>souledAgent()</code> wires in,
+fusing FTS with an HNSW sidecar, and
+<code>CognitiveMemoryManager</code>, which builds the mechanisms engine
+only behind <code>config.cognitiveMechanisms</code>.
+<code>agent()</code> reads that key only to warn, and facade recall
+omits the <code>brain_id</code> its schema is keyed on; the agency layer
+compiles <code>agencyId</code> into every vector query.</p>
+<p><strong><a href="../systems/ai-agent-automation/">AI Agent
+Automation</a> declares a similarity floor on recall and never applies
+it.</strong> A local-first workflow platform whose agents keep per-agent
+conversation memory in one MongoDB collection, loaded whole and scored
+by cosine in JavaScript around two workflow handlers and a playground.
+Ownership is asserted in the service, re-checked against the database
+and pinned by a cross-user suite; <code>minScore</code> appears only in
+the signature, a committed test asserts the unfloored result, and each
+row's embedding fields record the chat model rather than the
+embedder.</p>
+<p><strong><a href="../systems/aipass/">AIPass</a> budgets how often
+recall may speak, not only what ranks.</strong> A Python agent workspace
+whose memory module keeps capped JSON entries per branch with a ChromaDB
+archive. <code>should_surface</code> is a pure function that refuses a
+relevant item once five have surfaced in a session, fewer than ten
+messages have passed, or a 300-second cooldown has not elapsed, and
+returns the reason. Branch is the scope key on files, limits, search
+filters and lint, and a read-only linter audits the per-type entry
+caps.</p>
+<p><strong><a href="../systems/always-on-memory-agent/">Always-On Memory
+Agent</a> has no retrieval: the model reads a recent window, and a
+daemon consolidates on a timer.</strong> A Google ADK sample on Gemini
+Flash-Lite that ingests files and HTTP posts into structured SQLite
+rows, never embeds them, and answers by loading the latest 50 memories
+and 10 consolidations into context. Its <code>consolidation_loop</code>
+counts the whole unconsolidated backlog but reads
+<code>ORDER BY created_at DESC LIMIT 10</code> every 30 minutes, so a
+burst of more than ten ingests leaves a tail it never reaches.</p>
+<p><strong><a href="../systems/arcon/">Arcon</a> classifies every memory
+candidate CREATE, UPDATE, IGNORE or CONFLICT with no model
+call.</strong> A local-first companion architecture over Ollama and one
+SQLite file, where <code>memory-review.ts</code> decides
+deterministically before anything is stored and keeps a conflicting
+candidate as a <code>PENDING_CONFIRMATION</code> row rather than
+dropping it or overwriting what it contradicts. A <code>scope</code>
+column filtered before scoring separates the human's memories from the
+companion's own, and a single value of its status vocabulary is both
+written and read.</p>
+<p><strong><a href="../systems/autoresearchclaw/">AutoResearchClaw</a>
+keeps its memory package inside the run, and what outlives a run is a
+skill file.</strong> An autonomous research pipeline whose
+<code>researchclaw/memory/</code> store has ideation, experiment and
+writing categories with embeddings, decay and confidence. The one
+production caller constructs <code>ExperimentMemory</code> under
+<code>run_dir</code>, and both callers of <code>EvolutionStore</code>
+construct it under <code>run_dir</code> too, against a docstring
+promising lessons injected into future runs. The durable memory is a
+generated <code>arc-*</code> skill directory holding a
+<code>SKILL.md</code>.</p>
+<p><strong><a href="../systems/echo-agent/">Echo Agent</a> ranks
+provenance on every write, so a model-inferred claim cannot overwrite
+one the user stated.</strong> A self-hostable long-running agent with a
+four-tier SQLite memory, where <code>provenance_guard</code> permits a
+write only when the actor's <code>source</code> ranks at or above the
+target's, <code>user_stated</code> over <code>consolidated</code> over
+<code>model_inferred</code>, and unknown labels rank zero. The writing
+path sets the label, never the model.
+<code>ContradictionChecker.resolve</code> picks a winner by the same
+rank and marks the loser superseded, and a visibility function applies
+<code>memory_scope</code> before ranking.</p>
+<p><strong><a href="../systems/hexis/">Hexis</a> re-examines what a
+belief was suppressing when that worldview belief transforms.</strong> A
+Postgres-native companion agent with its memory model in SQL and one
+table per edge type, its <code>services/reconsolidation.py</code>
+revisits memories joined to the old belief by
+<code>CONTESTED_BECAUSE</code>, which may become acceptable, and by
+<code>SUPPORTS</code>, which may contradict. User-model claims carry
+<code>status</code> and <code>review_status</code> as separate
+CHECK-constrained columns, with evidence refs, contradiction refs and
+supersession pointers in both directions.</p>
+<p><strong><a href="../systems/kaisen/">KAISEN</a> keeps a durable
+visited-set of code hashes that outlives the record of why anything was
+skipped.</strong> An evolutionary coding harness that runs model swarms
+through build, verify and score, its memory is four plain files per
+project. <code>seen_hashes.json</code> grows without bound and is
+deliberately excluded from snapshots so a revert cannot reset it, while
+the <code>duplicate_skip</code> entries explaining each refusal sit in a
+<code>history</code> list truncated to 500. The set holds accepted
+candidates too, so it means already tried, not rejected.</p>
+<p><strong><a href="../systems/matrix-os/">Matrix OS</a> fills its
+memory with nine regular expressions over user messages and keeps it in
+a six-column table.</strong> In an agent operating system with a kernel,
+gateway, desktop app and plugin system, the kernel
+<code>MemoryStore</code> offers remember, recall, forget, list and
+export over SQLite with an FTS5 projection. There is no scope column, no
+status or confidence and no content update path, so a regex hit and a
+deliberate <code>remember</code> are the same kind of row; the Markdown
+export has no caller outside tests.</p>
+<p><strong><a href="../systems/minecontext/">MineContext</a> remembers
+commitments it infers from watching you.</strong> A local-first desktop
+assistant over SQLite and a vector backend, it turns screenshots,
+monitored folders, vault documents and web links into seven typed
+context stores and generated reports. Its <code>todo</code> table
+carries a deadline, urgency and a pending or completed status, and
+<code>SmartTodoManager</code> generates todos by asking a model to
+extract tasks from recent activity. Contexts and todos carry no scope
+key, and the Python package has no tests.</p>
+<p><strong><a href="../systems/mira/">MIRA</a> decays memory on the
+user's active days and checks its isolation before it binds a
+socket.</strong> A continuous assistant with one conversation thread per
+user, it collapses inactive segments into first-person memories scored
+by a thirteen-step SQL formula whose decay counts activity days while
+<code>happens_at</code> and <code>expires_at</code> count calendar days.
+Postgres row-level security covers eleven tables, a boot probe plants a
+canary row and refuses to start if another user can read it, and the
+curator's tool schema excludes <code>create_memory</code>.</p>
+<p><strong><a href="../systems/munder-difflin/">Munder Difflin</a>
+verifies the model's rewrite of a memory file before swapping it
+in.</strong> An Electron harness running Claude Code, Codex, Gemini and
+other CLIs as a team, it keeps one <code>memory.md</code> per agent and
+delegates semantic recall to <a
+href="../systems/mempalace/">MemPalace</a>. <code>MemoryReflector</code>
+condenses an oversize file with a headless <code>claude -p</code> behind
+backup-first, a <code>verify()</code> gate and an atomic swap; any
+failed check leaves the original byte-for-byte untouched, and the test
+that loads <code>reflect.ts</code> exercises the reply parser rather
+than <code>verify()</code>.</p>
+<p><strong><a href="../systems/open-webui/">Open WebUI</a> scopes every
+memory read by user and then discards relevance on assembly.</strong> A
+self-hosted chat front-end whose memory is a SQL table plus a vector
+collection per user, it filters every live read on <code>user_id</code>
+and re-checks it on each mutation. The relevance threshold its own
+comment argues for gates on a value above <code>0.0</code> with a
+default of <code>0.0</code>, so it never runs on a default install, and
+<code>add_memory_context</code> sorts each of three tiers
+alphabetically.</p>
+<p><strong><a href="../systems/opencompany/">OpenCompany</a> derives the
+memory namespace from authenticated identity so the model cannot name
+it.</strong> A self-hosted agent-workflow canvas where durable memory is
+an explicitly invoked <code>memory</code> tool node, it hashes
+authenticated owner, workflow and memory-node id into a SHA-256
+<code>namespace_id</code> that every query carries; the tool schema has
+no namespace field. Lexical retrieval survives an embedding failure. A
+<code>forget</code> deletes the row and keeps nothing keyed on it, so
+the deleted fact is admitted again on the next
+<code>remember</code>.</p>
+<p><strong><a href="../systems/openexecutive/">OpenExecutive</a> audits
+what memory was shown, not what was written.</strong> A virtual
+executive team of one orchestrator over eight specialists, it extracts
+decisions, initiatives and advice into SQLite with a background
+<code>claude-haiku-4-5</code> pass after every response and opens the
+next session with a <code>&lt;past_decisions&gt;</code> block scoped by
+<code>session_id</code>; tests assert the exclusion on the rendered
+prompt. A person can read, rewrite and delete extracted rows, and the
+memory module has no admission state.</p>
+<p><strong><a href="../systems/openhands-sdk/">OpenHands SDK</a> loads
+two agent-maintained markdown indexes under a shared 6,000-character
+budget, off by default.</strong> The package OpenHands V1 runs on, its
+<code>context/memory.py</code> concatenates a user-tier and a
+project-tier <code>MEMORY.md</code> into a
+<code>&lt;MEMORY_CONTEXT&gt;</code> prompt block when
+<code>AgentContext.load_memory</code> is set; the agent writes both
+files with ordinary file tools, and no code creates, parses or validates
+one. The condenser pipeline beside it is context-window management, not
+memory.</p>
+<p><strong><a href="../systems/orbital/">Orbital</a> refuses a
+commitment the user dropped if the agent writes it again.</strong> A
+desktop project agent delegating to Claude Code, Codex and Cursor, it
+keeps memory in four budgeted markdown files whose coldest entries
+demote to an archive behind an addressable pointer, plus
+<code>ASKS.md</code>, an append-only event log where an ask's state is
+its last event. The write path keys a new ask on its normalised text and
+refuses a dropped one, and a close the agent writes is stamped
+<code>by:agent</code> whatever it typed.</p>
+<p><strong><a href="../systems/redcell/">REDCELL</a> makes the pentest
+finding the memory unit, and a dismissed false positive stays in the
+table while leaving the report and the next run's recap.</strong> An
+autonomous penetration-testing platform on LangGraph, it writes
+findings, loot and hosts keyed to an engagement, each behind a dedup
+predicate, with every repository read filtered on
+<code>session_id</code>. The agent records under <code>candidate</code>
+by default; a human triages to <code>verified</code>,
+<code>dismissed</code> or <code>inconclusive</code>, and the record is
+read back into context on reopen. The LangGraph checkpointer is resume
+state, kept apart.</p>
+<p><strong><a href="../systems/sonder-runtime/">Sonder Runtime</a>
+quarantines a distilled lesson when its loss run is improbable for its
+retrieval-frequency band, with blame split across co-retrieved
+lessons.</strong> A self-modifying terminal agent over a stdlib-only
+SQLite store, it credits each interaction's outcome to every lesson
+retrieved for it at <code>1/cohort</code>, needs 2.0 attributable losses
+at p &lt;= 0.01 against the band's measured loss rate, and re-admits a
+quarantined lesson on a one-in-twenty sample after 24 hours. The agent's
+<code>memory_search</code> tool applies no project filter.</p>
+<p><strong><a href="../systems/swarmai/">SwarmAI</a> resolves a
+knowledge proposal's trust stamp from its source run, failing closed to
+not-applicable and never to passed.</strong> A desktop agent OS on the
+Claude Agent SDK, it pairs a curated markdown memory distilled from
+daily logs with a cultivation pipeline that proposes writes into project
+documents through a trust gate, an adversarial judge and a quality
+floor. The approval endpoint reuses the listing's actionable-status set,
+so a proposal hidden from the list cannot be approved by id; the
+automatic path discards what it distrusts to a recoverable archive.</p>
+<p><strong><a href="../systems/trueforge/">TrueForge</a> writes every
+context message once into an append-only log, so compaction and forking
+change pointers rather than bodies.</strong> An agent harness exposed as
+a chat UI, an HTTP API with an SDK and an embeddable UI, it has no
+belief-level memory subsystem; what a turn holds is ordered
+<code>(pos, append_id)</code> rows in <code>turn_thread_context</code>
+pointing into <code>thread_context_log</code>. Continuation and fork
+copy pointer rows, compaction replaces them, and no body is destroyed.
+<code>tenant_id</code> is a session-read predicate, <code>default</code>
+outside TrueFoundry mode.</p>
+<p><strong><a href="../systems/windieos/">WindieOS</a> stamps each FAISS
+index with the embedding space that built it, and re-embeds from SQLite
+when the model or dimension changes.</strong> A desktop-agent runtime
+with a two-tier episodic/semantic store on the user's machine, it calls
+its backend for embeddings and summaries and keeps all retrieval local;
+a write without an embedding lands in SQLite with a NULL vector id for
+later backfill. <code>user_id</code> is a SQL predicate on row-addressed
+reads and a Python post-filter on the vector read.</p>
+<p><strong><a href="../systems/xiaoo/">xiaoO</a> audits every process,
+file and network access its sandbox sees, and keeps memory rows with no
+status, scope or audit trail.</strong> A Rust agent runtime with a
+sandbox, a permission model, a skill system and a memory crate, it
+records execution through an <code>AuditEvent</code> and
+<code>AuditSink</code> layer and eBPF file and network records, and
+grants tool permissions with a scope and user approval. A memory row is
+<code>id</code>, <code>kind</code>, <code>content</code>,
+<code>source</code>, <code>embedding</code> and <code>updated_at</code>,
+and <code>crates/memory</code> contains no audit code.</p>
 <h2 id="host-runtimes-with-pluggable-memory">Host runtimes with
 pluggable memory</h2>
 <p>Hosts: <a
@@ -3056,7 +3734,12 @@ href="../systems/dsh-continual-harness/"><code>dsh-continual-harness</code></a>,
 <a
 href="../systems/hermes-fleet-memory/"><code>hermes-fleet-memory</code></a>,
 <a href="../systems/dsh-auto-memory/"><code>dsh-auto-memory</code></a>,
-<a href="../systems/dsh-superagent/"><code>dsh-superagent</code></a></p>
+<a href="../systems/dsh-superagent/"><code>dsh-superagent</code></a>, <a
+href="../systems/langchain/"><code>langchain</code></a>, <a
+href="../systems/langgraph/"><code>langgraph</code></a>, <a
+href="../systems/memory-lancedb-pro/"><code>memory-lancedb-pro</code></a>,
+<a href="../systems/omnimemory/"><code>omnimemory</code></a>, <a
+href="../systems/tideline-memory/"><code>tideline-memory</code></a></p>
 <p>The runtime ships an interface, not a memory model.
 <strong>Hermes</strong> bounds its own curated Markdown hard and freezes
 it into the prompt at session start while mounting one external
@@ -3895,6 +4578,55 @@ lists and the accept mode through its own tools behind a prose-only
 explicit-request rule, and nothing is ever deleted. Three marks,
 <code>scope_enforced</code>, <code>audit_log</code> and
 <code>negative_eval</code>.</p>
+<p><strong><a href="../systems/langchain/">LangChain</a> owns no memory
+store in version 1 and forwards <code>store</code> to <a
+href="../systems/langgraph/">LangGraph</a>.</strong> The framework whose
+class names became the field's vocabulary keeps its ten classic memory
+classes in <code>langchain_classic</code> under a removal notice, seven
+of them conversation-window management. Of the three that were memory,
+<code>SQLiteEntityStore</code> realises each session as its own table,
+isolation by DDL rather than predicate; its summarizer overwrites in
+place, and an empty summary deletes the entity it describes.</p>
+<p><strong><a href="../systems/langgraph/">LangGraph</a> makes the
+namespace half the primary key of its long-term store and leaves every
+memory semantic to the application.</strong> An agent runtime with two
+persistence layers, it separates the thread-scoped checkpointer from
+<code>BaseStore</code>, a namespaced key-value store with TTL and
+optional semantic search over Postgres, SQLite or an in-process dict. A
+point read or write cannot omit the namespace; a search takes a prefix,
+and an empty prefix matches every namespace. The conformance suite
+validates the checkpointer, not the store where the backends
+disagree.</p>
+<p><strong><a
+href="../systems/memory-lancedb-pro/">memory-lancedb-pro</a> supersedes
+by what a fact is about, keyed on a normalized
+<code>fact_key</code>.</strong> An <a
+href="../systems/openclaw/">OpenClaw</a> plugin over LanceDB, it scans
+the requesting scopes for an active memory with the same key on write,
+carries <code>valid_from</code>, <code>invalidated_at</code> and
+<code>valid_until</code> to a point-in-time read, and suppresses a
+memory from auto-recall after three unconfirmed injections. Its
+<code>pending</code> state is gated on and never written: every
+extractor site writes <code>confirmed</code>.</p>
+<p><strong><a href="../systems/omnimemory/">OmniMemory</a> tests whether
+its own default-deny gate discriminates, while its retrieval returns
+nothing.</strong> The ONEX platform's memory domain package, registered
+at the <code>onex.domain_plugins</code> entry point with
+Kafka-dispatched nodes and storage adapters, it runs positive and
+negative controls over the AST walk that forbids literal consumer-group
+names, and expires a memory by one compare-and-set UPDATE per command.
+The routed retrieval node serves in-memory test doubles that nothing
+seeds, and nothing in the repository inserts a <code>memories</code>
+row.</p>
+<p><strong><a href="../systems/tideline-memory/">Tideline</a> never
+edits a narrative; a correction is appended as an amendment with a
+reason.</strong> One agent's memory, an MCP server over SQLite with a
+Hermes provider plugin that injects self-concept, current state, open
+threads and high-weight memories at session start, it keeps amendments
+searchable as their own layer. The keyed state around that core is
+weaker: profile, self-concept and world-stance overwrites keep thirty
+prior values, thread edits keep none, and a time-filtered search leaks
+out-of-window narratives through its keyword fallback.</p>
 <h2 id="local-coding-agent-memory">Local coding-agent memory</h2>
 <p><a href="../systems/rekal/"><code>rekal</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
@@ -3958,7 +4690,7 @@ href="../systems/claude-code-memory-setup/"><code>claude-code-memory-setup</code
 <a href="../systems/token-optimizer/"><code>token-optimizer</code></a>,
 <a href="../systems/klypix-mcp/"><code>klypix-mcp</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
-href="../systems/tdai-memory-mcp/"><code>tdai-memory-mcp</code></a>, <a
+href="../systems/remem-mcp/"><code>remem-mcp</code></a>, <a
 href="../systems/memory-compiler/"><code>memory-compiler</code></a>, <a
 href="../systems/ods/"><code>ods</code></a>, <a
 href="../systems/neurakeep/"><code>neurakeep</code></a>, <a
@@ -4133,7 +4865,89 @@ href="../systems/stella/"><code>stella</code></a>, <a
 href="../systems/ken/"><code>ken</code></a>, <a
 href="../systems/mind/"><code>mind</code></a>, <a
 href="../systems/openmem/"><code>openmem</code></a>, <a
-href="../systems/textfold/"><code>textfold</code></a></p>
+href="../systems/textfold/"><code>textfold</code></a>, <a
+href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
+<a
+href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
+<a
+href="../systems/agentmemory-markdown/"><code>agentmemory-markdown</code></a>,
+<a
+href="../systems/ai-brain-starter/"><code>ai-brain-starter</code></a>,
+<a href="../systems/arcrift/"><code>arcrift</code></a>, <a
+href="../systems/athena/"><code>athena</code></a>, <a
+href="../systems/aurora/"><code>aurora</code></a>, <a
+href="../systems/brigade/"><code>brigade</code></a>, <a
+href="../systems/cass-memory-system/"><code>cass-memory-system</code></a>,
+<a
+href="../systems/claude-total-memory/"><code>claude-total-memory</code></a>,
+<a href="../systems/claudest/"><code>claudest</code></a>, <a
+href="../systems/clawmem/"><code>clawmem</code></a>, <a
+href="../systems/codewiki-plus/"><code>codewiki-plus</code></a>, <a
+href="../systems/compartment/"><code>compartment</code></a>, <a
+href="../systems/context-mem/"><code>context-mem</code></a>, <a
+href="../systems/continuous-claude/"><code>continuous-claude</code></a>,
+<a href="../systems/cortexgraph/"><code>cortexgraph</code></a>, <a
+href="../systems/daem0n-mcp/"><code>daem0n-mcp</code></a>, <a
+href="../systems/engraphis/"><code>engraphis</code></a>, <a
+href="../systems/enquire-mcp/"><code>enquire-mcp</code></a>, <a
+href="../systems/fidelis/"><code>fidelis</code></a>, <a
+href="../systems/flowix/"><code>flowix</code></a>, <a
+href="../systems/fx/"><code>fx</code></a>, <a
+href="../systems/gitmem/"><code>gitmem</code></a>, <a
+href="../systems/gomaa/"><code>gomaa</code></a>, <a
+href="../systems/gortex/"><code>gortex</code></a>, <a
+href="../systems/grok-build/"><code>grok-build</code></a>, <a
+href="../systems/guild/"><code>guild</code></a>, <a
+href="../systems/headroom/"><code>headroom</code></a>, <a
+href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
+href="../systems/jumbo/"><code>jumbo</code></a>, <a
+href="../systems/kage/"><code>kage</code></a>, <a
+href="../systems/kube-coder/"><code>kube-coder</code></a>, <a
+href="../systems/lerim/"><code>lerim</code></a>, <a
+href="../systems/linggen-memory/"><code>linggen-memory</code></a>, <a
+href="../systems/lossless-context-mcp/"><code>lossless-context-mcp</code></a>,
+<a href="../systems/mcp-memory/"><code>mcp-memory</code></a>, <a
+href="../systems/memcp/"><code>memcp</code></a>, <a
+href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
+href="../systems/memo-local/"><code>memo-local</code></a>, <a
+href="../systems/memoir/"><code>memoir</code></a>, <a
+href="../systems/memomind/"><code>memomind</code></a>, <a
+href="../systems/memory-industry/"><code>memory-industry</code></a>, <a
+href="../systems/memory-palace/"><code>memory-palace</code></a>, <a
+href="../systems/memory-project/"><code>memory-project</code></a>, <a
+href="../systems/memory-ts/"><code>memory-ts</code></a>, <a
+href="../systems/memsearch/"><code>memsearch</code></a>, <a
+href="../systems/midas/"><code>midas</code></a>, <a
+href="../systems/mnemos/"><code>mnemos</code></a>, <a
+href="../systems/moltbrain/"><code>moltbrain</code></a>, <a
+href="../systems/monet/"><code>monet</code></a>, <a
+href="../systems/neuron/"><code>neuron</code></a>, <a
+href="../systems/neurostack/"><code>neurostack</code></a>, <a
+href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
+href="../systems/obsidian-mind/"><code>obsidian-mind</code></a>, <a
+href="../systems/omega-memory/"><code>omega-memory</code></a>, <a
+href="../systems/omniclaude/"><code>omniclaude</code></a>, <a
+href="../systems/opencode-mem/"><code>opencode-mem</code></a>, <a
+href="../systems/opencontext/"><code>opencontext</code></a>, <a
+href="../systems/ori-mnemos/"><code>ori-mnemos</code></a>, <a
+href="../systems/ownmem/"><code>ownmem</code></a>, <a
+href="../systems/pltm-claude/"><code>pltm-claude</code></a>, <a
+href="../systems/reasonix/"><code>reasonix</code></a>, <a
+href="../systems/recall-substrate/"><code>recall-substrate</code></a>,
+<a href="../systems/remem/"><code>remem</code></a>, <a
+href="../systems/repowise/"><code>repowise</code></a>, <a
+href="../systems/runar-forge/"><code>runar-forge</code></a>, <a
+href="../systems/silica/"><code>silica</code></a>, <a
+href="../systems/sugar/"><code>sugar</code></a>, <a
+href="../systems/task-orchestrator/"><code>task-orchestrator</code></a>,
+<a href="../systems/throughline/"><code>throughline</code></a>, <a
+href="../systems/token-savior/"><code>token-savior</code></a>, <a
+href="../systems/vestige/"><code>vestige</code></a>, <a
+href="../systems/vibe-cognition/"><code>vibe-cognition</code></a>, <a
+href="../systems/vir/"><code>vir</code></a>, <a
+href="../systems/wenlan/"><code>wenlan</code></a>, <a
+href="../systems/yesmem/"><code>yesmem</code></a>, <a
+href="../systems/zer0dex/"><code>zer0dex</code></a></p>
 <p><strong><a href="../systems/dsh-mneme/">dsh-mneme</a> makes
 background consolidation accountable rather than trusted.</strong> A
 DeepSeek Harness plugin on SQLite with Markdown mirrors, it writes a
@@ -4365,13 +5179,14 @@ containment asserted before and after <code>realpath</code>; which skill
 arrived is not checked at all. Its compaction is worth copying
 regardless: the event that replaces the context carries the messages it
 replaced, so the model forgets and the store does not.</p>
-<p><strong>memoir publishes the best-argued deletion spec in this atlas
-and ships no way to invoke half of it.</strong> MIT, 11,932 lines of
-JavaScript, and its durable memory is mostly not its own: eleven
-adapters read and write the <em>host tools'</em> memory directories —
-<code>~/.claude</code>, <code>~/.gemini</code>, <code>~/.codex</code>,
-Cursor's, Windsurf's, Zed's — with only a session working set, an event
-log and encrypted cloud backups kept for itself. What it adds is <a
+<p><strong><a href="../systems/memoir/">memoir</a> publishes the
+best-argued deletion spec in this atlas and ships no way to invoke half
+of it.</strong> MIT, 11,932 lines of JavaScript, and its durable memory
+is mostly not its own: eleven adapters read and write the <em>host
+tools'</em> memory directories — <code>~/.claude</code>,
+<code>~/.gemini</code>, <code>~/.codex</code>, Cursor's, Windsurf's,
+Zed's — with only a session working set, an event log and encrypted
+cloud backups kept for itself. What it adds is <a
 href="https://github.com/camgitt/memoir/blob/2c1fe382b9c24289624f9f0329f378ab2d2aa653/docs/SPEC.md">a
 format spec</a> whose merge section opens by stating the standard the
 rest of this corpus should be held to: <em>"Every rule here exists
@@ -8353,6 +9168,678 @@ must quote source words that occur exactly once in the open paragraph.
 Correction overwrites: an edited or deleted note leaves no trace, a
 regenerated level replaces the last, and the per-site recipes its docs
 say are kept for a site's other pages have no reader.</p>
+<p><strong><a href="../systems/agent-context-os/">Context OS</a> applies
+every change to a coding agent's Markdown state as one receipted
+transaction.</strong> State files in known places and a routing table,
+under a Python kernel that renders a JSON payload into a proposal with
+per-file before and after hashes and applies it only when the exact
+proposal digest is echoed back, publishing a create-only receipt. Its
+continuity benchmark scores a quote only if it occurs in the file it
+cites, and committed trials show a well-written handoff note doing as
+well as the full layer.</p>
+<p><strong><a
+href="../systems/agent-working-memory/">AgentWorkingMemory</a> makes a
+retraction shake the wrong fact's neighbourhood.</strong> A local
+TypeScript memory reached through an MCP server and a Claude Code
+plugin. A retracted engram is excluded from every recall arm, and its
+graph neighbours lose confidence by a penalty multiplied by
+<code>0.5 + cohesion</code> of its two-hop neighbourhood, so a dense,
+tag-sharing cluster takes up to 1.5 times the base. On the default
+SQLite backend the lexical arm admits staged, archived and superseded
+rows and cuts its candidate window before the agent and retraction
+filters apply.</p>
+<p><strong><a href="../systems/agentmemory-markdown/">AgentMemory</a>
+turns public complaints about itself into falsifiable probes with
+required and forbidden markers.</strong> A local-first memory for coding
+agents in plain Markdown, a durable <code>MEMORY.md</code>, a dated work
+log and a scratchpad, with optional qmd search and no write gate,
+extraction or consolidation. The <code>eval/</code> suite records each
+probe with its source issue, fixture and a two-sided oracle, such as
+<code>current-fact-excludes-superseded-fact</code>, and exits zero when
+a probe reproduces its problem, treating it as a finding rather than a
+harness crash.</p>
+<p><strong><a href="../systems/ai-brain-starter/">AI Brain Starter</a>
+gates every hook on actually running, because two of its guards never
+did.</strong> A harness around an assistant that reads Markdown notes in
+a vault the person owns, where deterministic hooks refuse a write
+carrying a secret, raw git, a skip-prefix or a shared-worktree edit
+before it lands. <code>hooks/test_hook_smoke.py</code> exists because
+one hook carried an unsubstituted timezone placeholder and the secret
+scanner imported POSIX-only <code>fcntl</code> at module scope, so each
+crashed at import while the install reported it present.</p>
+<p><strong><a href="../systems/arcrift/">ArcRift</a> audits tenant
+isolation by asking a live server for the neighbour's secret by
+name.</strong> A local store fed by a browser extension from seven web
+AI products and by MCP from four coding tools, with FTS5, vectors and
+HyDE fused before injection. <code>mcp-stress-test.ts</code> writes a
+secret key into each of ten projects, spawns a real MCP process and
+passes only if the forbidden key is absent from the answer; ten
+own-project controls sit beside one cross-leak probe, and a global
+search path deliberately crosses the project boundary.</p>
+<p><strong><a href="../systems/athena/">Project Athena</a> grades its
+own claims by evidence in its README, and the labelling convention
+behind the grades is prose no code consults.</strong> A local-first
+personal memory of Markdown under <code>.context/</code>, written by a
+session routine and read by five channels fused by intent-weighted RRF,
+reached from Claude Code, Cursor and Gemini CLI through an MCP server
+and committed hooks. The <code>code-enforced</code>,
+<code>agent-discretion</code> and <code>aspirational</code> labels live
+in a workflow file; no memory carries a status, and the action log named
+as its black box has no caller.</p>
+<p><strong><a href="../systems/aurora/">AURORA</a> verifies a query
+decomposition, optionally against an adversarial template, before the
+expensive phases run.</strong> Code-aware memory for coding assistants:
+an ACT-R activation store over code chunks in SQLite, recalled by BM25,
+activation and embedding similarity weighted 0.3, 0.3 and 0.4. Its
+nine-phase SOAR pipeline puts Verify before Route, Collect and
+Synthesize, with <code>verify_decomposition</code> choosing
+<code>SELF</code> or <code>ADVERSARIAL</code>; the README's
+retrieval-quality gate passes parameters the function does not take.</p>
+<p><strong><a href="../systems/brigade/">Brigade</a> lets its memory
+writer propose into an Obsidian inbox and nothing more.</strong> A
+coding-agent work tracker whose <code>memory_vault.py</code> indexes and
+searches allowlisted vault roots and whose single write delivers an
+additive proposal into one allowlisted inbox; nothing in the tree
+accepts it, so the person resolves it in their own vault.
+<code>_open_contained_inbox</code> opens through directory handles
+without following any symlink component,
+<code>_reject_existing_note</code> refuses overwrites, and the module
+raises rather than degrading to plain <code>open()</code> where those
+primitives are missing.</p>
+<p><strong><a href="../systems/cass-memory-system/">CASS</a> keys a
+forgotten rule on its own text, so a paraphrase stays blocked.</strong>
+Procedural memory for coding agents: a JSON playbook of rules and
+anti-patterns, reflected from sessions by a model and rendered to
+markdown for injection. Forgetting writes a <code>BlockedEntry</code> to
+<code>.cass/blocked.log</code>, and each merge deprecates any bullet
+above 0.85 Jaccard token overlap with one as
+<code>BLOCKED_CONTENT</code>; <code>getActiveBullets</code> drops
+retired and deprecated bullets before <code>exportToMarkdown</code>. A
+usage-analytics log in <code>src/tracking.ts</code> has no caller
+outside its tests.</p>
+<p><strong><a
+href="../systems/claude-total-memory/">total-agent-memory</a> runs a
+second retrieval against an inverted query and lets a strong
+contradiction make the question unanswerable.</strong> A Python memory
+layer for coding agents over SQLite, with an append-only
+<code>fact_assertions</code> log closed by <code>superseded_by</code>, a
+temporal graph and a six-stage hybrid retriever.
+<code>negative_retrieval.py</code> scores each positive-negative pair
+for contradiction: below 0.30 nothing conflicts, up to 0.60 the answer
+hedges, and at or above it the router emits IDK. One
+<code>SearchScope</code> renders as SQL and is re-applied to anything
+expansion pulls in.</p>
+<p><strong><a href="../systems/claudest/">Claudest (claude-memory)</a>
+specifies a consolidation that must remove, and verifies each
+removal.</strong> A Claude Code plugin that stores every session in
+SQLite with FTS5, injects precomputed summaries at session start, and
+promotes learnings into <code>CLAUDE.md</code>, <code>MEMORY.md</code>
+and topic files only through an approval gate. Its
+<code>extract-learnings/SKILL.md</code> names a run that only adds as a
+failure mode, settles retirements before clustering so nothing masks a
+removable entry, deletes with <code>trash</code> rather than
+<code>rm</code>, and marks a removal done only once the file is verified
+absent.</p>
+<p><strong><a href="../systems/clawmem/">ClawMem</a> measured its
+composite ranking against the raw channel score, lost, and demoted
+metadata to a tie-breaker.</strong> An on-device memory for Claude Code,
+OpenClaw and Hermes over one SQLite vault with FTS5,
+<code>sqlite-vec</code> and a local GGUF extractor. An offline harness
+with hand-labelled gold evidence put raw cosine at MRR 0.912 against the
+composite's 0.307, so the direct routes rank by raw BM25 or cosine and
+every metadata signal, pin included, acts only within groups of equal
+raw score.</p>
+<p><strong><a href="../systems/codewiki-plus/">CodeWiki-Plus</a> treats
+three values of one status field three ways on read, and skips retired
+notes on write.</strong> A documentation generator's file-backed
+knowledge base served as MCP tools to an IDE-driven flow. In
+<code>handle_query_wiki</code> a <code>deprecated</code> note leaves the
+result set, a <code>draft</code> returns under an
+<code>[unconfirmed]</code> prefix, and the rest are weighted by an
+authority multiplier. <code>_is_retired_note</code> makes distillation's
+dedup and conflict searches skip deprecated notes, so a rejected claim
+extracted again lands as a fresh draft.</p>
+<p><strong><a href="../systems/compartment/">Compartment</a> anchors its
+audit chain's head and length outside the chain, so a truncated tail
+reports as removal.</strong> An encrypted offline vault in one sealed
+<code>.vault</code> file, served to agents over MCP, a Claude Code
+plugin and a Hermes provider, with per-caller ACLs resolved to a
+readable namespace set before every search. Its <code>gate.py</code>
+store gate refuses a memory whose shape would embed badly, replacing a
+short-memory instruction measured against a median organic memory of
+1,938 characters; supersession is keyed on a record id and carries no
+time.</p>
+<p><strong><a href="../systems/context-mem/">Context Mem</a> forgets by
+losing resolution: an observation ages through compression tiers rather
+than being deleted.</strong> A TypeScript memory layer for coding agents
+that auto-ingests every tool call into SQLite and a synced markdown
+vault. <code>adaptive-compressor.ts</code> moves content from verbatim
+through light and medium to distilled facts at 7, 30 and 90 days, with
+pinned rows exempt and high-importance rows a tier slower. Its gold 100%
+LongMemEval badge is recall@5 with a judge blend, beside a committed
+end-to-end QA result of 46.6%.</p>
+<p><strong><a href="../systems/continuous-claude/">Continuous Claude</a>
+mines a finished session's thinking blocks for typed learnings.</strong>
+A Claude Code configuration of hooks, agents and skills over a Python
+package: a background daemon spawns a headless <code>claude -p</code> to
+classify the reasoning into seven learning types and embed them into
+pgvector, and a <code>UserPromptSubmit</code> hook injects hybrid RRF
+matches on the next prompt. Recall applies no confidence, type or
+project filter, and the default <code>sqlite</code> learnings backend is
+selected while its write module is absent.</p>
+<p><strong><a href="../systems/cortexgraph/">CortexGraph</a> forgets by
+default: strength decays from <code>last_used</code> on an Ebbinghaus
+curve unless use reinforces it.</strong> An MCP server whose memories
+carry a decaying strength, a use count and typed relations in an
+append-only JSONL log or SQLite, recalled by activation spreading
+filtered to active status and promoted as Markdown into a vault. A
+committed spec, <code>per-memory-file-storage.md</code>, argues the log
+should become one file per memory because the data structure is fighting
+the biological model; no user, project or agent key exists in the
+source.</p>
+<p><strong><a href="../systems/daem0n-mcp/">Daem0nMCP</a> blocks every
+mutating tool until the agent holds a signed, expiring token proving it
+consulted memory.</strong> A Python memory and decision system for
+coding agents, served as an MCP server over per-project SQLite with
+FTS5, Qdrant vectors and a graph layer. <code>CovenantMiddleware</code>,
+registered on the server, requires a <code>PreflightToken</code> from
+<code>context_check</code> that names the intended action, session and
+project and carries an HMAC-SHA256 signature and an expiry;
+<code>_TOKEN_SECRET</code> defaults to a string committed in the
+source.</p>
+<p><strong><a href="../systems/enquire-mcp/">enquire-mcp</a> tells the
+model how old a note is and leaves the judgement to it.</strong> An MCP
+server over an existing Obsidian vault, it stores no memories of its own
+and returns each hit with its path, PDF page numbers,
+<code>age_days</code> and a <code>stale</code> flag. The recency
+re-ranking built on the same <code>mtime</code> signal is opt-in and off
+by default, so ranking stays relevance-primary; scope is filesystem
+confinement rather than a stored key.</p>
+<p><strong><a href="../systems/fidelis/">Fidelis Memory</a> stores the
+passage verbatim and corrects by supersession, not by rewrite.</strong>
+A local memory service for coding agents over Chroma and a SQLite
+sidecar, served by MCP to Claude Code, Codex, Cursor and others, it
+stamps a system-clock <code>recorded_at</code>, accepts a declared
+validity window and answers <code>as_of</code> an instant. Superseded,
+expired and not-yet-valid records are annotated and demoted rather than
+withheld, and the writing agent can supersede any record in its
+namespace.</p>
+<p><strong><a href="../systems/flowix/">Flowix</a> is a Markdown
+notebook an agent can search, edit and delete over MCP, and a memo
+carries no status, confidence or review state.</strong> A Rust workspace
+whose <code>dsh-flowix-memory</code> bundle registers a local
+<code>flowix-cli</code> server with DeepSeek Harness, it gives the agent
+one <code>memo</code> tool with twelve actions. Its bigram search
+re-checks every candidate with an exact <code>body.contains</code>, and
+version cleanup retains directories it cannot account for; a delete
+takes the version history with it.</p>
+<p><strong><a href="../systems/fx/">fx</a> is a Zig coding agent whose
+memory tool was a flat JSON array of strings, removed on 31 August
+2026.</strong> At the pinned predecessor tree, <code>save</code> in
+<code>~/.fx/memories.json</code> dedupes byte-for-byte and rewrites the
+whole array, <code>clear</code> is declared irreversible to the harness,
+and the tool description forbids persisting anything the user did not
+ask to persist. The session layer beside it, an append-only
+<code>events.jsonl</code> with two-phase authority files and lock
+deadlines, is untouched by the removal.</p>
+<p><strong><a href="../systems/gitmem/">GitMem</a> refuses a scar
+without two counter-arguments and blocks consequential commands until
+recalled scars are answered.</strong> An MCP server with Claude Code
+hooks over Postgres with pgvector or local JSON, it stores scars, wins,
+patterns and anti-patterns, and a <code>PreToolUse</code> hook blocks
+<code>git push</code>, publishes and deploys while recalled scars have
+no accepted confirmation. Both rules count rather than read: two empty
+strings satisfy the counter-argument check, the gate does not match
+confirmations to scars, and every scar read draws from one cross-project
+index.</p>
+<p><strong><a href="../systems/gomaa/">Gomaa</a> tests its injection
+defence in both directions, and leaves its scope to an argument the
+model may omit.</strong> A local-first memory engine for coding agents,
+it keeps Obsidian Markdown in a vault mirrored into Postgres with
+pgvector or SQLite WAL. <code>test_prose_tokens_neutralized</code>
+asserts chat-template tokens are stripped from prose, and the next case
+asserts they survive in a code fence. The <code>wing</code> and
+<code>room</code> scope passes through <code>_scope_clause</code>, which
+returns no predicate for an absent scope, while the MCP handler passes
+<code>args.get("scope")</code>.</p>
+<p><strong><a href="../systems/gortex/">Gortex</a> records on every edge
+how it was resolved, and discounts its compiler-grade tier for
+ranking.</strong> A Go code-intelligence engine that parses tree-sitter
+grammars into a persistent SQLite graph served over MCP, a CLI and a web
+UI, it stamps each edge with an <code>Origin</code> from
+<code>lsp_resolved</code> down to <code>text_matched</code>.
+<code>EdgeTierScore</code> is one shared mapping for path confidence,
+while centrality weights <code>ast_resolved</code> at 1.0 and pulls the
+dense LSP tier to 0.6, separating belief from ranking weight.</p>
+<p><strong><a href="../systems/grok-build/">Grok Build</a> consolidates
+memory with a dream pass that overwrites the project file and deletes
+the session logs it read.</strong> In SpaceXAI's Rust terminal coding
+agent, off by default, Markdown under <code>~/.grok/memory/</code> is
+the source of truth beside a derived per-workspace FTS5 index. The dream
+overwrites <code>MEMORY.md</code> with a character-truncated model
+response. On the read side, recalled session memory is stamped with its
+age, and the memory block persists in the leading system message to keep
+the prompt-prefix cache.</p>
+<p><strong><a href="../systems/guild/">The Agent Guild</a> admits four
+of nine lore statuses to search by name, so an unlisted status stays
+hidden.</strong> A single Go binary holding an MCP server and embedded
+SQLite, it serves lore and an atomic-claim quest board as a shared
+substrate for parallel agents in different editors. The listing path
+beside search is written as a deny-list, so the two reads hide different
+sets. The exclusion test is its own control: one archived match, zero
+results by default and one with the widening flag.</p>
+<p><strong><a href="../systems/headroom/">Headroom</a> supersedes a
+memory and then removes the old row from both search indexes, because
+each holds a cached copy that calls it current.</strong> A local
+context-compression proxy, its cross-agent memory subsystem shares facts
+across Claude, Codex, Gemini and Grok. Supersession closes a validity
+window and default search excludes superseded rows, but cached index
+metadata carries a null <code>valid_until</code>. The user id is bound
+at construction and passed to every operation, with ownership
+re-verified on update and delete; no test asserts the index removal.</p>
+<p><strong><a href="../systems/hippo-memory/">Hippo</a> enforces
+<code>tenant_id</code> in the read query and suspends it on purpose for
+consolidation.</strong> A TypeScript memory layer for coding agents on
+SQLite with FTS5, served by CLI, HTTP and MCP, it gives each entry a
+mass, charge and temperature and ranks by fused BM25 and vector
+similarity, with an optional physics search. The API recall passes the
+tenant; the CLI omits it under a single-tenant-per-process comment;
+<code>sleep</code> hard-deletes host-wide behind a loopback-only,
+admin-gated route.</p>
+<p><strong><a href="../systems/jumbo/">Jumbo Context</a> stores project
+memory as one atomically written JSON file per domain event, with SQLite
+views as rebuildable projections.</strong> A harness-agnostic CLI for
+Claude, Codex, Antigravity and Copilot, it appends to thirteen aggregate
+streams under an optimistic-concurrency <code>version</code>, writing to
+a temp file and renaming. Its review workflow's reviewer is a daemon
+that spawns an agent, and the base-event field that would say whether a
+human or a machine logged an event is set by nothing.</p>
+<p><strong><a href="../systems/kube-coder/">kube-coder</a> applies its
+namespace filter to every retrieval arm, so an out-of-scope hit cannot
+be fused back in.</strong> A Helm chart for per-developer Kubernetes dev
+workspaces, it keeps one SQLite file per workspace on the pod's volume,
+reached by a dashboard over HTTP and by Claude through a per-session MCP
+server. Search fuses FTS5 with an optional <code>sqlite-vec</code> pass,
+and the allow-list and namespace root hold on the FTS pass, the LIKE
+degradation and the vector-only ids. Its upsert clears the deletion flag
+it wrote.</p>
+<p><strong><a href="../systems/lerim/">Lerim</a> tests the cases where
+being wrong is quiet: an empty project list fails closed and an as-of
+query keeps rows archived afterwards.</strong> A Python context compiler
+over SQLite, it turns finished agent traces into decision and episode
+records with a world-validity window, served over MCP, HTTP and a
+dashboard. A curator agent sets status, validity window and supersession
+pointer as independent fields. The <code>status</code> pair of active
+and archived is lifecycle, not epistemic, so nothing means recorded but
+not believed.</p>
+<p><strong><a href="../systems/linggen-memory/">Linggen Memory</a>
+defaults its account filter closed, and its dedup lookup carries neither
+that filter nor the archive gate.</strong> A local-first Rust daemon
+over LanceDB serving a CLI, HTTP, MCP and Claude Code, Codex and
+OpenClaw plugins, it compiles the default
+<code>AccountScope::Owner</code> to <code>account_id IS NULL</code> and
+archives merge losers rather than deleting them. The exact-content dedup
+folds a byte-identical re-statement of an archived fact back into the
+archive, and can land one person's identical write on another's row.</p>
+<p><strong><a
+href="../systems/lossless-context-mcp/">lossless-context-mcp</a>
+archives every file version an agent was shown so a compaction cannot
+destroy the working set.</strong> A TypeScript MCP server fed by five
+Claude Code hooks, it content-addresses each version by SHA-256 beside
+per-writer append-only JSONL events, with a PreCompact sweep that parses
+the transcript for native reads and edits too. Its
+<code>BENCHMARK.md</code> requires byte-for-byte reconstruction after
+every operation and publishes the result that its compression saves
+nothing on real sessions.</p>
+<p><strong><a href="../systems/mcp-memory/">MCP-Memory</a> writes the
+Open Knowledge Format trust vocabulary faithfully and filters on none of
+it.</strong> A FastMCP server with six tools over one SQLite FTS5
+database per project, it stores each memory as OKF markdown with
+<code>status</code>, <code>verified</code> and <code>stale_after</code>
+frontmatter, mirrored to a <code>.md</code> file never read back. Search
+and retrieve consult key, namespace, tags and payload, so a deprecated
+or expired record returns like a fresh one, and search spans every
+namespace when none is given.</p>
+<p><strong><a href="../systems/memcp/">MemCP</a> penalises a misleading
+memory twice as hard as it rewards a helpful one, and carries the
+penalty into the graph.</strong> An MCP server giving Claude Code an
+RLM-style external memory over a SQLite knowledge graph with four edge
+types, its <code>memcp_reinforce</code> subtracts 0.2 from a misleading
+insight's score and weakens its edges by 0.05, against 0.1 and 0.02 for
+a helpful one. Its published head-to-head report's Native column is a
+constant typed into the test, <code>native_value=5.0</code>.</p>
+<p><strong><a href="../systems/memmy-agent/">Memmy</a> shares one local
+SQLite memory across coding agents by installing a CLI skill into each
+agent's config directory.</strong> From the MemOS team, it runs one
+daemon on <code>127.0.0.1:18960</code> and writes a skill into
+<code>~/.claude</code>, <code>~/.codex</code>, <code>~/.cursor</code>,
+<code>~/.openclaw</code> and <code>~/.hermes</code> that calls the
+<code>memmy-memory</code> CLI. A background pipeline distills L1 traces
+into L2 policies, L3 world models and Skills and induces avoid policies
+from failures; semantic recall pools across agents by design.</p>
+<p><strong><a href="../systems/memo-local/">memo</a> stops a re-ingest
+resurrecting a deleted note by tombstoning its source rather than
+deleting the user's file.</strong> A local-first Python memory for
+coding agents over SQLite and MCP, it records an exclusion glob for a
+deleted vault-derived memory's source note, consulted by the ingest path
+and lifted by an explicit command alone. It answers what the corpus held
+and what was true in the world as two separate as-of tool families, from
+the <code>history.db</code> audit log and from each record's validity
+interval.</p>
+<p><strong><a href="../systems/memomind/">MemoMind</a> is a field report
+on running <a href="../systems/hindsight/">Hindsight</a>, written as
+patches.</strong> A local memory for coding agents over PostgreSQL and
+pgvector with MCP over stdio, it vendors the Hindsight engine under
+<code>engine/</code>. <code>engine/PATCHES.md</code> records four fixes,
+two about memory quality: consolidation copies a single world fact into
+an <code>observation</code>, and model paraphrase defeats the 0.8
+similarity gate on duplicate observations, closed here by a 0.5
+threshold plus a length-ratio check.</p>
+<p><strong><a href="../systems/memory-industry/">MemoryIndustry</a>
+keeps untrusted text out of search with an allow-list rather than an
+exclusion.</strong> A Rust MCP memory server over PostgreSQL and
+pgvector, it stores text the agent did not vouch for with
+<code>trust = 'quarantined'</code>, and the search arms admit rows
+<code>AND trust = 'trusted'</code>, with tests pinning both directions.
+Its boundaries are written per query: every arm reads
+<code>project IS NULL OR project_id = project</code>, so on stdio, until
+the agent binds a project, every read spans every project.</p>
+<p><strong><a href="../systems/memory-project/">memory-project</a>
+forgets at two speeds, and the routine one is not destructive.</strong>
+Long-term memory for one developer's Claude Code sessions, wired in by
+hooks over one ChromaDB collection, it gives decay, reinforcement,
+consolidation and cued recall each a function. <code>prune()</code> sets
+<code>archived: True</code>, dropping the entry from
+<code>recall()</code> while keeping content and embedding reachable
+through <code>recall_cold()</code> and <code>revive_from_cold()</code>;
+<code>purge()</code> is the rare manual delete for something that should
+never have been recorded.</p>
+<p><strong><a href="../systems/memory-ts/">memory-ts</a> records in its
+schema history which fields it deleted and the evidence for
+each.</strong> A memory layer for Claude Code and Gemini CLI, with a
+curator extracting memories from the transcript at session end into a
+filesystem-backed vector store, its <code>src/types/schema.ts</code> v3
+note removes seven fields with reasons such as
+<code>emotional_resonance</code> '580 variants, never used' and
+<code>parent_id</code>/<code>child_ids</code> 'no logic implemented'. v4
+adds a two-tier memory: a headline always shown, full content expanded
+on demand.</p>
+<p><strong><a href="../systems/memsearch/">MemSearch</a> keeps distilled
+skills inert until a person installs them.</strong> Zilliz's
+agent-memory layer captures markdown journals per turn for Claude Code,
+OpenClaw, OpenCode and Codex CLI and indexes them into Milvus, which it
+calls a rebuildable shadow index behind Markdown as the source of truth.
+<code>skills.py</code> distils recurring workflows into candidates it
+never writes into an agent's skills directory; the candidate store is
+its own git repository, so a bad distillation is diffable and
+revertible, and the feature ships off by default.</p>
+<p><strong><a href="../systems/mnemos/">mnemos</a> strips each eval
+query from its host chunk before testing retrieval.</strong> A single
+cgo-free Go binary that indexes a project's ADRs, design docs and source
+into SQLite and serves cited BM25 hits over MCP, it ships
+<code>internal/eval</code>, which builds a held-out corpus with the
+queries removed and compares against a versioned baseline. Its secret
+scanner keeps the match on an unexported field so a finding cannot carry
+the secret; the collection that partitions the index is a filter the
+calling model may omit.</p>
+<p><strong><a href="../systems/moltbrain/">MoltBrain</a> stores the
+session summary as a form, not a paragraph.</strong> A TypeScript memory
+layer for Claude Code and OpenClaw over SQLite and ChromaDB, it parses
+the model's XML into <code>session_summaries</code> fields such as
+request, investigated, learned, completed and next steps, and into
+observations whose <code>type</code> a <code>CHECK</code> constrains to
+six values. Nothing models a memory being wrong: no confidence, status
+or correction field appears in the inspected code.</p>
+<p><strong><a href="../systems/monet/">Monet</a> binds rules to named
+stages read when a matching tool call fires.</strong> A local-first MCP
+memory for coding agents over one SQLite file at <code>~/.monet</code>,
+it stores a concept-observation graph in which principles, rules and
+corrections are values of <code>concepts.kind</code>. Human-declared
+principles enter a standing skeleton prewarmed into the first tool
+response; a rule's user-authored stage triggers match lexically against
+the intercepted call; a correction attaches as an observation that opens
+a contradiction and flips the concept to <code>disputed</code>.</p>
+<p><strong><a href="../systems/neuron/">Neuron</a> refuses a write that
+violates a per-category schema whatever the agent's prompt
+says.</strong> Markdown-as-memory for coding agents with a rebuildable
+SQLite index, it routes every mutation through
+<code>enforceFieldSchema</code>, which throws on a missing required
+field, an undeclared field or an out-of-enum value declared in
+<code>neuron.yaml</code>. Recall is the harness's job:
+<code>neuron init</code> wires lifecycle hooks on Claude Code and Codex
+CLI and publishes a deterministic, best-effort, instruction-only
+fidelity ladder for harnesses that lack a hook point.</p>
+<p><strong><a href="../systems/neurostack/">NeuroStack</a> deletes by
+relocating a memory into a table retrieval cannot search.</strong> A
+local SQLite index over a Markdown vault serving MCP clients, it sends
+forget, merge loss, TTL expiry and prune through one helper into
+<code>memories_archive</code>, which has no FTS index and no embedding,
+so archived rows are invisible to search by construction yet restorable.
+Expiry runs at read time by relocation, and the test asserts an empty
+full-text MATCH on the index rather than an empty answer.</p>
+<p><strong><a href="../systems/nexusmem/">NexusMem</a> keys recall on an
+execution.</strong> A local SQLite memory of what happened on a machine,
+holding shell commands with exit codes, Claude Code Bash calls and
+edits, git patches and docs, it answers a failed command with whether
+that execution failed in the repository before, what was edited each
+time and whether the fix that followed held. Nothing withholds a memory:
+a human <code>rejected</code> verdict, a supersession and a failed fix
+reorder or reword.</p>
+<p><strong><a href="../systems/obsidian-mind/">obsidian-mind</a> holds
+session-start injection to a byte budget and names every section it
+drops.</strong> An Obsidian vault template for Claude Code, Codex and
+Gemini with lifecycle hooks, QMD hybrid search and an <code>om</code>
+MCP server for other repositories, it degrades the cheapest-to-lose
+sections to pointers over the ceiling and ends each injection with a
+size meter. A <code>brain/</code> note carries no status, so a reversed
+Key Decision is served like a live one until a sweep runs.</p>
+<p><strong><a href="../systems/omega-memory/">OMEGA</a> filters
+retrieval at a point in time over both ends of a validity
+interval.</strong> A local-first SQLite memory server for coding agents
+with MCP, hooks and a CLI, it drops candidates where
+<code>valid_from &gt; valid_at</code> or
+<code>valid_until &lt;= valid_at</code>, and supersession writes
+<code>valid_until</code> with the status. Deletions write
+<code>forgetting_log</code> rows with a reason the agent can query.
+Feedback reaching -3 sets <code>flagged_for_review</code>, removing the
+memory from retrieval, and the inspected code has no path that clears
+it.</p>
+<p><strong><a href="../systems/omniclaude/">OmniClaude</a> holds one
+session in five out of memory injection as a control cohort.</strong>
+The Claude Code plugin half of a loop with <a
+href="../systems/omniintelligence/">OmniIntelligence</a>, it stores no
+memory, fetches graded patterns, injects them and emits an
+<code>injection.recorded</code> event carrying cohort, seed, salt and
+percentage. The production caller passes neither <code>user_id</code>
+nor <code>repo_path</code>, so identity is the session id and the arms
+are redrawn per session; <code>usage_count=0</code> zeroes every score,
+and the injection hooks ship unregistered.</p>
+<p><strong><a href="../systems/opencode-mem/">OpenCode Memory</a>
+commits an audit of its own code with an exploit path, fix and
+regression test per finding.</strong> A memory plugin for the OpenCode
+agent over embedded libSQL with DiskANN vectors sharded per scope, its
+<code>SECURITY_AUDIT.md</code> records a path traversal through an
+unvalidated <code>containerTag</code> hash and CORS used as
+authentication, fixed by a validated scope hash and a persisted 256-bit
+token. <code>container_tag = ?</code> is a predicate on every
+vector-search path, pinned in the emitted SQL by a test.</p>
+<p><strong><a href="../systems/opencontext/">OpenContext</a> owns the
+index and leaves the text on disk.</strong> A personal context store for
+bring-your-own coding agents, its memory is Markdown files in a folder
+tree, with SQLite indexing ids, paths and descriptions and LanceDB
+holding chunk vectors. Its MCP tools hand an agent paths to read,
+through <code>oc_manifest</code> and <code>oc_resolve</code>, and none
+writes a document body or deletes anything, so the store never holds a
+second copy of the text. Search applies the <code>doc_type</code> filter
+after the candidate set is cut.</p>
+<p><strong><a href="../systems/ori-mnemos/">Ori Mnemos</a> learns per
+query type which retrieval stages to skip.</strong> Persistent memory as
+a markdown vault with wiki-links as graph edges, git for versioning and
+a SQLite index behind an MCP server, it treats each retrieval stage as
+an arm of a LinUCB bandit in <code>stage-learner.ts</code>, with an
+abstain threshold, a cost penalty and a sample floor.
+<code>warmth-audit.jsonl</code> records base and final rank per result.
+Its README and bench tables disagree, with no committed run to
+adjudicate.</p>
+<p><strong><a href="../systems/reasonix/">Reasonix</a> keeps the memory
+index out of the cached prompt, so the prefix carries pinned facts and
+nothing that changes on a remember.</strong> A Go coding agent storing
+one Markdown file per fact, with a monotonic <code>Revision</code> and a
+<code>SubjectKey</code> that turns a second answer to a held question
+into a revision, it folds a fixed <code>memoryProtocol</code> and pinned
+bodies into the system prompt at boot and recalls the rest per turn. A
+committed benchmark has a memory-off arm; a fact forgotten mid-session
+persists in text that already carried it.</p>
+<p><strong><a href="../systems/remem/">remem</a> returns no claim at all
+when two surviving claims refute each other.</strong> A local-first Rust
+memory server over SQLite for Claude Code and the Codex CLI, its
+read-side CurrentTruth projection is deterministic, never writes, and
+answers a refutes conflict with <code>claim: None</code>,
+<code>validity: Contradicted</code> and both claims as evidence, under
+the comment 'never silently pick a side'. Captured events become
+candidates defaulting to <code>pending_review</code>, behind a review
+queue reachable from a terminal command the agent's own tool surface
+does not carry.</p>
+<p><strong><a href="../systems/remem-mcp/">remem-mcp</a> refuses a
+capture whose redacted content hash matches a rejected row, and returns
+the stored reason.</strong> A local-first TypeScript MCP memory server
+over SQLite with FTS5 and <code>sqlite-vec</code>, its
+<code>handleCapture</code> hashes the redacted content and calls
+<code>findRejectedByContentHash</code> before writing;
+<code>reject(id, reason)</code> keeps the row as the negative record and
+removes its vector. Recall defaults <code>session_key</code> to the
+project's <code>sha256(cwd)</code> and applies
+<code>session_key = ?</code> to the BM25 and vector arms alike, with
+tests asserting it against the real handler.</p>
+<p><strong><a href="../systems/repowise/">repowise</a> clears any
+decision-record field that no verbatim source span supports, and rejects
+a candidate with no grounded field left.</strong> A codebase index
+served over MCP, a CLI and a Claude Code plugin, it mines decision
+records from inline markers, git history, READMEs, transcripts and an
+LLM harvest of its own generated pages, and stamps survivors
+<code>exact</code>, <code>fuzzy</code> or <code>unverified</code>, kept
+apart from lifecycle <code>status</code> and <code>confidence</code>.
+Its repository boundary is mostly which database is open;
+shared-database full-text search takes an optional
+<code>repository_id</code>.</p>
+<p><strong><a href="../systems/runar-forge/">RunarForge</a> runs a
+graduation sweep that reads the newest five hundred entries, and so
+cannot reach the old ones it exists to archive.</strong> A Rust memory
+binary for coding agents over SQLite or Postgres, it moves entries
+across working, episodic, semantic and archival layers by days since
+access; <code>graduate_layers_inner</code> fetches
+<code>limit: Some(500)</code> from a list ordered
+<code>created_at DESC</code> and never pages. Writes pass one propose
+chokepoint that redacts, bounds, stamps the author and dedupes on a
+topic key, and much of its <code>EdgeType</code> vocabulary is
+unwired.</p>
+<p><strong><a href="../systems/silica/">Silica</a> is, at its pin, a
+five-tool evidence-retrieval index whose deleted predecessor governed a
+markdown vault as agent-writable memory.</strong> In that earlier tree
+the LLM proposes and a parser and finite-state machine verify and
+execute each write, contradictions stay visible until a person resolves
+them, each claim carries a <code>valid_from</code> stamp in an HTML
+comment, and the eval harness refuses to run a gate whose metric cannot
+fail. What ships at the pin is <code>files</code>, <code>search</code>,
+<code>read</code>, <code>code_pack</code> and
+<code>write_note</code>.</p>
+<p><strong><a href="../systems/sugar/">Sugar</a> separates projects by
+file rather than predicate, keeping project memories and cross-project
+guidelines in two SQLite databases.</strong> A local-first Python memory
+layer for coding agents, reached through MCP, a CLI and a skills
+directory, it routes each write to <code>.sugar/memory.db</code> or
+<code>~/.sugar/memory.db</code> and refuses rather than falling back
+when the project store is missing, so a project query has no shared
+table to span. A memory carries a type, an importance, an access count
+and an expiry enforced at read time, with no status or supersession.</p>
+<p><strong><a href="../systems/task-orchestrator/">Task Orchestrator</a>
+verifies an agent's actor claim against a did:web JWKS before admitting
+a note, and consults the verdict on no read.</strong> A Kotlin MCP
+server giving agents a persistent work-item graph, with a Claude plugin
+for actor attribution and retrospectives, it stores a five-value
+<code>VerificationStatus</code> on each note and transition and can
+refuse a write that is not <code>VERIFIED</code>; a
+<code>REJECTED</code> note comes back from queries like any other.
+<code>ResourceLeaseHistoryTable</code> survives deletion of its subject,
+while <code>RoleTransitionsTable</code> is removed with the work
+item.</p>
+<p><strong><a href="../systems/throughline/">Throughline</a> recognises
+transcripts its own jobs generated before the next ingest sweep takes
+them in as the user's work.</strong> A self-hosted Postgres workspace
+that ingests transcripts from nine AI coding tools into one schema, it
+extracts chunks, supersedes and merges them in a reflection pass, and
+looks for contradictions across tool boundaries that per-tool memory
+cannot see. The self-transcript filter is tested in both directions;
+search coalesces a null status to active and raises on an unrecognised
+status filter.</p>
+<p><strong><a href="../systems/token-savior/">Token Savior</a> re-ranks
+its memory index with a LinUCB contextual bandit rewarded by which
+listed observations the agent fetches.</strong> One MCP server for
+coding agents combining code navigation, Bash output compaction and
+SQLite memory, it persists the bandit's <code>A</code> and
+<code>b</code> to <code>linucb_model.json</code>; a fetch within 1,800
+seconds earns a reward of 1.0, and a listed observation never fetched
+gets no update, so the bandit sees no negative evidence. Prompt-time
+hooks pick the project by observation count rather than by the session's
+directory.</p>
+<p><strong><a href="../systems/vestige/">Vestige</a> classifies merge
+candidates by Fellegi-Sunter record linkage and stores an undo payload
+with every applied operation.</strong> A local-first Rust MCP memory
+over one SQLite file, modelled on FSRS-6 scheduling and dual-strength
+decay, it sorts each candidate pair into <code>match</code>,
+<code>possible</code> or <code>non_match</code>; the <code>dedup</code>
+tool applies a <code>match</code> plan directly and needs
+<code>confirm=true</code> for the rest, a flag the calling model sets
+itself. <code>merge_operations</code> keeps the reversing payload, and
+contradiction detection surfaces supersede candidates rather than
+applying them.</p>
+<p><strong><a href="../systems/vibe-cognition/">Vibe Cognition</a>
+appends every change to its writer's own journal file before the graph
+moves, and replays the graph from those files.</strong> A local MCP
+server for Claude Code and the Codex CLI that records why a codebase is
+the way it is as typed nodes shared through version control, it applies
+each line through the same last-writer-wins comparison replay uses,
+records deletions as appended lines, and repairs a journal a
+<code>git checkout</code> shrinks. A personal constraint's owner is
+whoever the agent last confirmed with
+<code>cognition_set_identity</code>.</p>
+<p><strong><a href="../systems/vir/">vir</a> decides whose transcripts
+these are before distilling them, skipping agent-internal runs three
+ways.</strong> It reads Claude Code and Codex transcripts and distils
+the sessions a person drove into typed markdown notes in an Obsidian
+vault; <code>classifyTranscript</code> reads the on-disk layout for
+subagent and workflow runs, a launch-signature check keys on
+<code>entrypoint</code>, and a per-line <code>isSidechain</code>
+backstop sits in the parser. Rules mined across sessions wait in a queue
+that a person drains, and the MCP tools are read-only.</p>
+<p><strong><a href="../systems/wenlan/">Wenlan</a> keeps a dismissed
+mind-map node's fingerprint under a unique index, so every re-proposal
+of it is a named no-op.</strong> A local-first knowledge base that
+maintains Markdown wiki pages from typed memory, served to coding agents
+over MCP and to a person through a desktop app, it inserts nodes
+<code>ON CONFLICT(page_id, fingerprint) DO NOTHING</code> and
+distinguishes <code>Duplicate</code> from <code>Tombstoned</code>. The
+tombstone rejects a placement, not a fact. An MCP recall naming no Space
+resolves to Global and reads all of them.</p>
+<p><strong><a href="../systems/yesmem/">YesMem</a> grades supersession
+by a trust score that refuses to overwrite a well-used learning, and
+leaves the confirmation it demands unimplemented.</strong> A Go
+continuity layer for Claude Code, OpenCode and Codex that turns session
+transcripts into categorized learnings, it computes trust from use and
+save counts, source and importance; at or above 3.0 a supersede becomes
+<code>pending_confirmation</code>, which no query filters on and no
+command resolves in the inspected code. <code>canonical_project</code>
+scopes reads with an OR clause that lets every unscoped row through.</p>
+<p><strong><a href="../systems/zer0dex/">zer0dex</a> pairs an
+operator-written Markdown index with semantic retrieval delegated to
+mem0 and Chroma, and leaves query wiring to the agent host.</strong> A
+small Python CLI, seeder and local server, it splits Markdown at
+level-two headings, caps chunks at 2,000 characters and pushes them into
+<a href="../systems/mem0/">mem0</a> with Ollama embeddings; its
+<code>CITATION.cff</code> abstract states that wiring the query into
+model calls remains an agent-host step. Every call forwards a
+<code>user_id</code> that defaults to the literal <code>agent</code>
+unless the operator sets it.</p>
 <h2 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
 symbolic memory</h2>
 <p><a href="../systems/holomem/"><code>holomem</code></a>, <a
@@ -8409,7 +9896,24 @@ href="../systems/emem/"><code>emem</code></a>, <a
 href="../systems/dreamgraph/"><code>dreamgraph</code></a>, <a
 href="../systems/tidemind/"><code>tidemind</code></a>, <a
 href="../systems/smriti/"><code>smriti</code></a>, <a
-href="../systems/ontofelia/"><code>ontofelia</code></a></p>
+href="../systems/ontofelia/"><code>ontofelia</code></a>, <a
+href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
+<a href="../systems/brain-db/"><code>brain-db</code></a>, <a
+href="../systems/cashew/"><code>cashew</code></a>, <a
+href="../systems/core-redplanet/"><code>core-redplanet</code></a>, <a
+href="../systems/gortex/"><code>gortex</code></a>, <a
+href="../systems/graqle/"><code>graqle</code></a>, <a
+href="../systems/lemmalog/"><code>lemmalog</code></a>, <a
+href="../systems/memorybear/"><code>memorybear</code></a>, <a
+href="../systems/mentedb/"><code>mentedb</code></a>, <a
+href="../systems/openkb/"><code>openkb</code></a>, <a
+href="../systems/openmemory/"><code>openmemory</code></a>, <a
+href="../systems/papez/"><code>papez</code></a>, <a
+href="../systems/potpie/"><code>potpie</code></a>, <a
+href="../systems/promptx/"><code>promptx</code></a>, <a
+href="../systems/rck/"><code>rck</code></a>, <a
+href="../systems/shodh-memory/"><code>shodh-memory</code></a>, <a
+href="../systems/synapse-hippocampus/"><code>synapse-hippocampus</code></a></p>
 <p>Structure is the retrieval mechanism. <strong>BrainAPI is the
 family's cleanest answer to a question the rest of it fudges: which
 facts are allowed to accumulate.</strong> An event is a node rather than
@@ -9426,6 +10930,134 @@ prompt. The README's forget and contradiction results come from an eval
 backend with its own delete, its own retrieval and twenty functional
 predicates. Three marks: <code>scope_enforced</code>,
 <code>trust_state</code>, <code>negative_eval</code>.</p>
+<p><strong><a href="../systems/agent-memory-dotnet/">AgentMemory for
+.NET</a> binds a transaction clock and a valid-time clock in one
+point-in-time query.</strong> A .NET library storing entities,
+subject-predicate-object facts and preferences as Neo4j nodes, with an
+owner clause spliced into every read and a strict mode that turns a
+missing owner scope into a named exception. Facts merge on a triple key
+canonicalised in C#, because the database's <code>toLower</code>
+disagrees with it on U+0130; re-asserting an invalidated fact clears
+<code>invalidated_at</code>, so no rejection survives.</p>
+<p><strong><a href="../systems/cashew/">Cashew</a> decays thoughts
+rather than deleting them, and audits every transition with a snapshot
+of what was lost.</strong> A one-person thought graph in SQLite,
+recalled by embedding similarity and traversal along derivation edges
+with decayed nodes excluded on both endpoints. A node decays only if it
+is not permanent, is old, was never read and has no edge to a live
+neighbour; every decay site calls one helper in
+<code>decay_audit.py</code>, and a test asserts a decayed node's vector
+remains indexed before asserting search filters it out.</p>
+<p><strong><a href="../systems/core-redplanet/">CORE</a> splits
+statements by whether they decompose: world facts become Neo4j triples,
+voice facts stay whole in Postgres.</strong> A personal memory layer
+indexing email, meetings, GitHub, Linear, Slack and assistant
+conversations into a temporal knowledge graph, where two parallel
+extractors classify graph aspects such as <code>Decision</code> against
+voice aspects such as <code>Directive</code> and
+<code>Preference</code>. A contradiction stamps an end time through one
+model call that can overwrite its own history; <code>userId</code> is
+unconditional on every graph query, and the test suite never reaches the
+memory code.</p>
+<p><strong><a href="../systems/lemmalog/">Lemmalog</a> makes agent
+memory a Datalog program, and its writer fills the transaction-time
+position with the valid time.</strong> A Rust stratified interpreter
+with seminaive fixpoint, semiring provenance, magic-sets evaluation,
+proof trees and an MCP server, it derives closures, temporal projections
+and contradiction candidates incrementally from asserted base facts. A
+hypothetical provably leaves no trace and identity conflicts derive a
+fact instead of merging, but the store cannot say when it learned
+something.</p>
+<p><strong><a href="../systems/mentedb/">MenteDB</a> judges each memory
+against the instant <code>AS OF</code> names.</strong> A Rust memory
+engine written as a database, with its own page store, WAL, HNSW and
+BM25 indexes and a graph crate, its query language carries record time
+and validity, and <code>invalidate_memory</code> closes a window rather
+than deleting, so a superseded fact is visible at a moment it was true.
+Without <code>AS OF</code> the executor applies no window, and the owner
+ids are optional arguments that MQL and the server's recall routes do
+not pass.</p>
+<p><strong><a href="../systems/openkb/">OpenKB</a> retrieves by an agent
+walking a compiled wiki index, with no embeddings in the
+repository.</strong> It compiles documents into markdown summaries,
+concepts, entities and saved explorations linked by
+<code>[[wikilinks]]</code> and catalogued in <code>index.md</code>; a
+query agent follows the index into page trees and drops into a source by
+page range. Code owns the frontmatter while an LLM writes page bodies,
+and pages are published through a journaled, fsync'd mutation with
+rollback.</p>
+<p><strong><a href="../systems/openmemory/">LongMemory</a> publishes its
+recall contract as named SQL and enforces a different copy in
+code.</strong> A TypeScript memory engine over SQLite, it stores
+immutable, content-addressed <code>HydroNode</code>s keyed on tenant and
+user, with validity, supersession, status and grounding state beside
+them. The <code>strict_candidates</code> query refuses on validity at a
+time, status, confidence, grounding and unresolved contradictions, but
+nothing executes it; the copy that runs admits two of the five statuses
+it refuses.</p>
+<p><strong><a href="../systems/papez/">Papez</a> enforces scope inside
+the store's read helpers, raising when no identity is set.</strong> An
+MCP memory server built on a causal graph, it scores memories as
+relevance times connectivity times reactivation and walks them up a
+consolidation ladder. Every read resolves through one visibility
+function over the caller's partition and org-visible nodes, with paired
+exclusion tests that hold the embedding constant. Its status enum,
+SUPERSEDES edge and contradiction detector withhold nothing: a
+superseded memory's rank is multiplied by 0.3, and forgetting is a hard
+delete.</p>
+<p><strong><a href="../systems/potpie/">Potpie</a> cannot record an
+invalidation without a reason, and an invalidation stamps
+<code>valid_to</code> rather than deleting.</strong> A context graph
+over a codebase and its development lifecycle, it lowers typed records
+into claims and edges in a per-pot graph; <code>InvalidationOp</code>
+takes a required <code>reason</code> and an optional
+<code>superseded_by_key</code> that writes a <code>SUPERSEDES</code>
+edge, and <code>ProvenanceRef</code> is stamped on every entity, edge
+and invalidation. <code>ClaimQuery</code> hides invalidated claims by
+default and takes an <code>as_of</code>, and the refusal is not keyed on
+the rejected value itself.</p>
+<p><strong><a href="../systems/promptx/">PromptX</a> recalls by
+spreading activation from cue words, and isolates roles by giving each
+one its own database file.</strong> Presented as a prompt platform, its
+memory lives in <code>packages/core/src/cognition/</code>: engrams with
+content, a schema, a type and a strength, a <code>cue_index</code> from
+words to engrams, and recall spreading through a <code>Network</code>
+rather than a similarity ranking.
+<code>CognitionManager.getRolePath(roleId)</code> opens
+<code>engrams.db</code> inside the role's directory, so a cross-role
+read would need a different file. The inspected code has no correction
+path.</p>
+<p><strong><a href="../systems/rck/">RCK</a> stores a denial as an
+explicit negated triple that blocks derivation as well as
+retrieval.</strong> A Python symbolic reasoning kernel over
+subject-relation-object triples in a sharded hyperdimensional (HRR/VSA)
+substrate, it checks <code>deny()</code> triples on the read path, in
+chain induction and in rule instantiation, and
+<code>idk_detection.py</code> returns <code>KNOWN</code>,
+<code>AMBIGUOUS</code> or <code>IDK</code> because the HRR cleanup
+always picks a candidate. Its own paper measures the substrate against a
+plain index, finds against it, and withdraws two published claims by
+name.</p>
+<p><strong><a href="../systems/shodh-memory/">Shodh-Memory</a> builds a
+Hebbian entity graph with no LLM at ingest or query, and ships a
+self-audit of how that graph is built.</strong> A Rust memory server for
+agents and robots over a RocksDB instance per user, it extracts entities
+by NER and YAKE keywords, strengthens edges with use and decays them on
+a hybrid exponential-then-power-law curve.
+<code>docs/graph-construction-audit.md</code> cites
+<code>file:line</code> for every claim and finds a dead resolver
+presented as live, a header contradicting its code, and a gate the
+upsert path voids.</p>
+<p><strong><a href="../systems/synapse-hippocampus/">Synapse</a> proves
+its point-in-time exclusion by asserting the generated Cypher contains
+the clause, never by running the query.</strong> A small MCP wrapper
+over <a href="../systems/graphiti/">Graphiti</a> on FalkorDB, it adds a
+salience-modulated forgetting curve, hippocampus-named consolidation
+passes, an explicit <code>synapse_remember</code> exempt from decay, and
+a separate graph per group id. <code>tests/test_falkor.py</code> checks
+a query string for <code>r.invalid_at IS NULL</code>, and the
+model-supplied <code>at_time</code> argument is interpolated by f-string
+with a ten-character slice as its sole bound.</p>
 <h2 id="verification-and-trust-first-memory">Verification and
 trust-first memory</h2>
 <p><a href="../systems/verel/"><code>verel</code></a>, <a
@@ -9477,7 +11109,50 @@ href="../systems/gmeow-ontology/"><code>gmeow-ontology</code></a>, <a
 href="../systems/mgi-mind/"><code>mgi-mind</code></a>, <a
 href="../systems/pluribus/"><code>pluribus</code></a>, <a
 href="../systems/particles/"><code>particles</code></a>, <a
-href="../systems/hive-mind/"><code>hive-mind</code></a></p>
+href="../systems/hive-mind/"><code>hive-mind</code></a>, <a
+href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
+href="../systems/brigade/"><code>brigade</code></a>, <a
+href="../systems/citra/"><code>citra</code></a>, <a
+href="../systems/compartment/"><code>compartment</code></a>, <a
+href="../systems/cortex-engine/"><code>cortex-engine</code></a>, <a
+href="../systems/echo-agent/"><code>echo-agent</code></a>, <a
+href="../systems/empirica/"><code>empirica</code></a>, <a
+href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
+href="../systems/engraphis/"><code>engraphis</code></a>, <a
+href="../systems/feltstate/"><code>feltstate</code></a>, <a
+href="../systems/fireweed-mcp/"><code>fireweed-mcp</code></a>, <a
+href="../systems/gbrain/"><code>gbrain</code></a>, <a
+href="../systems/genome/"><code>genome</code></a>, <a
+href="../systems/gmr/"><code>gmr</code></a>, <a
+href="../systems/graphnosis/"><code>graphnosis</code></a>, <a
+href="../systems/graqle/"><code>graqle</code></a>, <a
+href="../systems/icarus/"><code>icarus</code></a>, <a
+href="../systems/invalidate/"><code>invalidate</code></a>, <a
+href="../systems/kage/"><code>kage</code></a>, <a
+href="../systems/knowledge-worker/"><code>knowledge-worker</code></a>,
+<a href="../systems/memory-industry/"><code>memory-industry</code></a>,
+<a href="../systems/memory-palace/"><code>memory-palace</code></a>, <a
+href="../systems/mengram/"><code>mengram</code></a>, <a
+href="../systems/mentisdb/"><code>mentisdb</code></a>, <a
+href="../systems/midas/"><code>midas</code></a>, <a
+href="../systems/mnemo-cortex/"><code>mnemo-cortex</code></a>, <a
+href="../systems/monet/"><code>monet</code></a>, <a
+href="../systems/noosphere/"><code>noosphere</code></a>, <a
+href="../systems/ownmem/"><code>ownmem</code></a>, <a
+href="../systems/pltm-claude/"><code>pltm-claude</code></a>, <a
+href="../systems/potpie/"><code>potpie</code></a>, <a
+href="../systems/recall-substrate/"><code>recall-substrate</code></a>,
+<a href="../systems/recallweave/"><code>recallweave</code></a>, <a
+href="../systems/redcell/"><code>redcell</code></a>, <a
+href="../systems/remem/"><code>remem</code></a>, <a
+href="../systems/repowise/"><code>repowise</code></a>, <a
+href="../systems/silica/"><code>silica</code></a>, <a
+href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
+href="../systems/superlocalmemory/"><code>superlocalmemory</code></a>,
+<a href="../systems/swarmai/"><code>swarmai</code></a>, <a
+href="../systems/veracium/"><code>veracium</code></a>, <a
+href="../systems/weave/"><code>weave</code></a>, <a
+href="../systems/weknora/"><code>weknora</code></a></p>
 <p>These treat memory as a trust problem before a retrieval problem.
 <strong>Areev is the family's most complete account of the
 <em>process</em> by which a memory changes, and it governs the result at
@@ -10369,6 +12044,253 @@ the <code>tombstone</code>. The rule leaks at one adapter: Hermes
 mirrors the model's own reasoning with no channel, which the core counts
 as observation. Forgotten text is hidden from default reads and kept,
 signed, on every device, and a hive has no scope inside it.</p>
+<p><strong><a href="../systems/citra/">Citra Decision System</a> turns
+officer corrections into scoped clauses and puts the live statuses in
+the query.</strong> A decision system for regulated back-office work
+whose memory is a clause of at most 40 words in one MongoDB collection,
+carrying the corrections that taught it, its supporters and dissenters,
+firing counters and a ten-value status.
+<code>candidates_for_facets</code> passes <code>LIVE_STATUSES</code> as
+<code>$in</code>, so a clause the system stopped believing is absent
+rather than ranked lower, and scope is a
+<code>scope_facets ⊆ case_facets</code> subset predicate under
+<code>tenant_id</code> and <code>app_slug</code>.</p>
+<p><strong><a href="../systems/cortex-engine/">cortex-engine</a>
+adjudicates a contradiction before it becomes a signal, and penalises
+confidence only when the belief was wrong.</strong> A TypeScript memory
+layer of observation, belief, question and hypothesis nodes in a
+namespaced graph, served through MCP tools over SQLite, Firestore or
+JSON. <code>contradict.ts</code> classifies an evidence-belief pair as
+genuine, supersedes, tension, complementary or unrelated; only genuine
+applies a penalty scaled by the adjudicator's confidence, and a
+supersession is routed to <code>believe()</code> with
+<code>valid_from</code> because the world changed.</p>
+<p><strong><a href="../systems/empirica/">Empirica</a> argues its
+resolution vocabulary from its own data: a finding that aged and one
+that was never true are different events.</strong> Epistemic
+infrastructure for AI whose memory is typed artifacts, findings,
+unknowns, mistakes, decisions, assumptions and dead-ends, scoped by
+<code>project_id</code> and behind a Sentinel gate that blocks edits
+until understanding is demonstrated. <code>resolution_kind.py</code>
+replaced a boolean plus free text with
+<code>stale | superseded | retracted | mistyped</code> after the
+project's store resolved 1,268 findings and recorded exactly one as an
+error.</p>
+<p><strong><a href="../systems/engram-provable/">Engram Provable</a>
+erases content by crypto-shredding while the append-only record of the
+erasure survives.</strong> A Go memory service on PostgreSQL with
+pgvector that filters every read by <code>tenant_id</code> and binding.
+<code>CryptoShredAnchor</code> replaces each memory bound to a subject
+with AES-GCM ciphertext under a discarded key, clears the embedding and
+records the redaction in a per-tenant hash chain that a
+<code>BEFORE INSERT</code> trigger advances under an advisory lock and a
+second trigger makes immutable. Untrusted writes pass a Provenance
+Firewall that can hold them out of active memory.</p>
+<p><strong><a href="../systems/engraphis/">Engraphis</a> stamps every
+remote write <code>pending</code> and keeps approval out of reach of a
+bearer token.</strong> A local-first memory engine for coding agents
+over one SQLite file, with vector, BM25 and Personalized PageRank arms
+fused by RRF and MCP recall tools taking <code>valid_at</code> and
+<code>known_at</code> separately. Only a local agent source outside
+<code>http</code>, <code>mcp</code> and <code>remote</code> ingress
+writes <code>approved</code>; the packer drops pending, quarantined and
+conflicted rows, and <code>POST /dashboard/review/approve</code>
+requires the HttpOnly browser session, a CSRF token and a written
+reason.</p>
+<p><strong><a href="../systems/fireweed-mcp/">Fireweed MCP</a> refuses a
+claim unless deterministic functions find that its cited evidence
+supports it.</strong> A stdlib-only MCP server with no model in it, its
+<code>remember</code> takes a claim and the verbatim span, four pure
+functions check subject, relation order, numerals and predicate, and
+what survives binds to a <code>(doc_hash, byte_start, byte_end)</code>
+triple anyone can re-check. Every mutation emits to a hash-chained
+SQLite ledger, and erasure leaves a record keyed on a hash of the
+subject's name that the write gate consults.</p>
+<p><strong><a href="../systems/gbrain/">GBrain</a> keeps two memories
+over one Postgres, and a person's acceptance is the path into the graded
+one.</strong> A knowledge layer for agents served over MCP, a CLI and
+HTTP, it writes hot <code>facts</code> with required provenance,
+kind-based decay and a validity window read at query time, superseding
+rather than deleting. <code>takes</code> are claims typed fact, take,
+bet or hunch with a holder, and resolved bets become a Brier score;
+<code>propose_takes</code> queues extractions that
+<code>gbrain takes propose --accept</code> admits. On takes,
+<code>until_date</code> has no reader in <code>src/</code>.</p>
+<p><strong><a href="../systems/gmr/">GMR</a> binds a memory to the
+observable facts it depends on and surfaces it when those facts
+move.</strong> A Rust grounding runtime beside a memory provider, it
+stores a binding from <code>(provider, external_id)</code> to anchors,
+each a versioned probe with content-hashed transition rules. A change is
+a differing hash of observed <code>Facts</code>; a failed probe is
+journalled as an <code>Attempt</code> with a <code>ReasonClass</code>,
+so an unreachable probe never reads as a change. Every anchor is an
+append-only journal enforced by SQLite triggers.</p>
+<p><strong><a href="../systems/graphnosis/">Graphnosis</a> blocks on a
+human before an MCP client reads a sensitive tier, and treats every
+correction as a preview.</strong> A local-first encrypted memory product
+with a Tauri app, a sidecar and an MCP server on three transports, it
+registers a pending prompt and waits for allow, deny or timeout; the
+headless fallback phrase is HMAC-derived per tier and never returned
+over MCP or logged. Both correction paths stop before writing until a
+person approves, and deletion is a confidence value.</p>
+<p><strong><a href="../systems/graqle/">GraQle</a> redacts memory a
+reader's clearance cannot see rather than hiding it, inside a typed
+organisational knowledge graph.</strong> Its
+<code>ProvenanceEntry</code> carries a tenant key, a four-level
+clearance, five TRACE gap scores and a confidence that decays between
+verifications. The tenant validator fixes its step order so no
+acceptance check sees an un-normalised value, and every governed tool
+call is captured into a trace frozen with <code>extra="forbid"</code>
+and Merkle-committed to a public transparency log. Tenant partitioning
+is opt-in behind an environment variable.</p>
+<p><strong><a href="../systems/icarus/">Icarus</a> keeps provenance and
+freshness in separate fields, so a fact can be verified and superseded
+at once.</strong> A small Python library with a CLI and MCP server over
+Markdown files in git, it holds <code>verified</code> as unverified,
+verified, contradicted or rolled_back and <code>lifecycle</code> as
+active or superseded. Transitions pass a legal-transition table in which
+rolled_back is terminal, <code>plan_rollback</code> attaches entries
+derived from the reverted chain as <code>tainted_descendants</code>, and
+the taint is tested from the read side.</p>
+<p><strong><a href="../systems/invalidate/">invalidate</a> re-judges
+every stored fact against each new event and moves it among seven
+statuses, of which recall returns two.</strong> A library with a CLI,
+provider wrappers and adapters that lay the lifecycle over other stores,
+it keeps the judge's probability apart from status and re-applies the
+status set to caller-supplied candidates. Events read as
+<code>HYPOTHETICAL</code> or <code>DIRECTIVE</code> are logged and never
+written, the second as prompt-injection defence, and a killing verdict
+is re-judged with the memory alone in context.</p>
+<p><strong><a href="../systems/kage/">Kage</a> refuses a memory citing
+code that does not exist and withholds one whose cited symbols changed
+until it is re-verified.</strong> A framework for coding agents that
+maintains Open Knowledge Format packets in git and serves them over MCP,
+it fingerprints each cited file with SHA-256 and each resolvable cited
+symbol by name, so moving a symbol or editing elsewhere in the file does
+not trip it. The verdict path carries no model, and a committed
+benchmark deletes the cited files and checks the memory disappears.</p>
+<p><strong><a href="../systems/knowledge-worker/">knowledge-worker</a>
+demotes a high-confidence claim whose excerpt does not appear in its
+source, and records why.</strong> A local personal knowledge graph in
+JSON-LD with OWL and Turtle export, it runs extraction through a
+validator that rejects, demotes or accepts each node and edge. The
+provenance-or-bust check normalises the excerpt and substring-matches it
+against the source with no second model call; a missing or fabricated
+excerpt drops the claim to <code>low</code> and records
+<code>no_excerpt</code> or <code>excerpt_not_in_source</code>.</p>
+<p><strong><a href="../systems/memory-palace/">Memory Palace</a> makes
+derived procedural memory draft-by-default and enforces it in three
+places.</strong> A self-hosted FastAPI and SQLite backend behind one MCP
+server for Claude Code, Codex, Gemini CLI and OpenCode, it validates
+<code>review_state</code> on construction, has
+<code>recommend_for_trigger</code> return <code>human_reviewed</code>
+rows alone, and declares provenance columns <code>NOT NULL</code>.
+Approval needs a validated <code>review_token</code>. A rejection is
+terminal for its row, but <code>extract_pattern</code> never compares
+<code>source_hashes</code> against rejected rows, so re-extraction mints
+a fresh draft.</p>
+<p><strong><a href="../systems/mentisdb/">MentisDB</a> refuses to load a
+thought chain that fails verification.</strong> A Rust memory daemon
+serving an MCP surface to Claude Code, Codex, Cursor and other
+harnesses, it stores thoughts as an append-only SHA-256 hash-chained
+log; <code>verify_integrity</code> re-checks index sequence,
+<code>prev_hash</code> linkage and every record's hash on open and
+returns <code>InvalidData</code> rather than serving a tampered history.
+With no update or delete path, correction appends a thought carrying a
+<code>Supersedes</code>, <code>Corrects</code> or
+<code>Invalidates</code> relation.</p>
+<p><strong><a href="../systems/midas/">Midas</a> decides
+deterministically what a memory may authorize.</strong> A local SQLite
+memory layer for coding agents with no LLM at ingest or query, it
+returns verbatim turns stamped with a provenance.
+<code>midas/guard.py</code> maps four provenances against four declared
+uses: an answer may not rest on an internal plan, an external or
+destructive action requires <code>user_confirmation</code>, the gate
+re-checks currency so a superseded belief cannot justify an answer or
+action, and a stamped prohibition cannot authorize.</p>
+<p><strong><a href="../systems/mnemo-cortex/">Mnemo Cortex</a> seals the
+testimony and lets the filing change, and its confidence ladder leaves
+<code>false</code> unprotected.</strong> A local memory server with
+per-tenant JSON memories, a SQLite facts store and a USB courier, its
+<code>ledger.py</code> hash-chains what was said while category, tags
+and <code>superseded_by</code> stay mutable, with a
+<code>disputed</code> state for records a broken chain cannot vouch for.
+In <code>facts_store.py</code> the ladder runs <code>false</code>,
+<code>high_probability</code>, <code>verified</code>, and
+<code>new_rank &gt;= existing_rank</code> lets an ordinary write
+overwrite a fact demoted to <code>false</code>.</p>
+<p><strong><a href="../systems/noosphere/">Noosphere</a> refuses a
+revoked capture by an HMAC digest checked under every retained key
+version.</strong> A self-hosted memory layer whose data is an agent's
+memory and a human's Markdown wiki, with plugins for OpenClaw, OpenCode,
+Kilo Code and Hermes, it checks <code>memoryTombstone</code> inside a
+serializable transaction before creating a capture and throws a 409.
+Historical keys stay in a bounded keyring until their tombstones expire,
+so rotation does not readmit revoked values. The candidate tier is
+schema: nothing creates a <code>MemoryCandidate</code> row.</p>
+<p><strong><a href="../systems/ownmem/">OwnMem</a> keeps every rejected
+candidate with its reason and summary, keyed on a value.</strong>
+Git-native memory for coding agents, it stores markdown topics in the
+working tree beside a candidate ledger, promotion receipts and JSONL
+events. <code>rejectMemoryCandidate</code> throws without a reason and
+moves the candidate into <code>ledger.rejected</code>;
+<code>candidateId</code> digests identity and first-failure time, so
+re-extraction reproduces it and the merge suppresses it. The promotion
+decision schema encodes its invariants in <code>allOf</code> rules,
+including that R4 and R5 can never be automatic.</p>
+<p><strong><a href="../systems/pltm-claude/">PLTM</a> returns a
+three-valued jury verdict on every write and has no column to store the
+middle value.</strong> An MCP server giving Claude Desktop persistent
+memory, it runs memory, safety, time and consensus judges that answer
+<code>APPROVE</code>, <code>REJECT</code> or <code>QUARANTINE</code>; a
+quarantined memory is stored by halving its <code>strength</code> and
+appending a marker to the free-text <code>context</code> field, because
+<code>typed_memories</code> has no verdict column. Its conflict detector
+skips the similarity filter for exclusive predicates, so opposite
+predicates register as a conflict.</p>
+<p><strong><a href="../systems/recall-substrate/">Recall</a> scores each
+writer's stated confidence against whether its claims survived, and the
+Brier error attenuates everything that writer claims
+afterwards.</strong> A push memory substrate for Claude Code and Codex,
+it compiles typed cells into every turn through hooks and holds the turn
+open until memory was consulted or updated.
+<code>src/calibration.ts</code> maps an actor's Brier score to a
+multiplier in <code>[0.5, 1]</code>, neutral until three resolved
+outcomes exist, and the score legend keeps the stated <code>conf</code>
+apart from the derived <code>effective</code>. The project predicate is
+absent from the compile path.</p>
+<p><strong><a href="../systems/superlocalmemory/">SuperLocalMemory</a>
+runs its hash-chained audit log on its own database connection so the
+record survives corruption of the store it audits.</strong> A
+local-first Python memory layer over SQLite with MCP, a CLI and
+framework integrations, it chains audit entries by SHA-256 from a
+genesis hash with <code>verify_integrity()</code>, enforces a minimum
+trust score before any write or delete, and makes
+<code>profile_id</code> NOT NULL on every fact and read query. Its EU AI
+Act module reports deployment posture and states that it cannot certify
+compliance.</p>
+<p><strong><a href="../systems/veracium/">Veracium</a> makes third-party
+content unassertable, and records the supersessions it refuses.</strong>
+A Python memory library over one SQLite file, released with a
+longitudinal-evaluation paper, it floors events authored by or derived
+from a third party to <code>USE_ONLY</code> and routes
+<code>third_party_claim</code> to <code>QUARANTINED</code>, both failing
+the <code>assertable</code> gate the briefing filters on.
+<code>confirm_edge</code> commits its <code>confirmations</code> row in
+the same transaction or fails, and <code>supersession_refusals</code>
+keeps both edges, their authorities and the refusing
+<code>rule_version</code>. Revocation is keyed on the source.</p>
+<p><strong><a href="../systems/weave/">Weave</a> withholds every
+non-active claim from default recall, and audits the claims it rejects
+as well as the ones it keeps.</strong> The MCP memory service of a Rust
+knowledge-graph app, it stores LLM-extracted claims as resolved entity
+ids beside the proposed labels, with an evidence span and offset, a
+<code>modality</code>, a <code>confidence</code> and a five-value
+<code>status</code>; <code>vector_search_claims</code> filters
+<code>status = 'active'</code> and widens to contradicted claims, marked
+<code>[CONTRADICTED]</code>, on request. <code>CLAIM_REJECTED</code> and
+<code>CLAIM_QUARANTINED</code> sit beside <code>CLAIM_CREATED</code>,
+and the memory service has no scope column.</p>
 <h2 id="research-lineage">Research lineage</h2>
 <p><a
 href="../systems/generative-agents/"><code>generative-agents</code></a>,
@@ -10403,7 +12325,15 @@ href="../systems/embodied-lgr/"><code>embodied-lgr</code></a>, <a
 href="../systems/zenbrain/"><code>zenbrain</code></a>, <a
 href="../systems/harness-evolution/"><code>harness-evolution</code></a>,
 <a href="../systems/harness2/"><code>harness2</code></a>, <a
-href="../systems/librarian-agents/"><code>librarian-agents</code></a></p>
+href="../systems/librarian-agents/"><code>librarian-agents</code></a>,
+<a href="../systems/agentmemory-v4/"><code>agentmemory-v4</code></a>, <a
+href="../systems/autoresearchclaw/"><code>autoresearchclaw</code></a>,
+<a href="../systems/lethe/"><code>lethe</code></a>, <a
+href="../systems/memorybank/"><code>memorybank</code></a>, <a
+href="../systems/rck/"><code>rck</code></a>, <a
+href="../systems/reflexion/"><code>reflexion</code></a>, <a
+href="../systems/sage-novelty-gate/"><code>sage-novelty-gate</code></a>,
+<a href="../systems/truememory/"><code>truememory</code></a></p>
 <p><strong>Context Infrastructure is the family's clearest case of
 consolidation that deletes its own evidence.</strong> 159 commits from
 three authors, 10,646 lines of Markdown against 3,496 of Python — the
@@ -10908,6 +12838,43 @@ loader refuses broken parents and citations outside the corpus. Nothing
 writes to a snapshot after construction, a deleted file can be cited
 back into a new one, and every committed run hides the raw corpus the
 source lists point to. No marks.</p>
+<p><strong><a href="../systems/agentmemory-v4/">agentmemory V4</a>
+commits every artifact behind its LongMemEval claim, and the artifacts
+name the oracle variant.</strong> An extraction-and-HNSW memory with a
+cross-encoder reranker, run in a fresh <code>:memory:</code> SQLite
+store per benchmark case. The result file, run log and
+<code>LEGITIMACY.md</code> self-audit are committed, and the per-case
+records recount to 481, against the benchmark's 500 questions;
+<code>DATASET_PATH</code>, the log and the result summary all point at
+<code>longmemeval_oracle.json</code>, while the README claims
+LongMemEval_S with no oracle access.</p>
+<p><strong><a href="../systems/lethe/">Lethe</a> collapses every status
+into one depth axis and makes deletion provable afterwards.</strong> The
+SQLite memory behind <em>Control-Plane Placement Shapes Forgetting</em>,
+shipped with the ForgetEval harness and its six adapters, it releases a
+memory by setting <code>depth</code> to zero and pins it above one.
+<code>_purge</code> deletes from the row store, the <code>vec0</code>
+index and a deliberately non-contentless FTS5 table, and
+<code>purge_with_receipt</code> issues an Ed25519 receipt anchored to a
+Merkle root over the append-only event log.</p>
+<p><strong><a href="../systems/memorybank/">MemoryBank</a> implements
+Ebbinghaus forgetting with a precedence error that inverts it.</strong>
+The reference implementation of the MemoryBank paper, with the
+SiliconFriend companion over a JSON bank and FAISS, it computes
+retention as <code>math.exp(-t / 5*S)</code>, which Python parses as
+<code>((-t) / 5) * S</code>. Each recall increments strength, so recall
+makes deletion more likely; losing turns are popped and the JSON
+overwritten in place, and the per-user guard in the forgetting pass is
+commented out.</p>
+<p><strong><a href="../systems/reflexion/">Reflexion</a> stores memory
+as natural-language plans written after failed attempts, and pastes the
+last three into the prompt.</strong> The reference implementation of the
+verbal-reinforcement-learning paper, its AlfWorld and WebShop harnesses
+dump per-environment <code>env_configs</code> to JSON after every trial
+and reload them with <code>--is_resume</code>; the HotPotQA and
+code-generation paths keep reflections in process. There are no
+embeddings, no search, no update and no delete, and the store grows
+while the readable window stays at three.</p>
 <h2 id="the-category-almost-nothing-models-prospective-memory">The
 category almost nothing models: prospective memory</h2>
 <p><a href="../systems/nooa-memory/">NOOA Memory</a> carries two memory

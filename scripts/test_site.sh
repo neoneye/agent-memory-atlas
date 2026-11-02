@@ -144,6 +144,18 @@ if ! python3 "$project_dir/scripts/check_family_marks.py" "$project_dir"; then
   exit 1
 fi
 
+# The slug list under each family heading is how a reader finds a system's
+# neighbours, and it was the integration step that got skipped: 184 of 762
+# reports were in no list on 2026-11-02, and one list still named a slug a
+# rename had retired.
+if ! python3 "$project_dir/scripts/check_family_lists.py" --self-test; then
+  echo "check_family_lists.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_family_lists.py" "$project_dir"; then
+  exit 1
+fi
+
 # The same failure one level in: `capabilities:` and the prose on top of it are
 # edited at different times, so a re-score can award a mark and leave the section
 # that argued against it standing. Four reports were in that state when this
