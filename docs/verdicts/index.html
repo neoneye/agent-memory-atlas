@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 763 reports.</strong></p>
+<p><strong>This page covers all 764 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -31823,6 +31823,44 @@ clock — prices, versions, permissions — and every retained fact must
 carry its sources and a review.</li>
 <li>Do not copy when: you need the review to be independent of the agent
 that produced the record, or retrieval beyond a substring scan.</li>
+</ul>
+<h3 id="openai-codex"><a
+href="../systems/openai-codex/"><code>openai-codex</code></a></h3>
+<ul>
+<li>Best idea: <strong>forgetting is a diff the consolidator must
+answer.</strong> Phase 2 syncs <code>rollout_summaries/</code> exactly
+to the selected sessions and hands the consolidation agent a git diff
+against the last good baseline, so a deleted, polluted or aged-out
+session arrives as a vanished file, by the same route as an addition,
+and the prompt says to delete only what the deleted inputs
+supported.</li>
+<li>Second idea: <strong>the memory writer is the most constrained agent
+in the product.</strong> No approvals, no MCP servers, collaboration and
+memory switched off, ephemeral threads and, under a managed sandbox, one
+writable root and no network.</li>
+<li>Biggest risk: <strong>every guarantee ends at a prompt.</strong>
+Whether a forgotten or polluted fact leaves <code>MEMORY.md</code> is up
+to a model reading a diff, no test asserts it, and the one-commit
+baseline discards the history that would show what a run changed.</li>
+<li>Second risk: a parent session with the sandbox disabled runs the
+consolidator with no sandbox and no approvals over model-extracted text
+that may carry injected content, and a test pins that inheritance.</li>
+<li>Most reusable component: <code>get_phase2_input_selection</code>
+with <code>sync_phase2_workspace_inputs</code> and
+<code>memory_workspace_diff</code> in
+<code>codex-rs/memories/write/src/phase2.rs</code> — usage-ranked
+selection, exact sync and a diff that turns removals into consolidation
+input.</li>
+<li>Maturity impression: Apache-2.0; a memory subsystem of 16,919 lines
+inside 2,234,753 lines of Rust, 145 commits since April 2026, 114 memory
+tests against real SQLite and a mock model server, not run here. No
+marks: the one discrete state is on the source session, and the tested
+exclusions stop at the consolidator's input.</li>
+<li>Study when: you want an agent to learn a user's habits and project
+facts from its own transcripts with no write tool and no extra
+infrastructure.</li>
+<li>Do not copy when: memory must be correctable on demand, separated
+between projects or clients, or explained after a change.</li>
 </ul>
         </article>
       </div>

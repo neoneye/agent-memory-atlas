@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 763 reports.**
+**This page covers all 764 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6971,3 +6971,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no licence file; 8,406 lines of Python outside `vendor/`, 6 commits over two days by one account, 255 unittest methods with simulated model responses, not run here. Four marks. The README says live model execution did not succeed in its build environment.
 - Study when: an agent team keeps knowledge that goes stale on a known clock — prices, versions, permissions — and every retained fact must carry its sources and a review.
 - Do not copy when: you need the review to be independent of the agent that produced the record, or retrieval beyond a substring scan.
+
+### [`openai-codex`](../systems/openai-codex/)
+- Best idea: **forgetting is a diff the consolidator must answer.** Phase 2 syncs `rollout_summaries/` exactly to the selected sessions and hands the consolidation agent a git diff against the last good baseline, so a deleted, polluted or aged-out session arrives as a vanished file, by the same route as an addition, and the prompt says to delete only what the deleted inputs supported.
+- Second idea: **the memory writer is the most constrained agent in the product.** No approvals, no MCP servers, collaboration and memory switched off, ephemeral threads and, under a managed sandbox, one writable root and no network.
+- Biggest risk: **every guarantee ends at a prompt.** Whether a forgotten or polluted fact leaves `MEMORY.md` is up to a model reading a diff, no test asserts it, and the one-commit baseline discards the history that would show what a run changed.
+- Second risk: a parent session with the sandbox disabled runs the consolidator with no sandbox and no approvals over model-extracted text that may carry injected content, and a test pins that inheritance.
+- Most reusable component: `get_phase2_input_selection` with `sync_phase2_workspace_inputs` and `memory_workspace_diff` in `codex-rs/memories/write/src/phase2.rs` — usage-ranked selection, exact sync and a diff that turns removals into consolidation input.
+- Maturity impression: Apache-2.0; a memory subsystem of 16,919 lines inside 2,234,753 lines of Rust, 145 commits since April 2026, 114 memory tests against real SQLite and a mock model server, not run here. No marks: the one discrete state is on the source session, and the tested exclusions stop at the consolidator's input.
+- Study when: you want an agent to learn a user's habits and project facts from its own transcripts with no write tool and no extra infrastructure.
+- Do not copy when: memory must be correctable on demand, separated between projects or clients, or explained after a change.

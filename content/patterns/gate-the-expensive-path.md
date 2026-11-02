@@ -182,6 +182,8 @@ the one that matters — is unknown in every case.
 
 [OpenCode Session Recall](../../systems/opencode-session-recall/) gates a read path rather than a write path, at three levels. A query ranks in-memory session cards and checks a slim FTS5 index before fetching anything, then drills only the top twelve sessions under per-session and per-query character budgets and reports in `coverage` what it skipped. The one path that sweeps tool outputs across sessions is refused in code unless the caller supplies a session list, a single target, a cursor, or a lower time bound with a project or directory constraint, and its opt-in auto-recall fires only on a narrow set of history cues and stays silent when no card scores.
 
+[OpenAI Codex](../../systems/openai-codex/) gates its most expensive memory step, a full consolidation agent run, with a git diff. Phase 2 syncs the selected inputs into the memory folder and asks whether the workspace changed against the last successful baseline; when nothing changed and the required files validate, the job succeeds without spawning the agent. Two cheaper gates sit in front of that. Extraction waits for a session to be idle six hours and takes two sessions per start by default, and both phases skip when less than 25% of a Codex usage window remains. The retention prune runs before the quota check because it spends no tokens.
+
 ## Tests to require
 
 - Feed the gate turns that plainly need memory and turns that plainly do not,

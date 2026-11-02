@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **763 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **764 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -623,6 +623,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/open-webui/"><span class="az-id">Open WebUI</span><span class="az-what">Three tiers and no floor</span><code class="az-repo">open-webui/open-webui</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/open-bridge/"><span class="az-id">open-bridge</span><span class="az-what">File-per-fact memory inside a coding-agent workspace template</span><code class="az-repo">bks-lab/open-bridge</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/open-cowork/"><span class="az-id">open-cowork</span><span class="az-what">Two memory files, injected every run</span><code class="az-repo">OpenCoworkAI/open-cowork</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/openai-codex/"><span class="az-id">OpenAI Codex</span><span class="az-what">Consolidated session memory</span><code class="az-repo">openai/codex</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/openakashic/"><span class="az-id">OpenAkashic</span><span class="az-what">One memory, every agent</span><code class="az-repo">szara7678/OpenAkashic</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/openclaw/"><span class="az-id">OpenClaw</span><span class="az-what">A regex scorecard decides what you remember</span><code class="az-repo">openclaw/openclaw</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/opencode/"><span class="az-id">OpenCode</span><span class="az-what">Hooks, no contract</span><code class="az-repo">anomalyco/opencode</code><span class="az-caps"></span></a></li>

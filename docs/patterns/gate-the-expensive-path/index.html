@@ -301,6 +301,16 @@ session list, a single target, a cursor, or a lower time bound with a
 project or directory constraint, and its opt-in auto-recall fires only
 on a narrow set of history cues and stays silent when no card
 scores.</p>
+<p><a href="../../systems/openai-codex/">OpenAI Codex</a> gates its most
+expensive memory step, a full consolidation agent run, with a git diff.
+Phase 2 syncs the selected inputs into the memory folder and asks
+whether the workspace changed against the last successful baseline; when
+nothing changed and the required files validate, the job succeeds
+without spawning the agent. Two cheaper gates sit in front of that.
+Extraction waits for a session to be idle six hours and takes two
+sessions per start by default, and both phases skip when less than 25%
+of a Codex usage window remains. The retention prune runs before the
+quota check because it spends no tokens.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Feed the gate turns that plainly need memory and turns that plainly
