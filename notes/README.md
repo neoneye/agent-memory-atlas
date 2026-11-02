@@ -8,6 +8,11 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-11-02-generate-the-copies.md](2026-11-02-generate-the-copies.md) —
+  a staged plan to keep each fact about a system once, in its report's
+  frontmatter, and generate the family lists, census lines, inspected pins and
+  homepage cards from it, then rewrite the families page as eight essays over a
+  generated member table. Proposed, nothing built.
 - [2026-11-01-archive-copies-not-forks.md](2026-11-01-archive-copies-not-forks.md) —
   why repositories added to the archive from 2026-11-01 are standalone copies
   made by `archive_mirror.py`, not forks: moving a fork's branch put a
