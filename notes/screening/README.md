@@ -9,19 +9,19 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 762 of 762 screened at the report's current pin.**
+**Progress: 764 of 765 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
-off, and 0 report(s) have no record at all.
+off, and 1 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 362 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 403 |
-| Repositories with build-time execution (`EXEC`) | 558 |
+| Repositories with an auto-run surface (`RUNS`) | 363 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 334 |
+| Repositories with build-time execution (`EXEC`) | 559 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
-| Repositories that could not be screened | 0 |
+| Repositories that could not be screened | 1 |
 
 ## Auto-run surfaces
 
@@ -30,46 +30,46 @@ These execute without a command being typed. Read before opening the tree.
 | System | Surfaces |
 | --- | --- |
 | [`a-memory`](../../content/systems/a-memory.md) | `.cursorrules`, `hooks/` |
-| [`acontext`](../../content/systems/acontext.md) | `.claude-plugin/` |
+| [`acontext`](../../content/systems/acontext.md) | `.claude-plugin/`, `src/packages/claude-code/plugin/.claude-plugin/plugin.json`, `src/packages/claude-code/plugin/.mcp.json`, `src/packages/claude-code/plugin/hooks/`, `src/packages/claude-code/plugin/hooks/hooks.json` |
 | [`agent-context-os`](../../content/systems/agent-context-os.md) | `.claude/hooks/`, `.claude/settings.json`, `.opencode/` |
 | [`agent-framework`](../../content/systems/agent-framework.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
 | [`agent-memory-doctrine`](../../content/systems/agent-memory-doctrine.md) | `.github/copilot-instructions.md` |
 | [`agent-memory-dotnet`](../../content/systems/agent-memory-dotnet.md) | `.github/copilot-instructions.md`, `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`agent-memory-guard`](../../content/systems/agent-memory-guard.md) | `.devcontainer/devcontainer.json` |
 | [`agent-memory-mcp`](../../content/systems/agent-memory-mcp.md) | `server.json` |
-| [`agent-working-memory`](../../content/systems/agent-working-memory.md) | `.claude-plugin/` |
+| [`agent-working-memory`](../../content/systems/agent-working-memory.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`agentdatabase`](../../content/systems/agentdatabase.md) | `.githooks/` |
 | [`agentic-context-engine`](../../content/systems/agentic-context-engine.md) | `.claude/settings.json`, `.gitmodules` |
 | [`agentictrading`](../../content/systems/agentictrading.md) | `.vscode/settings.json` |
-| [`agentmemory`](../../content/systems/agentmemory.md) | `.claude-plugin/` |
+| [`agentmemory`](../../content/systems/agentmemory.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`agentmemory-markdown`](../../content/systems/agentmemory-markdown.md) | `.githooks/` |
 | [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
 | [`agentrt`](../../content/systems/agentrt.md) | `.gitmodules` |
 | [`agno`](../../content/systems/agno.md) | `.cursorrules` |
 | [`ai-brain-starter`](../../content/systems/ai-brain-starter.md) | `-` |
 | [`ai-maestro`](../../content/systems/ai-maestro.md) | `.gitmodules`, `hooks/` |
-| [`ai-memory`](../../content/systems/ai-memory.md) | `.claude-plugin/`, `hooks/` |
-| [`aidememo`](../../content/systems/aidememo.md) | `.claude-plugin/`, `.mcp.json` |
-| [`aigent-os`](../../content/systems/aigent-os.md) | `.claude-plugin/`, `hooks/` |
+| [`ai-memory`](../../content/systems/ai-memory.md) | `.claude-plugin/`, `hooks/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/.mcp.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json` |
+| [`aidememo`](../../content/systems/aidememo.md) | `.claude-plugin/`, `.mcp.json`, `plugins/claude/.claude-plugin/plugin.json`, `plugins/claude/.mcp.json`, `plugins/claude/hooks/`, `plugins/claude/hooks/hooks.json` |
+| [`aigent-os`](../../content/systems/aigent-os.md) | `.claude-plugin/`, `hooks/`, `plugins/fleet-band/.claude-plugin/plugin.json`, `plugins/fleet-band/hooks/`, `plugins/fleet-band/hooks/hooks.json`, `plugins/fleet-delivery/.claude-plugin/plugin.json`, `plugins/fleet-delivery/hooks/`, `plugins/fleet-delivery/hooks/hooks.json` |
 | [`aimee`](../../content/systems/aimee.md) | `.claude/hooks/` |
 | [`aipass`](../../content/systems/aipass.md) | `.claude/hooks/`, `.claude/settings.json`, `.claude/settings.local.json` |
-| [`akb`](../../content/systems/akb.md) | `.claude-plugin/`, `.claude/settings.json`, `server.json` |
+| [`akb`](../../content/systems/akb.md) | `.claude-plugin/`, `.claude/settings.json`, `.codex/config.toml`, `plugins/claude/akb-claude-code/.claude-plugin/plugin.json`, `plugins/claude/akb-claude-code/hooks/`, `plugins/claude/akb-claude-code/hooks/hooks.json`, `plugins/claude/akb-sessions/.claude-plugin/plugin.json`, `plugins/claude/akb-wiki/.claude-plugin/plugin.json` |
 | [`all-agentic-architectures`](../../content/systems/all-agentic-architectures.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`alphaonedev-ai-memory`](../../content/systems/alphaonedev-ai-memory.md) | `.claude/settings.json`, `hooks/`, `server.json` |
-| [`altk-evolve`](../../content/systems/altk-evolve.md) | `.claude-plugin/` |
+| [`altk-evolve`](../../content/systems/altk-evolve.md) | `.claude-plugin/`, `platform-integrations/claude/plugins/evolve-lite/.claude-plugin/plugin.json`, `platform-integrations/claw-code/plugins/evolve-lite/.claude-plugin/plugin.json`, `platform-integrations/claw-code/plugins/evolve-lite/hooks/` |
 | [`anything-llm`](../../content/systems/anything-llm.md) | `.devcontainer/devcontainer.json`, `.gitmodules`, `.vscode/settings.json`, `.vscode/tasks.json` |
-| [`archeus`](../../content/systems/archeus.md) | `.claude-plugin/` |
+| [`archeus`](../../content/systems/archeus.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json` |
 | [`areev`](../../content/systems/areev.md) | `.githooks/` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 | [`athena`](../../content/systems/athena.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
-| [`attune-ai`](../../content/systems/attune-ai.md) | `.claude-plugin/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `.mcp.json` |
+| [`attune-ai`](../../content/systems/attune-ai.md) | `.claude-plugin/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `.mcp.json`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`aurora`](../../content/systems/aurora.md) | `.mcp.json` |
 | [`auto-company`](../../content/systems/auto-company.md) | `.claude/settings.json` |
 | [`autobot-ai`](../../content/systems/autobot-ai.md) | `.claude/hooks/`, `.claude/settings.json`, `.vscode/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
 | [`autoharness`](../../content/systems/autoharness.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
-| [`basic-memory`](../../content/systems/basic-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `server.json`, `smithery.yaml` |
-| [`beads`](../../content/systems/beads.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `.githooks/`, `.github/copilot-instructions.md` |
+| [`basic-memory`](../../content/systems/basic-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json`, `server.json`, `smithery.yaml` |
+| [`beads`](../../content/systems/beads.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `.githooks/`, `.github/copilot-instructions.md`, `plugins/beads/.claude-plugin/plugin.json` |
 | [`beever-atlas`](../../content/systems/beever-atlas.md) | `.mcp.json`, `server.json` |
 | [`beevibe`](../../content/systems/beevibe.md) | `.claude-plugin/` |
 | [`binder`](../../content/systems/binder.md) | `.vscode/settings.json` |
@@ -83,18 +83,18 @@ These execute without a command being typed. Read before opening the tree.
 | [`cindy`](../../content/systems/cindy.md) | `.gitattributes`, `.githooks/` |
 | [`ciris-agent`](../../content/systems/ciris-agent.md) | `.githooks/` |
 | [`claude-engram-mlapeter`](../../content/systems/claude-engram-mlapeter.md) | `hooks/` |
-| [`claude-mem`](../../content/systems/claude-mem.md) | `.claude-plugin/` |
+| [`claude-mem`](../../content/systems/claude-mem.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md`, `cowork/.claude-plugin/plugin.json`, `cowork/hooks/`, `cowork/hooks/hooks.json`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json` |
 | [`claude-mem-lite`](../../content/systems/claude-mem-lite.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`claude-self-reflect`](../../content/systems/claude-self-reflect.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json` |
 | [`claude-total-memory`](../../content/systems/claude-total-memory.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
-| [`claudest`](../../content/systems/claudest.md) | `.claude-plugin/` |
+| [`claudest`](../../content/systems/claudest.md) | `.claude-plugin/`, `plugins/claude-claw/.claude-plugin/plugin.json`, `plugins/claude-coding/.claude-plugin/plugin.json`, `plugins/claude-content/.claude-plugin/plugin.json`, `plugins/claude-memory/.claude-plugin/plugin.json`, `plugins/claude-memory/hooks/`, `plugins/claude-memory/hooks/hooks.json`, `plugins/claude-research/.claude-plugin/plugin.json` |
 | [`claudinio-brain`](../../content/systems/claudinio-brain.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
-| [`codemem`](../../content/systems/codemem.md) | `.claude-plugin/`, `.opencode/` |
+| [`codemem`](../../content/systems/codemem.md) | `.claude-plugin/`, `.opencode/`, `opencode.jsonc`, `plugins/claude/.claude-plugin/plugin.json`, `plugins/claude/hooks/`, `plugins/claude/hooks/hooks.json` |
 | [`cognee`](../../content/systems/cognee.md) | `.devcontainer/devcontainer.json` |
-| [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursorrules` |
+| [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursorrules`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/.mcp.json`, `cognicore-experience/.claude-plugin/plugin.json`, `cognicore-experience/.mcp.json`, `cognicore-experience/hooks/`, `cognicore-experience/hooks/hooks.json` |
 | [`cogz`](../../content/systems/cogz.md) | `server.json` |
 | [`commonground`](../../content/systems/commonground.md) | `.gitmodules` |
-| [`compartment`](../../content/systems/compartment.md) | `.claude-plugin/`, `mcp.json`, `server.json` |
+| [`compartment`](../../content/systems/compartment.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `mcp.json`, `server.json` |
 | [`context-engineering`](../../content/systems/context-engineering.md) | `.gitattributes` |
 | [`context-keeper`](../../content/systems/context-keeper.md) | `hooks/`, `server.json` |
 | [`context-mem`](../../content/systems/context-mem.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
@@ -102,25 +102,25 @@ These execute without a command being typed. Read before opening the tree.
 | [`contextstream-mcp`](../../content/systems/contextstream-mcp.md) | `server.json` |
 | [`continuity-v2`](../../content/systems/continuity-v2.md) | `hooks/` |
 | [`continuous-claude`](../../content/systems/continuous-claude.md) | `.claude/hooks/`, `.claude/settings.json` |
-| [`core-redplanet`](../../content/systems/core-redplanet.md) | `.claude-plugin/` |
+| [`core-redplanet`](../../content/systems/core-redplanet.md) | `.claude-plugin/`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`cortana`](../../content/systems/cortana.md) | `.githooks/` |
 | [`cortex`](../../content/systems/cortex.md) | `.github/copilot-instructions.md` |
 | [`cortex-engine`](../../content/systems/cortex-engine.md) | `.githooks/`, `hooks/` |
 | [`cortex-hub`](../../content/systems/cortex-hub.md) | `.claude/hooks/`, `.claude/settings.json`, `.claude/settings.local.json`, `.cursorrules` |
-| [`cortex-hypermnesia`](../../content/systems/cortex-hypermnesia.md) | `.claude-plugin/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `server.json` |
-| [`cortexdb`](../../content/systems/cortexdb.md) | `.claude-plugin/` |
+| [`cortex-hypermnesia`](../../content/systems/cortex-hypermnesia.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `plugins/cortex-deprecated/.claude-plugin/plugin.json`, `plugins/cortex-deprecated/hooks/`, `plugins/cortex-deprecated/hooks/hooks.json`, `plugins/cortex-viz-deprecated/.claude-plugin/plugin.json` |
+| [`cortexdb`](../../content/systems/cortexdb.md) | `.claude-plugin/`, `plugins/cortexdb/.claude-plugin/plugin.json`, `plugins/cortexdb/.mcp.json`, `plugins/cortexdb/hooks/`, `plugins/cortexdb/hooks/hooks.json` |
 | [`cortexes`](../../content/systems/cortexes.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`cortexgraph`](../../content/systems/cortexgraph.md) | `.envrc`, `.github/copilot-instructions.md`, `.vscode/settings.json`, `server.json`, `smithery.yaml` |
 | [`craft`](../../content/systems/craft.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json`, `hooks/`, `hooks/hooks.json` |
-| [`ctx`](../../content/systems/ctx.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md` |
+| [`ctx`](../../content/systems/ctx.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md`, `internal/assets/claude/.claude-plugin/plugin.json`, `internal/assets/claude/.mcp.json`, `internal/assets/claude/hooks/`, `internal/assets/claude/hooks/hooks.json` |
 | [`ctx-open`](../../content/systems/ctx-open.md) | `.devcontainer/devcontainer.json` |
 | [`cua`](../../content/systems/cua.md) | `.vscode/settings.json` |
-| [`daem0n-mcp`](../../content/systems/daem0n-mcp.md) | `.claude-plugin/`, `.opencode/`, `hooks/` |
+| [`daem0n-mcp`](../../content/systems/daem0n-mcp.md) | `.claude-plugin/`, `.opencode/`, `hooks/`, `opencode.json` |
 | [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
-| [`deja-vu`](../../content/systems/deja-vu.md) | `.claude-plugin/`, `mcp.json`, `server.json` |
-| [`demarkus`](../../content/systems/demarkus.md) | `.claude-plugin/` |
+| [`deja-vu`](../../content/systems/deja-vu.md) | `.claude-plugin/`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/hooks/`, `mcp.json`, `server.json` |
+| [`demarkus`](../../content/systems/demarkus.md) | `.claude-plugin/`, `plugins/claude-code-knowledge/.claude-plugin/plugin.json`, `plugins/claude-code-knowledge/hooks/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/.mcp.json`, `plugins/claude-code/hooks/`, `plugins/cowork-memory/.claude-plugin/plugin.json`, `plugins/cowork-memory/.mcp.json` |
 | [`dense-mem`](../../content/systems/dense-mem.md) | `.githooks/` |
 | [`deus`](../../content/systems/deus.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
@@ -132,17 +132,17 @@ These execute without a command being typed. Read before opening the tree.
 | [`elizaos`](../../content/systems/elizaos.md) | `.gitmodules` |
 | [`empirica`](../../content/systems/empirica.md) | `.cursorrules`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`emulo`](../../content/systems/emulo.md) | `.claude-plugin/`, `server.json`, `smithery.yaml` |
-| [`engram`](../../content/systems/engram.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json` |
-| [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
+| [`engram`](../../content/systems/engram.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `plugin/claude-code/.claude-plugin/plugin.json`, `plugin/claude-code/hooks/`, `plugin/claude-code/hooks/hooks.json` |
+| [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/.mcp.json`, `claude-plugin/hooks/`, `claude-plugin/hooks/hooks.json`, `hooks/` |
 | [`engram-mcp`](../../content/systems/engram-mcp.md) | `hooks/` |
 | [`engram-nickcirv`](../../content/systems/engram-nickcirv.md) | `.cursorrules`, `server.json` |
 | [`engraphis`](../../content/systems/engraphis.md) | `.claude-plugin/`, `.githooks/` |
 | [`enquire-mcp`](../../content/systems/enquire-mcp.md) | `scripts/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
-| [`exomem`](../../content/systems/exomem.md) | `.claude-plugin/`, `server.json` |
+| [`exomem`](../../content/systems/exomem.md) | `.claude-plugin/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json`, `plugins/hosted/generated/claude/.claude-plugin/plugin.json`, `plugins/hosted/generated/claude/.mcp.json`, `server.json` |
 | [`farm`](../../content/systems/farm.md) | `.gitmodules` |
 | [`fava-trails`](../../content/systems/fava-trails.md) | `.vscode/settings.json` |
-| [`fernme`](../../content/systems/fernme.md) | `.claude-plugin/` |
+| [`fernme`](../../content/systems/fernme.md) | `.claude-plugin/`, `packaging/claude/plugins/fernme-docs/.claude-plugin/plugin.json`, `packaging/claude/plugins/fernme-docs/.mcp.json`, `packaging/claude/plugins/fernme-memory/.claude-plugin/plugin.json`, `packaging/claude/plugins/fernme-memory/.mcp.json` |
 | [`fidelis`](../../content/systems/fidelis.md) | `mcp.json`, `server.json` |
 | [`fireweed-mcp`](../../content/systems/fireweed-mcp.md) | `server.json` |
 | [`flatbread`](../../content/systems/flatbread.md) | `.cursor/rules/`, `.vscode/settings.json` |
@@ -150,7 +150,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`gaius`](../../content/systems/gaius.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`gambletan-cortex`](../../content/systems/gambletan-cortex.md) | `.claude/hooks/`, `.claude/settings.json`, `server.json` |
 | [`gastown`](../../content/systems/gastown.md) | `.githooks/` |
-| [`gbrain`](../../content/systems/gbrain.md) | `.claude-plugin/` |
+| [`gbrain`](../../content/systems/gbrain.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `plugin-variants/gbrain-coding/.claude-plugin/plugin.json`, `plugin-variants/gbrain-daily/.claude-plugin/plugin.json` |
 | [`genome`](../../content/systems/genome.md) | `mcp.json`, `server.json` |
 | [`gh-aw`](../../content/systems/gh-aw.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.vscode/settings.json` |
 | [`gitmem`](../../content/systems/gitmem.md) | `hooks/`, `server.json` |
@@ -158,87 +158,86 @@ These execute without a command being typed. Read before opening the tree.
 | [`gmeow-ontology`](../../content/systems/gmeow-ontology.md) | `.cursorrules`, `.github/copilot-instructions.md` |
 | [`gobii`](../../content/systems/gobii.md) | `server.json` |
 | [`goodmemory`](../../content/systems/goodmemory.md) | `server.json` |
-| [`graft`](../../content/systems/graft.md) | `.claude-plugin/`, `.gitmodules` |
+| [`graft`](../../content/systems/graft.md) | `.claude-plugin/`, `.gitmodules`, `plugins/graft/.claude-plugin/plugin.json`, `plugins/graft/hooks/`, `plugins/graft/hooks/hooks.json` |
 | [`graphnosis`](../../content/systems/graphnosis.md) | `.githooks/` |
-| [`graqle`](../../content/systems/graqle.md) | `.claude-plugin/`, `server.json` |
+| [`graqle`](../../content/systems/graqle.md) | `.claude-plugin/`, `plugins/claude-code/graqle/.claude-plugin/plugin.json`, `plugins/claude-code/graqle/hooks/`, `plugins/claude-code/graqle/hooks/hooks.json`, `server.json` |
 | [`graymatter`](../../content/systems/graymatter.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
 | [`growmos`](../../content/systems/growmos.md) | `.claude/settings.json`, `.mcp.json`, `server.json` |
-| [`headroom`](../../content/systems/headroom.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `server.json` |
+| [`headroom`](../../content/systems/headroom.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `plugins/headroom-agent-hooks/.claude-plugin/plugin.json`, `plugins/headroom-agent-hooks/hooks/`, `plugins/headroom-agent-hooks/hooks/hooks.json`, `server.json` |
 | [`hermes-agent`](../../content/systems/hermes-agent.md) | `.envrc` |
 | [`hermes-fleet-memory`](../../content/systems/hermes-fleet-memory.md) | `.cursorrules` |
-| [`hindsight`](../../content/systems/hindsight.md) | `.claude-plugin/`, `.githooks/` |
+| [`hindsight`](../../content/systems/hindsight.md) | `.claude-plugin/`, `.githooks/`, `hindsight-integrations/claude-code/.claude-plugin/plugin.json`, `hindsight-integrations/claude-code/.mcp.json`, `hindsight-integrations/claude-code/hooks/`, `hindsight-integrations/claude-code/hooks/hooks.json`, `hindsight-integrations/zcode/.claude-plugin/plugin.json`, `hindsight-integrations/zcode/hooks/` |
 | [`hipocampus`](../../content/systems/hipocampus.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
-| [`hivemind-activeloop`](../../content/systems/hivemind-activeloop.md) | `.claude-plugin/` |
+| [`hivemind-activeloop`](../../content/systems/hivemind-activeloop.md) | `.claude-plugin/`, `harnesses/claude-code/.claude-plugin/plugin.json`, `harnesses/claude-code/hooks/`, `harnesses/claude-code/hooks/hooks.json` |
 | [`holographic`](../../content/systems/holographic.md) | `.envrc` |
 | [`honcho`](../../content/systems/honcho.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`huqan`](../../content/systems/huqan.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
-| [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/` |
-| [`inite-brain`](../../content/systems/inite-brain.md) | `.claude-plugin/`, `server.json` |
+| [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
+| [`inite-brain`](../../content/systems/inite-brain.md) | `.claude-plugin/`, `plugins/inite-brain/.claude-plugin/plugin.json`, `plugins/inite-brain/.mcp.json`, `plugins/inite-brain/hooks/`, `plugins/inite-brain/hooks/hooks.json`, `server.json` |
 | [`inspeximus`](../../content/systems/inspeximus.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`joplin`](../../content/systems/joplin.md) | `.envrc`, `.vscode/settings.json` |
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
 | [`kaeru`](../../content/systems/kaeru.md) | `.gitmodules` |
-| [`kage`](../../content/systems/kage.md) | `.claude-plugin/`, `server.json`, `smithery.yaml` |
-| [`kagura-memory-cloud`](../../content/systems/kagura-memory-cloud.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md`, `server.json` |
+| [`kage`](../../content/systems/kage.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json`, `server.json`, `smithery.yaml` |
+| [`kagura-memory-cloud`](../../content/systems/kagura-memory-cloud.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md`, `claude-hooks/hooks.json`, `server.json` |
 | [`kannaka-memory`](../../content/systems/kannaka-memory.md) | `.claude-plugin/` |
 | [`khoj`](../../content/systems/khoj.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`kimetsu`](../../content/systems/kimetsu.md) | `.githooks/` |
-| [`kipi-system`](../../content/systems/kipi-system.md) | `.claude-plugin/`, `.claude/settings.json`, `.githooks/`, `.mcp.json` |
+| [`kipi-system`](../../content/systems/kipi-system.md) | `.claude-plugin/`, `.claude/settings.json`, `.codex/config.toml`, `.githooks/`, `.mcp.json`, `plugins/kipi-core/.claude-plugin/plugin.json`, `plugins/kipi-core/.mcp.json`, `plugins/kipi-core/hooks/` |
 | [`kleos`](../../content/systems/kleos.md) | `.githooks/`, `hooks/` |
 | [`klypix-mcp`](../../content/systems/klypix-mcp.md) | `server.json` |
 | [`knowl`](../../content/systems/knowl.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`langchain`](../../content/systems/langchain.md) | `.devcontainer/devcontainer.json`, `.mcp.json`, `.vscode/settings.json` |
 | [`leankg`](../../content/systems/leankg.md) | `.claude-plugin/` |
-| [`leteo`](../../content/systems/leteo.md) | `.claude-plugin/`, `server.json` |
-| [`light-mem`](../../content/systems/light-mem.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md` |
+| [`leteo`](../../content/systems/leteo.md) | `.claude-plugin/`, `plugin/claude-code/.claude-plugin/plugin.json`, `plugin/claude-code/.mcp.json`, `plugin/claude-code/hooks/`, `plugin/claude-code/hooks/hooks.json`, `plugin/zcode/.mcp.json`, `plugin/zcode/hooks/`, `plugin/zcode/hooks/hooks.json` |
 | [`lindahaviv-second-brain`](../../content/systems/lindahaviv-second-brain.md) | `.claude/settings.json` |
-| [`linggen-memory`](../../content/systems/linggen-memory.md) | `.claude-plugin/` |
+| [`linggen-memory`](../../content/systems/linggen-memory.md) | `.claude-plugin/`, `plugins/linggen/.claude-plugin/plugin.json`, `plugins/linggen/.mcp.json`, `plugins/linggen/hooks/`, `plugins/linggen/hooks/hooks.json` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
-| [`lobu`](../../content/systems/lobu.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitmodules`, `server.json` |
+| [`lobu`](../../content/systems/lobu.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitmodules`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/.mcp.json`, `server.json` |
 | [`local-memory-mcp`](../../content/systems/local-memory-mcp.md) | `server.json` |
-| [`longterm-memory-mcp`](../../content/systems/longterm-memory-mcp.md) | `.claude-plugin/`, `.mcp.json`, `.vscode/mcp.json`, `server.json` |
-| [`lorekit`](../../content/systems/lorekit.md) | `.claude-plugin/` |
+| [`longterm-memory-mcp`](../../content/systems/longterm-memory-mcp.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.mcp.json`, `.vscode/mcp.json`, `server.json` |
+| [`lorekit`](../../content/systems/lorekit.md) | `.claude-plugin/`, `plugins/lorekit-claude/.claude-plugin/plugin.json`, `plugins/lorekit-claude/hooks/`, `plugins/lorekit-claude/hooks/hooks.json` |
 | [`loreweave`](../../content/systems/loreweave.md) | `server.json` |
 | [`lossless-context-mcp`](../../content/systems/lossless-context-mcp.md) | `hooks/`, `server.json` |
 | [`m3-memory`](../../content/systems/m3-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitattributes`, `.githooks/`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |
 | [`mainline`](../../content/systems/mainline.md) | `.cursor/rules/`, `.github/copilot-instructions.md` |
 | [`maka`](../../content/systems/maka.md) | `.github/copilot-instructions.md` |
-| [`mama`](../../content/systems/mama.md) | `.claude-plugin/`, `.gitmodules` |
+| [`mama`](../../content/systems/mama.md) | `.claude-plugin/`, `.gitmodules`, `packages/claude-code-plugin/.claude-plugin/plugin.json`, `packages/claude-code-plugin/.mcp.json` |
 | [`marsnme`](../../content/systems/marsnme.md) | `server.json` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
-| [`matrix-os`](../../content/systems/matrix-os.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json` |
+| [`matrix-os`](../../content/systems/matrix-os.md) | `.agents/skills/clerk-custom-ui/.claude-plugin/plugin.json`, `.agents/skills/clerk-nextjs-patterns/.claude-plugin/plugin.json`, `.agents/skills/clerk-orgs/.claude-plugin/plugin.json`, `.agents/skills/clerk-setup/.claude-plugin/plugin.json`, `.agents/skills/clerk-testing/.claude-plugin/plugin.json`, `.agents/skills/clerk-webhooks/.claude-plugin/plugin.json`, `.agents/skills/clerk/.claude-plugin/plugin.json`, `.claude-plugin/` |
 | [`mcp-context-server`](../../content/systems/mcp-context-server.md) | `server.json` |
-| [`mcp-memory-service`](../../content/systems/mcp-memory-service.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitattributes` |
-| [`mem0`](../../content/systems/mem0.md) | `.claude-plugin/`, `.gitmodules` |
-| [`mem9`](../../content/systems/mem9.md) | `.claude-plugin/` |
+| [`mcp-memory-service`](../../content/systems/mcp-memory-service.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitattributes`, `claude-hooks/.claude-plugin/hooks.json`, `claude-hooks/.claude-plugin/plugin.json`, `claude-hooks/.mcp.json` |
+| [`mem0`](../../content/systems/mem0.md) | `.claude-plugin/`, `.gitmodules`, `integrations/claude-code-plugin/.claude-plugin/plugin.json`, `integrations/claude-code-plugin/.mcp.json`, `integrations/claude-code-plugin/hooks/`, `integrations/claude-code-plugin/hooks/hooks.json` |
+| [`mem9`](../../content/systems/mem9.md) | `.claude-plugin/`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/hooks/`, `claude-plugin/hooks/hooks.json` |
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
 | [`memcontinuum`](../../content/systems/memcontinuum.md) | `hooks/` |
 | [`memcp`](../../content/systems/memcp.md) | `hooks/` |
 | [`memesh`](../../content/systems/memesh.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`memex-zero-rag`](../../content/systems/memex-zero-rag.md) | `.mcp.json` |
 | [`memex-zettel`](../../content/systems/memex-zettel.md) | `.claude-plugin/`, `.cursorrules`, `hooks/`, `hooks/hooks.json`, `server.json`, `smithery.yaml` |
-| [`memini`](../../content/systems/memini.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json` |
+| [`memini`](../../content/systems/memini.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.claude.json` |
 | [`memo-local`](../../content/systems/memo-local.md) | `-` |
-| [`memoir`](../../content/systems/memoir.md) | `.claude-plugin/` |
+| [`memoir`](../../content/systems/memoir.md) | `.claude-plugin/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json` |
 | [`memoir-cli`](../../content/systems/memoir-cli.md) | `server.json` |
 | [`memomind`](../../content/systems/memomind.md) | `.claude/settings.local.json` |
-| [`memoose`](../../content/systems/memoose.md) | `.claude-plugin/`, `mcp.json` |
-| [`memora`](../../content/systems/memora.md) | `.claude-plugin/` |
+| [`memoose`](../../content/systems/memoose.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `harness/hooks/hooks.json`, `mcp.json` |
+| [`memora`](../../content/systems/memora.md) | `.claude-plugin/`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/.mcp.json`, `claude-plugin/hooks/`, `claude-plugin/hooks/hooks.json` |
 | [`memorix`](../../content/systems/memorix.md) | `.gitmodules`, `.opencode/`, `server.json` |
-| [`memory-engine`](../../content/systems/memory-engine.md) | `.claude-plugin/` |
+| [`memory-engine`](../../content/systems/memory-engine.md) | `.claude-plugin/`, `packages/claude-plugin/.claude-plugin/plugin.json`, `packages/claude-plugin/.mcp.json`, `packages/claude-plugin/hooks/`, `packages/claude-plugin/hooks/hooks.json` |
 | [`memory-industry`](../../content/systems/memory-industry.md) | `.cursor/rules/`, `server.json` |
 | [`memory-project`](../../content/systems/memory-project.md) | `hooks/` |
 | [`memory-ts`](../../content/systems/memory-ts.md) | `hooks/` |
 | [`memory-vault`](../../content/systems/memory-vault.md) | `server.json` |
-| [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/`, `mcp.json` |
+| [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.claude-plugin/.mcp.json`, `.claude-plugin/hooks/`, `.claude-plugin/hooks/hooks.json`, `.claude-plugin/plugin.json`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/` |
 | [`mempalace-code`](../../content/systems/mempalace-code.md) | `.claude/settings.json`, `hooks/` |
-| [`memsearch`](../../content/systems/memsearch.md) | `.claude-plugin/` |
-| [`memseek`](../../content/systems/memseek.md) | `.claude-plugin/`, `.vscode/tasks.json` |
+| [`memsearch`](../../content/systems/memsearch.md) | `.claude-plugin/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json` |
+| [`memseek`](../../content/systems/memseek.md) | `.claude-plugin/`, `.vscode/tasks.json`, `integrations/claude-code/.claude-plugin/plugin.json`, `integrations/claude-code/.mcp.json`, `integrations/claude-code/hooks/`, `integrations/claude-code/hooks/hooks.json` |
 | [`memspec`](../../content/systems/memspec.md) | `hooks/` |
-| [`memtomem`](../../content/systems/memtomem.md) | `.claude-plugin/`, `server.json` |
+| [`memtomem`](../../content/systems/memtomem.md) | `.claude-plugin/`, `packages/memtomem-claude-automation-plugin/.claude-plugin/plugin.json`, `packages/memtomem-claude-automation-plugin/hooks/`, `packages/memtomem-claude-automation-plugin/hooks/hooks.json`, `packages/memtomem-claude-plugin/.claude-plugin/plugin.json`, `packages/memtomem-claude-plugin/.mcp.json`, `server.json` |
 | [`memv`](../../content/systems/memv.md) | `.claude/settings.json`, `.claude/settings.local.json` |
-| [`mengram`](../../content/systems/mengram.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
+| [`mengram`](../../content/systems/mengram.md) | `.claude-plugin/`, `.mcp.json`, `integrations/claude-code-plugin/.claude-plugin/plugin.json`, `integrations/claude-code-plugin/.mcp.json`, `integrations/claude-code-plugin/hooks/`, `integrations/claude-code-plugin/hooks/hooks.json`, `server.json` |
 | [`mentedb`](../../content/systems/mentedb.md) | `.github/copilot-instructions.md` |
 | [`meridian`](../../content/systems/meridian.md) | `.claude/settings.json`, `.githooks/` |
 | [`mex`](../../content/systems/mex.md) | `.claude-plugin/` |
@@ -254,11 +253,11 @@ These execute without a command being typed. Read before opening the tree.
 | [`mnemoverse-mcp-memory-server`](../../content/systems/mnemoverse-mcp-memory-server.md) | `server.json` |
 | [`mnesio`](../../content/systems/mnesio.md) | `.mcp.json` |
 | [`mnestic`](../../content/systems/mnestic.md) | `.gitmodules` |
-| [`moltbrain`](../../content/systems/moltbrain.md) | `.claude-plugin/` |
+| [`moltbrain`](../../content/systems/moltbrain.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`muninn`](../../content/systems/muninn.md) | `.claude/settings.json` |
 | [`muninndb`](../../content/systems/muninndb.md) | `.claude/hooks/`, `.claude/settings.json` |
-| [`mushroomdb`](../../content/systems/mushroomdb.md) | `.claude-plugin/`, `server.json` |
+| [`mushroomdb`](../../content/systems/mushroomdb.md) | `.claude-plugin/`, `packaging/plugin/.claude-plugin/plugin.json`, `packaging/plugin/.mcp.json`, `packaging/plugin/hooks/`, `packaging/plugin/hooks/hooks.json`, `server.json` |
 | [`nano-brain`](../../content/systems/nano-brain.md) | `.claude/hooks/`, `.claude/settings.json`, `.opencode/` |
 | [`nanoclaw`](../../content/systems/nanoclaw.md) | `.claude/settings.json`, `.mcp.json` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
@@ -266,12 +265,12 @@ These execute without a command being typed. Read before opening the tree.
 | [`neuron`](../../content/systems/neuron.md) | `.claude/settings.json` |
 | [`neurostack`](../../content/systems/neurostack.md) | `server.json` |
 | [`nexusmem`](../../content/systems/nexusmem.md) | `server.json` |
-| [`no-human`](../../content/systems/no-human.md) | `.claude-plugin/`, `server.json` |
+| [`no-human`](../../content/systems/no-human.md) | `.claude-plugin/`, `plugins/no-human/.claude-plugin/plugin.json`, `plugins/no-human/.mcp.json`, `server.json` |
 | [`noosphere`](../../content/systems/noosphere.md) | `.github/copilot-instructions.md` |
 | [`nornicdb`](../../content/systems/nornicdb.md) | `.githooks/` |
 | [`nougenshards`](../../content/systems/nougenshards.md) | `.mcp.json`, `hooks/` |
 | [`obelyth-cortex`](../../content/systems/obelyth-cortex.md) | `.devcontainer/devcontainer.json` |
-| [`obsidian-mind`](../../content/systems/obsidian-mind.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json` |
+| [`obsidian-mind`](../../content/systems/obsidian-mind.md) | `.claude-plugin/`, `.claude/settings.json`, `.gemini/settings.json`, `.mcp.json` |
 | [`obsidian-wiki`](../../content/systems/obsidian-wiki.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.cursor/rules/`, `.github/copilot-instructions.md` |
 | [`octobrain`](../../content/systems/octobrain.md) | `server.json` |
 | [`octop-memory`](../../content/systems/octop-memory.md) | `.githooks/` |
@@ -280,9 +279,10 @@ These execute without a command being typed. Read before opening the tree.
 | [`okf-agent-memory`](../../content/systems/okf-agent-memory.md) | `.cursorrules`, `.github/copilot-instructions.md` |
 | [`omega-memory`](../../content/systems/omega-memory.md) | `.mcp.json`, `hooks/`, `server.json`, `smithery.yaml` |
 | [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.githooks/` |
-| [`omniclaude`](../../content/systems/omniclaude.md) | `.claude-plugin/` |
+| [`omniclaude`](../../content/systems/omniclaude.md) | `.claude-plugin/`, `plugins/onex-delegate/.claude-plugin/plugin.json`, `plugins/onex/.claude-plugin/plugin.json`, `plugins/onex/hooks/`, `plugins/onex/hooks/hooks.json` |
 | [`open-bridge`](../../content/systems/open-bridge.md) | `.claude/hooks/`, `.claude/settings.json`, `.github/copilot-instructions.md` |
 | [`open-second-brain`](../../content/systems/open-second-brain.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
+| [`openai-codex`](../../content/systems/openai-codex.md) | `.vscode/settings.json` |
 | [`openakashic`](../../content/systems/openakashic.md) | `server.json`, `smithery.yaml` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |
 | [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
@@ -293,46 +293,46 @@ These execute without a command being typed. Read before opening the tree.
 | [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
 | [`openmem`](../../content/systems/openmem.md) | `server.json` |
 | [`opensre`](../../content/systems/opensre.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
-| [`openviking`](../../content/systems/openviking.md) | `.claude-plugin/` |
+| [`openviking`](../../content/systems/openviking.md) | `.claude-plugin/`, `examples/claude-code-memory-plugin/.claude-plugin/plugin.json`, `examples/claude-code-memory-plugin/.mcp.json`, `examples/claude-code-memory-plugin/hooks/`, `examples/claude-code-memory-plugin/hooks/hooks.json` |
 | [`orgtree`](../../content/systems/orgtree.md) | `.gitmodules` |
 | [`ori-mnemos`](../../content/systems/ori-mnemos.md) | `.claude/settings.json`, `server.json`, `smithery.yaml` |
 | [`origintrail-dkg`](../../content/systems/origintrail-dkg.md) | `.cursor/mcp.json`, `.cursor/rules/` |
 | [`osiris`](../../content/systems/osiris.md) | `.claude/settings.json`, `.githooks/`, `.mcp.json` |
 | [`ouroboros-agent-os`](../../content/systems/ouroboros-agent-os.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
-| [`ownmem`](../../content/systems/ownmem.md) | `.claude-plugin/` |
-| [`ox`](../../content/systems/ox.md) | `.claude-plugin/`, `.claude/settings.json`, `.gemini/settings.json`, `.opencode/` |
+| [`ownmem`](../../content/systems/ownmem.md) | `.claude-plugin/`, `plugins/ownmem/.claude-plugin/plugin.json` |
+| [`ox`](../../content/systems/ox.md) | `.claude-plugin/`, `.claude/settings.json`, `.gemini/settings.json`, `.opencode/`, `claude-plugin/.claude-plugin/plugin.json`, `internal/pet/mod/.claude-plugin/plugin.json`, `internal/pet/mod/hooks/`, `internal/pet/mod/hooks/hooks.json` |
 | [`papez`](../../content/systems/papez.md) | `server.json` |
 | [`particles`](../../content/systems/particles.md) | `hooks/`, `server.json` |
-| [`pensyve`](../../content/systems/pensyve.md) | `.claude-plugin/`, `server.json`, `smithery.yaml` |
-| [`people-context`](../../content/systems/people-context.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
+| [`pensyve`](../../content/systems/pensyve.md) | `.claude-plugin/`, `integrations/claude-code/.claude-plugin/plugin.json`, `integrations/claude-code/hooks/`, `integrations/claude-code/hooks/hooks.json`, `server.json`, `smithery.yaml` |
+| [`people-context`](../../content/systems/people-context.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.mcp.json`, `server.json` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`plur`](../../content/systems/plur.md) | `.claude-plugin/`, `.githooks/`, `server.json` |
 | [`pmb`](../../content/systems/pmb.md) | `server.json` |
 | [`pond`](../../content/systems/pond.md) | `.envrc`, `server.json` |
-| [`prism-coder`](../../content/systems/prism-coder.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitmodules`, `server.json`, `smithery.yaml` |
+| [`prism-coder`](../../content/systems/prism-coder.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitmodules`, `plugins/prism/.claude-plugin/plugin.json`, `plugins/prism/.mcp.json`, `server.json`, `smithery.yaml` |
 | [`prismer-cloud`](../../content/systems/prismer-cloud.md) | `.claude-plugin/` |
 | [`pro-workflow`](../../content/systems/pro-workflow.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
 | [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
-| [`qwen-mm-plugins`](../../content/systems/qwen-mm-plugins.md) | `.claude-plugin/` |
+| [`qwen-mm-plugins`](../../content/systems/qwen-mm-plugins.md) | `.claude-plugin/`, `src/capabilities/api/.claude-plugin/plugin.json`, `src/capabilities/api/.mcp.json`, `src/capabilities/blender/.claude-plugin/plugin.json`, `src/capabilities/blender/.mcp.json`, `src/capabilities/core/.claude-plugin/plugin.json`, `src/capabilities/core/.mcp.json`, `src/capabilities/edu-agent/.claude-plugin/plugin.json` |
 | [`ragflow`](../../content/systems/ragflow.md) | `.github/copilot-instructions.md` |
-| [`re-call`](../../content/systems/re-call.md) | `.claude-plugin/`, `hooks/`, `server.json` |
+| [`re-call`](../../content/systems/re-call.md) | `.claude-plugin/`, `hooks/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json`, `server.json` |
 | [`reasonix`](../../content/systems/reasonix.md) | `.githooks/` |
 | [`recallnest`](../../content/systems/recallnest.md) | `.claude-plugin/`, `.mcp.json` |
 | [`recollect`](../../content/systems/recollect.md) | `.opencode/` |
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
 | [`reflexion`](../../content/systems/reflexion.md) | `.gitmodules` |
-| [`rekal`](../../content/systems/rekal.md) | `.claude-plugin/`, `.gitattributes` |
+| [`rekal`](../../content/systems/rekal.md) | `.claude-plugin/`, `.gitattributes`, `plugin/.claude-plugin/plugin.json` |
 | [`remem`](../../content/systems/remem.md) |  |
 | [`remem-mcp`](../../content/systems/remem-mcp.md) | `server.json` |
 | [`remembra`](../../content/systems/remembra.md) | `hooks/`, `server.json` |
-| [`rememora`](../../content/systems/rememora.md) | `.claude-plugin/` |
+| [`rememora`](../../content/systems/rememora.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`reporecall`](../../content/systems/reporecall.md) | `.claude/settings.json`, `.mcp.json` |
-| [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `server.json` |
+| [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/.mcp.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json`, `server.json` |
 | [`rexleimo-aios`](../../content/systems/rexleimo-aios.md) | `.gitmodules` |
 | [`ripwire`](../../content/systems/ripwire.md) | `.mcp.json`, `hooks/` |
-| [`ruflo`](../../content/systems/ruflo.md) | `.claude-plugin/`, `.claude/settings.json`, `.githooks/` |
+| [`ruflo`](../../content/systems/ruflo.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.claude/settings.json`, `.githooks/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json`, `plugins/ruflo-adr/.claude-plugin/plugin.json` |
 | [`rushdb`](../../content/systems/rushdb.md) | `.claude/settings.json` |
 | [`rust-self-learning-memory`](../../content/systems/rust-self-learning-memory.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `.opencode/`, `.vscode/settings.json` |
 | [`ruvector`](../../content/systems/ruvector.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `.gitmodules` |
@@ -353,35 +353,36 @@ These execute without a command being typed. Read before opening the tree.
 | [`sqlite-memory-mcp`](../../content/systems/sqlite-memory-mcp.md) | `hooks/` |
 | [`state-memory-mcp`](../../content/systems/state-memory-mcp.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `server.json` |
 | [`stella`](../../content/systems/stella.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/` |
-| [`superlocalmemory`](../../content/systems/superlocalmemory.md) | `.claude-plugin/`, `.gitattributes` |
+| [`superlocalmemory`](../../content/systems/superlocalmemory.md) | `.claude-plugin/`, `.gitattributes`, `codex-plugin/.claude-plugin/plugin.json`, `codex-plugin/.mcp.json`, `codex-plugin/hooks/`, `codex-plugin/hooks/hooks.json`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json` |
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`swarmai`](../../content/systems/swarmai.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`synapse-layer`](../../content/systems/synapse-layer.md) | `server.json`, `smithery.yaml` |
 | [`tanglies-agentos`](../../content/systems/tanglies-agentos.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`telemem`](../../content/systems/telemem.md) | `server.json` |
-| [`temporalstore`](../../content/systems/temporalstore.md) | `.claude-plugin/`, `.gitmodules` |
-| [`textfold`](../../content/systems/textfold.md) | `.claude-plugin/` |
-| [`the-librarian`](../../content/systems/the-librarian.md) | `.claude-plugin/` |
-| [`titen`](../../content/systems/titen.md) | `.claude-plugin/`, `server.json` |
+| [`temporalstore`](../../content/systems/temporalstore.md) | `.claude-plugin/`, `.gitmodules`, `integrations/claude-plugin/.claude-plugin/plugin.json`, `integrations/claude-plugin/.mcp.json`, `integrations/claude-plugin/hooks/`, `integrations/claude-plugin/hooks/hooks.json` |
+| [`textfold`](../../content/systems/textfold.md) | `.claude-plugin/`, `plugins/textfold/.claude-plugin/plugin.json`, `plugins/textfold/hooks/`, `plugins/textfold/hooks/hooks.json` |
+| [`the-librarian`](../../content/systems/the-librarian.md) | `.claude-plugin/`, `integrations/claude/.claude-plugin/plugin.json`, `integrations/claude/.mcp.json`, `integrations/claude/hooks/`, `integrations/claude/hooks/hooks.json` |
+| [`titen`](../../content/systems/titen.md) | `.claude-plugin/`, `plugins/claude/titen-memory/.claude-plugin/plugin.json`, `plugins/claude/titen-memory/.mcp.json`, `server.json` |
 | [`token-optimizer`](../../content/systems/token-optimizer.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`token-savior`](../../content/systems/token-savior.md) | `hooks/`, `server.json` |
-| [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
+| [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.mcp.json`, `server.json` |
 | [`tracedecay`](../../content/systems/tracedecay.md) | `.githooks/`, `.gitmodules`, `server.json` |
-| [`tree-ring-memory`](../../content/systems/tree-ring-memory.md) | `.claude-plugin/` |
+| [`tree-ring-memory`](../../content/systems/tree-ring-memory.md) | `.claude-plugin/`, `plugins/tree-ring-memory/.claude-plugin/plugin.json`, `plugins/tree-ring-memory/hooks/`, `plugins/tree-ring-memory/hooks/claude-hooks.json` |
 | [`trilium`](../../content/systems/trilium.md) | `.envrc`, `.mcp.json`, `.vscode/settings.json` |
 | [`trueforge`](../../content/systems/trueforge.md) | `.cursor/rules/` |
 | [`ulpia`](../../content/systems/ulpia.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `.mcp.json` |
+| [`understand-anything`](../../content/systems/understand-anything.md) | `.claude-plugin/`, `understand-anything-plugin/.claude-plugin/plugin.json`, `understand-anything-plugin/hooks/`, `understand-anything-plugin/hooks/hooks.json` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.claude-plugin/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`velesdb`](../../content/systems/velesdb.md) | `.githooks/`, `server.json`, `smithery.yaml` |
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
-| [`verimem`](../../content/systems/verimem.md) | `.claude-plugin/`, `.claude/hooks/`, `.githooks/`, `hooks/`, `server.json` |
+| [`verimem`](../../content/systems/verimem.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.claude/hooks/`, `.githooks/`, `hooks/`, `server.json` |
 | [`vestige`](../../content/systems/vestige.md) | `hooks/`, `server.json` |
 | [`vibe-cognition`](../../content/systems/vibe-cognition.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`vision-memory-mcp`](../../content/systems/vision-memory-mcp.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `server.json` |
 | [`vllm-semantic-router`](../../content/systems/vllm-semantic-router.md) | `.github/copilot-instructions.md` |
-| [`vortx-emem`](../../content/systems/vortx-emem.md) | `.claude-plugin/`, `.gitmodules`, `server.json` |
+| [`vortx-emem`](../../content/systems/vortx-emem.md) | `.claude-plugin/`, `.gitmodules`, `plugins/emem/.claude-plugin/plugin.json`, `plugins/emem/.mcp.json`, `server.json` |
 | [`waggle`](../../content/systems/waggle.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
-| [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/` |
+| [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |
 | [`windieos`](../../content/systems/windieos.md) | `.vscode/settings.json` |
 | [`windvane`](../../content/systems/windvane.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
@@ -391,4 +392,10 @@ These execute without a command being typed. Read before opening the tree.
 | [`zcode`](../../content/systems/zcode.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
+
+## Not screened
+
+| System | Status | Detail |
+| --- | --- | --- |
+| `light-mem` | clone-failed | fatal: repository 'https://github.com/DevEstacion/light-mem/' not found |
 
