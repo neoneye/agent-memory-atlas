@@ -383,7 +383,7 @@ synthesis pages; a report body names no corpus count at all.
 
 ## Archive the source
 
-Every report gets a copy of its source in `agent-memory-atlas-archive`, named `<owner>--<repo>` (the report's `archive_name`, which `check_archive_names.py` re-derives from `source_url`). Since 2026-11-01 that copy is a **standalone repository, not a fork**:
+Every report gets a copy of its source in `agent-memory-atlas-archive`, named `<owner>--<repo>` (the report's `archive_name`, which `check_archive_names.py` re-derives from `source_url`). Every report means every one, whatever marks it earns: the bar for archiving is the bar for a report. Since 2026-11-01 that copy is a **standalone repository, not a fork**:
 
 ```sh
 GITHUB_TOKEN=$(gh auth token) python3 scripts/archive_mirror.py --only <owner>/<repo>
@@ -403,7 +403,7 @@ One gap is untested: a commit message that writes a full reference (`owner/repo#
 
 The atlas's own commit messages are such a repository. **Never write `owner/repo#N`, or a URL to an upstream issue or pull request, in a commit message here**: it adds a line to that upstream thread the moment it is pushed. The commit that introduced this section wrote `wenlan-app/wenlan#969` in its message and put a line on that issue within a minute. Name the project and the number in words instead ("Wenlan's issue 969"). File contents, the published pages and the notes do not cross-reference; commit messages, issues, pull requests and comments do.
 
-Never run `archive_sync.py` to bring a fork up to date as part of adding or integrating a report. It refuses to move a branch without `--allow-upstream-references`, and that flag is the person's decision, not a step in this workflow.
+Never run `archive_sync.py` to bring a fork up to date as part of adding or integrating a report. It refuses to move a branch without `--allow-upstream-references`, and that flag is the person's decision, not a step in this workflow. A re-read brings the archive up to date by converting the fork to a copy with `scripts/archive_convert.py`; the `reanalyze-memory-system` skill has the steps.
 
 ## Build and validate
 

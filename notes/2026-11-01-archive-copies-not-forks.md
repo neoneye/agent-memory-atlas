@@ -42,10 +42,9 @@ issue tracker, which is switched off. The script:
 
 ## What is deferred
 
-- **The existing forks.** Converting them means deleting each fork and pushing a
-  copy, which loses nothing that matters but is several hundred deletions in the
-  organisation. Until then a re-pin of a forked repository leaves the new pin
-  held upstream only, unless the person chooses to sync that one fork.
+- **The existing forks, in bulk.** Converting them all at once means several
+  hundred deletions in the organisation. They convert one at a time instead, at
+  the re-read that touches each (below).
 - **Full references.** A commit message that writes `owner/repo#969` or an issue
   URL cross-references from any repository, copy or fork, and the atlas's own
   repository is one: commit `93cb59a69e499703eef3e44c33bdae5decb3799b`, which made
@@ -55,3 +54,15 @@ issue tracker, which is switched off. The script:
 - **Keeping copies current.** `archive_mirror.py` adds pins when it is re-run;
   nothing follows an upstream's default branch between re-reads. That is the
   part of the old sync this decision gives up.
+
+## Converted at re-read (2026-11-02)
+
+A re-read updates the archive, and a forked one is converted rather than
+synced: `scripts/archive_convert.py --only owner/repo` gathers every pin the
+reports cite for the upstream (`revision` and every `<source_url>/commit/<sha>`
+link, History included) from the upstream or else the fork, deletes nothing
+unless all of them are held locally, then deletes the fork and pushes a copy
+under the same name with an `atlas-pin-` tag per pin. A licence or size the
+mirror refuses leaves that fork frozen. Every report is archived, whatever marks
+it earns. The first two conversions were TokenMizer (four pins, the first of
+them unreachable from the upstream's default branch) and ThoughtDAG (fourteen).

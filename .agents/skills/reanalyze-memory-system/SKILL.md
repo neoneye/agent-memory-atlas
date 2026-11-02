@@ -315,21 +315,40 @@ place, with a link to the issue. Remove the open question the finding answers.
 
 ## Archive the new pin
 
-A re-pin moves `revision`, and the archive should hold the new commit too. What
-to do depends on what the archive holds, which the repository's `fork` field
-says (`gh api repos/agent-memory-atlas-archive/<owner>--<repo> --jq .fork`):
+A re-pin moves `revision`, and the archive must hold the new commit too: a
+re-read is not finished until it does. What to run depends on what the archive
+holds, which the repository's `fork` field says
+(`gh api repos/agent-memory-atlas-archive/<owner>--<repo> --jq .fork`):
 
 - **A standalone copy** (`false`, topic `atlas-mirror`): run
   `GITHUB_TOKEN=$(gh auth token) python3 scripts/archive_mirror.py --only <owner>/<repo>`.
   It pushes `refs/tags/atlas-pin-<sha>` for the new pin, pushes branches
   without force so a history upstream rewrote stays in the copy, and reads the
   pin back.
-- **A fork** (`true`, every repository archived before 2026-11-01): do not sync
-  it. Moving a fork's branch adds a cross-reference line to every upstream issue
-  and pull request the new commits name, and `archive_sync.py` refuses to move
-  one without `--allow-upstream-references`. The old pins stay in the fork. The
-  new pin is held upstream only. Say that in the completion summary, and leave the
-  decision to sync that one fork to the person.
+- **A fork** (`true`, every repository archived before 2026-11-01): convert it to
+  a copy. Never sync it — moving a fork's branch adds a cross-reference line to
+  every upstream issue and pull request the new commits name. Run the dry run
+  first, then the conversion:
+
+  ```sh
+  GITHUB_TOKEN=$(gh auth token) python3 scripts/archive_convert.py --dry-run --only <owner>/<repo>
+  GITHUB_TOKEN=$(gh auth token) python3 scripts/archive_convert.py --only <owner>/<repo>
+  ```
+
+  It collects every pin the reports cite for the upstream — `revision` and each
+  `<source_url>/commit/<sha>` link, History entries included — fetches each by
+  sha from the upstream or else from the fork, and **deletes nothing unless
+  every pin is held locally**. Then it deletes the fork, creates the copy under
+  the same name with Actions off, pushes branches, tags and an `atlas-pin-` tag
+  per pin, and reads every pin back. Deleting and recreating that one fork is
+  standing policy for a re-read, not a question to ask. A failure after the
+  deletion prints the path of the local bare clone, which holds every pin;
+  push from it to finish.
+
+  The conversion refuses where `archive_mirror.py` would — a licence that does
+  not grant redistribution, or more than about 1.8 GB of history. That fork
+  stays frozen at its old pins, the new pin is held upstream only, and the
+  completion summary says so.
 
 If the upstream changed owner or name, `archive_name` has to follow
 `source_url`, so rename the archive repository to the new `<owner>--<repo>`
