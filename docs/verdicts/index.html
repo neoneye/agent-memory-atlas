@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 762 reports.</strong></p>
+<p><strong>This page covers all 763 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -31778,6 +31778,50 @@ they came from.</li>
 <li>Do not copy when: you need the history of a corrected note,
 retrieval across many documents, or memory an agent builds up from its
 own sessions.</li>
+</ul>
+<h3 id="master-agent-system"><a
+href="../systems/master-agent-system/"><code>master-agent-system</code></a></h3>
+<ul>
+<li>Best idea: <strong>a status the writer cannot set, moved against the
+exact bytes reviewed.</strong> Every <code>put</code> writes
+<code>verification_status='UNVERIFIED'</code> itself, so the CLI, an
+import and a Markdown note all arrive unverified; <code>FRESH</code> is
+written only by the freshness auditor, against a completed QA task that
+names the record and its current content hash, inside an update that
+binds the revision it read. An edit after verification resets the
+status, and verification is dated by the oldest cited source, so a new
+task citing an old check cannot make it fresh today.</li>
+<li>Second idea: <strong>an external projection is a conflict surface,
+not an input.</strong> The Markdown sync never overwrites a file that
+changed, a retry keeps the old remote hash, and resolving a conflict
+requires the hash of the bytes the operator inspected.</li>
+<li>Biggest risk: <strong>every identity is a role name on the command
+line, and sixty-nine of seventy agents hold Bash.</strong>
+<code>review</code> refuses the task owner and its authors, but the
+reviewer is <code>--reviewer qa-auditor</code>, and
+<code>memory put --actor master-agent</code> writes to any namespace.
+The project records the limit as
+<code>identity_authenticated: False</code> on every QA record; the gate
+holds against a slip, not against an agent.</li>
+<li>Second risk: supersession is per record. The same claim written
+under a new UUID is accepted as a new unverified record, and the scan's
+same-title conflict check skips superseded rows before grouping, so it
+cannot see the return.</li>
+<li>Most reusable component: <code>agent_hub/freshness.py</code>
+<code>FreshnessAuditor.verify</code> and <code>_metadata</code> with
+<code>agent_hub/memory.py</code> <code>put</code> — a verification
+status outside the writer's reach, bound to a content hash and a
+revision.</li>
+<li>Maturity impression: no licence file; 8,406 lines of Python outside
+<code>vendor/</code>, 6 commits over two days by one account, 255
+unittest methods with simulated model responses, not run here. Four
+marks. The README says live model execution did not succeed in its build
+environment.</li>
+<li>Study when: an agent team keeps knowledge that goes stale on a known
+clock — prices, versions, permissions — and every retained fact must
+carry its sources and a review.</li>
+<li>Do not copy when: you need the review to be independent of the agent
+that produced the record, or retrieval beyond a substring scan.</li>
 </ul>
         </article>
       </div>

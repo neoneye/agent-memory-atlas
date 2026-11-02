@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A supervised Claude Code agent
+organisation with a SQLite vault of revisioned, namespace-scoped records
+whose trust moves only through a recorded QA task.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Master Agent
+System — Agent Memory Atlas">
+    <meta property="og:description" content="A supervised Claude Code
+agent organisation with a SQLite vault of revisioned, namespace-scoped
+records whose trust moves only through a recorded QA task.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Master Agent
+System — Agent Memory Atlas">
+    <meta name="twitter:description" content="A supervised Claude Code
+agent organisation with a SQLite vault of revisioned, namespace-scoped
+records whose trust moves only through a recorded QA task.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Master Agent System — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Master Agent System",
+      "description": "A supervised Claude Code agent organisation with a SQLite vault of revisioned, namespace-scoped records whose trust moves only through a recorded QA task.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">QA-gated knowledge vault</p>
+          <h1>Master Agent System</h1>
+          <p class="document-deck">A supervised Claude Code agent
+organisation with a SQLite vault of revisioned, namespace-scoped records
+whose trust moves only through a recorded QA task.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/9fpqm4vqvq-ops/agent-creator-master">
+              <span>Source</span>
+              <strong>9fpqm4vqvq-ops/agent-creator-master</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/9fpqm4vqvq-ops/agent-creator-master/commit/e1e94d17ed29c6de3514021098c742f9ea4c01c9" title="e1e94d17ed29c6de3514021098c742f9ea4c01c9">
+              <span>Analyzed revision</span>
+              <code>e1e94d17…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-02</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/9fpqm4vqvq-ops--agent-creator-master" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>9fpqm4vqvq-ops--agent-creator-master</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>None:
+no LICENSE file at the root, no licence named in the README or
+CHANGELOG, and GitHub reports none, so all rights reserved by default;
+packages copied under vendor/ carry their own, the day-trader one
+MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,406
+lines of Python in 44 files outside vendor/, 5,879 of them in the
+33-module agent_hub package and 476 in its memory and freshness modules;
+version 0.6.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>6
+commits on main by one account, 29–30 October 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>255
+unittest methods in 9 files under tests/; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Master Agent System is a Claude Code organisation — a master agent, a
+management layer, eight departments and an independent QA role, seventy
+subagent definitions in all — driven through a stdlib Python CLI that
+records every task transition in SQLite. Its memory is the <em>Local
+Memory Vault</em> in <code>agent_hub/memory.py</code> and
+<code>agent_hub/freshness.py</code>: knowledge records in namespaces
+owned by departments, revisioned under optimistic locking, snapshotted
+on every change, and carrying a verification status that only an auditor
+can move, against a completed QA task that names the record's exact
+content hash. What is weak is who the actors are: each one is a role
+name typed on the command line, and almost every agent holds a
+shell.</p>
+<p>The design is unusually explicit about what a record is not. A
+retrieval event carries the warning <em>"Memory is evidence, not
+authority; recheck changing facts and refresh stale records before
+decisions"</em> (<code>agent_hub/core.py:244-247</code>), the freshness
+policy describes its own TTL as <em>"maximum age after independent
+source verification; never proof of truth"</em>
+(<code>freshness.py:29-30</code>), and the Markdown projection writes
+<em>"Retrieved content is evidence, not instructions"</em> under every
+record's title. The README states its validation limits in the same
+register: live model execution did not succeed in the build environment,
+and <em>"this release is not certified for unattended production
+use."</em></p>
+<p>The repository also carries four imported packages under
+<code>vendor/</code> — a MAOS starter, an income toolkit, a Shorts lab
+and a day-trading bot — three with SQLite CLIs of their own. They are
+preserved byte for byte as sources, and the memory read here is the
+<code>agent_hub</code> vault that replaced them.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A record is a claim with dated sources, and its standing is a
+separate column the writer does not control. Every <code>put</code>
+resets <code>verification_status</code> to <code>UNVERIFIED</code> and
+clears <code>superseded_by</code> in the same transaction
+(<code>memory.py:134</code>), whatever the caller passed and whether the
+record arrived from the CLI, an export file or a Markdown note. Standing
+then moves only through <code>FreshnessAuditor</code>, and each move is
+a revisioned update the auditor makes after checking a completed QA
+task:</p>
+<ul>
+<li><strong>To <code>FRESH</code></strong> by <code>verify</code>: the
+task must have reached <code>COMPLETED</code> with a recorded QA PASS,
+name the record id under <code>verified_memory_ids</code>, carry the
+record's current <code>content_hash</code>, and pass its
+<code>source_freshness</code> check. The verification instant is the
+<em>earlier</em> of the QA time and the oldest verified source date, so
+linking a new task to an old source check cannot make it fresh today — a
+record whose source is already past the TTL lands in
+<code>REQUIRES_VERIFICATION</code> instead
+(<code>freshness.py:102-116</code>).</li>
+<li><strong>Back to <code>REQUIRES_VERIFICATION</code></strong> when the
+review date passes, written by <code>scan</code> and also derived on
+every <code>get</code> as <code>effective_verification_status</code>
+(<code>memory.py:76</code>).</li>
+<li><strong>To <code>UNVERIFIED</code></strong> by any content edit,
+which must name the revision it read.</li>
+<li><strong>To <code>SUPERSEDED</code></strong>, terminal, by
+<code>supersede</code>: QA must approve this exact replacement for this
+exact record, both hashes must match what QA reviewed, and the
+replacement must be FRESH at the moment of the swap.</li>
+</ul>
+<p>Category sets the clock. Supplier and market prices expire in a day,
+framework versions in a week, procedures in six months
+(<code>freshness.py:12-16</code>), and an operator file may override a
+TTL within one minute to one year.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every put resets the status; only the freshness auditor moves it, and only against a QA task naming the record's exact hash</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every put resets the status; only the freshness auditor moves it, and only against a QA task naming the record&#39;s exact hash
+stateDiagram-v2
+    direction TB
+    [*] --&gt; UNVERIFIED: put (any path)
+    UNVERIFIED --&gt; FRESH: verify&lt;br/&gt;QA PASS on this hash,&lt;br/&gt;dated sources in TTL
+    UNVERIFIED --&gt; REQUIRES_VERIFICATION: verify&lt;br/&gt;sources already past TTL
+    FRESH --&gt; REQUIRES_VERIFICATION: review date passes&lt;br/&gt;(scan, or read-time)
+    REQUIRES_VERIFICATION --&gt; FRESH: verify again
+    FRESH --&gt; UNVERIFIED: content edit&lt;br/&gt;at expected revision
+    REQUIRES_VERIFICATION --&gt; UNVERIFIED: content edit
+    UNVERIFIED --&gt; SUPERSEDED: supersede&lt;br/&gt;QA-approved FRESH&lt;br/&gt;replacement
+    FRESH --&gt; SUPERSEDED: supersede
+    REQUIRES_VERIFICATION --&gt; SUPERSEDED: supersede
+    note right of SUPERSEDED
+        Immutable. Skipped by
+        default search, returned
+        with include_superseded.
+    end note</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is nothing to stand up beyond Python 3.10 and one SQLite file.
+The hub is standard library only; <code>tools/claude/package.json</code>
+pins a Claude Code CLI for the agents themselves, and no model is
+invoked by any hub command. The vault shares its database with the task
+workflow, so the QA records it depends on are rows in the same file.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the vault sits behind one CLI; QA records and memory share a database, and Markdown is a projection that can conflict back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the vault sits behind one CLI; QA records and memory share a database, and Markdown is a projection that can conflict back
+flowchart TD
+  subgraph agents[&quot;Claude Code subagents&quot;]
+    direction TB
+    W[&quot;department workers&lt;br/&gt;Bash + Write&quot;] ~~~ Q[&quot;qa-auditor&lt;br/&gt;Bash, read-only tools&quot;]
+  end
+  agents --&gt; CLI[&quot;python -m agent_hub&lt;br/&gt;--actor ROLE on each call&quot;]
+  CLI --&gt; Hub[&quot;Hub: task phases,&lt;br/&gt;events, QA_RECORD&quot;]
+  CLI --&gt; Vault[&quot;MemoryVault&lt;br/&gt;authorize(actor, namespace)&quot;]
+  Hub --&gt;|&quot;QA PASS stores outcome&quot;| Vault
+  Vault --&gt; DB[(&quot;SQLite&lt;br/&gt;memory_records,&lt;br/&gt;memory_history&quot;)]
+  Fresh[&quot;FreshnessAuditor&lt;br/&gt;verify, scan, supersede&quot;] --&gt;|&quot;reads QA task&quot;| Hub
+  Fresh --&gt; DB
+  Vault --&gt; Sync[&quot;sync queue&lt;br/&gt;per provider&quot;]
+  Sync --&gt; MD[&quot;Markdown files&lt;br/&gt;one per record&quot;]
+  MD -.-&gt;|&quot;external edit = CONFLICT&quot;| Sync</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>MemoryVault.put</code> (<code>memory.py:80-139</code>):
+authorise the write, validate the confidence label
+(<code>VERIFIED</code> needs at least one source classified
+<code>VERIFIED</code>), redact, and hash the canonical body. Then,
+inside <code>BEGIN IMMEDIATE</code>, read the prior row; refuse a
+namespace change, an edit to a superseded record and a stale
+<code>expected_revision</code>; return unchanged on an identical hash;
+and update with the observed revision and hash in the <code>WHERE</code>
+clause.</li>
+<li><code>MemoryVault.search</code> (<code>:178-198</code>) and
+<code>get</code> (<code>:67-78</code>).</li>
+<li><code>Hub.review</code> (<code>core.py:359-402</code>): only
+<code>qa-auditor</code>, never the task owner or a listed author, can
+record a verdict; a PASS completes the task and stores its outcome in
+the department's namespace as <code>approved-task-outcome</code> with
+confidence <code>QA_APPROVED_OPERATOR</code>. The event it writes
+carries <code>'identity_authenticated': False</code>.</li>
+<li><code>Hub.recall</code> (<code>core.py:239-248</code>): the task
+owner, master, management or QA searches the vault and logs a
+<code>MEMORY_RETRIEVAL</code> event; preflight refuses to proceed
+without one.</li>
+<li><code>FreshnessAuditor</code> (<code>freshness.py:44-132</code>) and
+<code>approved_task</code> (<code>:33-41</code>).</li>
+<li><code>MemoryVault.sync</code>, <code>retry</code> and
+<code>resolve_conflict</code> (<code>memory.py:249-324</code>) with
+<code>MarkdownVaultProvider</code>
+(<code>providers.py:43-98</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_records</code> (<code>memory.py:35-40</code>, extended
+at <code>intelligence_schema.py:62-66</code>) holds <code>id</code> (a
+UUID the caller may supply), <code>namespace</code>, <code>kind</code>,
+<code>title</code>, <code>payload</code> and <code>sources</code> as
+canonical JSON, <code>task_id</code>, <code>owner</code>,
+<code>confidence</code>, <code>revision</code>,
+<code>content_hash</code>, the created and updated times, and the
+freshness columns <code>category</code>, <code>date_collected</code>,
+<code>last_verified_at</code>, <code>next_review_at</code>,
+<code>expiry_policy</code>, <code>verification_status</code>,
+<code>superseded_by</code> and <code>responsible_department</code>.</p>
+<p>Two status-like columns sit side by side, and only one of them is a
+state. <code>confidence</code> takes <code>UNVERIFIED</code>,
+<code>VERIFIED</code>, <code>ESTIMATE</code>, <code>ASSUMPTION</code> or
+<code>QA_APPROVED_OPERATOR</code> from the caller on every put,
+constrained only by the source rule. <code>verification_status</code> is
+written by the vault and the auditor, never by the caller.</p>
+<p><code>memory_history</code>
+(<code>intelligence_schema.py:25-28</code>) keys a full snapshot on
+<code>(record_id, revision)</code> with actor, reason and time. Beside
+it, <code>freshness_audits</code> keeps each scan's findings,
+<code>freshness_requests</code> the verification task queued per record
+revision, and three sync tables the queue, the last remote hash per
+provider and each explicit conflict resolution with the remote hash the
+operator acknowledged.</p>
+<p>The only times are record time: <code>created_at</code>,
+<code>updated_at</code>, <code>date_collected</code> and the
+verification dates. Nothing records when a claim was true.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search(query, actor, namespace=None, limit=20)</code> selects
+every row ordered by <code>updated_at DESC</code> and walks it in
+Python: skip a superseded row unless asked, skip a row outside the
+requested namespace, skip a row the actor may not read, then keep it if
+any whitespace-separated query word is a substring of the title plus the
+payload JSON, until <code>limit</code> (<code>memory.py:178-198</code>).
+The payload is matched as serialised JSON, so a key name such as
+<code>summary</code> matches every record that has one. There is no
+ranking beyond recency, no index and no embedding.</p>
+<p>Each kept row passes back through <code>get</code>, which
+re-authorises, decodes, and adds
+<code>effective_verification_status</code> —
+<code>REQUIRES_VERIFICATION</code> when a FRESH record's review date has
+passed, whether or not a scan has written it — and the vault's
+<code>source_instance</code> id. <code>recall</code> returns the same
+records and records which of them were stale in the retrieval event; it
+does not drop them.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and immediately retrievable: <code>put</code>
+commits before it returns unless the caller holds an outer transaction,
+in which case a savepoint protects the caller's other work
+(<code>memory.py:141-168</code>). There is no background writer and no
+extraction model. The two producers are an explicit
+<code>memory put</code>, and the QA PASS branch of <code>review</code>,
+which stores the task's summary, artifacts and hashes, limitations,
+lessons and review reference (<code>core.py:390-397</code>).</p>
+<p>An update must carry the revision it read. The <code>UPDATE</code>
+binds the observed revision and content hash and the absence of a
+supersession, and raises <code>ConflictError</code> if any changed in
+between, so two workers cannot interleave an edit. A content change
+resets verification; the test at <code>test_v04.py:176-179</code>
+asserts the status returns to <code>UNVERIFIED</code> and
+<code>last_verified_at</code> to <code>NULL</code>.</p>
+<p>Imports keep stable ids and go through the same <code>put</code>. A
+task id from another vault instance, or one that does not exist locally,
+is moved into <code>import_provenance</code> inside the payload rather
+than kept as a foreign key (<code>memory.py:227-234</code>). An existing
+record imported with different content and no expected revision is a
+conflict, not an overwrite.</p>
+<p>The Markdown sync writes one redacted file per record and remembers
+its hash. A file whose bytes differ from the remembered hash is never
+overwritten: the queue item goes to <code>CONFLICT</code>,
+<code>retry</code> keeps the old remote hash so a retry cannot overwrite
+either, and <code>resolve_conflict</code> requires the operator to pass
+the hash of the bytes they inspected, refusing if the file changed again
+since (<code>memory.py:283-324</code>). Keeping the remote version means
+editing SQLite through <code>put</code>; the docstring says the
+operation <em>"never imports notes as trusted authority."</em></p>
+<p>Nothing deletes. The freshness module's docstring says
+<em>"historical records are never deleted"</em>, <code>scan</code>
+returns <code>'deleted': 0</code>, and
+<code>git grep -n -E 'DELETE|DROP|TRUNCATE' -- agent_hub</code> finds
+only the dashboard mapping the <code>DELETE</code> verb onto its
+refusing POST handler.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Seventy agent definitions under <code>.claude/agents/</code>;
+sixty-nine list <code>Bash</code> among their tools, and the exception
+holds none of Bash, Write or Edit. The hub is reached by shelling out to
+<code>python -m agent_hub</code>, and every memory command takes
+<code>--actor</code> from <code>choices=ROLES</code>
+(<code>__main__.py:34</code>, <code>:47</code>, <code>:66</code>). The
+vault has no MCP surface; the agents' memory interface is the CLI.</p>
+<p>The workflow forces a recall before work starts — preflight refuses a
+task whose owner has no <code>MEMORY_RETRIEVAL</code> event since the
+last handoff (<code>core.py:258-264</code>) — and the result of a PASS
+lands in memory without a separate step, so the loop is <em>recall,
+work, independent review, remember</em>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The verification gate binds to bytes, not to a
+record.</strong> <code>verify</code> and <code>supersede</code> compare
+the content hash QA recorded with the record's current hash.
+<code>_metadata</code> writes the new status with the observed revision
+and hash in the <code>WHERE</code> clause and increments the revision
+itself, so a review of revision 3 cannot mark revision 4 fresh and a
+concurrent edit makes the auditor's write fail
+(<code>freshness.py:48-62</code>). The test suite carries the cases that
+matter: a wrong hash is refused, an old source check yields
+<code>REQUIRES_VERIFICATION</code>, and an edit after verification
+resets the status (<code>test_v04.py:166-179</code>).</p>
+<p><strong>The identities are names, and the agents can type
+them.</strong> <code>review</code> refuses any reviewer but
+<code>qa-auditor</code>, the task owner and any listed author, which
+stops a worker approving under its own name. But the reviewer is an
+argument, and a worker with Bash can pass
+<code>--reviewer qa-auditor</code>; the same holds for
+<code>memory put --actor master-agent</code>, which writes to any
+namespace. The project records the limit in data rather than leaving it
+implied — every QA record carries
+<code>'identity_authenticated': False</code> — and in the README's
+<em>"not authenticated user isolation"</em>. It is why
+<code>human_review</code> is withheld: QA is an agent role by design,
+and the actor that would clear a record's review is a string the
+producing agent can supply. The namespace mark stands, because the
+filter runs on every read path; what it protects against is a mistaken
+role, not a hostile one.</p>
+<p><strong>Supersession is per record, so a superseded claim can come
+back as a new one.</strong> <code>supersede</code> makes the old row
+immutable and hidden, but <code>put</code> with a fresh UUID and the
+same title and payload is accepted as a new <code>UNVERIFIED</code>
+record and returned by default search. Nothing compares a new write with
+superseded content, which is why <code>tombstone</code> is withheld. The
+one mechanism that could notice is the scan's conflict grouping by
+namespace and case-folded title, and it skips superseded rows before
+grouping (<code>freshness.py:69</code>, <code>:78-84</code>), so the
+re-assertion is grouped with nothing. An unverified record is still
+labelled unverified, and a team that only acts on FRESH would not act on
+it; nothing in the read path enforces that.</p>
+<p><strong>Unverified knowledge is labelled, not withheld.</strong>
+Recall returns <code>UNVERIFIED</code> and
+<code>REQUIRES_VERIFICATION</code> records beside FRESH ones and leaves
+the decision to the agent's instructions. Only supersession filters.</p>
+<p><strong>Redaction runs before hashing.</strong> <code>redact</code>
+drops keys named for hidden reasoning, replaces values under
+credential-named keys, and rewrites GitHub, Anthropic and bearer tokens,
+key-value secrets, URL tokens and PEM private keys in strings
+(<code>security.py:6-26</code>), so the stored body, its hash, every
+export and every Markdown file are the redacted text. It is
+pattern-based and misses anything outside those shapes.</p>
+<p><strong>Search scales with the table.</strong> Every search, scan and
+monitoring pass reads every row, and search re-reads each hit through
+<code>get</code>. At the size a supervised team produces this is
+immaterial; it is the first thing to replace past a few thousand
+records.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tests/</code> holds 255 <code>unittest</code> methods in nine
+files, named by release (<code>test_hub.py</code>,
+<code>test_v03.py</code> through <code>test_v06_*.py</code>), with
+fixtures that simulate model responses. The memory cases are
+concentrated in <code>test_v03.py</code> (persistence across restart,
+namespace ACLs, redaction, import provenance, sync conflicts) and
+<code>test_v04.py</code> (verification against hashes and source dates,
+supersession, TTL bounds). I did not run the suite; the screen found
+four dependency manifests changed inside the seven-day cooldown, and the
+hub itself is standard library only, which makes the suite the first
+thing to run on a later reading.</p>
+<p>The negative cases and their limits are in the
+<code>negative_eval</code> evidence above. The supersession case asserts
+a count, so it would also pass against a filter that returned the
+superseded record instead of its replacement; a one-line repair would
+assert the returned id. No case writes a superseded claim again under a
+new id, which is the path section 9 describes.</p>
+<p>No paper:
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- . ':!vendor'</code>
+finds two skill-reference files and a CHANGELOG line, none a citation of
+this project. The README's acceptance claims are its own; the documents
+it links (<code>docs/V06-ACCEPTANCE.md</code>) were not checked against
+a run.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the status a column the writer cannot set.</strong>
+Resetting it inside <code>put</code> closes every write path at once —
+CLI, import, Markdown, the QA hook — instead of validating each.</li>
+<li><strong>Bind a review to the content hash it reviewed.</strong> Then
+a verification cannot outlive an edit, and a stale review fails at write
+time instead of silently vouching for newer text.</li>
+<li><strong>Date verification by the oldest source, not the
+review.</strong> Citing an old check in a new task should not reset the
+clock.</li>
+<li><strong>Treat an external projection as a conflict surface, not an
+input.</strong> The Markdown sync refuses to overwrite an edited file
+and refuses to import one as authority; the operator acknowledges the
+exact bytes they inspected.</li>
+<li><strong>Record the gate's own weakness in the data.</strong>
+<code>identity_authenticated: False</code> on every QA record means no
+later reader can mistake the gate for more than it is.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li>Role names as principals for agents that hold a shell. If the review
+must be independent of the producer, the reviewer's identity has to come
+from something the producer cannot pass.</li>
+<li>Supersession as the only correction for a claim. Without a
+value-keyed record of what was replaced, the same claim returns under a
+new id.</li>
+<li>Substring matching over serialised JSON: key names match every
+record.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a single operator running a supervised agent team on one
+machine, who wants every piece of retained knowledge to carry its
+sources, its review and an expiry, and is willing to run the review. It
+is not a multi-user store, the retrieval is not one to scale, and the
+trust gate assumes the agents behave. Read it for the freshness and
+verification design, which is small, complete and unusually well tested;
+do not adopt it as a security boundary.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any committed workflow run <code>freshness scan</code> on a
+schedule, or is the review clock read only when someone calls it?
+Maintenance starts disabled.</li>
+<li>Would the QA gate survive an agent invoking the CLI as another role,
+under the Claude Code permission settings an operator would actually
+use? The tree carries no <code>.claude/settings.json</code>.</li>
+<li>How do the four vendored stores relate to the vault in a running
+install — migrated once, or left beside it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Vault, namespaces, sync: <code>agent_hub/memory.py</code>.</li>
+<li>Freshness, verification, supersession, research cache:
+<code>agent_hub/freshness.py</code>.</li>
+<li>Schema additions (<code>memory_history</code>, freshness columns):
+<code>agent_hub/intelligence_schema.py</code>,
+<code>agent_hub/migrations.py</code>.</li>
+<li>Task workflow, recall, QA review, outcome storage:
+<code>agent_hub/core.py</code>.</li>
+<li>Roles and namespaces: <code>agent_hub/roles.py</code>,
+<code>agent_hub/departments.py</code>.</li>
+<li>Redaction and canonical JSON:
+<code>agent_hub/security.py</code>.</li>
+<li>Providers (SQLite, Markdown, Notion stub):
+<code>agent_hub/providers.py</code>.</li>
+<li>CLI: <code>agent_hub/__main__.py</code>.</li>
+<li>Tests: <code>tests/test_v03.py</code>,
+<code>tests/test_v04.py</code>, <code>tests/test_v05.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run at the pin with <code>/usr/bin/git grep</code>:</p>
+<ul>
+<li><code>-n -E 'UPDATE memory_records|INSERT (OR [A-Z]+ )?INTO memory_records|memory_history' -- agent_hub scripts dashboard</code>
+— the writers: <code>memory.py:118</code>, <code>:129</code>,
+<code>:134</code>, <code>:171</code>, <code>freshness.py:54</code>,
+<code>migrations.py:94-95</code>.</li>
+<li><code>-n -E 'DELETE|DROP|TRUNCATE' -- agent_hub</code> — one hit,
+the dashboard's verb mapping.</li>
+<li><code>-n -E 'memory\.search|\.recall\(' -- tests</code> — the eleven
+search and recall calls in the suite; none searches as a foreign role
+with a matching query.</li>
+<li><code>-l -E '^tools:.*Bash' .claude/agents/*.md</code> — sixty-nine
+of seventy.</li>
+<li><code>-n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- . ':!vendor'</code>
+— no citation of this project.</li>
+<li><code>ls .claude</code> — <code>agents</code> and
+<code>skills</code>; no <code>settings.json</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-02</strong> — <a
+href="https://github.com/9fpqm4vqvq-ops/agent-creator-master/commit/e1e94d17ed29c6de3514021098c742f9ea4c01c9"><code class="commit-id" title="e1e94d17ed29c6de3514021098c742f9ea4c01c9">e1e94d17…</code></a>,
+v0.6.0. First reading. Four marks: <code>trust_state</code> on the
+auditor-only verification status, <code>scope_enforced</code> on the
+per-row namespace check, <code>audit_log</code> on
+<code>memory_history</code>, and <code>negative_eval</code> on the
+supersession and namespace cases. <code>human_review</code> is withheld
+because the reviewer is a role name an agent with Bash can pass, and
+<code>tombstone</code> because supersession is per record. Screened
+before reading from a full clone: no auto-run or build-time surface, two
+agent-instruction files read as data, four dependency manifests inside
+the seven-day cooldown and one unpinned surface; nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

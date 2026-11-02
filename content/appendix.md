@@ -463,6 +463,7 @@ page_kind: comparison
 - [`dsh-superagent`](../systems/dsh-superagent/)
 - [`openmem`](../systems/openmem/)
 - [`textfold`](../systems/textfold/)
+- [`master-agent-system`](../systems/master-agent-system/)
 
 ## Repos Inspected
 
@@ -1230,12 +1231,13 @@ page_kind: comparison
 - [deepseek-ai/dsh-superagent-prototype](https://github.com/deepseek-ai/dsh-superagent-prototype) at [`6337fc823ce20251c8de8085948165c81aaa701e`](https://github.com/deepseek-ai/dsh-superagent-prototype/commit/6337fc823ce20251c8de8085948165c81aaa701e) — read only, at the head of `main`, the repository's only commit, 31 October 2026, from a shallow clone (`--depth 1`); history from the GitHub API. MIT, LICENSE read in full, no rider; no `.gitmodules`. Screened before reading: no auto-run surface, no build-time execution point, no unpinned surface; `package.json` and `pnpm-lock.yaml` inside the cooldown, exact rather than inflated since the history is one commit. The Store, prompt and settings versions, resource reads, both tool registries, the settings guards and their tests were read; the article the README names, published on DeepSeek's WeChat account, was not, and there is no paper in the tree. Nothing was installed, built or run
 - [bcmyguest/openmem](https://github.com/bcmyguest/openmem) at [`af42d8cabfdf9911c85b0ff6554b0bec760e8cb6`](https://github.com/bcmyguest/openmem/commit/af42d8cabfdf9911c85b0ff6554b0bec760e8cb6) — read only, at the head of `main`, 31 October 2026, from a shallow clone; history from a treeless bare clone. Apache-2.0, LICENSE read in full, no rider; no `.gitmodules`. Screened before reading: one auto-run surface, `server.json`, an MCP registry manifest; two `conftest.py` files; three manifests with floating ranges behind lockfiles; five dependency surfaces inside the cooldown by history, a sixth inflated by the shallow clone. The facade, hooks, policy readers, wizard seed, indexer, proxy core, both session-store writers, the MCP search and SQL tools were read, and the two README ContextBench headlines were recomputed from the committed per-cell means; the Hindsight, mem0 and Cognee engines were not read, and nothing was installed, built or run
 - [chenxiachan/textfold](https://github.com/chenxiachan/textfold) at [`5fc941dc4560ee2809c0f278da28457292c7f739`](https://github.com/chenxiachan/textfold/commit/5fc941dc4560ee2809c0f278da28457292c7f739) — read only, at the head of `main`, 31 October 2026, from a shallow clone; history from a treeless bare clone. Formerly PaperFold; the old GitHub name redirects here. Apache-2.0, LICENSE and NOTICE read in full, no rider; no `.gitmodules`. Screened before reading: one auto-run surface, `.claude-plugin/marketplace.json`; no build-time execution; five unpinned surfaces; five dependency surfaces inside the cooldown by history, four more inflated by the shallow clone. The levels, storage backend, notes and re-anchoring, reply cache, WebMCP tools, the `get` and `adapt` commands and both plugins were read; nothing was installed, built or run
+- [9fpqm4vqvq-ops/agent-creator-master](https://github.com/9fpqm4vqvq-ops/agent-creator-master) at [`e1e94d17ed29c6de3514021098c742f9ea4c01c9`](https://github.com/9fpqm4vqvq-ops/agent-creator-master/commit/e1e94d17ed29c6de3514021098c742f9ea4c01c9) — read only; no auto-run or build-time surface, two agent-instruction files read as data, four dependency manifests inside the seven-day cooldown and one unpinned surface, so nothing was installed, built or run. The vault, freshness auditor and QA review were read from `agent_hub/memory.py`, `agent_hub/freshness.py` and `agent_hub/core.py` against `tests/test_v03.py` and `tests/test_v04.py`; the four packages under `vendor/` were noted and not read as the subject
 
 ## What the licences actually say
 
 A licence is an operational caveat, not a memory mechanism, so it lives in the
 appendix — but a reader deciding whether they can *use* something needs it.
-"Publicly readable source" is not "open source": **eighteen carry a licence
+"Publicly readable source" is not "open source": **nineteen carry a licence
 that is not open source**, each named in its own report and collected here.
 
 | Licence | Systems |
@@ -1245,14 +1247,14 @@ that is not open source**, each named in its own report and collected here.
 | Non-commercial — read and run, do not build a product on it | [Memento](../systems/memento/) (PolyForm Noncommercial 1.0.0), [Project Golem](../systems/project-golem/) (its own source-available non-commercial licence), [NouGenShards](../systems/nougenshards/) (its own source-available licence; inspection and personal use granted, commercial use, competing hosted services and use to build competing AI memory or retrieval products prohibited) |
 | Conditional MIT — three added conditions, revocable at the author's discretion | [Z-Waif](../systems/z-waif/) (a 2% royalty on gross income above $100,000 lifetime; an "ethical treatment" clause *"DEFINED AT SugarcaneDefender's SOLE DESCRECION"*; and — the one that constrains the memory itself — no collection or storage of "user logs, character configurations, or other user data" without consent obtained through terms the user "MUST ACCEPT UPON OPENING" the software) |
 | Conditional BSD — branding may not be altered above fifty users | [Open WebUI](../systems/open-webui/) (the "Open WebUI License": BSD-3 plus a fourth clause making removal of the branding "a material breach" in any deployment reaching fifty end users in a rolling thirty days, absent a written permission or an enterprise licence) |
-| All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (whose README asserts MIT with no licence file under it) and [SESA](../systems/sesa/) (no licence file, which defaults to this) |
+| All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (whose README asserts MIT with no licence file under it), [SESA](../systems/sesa/) (no licence file, which defaults to this) and [Master Agent System](../systems/master-agent-system/) (no licence file at the root, beside vendored packages that carry their own) |
 
 Two things this table is not. It is **not a complete licence taxonomy of the
 corpus**: it collects what the reports happened to record, and a report is
 written about mechanisms, so a permissive licence usually goes unmentioned. The
-rest have not each been checked — the honest claim is that eighteen are known
+rest have not each been checked — the honest claim is that nineteen are known
 non-open-source and the others are unrecorded, not that the others are MIT. And
-it is **not a reason to skip those eighteen**: every mechanism in this atlas is
+it is **not a reason to skip those nineteen**: every mechanism in this atlas is
 described so it can be re-implemented rather than copied, which is the only way a
 restrictively licensed system can be read usefully. What changes is what you may
 do with the code afterwards, and that is worth knowing before you open the file

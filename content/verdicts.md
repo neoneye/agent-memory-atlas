@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 762 reports.**
+**This page covers all 763 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6960,3 +6960,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 443 commits under 22 author names, 5 – 31 October 2026; 14,901 lines of Python in `textfold/`, 636 of them `notes.py`; 502 Python test functions outside CI, not run. No marks.
 - Study when: an agent or a person files notes against documents that change, or model-written summaries must stay checkable against the words they came from.
 - Do not copy when: you need the history of a corrected note, retrieval across many documents, or memory an agent builds up from its own sessions.
+
+### [`master-agent-system`](../systems/master-agent-system/)
+
+- Best idea: **a status the writer cannot set, moved against the exact bytes reviewed.** Every `put` writes `verification_status='UNVERIFIED'` itself, so the CLI, an import and a Markdown note all arrive unverified; `FRESH` is written only by the freshness auditor, against a completed QA task that names the record and its current content hash, inside an update that binds the revision it read. An edit after verification resets the status, and verification is dated by the oldest cited source, so a new task citing an old check cannot make it fresh today.
+- Second idea: **an external projection is a conflict surface, not an input.** The Markdown sync never overwrites a file that changed, a retry keeps the old remote hash, and resolving a conflict requires the hash of the bytes the operator inspected.
+- Biggest risk: **every identity is a role name on the command line, and sixty-nine of seventy agents hold Bash.** `review` refuses the task owner and its authors, but the reviewer is `--reviewer qa-auditor`, and `memory put --actor master-agent` writes to any namespace. The project records the limit as `identity_authenticated: False` on every QA record; the gate holds against a slip, not against an agent.
+- Second risk: supersession is per record. The same claim written under a new UUID is accepted as a new unverified record, and the scan's same-title conflict check skips superseded rows before grouping, so it cannot see the return.
+- Most reusable component: `agent_hub/freshness.py` `FreshnessAuditor.verify` and `_metadata` with `agent_hub/memory.py` `put` — a verification status outside the writer's reach, bound to a content hash and a revision.
+- Maturity impression: no licence file; 8,406 lines of Python outside `vendor/`, 6 commits over two days by one account, 255 unittest methods with simulated model responses, not run here. Four marks. The README says live model execution did not succeed in its build environment.
+- Study when: an agent team keeps knowledge that goes stale on a known clock — prices, versions, permissions — and every retained fact must carry its sources and a review.
+- Do not copy when: you need the review to be independent of the agent that produced the record, or retrieval beyond a substring scan.
