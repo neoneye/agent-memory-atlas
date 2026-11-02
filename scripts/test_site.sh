@@ -96,6 +96,15 @@ if ! python3 "$project_dir/scripts/check_verdict_anchors.py" "$project_dir"; the
   exit 1
 fi
 
+# screen_repo.py looked for plugin hooks at the checkout root only, so a plugin
+# shipped in a subdirectory behind a marketplace entry screened as one auto-run
+# surface while its own hooks.json registered two (Understand-Anything,
+# 2026-11-02). The controls build each plugin layout in a temporary directory.
+if ! python3 "$project_dir/scripts/screen_repo.py" --self-test; then
+  echo "screen_repo.py cannot demonstrate that it finds plugin hooks below the root." >&2
+  exit 1
+fi
+
 # On 25 September 2026 the rest of the comparative report left /compare/ for
 # /overview/, /families/ and /appendix/, and assets/main.js maps every id that
 # moved. The map is only right while each target still exists.

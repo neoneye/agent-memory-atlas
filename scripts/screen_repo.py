@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -228,6 +229,133 @@ def scan_autorun(root: Path, out: list) -> int:
             detail += f"; launches a package fetched at run time ({', '.join(launchers)})"
         out.append(("RUNS", rel(root, target), detail))
     return scanned
+
+
+# A marketplace entry names the plugin's own root, and that root registers the
+# hooks. Understand-Anything was screened as one auto-run surface, the
+# marketplace manifest at `.claude-plugin/`, while
+# `understand-anything-plugin/hooks/hooks.json` registered SessionStart and
+# PostToolUse hooks that tell the agent not to ask the user (2026-11-02). The
+# fixed paths above only look at the checkout root.
+PLUGIN_SKIP_DIRS = {".git", "node_modules", "vendor", "third_party", "dist", "build", ".venv", "venv"}
+PLUGIN_WALK_DEPTH = 4
+
+
+def plugin_roots(root: Path) -> list[Path]:
+    """Every local plugin root: each relative `source` in the marketplace
+    manifest, plus every directory below the checkout holding its own
+    `.claude-plugin/plugin.json`. Remote sources (GitHub, git URLs) are not in
+    the tree and are skipped."""
+    root = root.resolve()
+    found: dict[str, Path] = {}
+    market = load_json(root / ".claude-plugin" / "marketplace.json")
+    for entry in (market or {}).get("plugins", []) if isinstance(market, dict) else []:
+        source = entry.get("source") if isinstance(entry, dict) else None
+        if isinstance(source, dict):
+            source = source.get("path") if source.get("source") in (None, "local", "path") else None
+        if not isinstance(source, str) or "://" in source or source.startswith("git@"):
+            continue
+        candidate = (root / source).resolve()
+        if candidate.is_dir() and (candidate == root or root in candidate.parents):
+            found[str(candidate)] = candidate
+    for dirpath, dirnames, _ in os.walk(root):
+        here = Path(dirpath)
+        depth = len(here.relative_to(root).parts)
+        dirnames[:] = [d for d in dirnames if d not in PLUGIN_SKIP_DIRS and depth < PLUGIN_WALK_DEPTH]
+        if (here / ".claude-plugin" / "plugin.json").is_file():
+            found[str(here)] = here
+    return sorted(found.values())
+
+
+def scan_plugin_roots(root: Path, out: list) -> int:
+    root = root.resolve()
+    scanned = 0
+    seen = {path for _, path, _ in out}
+    def report(target: Path, why: str) -> None:
+        nonlocal scanned
+        key = rel(root, target) + ("/" if target.is_dir() else "")
+        if key in seen:
+            return
+        seen.add(key)
+        scanned += 1
+        if target.is_dir():
+            members = sorted(x.name for x in target.iterdir())[:20]
+            out.append(("RUNS", key, f"{why} — {len(members)} entr(ies): {', '.join(members)}"))
+            return
+        text = read(target)
+        hits = sorted({t for t in AUTORUN_TRIGGERS if t in text})
+        detail = why + (f" — mentions {', '.join(hits)}" if hits else "")
+        launchers = sorted(set(PACKAGE_LAUNCHER.findall(text)))
+        if launchers:
+            detail += f"; launches a package fetched at run time ({', '.join(launchers)})"
+        out.append(("RUNS", key, detail))
+    for plugin in plugin_roots(root):
+        manifest_path = plugin / ".claude-plugin" / "plugin.json"
+        manifest = load_json(manifest_path) if manifest_path.is_file() else None
+        if plugin != root and manifest_path.is_file():
+            report(manifest_path, "plugin manifest below the checkout root; a harness installs from it")
+        hooks_field = manifest.get("hooks") if isinstance(manifest, dict) else None
+        if isinstance(hooks_field, str):
+            target = (plugin / hooks_field).resolve()
+            if target.is_file() and root in target.parents:
+                report(target, "hook registrations named by the plugin manifest's `hooks` field")
+        elif isinstance(hooks_field, (dict, list)) and hooks_field:
+            report(manifest_path, "plugin manifest registers hooks inline")
+        if isinstance(manifest, dict) and manifest.get("mcpServers"):
+            report(manifest_path, "plugin manifest starts MCP servers")
+        for spec, why in (("hooks/hooks.json", "plugin hook registrations (SessionStart / PostToolUse / Stop)"),
+                          ("hooks/", "hook scripts the plugin can register"),
+                          (".mcp.json", "MCP servers the plugin starts")):
+            target = plugin / spec.rstrip("/")
+            if target.exists() and plugin != root:
+                report(target, why)
+    return scanned
+
+
+def plugin_self_test() -> int:
+    import tempfile
+    hooks = '{"hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "node x.mjs"}]}]}}'
+    def build(files: dict) -> list:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp).resolve()
+            for name, body in files.items():
+                path = base / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(body)
+            out: list = []
+            scan_autorun(base, out)
+            scan_plugin_roots(base, out)
+            return sorted(p for kind, p, _ in out if kind == "RUNS")
+    cases = [
+        ("a marketplace source's hooks are found",
+         {".claude-plugin/marketplace.json": '{"plugins": [{"name": "p", "source": "./plug"}]}',
+          "plug/hooks/hooks.json": hooks},
+         [".claude-plugin/", "plug/hooks/", "plug/hooks/hooks.json"]),
+        ("a nested plugin without a marketplace is found",
+         {"pkgs/x/.claude-plugin/plugin.json": '{"name": "x"}', "pkgs/x/hooks/hooks.json": hooks},
+         ["pkgs/x/.claude-plugin/plugin.json", "pkgs/x/hooks/", "pkgs/x/hooks/hooks.json"]),
+        ("a manifest's hooks field is followed",
+         {".claude-plugin/plugin.json": '{"name": "r", "hooks": "./cfg/h.json"}', "cfg/h.json": hooks},
+         [".claude-plugin/", "cfg/h.json"]),
+        ("a remote marketplace source adds nothing",
+         {".claude-plugin/marketplace.json":
+          '{"plugins": [{"name": "p", "source": {"source": "github", "repo": "a/b"}}]}'},
+         [".claude-plugin/"]),
+        ("a plugin under node_modules is ignored",
+         {"node_modules/y/.claude-plugin/plugin.json": '{"name": "y"}',
+          "node_modules/y/hooks/hooks.json": hooks},
+         []),
+        ("root hooks are reported once",
+         {".claude-plugin/plugin.json": '{"name": "r"}', "hooks/hooks.json": hooks},
+         [".claude-plugin/", "hooks/", "hooks/hooks.json"]),
+    ]
+    for name, files, expected in cases:
+        got = build(files)
+        if got != sorted(expected):
+            print(f"self-test failed: {name}: got {got}, expected {sorted(expected)}", file=sys.stderr)
+            return 1
+    print(f"self-test: {len(cases)} controls passed")
+    return 0
 
 
 def scan_agent_text(root: Path, out: list) -> int:
@@ -499,6 +627,8 @@ SEVERITY = {"RUNS": 0, "FRESH": 1, "EXEC": 2, "FLOAT": 3, "AGENT": 4, "NOTE": 5}
 
 
 def main() -> int:
+    if "--self-test" in sys.argv[1:]:
+        return plugin_self_test()
     ap = argparse.ArgumentParser()
     ap.add_argument("checkout")
     ap.add_argument("--json", action="store_true")
@@ -512,6 +642,7 @@ def main() -> int:
     findings: list = []
     scanned = 0
     scanned += scan_autorun(root, findings)
+    scanned += scan_plugin_roots(root, findings)
     scanned += scan_agent_text(root, findings)
     scanned += scan_npm(root, findings)
     scanned += scan_python(root, findings)
