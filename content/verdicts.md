@@ -156,9 +156,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`verel`](../systems/verel/)
 - Best idea: explicit trust, confidence, retrieval strength, rejected tombstones, and defensive recall.
-- Biggest risk: complexity.
+- Biggest risk: complexity, and a belief audit that is the weaker of two logs in its own tree — the memory audit is an unkeyed hash chain blind to tail truncation, while the pilot, policy and authorization logs share a keyed chain with a head ledger that catches it.
 - Most reusable component: `MemoryRecord`, `LocalMemory.write()`, and `recall_budgeted()`.
-- Maturity impression: research-grade correctness focus with strong targeted tests.
+- Maturity impression: research-grade correctness focus; 1,633 test functions in 126 files, among them a negative-eval suite, a valid-time suite and a backend contract, with every red-team round's fix landed beside its test.
 - Study when: wrong memory is costly.
 - Do not copy wholesale when: you need a fast MVP.
 

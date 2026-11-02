@@ -1,23 +1,27 @@
 ---
 title: Verel
 eyebrow: Verification-first memory
-description: A correctness-focused memory framework with explicit trust states, rejected tombstones, confidence, and defensive recall.
+description: A verification-first agent framework whose memory keeps trust apart from confidence, makes rejection a durable tombstone, and keeps human review off the agent's tools.
 root: ../..
 page_kind: system
 source_name: amitpatole/verel
 source_url: https://github.com/amitpatole/verel
 archive_name: "amitpatole--verel"
-revision: a8cbba27a3fa61baeffa808c5929a273d176c942
-revision_url: https://github.com/amitpatole/verel/commit/a8cbba27a3fa61baeffa808c5929a273d176c942
-analyzed_at: 2026-09-19
+revision: aaf163efd57aede347fc47b35ffae3eed7d570aa
+revision_url: https://github.com/amitpatole/verel/commit/aaf163efd57aede347fc47b35ffae3eed7d570aa
+analyzed_at: 2026-11-02
+licence: "MIT"
+size: "31,236 lines of Python in 163 files under src/verel/, 6,749 of them in the 26-file memory package; version 1.18.0rc1"
+activity: "373 commits on main, all by one author under two spellings, 18 June – 23 October 2026"
+tests: "1,633 test functions in 126 files under tests/, among them a negative-eval suite and a backend contract in `tests/memory_contract.py`; none run for this reading"
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "REJECTED as a durable, prune-exempt state that every write path routes through | src/verel/memory/local.py:346, src/verel/memory/pg_backend.py:535, src/verel/memory/review.py:14,:61,:77, src/verel/memory/remember.py:96-115 | rejection is keyed on the record and survives every path that would otherwise revive it: `local.py` refuses to let a demote *\\\"un-reject a tombstone back to a recallable candidate\\\"*, `pg_backend.py` keeps `REJECTED` prune-exempt in `rejected_values` alongside verified rows, and corroboration cannot re-promote a rejected fact. The guard reuses it rather than building a parallel deny-list: a fact whose canonical value carries a taint key from the source scan is written and immediately floored with `contradict(rec.id, delta=1.0)` *\\\"so the backend own contradict path seeds the durable rejected-value tombstone — a later restate can not launder it in.\\\"* `review.py` tells a human the same thing from the other side: a value that is genuinely correct now must be *\\\"written as a new fact\\\"* rather than un-rejected | tests/test_guard_memory.py"
   trust_state: "Trust, a three-value enum held apart from the confidence float | src/verel/memory/view.py:65-68,:79-101 | `class Trust(str, Enum)` is `CANDIDATE` (*\\\"written, not yet promoted\\\"*), `VERIFIED` (*\\\"passed the held-out, attested eval gate\\\"*) and `REJECTED` (*\\\"contradicted / failed promotion\\\"*), stored on the record beside a separate `epistemic_confidence`, so the status is a field rather than a threshold on a score. `REJECTED` withholds: recall filters it out and the tombstone evidence above keeps it out. Promotion to `VERIFIED` requires an attested gate rather than accumulation — corroboration raises confidence and never grants the tier, because *\\\"raw source strings are self-asserted, so without an authenticator corroboration NEVER promotes\\\"* | tests/test_lattice.py:75"
-  bitemporal: "valid_from and valid_to on the record, with an as-of read | src/verel/memory/view.py:97-101,:264,:377, src/verel/memory/__init__.py:41,:76 | the record carries a validity interval separate from `created_ts` and `last_recall_ts`, with the open case written down — *\\\"`valid_to == 0.0` is an OPEN interval (still valid)\\\"*. Superseding a value stamps the prior interval closed and the correction chain preserves it, so an earlier belief keeps its own window rather than being overwritten. `_interval_contains(valid_from, valid_to, t)` is the predicate, and `recall_as_of` and `value_as_of` are exported from the package, so *what did this store hold on that date* is answerable rather than implied | not directly asserted in a committed case at this pin"
+  bitemporal: "valid_from and valid_to on the record, with an as-of read | src/verel/memory/view.py:97-101,:264,:377, src/verel/memory/__init__.py:41,:76 | the record carries a validity interval separate from `created_ts` and `last_recall_ts`, with the open case written down — *\\\"`valid_to == 0.0` is an OPEN interval (still valid)\\\"*. Superseding a value stamps the prior interval closed and the correction chain preserves it, so an earlier belief keeps its own window rather than being overwritten. `_interval_contains(valid_from, valid_to, t)` is the predicate, and `recall_as_of` and `value_as_of` are exported from the package, so *what did this store hold on that date* is answerable rather than implied | tests/test_memory_bitemporal.py:19-26 asserts valid-time apart from `created_ts`, :29-34 reconstructs a superseded value from the correction chain, :37-43 asserts the boundaries are half-open"
   scope_enforced: "scope applied in the SQL and again on the candidate set | src/verel/memory/local.py:251,:283,:409 | the default FTS5 lexical path does *\\\"SQL-side scope/kind/rejected filtering\\\"* rather than filtering after ranking, and the candidate list is narrowed again with `c.scope == scope or c.scope == \\\"global\\\"` so a global row is visible everywhere and a scoped row is not. A third filter runs on the record path at :409 | tests/test_lance_contract.py:92 asserts a query under a hostile scope returns nothing, commented *\\\"matches nothing; no leak\\\"*"
   audit_log: "MemoryAudit, hash-chained and wrapped around any backend at the Protocol seam | src/verel/memory/audit.py:1-18 | *\\\"a hash-chained, append-only log of every trust-layer mutation\\\"* recording `{seq, ts, actor, action, record_id, before, after}`, each entry committing to its predecessor by SHA-256. `AuditedMemory` wraps *\\\"ANY MemoryView backend (local/postgres/lancedb/redis/mem0/remote)\\\"* at the Protocol seam, so coverage is a property of the wrapper rather than of each backend remembering to log. The module states its own limit rather than leaving it implied: it is *\\\"NOT a signed log\\\"* and is *\\\"defense-in-depth, not a trust boundary\\\"*, since the process that writes the log can also write the store | tests/test_memory_audit.py"
-  human_review: "review.py — a pending queue with an approve and a reject, kept off the agent surface on purpose | src/verel/memory/review.py:1-20, :37, :49, :75, src/verel/mcp_server.py | `pending(mem, scope=, kind=)` lists what is awaiting judgement, `approve(mem, record_id, reviewed_by=)` promotes it and `reject(mem, record_id, reviewed_by=, ...)` refuses it, with the reviewer identity a required keyword on both verdicts rather than an optional annotation. The module docstring states the producer test as a design rule and the surface honours it: *\"CLI-only by design. Review is exposed via `verel memory ...` (a human at a terminal), NOT over MCP — an agent must never be able to approve its own candidate facts,\"* and the twelve `verel_*` tools the MCP server registers carry `remember`, `recall` and `remember_conversation` with no review verb among them. Two properties beside it: approve refuses a REJECTED record, *\"the rejected-value ledger exists precisely so a once-rejected value can't come back,\"* and reject drives the backend's own contradict transition so a human verdict and a machine contradiction leave the same durable trace. Everything shown to the operator passes `view.canonical_text`, so a stored fact cannot smuggle control sequences into the terminal and spoof what is being approved | the review suite"
+  human_review: "review.py — a pending queue with an approve and a reject, kept off the agent surface on purpose | src/verel/memory/review.py:1-20, :37, :49, :75, src/verel/mcp_server.py | `pending(mem, scope=, kind=)` lists what is awaiting judgement, `approve(mem, record_id, reviewed_by=)` promotes it and `reject(mem, record_id, reviewed_by=, ...)` refuses it, with the reviewer identity a required keyword on both verdicts rather than an optional annotation. The module docstring states the producer test as a design rule and the surface honours it: *\"CLI-only by design. Review is exposed via `verel memory ...` (a human at a terminal), NOT over MCP — an agent must never be able to approve its own candidate facts,\"* and the fourteen `verel_*` tools the MCP server registers carry `remember`, `recall` and `remember_conversation` with no review verb among them. Two properties beside it: approve refuses a REJECTED record, *\"the rejected-value ledger exists precisely so a once-rejected value can't come back,\"* and reject drives the backend's own contradict transition so a human verdict and a machine contradiction leave the same durable trace. Everything shown to the operator passes `view.canonical_text`, so a stored fact cannot smuggle control sequences into the terminal and spoof what is being approved | the review suite"
   negative_eval: "committed cases asserting a query returns nothing, across three backends | tests/test_lance_contract.py:92, tests/test_memory_fts.py:59,:69, tests/test_lattice.py:75, tests/test_antientropy.py:51 | `assert mem.recall(\\\"max-width card width\\\", scope=evil) == []` under a hostile scope, commented *\\\"matches nothing; no leak\\\"*. The FTS pair is the stronger shape: after an edit, `recall(\\\"dark\\\", scope=...) == []` because *\\\"old text no longer matches\\\"*, and after a delete `recall(\\\"transient\\\", ...) == []` because it is *\\\"gone from the FTS index too\\\"* — an assertion about the index rather than only about the row. The lattice case asserts a recall is empty for a scope that is *\\\"nothing relevant + not rejected\\\"*, which separates an empty result from a suppressed one | this is the test"
 stack_storage: "sqlite, delegated"
 stack_retrieval: "lexical, vector"
@@ -264,6 +268,15 @@ against. The module's own framing is that an attacker who can write to the log
 already has write access to the store, so this is defence in depth rather than a
 trust boundary.
 
+The codebase closes both of those gaps in a module the memory audit does not use.
+[`verel/_chainlog.py`](https://github.com/amitpatole/verel/blob/aaf163efd57aede347fc47b35ffae3eed7d570aa/src/verel/_chainlog.py#L1-L19)
+is *"one keyed, hash-chained, append-only, file-locked JSONL log"*: every record
+carries an HMAC-SHA256 under a per-installation key, and a keyed head ledger pins
+the latest head and count, so tail truncation and a rebuilt chain are detected.
+It backs the pilot decision log, the label ledger, the policy history and the
+authorization audit log. `memory/audit.py` keeps its own unkeyed chain, so the
+belief log is the weaker of the two logs in the same tree.
+
 ### Review that cannot launder
 
 `memory/review.py` adds the third path into VERIFIED — a human adjudicating
@@ -295,8 +308,7 @@ supersession of a single value.
 
 ### Capability claims as live probes
 
-`memory/rubric.py` is the newest module and the one that needs the most careful
-handling here, because it assesses Verel against *this atlas's* seven
+`memory/rubric.py` is the module that needs the most careful handling here, because it assesses Verel against *this atlas's* seven
 capabilities. **The marks in the strip at the top of this page are the atlas's
 own reading of the code and owe nothing to it.** What follows is a description of
 a mechanism Verel ships, judged the same way any other mechanism would be.
@@ -314,10 +326,21 @@ That is the right shape for a capability claim, and it is worth separating from
 whether the claim is *true*: a system can ship an honest probe and still be wrong
 about itself, and a probe is only as good as the behaviour it exercises.
 
-**Run from an installed wheel it scores 6/7, not the 7/7 the release claims.**
-Verel v1.9.2 is titled "fix verel memory rubric to be install-independent (7/7
-from a wheel)", but `rubric.py` is byte-identical to v1.9.1 and the wheel ships
-no `tests/`. I installed the package at this pin and ran it:
+**From an installed wheel, the negative-eval probe passes on its behavioural half
+alone.** It has two halves: a value contradicted six times must be absent from
+budgeted recall, checked at runtime, and `tests/test_memory_negative_eval.py`
+must exist. In a source checkout both are required, and deleting the suite flips
+the mark. A wheel ships no `tests/` (`pyproject.toml` excludes them), so there
+the probe passes on the runtime half and reports the committed half as a constant
+— *"committed upstream; not shipped in the wheel"* — naming a file it has not seen
+([`rubric.py:179-205`](https://github.com/amitpatole/verel/blob/aaf163efd57aede347fc47b35ffae3eed7d570aa/src/verel/memory/rubric.py#L179-L205)).
+The proof string says so, and it is the one result of the seven that a wheel
+asserts rather than demonstrates.
+
+That leniency has a release history in which a claim ran ahead of its code. v1.9.2
+was titled "fix verel memory rubric to be install-independent (7/7 from a wheel)",
+but tag v1.9.2 carries the v1.9.1 `rubric.py` unchanged, and a wheel built from
+that tag on 2026-07-28 scored 6/7:
 
 ```text
 score: 6/7 (binary marks; NOT a maturity score)
@@ -327,13 +350,11 @@ score: 6/7 (binary marks; NOT a maturity score)
                (negative-eval suite not found next to the package — running from a wheel?)
 ```
 
-From a source checkout at the same commit it does score 7/7. The gap is not a
-capability gap and the probe is not lying — the behavioural half passes either
-way, and the atlas's criterion asks for *committed* cases, which genuinely cannot
-be seen from a wheel that excludes them. It is a release note that overstates a
-packaging change that did not land. Worth recording precisely because the module
-is an argument for demonstrated over asserted behaviour, and the assertion that
-slipped was the one about the tool itself.
+v1.9.3 ([`72c4cd32a5454fd77b773a48ff98a9a0ea7a0d47`](https://github.com/amitpatole/verel/commit/72c4cd32a5454fd77b773a48ff98a9a0ea7a0d47),
+3 August 2026) committed the change and named the cause: the PyPI 1.9.2 wheel had
+been built from a working tree whose rubric edit was never committed, so the
+wheel was not reproducible from its tag, and the container image CI built from
+the tag reported 6/7.
 
 ## 5. Memory Data Model
 
@@ -426,7 +447,8 @@ setting `VEREL_MEMORY_BACKEND`. Six backends exist; five are operator-selectable
 
 ### Operational shape
 
-Nothing here is queued, which matters for anyone sizing this:
+Nothing on the memory path is queued, which matters for anyone sizing this. The
+SQLite job queue in `verel.jobs` carries grading jobs and never writes memory:
 
 - **Local writes are synchronous and immediately retrievable.** `write()` returns after the row is
   upserted; there is no ingestion queue between writing a fact and recalling it.
@@ -468,18 +490,17 @@ Risks:
 
 - Considerably more complex than most teams need initially.
 - Some LLM consolidation paths are ambitious and may be brittle. `ConsolidationStats`
-  makes a weak pass visible rather than reliable — you now learn that four clusters
+  makes a weak pass visible rather than reliable — you learn that four clusters
   went unparsed, which is the necessary first step and not a fix.
-- Release notes have run ahead of the code at least once: v1.9.2 claims a rubric
-  fix that is not in that commit. The mechanisms hold up under checking; the
-  announcements need the same checking.
+- Release notes have run ahead of the code at least once: the v1.9.2 rubric fix
+  shipped in the PyPI wheel and not in the tag, until v1.9.3 committed it. The
+  mechanisms hold up under checking; the announcements need the same checking.
 - Recall is lexical by default. BM25 is a real ranking function rather than the token-overlap
   fallback, but it is still keyword matching: a paraphrased query needs the optional embedder.
 - Correctness of attestation/authenticator depends on external integration.
 - The many security-oriented mechanisms require discipline to preserve when extending.
 
-**The ingress guard is the newest subsystem and it cuts poison before the
-extractor sees it.** `verel.guard` grades a source document — HTML, Markdown,
+**The ingress guard cuts poison before the extractor sees it.** `verel.guard` grades a source document — HTML, Markdown,
 RTF, ODF, PPTX, XLSX, PDF and image metadata — for hidden content and injection
 payloads, and `remember()` takes the resulting report as a parameter. If it
 failed, extraction stops:
@@ -553,10 +574,12 @@ Verel has strong memory-specific tests:
 - Hosted and replicated backends.
 - MCP memory.
 
-I did not run the test suite. The test file coverage is unusually aligned with the
-design claims. I did run `verel.memory.rubric`, from a wheel and from a source
-checkout at this pin — see [capability claims as live probes](#capability-claims-as-live-probes)
-— which is the only Verel code the atlas has executed rather than read.
+I did not run the test suite, at this pin or any earlier one. The test file
+coverage is unusually aligned with the design claims. The only Verel code run for
+any reading of this report is `verel.memory.rubric`, from a wheel and from a
+source checkout at `df44e76` (v1.9.2) on 2026-07-28 — see
+[capability claims as live probes](#capability-claims-as-live-probes). Nothing was
+installed or run at this pin.
 
 ### Negative evals
 
@@ -570,8 +593,12 @@ The fixture is "paris office" — the same example as the round-7 red-team findi
 that produced the tombstone. **The attack became a permanent regression test**,
 which is the strongest form the
 [rejected-value tombstone](../../patterns/rejected-value-tombstone/) pattern's
-tests-to-require can take, and one of two instances of negative retrieval
-assertions in this atlas.
+tests-to-require can take.
+
+Valid time has its own suite. `tests/test_memory_bitemporal.py` asserts that a
+backdated `valid_from` leaves `created_ts` alone, that `value_as_of` reconstructs
+a superseded value from the correction chain, that interval boundaries are
+half-open, and that an as-of read excludes a rejected key and never reinforces.
 
 ## 11. For Your Own Build
 
@@ -652,6 +679,8 @@ Add consolidation/promotion/replication later.
 - Tests: `tests/test_memory*.py`, `tests/test_consolidation.py`, `tests/test_promotion.py`, `tests/test_lattice.py`.
 
 ## History
+
+**2026-11-02** — [`aaf163efd57aede347fc47b35ffae3eed7d570aa`](https://github.com/amitpatole/verel/commit/aaf163efd57aede347fc47b35ffae3eed7d570aa), 1.18.0rc1, 16 commits on. `src/verel/memory` has the same tree hash at both pins; the commits add pilot, auth, jobs, connectors and media, none of which writes memory. All seven marks hold. Two claims were wrong at the previous pin, both understating: the MCP server registers fourteen `verel_*` tools, not twelve, still with no review verb; and `bitemporal` is asserted in committed cases (`tests/test_memory_bitemporal.py`, in the tree since 28 July). The wheel finding described tag v1.9.2 and has been fixed since v1.9.3, and is rewritten as [that history](#capability-claims-as-live-probes). The [mutation audit](#a-hash-chained-mutation-audit) section gains the keyed `_chainlog.py` the new logs share and memory does not. Screened first: one collection-time hook, one unpinned surface; nothing run.
 
 **2026-09-19** — re-read at the same pin [`a8cbba27a3fa61baeffa808c5929a273d176c942`](https://github.com/amitpatole/verel/commit/a8cbba27a3fa61baeffa808c5929a273d176c942), still the tip. **All seven marks hold.** `human_review` was re-tested against the producer question, and this is one of the few systems in the corpus that states the question itself and answers it in the same docstring: *"CLI-only by design. Review is exposed via `verel memory ...` (a human at a terminal), NOT over MCP — an agent must never be able to approve its own candidate facts."* Checked rather than taken: the MCP server registers twelve `verel_*` tools, among them `remember`, `recall` and `remember_conversation`, and no review verb. The `reviewed_by=` keyword is a caller-supplied identity, which on its own would be the weak shape this atlas keeps withdrawing marks for — here it is audit metadata on a surface the producer cannot reach, which is the distinction that matters. Two further properties are now in the record: approve refuses a REJECTED record so the rejected-value ledger cannot be laundered, and reject drives the backend's own contradict transition so a human verdict leaves the same durable trace as a machine contradiction. The operator's terminal is protected from control-sequence spoofing by `view.canonical_text`. Screened again first; nothing installed or run.
 
