@@ -467,6 +467,7 @@ page_kind: comparison
 - [`openai-codex`](../systems/openai-codex/)
 - [`understand-anything`](../systems/understand-anything/)
 - [`llm-harness-memory`](../systems/llm-harness-memory/)
+- [`mem-mastero`](../systems/mem-mastero/)
 
 ## Repos Inspected
 
@@ -1238,6 +1239,7 @@ page_kind: comparison
 - [openai/codex](https://github.com/openai/codex) at [`0a2d5f556de6e3b2c340d7f0635a1daf4040c30a`](https://github.com/openai/codex/commit/0a2d5f556de6e3b2c340d7f0635a1daf4040c30a) — read only, from a shallow clone; one auto-run surface, ten build-time execution paths, three unpinned surfaces and every dependency file inside the seven-day cooldown. Nothing was built and nothing was run. Apache-2.0
 - [Egonex-AI/Understand-Anything](https://github.com/Egonex-AI/Understand-Anything) at [`4e6d3299017a7432da15957874992837a315c5b4`](https://github.com/Egonex-AI/Understand-Anything/commit/4e6d3299017a7432da15957874992837a315c5b4) — read only; four auto-run surfaces (the `.claude-plugin/` marketplace manifest, the plugin's own manifest under `understand-anything-plugin/`, and its `hooks/` directory, whose `hooks.json` registers a `SessionStart` and a `PostToolUse` hook), one build-time script, five unpinned manifests and nothing inside the cooldown. Nothing was built and nothing was run. MIT
 - [waldnzwrld/llm-harness-memory](https://github.com/waldnzwrld/llm-harness-memory) at [`f60469fc05379dc056359e28adfcc27f25899bd4`](https://github.com/waldnzwrld/llm-harness-memory/commit/f60469fc05379dc056359e28adfcc27f25899bd4) — read only, from a shallow clone; no auto-run, build-time or unpinned surface in the checkout and an `AGENTS.md` read as data. The hooks it installs are written by `install.sh` into the user's harness settings, and were read there. The engine, outl, was read at [`97aa72bd002b57cc22f5a67b20dbf2ad6775f920`](https://github.com/outlmd/outl/commit/97aa72bd002b57cc22f5a67b20dbf2ad6775f920), its last commit before the pin, for delete and trash semantics only. Nothing was installed, built or run, and the three test runners were not run because they need outl. MIT
+- [Shaf2665/mem-mastero](https://github.com/Shaf2665/mem-mastero) at [`f0221b2757cea4dafad3dd928ddcc2d13de2f170`](https://github.com/Shaf2665/mem-mastero/commit/f0221b2757cea4dafad3dd928ddcc2d13de2f170) — read only, from a full clone, at the head of `main` on 1 November 2026; four auto-run surfaces, all the plugin's own (the `.claude-plugin/` marketplace and plugin manifests, the `hooks/` directory, and `hooks/hooks.json` registering SessionStart, Stop and SessionEnd commands), no build-time or unpinned surface, and `package.json`, which names no dependencies, inside the seven-day cooldown. Nothing was installed, built or run, and the 25 test scripts were not run. MIT
 
 ## What the licences actually say
 

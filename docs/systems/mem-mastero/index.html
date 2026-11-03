@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A coding-agent plugin that syncs
+native sessions through a private repo or Drive, beside a
+content-addressed project-knowledge store with sticky, synced forget
+markers.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mem-mastero — Agent Memory Atlas">
+    <meta property="og:description" content="A coding-agent plugin that
+syncs native sessions through a private repo or Drive, beside a
+content-addressed project-knowledge store with sticky, synced forget
+markers.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mem-mastero — Agent Memory Atlas">
+    <meta name="twitter:description" content="A coding-agent plugin that
+syncs native sessions through a private repo or Drive, beside a
+content-addressed project-knowledge store with sticky, synced forget
+markers.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mem-mastero — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "mem-mastero",
+      "description": "A coding-agent plugin that syncs native sessions through a private repo or Drive, beside a content-addressed project-knowledge store with sticky, synced forget markers.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Sticky forgets beside a sync that never
+deletes</p>
+          <h1>mem-mastero</h1>
+          <p class="document-deck">A coding-agent plugin that syncs
+native sessions through a private repo or Drive, beside a
+content-addressed project-knowledge store with sticky, synced forget
+markers.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Shaf2665/mem-mastero">
+              <span>Source</span>
+              <strong>Shaf2665/mem-mastero</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Shaf2665/mem-mastero/commit/f0221b2757cea4dafad3dd928ddcc2d13de2f170" title="f0221b2757cea4dafad3dd928ddcc2d13de2f170">
+              <span>Analyzed revision</span>
+              <code>f0221b27…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Shaf2665--mem-mastero" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Shaf2665--mem-mastero</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>4,715
+lines of dependency-free Node.js outside tests: 2,132 in the knowledge
+layer, 1,509 in archives, 1,039 in sync.js and the Pi
+extension</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>27
+commits from one author, 18 October – 1 November 2026; the knowledge
+layer arrived on 1 November</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>25
+node:assert scripts, 4,033 lines, run by run-tests.js on Linux, Windows
+and macOS in CI; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mem-mastero is a plugin for Claude Code, Codex, Copilot CLI and Pi
+that copies each agent's native session folders, Claude's
+<code>memory/</code> included, through a private GitHub repository or a
+Drive folder. Beside that sync sits a project-knowledge store of
+immutable JSON notes, whose ids hash their content and whose forget
+markers sync ahead of them. The store is notable for how hard it is to
+resurrect: capture replays, stale peers, re-imports and reworded AI
+summaries are all refused. The native sync has no such guard, and its
+own comment says a memory pruned on one machine comes back from
+another.</p>
+<p>The knowledge store needs no service and no API key. Capture copies
+assistant messages verbatim, and a SessionStart hook prints a bounded
+slice back into the next session. Optional semantic search and summaries
+run through whichever coding CLI the user is already signed in to, with
+its tools disabled. No capability mark is earned. The forget marker is
+keyed on the note's whole record, so the same fact from another session
+is a new note. Every test of exclusion checks for absence without a
+control in the same result.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>note</strong>: kind, title, text, tags, a
+<code>source</code> naming agent, session, event and optionally an
+archive node or source notes, a provenance, and <code>createdAt</code>.
+Its id is <code>memory:</code> plus the SHA-256 of that body
+(<code>memory-store.js:113-117</code>). Nothing about a note ever
+changes. A captured note is deterministic, so capturing the same
+transcript event twice yields the same id. A manual note carries a
+random nonce, so saving the same text twice yields two notes
+(<code>memory-store.js:105-109</code>).</p>
+<p>A note is visible when four conditions hold (<code>active</code>,
+<code>memory-store.js:216-247</code>):</p>
+<ul>
+<li>no forget marker carries its id;</li>
+<li>for a generated summary, its recipe is not forgotten, and it has the
+lowest id among summaries of that recipe;</li>
+<li>every note it cites in <code>memoryIds</code> is itself visible,
+resolved breadth-first, so a forgotten source hides every summary built
+on it;</li>
+<li>a cycle or a missing source leaves it hidden.</li>
+</ul>
+<p>That is the whole state machine. A note is created, visible, then
+invisible once a marker lands. It does not expire, decay, get superseded
+or change status. An edit is a new note plus a forget of the old one,
+with no link between them (<code>memory-command.js:79-86</code>).</p>
+<p>Nothing is treated as verified. <code>provenance</code> says where a
+note came from (<code>manual</code>, <code>captured</code>,
+<code>imported</code>, <code>generated</code>), and no read filters on
+it. A captured note is a sentence the assistant said. A summary's text
+opens with <em>"AI-generated summary; verify against the cited source
+memories"</em> (<code>memory-summary.js:76</code>). The startup context
+calls every note untrusted historical data
+(<code>memory-runtime.js:46</code>).</p>
+<p>The native layer has no memory model of its own. It copies files and
+keeps the newer one.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a note is visible only while no marker names it and every source it cites is visible; the native files beside it are copied by mtime and never deleted</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a note is visible only while no marker names it and every source it cites is visible; the native files beside it are copied by mtime and never deleted
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    CAP[&quot;Stop / SessionEnd hook&lt;br/&gt;assistant messages verbatim&lt;br/&gt;id = hash of record&quot;]
+    MAN[&quot;memory_save, CLI add&lt;br/&gt;random nonce per save&quot;]
+    GEN[&quot;summary worker&lt;br/&gt;recipe = provider + source ids&quot;]
+    CAP ~~~ MAN ~~~ GEN
+  end
+  writers --&gt; REC[&quot;immutable note&lt;br/&gt;records/hash.json&quot;]
+  REC --&gt; VIS{&quot;marker on id?&lt;br/&gt;recipe forgotten?&lt;br/&gt;every source visible?&quot;}
+  VIS --&gt;|&quot;no, no, yes&quot;| READ[&quot;startup context&lt;br/&gt;keyword or AI search&quot;]
+  VIS --&gt;|&quot;otherwise&quot;| HID[&quot;hidden, file kept&quot;]
+  FORGET[&quot;forget / edit&quot;] --&gt; TOMB[&quot;marker: id only&lt;br/&gt;no time, no actor&quot;]
+  TOMB --&gt; VIS
+  TOMB --&gt; SYNC[&quot;sync pushes markers&lt;br/&gt;before records&quot;]
+  READ ~~~ NATIVE[&quot;native session folders&lt;br/&gt;newer mtime wins&lt;br/&gt;nothing deleted&quot;]
+  NATIVE --&gt; BACK[&quot;file pruned here&lt;br/&gt;returns from a peer&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything is one Node.js program, <code>sync.js</code>, with no npm
+dependencies; agents reach it through lifecycle hooks and the MCP server
+through <code>memory-mcp.js</code>. State lives in
+<code>~/.mem-mastero/</code> (<code>sync.js:366</code>) and in the
+user's chosen store.</p>
+<p><strong>Native sync.</strong> Each agent adapter names a local folder
+and a remote one (<code>AGENTS</code>, <code>sync.js:181</code>). For
+Claude it is the whole
+<code>~/.claude/projects/&lt;encoded cwd&gt;/</code> folder, transcripts
+and <code>memory/</code> together. <code>syncFile</code> copies a file
+when the source is newer and throws on equal mtimes with different bytes
+(<code>sync.js:87-105</code>); <code>syncDir</code> never deletes
+(<code>sync.js:123-124</code>). With GitHub the store is a git clone:
+commit, then <code>pull --rebase -X theirs</code>, which keeps this
+machine's side of a conflicting hunk (<code>sync.js:440</code>,
+<code>:457</code>), then push. Files over GitHub's limit are split into
+parts with a manifest.</p>
+<p><strong>Knowledge store.</strong> One directory per project and store
+under
+<code>~/.mem-mastero/knowledge/&lt;digest(store, project)&gt;/</code>,
+with <code>records/</code> and <code>tombstones/</code> of one JSON file
+each, plus local settings, an AI cache and job state
+(<code>memory-store.js:18-35</code>). The remote copy is
+<code>knowledge/v1/&lt;sha256(project)&gt;/</code> in the same store
+(<code>sync.js:548</code>).</p>
+<p><strong>Archives.</strong> Inactive Claude sessions can be uploaded
+to a <code>mem-mastero-archives-v1</code> branch through the GitHub API,
+verified by re-download against a manifest, then removed locally; a
+metadata graph and a temporary, verified <code>recall</code> read them
+back. This is session storage, not memory, and a note may cite an
+archive node.</p>
+<p><strong>AI.</strong> <code>memory-ai-provider.js</code> spawns the
+signed-in <code>claude</code>, <code>codex</code> or
+<code>copilot</code> CLI with its tools, MCP servers, hooks and history
+off, strips API-key and endpoint variables from the child's environment,
+and reads structured JSON back
+(<code>memory-ai-provider.js:53-61</code>, <code>:108-132</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run. The prerequisites are Node 18.17 or later, git,
+and for GitHub a signed-in <code>gh</code>. Setup is
+<code>npx github:Shaf2665/mem-mastero setup</code>, which creates or
+checks a private repository, installs the plugin into each agent it
+finds, and optionally sets git's global <code>core.hooksPath</code> to a
+shim directory so <code>git push</code>, <code>pull</code> and
+<code>checkout</code> sync too (<code>sync.js:604-643</code>; it refuses
+when <code>core.hooksPath</code> is already set). It works offline for
+local notes. No API key is used anywhere. The store is plain JSON, one
+file per note, but hand-editing a note breaks its hash and makes
+<code>readCollection</code> refuse the whole collection
+(<code>memory-store.js:118-124</code>, <code>:169</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>run</code> in
+<code>sync.js:502-526</code> resolves the project, then
+<code>captureHook</code> (<code>memory-runtime.js:76-88</code>) calls
+<code>captureTranscript</code> (<code>memory-capture.js:149-232</code>)
+on push hooks only. It checks the transcript's recorded cwd against the
+project (<code>:103-147</code>), reads from a cursor at most 2 MiB and
+20 assistant messages, skips turns whose user prompt opened
+<code>&lt;private&gt;</code>, redacts secrets, and skips text echoing
+its own context (<code>:204</code>). Each message becomes an
+<code>observation</code> whose <code>eventId</code> is
+<code>digest([eventId, text])</code> (<code>:207-211</code>), saved in
+one batch (<code>:222</code>).</li>
+<li><strong>Manual write.</strong> <code>memory_save</code>
+(<code>memory-mcp.js:91-96</code>) and <code>memory add</code>
+(<code>memory-command.js:78</code>) call <code>addMemory</code> with
+<code>provenance: 'manual'</code>.</li>
+<li><strong>Summaries.</strong> <code>scheduleAI</code> spawns
+<code>sync.js memory-worker</code> detached after a push or start hook
+(<code>memory-ai-jobs.js:74-84</code>). <code>runAIJob</code> runs up to
+three batches 60 seconds apart (<code>:85-119</code>).
+<code>summarizePending</code> (<code>memory-summary.js:82-124</code>)
+takes up to 20 notes no recipe has covered, builds
+<code>eventId = summary-v1:&lt;provider fingerprint&gt;:&lt;hash(source ids)&gt;</code>
+(<code>:98</code>), validates the model's JSON and citations
+(<code>:45-74</code>), and publishes through
+<code>addGeneratedMemory</code> under the lock
+(<code>memory-store.js:306-323</code>).</li>
+<li><strong>Startup context.</strong> On SessionStart,
+<code>buildContext</code> (<code>memory-runtime.js:41-61</code>) prints
+notes before the cloud sync starts, so a slow network cannot eat the
+hook's budget (<code>sync.js:511-516</code>). If <code>MEMORY.md</code>
+arrived from another device, its whole text is printed as well
+(<code>sync.js:582-585</code>).</li>
+<li><strong>Search.</strong> <code>searchMemories</code>
+(<code>memory-store.js:335-355</code>); <code>searchMemoriesAI</code>
+(<code>memory-semantic.js:77-144</code>).</li>
+<li><strong>Forget and edit.</strong> <code>forgetMemory</code>
+(<code>memory-store.js:280-292</code>); <code>edit</code>
+(<code>memory-command.js:79-86</code>).</li>
+<li><strong>Sync.</strong> <code>syncMemories</code> pushes or pulls
+markers, then records (<code>memory-store.js:394-409</code>), called
+from <code>runSessions</code> before and after the git round trip
+(<code>sync.js:547-565</code>).</li>
+<li><strong>Import.</strong> <code>importMemories</code> for the store's
+own export, which must match project and store
+(<code>memory-store.js:373-392</code>); <code>importClaudeMem</code> for
+a claude-mem export filtered to a named source project
+(<code>memory-import.js</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A stored note has exactly <code>version</code>, <code>id</code>,
+<code>projectId</code>, <code>storeId</code>, <code>kind</code>,
+<code>title</code>, <code>text</code>, <code>tags</code>,
+<code>source</code>, <code>provenance</code>, <code>createdAt</code>
+and, for manual notes, <code>nonce</code>
+(<code>memory-store.js:85-111</code>). <code>kind</code> is one of
+eight: decision, bugfix, discovery, preference, constraint, progress,
+summary, observation. Text is capped at 16 KiB and the collection at
+10,000 notes and 64 MiB (<code>:12-16</code>). A generated note must be
+a <code>summary</code> from agent <code>mem-mastero-ai</code> whose
+<code>eventId</code> hashes its own <code>memoryIds</code>
+(<code>:100-102</code>).</p>
+<p>A forget marker holds <code>version</code>, <code>id</code>,
+<code>projectId</code>, <code>storeId</code> and, for a summary, a
+receipt of its <code>eventId</code> and <code>memoryIds</code>
+(<code>memory-store.js:125-135</code>). It carries no time, actor or
+reason.</p>
+<p>The one temporal field is <code>createdAt</code>: the transcript
+message's timestamp for a captured note, the epoch for an import with no
+date, and wall-clock time for a manual note (<code>:103</code>). The
+forgotten note's file stays in <code>records/</code>; export omits it
+(<code>:367-372</code>), and so does every read through
+<code>active</code>.</p>
+<p><strong>Scope</strong> is the pair of store and project.
+<code>projectId</code> is the normalised git origin URL
+(<code>sync.js:127-139</code>). The store is the first configured one
+whose patterns match it, so work repositories can route to a work
+account (<code>resolveMemoryContext</code>,
+<code>sync.js:480-500</code>). The partition is a directory, and every
+note also carries <code>projectId</code> and <code>storeId</code>.
+<code>canonicalRecord</code> recomputes the hash with the current scope
+and throws on a mismatch, so a foreign note planted in the directory
+fails the read rather than leaking into it
+(<code>memory-store.js:118-124</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Startup context</strong> is ranked by kind (constraint 8 down
+to observation 1), then manual before other provenance, then recency,
+and packed as JSON lines into 4,000 characters by default, 512 to 12,000
+by setting (<code>memory-runtime.js:41-61</code>). A captured note
+contributes 180 characters, any other 500. Claude Code and Codex hooks
+print it; the README says Copilot and Pi receive none automatically.</p>
+<p><strong>Keyword search</strong> tokenises on Unicode letters, digits,
+<code>_</code> and <code>-</code>, and scores each term by title hit
+(5), tag hit (4) and body count capped at 4, plus 10 when every term
+matched (<code>memory-store.js:334-355</code>). Kind, agent and date
+filters apply first. Every call reads and re-hashes every file in the
+collection, so a search over 10,000 notes validates 10,000 SHA-256
+hashes.</p>
+<p><strong>AI search</strong> leads its candidate list with up to 100
+lexical hits, then the rest by recency. It packs as many of 80 as fit in
+24 KiB, each cut to 512 bytes, and asks the configured CLI to return ids
+with scores of 0.5 or more (<code>memory-semantic.js:94-105</code>,
+<code>:13</code>). Returned ids must belong to the candidate set, and
+are re-read after the model returns, so a note forgotten mid-inference
+drops out (<code>:72-75</code>). Hybrid mode fuses the two lists with
+reciprocal rank at k = 60 (<code>:138-142</code>). There is no embedding
+index.</p>
+<p>Any failure falls back to keyword results with a
+<code>fallback</code> code. The response reports <code>coverage</code>,
+the number considered and the offset of the next page, so a caller can
+see how much of the store the model saw.</p>
+<p><strong>MCP</strong> exposes search, timeline, get, save, forget and
+summarise; search returns 240-character excerpts and get returns up to
+ten full notes (<code>memory-mcp.js:23-42</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Capture is extractive and model-free. It takes each assistant message
+whole, up to 4,096 bytes, as one observation, with its first line as the
+title (<code>memory-capture.js:203-211</code>). Nothing decides whether
+the message held a durable fact. User prompts and tool payloads are
+excluded, and so is any turn whose prompt contained
+<code>&lt;private</code>. A paused capture records
+<code>captureSince</code>, so resuming skips the paused interval
+(<code>memory-runtime.js:33-35</code>).</p>
+<p>Deduplication is the id. A replayed capture produces the same note,
+and a replay of a forgotten one is reported <code>forgotten: true</code>
+and not written (<code>memory-store.js:259-262</code>). Manual saves are
+never deduplicated. There is no consolidation or conflict detection
+between notes; two contradictory notes are both visible.</p>
+<p>Summaries are the only model writes. A summary covers up to 20 notes,
+each cut to 900 bytes, and must cite every supplied id and no other
+(<code>memory-summary.js:34-74</code>). Once any recipe has consumed a
+note, it is never summarised again (<code>:30-33</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Capture runs synchronously in the Stop hook. It costs one bounded
+file read, the privacy regexes and one collection scan, with no model
+call. A captured note is searchable as soon as the hook returns. It
+reaches another machine on that machine's next start or push hook.
+Summaries run in a detached process that never blocks the agent, with at
+most three batches per run and 60 seconds between batch starts. No pass
+rewrites the store. Startup injection is bounded by the character budget
+and printed by the SessionStart hook, ahead of the first user turn.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Claude Code and Codex register SessionStart, Stop and SessionEnd
+hooks that run <code>sync.js &lt;agent&gt; start|push</code>
+(<code>hooks/hooks.json</code>, <code>hooks/codex-hooks.json</code>).
+Copilot runs a push on <code>userPromptSubmitted</code>, so it captures
+on every prompt (<code>hooks/copilot-hooks.json</code>). Pi's extension
+runs start on <code>session_start</code> and push on
+<code>agent_end</code> and <code>session_shutdown</code>
+(<code>pi/index.js:21-27</code>). Claude Code and Copilot manifests
+register the MCP server; Codex gets the hooks and CLI only.</p>
+<p>The agent has every verb. <code>memory_save</code> writes a manual
+note with any source fields it chooses, <code>memory_forget</code>
+writes a marker, and <code>memory_summarize</code> spends the user's
+model allowance. <strong>Every call names its project through a
+<code>cwd</code> argument the model supplies</strong>
+(<code>memory-mcp.js:15</code>, <code>:77</code>). The server resolves
+whatever git origin that directory has, so an agent working in one
+repository can search, save into or forget from another repository's
+store by passing that repository's path. The integration test for this
+proves that a second project is resolved separately, not that it is
+refused (<code>test-memory-mcp.js:48</code>).</p>
+<p>Codex requires the user to trust the hooks under
+<code>/hooks</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3
+id="the-native-sync-resurrects-what-the-knowledge-store-would-not">The
+native sync resurrects what the knowledge store would not</h3>
+<p>The knowledge store's tombstones exist because a copy-newer sync
+resurrects deletions, and the native layer is that sync.
+<code>syncDir</code> copies every file that is missing or newer and
+deletes nothing, and the comment above it says so: <em>"a memory pruned
+on one machine comes back from another"</em> (<code>sync.js:123</code>).
+A Claude auto-memory file deleted on laptop A is still in the store and
+is copied back on A's next start. If A edited <code>MEMORY.md</code> and
+B edited it too, the git rebase keeps this machine's hunks
+(<code>sync.js:440</code>). The file copy then keeps whichever side has
+the newer mtime. The README states both rules for sessions
+(<code>README.md:354</code>, <code>:487</code>). It does not say they
+cover the <code>memory/</code> files it advertises syncing.</p>
+<h3 id="forgetting-is-suppression-everywhere">Forgetting is suppression,
+everywhere</h3>
+<p>A forget leaves the note's file on disk and in the synced store,
+where git history keeps it permanently. The README says this plainly
+(<em>"Forget is not secure erasure"</em>). The marker has no timestamp
+or actor, so the store cannot say when or by whom a note was forgotten.
+Edit adds the replacement and then forgets the original under two
+separate locks. A failure between the two leaves both notes visible
+(<code>memory-command.js:83-84</code>).</p>
+<h3 id="what-capture-lets-in">What capture lets in</h3>
+<p>Capture stores the assistant's own sentences. A message that repeats
+a web page, a tool result or an injected instruction becomes an
+observation, and its first 180 characters return in every later
+session's startup context. Two defences exist: the context header
+calling notes untrusted, and a filter that drops captured text echoing
+mem-mastero's own context blocks (<code>memory-capture.js:204</code>).
+Nothing evaluates a captured message before it is stored.</p>
+<h3 id="supply-chain">Supply chain</h3>
+<p><code>setup</code> and the README's update command fetch
+<code>main</code> with no pin
+(<code>npx github:Shaf2665/mem-mastero</code>); <code>update</code>
+clones <code>main</code> at depth 1 and runs its <code>sync.js</code>
+(<code>sync.js:715-724</code>). A compromised push to <code>main</code>
+reaches every installation on its next update, and each lifecycle hook
+then runs it.</p>
+<h3 id="the-ai-child-process">The AI child process</h3>
+<p>The provider runs its child with tools, MCP servers, hooks, slash
+commands and session persistence off; Codex also gets a read-only
+sandbox. It strips <code>ANTHROPIC_API_KEY</code>,
+<code>OPENAI_API_KEY</code> and provider-endpoint variables so the call
+bills the signed-in subscription
+(<code>memory-ai-provider.js:53-61</code>, <code>:108-132</code>). Note
+text goes over stdin, never argv. Each summary or search call uses the
+user's plan allowance.</p>
+<h3 id="marks">Marks</h3>
+<p>None is carried.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — the marker is keyed on the
+note's id, and the id hashes the whole record: source session, event,
+<code>createdAt</code>, and for manual notes a random nonce. It refuses
+the same captured event, a stale peer and a re-import, which are
+deletion-durability properties of one record. The same fact captured
+from another message, or saved again by hand, is a new note that no
+marker names. The summary receipt comes closer. It is keyed on the
+provider and the sorted source ids, so a forgotten summary cannot return
+in other words. It blocks one derivation, not the conclusion; a summary
+of other notes stating the same thing passes.</li>
+<li><strong><code>trust_state</code></strong> — <code>provenance</code>
+is a source label and no read filters on it; summaries are labelled
+unverified in their text only.</li>
+<li><strong><code>bitemporal</code></strong> — <code>createdAt</code> is
+the only time.</li>
+<li><strong><code>scope_enforced</code></strong> — the partition is a
+directory per project and store. The per-note project check rejects a
+mismatched note instead of filtering it, and the model chooses the
+partition on every MCP call.</li>
+<li><strong><code>audit_log</code></strong> — notes and markers are
+append-only, but a marker records no time or actor, and git history of
+the store is not credited.</li>
+<li><strong><code>human_review</code></strong> —
+<code>memory view</code> writes a read-only HTML snapshot with no
+mutation API (<code>memory-view.js:1</code>). Correction is a CLI or MCP
+verb the agent holds equally.</li>
+<li><strong><code>negative_eval</code></strong> — no committed case
+asserts that a forgotten note stays out of a result the same case shows
+to be populated; see section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>run-tests.js</code> runs 25 <code>node:assert</code> scripts
+and the announcer's self-test in sequence, each in an isolated home with
+git config and agent variables stripped. CI runs them on Ubuntu, Windows
+and macOS with Node 22 (<code>.github/workflows/test.yml</code>). I did
+not run them.</p>
+<p>The resurrection paths are covered thoroughly in
+<code>test-memory-store.js</code>. Capture replay is refused
+(<code>:44-48</code>, <code>:134</code>), and a stale peer and a fresh
+machine honour a marker (<code>:139-142</code>). A stale export cannot
+revive a note (<code>:143-144</code>). A forgotten source hides its
+summary on this device and a peer (<code>:182-190</code>). A forgotten
+recipe suppresses a differently worded summary arriving from another
+device (<code>:216</code>). Races are tested too: a source forgotten
+while a summary or a semantic search is in flight is excluded
+(<code>test-memory-summary.js:89-94</code>,
+<code>test-memory-semantic.js:103-107</code>). The viewer is executed
+against an XSS payload with text-only DOM sinks
+(<code>test-memory-runtime.js:128-131</code>).</p>
+<p><code>negative_eval</code> is withheld on vacuity. Each exclusion
+asserts only absence:</p>
+<ul>
+<li><code>test-memory-integration.js:73</code> checks that
+<code>search 'blue widgets'</code> returns nothing after the
+forget;</li>
+<li><code>test-memory-ai-integration.js:69</code> and <code>:71</code>
+check <code>!matches.some(r =&gt; r.id === …)</code>;</li>
+<li><code>test-memory-runtime.js:126</code> checks that the context
+lacks the id.</li>
+</ul>
+<p>None asserts in the same call that another note is present, so each
+passes against a search that returns nothing. The fixture at
+<code>test-memory-integration.js:68</code> writes <code>fromB</code> and
+asserts it with a separate <code>get</code>; asserting it in the same
+search would close this. The MCP case at
+<code>test-memory-mcp.js:46-47</code> is populated, but what it excludes
+is private-tag text redacted at write time, which was never stored.</p>
+<p>There is no retrieval-quality evaluation and no benchmark.
+<code>docs/claude-mem-comparison.md</code> is a capability comparison
+with <a href="../claude-mem/">claude-mem</a> and says the tests
+<em>"establish behavior and safety properties, not superiority to
+another plugin"</em> (<code>:72</code>). No paper is associated with the
+project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the id the hash of the record and the marker the
+id.</strong> Re-capture, re-import and stale replicas then cannot
+resurrect a deletion, with no coordination beyond copying files. Push
+markers before records, so a sync interrupted halfway still errs towards
+hidden.</li>
+<li><strong>Key a derived note's deletion on its inputs.</strong> A
+receipt on the sorted source ids and the generator's identity stops
+regeneration in any wording, which a text hash cannot.</li>
+<li><strong>Hide a derivation when any source is hidden</strong>,
+resolved breadth-first so a cycle or a missing source stays hidden.</li>
+<li><strong>Report how much of the store the reranker saw.</strong>
+<code>coverage</code> and <code>nextOffset</code> turn a bounded model
+rerank into something a caller can page through, rather than a silent
+truncation.</li>
+<li><strong>Re-read every model-selected id after the call
+returns.</strong> It closes the window in which a note forgotten during
+inference is returned.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two sync rules in one tool.</strong> A user who learns that
+forget sticks has no reason to expect that deleting a native memory file
+does not. Either give both layers the same rule or say which files obey
+which.</li>
+<li><strong>Taking the partition from a tool argument.</strong> Resolve
+it from the session that launched the server; a model that can name the
+directory can name another project.</li>
+<li><strong>A marker with no time and no actor.</strong> It makes the
+forget durable and leaves nothing to audit or undo by.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone who works across several machines with agents that
+keep history in their home folder, and who wants a small,
+dependency-free, offline note store riding on storage they already own.
+The engineering is careful where it matters for that job: locking,
+atomic publication, path safety, re-hashing on every read and
+fail-closed AI calls. Walk away if you need memory others can rely on as
+true. Capture keeps whatever the assistant said, nothing reconciles
+contradictions, and the native layer will put back what you deleted. It
+is a single author's two-week-old project that updates itself from
+<code>main</code>.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often captured assistant messages are useful notes rather than
+chatter, and how quickly the 10,000-note cap is reached in
+practice.</li>
+<li>Whether any user relies on native <code>memory/</code> files being
+restored after deletion, or whether a tombstone for that layer is
+planned.</li>
+<li>How the 64 MiB collection performs when every read re-hashes every
+note.</li>
+<li>How Copilot's per-prompt capture behaves against the hook's
+60-second timeout on a large transcript.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Knowledge store: <code>memory-store.js</code>,
+<code>memory-privacy.js</code></li>
+<li>Capture and context: <code>memory-capture.js</code>,
+<code>memory-runtime.js</code></li>
+<li>Retrieval: <code>memory-semantic.js</code>,
+<code>memory-store.js</code> (<code>searchMemories</code>)</li>
+<li>Summaries and worker: <code>memory-summary.js</code>,
+<code>memory-ai-jobs.js</code>, <code>memory-ai-provider.js</code>,
+<code>memory-copilot-provider.js</code></li>
+<li>CLI, MCP, import, viewer: <code>memory-command.js</code>,
+<code>memory-mcp.js</code>, <code>memory-import.js</code>,
+<code>memory-view.js</code></li>
+<li>Native sync, hooks, setup, update: <code>sync.js</code>,
+<code>hooks/*.json</code>, <code>pi/index.js</code>,
+<code>.claude-plugin/plugin.json</code></li>
+<li>Archives: <code>archive*.js</code>,
+<code>claude-files.js</code></li>
+<li>Tests: <code>run-tests.js</code>, <code>test-memory-*.js</code>,
+<code>test-archive-*.js</code>, <code>test.js</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|validfrom|event_time|occurred_at|expires?_?at' -- '*.js' ':!test*'</code>
+returns nothing; the same pattern with <code>createdat</code> added
+matches <code>memory-store.js</code> seven times.</li>
+<li><strong>No status on a note.</strong>
+<code>git grep -n -i -E 'status|verified|candidate|rejected|confidence' -- memory-store.js</code>
+returns <code>addGeneratedMemory</code>'s return codes and the search's
+<code>candidates</code> variable only.</li>
+<li><strong>Edit records no predecessor.</strong>
+<code>git grep -n -i -E 'supersed|replaces|previous|predecessor' -- memory-store.js memory-command.js</code>
+returns local variables in <code>edit</code>, the recipe-winner map and
+the AI settings patch.</li>
+<li><strong>The marker has no time or actor.</strong>
+<code>git grep -n -E 'actor|deletedAt|forgottenAt|at:' -- memory-store.js</code>
+returns nothing.</li>
+<li><strong>The MCP server takes no session-bound project.</strong>
+<code>git grep -n -E 'CLAUDE_PROJECT_DIR|process\.cwd|sessionId|transcript' -- memory-mcp.js</code>
+returns the <code>memory_save</code> source fields only.</li>
+<li><strong>No embedding index.</strong>
+<code>git grep -n -i -E 'embedding|vector|cosine' -- '*.js' ':!test*'</code>
+returns a Copilot SDK option disabling embedding retrieval and the
+comment saying semantic search is not one.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/Shaf2665/mem-mastero/commit/f0221b2757cea4dafad3dd928ddcc2d13de2f170"><code class="commit-id" title="f0221b2757cea4dafad3dd928ddcc2d13de2f170">f0221b27…</code></a>.
+First reading, from a full clone. Screened first: four auto-run
+surfaces, all the plugin's own (the <code>.claude-plugin/</code>
+marketplace and plugin manifests, the <code>hooks/</code> directory, and
+<code>hooks/hooks.json</code> registering SessionStart, Stop and
+SessionEnd commands that run <code>sync.js</code>); the manifest also
+starts <code>memory-mcp.js</code>. <code>package.json</code> was inside
+the seven-day cooldown and names no dependencies. MIT, no rider. Nothing
+installed, built or run. No marks: the forget marker is keyed on the
+record rather than the value (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

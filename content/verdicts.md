@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 766 reports.**
+**This page covers all 767 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7002,3 +7002,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 3,631 lines of Python, Bash and TypeScript outside tests, 57 commits from one author since 10 August 2026, three shell test runners needing outl, not run here. No marks. The README describes tag expansion and a `normalize` command that exist only on an unmerged branch.
 - Study when: you want memory that stays small without curation and can accept losing what goes unread for about thirty active days.
 - Do not copy when: a deletion must be explainable or undoable, projects must not see each other's memory, or sessions read untrusted content.
+
+### [`mem-mastero`](../systems/mem-mastero/)
+- Best idea: **a forget that nothing can resurrect.** Notes are content-addressed and immutable, and a forget is a content-free marker on the id that syncs ahead of the notes, so a capture replay, a stale peer, a fresh machine and a re-imported export all leave it forgotten.
+- Second idea: a forgotten AI summary leaves a receipt keyed on its provider and sorted source ids, so no device can regenerate it in other words; and a summary is hidden whenever any note it cites is.
+- Biggest risk: **the native sync beside it never deletes.** Claude's `memory/` files and every session folder are copied newer-wins, so a memory file pruned on one machine returns from the next one to sync.
+- Second risk: every MCP call names its project by a `cwd` the model supplies, so an agent can read, save into or forget from another repository's store; and setup and update run whatever `main` holds.
+- Most reusable component: `memory-store.js` — `recordFor`, `active` and `syncMemories`: hashed records, dependency-resolved visibility, and markers published before records.
+- Maturity impression: MIT; 4,715 lines of dependency-free Node.js outside tests, 27 commits from one author since 18 October 2026, the knowledge layer added on 1 November; 25 test scripts in a three-OS CI matrix, not run here. No marks. Every forget-exclusion test checks absence without a control in the same result.
+- Study when: you sync agent memory between machines through storage you own and need a deletion to survive replicas and replays.
+- Do not copy when: a restated fact must stay rejected, captured text must be checked before it returns as context, or projects must not be reachable from one another's sessions.

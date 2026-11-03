@@ -1549,6 +1549,18 @@ the main Session's pages of the same records carry both
 model-facing tool only: the same worker runs unapproved shell commands
 as the operator's user beside the SQLite file, and no case reads another
 Ticket's <code>ticket/</code> page.</p>
+<p><strong><a href="../../systems/mem-mastero/">mem-mastero</a>
+partitions by git origin and lets the model name the checkout.</strong>
+Each project and store has its own directory of notes, and every note
+also carries <code>projectId</code> and <code>storeId</code>; a note
+whose hash does not verify under the current scope fails the whole read
+rather than leaking into it. The MCP server never caches that scope:
+every tool takes an absolute <code>cwd</code>, resolves its git origin,
+and serves that partition. An agent working in one repository reaches
+another's search, save and forget by passing the other's path, and the
+test for it shows the second project is resolved separately, not
+refused. <strong>A per-record check guards the partition's contents;
+only the session can guard the choice of partition.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a
