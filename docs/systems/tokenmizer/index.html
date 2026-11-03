@@ -759,7 +759,7 @@ quality</td>
 <p>Run at the tree root of the pinned checkout with
 <code>git grep -n -E</code>.</p>
 <pre class="sh"><code>git grep -n -E &#39;INACTIVE_STATUSES&#39; -- tokenmizer                            # types.py:72, graph.py:1050,:1606, agents/__init__.py:247, checkpoints/manager.py:295: the readers
-git grep -n -E &#39;status\s*=\s*NodeStatus|\.status = &#39; -- tokenmizer          # graph.py:623-624,:737, routes_graph.py:519,:536, pruning.py:61 write the dead and contested statuses; :392,:427,:461,:534 are the forward-only re-adds, :688,:1271 set COMPLETED
+git grep -n -E &#39;status[[:space:]]*=[[:space:]]*NodeStatus|\.status = &#39; -- tokenmizer          # graph.py:623-624,:737, routes_graph.py:519,:536, pruning.py:61 write the dead and contested statuses; :392,:427,:461,:534 are the forward-only re-adds, :688,:1271 set COMPLETED
 git grep -n -E &#39;persist_transition|DecisionTransition\(&#39; -- tokenmizer      # graph.py:319-321 the wrapper, :751-764 its one caller, persistence.py:278 the loader: supersession is the one writer of the transition table
 git grep -n -i -E &#39;decision_transitions&#39; -- tokenmizer                     # persistence.py:219,:244,:274: create, insert, select; no delete
 git grep -n -E &#39;valid_from&#39; -- tokenmizer                                   # assigned only by the dataclass default at types.py:102
@@ -767,6 +767,14 @@ git grep -n -E &#39;del graph\._nodes|_nodes\.pop&#39; -- tokenmizer            
 git grep -n -E &#39;sessions_for|query_across_sessions&#39; -- tests               # test_cross_session_recall.py passes one caller&#39;s session list, test_sessions_endpoint.py:74 stubs it empty: no case with two principals and recall on
 git grep -n -E &#39;assert .*not in .*(block|resume|ctx|context)&#39; -- tests      # test_security.py:125,:235-236 are outgoing request blocks: no secret asserted absent from to_context_block()</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/Shweta-Mishra-ai/tokenmizer/commit/6b26679c0812c95efff9213253b3d23ce20c0bbb"><code class="commit-id" title="6b26679c0812c95efff9213253b3d23ce20c0bbb">6b26679c…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-11-02</strong> — <a
 href="https://github.com/Shweta-Mishra-ai/tokenmizer/commit/6b26679c0812c95efff9213253b3d23ce20c0bbb"><code class="commit-id" title="6b26679c0812c95efff9213253b3d23ce20c0bbb">6b26679c…</code></a>
 — 42 commits on, releases 0.5.5 to 0.6.1. No mark moved. Added: an

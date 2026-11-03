@@ -665,10 +665,11 @@ interactive staged review.</li>
 (live TTL).</li>
 <li><code>git grep -n -E "DELETE FROM facts" -- .</code> — no
 match.</li>
-<li><code>git grep -n -E "fact_key ?=|\bfk ?=" -- gaius</code> — the key
-derivations: session stem plus text in <code>retire.py:325</code> and
-<code>:409</code>, lower-cased text in <code>ingest.py</code>, raw text
-at 32 characters in <code>mcp_server.py:384</code>.</li>
+<li><code>git grep -n -E "fact_key ?=|(^|[^[:alnum:]_])fk ?=" -- gaius</code>
+— the key derivations: session stem plus text in
+<code>retire.py:325</code> and <code>:409</code>, lower-cased text in
+<code>ingest.py</code>, raw text at 32 characters in
+<code>mcp_server.py:384</code>.</li>
 <li><code>git grep -n -E "domain ?= ?\?|domain = '" -- gaius</code> —
 unconditional only in <code>facts.py:443</code>,
 <code>corpus_audit.py:323</code> and <code>skills.py:716</code>;
@@ -698,6 +699,14 @@ the others assert about files, commands, skills and graph names.</li>
 — no match; the Apache-2.0 text carries no rider.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/jkubo/gaius/commit/520c2eb12627e2c7eb886999b5377a20ee31a7b8"><code class="commit-id" title="520c2eb12627e2c7eb886999b5377a20ee31a7b8">520c2eb1…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/jkubo/gaius/commit/520c2eb12627e2c7eb886999b5377a20ee31a7b8"><code class="commit-id" title="520c2eb12627e2c7eb886999b5377a20ee31a7b8">520c2eb1…</code></a>
 — 12 commits on, MCP SDK 2 support and dependency bumps; no memory path

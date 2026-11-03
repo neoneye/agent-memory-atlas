@@ -448,7 +448,7 @@ does not honour `.gitignore`.
 | Claim | Command | Result at this pin |
 | --- | --- | --- |
 | Fixtures exit non-zero on a failed check | `git grep -n -E 'sys\.exit' -- tests` | `sys.exit(1)` or `sys.exit(0 if passed == total else 1)` in all nine; phase16 also exits 0 at `:23` when the plugin path is absent |
-| 169 named checks | `git grep -c -E '^\s*check\(' -- tests` | 5, 22, 28, 10, 12, 7, 36, 33, 16 |
+| 169 named checks | `git grep -c -E '^[[:space:]]*check\(' -- tests` | 5, 22, 28, 10, 12, 7, 36, 33, 16 |
 | No CI and no runner | `git ls-files \| grep -E '^\.github\|pytest\|tox\|Makefile\|pyproject'` | Nothing |
 | No delete of memory content | `git grep -n -E 'DELETE FROM (narratives\|amendments\|context\|snapshots)' -- '*.py'` | Nothing; FTS `AFTER DELETE` triggers only |
 | Narratives' semantic fields are not updated | `git grep -n -E 'UPDATE narratives' -- '*.py'` | `weight`, `recurrence`, the four weight dimensions, `source_links`, and `embedding` in a fixture |
@@ -458,9 +458,9 @@ does not honour `.gitignore`.
 | Conflict status never leaves open | `git grep -n -E "UPDATE conflict_candidates\|'(resolved\|parked\|dismissed)'" -- '*.py'` | Nothing; the values appear only in a schema comment and in `prompts/dream_solidify.md:84-85` |
 | `pin_registry` has no product writer | `git grep -n 'INSERT INTO pin_registry'` | `tests/fixture_phase19_salience_read.py` only |
 | `deliver_window` has no reader that filters | `git grep -n -E 'deliver_window' -- '*.py' ':!tests'` | Schema, validation and write in `world_entities.py`; tool schema in `server.py` |
-| `moment` is never parsed | `git grep -n -E '\bmoment\b' -- '*.py' ':!tests'` | Schema, write, display and a `LIKE` clause |
+| `moment` is never parsed | `git grep -w -n -E 'moment' -- '*.py' ':!tests'` | Schema, write, display and a `LIKE` clause |
 | No fixture covers the time filter or a thread edit | `git grep -n -E 'since\|until\|memory_write_thread\|thread_id' -- tests` | Nothing |
-| No writer identity on any memory row | `git grep -n -i -E '\b(actor\|author\|writer\|agent_id\|written_by\|created_by)\b' -- server.py` | Nothing |
+| No writer identity on any memory row | `git grep -w -n -i -E '(actor\|author\|writer\|agent_id\|written_by\|created_by)' -- server.py` | Nothing |
 | Nothing calls the Moonshake adapter | `git grep -n -E 'moonshake_adapter\|ingest_rows' -- ':!moonshake_adapter.py'` | Nothing |
 | No epistemic vocabulary | `git grep -l -i -E 'tombstone\|supersede\|decay' -- '*.py'` | Nothing |
 | No execution of strings | `git grep -n -E 'subprocess\|os\.system\|eval\(\|exec\(' -- '*.py'` | Nothing |
@@ -468,6 +468,8 @@ does not honour `.gitignore`.
 | The screen could not see the execution surface | `python3 scripts/screen_repo.py <tree>` | "NOTHING SCANNED", read by hand |
 
 ## History
+
+**2026-11-03** — [`07fbd67808016d3a27d15d4ada671adfc59ff5bc`](https://github.com/ennisaaaaaaaa-stack/tideline-memory/commit/07fbd67808016d3a27d15d4ada671adfc59ff5bc) — recorded searches re-run at the same pin. Three recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. Each returns what its annotation states, and no claim moves.
 
 **2026-10-15** — [`07fbd67808016d3a27d15d4ada671adfc59ff5bc`](https://github.com/ennisaaaaaaaa-stack/tideline-memory/commit/07fbd67808016d3a27d15d4ada671adfc59ff5bc) — the upstream rewrote its whole history to pseudonymise names, leaving the old pin off the branch; its twin differs only in names ([Repository history](#repository-history)). Eleven commits followed: amendment `view_state`, the sensory and salience ports, world-stance pages and a Moonshake adapter. **`negative_eval` awarded** on the salience fixture ([section 10](#10-tests-evals-and-benchmarks)). Four claims were wrong at the old pin: the fixtures exit 1 on 77 named checks rather than asserting only a path; the latest snapshot and recent narratives are injected; context and threads are not keyed rows; and amendments are an append-only layer under immutable narratives. A search time-filter defect arrived on 2026-09-25 ([section 4](#4-essential-implementation-paths)). Screened by hand again; nothing installed or run.
 

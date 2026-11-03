@@ -456,7 +456,7 @@ adopter, and the roadmap places review and semantic merge in a later era.
 Checked against the checkout at the pinned revision, each run once.
 
 - `git grep -nE 'objects::delete|fn delete|OBJECTS.*remove' -- crates/mnem-store/src` — only `branch.rs:54` and `refs.rs:105`, both on refs; no object remover.
-- `git grep -nE '\b(gc|garbage|purge|prune|redact|erase|squash|rebase|reset|amend)\b' -- crates python packages` — no match.
+- `git grep -w -nE '(gc|garbage|purge|prune|redact|erase|squash|rebase|reset|amend)' -- crates python packages` — one doc comment, which says the store has no garbage collection (`crates/mnem-store/src/branch.rs:52`).
 - `git grep -nE 'as_of|valid_(from|to|until)|event_time *[<>]' -- crates python packages` — no match; no read filters on a time.
 - `git grep -nE 'fn (tombstone|untombstone)|STAGING_TOMBSTONES:' -- crates/mnem-store/src` — the staging table and its four functions in `staging.rs`; nothing else.
 - `git grep -nE 'delete_branch|unstage|discard|rebuild_index' -- packages python/mnem/agents.py` — no match; no adapter or MCP tool reaches them.
@@ -467,5 +467,7 @@ Checked against the checkout at the pinned revision, each run once.
 - `git grep -nE 'join\(\[\*namespace|split\(":"\)|startswith\(prefix\)' -- packages` — the colon join and split in the LangGraph adapter and the prefix read in the session, with no separator check beside them.
 
 ## History
+
+**2026-11-03** — [`431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6`](https://github.com/Nabzx/mnemosyne/commit/431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. The maintenance-verb search, recorded as no match, finds one doc comment saying the store has no garbage collection.
 
 **2026-09-28** — [`431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6`](https://github.com/Nabzx/mnemosyne/commit/431f1f0ee1a9e4aa05e9afad0120ad1b80edf9d6) — first reading, at the head of `main`, a commit from the same day. Two marks, `audit_log` and `negative_eval`. Screened before reading: 1 auto-run surface (`.githooks/pre-commit`, inert unless `core.hooksPath` points at it), no build-time execution point, 8 dependency files inside the cooldown — every file in a depth-1 clone dates to the tip — and 4 unpinned Python surfaces; `AGENTS.md` was treated as data. Read with `git grep` and `sed`; nothing installed, built or run.

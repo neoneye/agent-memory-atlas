@@ -9985,7 +9985,7 @@ and four benchmark files);
 <code>git grep -nE 'write_text|json\.dump|open\(' -- '*.py'</code>
 (result writers in <code>THREADS_test_runner.py</code> and
 <code>benchmarks/</code> only);
-<code>git grep -nEi '\bllm\b|openai|anthropic|prompt|embedding|\bmcp\b' -- '*.py'</code>
+<code>git grep -nEi '(^|[^[:alnum:]_])llm([^[:alnum:]_]|$)|openai|anthropic|prompt|embedding|(^|[^[:alnum:]_])mcp([^[:alnum:]_]|$)' -- '*.py'</code>
 (nothing). The screen found 0 RUNS, 0 EXEC, 0 FRESH and 2 FLOAT
 (<code>numpy&gt;=1.24</code> in <code>requirements.txt</code>, and
 <code>source/pyproject.toml</code> with no lockfile), and nothing was
@@ -14839,10 +14839,12 @@ WAL, dense HNSW and sparse inverted vector indexes, GQL, and native
 Node.js and Python bindings. Nothing in it defines a memory unit,
 extracts, embeds or exposes a tool to a model: embeddings arrive from
 the caller's model, and
-<code>git grep -n -i -E '\bmcp\b|remember|recall\(|\bllm\b|openai|anthropic' -- . ':!docs/04-quality' ':!Cargo.lock'</code>
-matches only a query-planner helper named
+<code>git grep -n -i -E '(^|[^[:alnum:]_])mcp([^[:alnum:]_]|$)|remember|recall\(|(^|[^[:alnum:]_])llm([^[:alnum:]_]|$)|openai|anthropic' -- . ':!docs/04-quality' ':!Cargo.lock'</code>
+matches a query-planner helper named
 <code>remember_candidate_probe_warning</code>
-(<code>src/engine/query_plan.rs:10294</code>). The README's agent-memory
+(<code>src/engine/query_plan.rs:10294</code>, called at
+<code>:10339</code>) and one roadmap sentence on an MCP server that
+could be added (<code>ROADMAP.md:118</code>). The README's agent-memory
 line (<code>README.md:29</code>) and the roadmap's "memory that can
 change and forget" section (<code>ROADMAP.md:97-108</code>), which says
 the application should decide what deserves to stay, are where the use
@@ -14863,10 +14865,13 @@ physically removed with their incident edges at compaction
 (<code>src/engine/mod.rs:3262-3287</code>;
 <code>docs/architecture-overview.md:62</code>, <code>:169</code>,
 <code>:175-182</code>). Tenancy is not modelled:
-<code>git grep -n -i -E '\b(tenant_id|user_id|agent_id|session_id)\b' -- src ':!src/engine/tests'</code>
-returns nothing, so a scope is one database directory or a caller
-convention on labels and properties. Screened before reading, from a
-full clone: no auto-run surface, two build-time execution points
+<code>git grep -w -n -i -E '(tenant_id|user_id|agent_id|session_id)' -- src ':!src/engine/tests'</code>
+matches only an example property in two GQL parser tests
+(<code>src/gql/index.rs:374-379</code>,
+<code>src/gql/parser.rs:5193-5200</code>, both under
+<code>#[cfg(test)]</code>), so a scope is one database directory or a
+caller convention on labels and properties. Screened before reading,
+from a full clone: no auto-run surface, two build-time execution points
 (<code>overgraph-node/build.rs</code>,
 <code>overgraph-python/tests/conftest.py</code>), seven dependency files
 inside the cooldown from the release commit, and two unpinned surfaces
@@ -15619,8 +15624,11 @@ claims ran at the tree root. Tables:
 Vocabulary:
 <code>git grep -c -i -E 'remember|recall' -- src studio/src studio/src-tauri python</code>,
 whose hits in <code>src/</code> are retrieval-metric names, and
-<code>git grep -n -i -E '\bmemor(y|ies)\b' -- src</code>, every hit
-being RAM, the storage mode or a WASM plugin's linear memory. Lineage
+<code>git grep -w -n -i -E 'memor(y|ies)' -- src</code>, every hit being
+RAM, the storage mode or a WASM plugin's linear memory, apart from a
+design comment about the developers' own notes
+(<code>src/align_fuzzy.rs:17</code>) and a credit to synaptic-memory for
+the sync watermark pattern (<code>src/sql_sync.rs:4</code>). Lineage
 writers:
 <code>git grep -n -E 'lineage\(\)\.record\(' -- src/server.rs</code>.
 Verdict readers: <code>git grep -n -E 'support_verdicts' -- src</code>.
@@ -15902,7 +15910,7 @@ openCypher over GraphBLAS sparse matrices, with numeric, full-text and
 vector indexes. The README names agent memory as a use case, and nothing
 under <code>graph/</code> or <code>src/</code> defines a memory unit, a
 write policy, a validity interval or an entity expiry:
-<code>git grep -n -i -E '\bttl\b|expire|valid_(from|to|at)|tenant' -- graph src</code>
+<code>git grep -n -i -E '(^|[^[:alnum:]_])ttl([^[:alnum:]_]|$)|expire|valid_(from|to|at)|tenant' -- graph src</code>
 matches only three Redis key-open flags in
 <code>graph/src/index/redisearch/redis.rs</code>, and tenancy is one
 graph per Redis key, a physical partition. The memory semantics belong

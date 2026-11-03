@@ -770,7 +770,7 @@ memory or skill writer outside nightly learning reads them.</li>
 — no match.</li>
 <li><code>git grep -n -E 'evidence|messageId' -- packages/maker-core/src/memory ':!*.test.*'</code>
 — no match; shards keep no source.</li>
-<li><code>git grep -n -E 'appendFile|audit|_log\b|history' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory ':!*.test.*'</code>
+<li><code>git grep -n -E 'appendFile|audit|_log([^[:alnum:]_]|$)|history' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory ':!*.test.*'</code>
 — one hit, the prompt's "Git history" line.</li>
 <li><code>git grep -n -E 'MAX_RUNS|MAX_DECLINED|keptRuns|fs.rm\(historyPath' -- apps/desktop/src/main/maker-ipc/botNightlyLearningState.ts</code>
 — runs capped at 30 with their backups removed, declined titles at
@@ -807,6 +807,14 @@ stripping. No <code>CITATION.cff</code>.</li>
 <li><code>ls .gitmodules</code> — absent.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/makecindy/cindy/commit/e1bed8973a72a7555405fccc297ecf832851a05e"><code class="commit-id" title="e1bed8973a72a7555405fccc297ecf832851a05e">e1bed897…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-11-03</strong> — <a
 href="https://github.com/makecindy/cindy/commit/e1bed8973a72a7555405fccc297ecf832851a05e"><code class="commit-id" title="e1bed8973a72a7555405fccc297ecf832851a05e">e1bed897…</code></a>
 — 2,472 commits on; the memory engine, MCP tools, nightly learning,

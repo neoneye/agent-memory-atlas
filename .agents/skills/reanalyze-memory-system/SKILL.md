@@ -200,6 +200,12 @@ pins without matching the original pattern, over a test that existed at both —
 are tests that X, and none that Y"* are absence claims too, and the grep will
 not see them; read section 10 for them by hand.
 
+A recorded command that cannot match proves nothing however often it is
+re-run. Under `git grep -E`, macOS git matches nothing for `\b`, `\s`, `\w`,
+`\d`, `\<` or `\>`, and both greps read `\|` as a literal pipe. Write `-w`,
+`(^|[^[:alnum:]_])`, `[[:space:]]` or a bare `|` instead (the `rg` above is
+unaffected). `list_inert_recorded_commands.py` fails the build on these.
+
 **The code is gone.** The upstream deleted the implementation, or rewrote history
 past it. Do not re-pin: a pin to a tree with nothing in it makes every section of
 the report false, and the reading it records was of real code. Keep `revision`

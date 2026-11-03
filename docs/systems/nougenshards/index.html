@@ -612,17 +612,17 @@ scope</td>
 <p>Run at the tree root of the pinned checkout with
 <code>git grep</code>.</p>
 <ul>
-<li><code>git grep -nE 'original_timestamp\s*=' -- '*.py' ':!tests'</code>
+<li><code>git grep -nE 'original_timestamp[[:space:]]*=' -- '*.py' ':!tests'</code>
 — <code>src/nougen_shards/tube.py:432</code>,
 <code>src/nougen_shards/mcp.py:97</code>, <code>app.py:301</code>,
 <code>:1846</code>, <code>:1911</code>, the standalone scripts
 <code>tools/nougentube.py</code> and
 <code>tools/nougentranscribe.py</code>, and two docstrings; nothing
 under <code>brain_scan/</code> or in <code>cli.py</code>.</li>
-<li><code>git grep -nE 'valid_until\s*=|mark_verified\(' -- '*.py' ':!tests'</code>
+<li><code>git grep -nE 'valid_until[[:space:]]*=|mark_verified\(' -- '*.py' ':!tests'</code>
 — <code>mark_verified</code>'s definition at <code>core.py:1345</code>
 only; no caller and no <code>valid_until=</code> argument.</li>
-<li><code>git grep -nE 'event_(after|before)\s*=' -- '*.py' ':!tests'</code>
+<li><code>git grep -nE 'event_(after|before)[[:space:]]*=' -- '*.py' ':!tests'</code>
 — no match; nothing passes either filter to
 <code>core.retrieve</code>.</li>
 <li><code>git grep -nE 'history\.log_events?\(' -- '*.py' ':!tests'</code>
@@ -633,7 +633,7 @@ forget.</li>
 no match.</li>
 <li><code>git grep -nE 'temporal_status' -- '*.py' ':!tests'</code> —
 <code>unlearning.py</code> only; no schema column and no reader.</li>
-<li><code>git grep -nE 'execute_sandboxed\(|trusted\s*=\s*True' -- '*.py' ':!tests'</code>
+<li><code>git grep -nE 'execute_sandboxed\(|trusted[[:space:]]*=[[:space:]]*True' -- '*.py' ':!tests'</code>
 — <code>nougen_sandbox.py:134</code> inside the batch helper,
 <code>mcp.py:334</code> with neither flag, and CLI, evolution and skill
 callers.</li>
@@ -652,6 +652,14 @@ no reader.</li>
 match.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/Who-Visions/NouGenShards/commit/b570cf2fe4d0c8788ec66bb28ab6d05c6ec2635a"><code class="commit-id" title="b570cf2fe4d0c8788ec66bb28ab6d05c6ec2635a">b570cf2f…</code></a>
+— recorded searches re-run at the same pin. Four recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. Each returns what its
+annotation states, and no claim moves.</p>
 <p><strong>2026-10-12</strong> — <a
 href="https://github.com/Who-Visions/NouGenShards/commit/b570cf2fe4d0c8788ec66bb28ab6d05c6ec2635a"><code class="commit-id" title="b570cf2fe4d0c8788ec66bb28ab6d05c6ec2635a">b570cf2f…</code></a>
 — 329 commits on, version unchanged at 1.3.1. Screened before reading

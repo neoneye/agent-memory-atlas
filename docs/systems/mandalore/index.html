@@ -694,7 +694,7 @@ delete</td>
 <li><code>git grep -nE 'os\.(Remove|RemoveAll)\(' -- internal/memory ':!*_test.go'</code>
 — <code>store.go:95</code> (staging) and <code>:201</code> (temp file)
 only.</li>
-<li><code>git grep -nE 'EffectiveFrom\s*[:=]|\.EffectiveFrom\s*=' -- '*.go' ':!*_test.go'</code>
+<li><code>git grep -nE 'EffectiveFrom[[:space:]]*[:=]|\.EffectiveFrom[[:space:]]*=' -- '*.go' ':!*_test.go'</code>
 — <code>internal/memory/service.go:161</code> and the synthetic fixture
 <code>internal/testfixture/retrieval.go:61</code>, both equal to the
 record time.</li>
@@ -702,13 +702,13 @@ record time.</li>
 <code>binding.go:226</code>, the migration journal entry, readiness and
 upgrade checks and the test fixture; none sets <code>Model</code> or
 <code>SessionID</code>.</li>
-<li><code>git grep -nE '\b(Model|SessionID)\s*[:=]' -- internal/memory internal/binding internal/razorcrest internal/migration internal/api ':!*_test.go'</code>
+<li><code>git grep -nE '(^|[^[:alnum:]_])(Model|SessionID)[[:space:]]*[:=]' -- internal/memory internal/binding internal/razorcrest internal/migration internal/api ':!*_test.go'</code>
 — one hit, a canon recall input's <code>SessionID</code> at
 <code>internal/api/canon.go:55</code>, unrelated to authorship.</li>
 <li><code>git grep -nE 'ExactScope' -- '*.go' ':!*_test.go'</code> — the
 field, its one read at <code>memory.go:467</code>, and three callers,
 all <code>true</code>.</li>
-<li><code>git grep -nE '\.Sensitivity\b' -- '*.go' ':!*_test.go'</code>
+<li><code>git grep -nE '\.Sensitivity([^[:alnum:]_]|$)' -- '*.go' ':!*_test.go'</code>
 — the default, the revision assignment and the export projection; no
 read filter.</li>
 <li><code>git grep -niE 'scope' -- internal/razorcrest/auth.go</code> —
@@ -735,6 +735,14 @@ write or read path.</li>
 — no match; the MIT text carries no rider.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/acoz-labs/mandalore/commit/c28d2e607aa6fa78feb7117a852d82a077d33bc8"><code class="commit-id" title="c28d2e607aa6fa78feb7117a852d82a077d33bc8">c28d2e60…</code></a>
+— recorded searches re-run at the same pin. Three recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. Each returns what its
+annotation states, and no claim moves.</p>
 <p><strong>2026-10-11</strong> — <a
 href="https://github.com/acoz-labs/mandalore/commit/c28d2e607aa6fa78feb7117a852d82a077d33bc8"><code class="commit-id" title="c28d2e607aa6fa78feb7117a852d82a077d33bc8">c28d2e60…</code></a>
 — 167 commits on, version 1.0.0 to 1.6.0. Withdrawal and restore arrived

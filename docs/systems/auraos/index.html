@@ -735,9 +735,14 @@ that was actually run.</p>
 <code>KNOWLEDGE_BASE</code> stored once and loaded nowhere.</td>
 </tr>
 <tr>
-<td>No delete path in code</td>
-<td><code>git grep -n -I -i -E '\bDELETE\b|os\.remove|unlink|rmtree' -- '*.py' '*.js' '*.php' '*.html' ':!*READTHEDOCS*' ':!*_static*'</code></td>
-<td>Nothing.</td>
+<td>No delete path for stored memory</td>
+<td><code>git grep -n -I -i -E '(^|[^[:alnum:]_])DELETE([^[:alnum:]_]|$)|os\.remove|unlink|rmtree' -- '*.py' '*.js' '*.php' '*.html' ':!*READTHEDOCS*' ':!*_static*'</code></td>
+<td>Page-local only: the browser client drops parsed profile fields from
+its in-memory <code>userData</code> when a guest fails the hash check
+(<code>indexworking.html:545</code>, <code>:553-554</code>, repeated in
+six other HTML copies); the other hits are prose in
+<code>webfiles/AIPROMPT.html</code>. Nothing removes a history
+file.</td>
 </tr>
 <tr>
 <td>No licence file</td>
@@ -755,6 +760,15 @@ prefix</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/AdultSwimmer/AuraOS/commit/81dffa9ba95334b3ded57f9237750372ab80815d"><code class="commit-id" title="81dffa9ba95334b3ded57f9237750372ab80815d">81dffa9b…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. The delete search matches the browser
+client dropping parsed profile fields from its in-page object; nothing
+removes stored memory, and no mark moves.</p>
 <p><strong>2026-09-26</strong> — <a
 href="https://github.com/AdultSwimmer/AuraOS/commit/81dffa9ba95334b3ded57f9237750372ab80815d"><code class="commit-id" title="81dffa9ba95334b3ded57f9237750372ab80815d">81dffa9b…</code></a>
 — audit at an unchanged pin; no mark changes. Four published claims were

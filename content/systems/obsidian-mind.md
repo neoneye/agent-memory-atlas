@@ -462,7 +462,7 @@ prices a cost every agent memory system pays.
 
 ```sh
 git grep -n 'confidence' -- ':!*tests*'                         # no read filters on it; display at mcp-server.ts:373
-git grep -n -E '\baudit\(' -- '.claude/scripts/lib/*.ts' ':!*tests*'   # twelve calls; none on the duplicate refusal or captureNote catch
+git grep -n -E '(^|[^[:alnum:]_])audit\(' -- '.claude/scripts/lib/*.ts' ':!*tests*'   # twelve calls; none on the duplicate refusal or captureNote catch
 git grep -n -E 'recallFrom|isVisibleTo' -- ':!*tests*'           # one production caller, mcp-server.ts:277
 git grep -n -i -E 'tombstone|rejected_value|valid_from|valid_to'  # nothing in code
 git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation\.cff|doi\.org'  # nothing
@@ -472,6 +472,8 @@ git grep -n -i -E 'baseline|ablation' -- ':!*.json'              # review-cycle 
 ```
 
 ## History
+
+**2026-11-03** — [`af615d100a1d04561409ab9a1e71e615efa1d87b`](https://github.com/breferrari/obsidian-mind/commit/af615d100a1d04561409ab9a1e71e615efa1d87b) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-09-30** — [`af615d100a1d04561409ab9a1e71e615efa1d87b`](https://github.com/breferrari/obsidian-mind/commit/af615d100a1d04561409ab9a1e71e615efa1d87b) — audit at an unchanged pin; upstream HEAD is the pin. Screened again with the same three in-repo auto-run findings; nothing installed, built or run. No mark moved. Corrected: [section 6](#6-retrieval-mechanics) said `scope_enforced` was not earned while the frontmatter awarded it; [section 5](#5-memory-data-model) said there was no confidence and no supersession, while captures carry both. The `negative_eval` record said each scope case carries its positive half; the `:222` case asserts only the predicate. The `audit_log` record omitted the 5 MB rotation, two unaudited refusals and the unlogged supersession edit. The `reason` tool's prompt-only boundary is recorded, and the `CHANGELOG.md` anchors were those of the first pin. Added: the cross-repo capture layer in sections 5–7; census moved to the header band.
 

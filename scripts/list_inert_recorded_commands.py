@@ -64,6 +64,27 @@ for more than it is:
   `list_unchecked_absences.py`'s job, and the two gates are complements: one
   asks whether a search was recorded, this one whether the recorded search runs.
 
+**The second defect is an escape under `-E`.** Git uses the platform's POSIX
+regex library unless it was built with PCRE, and on macOS that library's
+*extended* mode reads `\b`, `\s`, `\w`, `\d`, `\<` and `\>` as nothing it can
+match, and `\|` as a literal pipe. Basic mode accepts them, and BSD `grep -E`
+accepts every one of them except `\|`. So
+
+    git grep -n -E '\.disputed\b' -- src
+
+returns nothing on the machine these reports are written on, whether or not
+the field is assigned. On 2026-11-03, 66 such commands in 41 pages were re-run
+in a form that can match. Nine annotations stated an absence the tree
+contradicts, two of them in kannaka-memory (`disputed` has two writers), and
+six more omitted hits that were really there. The same commands match on glibc, so this check is about
+who can reproduce a search, not about any one machine. The portable spellings
+are `-w` for a pattern wrapped whole in `\b…\b`, `(^|[^[:alnum:]_])` and
+`([^[:alnum:]_]|$)` for a single boundary, and `[[:space:]]` for `\s`.
+
+This rule reads inline code spans as well as fenced lines, since most recorded
+searches are inline list items, and it reads a table cell's `\|` as the `|` it
+renders as. `ESCAPE_CEILING` is its own ratchet, at zero.
+
 Usage:
        list_inert_recorded_commands.py <project-dir>
        list_inert_recorded_commands.py --check <project-dir>
@@ -111,6 +132,42 @@ LITERAL_PIPE_EXEMPTIONS = {
 #: known-limitations bullet quoting the defect is inside an inline code span.
 INERT_CEILING = 1
 
+#: Escapes macOS's extended-mode regcomp cannot match. Read for `git grep`
+#: only: BSD `grep -E` accepts all of them.
+CLASS_ESCAPE = re.compile(r"\\[bBsSwWdD<>]")
+
+#: Extended-mode patterns whose `\|` is deliberately a literal pipe.
+LITERAL_ESCAPED_PIPE_EXEMPTIONS = {
+    r"slug_pattern \|\| '%'",   # llm-memory-api: SQL string concatenation
+}
+
+#: Commands with an extended-mode escape at the last time this was lowered.
+ESCAPE_CEILING = 0
+
+
+def scan_escapes(text: str) -> list[tuple[int, str]]:
+    """Return (line number, command) for each -E grep with an escape it cannot match."""
+    found = []
+    fenced = False
+    for lineno, raw in enumerate(text.splitlines(), 1):
+        if raw.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+        spans = [raw] if fenced else re.findall(r"`([^`]*)`", raw)
+        if not fenced and raw.lstrip().startswith("|"):
+            spans = [s.replace(r"\|", "|") for s in spans]
+        for span in spans:
+            for match in GREP.finditer(span):
+                flags, pattern = match.group(1), match.group(3)
+                is_git = span[: match.start()].endswith("git ")
+                if not re.search(r"(^|\s)-[a-zA-Z]*E", flags) or re.search(r"(^|\s)-[a-zA-Z]*P", flags):
+                    continue
+                if is_git and CLASS_ESCAPE.search(pattern):
+                    found.append((lineno, match.group(0).strip()))
+                elif r"\|" in pattern and pattern not in LITERAL_ESCAPED_PIPE_EXEMPTIONS:
+                    found.append((lineno, match.group(0).strip()))
+    return found
+
 
 def scan_text(text: str) -> list[tuple[int, str]]:
     """Return (line number, command) for each grep that cannot alternate."""
@@ -131,7 +188,8 @@ def scan_text(text: str) -> list[tuple[int, str]]:
     return found
 
 
-def collect(project_dir: Path) -> list[tuple[str, int, str]]:
+def collect(project_dir: Path, scan=None) -> list[tuple[str, int, str]]:
+    scan = scan or scan_text
     out = []
     targets = sorted((project_dir / "content" / "systems").glob("*.md"))
     for extra in ("overview.md", "families.md", "appendix.md", "benchmarks.md", "verdicts.md"):
@@ -140,7 +198,7 @@ def collect(project_dir: Path) -> list[tuple[str, int, str]]:
             targets.append(candidate)
     for path in targets:
         text = path.read_text(encoding="utf-8", errors="replace")
-        for lineno, command in scan_text(text):
+        for lineno, command in scan(text):
             out.append((path.name, lineno, command))
     return out
 
@@ -162,18 +220,34 @@ SELF_TEST = [
     ('rg "a|b" .', 0, "rg is not grep and is ERE by default"),
 ]
 
+ESCAPE_SELF_TEST = [
+    ("- `git grep -nE '\\.disputed\\b' -- src` — no match.", 1, "the kannaka defect, inline"),
+    ("```sh\ngit grep -n -E 'Model\\s*[:=]' -- internal\n```", 1, "\\s under -E, fenced"),
+    ("- `git grep -n -i -E 'a\\|b' -- src`", 1, "escaped pipe under -E is a literal"),
+    ("| claim | `git grep -n -E '\\bDELETE\\b\\|unlink' -- .` | Nothing. |", 1, "table cell, \\b still inert"),
+    ("| claim | `git grep -n -E 'DELETE\\|unlink' -- .` | Nothing. |", 0, "table cell's \\| renders as |"),
+    ("- `git grep -n -w -E 'disputed' -- src`", 0, "-w is the portable boundary"),
+    ("- `git grep -n -E '\\.disputed([^[:alnum:]_]|$)' -- src`", 0, "POSIX class boundary"),
+    ("- `git grep -n 'facade\\.record\\b'`", 0, "basic mode accepts \\b"),
+    ("- `/usr/bin/grep -rn -E '\\bfoo\\b' src`", 0, "BSD grep -E accepts \\b"),
+    ("- `/usr/bin/grep -rn -E 'a\\|b' src`", 1, "BSD grep -E reads \\| as a literal too"),
+    ("- `git grep -n -P '\\bfoo\\b'`", 0, "-P is Perl"),
+    ("- `git grep -nE \"slug_pattern \\|\\| '%'\" -- node`", 0, "literal ||, exempt by intent"),
+]
+
 
 def self_test() -> int:
     failures = 0
-    for text, expected, why in SELF_TEST:
-        got = len(scan_text(text))
+    cases = [(scan_text, *c) for c in SELF_TEST] + [(scan_escapes, *c) for c in ESCAPE_SELF_TEST]
+    for scan, text, expected, why in cases:
+        got = len(scan(text))
         if got != expected:
             print(f"  FAIL ({why}): expected {expected}, got {got} — {text}", file=sys.stderr)
             failures += 1
     if failures:
-        print(f"self-test: {failures} of {len(SELF_TEST)} controls failed", file=sys.stderr)
+        print(f"self-test: {failures} of {len(cases)} controls failed", file=sys.stderr)
         return 1
-    print(f"self-test: {len(SELF_TEST)} controls passed")
+    print(f"self-test: {len(cases)} controls passed")
     return 0
 
 
@@ -184,7 +258,9 @@ def main(argv: list[str]) -> int:
     args = [a for a in argv if not a.startswith("--")]
     project_dir = Path(args[0]) if args else Path(__file__).resolve().parent.parent
     inert = collect(project_dir)
+    escapes = collect(project_dir, scan_escapes)
     if check:
+        failed = False
         if len(inert) > INERT_CEILING:
             for name, lineno, command in inert:
                 print(f"  {name}:{lineno}  {command}", file=sys.stderr)
@@ -194,14 +270,27 @@ def main(argv: list[str]) -> int:
                 "Use -E, or escape the pipes as \\|.",
                 file=sys.stderr,
             )
+            failed = True
+        if len(escapes) > ESCAPE_CEILING:
+            for name, lineno, command in escapes:
+                print(f"  {name}:{lineno}  {command}", file=sys.stderr)
+            print(
+                f"extended-mode escapes that cannot match rose to {len(escapes)} > {ESCAPE_CEILING}. "
+                "Under -E, macOS git matches nothing for \\b, \\s, \\w, \\d, \\< or \\>, and grep "
+                "and git grep read \\| as a literal. Use -w, (^|[^[:alnum:]_]), [[:space:]] or a bare |.",
+                file=sys.stderr,
+            )
+            failed = True
+        if failed:
             return 1
         print(
-            f"{len(inert)} recorded command(s) cannot match as written (ceiling {INERT_CEILING})."
+            f"{len(inert)} recorded command(s) cannot match as written (ceiling {INERT_CEILING}); "
+            f"{len(escapes)} carry an extended-mode escape (ceiling {ESCAPE_CEILING})."
         )
         return 0
-    for name, lineno, command in inert:
+    for name, lineno, command in inert + escapes:
         print(f"{name}:{lineno}  {command}")
-    print(f"\n{len(inert)} inert recorded command(s).")
+    print(f"\n{len(inert)} inert recorded command(s), {len(escapes)} with an extended-mode escape.")
     return 0
 
 

@@ -818,7 +818,7 @@ types; no producer.</li>
 only absence assertion on retrieved notes.</li>
 <li><code>git grep -n -E 'appendFileSync|createWriteStream' -- src/daemon ':!*.test.ts'</code>
 — <code>log.ts</code> only.</li>
-<li><code>git grep -n -i -E 'valid_?from|valid_?until|valid_?to\b|as_?of\b' -- src</code>
+<li><code>git grep -n -i -E 'valid_?from|valid_?until|valid_?to([^[:alnum:]_]|$)|as_?of([^[:alnum:]_]|$)' -- src</code>
 — no match.</li>
 <li><code>git grep -n -i -E 'tombstone|rejectedValue|deny-?list' -- src/daemon/agent src/lib/skills src/lib/bridge/skill-store.ts src/lib/bridge/recording-store.ts</code>
 — test mocks and Cursor fixtures only.</li>
@@ -830,6 +830,14 @@ telling the model not to answer from memory.</li>
 — one Codex fixture; no paper and no <code>CITATION.cff</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/imshaikot/browsentic/commit/868fd857e7b8908b3a16400675bc4d955e056570"><code class="commit-id" title="868fd857e7b8908b3a16400675bc4d955e056570">868fd857…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-10-08</strong> — <a
 href="https://github.com/imshaikot/browsentic/commit/868fd857e7b8908b3a16400675bc4d955e056570"><code class="commit-id" title="868fd857e7b8908b3a16400675bc4d955e056570">868fd857…</code></a>
 — first reading, at the head of <code>main</code>, 17 commits past

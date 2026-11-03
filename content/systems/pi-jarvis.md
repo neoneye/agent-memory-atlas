@@ -559,7 +559,7 @@ Run with `git grep` in the checkout at the pinned revision, from the tree root.
 
 - `git grep -n -E 'CREATE TABLE|CREATE VIRTUAL TABLE' -- memory-store.ts archive-store.ts` — each store has `records`, `tombstones` and an FTS5 table; no history or audit table.
 - `git grep -n -i -E 'valid_from|valid_to|valid_until|as_of|valid_at|effective_' -- '*.ts' ':!test'` — no match.
-- `git grep -n -i -E '\b(status|verified|candidate|pending|approved|rejected)\b' -- memory-store.ts memory-types.ts` — no match.
+- `git grep -w -n -i -E '(status|verified|candidate|pending|approved|rejected)' -- memory-store.ts memory-types.ts` — no match.
 - `git grep -n -i -E 'audit|mutation|history' -- 'memory-*.ts'` — comments and UI strings only; no mutation record.
 - `git grep -n -E 'remember\(|explicit' -- memory-service.ts memory-extension.ts` — `explicit` is `true` only at `memory-service.ts:316`, the human command; the tool at `memory-extension.ts:97` passes none.
 - `git grep -n "FROM tombstones WHERE id" -- memory-store.ts` — checked in `save`, `replace`, `editorCreate` and `editorUpdate`; deleted only in `save` under `explicit`.
@@ -569,5 +569,7 @@ Run with `git grep` in the checkout at the pinned revision, from the tree root.
 - `git grep -l -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION'` — no match, and no `CITATION.cff`.
 
 ## History
+
+**2026-11-03** — [`1dab7a41ad9c2a7a2a5249da396faa4aa316108b`](https://github.com/crustyhacker/pi-jarvis/commit/1dab7a41ad9c2a7a2a5249da396faa4aa316108b) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-15** — [`1dab7a41ad9c2a7a2a5249da396faa4aa316108b`](https://github.com/crustyhacker/pi-jarvis/commit/1dab7a41ad9c2a7a2a5249da396faa4aa316108b) — first reading, at the head of `main`, the v1.14.0 release commit of 11 October 2026. One mark, `negative_eval`. Screened before reading from a full clone: no auto-run surface and no build-time execution point; `package.json` and `package-lock.json` inside the seven-day cooldown, changed three days before the pin; three floating dev-dependency ranges against a present lockfile; an `AGENTS.md` addressed to a reading agent, read as data. MIT, no rider. Read with `git grep` and `sed`; nothing was installed, built or run.

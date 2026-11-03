@@ -783,9 +783,9 @@ admin route, the SDK and tests.</li>
 <code>git grep -n -E 'complete_decay_phase|cleanup_completed_decays' -- 'ciris_engine/*.py'</code>
 — the definitions only.</li>
 <li>Agent:
-<code>git grep -n -E '(expires_at|consent_stream)\s*=' -- 'ciris_engine/*.py'</code>
+<code>git grep -n -E '(expires_at|consent_stream)[[:space:]]*=' -- 'ciris_engine/*.py'</code>
 — assignments on other schemas (ConsentStatus, IdentitySnapshot,
-WAPermission, tokens), none on a <code>GraphNode</code>.</li>
+WAPermission, tokens) and locals, none on a <code>GraphNode</code>.</li>
 <li>Agent:
 <code>git grep -n -E '"wa_authorized"|wa_authorized=' -- 'ciris_engine/*.py'</code>
 — readers, and a hard-coded <code>False</code> in database maintenance;
@@ -806,7 +806,7 @@ over the V013 and V019 migrations — no match.</li>
 <li>Persist: <code>git grep -n -E '_deleted' -- src/graph</code> — the
 two soft-delete writers and a comment; no reader.</li>
 <li>Persist:
-<code>git grep -n -E '\b(CREATE TRIGGER|CREATE RULE|REVOKE (UPDATE|DELETE|ALL))\b' -- $(git grep -l -E 'audit_log' -- migrations)</code>
+<code>git grep -w -n -E '(CREATE TRIGGER|CREATE RULE|REVOKE (UPDATE|DELETE|ALL))' -- $(git grep -l -E 'audit_log' -- migrations)</code>
 — no match.</li>
 <li>Persist:
 <code>git grep -n -i -E 'verify|ed25519|verifying_key' -- src/graph</code>
@@ -817,6 +817,14 @@ two soft-delete writers and a comment; no reader.</li>
 <code>src/ffi/pyo3.rs</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/CIRISAI/CIRISAgent/commit/7de0d36eee7fda81d6415c100002fbc9663a5568"><code class="commit-id" title="7de0d36eee7fda81d6415c100002fbc9663a5568">7de0d36e…</code></a>
+— recorded searches re-run at the same pin. Two recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. One annotation gains the
+local variables it had omitted.</p>
 <p><strong>2026-11-01</strong> — <a
 href="https://github.com/CIRISAI/CIRISAgent/commit/7de0d36eee7fda81d6415c100002fbc9663a5568"><code class="commit-id" title="7de0d36eee7fda81d6415c100002fbc9663a5568">7de0d36e…</code></a>
 — first reading, at the head of <code>main</code>, the 2.19.0 merge,

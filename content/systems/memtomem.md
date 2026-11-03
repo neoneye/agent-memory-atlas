@@ -398,7 +398,7 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -nE 'get_source_files_with_counts\(' -- 'packages/memtomem/src/*.py'` — the indexing engine, the MCP sources resource, `mem_list`, `mem_consolidate` and three web routes; the method takes no boundary argument.
 - `git grep -nE 'boundary|project_context_root|scope_context' -- packages/memtomem/src/memtomem/server/tools/export_import.py packages/memtomem/src/memtomem/tools/export_import.py` — two comments about the import trust boundary and one about UTC; no scope on export.
 - `git grep -nE 'mem_consolidate\(|mem_list\(' -- packages/memtomem/tests` — four calls, two in `test_source_holds.py` about held sources and two in `test_validation_error_messages.py` about argument bounds; none sets a project. The scope tests on consolidation, in `test_memory_write_scope.py`, cover `mem_consolidate_apply`.
-- `git grep -nE 'valid_(from|to)_unix\s*=' -- 'packages/memtomem/src/*.py'` — the chunker, the budget migration, the row decoder and the web schema; no default to the write clock.
+- `git grep -nE 'valid_(from|to)_unix[[:space:]]*=' -- 'packages/memtomem/src/*.py'` — the chunker, the budget migration, the row decoder and the web schema; no default to the write clock.
 - `git grep -nE '\.(add_assertion|link_assertions|query_assertions)\(' -- packages/memtomem/src` — no match.
 - `git grep -nE 'reviewer: str = "user"' -- packages/memtomem/src` — `server/tools/formation.py:224`.
 - `git grep -nE 'UNIQUE\(session_id, fingerprint\)' -- packages/memtomem/src` — `storage/sqlite_schema.py:872`, the only uniqueness on candidates besides the id.
@@ -407,6 +407,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -niE 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE` — no match; the Apache-2.0 text carries no rider.
 
 ## History
+
+**2026-11-03** — [`d844f08ce66ecd5da28995f885980fe33a6bf42c`](https://github.com/memtomem/memtomem/commit/d844f08ce66ecd5da28995f885980fe33a6bf42c) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-11-02** — [`d844f08ce66ecd5da28995f885980fe33a6bf42c`](https://github.com/memtomem/memtomem/commit/d844f08ce66ecd5da28995f885980fe33a6bf42c) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 5 auto-run surfaces, 7 in all: hooks registered in `packages/memtomem-claude-automation-plugin/hooks/hooks.json` on SessionStart, UserPromptSubmit, PostToolUse and Stop; an MCP server declared in `packages/memtomem-claude-plugin/.mcp.json`, launched from a package fetched at run time. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 

@@ -729,12 +729,12 @@ Checked with `git grep` against the checkout at the pinned revision, from the tr
 - `git grep -n -E 'Procedure\(|Revision\(' -- packages/musclememory ':!*/migrations/*'` — constructors only at `service.py:520` and `:530`, inside `learn`.
 - `git grep -n -i -E 'auto[-_]?flag|autoFlag' -- packages apps integrations` — the REST route, the Python SDK, `service.py:1232` and the one hook caller at `client_hooks.py:904`; none in the TypeScript SDK or the CleanSlate adapter.
 - `git grep -n -E '"succeeded": False|succeeded=False' -- packages` — one match, `service.py:1277` in `auto_flag`.
-- `git grep -n -E '\bAudit\b|audit_log' -- packages apps scripts` — construction at `service.py:164`, an aggregate select at `:1451-1453`, the model, the migration and the backup's table list; no update or delete.
+- `git grep -n -E '(^|[^[:alnum:]_])Audit([^[:alnum:]_]|$)|audit_log' -- packages apps scripts` — construction at `service.py:164`, an aggregate select at `:1451-1453`, the model, the migration and the backup's table list; no update or delete.
 - `git grep -n -i -E 'valid_from|valid_to|valid_until|invalid_at|as_of' -- packages` — one false positive, `invalid_tool_metadata` in `observer.ts`.
 - `git grep -n -i -E 'project|repository|repo_' -- packages/musclememory/retrieval.py packages/musclememory/service.py packages/musclememory/core.py` — comments only; no project column or predicate.
 - `git grep -n -E 'retire' -- tests packages/sdk-typescript/tests` — the status-code assertion at `tests/test_api.py:80` and `test_a_retired_skill_stays_retired` at `tests/test_engine.py:305-324`.
 - `git grep -n -E 'rmtree|unlink|remove\(' -- packages/musclememory/skill_export.py packages/musclememory/service.py` — staging cleanup and `write_skill`'s replace of its own target; nothing removes an exported skill on delete.
-- `git grep -n -E 'audit_log|Audit\b' -- tests` — no match; the `audit` hits in `tests/test_codex_evaluation.py` are about Codex receipts.
+- `git grep -n -E 'audit_log|Audit([^[:alnum:]_]|$)' -- tests` — no match; the `audit` hits in `tests/test_codex_evaluation.py` are about Codex receipts.
 - `git grep -n -E 'sign.in|SignIn|local\.dashboard' -- tests` — no match; the tests issue keys only through `service.issue_key`.
 - `git grep -n -i -E 'merge' -- packages/musclememory` — one hit, the hook installer's config merge at `client_hooks.py:961`; nothing merges procedures.
 - `git ls-files benchmarks/results | cut -d/ -f3-4 | sort -u` — `claude/sonnet-01`, `codex/django-forms-01` and `codex/luna-03`; no scale result is committed.
@@ -742,6 +742,8 @@ Checked with `git grep` against the checkout at the pinned revision, from the tr
 - `git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation|doi\.org'` — related-work citations in `docs/whitepaper.md:401-419`; no `CITATION.cff` and no paper for this system.
 
 ## History
+
+**2026-11-03** — [`51946bd800813881a1348d92b71e04cdeeedc415`](https://github.com/TheWariend/MuscleMemory/commit/51946bd800813881a1348d92b71e04cdeeedc415) — recorded searches re-run at the same pin. Two recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. Each returns what its annotation states, and no claim moves.
 
 **2026-10-16** — [`51946bd800813881a1348d92b71e04cdeeedc415`](https://github.com/TheWariend/MuscleMemory/commit/51946bd800813881a1348d92b71e04cdeeedc415) — re-read at the head of `main`, with [`d6fb50518c611eb176f6ace2dc97e847a4a147d6`](https://github.com/TheWariend/MuscleMemory/commit/d6fb50518c611eb176f6ace2dc97e847a4a147d6) carrying the memory changes. Two marks added, `human_review` and `tombstone` ([section 9](#9-reliability-safety-and-trust)). Overtaken: MCP, REST and SDK learns landing approved; approve on the `write` grant; the word-list verifier; hooks never reporting a failure; a revise reopening a retired skill; delete re-arming the trace. Wrong at the previous pin: a passing session with any failed tool call never counted as a check, because `auto_learn` sent a success-only call count that `evaluate` refused, so it became a duplicate skill ([section 7](#7-write-mechanics)). Screened before reading: no auto-run surface, one build-time execution point, five dependency files inside the cooldown, two floating-range manifests. Nothing was installed, built or run.
 

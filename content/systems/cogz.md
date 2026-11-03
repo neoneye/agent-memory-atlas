@@ -411,13 +411,15 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -n -i -E 'DELETE FROM events|UPDATE events' -- src ':!*_tests.rs'` — the sweep at `src/storage/usage.rs:335`, the scrub at `src/storage/crud_batch.rs:180`, the cascade at `:199` and `:248`, and `annotate_event` at `src/storage/events.rs:175`.
 - `git grep -n 'rejected_match' -- src` — the dedup result, the pass, and one consumer, the MCP response at `src/mcp/entity_helpers.rs:199`.
 - `git grep -n -i -E 'valid_(from|to|until|at)|effective_(from|at)|observed_at|occurred_at|event_time|as_of' -- src ':!*_tests.rs'` — no match.
-- `git grep -n -i -E '\b(tenant|namespace|user_id|agent_id|project_id|workspace_id)\b' -- src ':!*_tests.rs'` — two UUID v5 namespace constants; no scope key.
+- `git grep -w -n -i -E '(tenant|namespace|user_id|agent_id|project_id|workspace_id)' -- src ':!*_tests.rs'` — two UUID v5 namespace constants; no scope key.
 - `git grep -n -i -E '"(pending|proposed|candidate|needs_review|approved|draft)"|approve|isatty|is_terminal' -- src ':!*_tests.rs'` — no match; no review state and no terminal check.
 - `git grep -n -E 'entity_usage|deliveries' -- src ':!*_tests.rs' ':!src/storage/usage.rs' ':!src/storage/schema.rs'` — delivery bookkeeping and the doctor check; no ranking reader.
 - `git grep -n -i -E 'arxiv|bibtex|@article|doi\.org' -- README.md docs` — no match.
 - `git grep -n -i -E 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE` — no match; the MIT text carries no rider.
 
 ## History
+
+**2026-11-03** — [`edb40d72e9208341bf7bc96d6eb23641801b61c3`](https://github.com/balaianu/CogZ/commit/edb40d72e9208341bf7bc96d6eb23641801b61c3) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-15** — [`edb40d72e9208341bf7bc96d6eb23641801b61c3`](https://github.com/balaianu/CogZ/commit/edb40d72e9208341bf7bc96d6eb23641801b61c3) — 158 commits on, version 0.2.1 to 0.5.8. `audit_log` withdrawn: a 30-day sweep deletes events at session end and pruning strips pre-images ([section 9](#9-reliability-safety-and-trust)), and at the old pin the cascade already rewrote mutation rows. Wrong at the old pin: that the frontmatter path skipped the lattice and `transition_status` had one caller ([section 1](#1-executive-summary)), the batch-fetch anchors, and the census. Overtaken: `rejected` gained producers on the CLI and MCP surfaces and a write-time warning, `stale` gained exits to rejected and superseded, and contentful `pruned` files are refused, the last citing the atlas at the old pin in `ed78398f9e664bef3a5803ff9de746bf2c2ae41b`. Screened from a full clone: six files, one auto-run surface (`server.json`), no build-time execution, `Cargo.toml` and `Cargo.lock` inside the cooldown, `AGENTS.md` read as data. Nothing was installed, built or run.
 

@@ -770,7 +770,8 @@ the same at both pins.</li>
 — the cascade, <code>src/core/topic-commands.ts:68</code>,
 <code>src/chat/routes.ts:498</code>,
 <code>src/dashboard/routes/data-routes.ts:241</code>.</li>
-<li><code>git grep -nE '\bsaveMemory\(' -- src ':!*.test.ts'</code> —
+<li><code>git grep -nE '(^|[^[:alnum:]_])saveMemory\(' -- src ':!*.test.ts'</code>
+— the definition (<code>src/db/memories.ts:16</code>) and two callers,
 <code>src/memory/extractor.ts:84</code> and
 <code>src/dashboard/routes/wiki-routes.ts:3210</code>.</li>
 <li><code>git grep -nE 'searchMemories|searchMemoriesHybrid|getMemoriesForUser|getRecentMemories|getMemoriesByUser|dashboardSearchMemories' -- src scripts ':!*.test.ts' ':!src/db/memories.ts'</code>
@@ -798,6 +799,14 @@ omits status.</li>
 — no match; the MIT text carries no rider.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/RuneLind/muninn/commit/34c9e0b52ed1fe4559dce4867e2aaeeac87db408"><code class="commit-id" title="34c9e0b52ed1fe4559dce4867e2aaeeac87db408">34c9e0b5…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. The annotation gains the function's
+definition, which it had omitted.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/RuneLind/muninn/commit/34c9e0b52ed1fe4559dce4867e2aaeeac87db408"><code class="commit-id" title="34c9e0b52ed1fe4559dce4867e2aaeeac87db408">34c9e0b5…</code></a>
 — 124 commits on; <code>src/db/memories.ts</code>, the extractor and the

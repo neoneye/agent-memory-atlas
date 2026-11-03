@@ -457,7 +457,7 @@ Checked against the checkout at the pinned revision, from the tree root.
 - `git log --reverse -S'ripwire_quality_acks' -- src` — first `2c9db2f`, 11 October 2026; the ledger itself is in `a18ae78`, 10 October 2026.
 - `git grep -n -E 'fnv1a|0xcbf29ce484222325' -- src` — `src/clones/token_stream.rs` only; no ack key is computed.
 - `git grep -n -i -E 'heal|remap|rescue|acked_by' -- src/gate` — the literal header at `src/gate/quality_delta.rs:130` only.
-- `git grep -n -E '\bby=' -- src` — one comment in `src/serialize/html_vis.js`; `by=` is not parsed.
+- `git grep -n -E '(^|[^[:alnum:]_])by=' -- src` — one comment in `src/serialize/html_vis.js`; `by=` is not parsed.
 - `git grep -n -E 'show-stale|show_stale|stale_by_kind|scoped-out' -- src` — no match.
 - `git grep -n -E 'dangling' -- src` — PageRank only.
 - `git grep -n -E 'ripwire_notes' -- src` — help text in `src/cli/args.rs` and the two notes functions in `src/cli/queries.rs`.
@@ -467,5 +467,7 @@ Checked against the checkout at the pinned revision, from the tree root.
 - `git grep -l -i -E 'arxiv|bibtex|CITATION' -- .` — the slicing citation in `docs/ALGORITHMS.md`, `www/docs.html` and two skill files; no `CITATION.cff`.
 
 ## History
+
+**2026-11-03** — [`5eba075534d8009b86b201f8574ac1c0a9ad82e4`](https://github.com/casonadams/ripwire-rs/commit/5eba075534d8009b86b201f8574ac1c0a9ad82e4) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-14** — [`5eba075534d8009b86b201f8574ac1c0a9ad82e4`](https://github.com/casonadams/ripwire-rs/commit/5eba075534d8009b86b201f8574ac1c0a9ad82e4) — first reading, at the head of `main`, a commit of 14 October 2026. No mark. Screened before reading from a full clone: no auto-run surface, two build-time execution points (`Makefile`, `build.rs`), `Cargo.toml` and `Cargo.lock` inside the seven-day cooldown, no unpinned surface; `AGENTS.md` read as data. The original's pin `e54b688`, its v0.6.5 release and its `main` at `d4325a8` were fetched as objects into the same clone to compare the ack contract and the ledger header. Read with `git grep` and `sed`; nothing installed, built or run.

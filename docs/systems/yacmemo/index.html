@@ -668,7 +668,7 @@ other caller. Same shape at the old pin.</li>
 <li><code>git grep -n -E 'DELETE FROM (call_log|guard_events|audit_exec_events|audit_actions)' -- yacmemo</code>
 — <code>usage.py:90</code> (the trim) and <code>index_db.py:415</code>
 (blank disposition rows only).</li>
-<li><code>git grep -n -i -E '\bvalid_(from|to|at|until)\b|\bas_of\b|effective_(at|from)|bitemporal|event_time' -- yacmemo</code>
+<li><code>git grep -n -i -E '(^|[^[:alnum:]_])valid_(from|to|at|until)([^[:alnum:]_]|$)|(^|[^[:alnum:]_])as_of([^[:alnum:]_]|$)|effective_(at|from)|bitemporal|event_time' -- yacmemo</code>
 — no match.</li>
 <li><code>git grep -n -E 'remove_collisions_involving\(rel\)' 4a12be944cd78edca28354feb2af14a11542bd83 -- yacmemo/store.py</code>
 — <code>store.py:1271</code> inside <code>_index_note</code>, a delete
@@ -686,6 +686,14 @@ and test functions as <code>^\s*(async\s+)?def test_</code> per file,
 which reproduces 11,695 lines and 146 functions at the old pin.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/yachen4ever/yacmemo/commit/66fb7866172d2a1f9742dbb318d6dd0671e8ee7b"><code class="commit-id" title="66fb7866172d2a1f9742dbb318d6dd0671e8ee7b">66fb7866…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/yachen4ever/yacmemo/commit/66fb7866172d2a1f9742dbb318d6dd0671e8ee7b"><code class="commit-id" title="66fb7866172d2a1f9742dbb318d6dd0671e8ee7b">66fb7866…</code></a>
 — 62 commits on, v0.2.1 to v0.3.18. <strong><code>scope_enforced</code>

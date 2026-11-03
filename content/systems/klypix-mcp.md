@@ -762,7 +762,7 @@ Run at the tree root of the pinned checkout with `git grep`.
 
 - `git grep -cF '/^archive$/i' -- src bin` — 52 lines in `src/klypix-format.mjs`, 8 in `src/klypix-core.mjs`, 2 in `src/global-brain-hook.mjs`, 1 in `src/merge-brains.mjs`.
 - `git grep -nE "graveyard" -- src/klypix-format.mjs` — hits at `:147-2851` (parser, bin identities, arrange); none at or after `captureIntoBrain` (`:6616`).
-- `git grep -niE "valid_?from|valid_?to\b|valid_?until|effective_?(from|at)|occurred_?at|event_?time|valid_?time" -- src bin` — no match.
+- `git grep -niE "valid_?from|valid_?to([^[:alnum:]_]|$)|valid_?until|effective_?(from|at)|occurred_?at|event_?time|valid_?time" -- src bin` — no match.
 - `git grep -nE "scopeLockedView\(" -- src bin` — `bin/klypix-read.mjs:39`, `src/app-tools.mjs:503`, `src/klypix-core.mjs:379`, `:418`, `:935`, and the definition; not in `opBrainAsk`, `opBrainTaskContext` or the hook.
 - `git grep -nE "inspectCardEvidence\(" -- src bin` — the definition, `src/global-brain-hook.mjs:360`, `src/klypix-core.mjs:685`, `:889`.
 - `git grep -nE "appendJsonl\(LEDGER" -- src` — `src/global-brain-hook.mjs:4111`, `:4242`, `:4646`, each with a 1000-line cap.
@@ -779,6 +779,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -niE "anthropic|machine learning|not (be )?used (for|to)" -- LICENSE NOTICE` — no match; the Apache-2.0 text carries no rider.
 
 ## History
+
+**2026-11-03** — [`1f133014fff2e931ce7c4566b35d4231f5a1d7ef`](https://github.com/dahshanlabs/klypix-mcp/commit/1f133014fff2e931ce7c4566b35d4231f5a1d7ef) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-15** — [`1f133014fff2e931ce7c4566b35d4231f5a1d7ef`](https://github.com/dahshanlabs/klypix-mcp/commit/1f133014fff2e931ce7c4566b35d4231f5a1d7ef) — 95 commits on, 1.86.2 to 1.102.0. Two marks withdrawn, both wrong at the previous pin: `human_review`, because `brain_note`, `brain_reconcile` `confirm` and `brain_handoff` archive cards with no person and the garden code guards one path ([section 9](#9-reliability-safety-and-trust)); `audit_log`, because the ledger, restore points and graveyard each prune or rewrite. Also wrong then: that no MCP tool reports evidence drift, that only the hook writes the registry, and the tool and test counts. Overtaken: the 1.87 hook lanes ([section 4](#4-essential-implementation-paths)), the default semantic install, the 6-hour updater, the scope lock ([section 5](#5-memory-data-model)), the coordination bench. Screened: one auto-run surface (`server.json`), no build-time execution, two dependency files inside the cooldown. Nothing was installed or run.
 

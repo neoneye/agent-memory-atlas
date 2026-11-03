@@ -429,7 +429,7 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -n -E "_promote_event\(" -- gaius` — `review.py:362` and `:408`, both inside the interactive staged review.
 - `git grep -n -E "tombstoned_at ?=|tombstoned_at=" -- gaius` — `facts.py:75` (merge) and `maturity.py:668` (live TTL).
 - `git grep -n -E "DELETE FROM facts" -- .` — no match.
-- `git grep -n -E "fact_key ?=|\bfk ?=" -- gaius` — the key derivations: session stem plus text in `retire.py:325` and `:409`, lower-cased text in `ingest.py`, raw text at 32 characters in `mcp_server.py:384`.
+- `git grep -n -E "fact_key ?=|(^|[^[:alnum:]_])fk ?=" -- gaius` — the key derivations: session stem plus text in `retire.py:325` and `:409`, lower-cased text in `ingest.py`, raw text at 32 characters in `mcp_server.py:384`.
 - `git grep -n -E "domain ?= ?\?|domain = '" -- gaius` — unconditional only in `facts.py:443`, `corpus_audit.py:323` and `skills.py:716`; conditional in `landscape.py:1123` and `maturity.py:407`.
 - `git grep -n -E "valid_from|valid_to" -- gaius/kg.py gaius/facts.py` and `git grep -n invalidate_triple -- .` — `valid_from` from the write clock or `first_seen`; `valid_to` from the CLI's clock.
 - `git grep -n -E "CREATE (VIRTUAL )?TABLE" -- gaius` — no table records fact mutations.
@@ -441,6 +441,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -n -i -E 'anthropic|not (be )?used (for|to)' -- LICENSE` — no match; the Apache-2.0 text carries no rider.
 
 ## History
+
+**2026-11-03** — [`520c2eb12627e2c7eb886999b5377a20ee31a7b8`](https://github.com/jkubo/gaius/commit/520c2eb12627e2c7eb886999b5377a20ee31a7b8) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-15** — [`520c2eb12627e2c7eb886999b5377a20ee31a7b8`](https://github.com/jkubo/gaius/commit/520c2eb12627e2c7eb886999b5377a20ee31a7b8) — 12 commits on, MCP SDK 2 support and dependency bumps; no memory path moved. `negative_eval` gained, earned at the first pin: the inject credential case asserts a fact absent beside a control that must appear ([section 10](#10-tests-evals-and-benchmarks)). Also wrong then: the withholding read is on `outcome`, not `review_state`; the review state has six values, not three ([section 2](#2-mental-model)); the hard gates ship as a documentation example, not code; `domain` is a topic label the injector and search make optional ([section 6](#6-retrieval-mechanics)). Screened from a full clone: four auto-run surfaces, one build-time execution point, no unpinned surfaces, nothing inside the cooldown. Nothing was installed, built or run.
 

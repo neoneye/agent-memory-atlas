@@ -484,11 +484,11 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -nE 'func \(s \*(Service|Store)\) (Delete|Forget|Redact|Purge|Erase|Remove)' -- '*.go'` — no match.
 - `git grep -nE '"memory_(delete|forget|redact|purge|erase)' -- '*.go'` — no match.
 - `git grep -nE 'os\.(Remove|RemoveAll)\(' -- internal/memory ':!*_test.go'` — `store.go:95` (staging) and `:201` (temp file) only.
-- `git grep -nE 'EffectiveFrom\s*[:=]|\.EffectiveFrom\s*=' -- '*.go' ':!*_test.go'` — `internal/memory/service.go:161` and the synthetic fixture `internal/testfixture/retrieval.go:61`, both equal to the record time.
+- `git grep -nE 'EffectiveFrom[[:space:]]*[:=]|\.EffectiveFrom[[:space:]]*=' -- '*.go' ':!*_test.go'` — `internal/memory/service.go:161` and the synthetic fixture `internal/testfixture/retrieval.go:61`, both equal to the record time.
 - `git grep -nE 'Authorship\{' -- '*.go' ':!*_test.go'` — `binding.go:226`, the migration journal entry, readiness and upgrade checks and the test fixture; none sets `Model` or `SessionID`.
-- `git grep -nE '\b(Model|SessionID)\s*[:=]' -- internal/memory internal/binding internal/razorcrest internal/migration internal/api ':!*_test.go'` — one hit, a canon recall input's `SessionID` at `internal/api/canon.go:55`, unrelated to authorship.
+- `git grep -nE '(^|[^[:alnum:]_])(Model|SessionID)[[:space:]]*[:=]' -- internal/memory internal/binding internal/razorcrest internal/migration internal/api ':!*_test.go'` — one hit, a canon recall input's `SessionID` at `internal/api/canon.go:55`, unrelated to authorship.
 - `git grep -nE 'ExactScope' -- '*.go' ':!*_test.go'` — the field, its one read at `memory.go:467`, and three callers, all `true`.
-- `git grep -nE '\.Sensitivity\b' -- '*.go' ':!*_test.go'` — the default, the revision assignment and the export projection; no read filter.
+- `git grep -nE '\.Sensitivity([^[:alnum:]_]|$)' -- '*.go' ':!*_test.go'` — the default, the revision assignment and the export projection; no read filter.
 - `git grep -niE 'scope' -- internal/razorcrest/auth.go` — no match; grants are read and write only.
 - `git grep -nE '"memory_withdraw"|"memory_restore"' -- internal/razorcrest` — no match.
 - `git grep -nE 'Remember|AppendJournal|ChangeVisibility' -- internal/claudecode internal/codex internal/memorycontext ':!*_test.go'` — no match; the hooks write no memory.
@@ -500,6 +500,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -niE 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE` — no match; the MIT text carries no rider.
 
 ## History
+
+**2026-11-03** — [`c28d2e607aa6fa78feb7117a852d82a077d33bc8`](https://github.com/acoz-labs/mandalore/commit/c28d2e607aa6fa78feb7117a852d82a077d33bc8) — recorded searches re-run at the same pin. Three recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. Each returns what its annotation states, and no claim moves.
 
 **2026-10-11** — [`c28d2e607aa6fa78feb7117a852d82a077d33bc8`](https://github.com/acoz-labs/mandalore/commit/c28d2e607aa6fa78feb7117a852d82a077d33bc8) — 167 commits on, version 1.0.0 to 1.6.0. Withdrawal and restore arrived as appended visibility events; nothing deletes, and [section 2](#2-mental-model) carries the lifecycle. Two marks gained that were earned at the first pin: `scope_enforced`, withheld on the claim that exact scope was caller-selected when every production caller hard-codes it ([section 6](#6-retrieval-mechanics)), and `negative_eval`, on a retrieval matrix present then ([section 10](#10-tests-evals-and-benchmarks)). Also wrong then: authorship never records a model ([section 5](#5-memory-data-model)). Overtaken: the notice wording, background sync, the plugin list. Screened from a full clone: six files, no auto-run or build-time execution, no unpinned surfaces, `go.mod` and `go.sum` inside the cooldown, `AGENTS.md` read as data. Nothing was installed, built or run.
 

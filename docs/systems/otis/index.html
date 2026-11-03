@@ -675,10 +675,12 @@ returns one comment line and no field; the manifest's other writer is
 and at <code>OLD</code> return only French UI strings in
 <code>src/desktop/renderer/i18n/messages/fr.ts</code>.</li>
 <li>No trust state:
-<code>git grep -n -i -E '\b(trust_state|epistemic|unverified|quarantin|contested|confidence)\b' HEAD -- src</code>
-and at <code>OLD</code> return nothing.</li>
+<code>git grep -w -n -i -E '(trust_state|epistemic|unverified|quarantin|contested|confidence)' HEAD -- src</code>
+returns one comment on serving limits
+(<code>src/inference/context-policy.ts:26</code>), and the same at
+<code>OLD</code> returns nothing.</li>
 <li>No valid time:
-<code>git grep -n -i -E 'valid_?(from|to|until)\b|validFrom|validTo|validUntil|bitemporal|valid[ _]time|\basOf\b' HEAD -- src</code>
+<code>git grep -n -i -E 'valid_?(from|to|until)([^[:alnum:]_]|$)|validFrom|validTo|validUntil|bitemporal|valid[ _]time|(^|[^[:alnum:]_])asOf([^[:alnum:]_]|$)' HEAD -- src</code>
 and at <code>OLD</code> return nothing.</li>
 <li>Recall's session read is unscoped:
 <code>git grep -n -E 'searchAllSessions\(' HEAD -- src</code> returns
@@ -707,7 +709,7 @@ returns the repository's first commit, 16 July 2026.</li>
 <code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' HEAD -- README.md docs</code>
 returns nothing.</li>
 <li>The session log is appended, not rewritten:
-<code>git grep -n -E 'writeFile|truncate|rename\(|\brm\(' HEAD -- src/storage/session.ts src/storage/session-files.ts src/storage/session-events.ts src/storage/session-index.ts</code>
+<code>git grep -n -E 'writeFile|truncate|rename\(|(^|[^[:alnum:]_])rm\(' HEAD -- src/storage/session.ts src/storage/session-files.ts src/storage/session-events.ts src/storage/session-index.ts</code>
 returns the append in <code>appendJsonLine</code>
 (<code>session-files.ts:47</code>), the two <code>rm</code> calls of
 <code>deleteSession</code> (<code>session.ts:308-309</code>) and a field
@@ -716,7 +718,7 @@ check.</li>
 <code>git grep -n -i -E 'embedding|vector|stemm' HEAD -- src/memory src/storage</code>
 returns nothing.</li>
 <li>Every fact writer:
-<code>git grep -n -E '\b(remember|rememberAll)\(' HEAD -- src</code>
+<code>git grep -n -E '(^|[^[:alnum:]_])(remember|rememberAll)\(' HEAD -- src</code>
 returns the tool (<code>src/tools/index.ts:103</code>), the
 <code>/memory</code> command, the desktop runtime (<code>:1237</code>;
 <code>:289</code> and <code>:295</code> are an unrelated local function
@@ -729,6 +731,15 @@ returns nothing.</li>
 returns nothing.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/TrianglLabs/otis/commit/b8b8aabae1e4674778ad2545fcf71ceabd6b0515"><code class="commit-id" title="b8b8aabae1e4674778ad2545fcf71ceabd6b0515">b8b8aaba…</code></a>
+— recorded searches re-run at the same pin. Four recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. The trust-state search,
+recorded as returning nothing, finds one comment on serving limits; the
+other three return the hits their annotations name.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/TrianglLabs/otis/commit/b8b8aabae1e4674778ad2545fcf71ceabd6b0515"><code class="commit-id" title="b8b8aabae1e4674778ad2545fcf71ceabd6b0515">b8b8aaba…</code></a>
 — 136 commits on, v0.1.48 to v0.2.38. <code>negative_eval</code> holds

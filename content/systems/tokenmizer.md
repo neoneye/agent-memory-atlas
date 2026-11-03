@@ -510,7 +510,7 @@ Run at the tree root of the pinned checkout with `git grep -n -E`.
 
 ```sh
 git grep -n -E 'INACTIVE_STATUSES' -- tokenmizer                            # types.py:72, graph.py:1050,:1606, agents/__init__.py:247, checkpoints/manager.py:295: the readers
-git grep -n -E 'status\s*=\s*NodeStatus|\.status = ' -- tokenmizer          # graph.py:623-624,:737, routes_graph.py:519,:536, pruning.py:61 write the dead and contested statuses; :392,:427,:461,:534 are the forward-only re-adds, :688,:1271 set COMPLETED
+git grep -n -E 'status[[:space:]]*=[[:space:]]*NodeStatus|\.status = ' -- tokenmizer          # graph.py:623-624,:737, routes_graph.py:519,:536, pruning.py:61 write the dead and contested statuses; :392,:427,:461,:534 are the forward-only re-adds, :688,:1271 set COMPLETED
 git grep -n -E 'persist_transition|DecisionTransition\(' -- tokenmizer      # graph.py:319-321 the wrapper, :751-764 its one caller, persistence.py:278 the loader: supersession is the one writer of the transition table
 git grep -n -i -E 'decision_transitions' -- tokenmizer                     # persistence.py:219,:244,:274: create, insert, select; no delete
 git grep -n -E 'valid_from' -- tokenmizer                                   # assigned only by the dataclass default at types.py:102
@@ -520,6 +520,8 @@ git grep -n -E 'assert .*not in .*(block|resume|ctx|context)' -- tests      # te
 ```
 
 ## History
+
+**2026-11-03** — [`6b26679c0812c95efff9213253b3d23ce20c0bbb`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/6b26679c0812c95efff9213253b3d23ce20c0bbb) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-11-02** — [`6b26679c0812c95efff9213253b3d23ce20c0bbb`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/6b26679c0812c95efff9213253b3d23ce20c0bbb) — 42 commits on, releases 0.5.5 to 0.6.1. No mark moved. Added: an injection refusal at `add_node` and a fence around every replayed block, a per-principal preference store, summary nodes for windowed-out constraints, local-only mode ([section 1](#1-executive-summary), [section 6](#6-retrieval-mechanics)). `negative_eval` gains three cases on what the model reads ([section 9](#9-reliability-safety-and-trust)). Corrected, wrong at the previous pin too: a restatement of a dead decision meets the dead node, so `tombstone` is withheld on pruning, not on keying; `test_audit_fixes.py:108-131` already asserted dead decisions absent from the checkpoint resume; the resume reads transitions back; the `audit_log` record claimed every status transition where only supersessions are logged. Screened from a fresh clone: three publication manifests, `conftest.py`, nothing in the cooldown; nothing installed or run.
 

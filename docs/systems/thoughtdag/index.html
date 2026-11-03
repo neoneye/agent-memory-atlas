@@ -1182,11 +1182,11 @@ git grep -n -E &#39;findJson&#39; -- cli/test                                  #
 git grep -n -E &#39;findJson\(&#39; -- cli/src/main.ts                         # none: the CLI&#39;s find does not reach the filter
 git grep -n -E &#39;archived&#39; -- cli/src src/lib/dossier.ts src/lib/topics.ts   # lib.ts:91 only: dossiers and labels keep archived turns
 git grep -n -E &#39;archived&#39; -- src/lib/canvas-record.ts                  # none: the record keeps archived nodes; the adapter drops them
-git grep -n -E &#39;lineNote|\.notes\b&#39; -- src &#39;:!src/lib/profile.ts&#39;     # MemoryPage.tsx only: no read path filters on a line note
+git grep -n -E &#39;lineNote|\.notes([^[:alnum:]_]|$)&#39; -- src &#39;:!src/lib/profile.ts&#39;     # MemoryPage.tsx only: no read path filters on a line note
 git grep -n -i -E &#39;stale&#39; -- src/lib/canvas-chat.ts src/components/CanvasChat.tsx   # none: ask the canvas sends no stale mark
 git grep -n -E &#39;decideMemory|MEMORY_DURABLE_BAR&#39; -- scripts            # none: no golden set for the typed path
 git grep -n -i -E &#39;tombstone|denylist|blocklist&#39; -- src cli/src dsh/lib runtime desktop   # none: no refused-value record
-git grep -n -i -E &#39;valid_?(from|to|until)\b&#39; -- src cli/src dsh/lib runtime desktop server.mjs   # none: no validity interval
+git grep -n -i -E &#39;valid_?(from|to|until)([^[:alnum:]_]|$)&#39; -- src cli/src dsh/lib runtime desktop server.mjs   # none: no validity interval
 git grep -l -F &#39;[Stale: this answer&#39; -- benchmark/runs/compiled        # 30 artifacts, all source_prune_stale
 git ls-files benchmark/runs | /usr/bin/grep source_prune_stale | /usr/bin/grep -v -c &#39;^benchmark/runs/compiled/&#39;   # 0: no captured trace
 git grep -n -E &#39;agent-runtime|pi-guard|fs-diff|compileForAgent|fetchRecallItems|judgeStaleness|mergeIntoDoc|carryNotes|replayStale|ladderContextFor|collectMapLines|turnsJson|buildCanvasChat&#39; -- cli/test scripts   # test-background.mjs:144,158 only, a stubbed agent-runtime module: lane, recall, stale judge, Replay, summariser, profile rewrite and ask the canvas untested
@@ -1196,6 +1196,14 @@ git grep -n -i -E &#39;arxiv|doi&#39; -- CITATION.cff README.md README_ZH.md   #
 git ls-files src | /usr/bin/grep -i -E &#39;test|spec&#39;                     # none: no unit suite for the store
 git grep -c -E &#39;^[[:space:]]*(test|it)\(&#39; -- &#39;cli/test/*.mjs&#39;; git grep -c -E &#39;^[[:space:]]*t\(&#39; -- cli/test/dsh.test.mjs   # 70, plus 9 under the alias</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/chenxiachan/thoughtdag/commit/d450c9826a3fb940930456bf418890d11ba0d63d"><code class="commit-id" title="d450c9826a3fb940930456bf418890d11ba0d63d">d450c982…</code></a>
+— recorded searches re-run at the same pin. Two recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. Each returns what its
+annotation states, and no claim moves.</p>
 <p><strong>2026-11-02</strong> — <a
 href="https://github.com/chenxiachan/thoughtdag/commit/d450c9826a3fb940930456bf418890d11ba0d63d"><code class="commit-id" title="d450c9826a3fb940930456bf418890d11ba0d63d">d450c982…</code></a>
 — 17 commits on, releases 0.5.23 to 0.5.27. No mark moved. An imported

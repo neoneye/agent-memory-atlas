@@ -639,7 +639,7 @@ ranking and the duplication-not-information rule <code>:103</code>),
 <p><strong>Recorded searches</strong> — run from the repository root at
 the pin:</p>
 <pre class="sh"><code>git grep -n &#39;confidence&#39; -- &#39;:!*tests*&#39;                         # no read filters on it; display at mcp-server.ts:373
-git grep -n -E &#39;\baudit\(&#39; -- &#39;.claude/scripts/lib/*.ts&#39; &#39;:!*tests*&#39;   # twelve calls; none on the duplicate refusal or captureNote catch
+git grep -n -E &#39;(^|[^[:alnum:]_])audit\(&#39; -- &#39;.claude/scripts/lib/*.ts&#39; &#39;:!*tests*&#39;   # twelve calls; none on the duplicate refusal or captureNote catch
 git grep -n -E &#39;recallFrom|isVisibleTo&#39; -- &#39;:!*tests*&#39;           # one production caller, mcp-server.ts:277
 git grep -n -i -E &#39;tombstone|rejected_value|valid_from|valid_to&#39;  # nothing in code
 git grep -n -i -E &#39;arxiv|bibtex|@article|@misc|citation\.cff|doi\.org&#39;  # nothing
@@ -647,6 +647,14 @@ grep -n &#39;not one the filesystem enforces&#39; .claude/scripts/lib/mcp-reason
 git grep -n -E &#39;memories/|Never read&#39; -- &#39;.claude/scripts/tests/mcp-reason*.ts&#39;   # prompt-content asserts only
 git grep -n -i -E &#39;baseline|ablation&#39; -- &#39;:!*.json&#39;              # review-cycle baselines only; no flat-file comparison</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/breferrari/obsidian-mind/commit/af615d100a1d04561409ab9a1e71e615efa1d87b"><code class="commit-id" title="af615d100a1d04561409ab9a1e71e615efa1d87b">af615d10…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-09-30</strong> — <a
 href="https://github.com/breferrari/obsidian-mind/commit/af615d100a1d04561409ab9a1e71e615efa1d87b"><code class="commit-id" title="af615d100a1d04561409ab9a1e71e615efa1d87b">af615d10…</code></a>
 — audit at an unchanged pin; upstream HEAD is the pin. Screened again

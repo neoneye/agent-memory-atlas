@@ -1144,7 +1144,7 @@ grep -n -i &#39;ROW LEVEL SECURITY&#39; src/modules/kb/c/schema.sql | grep -E &#
 git grep -n -E &#39;review_correction|correction-review&#39; -- frontend control-web &#39;:!*.test.tsx&#39;
 
 # no paper, citation file or DOI (empty output)
-git grep -n -i -E &#39;arxiv|@article|@misc|bibtex|CITATION\.cff|\bdoi\b&#39; -- README.md MANUAL.md docs/KNOWLEDGE.md docs/NATIVE_MEMORY_PLUGIN.md
+git grep -n -i -E &#39;arxiv|@article|@misc|bibtex|CITATION\.cff|(^|[^[:alnum:]_])doi([^[:alnum:]_]|$)&#39; -- README.md MANUAL.md docs/KNOWLEDGE.md docs/NATIVE_MEMORY_PLUGIN.md
 
 # native delivery: the route, its handler and the OpenAPI entry, nothing else; one test file
 git grep -n -E &#39;native/primitive|native_primitive&#39; -- src server-go api &#39;:!src/tests/*&#39;
@@ -1163,6 +1163,14 @@ gh api orgs/RakuenSoftware/repos --paginate --jq &#39;.[] | .name + &quot; &quot
 gh api repos/RakuenSoftware/aimee/releases --paginate --jq &#39;.[].tag_name&#39; | grep -c native
 curl -s -o /dev/null -w &#39;%{http_code}\n&#39; https://pypi.org/pypi/aimee-vllm/json</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/d7cb791547e5f6354afecb53d82f768ba4f5e3e4"><code class="commit-id" title="d7cb791547e5f6354afecb53d82f768ba4f5e3e4">d7cb7915…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-10-03</strong> — <a
 href="https://github.com/RakuenSoftware/aimee/commit/d7cb791547e5f6354afecb53d82f768ba4f5e3e4"><code class="commit-id" title="d7cb791547e5f6354afecb53d82f768ba4f5e3e4">d7cb7915…</code></a>
 — 25 commits on <code>testing</code>, from PR #3000 (branch

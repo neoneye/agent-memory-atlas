@@ -621,12 +621,12 @@ the generation path.</li>
 <code>recall/cli_commands/extract_rewrite.py</code>.</li>
 <li><code>git grep -nE 'rejected_claims' -- 'recall*' | grep -iE 'delete|update'</code>
 — no match; nothing removes a rejection.</li>
-<li><code>git grep -nE '^\s+name="recall_' -- recall_mcp/server.py</code>
+<li><code>git grep -nE '^[[:space:]]+name="recall_' -- recall_mcp/server.py</code>
 — twenty-four tools; no <code>apply</code>, <code>approve</code>,
 <code>accept</code> or <code>reject</code> verb.
 <code>recall_calibration_publish</code> carries the admin scope and
 <code>recall_forget</code> erases; neither resolves a review.</li>
-<li><code>git grep -niE '(UPDATE|DELETE FROM|TRUNCATE)\s+recall_audit_events' -- 'recall*' ':!tests'</code>
+<li><code>git grep -niE '(UPDATE|DELETE FROM|TRUNCATE)[[:space:]]+recall_audit_events' -- 'recall*' ':!tests'</code>
 — no match at either pin; the only DELETE is the operator example in
 <code>docs/DECISION_LEDGER.md:135</code>.</li>
 <li><code>git grep -nE 'recall_audit_events' -- 'recall*' ':!tests' ':!*.sql'</code>
@@ -654,6 +654,14 @@ definitions.</li>
 — no match; no rider.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/GiulioDER/RE-call/commit/ab4d37de84681a630c46589d4986aeb843bb2e35"><code class="commit-id" title="ab4d37de84681a630c46589d4986aeb843bb2e35">ab4d37de…</code></a>
+— recorded searches re-run at the same pin. Two recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. Each returns what its
+annotation states, and no claim moves.</p>
 <p><strong>2026-11-02</strong> — <a
 href="https://github.com/GiulioDER/RE-call/commit/ab4d37de84681a630c46589d4986aeb843bb2e35"><code class="commit-id" title="ab4d37de84681a630c46589d4986aeb843bb2e35">ab4d37de…</code></a>
 — re-screened at the same pin with plugins below the checkout root

@@ -731,7 +731,7 @@ Run at the tree root of the pinned checkout with `git grep`.
 
 - `git grep -nE 'UPDATE oplog|DELETE FROM oplog'` — `crates/areev-store/src/lib.rs:2806` and `crates/areev-store/src/pg.rs:162`, both the NULL-`ns` backfill; no delete.
 - `git grep -c 'INSERT INTO oplog' -- crates/areev-store/src/lib.rs` — 7.
-- `git grep -nE 'retract\(|fn retract|\.retract\b' -- crates/areev-conformance/` — no match.
+- `git grep -nE 'retract\(|fn retract|\.retract([^[:alnum:]_]|$)' -- crates/areev-conformance/` — no match.
 - `git grep -nE 'impl Backend for' -- crates/areev-conformance` — `TursoBackend` and `PgBackend` only.
 - `git grep -lE 'verification::Trust|include_retracted|is_actionable' -- '*.rs'` — `areev-core/src/verification.rs`, three files in `areev-context`, `areev-cli/src/corpus.rs` and `areev-bench/src/bin/honesty_metrics.rs`.
 - `git grep -nE 'Trust::|include_retracted' -- crates/areev-cal crates/areev-mcp crates/areev-run crates/areev-server crates/areev-js crates/areev-py` — no match.
@@ -746,6 +746,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -niE 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE-MIT LICENSE-APACHE` — no match; no rider.
 
 ## History
+
+**2026-11-03** — [`34f0163c829364f8bc9f06feb6d237adcf4180b0`](https://github.com/AreevAI/areev/commit/34f0163c829364f8bc9f06feb6d237adcf4180b0) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-15** — [`34f0163c829364f8bc9f06feb6d237adcf4180b0`](https://github.com/AreevAI/areev/commit/34f0163c829364f8bc9f06feb6d237adcf4180b0) — 85 commits on, to version 1.12.2. Five marks, from six: `human_review` was wrong at the previous pin, because the agent's MCP tools approve and apply builtin findings and `areev_cal` approves as the owner, recorded as human ([section 8](#8-agent-integration)). Also wrong then: an op-log update said not to exist, a conformance kit said to run against the reference substrate, a verification script said to be absent, a `-0.3` said to apply outside the assembler, and store line anchors from an earlier pin ([section 9](#9-reliability-safety-and-trust)). Overtaken: every rendering mode withholds ([section 5](#5-memory-data-model)), a decision-backend seam arrived, the README was rewritten. Screened from a full clone: one committed hook, two build scripts, three unpinned surfaces, nothing inside the cooldown; `AGENTS.md` and `CLAUDE.md` read as data. Nothing was installed, built or run.
 

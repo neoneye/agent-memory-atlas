@@ -690,7 +690,7 @@ also exits 0 at <code>:23</code> when the plugin path is absent</td>
 </tr>
 <tr>
 <td>169 named checks</td>
-<td><code>git grep -c -E '^\s*check\(' -- tests</code></td>
+<td><code>git grep -c -E '^[[:space:]]*check\(' -- tests</code></td>
 <td>5, 22, 28, 10, 12, 7, 36, 33, 16</td>
 </tr>
 <tr>
@@ -747,7 +747,7 @@ schema in <code>server.py</code></td>
 </tr>
 <tr>
 <td><code>moment</code> is never parsed</td>
-<td><code>git grep -n -E '\bmoment\b' -- '*.py' ':!tests'</code></td>
+<td><code>git grep -w -n -E 'moment' -- '*.py' ':!tests'</code></td>
 <td>Schema, write, display and a <code>LIKE</code> clause</td>
 </tr>
 <tr>
@@ -757,7 +757,7 @@ schema in <code>server.py</code></td>
 </tr>
 <tr>
 <td>No writer identity on any memory row</td>
-<td><code>git grep -n -i -E '\b(actor|author|writer|agent_id|written_by|created_by)\b' -- server.py</code></td>
+<td><code>git grep -w -n -i -E '(actor|author|writer|agent_id|written_by|created_by)' -- server.py</code></td>
 <td>Nothing</td>
 </tr>
 <tr>
@@ -788,6 +788,14 @@ schema in <code>server.py</code></td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/ennisaaaaaaaa-stack/tideline-memory/commit/07fbd67808016d3a27d15d4ada671adfc59ff5bc"><code class="commit-id" title="07fbd67808016d3a27d15d4ada671adfc59ff5bc">07fbd678…</code></a>
+— recorded searches re-run at the same pin. Three recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. Each returns what its
+annotation states, and no claim moves.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/ennisaaaaaaaa-stack/tideline-memory/commit/07fbd67808016d3a27d15d4ada671adfc59ff5bc"><code class="commit-id" title="07fbd67808016d3a27d15d4ada671adfc59ff5bc">07fbd678…</code></a>
 — the upstream rewrote its whole history to pseudonymise names, leaving

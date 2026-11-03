@@ -660,7 +660,7 @@ the pass, and one consumer, the MCP response at
 <code>src/mcp/entity_helpers.rs:199</code>.</li>
 <li><code>git grep -n -i -E 'valid_(from|to|until|at)|effective_(from|at)|observed_at|occurred_at|event_time|as_of' -- src ':!*_tests.rs'</code>
 — no match.</li>
-<li><code>git grep -n -i -E '\b(tenant|namespace|user_id|agent_id|project_id|workspace_id)\b' -- src ':!*_tests.rs'</code>
+<li><code>git grep -w -n -i -E '(tenant|namespace|user_id|agent_id|project_id|workspace_id)' -- src ':!*_tests.rs'</code>
 — two UUID v5 namespace constants; no scope key.</li>
 <li><code>git grep -n -i -E '"(pending|proposed|candidate|needs_review|approved|draft)"|approve|isatty|is_terminal' -- src ':!*_tests.rs'</code>
 — no match; no review state and no terminal check.</li>
@@ -672,6 +672,14 @@ the pass, and one consumer, the MCP response at
 — no match; the MIT text carries no rider.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/balaianu/CogZ/commit/edb40d72e9208341bf7bc96d6eb23641801b61c3"><code class="commit-id" title="edb40d72e9208341bf7bc96d6eb23641801b61c3">edb40d72…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/balaianu/CogZ/commit/edb40d72e9208341bf7bc96d6eb23641801b61c3"><code class="commit-id" title="edb40d72e9208341bf7bc96d6eb23641801b61c3">edb40d72…</code></a>
 — 158 commits on, version 0.2.1 to 0.5.8. <code>audit_log</code>

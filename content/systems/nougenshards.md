@@ -403,13 +403,13 @@ describes a batch sandbox and says nothing about the opt-in.
 
 Run at the tree root of the pinned checkout with `git grep`.
 
-- `git grep -nE 'original_timestamp\s*=' -- '*.py' ':!tests'` — `src/nougen_shards/tube.py:432`, `src/nougen_shards/mcp.py:97`, `app.py:301`, `:1846`, `:1911`, the standalone scripts `tools/nougentube.py` and `tools/nougentranscribe.py`, and two docstrings; nothing under `brain_scan/` or in `cli.py`.
-- `git grep -nE 'valid_until\s*=|mark_verified\(' -- '*.py' ':!tests'` — `mark_verified`'s definition at `core.py:1345` only; no caller and no `valid_until=` argument.
-- `git grep -nE 'event_(after|before)\s*=' -- '*.py' ':!tests'` — no match; nothing passes either filter to `core.retrieve`.
+- `git grep -nE 'original_timestamp[[:space:]]*=' -- '*.py' ':!tests'` — `src/nougen_shards/tube.py:432`, `src/nougen_shards/mcp.py:97`, `app.py:301`, `:1846`, `:1911`, the standalone scripts `tools/nougentube.py` and `tools/nougentranscribe.py`, and two docstrings; nothing under `brain_scan/` or in `cli.py`.
+- `git grep -nE 'valid_until[[:space:]]*=|mark_verified\(' -- '*.py' ':!tests'` — `mark_verified`'s definition at `core.py:1345` only; no caller and no `valid_until=` argument.
+- `git grep -nE 'event_(after|before)[[:space:]]*=' -- '*.py' ':!tests'` — no match; nothing passes either filter to `core.retrieve`.
 - `git grep -nE 'history\.log_events?\(' -- '*.py' ':!tests'` — CREATED, UTILITY_CHANGE, ACCESSED, SEARCH_FALLBACK, DB_DEGRADED and DB_QUARANTINED; none in `app.py`'s amend, retract or forget.
 - `git grep -niE '(DELETE +FROM|UPDATE) +shard_events'` — no match.
 - `git grep -nE 'temporal_status' -- '*.py' ':!tests'` — `unlearning.py` only; no schema column and no reader.
-- `git grep -nE 'execute_sandboxed\(|trusted\s*=\s*True' -- '*.py' ':!tests'` — `nougen_sandbox.py:134` inside the batch helper, `mcp.py:334` with neither flag, and CLI, evolution and skill callers.
+- `git grep -nE 'execute_sandboxed\(|trusted[[:space:]]*=[[:space:]]*True' -- '*.py' ':!tests'` — `nougen_sandbox.py:134` inside the batch helper, `mcp.py:334` with neither flag, and CLI, evolution and skill callers.
 - `git grep -niE 'DELETE FROM hashes'` — three maintenance scripts under `tools/`; not `app.py`'s `shard_forget`.
 - `git grep -niE "retracted" -- '*.py' ':!tests' ':!src/nougen_shards/unlearning.py'` — the writer in `app.py` and modules with no product importer; no read filter.
 - `git grep -nE "['\"]IMPORT['\"]" -- '*.py' ':!tests'` — the importer's write and a handler template under `tools/`; no reader.
@@ -417,6 +417,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -niE 'anthropic' -- LICENSE.md NOTICE.md` — no match.
 
 ## History
+
+**2026-11-03** — [`b570cf2fe4d0c8788ec66bb28ab6d05c6ec2635a`](https://github.com/Who-Visions/NouGenShards/commit/b570cf2fe4d0c8788ec66bb28ab6d05c6ec2635a) — recorded searches re-run at the same pin. Four recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. Each returns what its annotation states, and no claim moves.
 
 **2026-10-12** — [`b570cf2fe4d0c8788ec66bb28ab6d05c6ec2635a`](https://github.com/Who-Visions/NouGenShards/commit/b570cf2fe4d0c8788ec66bb28ab6d05c6ec2635a) — 329 commits on, version unchanged at 1.3.1. Screened before reading from a full clone: twenty-nine files, two auto-run surfaces, two build-time execution points, four unpinned surfaces and four dependency files inside the seven-day cooldown. Nothing was installed, built or run. `audit_log` and `negative_eval` gained, both earned at the old pin; bitemporal kept with its producers named, the brain scan not among them. Since `093c294cd0f0c740d158f1f2eb8601bde1452737` the MCP tool `batch_execute_sandboxed` runs code with `trusted=True`, outside the opt-in ([§1](#1-executive-summary)).
 

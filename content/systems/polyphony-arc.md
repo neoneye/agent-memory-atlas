@@ -387,7 +387,7 @@ gives 6,542, and the same over `arc_hs/*.py`, `compat`, `vendor/*.py` and
 `vendor/arc/environment_files/*.py` gives 5,599, 943, 79,035 and 72,572.
 
 - `git ls-files | grep -i -E '(^|/)(tests?|spec)(/|_)|_test\.py$|conftest|pytest|\.github|tox\.ini|setup\.cfg|pyproject'` — one match, `arc_hs/workspace/test_timeout.py`.
-- `git grep -n -E 'def test_|import (unittest|pytest)|^\s*assert ' -- ':!vendor'` — no match; `git grep -l -E 'def test_' -- vendor` — no match.
+- `git grep -n -E 'def test_|import (unittest|pytest)|^[[:space:]]*assert ' -- ':!vendor'` — no match; `git grep -l -E 'def test_' -- vendor` — no match.
 - `git grep -n -I -E '19\.8|\$115|v11|d0895597|leaderboard|RHAE|scorecards/' -- ':!vendor'` — the scorecard URL template at `arc_hs/swarm.py:212` and two `.v11_` temp-file prefixes in `compat/sandbox.py`; no result.
 - `git grep -n -E 'tags=' -- arc_hs` — one match, `swarm.py:158`, `tags=["polyphony"]`.
 - `git grep -n -E 'progress_notes' -- arc_hs compat` — four matches, all in `hs_compaction.py` (`:29`, `:228`, `:293`, `:313`); none in a prompt.
@@ -400,6 +400,8 @@ gives 6,542, and the same over `arc_hs/*.py`, `compat`, `vendor/*.py` and
 - `git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation|doi\.org'` — no match; the README links a blog post on Heuristic Learning, and no paper for this system.
 
 ## History
+
+**2026-11-03** — [`9bb384c25d1bc95501cb08a124af7871c9ea24eb`](https://github.com/Mininglamp-AI/polyphony-arc-3/commit/9bb384c25d1bc95501cb08a124af7871c9ea24eb) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-18** — [`9bb384c25d1bc95501cb08a124af7871c9ea24eb`](https://github.com/Mininglamp-AI/polyphony-arc-3/commit/9bb384c25d1bc95501cb08a124af7871c9ea24eb) — same commit, nothing moved upstream; an audit of the report's own claims, seven of which were wrong at this pin. The summary is held to the 16,384-token generation cap and refused when it is tool-call markup, not stored as returned. The successor also gets a code-written state pointer and up to 20,000 tokens of its newest turns, and loses the main prompt. Both quoted comments describe one failure; the token meter was the other. Ten games score below 5, not eleven; the scorecard was published 2 July 2026, before the commit. A truncated log of every turn survives a compaction, and `arc_hs/` is 5,599 lines. Evidence in [section 4](#4-essential-implementation-paths) and [section 10](#10-tests-evals-and-benchmarks). No marks.
 

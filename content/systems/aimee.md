@@ -330,7 +330,7 @@ grep -n -i 'ROW LEVEL SECURITY' src/modules/kb/c/schema.sql | grep -E 'memories|
 git grep -n -E 'review_correction|correction-review' -- frontend control-web ':!*.test.tsx'
 
 # no paper, citation file or DOI (empty output)
-git grep -n -i -E 'arxiv|@article|@misc|bibtex|CITATION\.cff|\bdoi\b' -- README.md MANUAL.md docs/KNOWLEDGE.md docs/NATIVE_MEMORY_PLUGIN.md
+git grep -n -i -E 'arxiv|@article|@misc|bibtex|CITATION\.cff|(^|[^[:alnum:]_])doi([^[:alnum:]_]|$)' -- README.md MANUAL.md docs/KNOWLEDGE.md docs/NATIVE_MEMORY_PLUGIN.md
 
 # native delivery: the route, its handler and the OpenAPI entry, nothing else; one test file
 git grep -n -E 'native/primitive|native_primitive' -- src server-go api ':!src/tests/*'
@@ -351,6 +351,8 @@ curl -s -o /dev/null -w '%{http_code}\n' https://pypi.org/pypi/aimee-vllm/json
 ```
 
 ## History
+
+**2026-11-03** — [`d7cb791547e5f6354afecb53d82f768ba4f5e3e4`](https://github.com/RakuenSoftware/aimee/commit/d7cb791547e5f6354afecb53d82f768ba4f5e3e4) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-03** — [`d7cb791547e5f6354afecb53d82f768ba4f5e3e4`](https://github.com/RakuenSoftware/aimee/commit/d7cb791547e5f6354afecb53d82f768ba4f5e3e4) — 25 commits on `testing`, from PR #3000 (branch `fix/atlas-memory-boundaries`, with `docs/reviews/agent-memory-atlas-2026-09-29.md`) and PR #3001. The refusal trigger and the Go consult share a generated identity, and `aimee_store_runtime` loses `DELETE` on refusals under an authenticated CI test; the lift stays an unaudited `UPDATE` ([section 7](#7-write-mechanics)). Model-authored override lines are refused at write. PR #3001 adds `POST /v1/native/primitive`, the source end of the native-memory preprint; the plugin is unpublished ([section 8](#8-agent-integration), [section 10](#10-tests-evals-and-benchmarks)). All seven marks hold; the route refuses the KB, so `scope_enforced` is untouched. One claim was wrong at the previous pin, in the awarding direction: `pending` rows do enter a current read, as open commitments. Screened first: the previous pin's surfaces, cooldown hits inflated by a depth-1 clone. Nothing installed, built or run.
 

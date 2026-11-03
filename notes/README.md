@@ -8,6 +8,11 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-11-03-extended-mode-escapes.md](2026-11-03-extended-mode-escapes.md) —
+  66 recorded searches used `\b` or `\s` under `git grep -E`, which macOS git
+  cannot match. Each was re-run at its pin and rewritten in POSIX form. Two
+  kannaka-memory annotations and five more pages had stated an absence the
+  tree contradicts; no mark moved. The build gate that now fails on them.
 - [2026-11-02-generate-the-copies.md](2026-11-02-generate-the-copies.md) —
   a staged plan to keep each fact about a system once, in its report's
   frontmatter, and generate the family lists, census lines, inspected pins and

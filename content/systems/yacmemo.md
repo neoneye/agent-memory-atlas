@@ -456,7 +456,7 @@ Run at the tree root of the pinned checkout with `git grep`, and at
 - `git grep -n -E 'store\.audit\(' -- yacmemo/tools.py` — `tools.py:381`, with no identity argument.
 - `git grep -n -E 'visible\(' -- yacmemo` — `search.py:111`, `:219`, `store.py:484`, `:498`, `:540`, `:560`, `:869`, `:1492`; none in `audit()` or `check_title_conflicts`.
 - `git grep -n -E 'DELETE FROM (call_log|guard_events|audit_exec_events|audit_actions)' -- yacmemo` — `usage.py:90` (the trim) and `index_db.py:415` (blank disposition rows only).
-- `git grep -n -i -E '\bvalid_(from|to|at|until)\b|\bas_of\b|effective_(at|from)|bitemporal|event_time' -- yacmemo` — no match.
+- `git grep -n -i -E '(^|[^[:alnum:]_])valid_(from|to|at|until)([^[:alnum:]_]|$)|(^|[^[:alnum:]_])as_of([^[:alnum:]_]|$)|effective_(at|from)|bitemporal|event_time' -- yacmemo` — no match.
 - `git grep -n -E 'remove_collisions_involving\(rel\)' 4a12be944cd78edca28354feb2af14a11542bd83 -- yacmemo/store.py` — `store.py:1271` inside `_index_note`, a delete with no status condition, followed by `add_collision(... 'open')`.
 - `git grep -n -E 'chat/completions' 4a12be944cd78edca28354feb2af14a11542bd83 -- yacmemo` — `curator.py:61`.
 - `git ls-files | grep -i -E 'licen[cs]e|copying'` — no match at either pin; `pyproject.toml:7` carries `license = { text = "MIT" }`.
@@ -464,6 +464,8 @@ Run at the tree root of the pinned checkout with `git grep`, and at
 - Python lines counted as `len(text.split('\n'))` per file and test functions as `^\s*(async\s+)?def test_` per file, which reproduces 11,695 lines and 146 functions at the old pin.
 
 ## History
+
+**2026-11-03** — [`66fb7866172d2a1f9742dbb318d6dd0671e8ee7b`](https://github.com/yachen4ever/yacmemo/commit/66fb7866172d2a1f9742dbb318d6dd0671e8ee7b) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-15** — [`66fb7866172d2a1f9742dbb318d6dd0671e8ee7b`](https://github.com/yachen4ever/yacmemo/commit/66fb7866172d2a1f9742dbb318d6dd0671e8ee7b) — 62 commits on, v0.2.1 to v0.3.18. **`scope_enforced` gained**: an identity token filters every MCP read through one predicate, which `memory_audit` and the write guard's refusal bypass ([section 9](#9-reliability-safety-and-trust)). `human_review` and `negative_eval` hold, and pytest carries the scope and archive cases ([section 10](#10-tests-evals-and-benchmarks)). Wrong at the old pin: a dismissal reopened on the next edit of either note, the curator calls a generative model, the console recorded proposal rulings, console writes reached `call_log`, the store lock skipped `save` and `delete_note`, and section 4's anchors were a pin behind. Overtaken: archived notes hidden from MCP search, and a create-only `memory_write`. Screened from a full clone: no auto-run, two `conftest.py`, two unpinned surfaces, four dependency files in the cooldown. Nothing was installed, built or run.
 

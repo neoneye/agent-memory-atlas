@@ -464,9 +464,10 @@ where marked, at `879397c8ec9fd2488c69b742891f6b6c28c2af23` (`OLD`), with
   `src/skills/manager.ts:154-161`.
 - No tombstone: `git grep -n -i -E 'tombstone|suppress(ed|ion)' HEAD -- src`
   and at `OLD` return only French UI strings in `src/desktop/renderer/i18n/messages/fr.ts`.
-- No trust state: `git grep -n -i -E '\b(trust_state|epistemic|unverified|quarantin|contested|confidence)\b' HEAD -- src`
-  and at `OLD` return nothing.
-- No valid time: `git grep -n -i -E 'valid_?(from|to|until)\b|validFrom|validTo|validUntil|bitemporal|valid[ _]time|\basOf\b' HEAD -- src`
+- No trust state: `git grep -w -n -i -E '(trust_state|epistemic|unverified|quarantin|contested|confidence)' HEAD -- src`
+  returns one comment on serving limits (`src/inference/context-policy.ts:26`),
+  and the same at `OLD` returns nothing.
+- No valid time: `git grep -n -i -E 'valid_?(from|to|until)([^[:alnum:]_]|$)|validFrom|validTo|validUntil|bitemporal|valid[ _]time|(^|[^[:alnum:]_])asOf([^[:alnum:]_]|$)' HEAD -- src`
   and at `OLD` return nothing.
 - Recall's session read is unscoped: `git grep -n -E 'searchAllSessions\(' HEAD -- src`
   returns `src/app/global-sessions.ts:75`, `src/memory/memory.ts:326` and the
@@ -485,12 +486,12 @@ where marked, at `879397c8ec9fd2488c69b742891f6b6c28c2af23` (`OLD`), with
   returns the repository's first commit, 16 July 2026.
 - No paper: `git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' HEAD -- README.md docs`
   returns nothing.
-- The session log is appended, not rewritten: `git grep -n -E 'writeFile|truncate|rename\(|\brm\(' HEAD -- src/storage/session.ts src/storage/session-files.ts src/storage/session-events.ts src/storage/session-index.ts`
+- The session log is appended, not rewritten: `git grep -n -E 'writeFile|truncate|rename\(|(^|[^[:alnum:]_])rm\(' HEAD -- src/storage/session.ts src/storage/session-files.ts src/storage/session-events.ts src/storage/session-index.ts`
   returns the append in `appendJsonLine` (`session-files.ts:47`), the two
   `rm` calls of `deleteSession` (`session.ts:308-309`) and a field check.
 - Fact recall has no embedding or stemming: `git grep -n -i -E 'embedding|vector|stemm' HEAD -- src/memory src/storage`
   returns nothing.
-- Every fact writer: `git grep -n -E '\b(remember|rememberAll)\(' HEAD -- src`
+- Every fact writer: `git grep -n -E '(^|[^[:alnum:]_])(remember|rememberAll)\(' HEAD -- src`
   returns the tool (`src/tools/index.ts:103`), the `/memory` command, the
   desktop runtime (`:1237`; `:289` and `:295` are an unrelated local function
   for serve settings) and the import (`src/app/other-agents.ts:106`).
@@ -499,6 +500,8 @@ where marked, at `879397c8ec9fd2488c69b742891f6b6c28c2af23` (`OLD`), with
 - No benchmark: `git ls-files | grep -i -E 'bench|eval'` returns nothing.
 
 ## History
+
+**2026-11-03** — [`b8b8aabae1e4674778ad2545fcf71ceabd6b0515`](https://github.com/TrianglLabs/otis/commit/b8b8aabae1e4674778ad2545fcf71ceabd6b0515) — recorded searches re-run at the same pin. Four recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. The trust-state search, recorded as returning nothing, finds one comment on serving limits; the other three return the hits their annotations name.
 
 **2026-10-15** — [`b8b8aabae1e4674778ad2545fcf71ceabd6b0515`](https://github.com/TrianglLabs/otis/commit/b8b8aabae1e4674778ad2545fcf71ceabd6b0515) — 136 commits on, v0.1.48 to v0.2.38. `negative_eval` holds at both pins and gains two recall cases; no other mark moves. A fact store with `recall`, `remember` and `forget` arrived on 27 September 2026 ([section 5](#5-memory-data-model)); recall reads transcripts from every workspace ([section 6](#6-retrieval-mechanics)); other agents' skills, instructions and memory are read or imported ([section 8](#8-agent-integration)). The skill manifest gained a path and an install time and no revision. Five claims were wrong at the previous pin — the compaction event's contents, the lockfile, the path mapping, skill file modes and a carried-forward census — and are corrected in the body and in Known Limitations. Screened before reading: no auto-run surface, a new `postinstall`, two dependency files inside the cooldown, one unpinned surface, `AGENTS.md` read as data. Nothing was installed or run.
 

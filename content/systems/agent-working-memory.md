@@ -555,7 +555,7 @@ same at `6b04ba62ac50b3123ab69a3fda2679da9ae9e611`.
 - `git grep -n -E 'logStagingEvent\(' -- src ':!src/storage'` — no match; the staging event table has no writer.
 - `git grep -n -E 'includeStaging' -- src/engine src/core` — no match; the recall flag has no reader.
 - `git grep -n -E 'retractEngram\(' -- src ':!src/storage'` — `src/engine/retraction.ts:79`, `:104` and the import path `src/cli.ts:575`, `:736`.
-- `git grep -n -E '\.reason\b' -- src/engine/retraction.ts` — no match; the retraction reason is never read.
+- `git grep -n -E '\.reason([^[:alnum:]_]|$)' -- src/engine/retraction.ts` — no match; the retraction reason is never read.
 - `git grep -n -i 'bridge' -- src/engine/retraction.ts` — the docstring at `:33-34` only.
 - `git grep -n -E 'validTo|valid_to' -- src/engine` — no match; no lifecycle path reads the validity window.
 - `git grep -n -E 'TaskTrial'` — the type at `src/types/eval.ts:90` and the comment at `src/engine/eval.ts:12`.
@@ -567,6 +567,8 @@ same at `6b04ba62ac50b3123ab69a3fda2679da9ae9e611`.
 - `/usr/bin/grep -n -i -E 'anthropic|machine learning|not (be )?used (for|to)' LICENSE NOTICE` — one hit, the NOTICE heading listing runtime model licences; no rider.
 
 ## History
+
+**2026-11-03** — [`eb56cb353dae2e7f00c2e45b41d27ffc1f1198bc`](https://github.com/CompleteIdeas/agent-working-memory/commit/eb56cb353dae2e7f00c2e45b41d27ffc1f1198bc) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-11-02** — [`eb56cb353dae2e7f00c2e45b41d27ffc1f1198bc`](https://github.com/CompleteIdeas/agent-working-memory/commit/eb56cb353dae2e7f00c2e45b41d27ffc1f1198bc) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 3 auto-run surfaces, 4 in all: hooks registered in `plugin/hooks/hooks.json` on UserPromptSubmit, PostToolUse, PreCompact, Stop and SessionEnd; an MCP server declared in `plugin/.claude-plugin/plugin.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 

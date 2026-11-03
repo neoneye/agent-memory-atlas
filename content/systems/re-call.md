@@ -409,8 +409,8 @@ previous pin `1157360f1e0704a06548d93a4f4797c415c722f9` where noted.
 - `git grep -nE 'recall_source_tombstones|_is_tombstoned|tombstoned_sources' -- ':!tests' ':!docs'` — the migration, `recall/schema.py:41` and `recall/generations.py` only, at both pins; no reader outside the generation path.
 - `git grep -nE 'class RejectionLedger|_rejected_claims|rejected_claims|is_rejected' -- recall recall_mcp` — `recall/rewrite.py`, `recall/cli_commands/extract_rewrite.py`, `recall/stale_reports.py`, `recall/dashboard/review.py` and `recall/dashboard/activity.py`; at the previous pin `recall/rewrite.py`, `recall/cli.py` and `recall/cli_commands/extract_rewrite.py`.
 - `git grep -nE 'rejected_claims' -- 'recall*' | grep -iE 'delete|update'` — no match; nothing removes a rejection.
-- `git grep -nE '^\s+name="recall_' -- recall_mcp/server.py` — twenty-four tools; no `apply`, `approve`, `accept` or `reject` verb. `recall_calibration_publish` carries the admin scope and `recall_forget` erases; neither resolves a review.
-- `git grep -niE '(UPDATE|DELETE FROM|TRUNCATE)\s+recall_audit_events' -- 'recall*' ':!tests'` — no match at either pin; the only DELETE is the operator example in `docs/DECISION_LEDGER.md:135`.
+- `git grep -nE '^[[:space:]]+name="recall_' -- recall_mcp/server.py` — twenty-four tools; no `apply`, `approve`, `accept` or `reject` verb. `recall_calibration_publish` carries the admin scope and `recall_forget` erases; neither resolves a review.
+- `git grep -niE '(UPDATE|DELETE FROM|TRUNCATE)[[:space:]]+recall_audit_events' -- 'recall*' ':!tests'` — no match at either pin; the only DELETE is the operator example in `docs/DECISION_LEDGER.md:135`.
 - `git grep -nE 'recall_audit_events' -- 'recall*' ':!tests' ':!*.sql'` — INSERTs in `recall/generations.py`, `recall/store.py` and `recall/calibration_v2.py`, and SELECTs in `recall/dashboard/db.py`.
 - `git grep -niE 'supersed|verdict' -- recall_hooks/prompt_time.py recall_hooks/write_time.py` — no match at either pin.
 - `git grep -nE 'set_config|current_setting' -- recall_hooks` — no match; the write-time hook sets no GUC.
@@ -420,6 +420,8 @@ previous pin `1157360f1e0704a06548d93a4f4797c415c722f9` where noted.
 - `git grep -niE 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE LICENSE_GRANT_AGPL.md COMMERCIAL_LICENSE.md NOTICE` — no match; no rider.
 
 ## History
+
+**2026-11-03** — [`ab4d37de84681a630c46589d4986aeb843bb2e35`](https://github.com/GiulioDER/RE-call/commit/ab4d37de84681a630c46589d4986aeb843bb2e35) — recorded searches re-run at the same pin. Two recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. Each returns what its annotation states, and no claim moves.
 
 **2026-11-02** — [`ab4d37de84681a630c46589d4986aeb843bb2e35`](https://github.com/GiulioDER/RE-call/commit/ab4d37de84681a630c46589d4986aeb843bb2e35) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 3 auto-run surfaces, 6 in all: hooks registered in `plugin/hooks/hooks.json` on SessionStart, UserPromptSubmit, PreToolUse, PreCompact and SessionEnd; an MCP server declared in `plugin/.claude-plugin/plugin.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 

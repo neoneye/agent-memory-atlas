@@ -608,7 +608,7 @@ an empty string; the one writer is in <code>services.py</code>.</li>
 visualiser defaults them to <code>None</code>.</li>
 <li><code>git grep -niE 'tombstone|reject(ed)?_(value|caption|object)|deny.?list|blocklist' -- src ros scripts</code>
 — no match.</li>
-<li><code>git grep -nE 'valid_from|valid_to|valid_at|observed_at|first_seen|last_seen_(s|t|time)|\bt_first\b|\bt_last\b' -- src ros</code>
+<li><code>git grep -nE 'valid_from|valid_to|valid_at|observed_at|first_seen|last_seen_(s|t|time)|(^|[^[:alnum:]_])t_first([^[:alnum:]_]|$)|(^|[^[:alnum:]_])t_last([^[:alnum:]_]|$)' -- src ros</code>
 — no match.</li>
 <li><code>git grep -nE 'user_id|tenant|agent_id|session_id' -- src ros</code>
 — no match.</li>
@@ -627,6 +627,14 @@ href="https://arxiv.org/abs/2606.15476">arXiv:2606.15476</a>, and the
 GrandTour dataset citation.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/GoldenGait/FARM-Project/commit/2fcaf8602e741341a70ca980133f7ff05cfc83a2"><code class="commit-id" title="2fcaf8602e741341a70ca980133f7ff05cfc83a2">2fcaf860…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-09-28</strong> — <a
 href="https://github.com/GoldenGait/FARM-Project/commit/2fcaf8602e741341a70ca980133f7ff05cfc83a2"><code class="commit-id" title="2fcaf8602e741341a70ca980133f7ff05cfc83a2">2fcaf860…</code></a>
 — first reading, at the head of <code>main</code>, the repository's only

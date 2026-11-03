@@ -336,9 +336,11 @@ returned.
 | No insert sets a namespace | `git grep -nE 'INSERT INTO memory_fragments' HEAD` | `:634`, whose column list has no `namespace` |
 | `embedding_state` has no reader or writer | `git grep -nE 'embedding_state' HEAD` | The schema line `:198` only |
 | No query filters on the provenance fields | `git grep -nE 'WHERE[^"]*(authorization_ref\|source_tag)' HEAD` | Nothing |
-| No paper is cited | `git grep -niE 'arxiv\|bibtex\|@article\|@misc\|citation\|\bdoi\b' HEAD -- '*.md' '*.txt' '*.cff'` | Nothing |
+| No paper is cited | `git grep -niE 'arxiv\|bibtex\|@article\|@misc\|citation\|(^\|[^[:alnum:]_])doi([^[:alnum:]_]\|$)' HEAD -- '*.md' '*.txt' '*.cff'` | Nothing |
 
 ## History
+
+**2026-11-03** — [`2f48deb24304b80c5434802a06ebfeb06d6f6c4e`](https://github.com/qilunuojiang9-hue/Huiran-cerebro/commit/2f48deb24304b80c5434802a06ebfeb06d6f6c4e) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-09-28** — [`2f48deb24304b80c5434802a06ebfeb06d6f6c4e`](https://github.com/qilunuojiang9-hue/Huiran-cerebro/commit/2f48deb24304b80c5434802a06ebfeb06d6f6c4e) — The upstream re-created its history. Every commit keeps its subject, author name and date and has a new tree, none matching the pin's, each differing in a few lines of `COLLAB.md` and `requirements.txt` that named a third-party service and an internal project. The old pin is held in the [archive](https://github.com/agent-memory-atlas-archive/qilunuojiang9-hue--Huiran-cerebro/commit/08644a7edd1bff64ba46177d069287cb1daaad7a); `cyber_brain.py` is byte-identical at both pins, and three new commits add a sanitisation scan. `trust_state` is withdrawn, and was wrong at the old pin: the dedup's only caller hardcodes a dry run, and `search_memory` never filters on status ([section 1](#1-executive-summary)). The smoke scripts were miscounted (three, not two) and `namespace` was placed on entities. Screened from a full clone: one unpinned surface, nothing inside the cooldown. Nothing installed, built or run.
 

@@ -1034,7 +1034,7 @@ TypeScript SDK or the CleanSlate adapter.</li>
 <li><code>git grep -n -E '"succeeded": False|succeeded=False' -- packages</code>
 — one match, <code>service.py:1277</code> in
 <code>auto_flag</code>.</li>
-<li><code>git grep -n -E '\bAudit\b|audit_log' -- packages apps scripts</code>
+<li><code>git grep -n -E '(^|[^[:alnum:]_])Audit([^[:alnum:]_]|$)|audit_log' -- packages apps scripts</code>
 — construction at <code>service.py:164</code>, an aggregate select at
 <code>:1451-1453</code>, the model, the migration and the backup's table
 list; no update or delete.</li>
@@ -1050,8 +1050,8 @@ list; no update or delete.</li>
 <li><code>git grep -n -E 'rmtree|unlink|remove\(' -- packages/musclememory/skill_export.py packages/musclememory/service.py</code>
 — staging cleanup and <code>write_skill</code>'s replace of its own
 target; nothing removes an exported skill on delete.</li>
-<li><code>git grep -n -E 'audit_log|Audit\b' -- tests</code> — no match;
-the <code>audit</code> hits in
+<li><code>git grep -n -E 'audit_log|Audit([^[:alnum:]_]|$)' -- tests</code>
+— no match; the <code>audit</code> hits in
 <code>tests/test_codex_evaluation.py</code> are about Codex
 receipts.</li>
 <li><code>git grep -n -E 'sign.in|SignIn|local\.dashboard' -- tests</code>
@@ -1070,6 +1070,14 @@ one hit, the hook installer's config merge at
 <code>CITATION.cff</code> and no paper for this system.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/TheWariend/MuscleMemory/commit/51946bd800813881a1348d92b71e04cdeeedc415"><code class="commit-id" title="51946bd800813881a1348d92b71e04cdeeedc415">51946bd8…</code></a>
+— recorded searches re-run at the same pin. Two recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. Each returns what its
+annotation states, and no claim moves.</p>
 <p><strong>2026-10-16</strong> — <a
 href="https://github.com/TheWariend/MuscleMemory/commit/51946bd800813881a1348d92b71e04cdeeedc415"><code class="commit-id" title="51946bd800813881a1348d92b71e04cdeeedc415">51946bd8…</code></a>
 — re-read at the head of <code>main</code>, with <a

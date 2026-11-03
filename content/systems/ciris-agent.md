@@ -589,17 +589,19 @@ checkout at `94a7b15`, from each tree root.
 - Agent: `git grep -n -E 'maintenance_prune_audit_chain|cleanup_old_entries|_cleanup_audit_graph_nodes' -- 'ciris_engine/*.py'` — the definitions, and the rate limiter's unrelated `_cleanup_old_entries`.
 - Agent: `git grep -n -E '\.cleanup_expired\(' -- .` — the admin route, the SDK and tests.
 - Agent: `git grep -n -E 'complete_decay_phase|cleanup_completed_decays' -- 'ciris_engine/*.py'` — the definitions only.
-- Agent: `git grep -n -E '(expires_at|consent_stream)\s*=' -- 'ciris_engine/*.py'` — assignments on other schemas (ConsentStatus, IdentitySnapshot, WAPermission, tokens), none on a `GraphNode`.
+- Agent: `git grep -n -E '(expires_at|consent_stream)[[:space:]]*=' -- 'ciris_engine/*.py'` — assignments on other schemas (ConsentStatus, IdentitySnapshot, WAPermission, tokens) and locals, none on a `GraphNode`.
 - Agent: `git grep -n -E '"wa_authorized"|wa_authorized=' -- 'ciris_engine/*.py'` — readers, and a hard-coded `False` in database maintenance; no writer of `True` besides `context_utils.py:123-126`.
 - Agent: `git grep -n -i -E 'audit' -- ciris_engine/logic/adapters/api/routes/memory.py ciris_engine/logic/services/graph/memory_service.py` — no match.
 - Agent: `git grep -l -i -E 'locomo|longmemeval' -- '*.py' '*.md' '*.yml' '*.yaml' '*.json'` — an emoji table and a decision-pipeline test; no memory benchmark.
 - Persist: `git grep -n -i -E 'deleted_at|expires_at|valid_from|valid_to|tombstone|status|tenant_id|agent_id|owner'` over the V013 and V019 migrations — no match.
 - Persist: `git grep -n -i -E 'cirisgraph[._]?(node_)?(history|versions|tombstones?)|nodes_history|node_history'` — no match.
 - Persist: `git grep -n -E '_deleted' -- src/graph` — the two soft-delete writers and a comment; no reader.
-- Persist: `git grep -n -E '\b(CREATE TRIGGER|CREATE RULE|REVOKE (UPDATE|DELETE|ALL))\b' -- $(git grep -l -E 'audit_log' -- migrations)` — no match.
+- Persist: `git grep -w -n -E '(CREATE TRIGGER|CREATE RULE|REVOKE (UPDATE|DELETE|ALL))' -- $(git grep -l -E 'audit_log' -- migrations)` — no match.
 - Persist: `git grep -n -i -E 'verify|ed25519|verifying_key' -- src/graph` — a doc comment only.
 - Persist: `git grep -n -E '\.archive_audit_range\(|archive_audit_range_(sqlite|pg)\('` — the engine dispatch and tests; nothing in `src/ffi/pyo3.rs`.
 
 ## History
+
+**2026-11-03** — [`7de0d36eee7fda81d6415c100002fbc9663a5568`](https://github.com/CIRISAI/CIRISAgent/commit/7de0d36eee7fda81d6415c100002fbc9663a5568) — recorded searches re-run at the same pin. Two recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. One annotation gains the local variables it had omitted.
 
 **2026-11-01** — [`7de0d36eee7fda81d6415c100002fbc9663a5568`](https://github.com/CIRISAI/CIRISAgent/commit/7de0d36eee7fda81d6415c100002fbc9663a5568) — first reading, at the head of `main`, the 2.19.0 merge, from a shallow clone (`--depth 1`); history from the GitHub API. The storage engine was read at CIRISAI/CIRISPersist `v59.1.2` (`94a7b15793772543a4a987e447e0b7a1a79e48e0`), the version CIRISServer `v0.5.243` pins. One mark, `audit_log`. Screened before reading: one committed git-hook directory, inactive since `core.hooksPath` is unset; no checkout filter in `.gitattributes`; seven `setup.py` and twenty conftest execution points; five dependency surfaces inside the cooldown, inflated because the shallow clone dates every file to the tip; five unpinned surfaces with no lockfile; `AGENTS.md` and `CLAUDE.md` read as data. The archive holds a fork, taken once: the history is 9 GB, over GitHub's push limit for a standalone copy. Nothing was installed, built or run.

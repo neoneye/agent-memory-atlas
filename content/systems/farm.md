@@ -459,7 +459,7 @@ Run once from the checkout root at the pinned revision.
 - `git grep -nE 'merge_log_path' -- src ros` — defaults to an empty string; the one writer is in `services.py`.
 - `git grep -nE 'on_edit_caption=|on_delete_object=' -- src ros scripts` — handlers passed only by `streaming_mapper.py`; the visualiser defaults them to `None`.
 - `git grep -niE 'tombstone|reject(ed)?_(value|caption|object)|deny.?list|blocklist' -- src ros scripts` — no match.
-- `git grep -nE 'valid_from|valid_to|valid_at|observed_at|first_seen|last_seen_(s|t|time)|\bt_first\b|\bt_last\b' -- src ros` — no match.
+- `git grep -nE 'valid_from|valid_to|valid_at|observed_at|first_seen|last_seen_(s|t|time)|(^|[^[:alnum:]_])t_first([^[:alnum:]_]|$)|(^|[^[:alnum:]_])t_last([^[:alnum:]_]|$)' -- src ros` — no match.
 - `git grep -nE 'user_id|tenant|agent_id|session_id' -- src ros` — no match.
 - `git grep -nE 'scene_state_io|delete_object|toggle_lock|is_locked|"active"' -- tests` — no match.
 - `git grep -nE 'open\("a"|\.open\("a"' -- src ros` — the merge log in `services.py` and an evaluation debug manifest.
@@ -467,5 +467,7 @@ Run once from the checkout root at the pinned revision.
 - `git grep -niE 'arxiv|bibtex|@misc|doi\.org' -- README.md CITATION.cff` — the paper, [arXiv:2606.15476](https://arxiv.org/abs/2606.15476), and the GrandTour dataset citation.
 
 ## History
+
+**2026-11-03** — [`2fcaf8602e741341a70ca980133f7ff05cfc83a2`](https://github.com/GoldenGait/FARM-Project/commit/2fcaf8602e741341a70ca980133f7ff05cfc83a2) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-09-28** — [`2fcaf8602e741341a70ca980133f7ff05cfc83a2`](https://github.com/GoldenGait/FARM-Project/commit/2fcaf8602e741341a70ca980133f7ff05cfc83a2) — first reading, at the head of `main`, the repository's only commit. No capability mark. Screened before reading: 1 auto-run surface (`.gitmodules`, the YOLOE fork, left uninitialised), 1 build-time execution point (`ros/mapping/setup.py`), 1 unpinned surface (`pyproject.toml` with no lockfile) and nothing inside the cooldown; `CLAUDE.md` was treated as data. `LICENSE` is the AGPL-3.0 text with no rider. The paper was read at v3. Nothing was installed, built or run.

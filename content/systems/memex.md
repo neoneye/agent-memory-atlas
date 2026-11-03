@@ -486,11 +486,11 @@ Whether `import` dropping `status` is deliberate; export writes it.
 
 Run at the tree root of the pinned checkout with `git grep`.
 
-- `git grep -n -E '^\s+slug:' -- src/memex/domain/models.py` — `WikiNode` and three result types; `WriteInput` has none.
+- `git grep -n -E '^[[:space:]]+slug:' -- src/memex/domain/models.py` — `WikiNode` and three result types; `WriteInput` has none.
 - `git grep -n -E 'def memex_' -- src/memex/mcp_server.py` — five tools: write, recall, consolidate, forget, provenance.
 - `git grep -n -E 'approve' -- src/memex/mcp_server.py src/memex/domain/operations.py src/memex/marketplace` — no match; no approve verb on the model's surface or in a shipped snippet.
 - `git grep -n -E 'initial_status\(' -- src` — the definition and one caller, the consolidator.
-- `git grep -n -E 'status\s*=' -- src/memex/application/memory.py src/memex/mcp_server.py` — archive, approve and merge; the facade write sets none.
+- `git grep -n -E 'status[[:space:]]*=' -- src/memex/application/memory.py src/memex/mcp_server.py` — archive, approve and merge, plus three log-format strings; the facade write sets none.
 - `git grep -n 'status' -- src/memex/infrastructure/store/import_export.py` — one hit, the export; the importer never reads it.
 - `git grep -n 'supersedes' -- src` — the write, the merge, import, export, front matter and `relations()`; no status change.
 - `git grep -n -E '\.recall\(' -- src` — hook injection with no scope, the CLI and the MCP tool, both defaulting to global.
@@ -503,6 +503,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -n -i -E 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE` — no match; the MIT text carries no rider.
 
 ## History
+
+**2026-11-03** — [`069cd03bcfca62f41d5b670c91e694c3cd24d5da`](https://github.com/phanijapps/memex/commit/069cd03bcfca62f41d5b670c91e694c3cd24d5da) — recorded searches re-run at the same pin. Two recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. One annotation gains three log-format strings it had omitted.
 
 **2026-10-12** — [`069cd03bcfca62f41d5b670c91e694c3cd24d5da`](https://github.com/phanijapps/memex/commit/069cd03bcfca62f41d5b670c91e694c3cd24d5da) — 216 commits on, version 0.2.4 to 0.5.0. Page status, a pending queue for consolidated knowledge and project scopes arrived: `trust_state` and `human_review` gained, scope withheld because global recall is the default ([section 9](#9-reliability-safety-and-trust)). Overtaken: `valid_from` is read by recall, the MCP surface went from eight tools to five, the ranker matches AND before OR. Wrong at the first pin: `memex_import` was an MCP tool that updated pages by slug, so the model could update; per-turn injection covered pi and Claude Code only; a second test exercised `valid_from`. The write tool's missing slug holds. Screened from a full clone: seven files, no auto-run surfaces, one build-time execution point (`tests/conftest.py`), nothing inside the cooldown, `AGENTS.md` read as data. Nothing was installed, built or run.
 

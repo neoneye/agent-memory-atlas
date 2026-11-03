@@ -465,24 +465,26 @@ Run at the tree root of the pinned checkout with `git grep`; each was also run
 at `631fcaa7f56ef6fa567cbc0ea9859d1b4bec4263` with the same result.
 
 - `git grep -n -w 'memory_curate' -- '*.rs' '*.sh' '*.py'` — the definition, its log and source strings, and one call at `memory_db.rs:2220` inside a test.
-- `git grep -n -E 'verified\s*=\s*1|SET verified|verified:\s*Some' -- '*.rs' '*.py' '*.sh'` — one doc comment, `memory_db.rs:555`; the writes are the literal `1` in the two summariser inserts at `:613` and `:767`.
-- `git grep -n -E -e '--curate\b' -- ':!.chump' ':!*.md'` — `src/main.rs` only; no scheduler invokes it.
+- `git grep -n -E 'verified[[:space:]]*=[[:space:]]*1|SET verified|verified:[[:space:]]*Some' -- '*.rs' '*.py' '*.sh'` — one doc comment, `memory_db.rs:555`, and an unrelated CI shell variable (`scripts/ci/test-fleet-auth-check.sh:110`); the writes are the literal `1` in the two summariser inserts at `:613` and `:767`.
+- `git grep -n -E -e '--curate([^[:alnum:]_]|$)' -- ':!.chump' ':!*.md'` — `src/main.rs` only; no scheduler invokes it.
 - `git grep -n -E 'chump_memory_embeddings|save_embeddings\(|remove_file\(.*embed' -- '*.rs' '*.py' '*.sh'` — the path constant, two doc comments, the function and three appending saves; nothing truncates or rebuilds the array.
 - `git grep -n -i 'expires_at' -- crates/mcp-servers/chump-mcp-memory/src/main.rs` — the `CREATE TABLE` column at `:86` only.
-- `git grep -n -E 'stale\s*=\s*1' -- '*.rs'` — `memory_db.rs:854` and `:902`, both in `memory_curate`.
+- `git grep -n -E 'stale[[:space:]]*=[[:space:]]*1' -- '*.rs'` — `memory_db.rs:854` and `:902`, both in `memory_curate`.
 - `git grep -n -E 'invalidate_causal_edge|curate_causal_graph' -- '*.rs'` — definitions and tests in `src/counterfactual.rs` only.
-- `git grep -n -i -E '\b(valid_from|valid_to|valid_until|invalid_at|superseded_by|supersedes_id|bitemporal)\b' -- '*.rs' '*.sql' '*.py' '*.sh' ':!.chump'` — no match.
+- `git grep -w -n -i -E '(valid_from|valid_to|valid_until|invalid_at|superseded_by|supersedes_id|bitemporal)' -- '*.rs' '*.sql' '*.py' '*.sh' ':!.chump'` — no match.
 - `git grep -l -i 'tombstone' -- 'src/*memory*' 'src/reflection*' src/counterfactual.rs crates/chump-memory-db crates/mcp-servers/chump-mcp-memory` — no match; the tree's hits are in coordination code.
 - `git grep -n -i -E 'CREATE TABLE[^(]*(memory|lesson|reflection)[a-z_]*(event|audit|history|log|mutation)' -- ':!.chump'` — no match.
 - `git grep -n -i -E '(pending|approved|rejected|quarantine)' -- crates/chump-memory-db src/memory_tool.rs src/reflection_db.rs src/reflection.rs crates/mcp-servers/chump-mcp-memory src/counterfactual.rs src/memory_graph.rs crates/chump-orchestrator/src/reflect.rs` — three incidental comment and assertion hits; no review state.
 - `git grep -l -F 'moved to a private repository' -- 'docs/eval/*.md'`, top level only — 39 files match, in a directory holding 78.
-- `git grep -n -E 'CHUMP_MEMORY_DB\b|CHUMP_MEMORY_DB_PATH' -- ':!.chump/state.sql'` — the pool reads the second, the MCP server and the peer shell the first.
+- `git grep -n -E 'CHUMP_MEMORY_DB([^[:alnum:]_]|$)|CHUMP_MEMORY_DB_PATH' -- ':!.chump/state.sql'` — the pool reads the second, the MCP server and the peer shell the first.
 - `git grep -n -i -E '"(forget|delete|remove|retire|correct|update)"' -- src/memory_tool.rs src/memory_brain_tool.rs src/memory_graph_tool.rs crates/mcp-servers/chump-mcp-memory` — no match; no memory surface offers a removal or correction verb.
 - `git grep -n -E 'DELETE FROM chump_(improvement_targets|reflections|memory_graph)' -- '*.rs' '*.py' '*.sh'` — `clear_ab_seed_lessons` at `src/reflection_db.rs:1503` and `:1510`, the A/B seeding script, and a test.
 - `git grep -n -E 'sensitivity' -- '*.rs'`, outside `memory_db.rs`, `db_pool.rs` and the MCP server — only unrelated uses in `src/neuromodulation.rs` and `crates/chump-verify`; no reader of the column.
 - `git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md` — no match; no paper.
 
 ## History
+
+**2026-11-03** — [`c532a7fa50f9a7ff4a0e5ee163f9aee408e0a1d1`](https://github.com/repairman29/chump/commit/c532a7fa50f9a7ff4a0e5ee163f9aee408e0a1d1) — recorded searches re-run at the same pin. Five recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. One annotation gains an unrelated CI shell variable it had omitted.
 
 **2026-10-12** — [`c532a7fa50f9a7ff4a0e5ee163f9aee408e0a1d1`](https://github.com/repairman29/chump/commit/c532a7fa50f9a7ff4a0e5ee163f9aee408e0a1d1) — 910 commits on; every memory file is unchanged, `docs/eval/` changed by one line, and the duty-officer peer's episode memory is new ([section 7](#7-write-mechanics)). `negative_eval` gained, earned at the first pin on lesson-block tests ([section 10](#10-tests-evals-and-benchmarks)). Wrong then: the ablated memory is the lesson store, not the fact table; retrieval has a vector arm ([section 6](#6-retrieval-mechanics)); EVAL-056 was presented as credible under controls its own directive says it fails; the 5% threshold is preregistered as 10%; 39 write-ups are public, not four; the test count omitted `tokio::test` ([section 1](#1-executive-summary)). Screened from a full clone: 99 files, three auto-run surfaces, three build-time execution points, seven unpinned surfaces, five files inside the cooldown, `CLAUDE.md` and `AGENTS.md` read as data. Nothing was installed, built or run.
 

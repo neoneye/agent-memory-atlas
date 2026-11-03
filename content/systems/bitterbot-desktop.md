@@ -610,7 +610,7 @@ regardless of `.gitignore`.
 | Validity setter has no caller | `git grep -n "setChunkValidTimeEnd" -- src` | definition only |
 | Chunk validity helpers have no caller | `git grep -n -E "buildTemporalWhereClause\|currentFactsOnly" -- src ':!src/memory/temporal-filter.ts'` | `temporal-filter.test.ts` only |
 | Belief-history reads have no caller | `git grep -n -E "beliefHistory\|beliefAsOf\|queryAtTime" -- . ':!*.test.ts'` | `knowledge-graph.ts` and one doc |
-| No producer sets a relationship's `validFrom` | `git grep -n -E "validFrom\s*:\|validFrom\s*=" -- src ':!*.test.ts' ':!src/memory/knowledge-graph.ts'` | `canonical-facts.ts` type and row mapping only |
+| No producer sets a relationship's `validFrom` | `git grep -n -E "validFrom[[:space:]]*:\|validFrom[[:space:]]*=" -- src ':!*.test.ts' ':!src/memory/knowledge-graph.ts'` | `canonical-facts.ts` type and row mapping only |
 | Every writer of `expired` passes `forgotten` | `git grep -n -E "lifecycle: *\"expired\"\|lifecycleState:" -- src ':!*.test.ts'` | consolidation, governance, manager, and the incremental restore |
 | `crystalToRow` has no caller in `src/` | `git grep -n "crystalToRow" -- src` | definition and one test |
 | No inserter writes NULL to `lifecycle_state` | `git grep -n -E "INSERT (OR [A-Z]+ )?INTO chunks" -- src ':!*.test.ts'` | each omits the column or writes `'active'`; carry-over copies stored values |
@@ -623,6 +623,8 @@ regardless of `.gitignore`.
 | Full reindex carried only chunks at `cf9332b1` | `git show cf9332b1:src/memory/manager-sync-ops.ts \| grep -n "carryOver"` | `carryOverNonFileChunks` only |
 
 ## History
+
+**2026-11-03** — [`cd4562a7038a1700ae4d19a345223e98d5b9efb3`](https://github.com/Bitterbot-AI/bitterbot-desktop/commit/cd4562a7038a1700ae4d19a345223e98d5b9efb3) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-09** — [`cd4562a7038a1700ae4d19a345223e98d5b9efb3`](https://github.com/Bitterbot-AI/bitterbot-desktop/commit/cd4562a7038a1700ae4d19a345223e98d5b9efb3) — 232 commits on. `5e5a9e4f` (#200), whose message cites the atlas review of `cf9332b1`, repaired the skill resolver filter and the `expired` derivation, added v72 and a vocabulary test, and deleted `memcube.ts`; `2e938922` (#174) added owner edit, forget and export. `bitemporal` withdrawn: every writer stamps a relationship's `valid_from` with the insert time, so the interval is belief time, as it was at `cf9332b1`. `audit_log` gained: `memory_audit_log` survives a full reindex since `829356fb`. Also wrong at `cf9332b1`: the search SQL never filtered lifecycle (the cited lines were the embedding backfill), the conflict resolver had no caller, `memcube.ts` was imported by nothing, and the v1 CASE runs before any writer-marked `consolidated` exists. Evidence in [section 6](#6-retrieval-mechanics) and [section 5](#5-memory-data-model). Screened first; nothing installed or run.
 

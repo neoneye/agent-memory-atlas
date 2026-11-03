@@ -555,7 +555,7 @@ Run at the tree root of the pinned checkout with `/usr/bin/git grep`, and at
 
 - `git grep -nE 'DELETE FROM memories|UPDATE memories' -- . ':!*.test.ts' ':!*.md'` — `src/db/threads.ts:358` (the topic cascade), `src/db/memories.ts:194` (embedding only) and `src/benchmarks/retrieval-fixtures.ts:124` (fixture reseed); the same at both pins.
 - `git grep -nE 'cascadeDeleteThread|deleteThread(ById)?\(' -- . ':!*.test.ts'` — the cascade, `src/core/topic-commands.ts:68`, `src/chat/routes.ts:498`, `src/dashboard/routes/data-routes.ts:241`.
-- `git grep -nE '\bsaveMemory\(' -- src ':!*.test.ts'` — `src/memory/extractor.ts:84` and `src/dashboard/routes/wiki-routes.ts:3210`.
+- `git grep -nE '(^|[^[:alnum:]_])saveMemory\(' -- src ':!*.test.ts'` — the definition (`src/db/memories.ts:16`) and two callers, `src/memory/extractor.ts:84` and `src/dashboard/routes/wiki-routes.ts:3210`.
 - `git grep -nE 'searchMemories|searchMemoriesHybrid|getMemoriesForUser|getRecentMemories|getMemoriesByUser|dashboardSearchMemories' -- src scripts ':!*.test.ts' ':!src/db/memories.ts'` — the four model-facing readers, the eval, the backfill script and the dashboard routes.
 - `git grep -nE 'new McpServer' -- . ':!*.test.ts'` — `src/research`, `src/hivemind`, `src/serena`; none registers a proposal verb.
 - `git grep -nE 'approveWikiProposal(Group)?\(' -- . ':!*.test.ts'` — the two route bindings in `wiki-gardener-routes.ts` and the definitions.
@@ -567,6 +567,8 @@ Run at the tree root of the pinned checkout with `/usr/bin/git grep`, and at
 - `git grep -niE 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE` — no match; the MIT text carries no rider.
 
 ## History
+
+**2026-11-03** — [`34c9e0b52ed1fe4559dce4867e2aaeeac87db408`](https://github.com/RuneLind/muninn/commit/34c9e0b52ed1fe4559dce4867e2aaeeac87db408) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. The annotation gains the function's definition, which it had omitted.
 
 **2026-10-15** — [`34c9e0b52ed1fe4559dce4867e2aaeeac87db408`](https://github.com/RuneLind/muninn/commit/34c9e0b52ed1fe4559dce4867e2aaeeac87db408) — 124 commits on; `src/db/memories.ts`, the extractor and the memory tests are byte-identical. All four marks hold at both pins. Wrong at the previous pin: memories were deletable through the topic cascade ([section 7](#7-write-mechanics)); `shared` reads were narrowed on authenticating instances ([section 2](#2-mental-model)); the dashboard wrote memories through Remember; the `negative_eval` record cited a test that passes on an empty result, where acceptance 11 holds the paired cases ([section 10](#10-tests-evals-and-benchmarks)); and the review gate needed an admin role under `entra`. Overtaken: memory context moved from the system prompt to the user turn, write verbs refuse cross-site and non-JSON requests, drafters run with no tools, and lint fixes join the queue. Screened from a full clone: one auto-run hook, `package.json` inside the cooldown, fourteen floating ranges under a lockfile. Nothing was installed or run.
 

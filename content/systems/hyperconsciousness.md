@@ -525,7 +525,7 @@ Run with `PIN=0f0c8653c26e89c68d3f3ef844ef960b40f26b24` from the clone root.
 - `git grep -n -E 'set_len|remove_dir_all' "${PIN}" -- src ':!src/*tests.rs'` — `log.rs` only in `repair_tail` (353, 365) and failed-append rollback (716, 758, 1025); `remove_dir_all` in the recovery-drill cleanup (`recovery.rs:536`) and in `#[cfg(test)]` modules (`catalog.rs:616`, `key_control.rs:283`); `bucket.rs` and `updater.rs` truncate download and lock files.
 - `git grep -n -E 'visible\(|\.allows\(' "${PIN}" -- src/main.rs` — `captures.visible` at 3574 in `recent_local_records` only; nothing in `find_command` (348-519) or `collect_hc_discovery_hit` (520-544).
 - `git grep -n -E 'capture_change|retract' "${PIN}" -- tests/hc_cli.rs tests/shared_mcp_cli.rs` — no match; the `hc find` tests write no capture change.
-- `git grep -n -E 'Material::|\.material\b|\["material"\]' "${PIN}" -- src ':!src/*tests.rs'` — no reader outside `capture.rs`'s definition and schema.
+- `git grep -n -E 'Material::|\.material([^[:alnum:]_]|$)|\["material"\]' "${PIN}" -- src ':!src/*tests.rs'` — no reader outside `capture.rs`'s definition and schema; the hits are recovery-kit key material (`RecoveryMaterial`) in `recovery.rs`.
 - `git grep -n -E 'observed_at_ms' "${PIN}" -- src/query.rs src/query src/grant.rs src/search_index.rs src/capture_state.rs` — no match.
 - `git grep -n -i -E 'valid_(from|to|until)|as_of' "${PIN}" -- src` — no match.
 - `git ls-tree -r --name-only "${PIN}" | grep -i -E 'hooks?\.json|\.claude/|settings\.json'` — no match; no hook or harness configuration ships.
@@ -534,5 +534,7 @@ Run with `PIN=0f0c8653c26e89c68d3f3ef844ef960b40f26b24` from the clone root.
 - `git grep -l -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' "${PIN}" -- . ':!Cargo.lock'` — hits are the word "citation" in eval and harness documents; no paper and no `CITATION.cff`.
 
 ## History
+
+**2026-11-03** — [`0f0c8653c26e89c68d3f3ef844ef960b40f26b24`](https://github.com/louis030195/hyperconsciousness/commit/0f0c8653c26e89c68d3f3ef844ef960b40f26b24) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. The `material` search finds recovery-kit key material only, so the claim stands.
 
 **2026-10-15** — [`0f0c8653c26e89c68d3f3ef844ef960b40f26b24`](https://github.com/louis030195/hyperconsciousness/commit/0f0c8653c26e89c68d3f3ef844ef960b40f26b24) — first reading, at the head of `main`, a commit of 14 October 2026, 42 commits past `d2152ce`, the commit the recall baseline was run at. The project was called Brainmesh; protocol domains keep that name. Three marks: `scope_enforced`, `audit_log`, `negative_eval`. MIT with no rider. Screened before reading from a full clone: no auto-run surface; one build-time execution point (the npm `postinstall`); `Cargo.toml`, `Cargo.lock` and `package.json` inside the seven-day cooldown; one unpinned surface, `dashboard/package.json`'s floating ranges behind `bun.lock`; `AGENTS.md` and the agent-addressed header comments treated as data. Read with `git grep` and `sed`; nothing installed, built or run.

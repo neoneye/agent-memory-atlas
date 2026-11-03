@@ -924,7 +924,7 @@ tracked files regardless of <code>.gitignore</code>.</p>
 returns the definitions in <code>refinement_transactions.py</code>
 only.</li>
 <li>Writers of preferences:
-<code>git grep -n -i -E '(INSERT( OR [A-Z]+)? INTO|UPDATE|DELETE FROM)[[:space:]]+preferences\b' -- ':!tests' ':!docs'</code>
+<code>git grep -n -i -E '(INSERT( OR [A-Z]+)? INTO|UPDATE|DELETE FROM)[[:space:]]+preferences([^[:alnum:]_]|$)' -- ':!tests' ':!docs'</code>
 returns <code>memory_store.py:3775</code>, <code>:3977</code>, the
 projection's replay, and <code>refinement_transactions.py</code>.</li>
 <li>Deletes of the fact journal:
@@ -948,9 +948,20 @@ and the reconcile path.</li>
 <li>Outbox producer:
 <code>git grep -n -E 'OutcomeService\(|\.memory\.record\(' -- ':!tests'</code>
 returns <code>facade.py:63</code> only, and
-<code>git grep -n 'facade\.record\b'</code> returns nothing.</li>
+<code>git grep -n 'facade\.record\b'</code> returns one test call
+(<code>tests/test_memory_learning_facade.py:50</code>).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/Krilliac/Sonder-runtime/commit/ad7e59d45fb3792c638e690e9aeb02773fc5ccc0"><code class="commit-id" title="ad7e59d45fb3792c638e690e9aeb02773fc5ccc0">ad7e59d4…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves. Separately, the basic-regex
+<code>facade\.record\b</code> search, which can match, returns one test
+call rather than nothing; the producer claim stands.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/Krilliac/Sonder-runtime/commit/ad7e59d45fb3792c638e690e9aeb02773fc5ccc0"><code class="commit-id" title="ad7e59d45fb3792c638e690e9aeb02773fc5ccc0">ad7e59d4…</code></a>
 — 707 commits on. <code>scope_enforced</code> is withdrawn, wrong at

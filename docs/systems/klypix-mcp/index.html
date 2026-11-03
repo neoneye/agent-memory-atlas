@@ -1075,7 +1075,7 @@ schemas</td>
 <li><code>git grep -nE "graveyard" -- src/klypix-format.mjs</code> —
 hits at <code>:147-2851</code> (parser, bin identities, arrange); none
 at or after <code>captureIntoBrain</code> (<code>:6616</code>).</li>
-<li><code>git grep -niE "valid_?from|valid_?to\b|valid_?until|effective_?(from|at)|occurred_?at|event_?time|valid_?time" -- src bin</code>
+<li><code>git grep -niE "valid_?from|valid_?to([^[:alnum:]_]|$)|valid_?until|effective_?(from|at)|occurred_?at|event_?time|valid_?time" -- src bin</code>
 — no match.</li>
 <li><code>git grep -nE "scopeLockedView\(" -- src bin</code> —
 <code>bin/klypix-read.mjs:39</code>, <code>src/app-tools.mjs:503</code>,
@@ -1118,6 +1118,14 @@ files — no match; no test re-captures a buried claim.</li>
 — no match; the Apache-2.0 text carries no rider.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/dahshanlabs/klypix-mcp/commit/1f133014fff2e931ce7c4566b35d4231f5a1d7ef"><code class="commit-id" title="1f133014fff2e931ce7c4566b35d4231f5a1d7ef">1f133014…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. It returns what its annotation states, and
+no claim moves.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/dahshanlabs/klypix-mcp/commit/1f133014fff2e931ce7c4566b35d4231f5a1d7ef"><code class="commit-id" title="1f133014fff2e931ce7c4566b35d4231f5a1d7ef">1f133014…</code></a>
 — 95 commits on, 1.86.2 to 1.102.0. Two marks withdrawn, both wrong at

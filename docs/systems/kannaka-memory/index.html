@@ -392,8 +392,12 @@ rewritten.</p>
 <code>apply_destructive</code> and <code>apply_partial</code>, which
 nothing outside their own module's tests calls, and
 <code>hrm_store.rs:773</code> and <code>:808</code> rebuild every cached
-memory with an empty list. <code>disputed</code> has no reader and no
-writer anywhere in <code>src/</code>.</p>
+memory with an empty list. <code>disputed</code> has no reader, and its
+two writers run only under tests: <code>apply_destructive</code>
+(<code>collective/merge.rs:255</code>), and the paradox resolver's
+irreducible branch (<code>paradox.rs:665</code>), reached through
+<code>dream_parallel</code>, whose one caller is the test at
+<code>paradox.rs:946</code>.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Resonance against the medium: the query is a vector, recall is a
 similarity over the field with optional beam and temporal factors, and
@@ -668,7 +672,9 @@ nothing inside <code>belief_core_snapshot</code>
 <li><code>git grep -nE 'merge_history\.push|apply_(constructive|destructive|partial)' -- src</code>
 — only <code>src/collective/merge.rs</code> and its re-export in
 <code>collective/mod.rs</code>.</li>
-<li><code>git grep -nE '\.disputed\b' -- src</code> — no match.</li>
+<li><code>git grep -nE '\.disputed([^[:alnum:]_]|$)' -- src</code> —
+<code>collective/merge.rs:255</code> and <code>paradox.rs:665</code>,
+both reached only from tests; no reader.</li>
 <li><code>git grep -nE 'set_temporal\(' -- src</code> —
 <code>bin/kannaka.rs:2038</code>, <code>:2196</code>,
 <code>openclaw.rs:1127</code> (<code>observed_at</code> only) and one
@@ -688,14 +694,28 @@ variant and its match arms in <code>nats.rs</code>; no producer.</li>
 — <code>QuarantineStaging::promote</code>, called from
 <code>admit</code> on corroboration, and a retention-tier
 <code>promote</code> CLI verb; no review queue.</li>
-<li><code>git grep -niE '\bmcp\b' -- src Cargo.toml</code> — no
-match.</li>
+<li><code>git grep -w -niE 'mcp' -- src Cargo.toml</code> — comments
+recording the MCP server's removal (<code>Cargo.toml:79</code>,
+<code>:120</code>, <code>:160</code>, <code>src/lib.rs:43</code>,
+<code>src/acp/protocol.rs:11</code>) and two comments naming MCP tools
+(<code>src/bin/handlers/swarm.rs:375</code>,
+<code>src/openclaw.rs:2691</code>); no MCP server.</li>
 <li><code>git grep -niE 'arxiv\.org|bibtex' -- README.md docs press</code>
 — no match; no paper.</li>
 <li><code>git grep -niE 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE NOTICE</code>
 — no match; no rider concerning analysis.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/kannaka-labs/kannaka-memory/commit/4bd8db6e9880b8707ff950f8efbe4abf239125cf"><code class="commit-id" title="4bd8db6e9880b8707ff950f8efbe4abf239125cf">4bd8db6e…</code></a>
+— recorded searches re-run at the same pin. Two recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. Two said no match and were
+wrong: <code>disputed</code> has two writers, both reached only from
+tests, so it has no production writer as stated; and the MCP search
+finds comments recording the server's removal. No mark moves.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/kannaka-labs/kannaka-memory/commit/4bd8db6e9880b8707ff950f8efbe4abf239125cf"><code class="commit-id" title="4bd8db6e9880b8707ff950f8efbe4abf239125cf">4bd8db6e…</code></a>
 — 126 commits on, version 0.16.6 to 0.16.16. <code>trust_state</code>

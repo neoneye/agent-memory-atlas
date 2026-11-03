@@ -669,10 +669,11 @@ root.</p>
 <code>cortex-core/tests/test_procedural.rs</code> only.</li>
 <li><code>git grep -n -E '\.touch\(' -- cortex-core cortex-mcp-server cortex-http</code>
 — one hit, <code>cortex-core/tests/test_episode.rs:140</code>.</li>
-<li><code>git grep -n -E 'access_count \+?=|last_accessed\s*=' -- '*.rs' ':!*/tests/*'</code>
+<li><code>git grep -n -E 'access_count \+?=|last_accessed[[:space:]]*=' -- '*.rs' ':!*/tests/*'</code>
 — <code>episode.rs:233-234</code> (<code>touch</code>),
 <code>lib.rs:874-875</code> and <code>:1043-1044</code>, both
-near-duplicate reinforcement.</li>
+near-duplicate reinforcement, and fixtures in
+<code>retrieval.rs</code>'s test module.</li>
 <li><code>git grep -n -E 'for_remote_llm\(|with_include_private\('</code>
 — the definitions in <code>context.rs</code> and one call in
 <code>cortex-core/tests/test_context.rs:143</code>.</li>
@@ -703,6 +704,14 @@ the bench scripts, the LoCoMo dataset and two Criterion benches; no
 result file.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/gambletan/cortex/commit/951aca3e6bac84669dec65865dd6f774ca13b67e"><code class="commit-id" title="951aca3e6bac84669dec65865dd6f774ca13b67e">951aca3e…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. The annotation gains test fixtures it had
+omitted.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/gambletan/cortex/commit/951aca3e6bac84669dec65865dd6f774ca13b67e"><code class="commit-id" title="951aca3e6bac84669dec65865dd6f774ca13b67e">951aca3e…</code></a>
 — first reading, at the head of <code>main</code>, a commit of 8 October

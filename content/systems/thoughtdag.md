@@ -875,11 +875,11 @@ git grep -n -E 'findJson' -- cli/test                                  # none: t
 git grep -n -E 'findJson\(' -- cli/src/main.ts                         # none: the CLI's find does not reach the filter
 git grep -n -E 'archived' -- cli/src src/lib/dossier.ts src/lib/topics.ts   # lib.ts:91 only: dossiers and labels keep archived turns
 git grep -n -E 'archived' -- src/lib/canvas-record.ts                  # none: the record keeps archived nodes; the adapter drops them
-git grep -n -E 'lineNote|\.notes\b' -- src ':!src/lib/profile.ts'     # MemoryPage.tsx only: no read path filters on a line note
+git grep -n -E 'lineNote|\.notes([^[:alnum:]_]|$)' -- src ':!src/lib/profile.ts'     # MemoryPage.tsx only: no read path filters on a line note
 git grep -n -i -E 'stale' -- src/lib/canvas-chat.ts src/components/CanvasChat.tsx   # none: ask the canvas sends no stale mark
 git grep -n -E 'decideMemory|MEMORY_DURABLE_BAR' -- scripts            # none: no golden set for the typed path
 git grep -n -i -E 'tombstone|denylist|blocklist' -- src cli/src dsh/lib runtime desktop   # none: no refused-value record
-git grep -n -i -E 'valid_?(from|to|until)\b' -- src cli/src dsh/lib runtime desktop server.mjs   # none: no validity interval
+git grep -n -i -E 'valid_?(from|to|until)([^[:alnum:]_]|$)' -- src cli/src dsh/lib runtime desktop server.mjs   # none: no validity interval
 git grep -l -F '[Stale: this answer' -- benchmark/runs/compiled        # 30 artifacts, all source_prune_stale
 git ls-files benchmark/runs | /usr/bin/grep source_prune_stale | /usr/bin/grep -v -c '^benchmark/runs/compiled/'   # 0: no captured trace
 git grep -n -E 'agent-runtime|pi-guard|fs-diff|compileForAgent|fetchRecallItems|judgeStaleness|mergeIntoDoc|carryNotes|replayStale|ladderContextFor|collectMapLines|turnsJson|buildCanvasChat' -- cli/test scripts   # test-background.mjs:144,158 only, a stubbed agent-runtime module: lane, recall, stale judge, Replay, summariser, profile rewrite and ask the canvas untested
@@ -891,6 +891,8 @@ git grep -c -E '^[[:space:]]*(test|it)\(' -- 'cli/test/*.mjs'; git grep -c -E '^
 ```
 
 ## History
+
+**2026-11-03** — [`d450c9826a3fb940930456bf418890d11ba0d63d`](https://github.com/chenxiachan/thoughtdag/commit/d450c9826a3fb940930456bf418890d11ba0d63d) — recorded searches re-run at the same pin. Two recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. Each returns what its annotation states, and no claim moves.
 
 **2026-11-02** — [`d450c9826a3fb940930456bf418890d11ba0d63d`](https://github.com/chenxiachan/thoughtdag/commit/d450c9826a3fb940930456bf418890d11ba0d63d) — 17 commits on, releases 0.5.23 to 0.5.27. No mark moved. An imported turn's tool steps arrive switched off behind one switch per node, and `scripts/test-turn-context.mjs` adds a negative case to the mark's evidence ([section 10](#10-tests-evals-and-benchmarks)). Every memory model call goes through one background order that never picks an agent, and no memory write keeps the model that answered ([section 7](#7-write-mechanics)). The CLI, recall, the stale judge, the event log, the canvas adapter and the benchmark are byte-identical to the previous pin. Corrected: the recorded `cwd`-caller search matched a type declaration at both pins and excludes `.d.ts` files. Screened from a full clone: no auto-run surface, three manifests inside the seven-day cooldown, `AGENTS.md` treated as data; nothing installed, built or run.
 

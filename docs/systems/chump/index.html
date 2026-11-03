@@ -701,23 +701,24 @@ result.</p>
 <li><code>git grep -n -w 'memory_curate' -- '*.rs' '*.sh' '*.py'</code>
 — the definition, its log and source strings, and one call at
 <code>memory_db.rs:2220</code> inside a test.</li>
-<li><code>git grep -n -E 'verified\s*=\s*1|SET verified|verified:\s*Some' -- '*.rs' '*.py' '*.sh'</code>
-— one doc comment, <code>memory_db.rs:555</code>; the writes are the
-literal <code>1</code> in the two summariser inserts at
-<code>:613</code> and <code>:767</code>.</li>
-<li><code>git grep -n -E -e '--curate\b' -- ':!.chump' ':!*.md'</code> —
-<code>src/main.rs</code> only; no scheduler invokes it.</li>
+<li><code>git grep -n -E 'verified[[:space:]]*=[[:space:]]*1|SET verified|verified:[[:space:]]*Some' -- '*.rs' '*.py' '*.sh'</code>
+— one doc comment, <code>memory_db.rs:555</code>, and an unrelated CI
+shell variable (<code>scripts/ci/test-fleet-auth-check.sh:110</code>);
+the writes are the literal <code>1</code> in the two summariser inserts
+at <code>:613</code> and <code>:767</code>.</li>
+<li><code>git grep -n -E -e '--curate([^[:alnum:]_]|$)' -- ':!.chump' ':!*.md'</code>
+— <code>src/main.rs</code> only; no scheduler invokes it.</li>
 <li><code>git grep -n -E 'chump_memory_embeddings|save_embeddings\(|remove_file\(.*embed' -- '*.rs' '*.py' '*.sh'</code>
 — the path constant, two doc comments, the function and three appending
 saves; nothing truncates or rebuilds the array.</li>
 <li><code>git grep -n -i 'expires_at' -- crates/mcp-servers/chump-mcp-memory/src/main.rs</code>
 — the <code>CREATE TABLE</code> column at <code>:86</code> only.</li>
-<li><code>git grep -n -E 'stale\s*=\s*1' -- '*.rs'</code> —
-<code>memory_db.rs:854</code> and <code>:902</code>, both in
+<li><code>git grep -n -E 'stale[[:space:]]*=[[:space:]]*1' -- '*.rs'</code>
+— <code>memory_db.rs:854</code> and <code>:902</code>, both in
 <code>memory_curate</code>.</li>
 <li><code>git grep -n -E 'invalidate_causal_edge|curate_causal_graph' -- '*.rs'</code>
 — definitions and tests in <code>src/counterfactual.rs</code> only.</li>
-<li><code>git grep -n -i -E '\b(valid_from|valid_to|valid_until|invalid_at|superseded_by|supersedes_id|bitemporal)\b' -- '*.rs' '*.sql' '*.py' '*.sh' ':!.chump'</code>
+<li><code>git grep -w -n -i -E '(valid_from|valid_to|valid_until|invalid_at|superseded_by|supersedes_id|bitemporal)' -- '*.rs' '*.sql' '*.py' '*.sh' ':!.chump'</code>
 — no match.</li>
 <li><code>git grep -l -i 'tombstone' -- 'src/*memory*' 'src/reflection*' src/counterfactual.rs crates/chump-memory-db crates/mcp-servers/chump-mcp-memory</code>
 — no match; the tree's hits are in coordination code.</li>
@@ -727,7 +728,7 @@ saves; nothing truncates or rebuilds the array.</li>
 — three incidental comment and assertion hits; no review state.</li>
 <li><code>git grep -l -F 'moved to a private repository' -- 'docs/eval/*.md'</code>,
 top level only — 39 files match, in a directory holding 78.</li>
-<li><code>git grep -n -E 'CHUMP_MEMORY_DB\b|CHUMP_MEMORY_DB_PATH' -- ':!.chump/state.sql'</code>
+<li><code>git grep -n -E 'CHUMP_MEMORY_DB([^[:alnum:]_]|$)|CHUMP_MEMORY_DB_PATH' -- ':!.chump/state.sql'</code>
 — the pool reads the second, the MCP server and the peer shell the
 first.</li>
 <li><code>git grep -n -i -E '"(forget|delete|remove|retire|correct|update)"' -- src/memory_tool.rs src/memory_brain_tool.rs src/memory_graph_tool.rs crates/mcp-servers/chump-mcp-memory</code>
@@ -744,6 +745,14 @@ only unrelated uses in <code>src/neuromodulation.rs</code> and
 — no match; no paper.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/repairman29/chump/commit/c532a7fa50f9a7ff4a0e5ee163f9aee408e0a1d1"><code class="commit-id" title="c532a7fa50f9a7ff4a0e5ee163f9aee408e0a1d1">c532a7fa…</code></a>
+— recorded searches re-run at the same pin. Five recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. One annotation gains an
+unrelated CI shell variable it had omitted.</p>
 <p><strong>2026-10-12</strong> — <a
 href="https://github.com/repairman29/chump/commit/c532a7fa50f9a7ff4a0e5ee163f9aee408e0a1d1"><code class="commit-id" title="c532a7fa50f9a7ff4a0e5ee163f9aee408e0a1d1">c532a7fa…</code></a>
 — 910 commits on; every memory file is unchanged,

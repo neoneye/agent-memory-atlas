@@ -568,7 +568,7 @@ of thousands.
 Run from the tree root at the pinned revision with `/usr/bin/git grep`.
 
 - `git grep -n -i -E 'valid_(from|to|at|until)|observed_at|event_time|occurred_at' -- '*.py' hv` — no match; no valid-time field.
-- `git grep -n -i -E '(WHERE|AND)[^"]*\b(project|user_id|tenant|namespace|agent_id|scope)\b' -- hivemind hv hive_module_api.py` — no match; no scope predicate on any read.
+- `git grep -n -i -E '(WHERE|AND)[^"]*(^|[^[:alnum:]_])(project|user_id|tenant|namespace|agent_id|scope)([^[:alnum:]_]|$)' -- hivemind hv hive_module_api.py` — three docstring lines and the telemetry dashboard's session filter (`hivemind/parts/08_read_api.py:392`, `_tel_aggregate`); no scope predicate on any memory read.
 - `git grep -n -E '_salience_gate\('` — the definition at `integrations/hermes/__init__.py:954` and a docstring mention at `:880`; no caller.
 - `git grep -n -E 'speculation' -- hivemind hv` — no match; the core never reads the tag Hermes writes.
 - `git grep -n -E 'open\(' -- merkle.py hivemind hv` — the journal is opened only in append mode (`02_store_journal.py:789`); the write-mode opens are key, pin, quarantine and nudge-state files.
@@ -578,5 +578,7 @@ Run from the tree root at the pinned revision with `/usr/bin/git grep`.
 - `git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation|doi\.org'` — no match, and no `CITATION.cff`.
 
 ## History
+
+**2026-11-03** — [`739b63e97e116b2ea43dd4bcaa6df79addd3fef7`](https://github.com/projectmentor/hive-mind/commit/739b63e97e116b2ea43dd4bcaa6df79addd3fef7) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. The scope search matches the telemetry dashboard's session filter as well as docstrings; no memory read carries a scope predicate, and no mark moves.
 
 **2026-10-15** — [`739b63e97e116b2ea43dd4bcaa6df79addd3fef7`](https://github.com/projectmentor/hive-mind/commit/739b63e97e116b2ea43dd4bcaa6df79addd3fef7) — first reading, at the head of `main`, a manifest re-signing commit of 15 October 2026 after the contract 4.3 merge. Three marks: `tombstone`, `audit_log`, `negative_eval`; `trust_state`, `scope_enforced`, `human_review` and `bitemporal` withheld, with the reasons in sections 2, 5 and 9. Screened before reading from a full clone: no auto-run surface; two `conftest.py` build-time execution points; `requirements.txt` inside the cooldown with one floating range, `requests>=2.32.4,<3`; `AGENTS.md` read as data. No licence rider. Nothing was installed, built or run.

@@ -721,7 +721,7 @@ regardless of `.gitignore`.
   `git grep -n -E 'apply_preference_refinement|rollback_preference_refinement|INSERT INTO refinement_history' -- ':!tests'`
   returns the definitions in `refinement_transactions.py` only.
 - Writers of preferences:
-  `git grep -n -i -E '(INSERT( OR [A-Z]+)? INTO|UPDATE|DELETE FROM)[[:space:]]+preferences\b' -- ':!tests' ':!docs'`
+  `git grep -n -i -E '(INSERT( OR [A-Z]+)? INTO|UPDATE|DELETE FROM)[[:space:]]+preferences([^[:alnum:]_]|$)' -- ':!tests' ':!docs'`
   returns `memory_store.py:3775`, `:3977`, the projection's replay, and
   `refinement_transactions.py`.
 - Deletes of the fact journal:
@@ -740,9 +740,11 @@ regardless of `.gitignore`.
 - Outbox producer:
   `git grep -n -E 'OutcomeService\(|\.memory\.record\(' -- ':!tests'`
   returns `facade.py:63` only, and `git grep -n 'facade\.record\b'` returns
-  nothing.
+  one test call (`tests/test_memory_learning_facade.py:50`).
 
 ## History
+
+**2026-11-03** — [`ad7e59d45fb3792c638e690e9aeb02773fc5ccc0`](https://github.com/Krilliac/Sonder-runtime/commit/ad7e59d45fb3792c638e690e9aeb02773fc5ccc0) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves. Separately, the basic-regex `facade\.record\b` search, which can match, returns one test call rather than nothing; the producer claim stands.
 
 **2026-10-15** — [`ad7e59d45fb3792c638e690e9aeb02773fc5ccc0`](https://github.com/Krilliac/Sonder-runtime/commit/ad7e59d45fb3792c638e690e9aeb02773fc5ccc0) — 707 commits on. `scope_enforced` is withdrawn, wrong at 1a41a88: `memory_search` reads every project's facts, sessions and interactions ([section 5](#5-memory-data-model)). `bitemporal` is gained on fact validity intervals ([`0ada6adde6b74b98e33582acf5872551dc4c60b2`](https://github.com/Krilliac/Sonder-runtime/commit/0ada6adde6b74b98e33582acf5872551dc4c60b2)) and `human_review` on owner-approved playbooks ([`7da8c7cd995af92660721c22a9633191dab79a5d`](https://github.com/Krilliac/Sonder-runtime/commit/7da8c7cd995af92660721c22a9633191dab79a5d)), in [section 8](#8-agent-integration). `audit_log` was wrong at 1a41a88, since `refinement_history` has no production writer at either pin; it holds on the opt-in fact journal ([section 9](#9-reliability-safety-and-trust)). Also wrong then: account scope on preferences, caller-over-machine quarantine weighting, the outbox constructor, four module locations. The quarantine moved one line. Screened from a full clone: no auto-run surface, two `conftest.py` execution points, two unpinned requirement files, nothing inside the cooldown; Apache-2.0, no rider. Nothing was installed, built or run.
 

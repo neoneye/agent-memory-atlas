@@ -707,7 +707,7 @@ deliberate; export writes it.</p>
 <p>Run at the tree root of the pinned checkout with
 <code>git grep</code>.</p>
 <ul>
-<li><code>git grep -n -E '^\s+slug:' -- src/memex/domain/models.py</code>
+<li><code>git grep -n -E '^[[:space:]]+slug:' -- src/memex/domain/models.py</code>
 — <code>WikiNode</code> and three result types; <code>WriteInput</code>
 has none.</li>
 <li><code>git grep -n -E 'def memex_' -- src/memex/mcp_server.py</code>
@@ -717,8 +717,9 @@ has none.</li>
 snippet.</li>
 <li><code>git grep -n -E 'initial_status\(' -- src</code> — the
 definition and one caller, the consolidator.</li>
-<li><code>git grep -n -E 'status\s*=' -- src/memex/application/memory.py src/memex/mcp_server.py</code>
-— archive, approve and merge; the facade write sets none.</li>
+<li><code>git grep -n -E 'status[[:space:]]*=' -- src/memex/application/memory.py src/memex/mcp_server.py</code>
+— archive, approve and merge, plus three log-format strings; the facade
+write sets none.</li>
 <li><code>git grep -n 'status' -- src/memex/infrastructure/store/import_export.py</code>
 — one hit, the export; the importer never reads it.</li>
 <li><code>git grep -n 'supersedes' -- src</code> — the write, the merge,
@@ -743,6 +744,14 @@ the Codex capture log; no record of page mutations.</li>
 — no match; the MIT text carries no rider.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/phanijapps/memex/commit/069cd03bcfca62f41d5b670c91e694c3cd24d5da"><code class="commit-id" title="069cd03bcfca62f41d5b670c91e694c3cd24d5da">069cd03b…</code></a>
+— recorded searches re-run at the same pin. Two recorded searches use
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of each
+pattern using them matched nothing. They are rewritten with
+<code>-w</code> or POSIX classes and re-run. One annotation gains three
+log-format strings it had omitted.</p>
 <p><strong>2026-10-12</strong> — <a
 href="https://github.com/phanijapps/memex/commit/069cd03bcfca62f41d5b670c91e694c3cd24d5da"><code class="commit-id" title="069cd03bcfca62f41d5b670c91e694c3cd24d5da">069cd03b…</code></a>
 — 216 commits on, version 0.2.4 to 0.5.0. Page status, a pending queue

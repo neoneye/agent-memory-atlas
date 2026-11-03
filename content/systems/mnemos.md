@@ -549,7 +549,7 @@ Run at the tree root of the pinned checkout with `git grep`.
 
 - `git grep -n -E 'collection,omitempty' -- internal/mcp ':!*_test.go'` — search, context, list, okfy, remember and the related output; every collection argument is optional.
 - `git grep -n -i 'collection' -- internal/cli/serve.go` — no match; serve binds no collection.
-- `git grep -n -i -E '\b(confidence|enforcement|provenance|reviewer|trust)\b' -- internal/parse internal/memory internal/okfschema internal/storage ':!*_test.go'` — no match, here and at 6e7b14f.
+- `git grep -w -n -i -E '(confidence|enforcement|provenance|reviewer|trust)' -- internal/parse internal/memory internal/okfschema internal/storage ':!*_test.go'` — no match, here and at 6e7b14f.
 - `git grep -n -i -E 'tombstone|suppress|blocklist' -- '*.go' '*.sql' ':!*_test.go'` — no match.
 - `git grep -n -i -E 'valid_from|valid_to|valid_until|effective_(from|at)|event_time|as_of|asof' -- '*.go' '*.sql' ':!*_test.go'` — no match.
 - `git grep -n -E 'AppendEvent\(' -- '*.go' ':!*_test.go'` — the definition and one caller, `internal/ingest/process.go:194`, type `ingested`.
@@ -561,6 +561,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -n -i -E 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE` — no match; the MIT text carries no rider.
 
 ## History
+
+**2026-11-03** — [`8d8d65c6dfb5e74293770163fb3e868521e40610`](https://github.com/arhuman/mnemos/commit/8d8d65c6dfb5e74293770163fb3e868521e40610) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-15** — [`8d8d65c6dfb5e74293770163fb3e868521e40610`](https://github.com/arhuman/mnemos/commit/8d8d65c6dfb5e74293770163fb3e868521e40610) — 60 commits on, past v0.3.0. Marks move from `scope_enforced` to `negative_eval`, both wrong at 6e7b14f: the collection was an omittable model argument and read took none ([section 6](#6-retrieval-mechanics)), and deny-list must-not-surface tests with a control were committed ([section 10](#10-tests-evals-and-benchmarks)). Also wrong then: ingest secret-scanning, re-ingest eviction, "no status field", the census. Overtaken: supersession demotion, the journal tier, ingest scanning, reconcile on ingest, registered origins, the deny list on edit and doctor ([section 2](#2-mental-model)). Screened from a full clone: no auto-run surface, one build-time execution path in the `Makefile`, `go.mod` inside the cooldown, `go.sum` present; MIT with a third-party note and no rider. Nothing was installed, built or run.
 

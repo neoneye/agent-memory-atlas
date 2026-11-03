@@ -508,7 +508,7 @@ walk away, because the design refuses that by principle.
 
 Checked against the checkout at the pinned revision, from the repository root.
 
-- `git grep -nE 'DELETE FROM (decisions|memory_events|memory_scope_bindings|judgment_commands)\b' -- packages ':!**/tests/**'` — no match.
+- `git grep -nE 'DELETE FROM (decisions|memory_events|memory_scope_bindings|judgment_commands)([^[:alnum:]_]|$)' -- packages ':!**/tests/**'` — no match.
 - `git grep -nE 'UPDATE decisions' -- packages ':!**/tests/**' ':!**/migrations/**'` — four in `judgments.ts` and one in `registry/record-identity.ts`, which `applyProjections` calls inside the append.
 - `git grep -nE 'promoteMemoryStatus' -- packages ':!**/tests/**'` — the definition, the root export and an adapter comment; no caller.
 - `git grep -nE 'revoked_wiki_tombstones' -- packages ':!**/migrations/**'` — two test files only.
@@ -517,12 +517,14 @@ Checked against the checkout at the pinned revision, from the repository root.
 - `git grep -nE 'vectorSearch\(' -- packages/claude-code-plugin` — the PreToolUse and PreCompact hooks, neither passing an exclusion list.
 - `git grep -nE 'Prior context' -- packages` — `memory/api.ts:1723-1724` only; no test.
 - `git grep -nE "status: 'contradicted'|= 'contradicted'|'contradicted' as" -- packages ':!**/tests/**'` — no match.
-- `git grep -nE -i '\b(purge|forget|erase)\b' -- packages ':!**/tests/**' ':!*.md'` — test seams, a fire-and-forget comment and a wiki comment; no memory deletion verb.
+- `git grep -w -nE -i '(purge|forget|erase)' -- packages ':!**/tests/**' ':!*.md'` — test seams, a fire-and-forget comment and a wiki comment; no memory deletion verb.
 - `git grep -nE 'entity_resolution_candidates|entity_merge_actions' -- packages ':!**/tests/**' ':!**/migrations/**'` — no match.
 - `git grep -lE -i 'memorybench|longmemeval'` — `.gitignore`, `CHANGELOG.md`, `bun.lock` and two test comments; no harness.
 - `git grep -nE -i 'arxiv|bibtex|@article|@misc|doi\.org'` — no match, and no `CITATION.cff`.
 
 ## History
+
+**2026-11-03** — [`6738c694144313481516333312aec7497bae7a04`](https://github.com/jungjaehoon-lifegamez/MAMA/commit/6738c694144313481516333312aec7497bae7a04) — recorded searches re-run at the same pin. Two recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. Each returns what its annotation states, and no claim moves.
 
 **2026-11-02** — [`6738c694144313481516333312aec7497bae7a04`](https://github.com/jungjaehoon-lifegamez/MAMA/commit/6738c694144313481516333312aec7497bae7a04) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 2 auto-run surfaces, 4 in all: hooks declared inline in `packages/claude-code-plugin/.claude-plugin/plugin.json` on SessionStart, PreToolUse, PostToolUse and PreCompact; MCP servers declared in `packages/claude-code-plugin/.claude-plugin/plugin.json` and `packages/claude-code-plugin/.mcp.json`, launched from packages fetched at run time. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 

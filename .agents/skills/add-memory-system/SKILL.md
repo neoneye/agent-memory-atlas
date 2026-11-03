@@ -145,6 +145,13 @@ nothing does Z / X is not in this tree*:
 A negative claim you were not willing to run a command for is one to delete
 rather than publish.
 
+A command that cannot match is no better. Under `git grep -E`, macOS git
+matches nothing for `\b`, `\s`, `\w`, `\d`, `\<` or `\>`, and both greps read
+`\|` as a literal pipe, so the empty result looks like an absence. Write `-w`,
+`(^|[^[:alnum:]_])`, `[[:space:]]` or a bare `|`. Before recording a "no
+match", run one search the same pattern ought to hit, so you know it can match.
+`list_inert_recorded_commands.py` fails the build on the escapes.
+
 Prefer code, schemas, tests, and committed artifacts over marketing language. Cite repository-relative file paths and key functions, classes, types, or endpoints. Label inferences and unknowns. Do not imply that a benchmark was rerun when only its code or committed output was inspected.
 
 Use focused searches rather than reading every file. Useful search concepts include:

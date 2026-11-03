@@ -582,11 +582,13 @@ Checked against the checkout at the pinned revision, from the tree root.
 - `git grep -n -E "\.staging" -- '*.test.ts' '*.test.tsx'` — the replaced-map count and two screenshot paths; no assertion that `loadSkills` skips staging.
 - `git grep -n -E "not\.toContain|toBeUndefined\(\)|toEqual\(\[\]\)" -- src/daemon/agent/skills.test.ts src/daemon/agent/site-map-store.test.ts src/daemon/agent/skill-store.test.ts src/daemon/agent/prompt.test.ts` — the lookalike-domain case at `skills.test.ts:132` is the only absence assertion on retrieved notes.
 - `git grep -n -E 'appendFileSync|createWriteStream' -- src/daemon ':!*.test.ts'` — `log.ts` only.
-- `git grep -n -i -E 'valid_?from|valid_?until|valid_?to\b|as_?of\b' -- src` — no match.
+- `git grep -n -i -E 'valid_?from|valid_?until|valid_?to([^[:alnum:]_]|$)|as_?of([^[:alnum:]_]|$)' -- src` — no match.
 - `git grep -n -i -E 'tombstone|rejectedValue|deny-?list' -- src/daemon/agent src/lib/skills src/lib/bridge/skill-store.ts src/lib/bridge/recording-store.ts` — test mocks and Cursor fixtures only.
 - `git grep -n -i -E 'memor' -- 'src/daemon/agent/runners/*.ts' ':!*.test.ts'` — `GROK_MEMORY: '0'` in `grok.ts`, `save_memory` denied in `qwen.ts`, and prompt text telling the model not to answer from memory.
 - `git grep -l -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- .` — one Codex fixture; no paper and no `CITATION.cff`.
 
 ## History
+
+**2026-11-03** — [`868fd857e7b8908b3a16400675bc4d955e056570`](https://github.com/imshaikot/browsentic/commit/868fd857e7b8908b3a16400675bc4d955e056570) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-08** — [`868fd857e7b8908b3a16400675bc4d955e056570`](https://github.com/imshaikot/browsentic/commit/868fd857e7b8908b3a16400675bc4d955e056570) — first reading, at the head of `main`, 17 commits past v0.8.0. Two marks, `scope_enforced` and `human_review`. Screened before reading from a full clone: 1 auto-run surface, `server.json`, an MCP registry manifest declaring `npx browsentic mcp`, which runs only when an MCP client is configured with it; 2 dependency files inside the seven-day cooldown; 2 build-time execution points (a `postinstall` of `wxt prepare` and a Tauri `build.rs`); 2 floating-range surfaces against present lockfiles. `LICENSE` is Apache-2.0 with no rider. Read with `git grep` and `sed`; nothing installed, built or run.

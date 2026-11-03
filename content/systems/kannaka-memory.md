@@ -209,7 +209,10 @@ Two declared fields have no production writer. `merge_history` is filled by
 `collective::merge::apply_constructive`, `apply_destructive` and
 `apply_partial`, which nothing outside their own module's tests calls, and
 `hrm_store.rs:773` and `:808` rebuild every cached memory with an empty list.
-`disputed` has no reader and no writer anywhere in `src/`.
+`disputed` has no reader, and its two writers run only under tests:
+`apply_destructive` (`collective/merge.rs:255`), and the paradox resolver's
+irreducible branch (`paradox.rs:665`), reached through `dream_parallel`, whose
+one caller is the test at `paradox.rs:946`.
 
 ## 6. Retrieval Mechanics
 
@@ -424,18 +427,20 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -nE 'hallucinated' -- src tests evals` — writers at `consolidation.rs:1643`, `:1784`, `medium/hemisphere.rs:1038`, `medium/dynamics.rs:727`, `openclaw.rs:2715` (no caller outside tests) and the import at `bin/handlers/ops.rs:616`; withholding reads at `openclaw.rs:856`, `:1270` and `hrm_store.rs:3207`; no match in `tests/` or `evals/`.
 - `git grep -nE 'hallucinat' -- src/medium/chiral.rs` — nothing inside `belief_core_snapshot` (`:1572-1620`).
 - `git grep -nE 'merge_history\.push|apply_(constructive|destructive|partial)' -- src` — only `src/collective/merge.rs` and its re-export in `collective/mod.rs`.
-- `git grep -nE '\.disputed\b' -- src` — no match.
+- `git grep -nE '\.disputed([^[:alnum:]_]|$)' -- src` — `collective/merge.rs:255` and `paradox.rs:665`, both reached only from tests; no reader.
 - `git grep -nE 'set_temporal\(' -- src` — `bin/kannaka.rs:2038`, `:2196`, `openclaw.rs:1127` (`observed_at` only) and one test.
 - `git grep -nE '"--supersedes"' -- src` — no match; the string appears only in comments at `bin/kannaka.rs:4557` and `temporal.rs:101`.
 - `git grep -niE 'tombstone|blocklist|denylist|rejected_(value|content|hash)' -- . ':!docs' ':!CHANGELOG.md' ':!workspace'` — presence-record tombstones in `nats.rs` and the steward gate's sender blocklist in `README.md`; nothing keyed on a memory value.
 - `git grep -nE 'MemoryForget \{' -- src` — the enum variant and its match arms in `nats.rs`; no producer.
 - `git grep -nE 'origin_agent ?(==|!=)|namespace|tenant|user_id|project_id' -- src/openclaw.rs src/hrm_store.rs src/store.rs src/medium` — no match; no scope predicate on recall.
 - `git grep -niE 'fn (approve|promote|release)[a-z_]*\(|pending_review|review_queue' -- src` — `QuarantineStaging::promote`, called from `admit` on corroboration, and a retention-tier `promote` CLI verb; no review queue.
-- `git grep -niE '\bmcp\b' -- src Cargo.toml` — no match.
+- `git grep -w -niE 'mcp' -- src Cargo.toml` — comments recording the MCP server's removal (`Cargo.toml:79`, `:120`, `:160`, `src/lib.rs:43`, `src/acp/protocol.rs:11`) and two comments naming MCP tools (`src/bin/handlers/swarm.rs:375`, `src/openclaw.rs:2691`); no MCP server.
 - `git grep -niE 'arxiv\.org|bibtex' -- README.md docs press` — no match; no paper.
 - `git grep -niE 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE NOTICE` — no match; no rider concerning analysis.
 
 ## History
+
+**2026-11-03** — [`4bd8db6e9880b8707ff950f8efbe4abf239125cf`](https://github.com/kannaka-labs/kannaka-memory/commit/4bd8db6e9880b8707ff950f8efbe4abf239125cf) — recorded searches re-run at the same pin. Two recorded searches use `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of each pattern using them matched nothing. They are rewritten with `-w` or POSIX classes and re-run. Two said no match and were wrong: `disputed` has two writers, both reached only from tests, so it has no production writer as stated; and the MCP search finds comments recording the server's removal. No mark moves.
 
 **2026-10-15** — [`4bd8db6e9880b8707ff950f8efbe4abf239125cf`](https://github.com/kannaka-labs/kannaka-memory/commit/4bd8db6e9880b8707ff950f8efbe4abf239125cf) — 126 commits on, version 0.16.6 to 0.16.16. `trust_state` holds, re-anchored on remember's duplicate rule and recall ([section 2](#2-mental-model)). `bitemporal` is **gained, earned at the old pin**: the three temporal bounds and their CLI writers predate it ([section 5](#5-memory-data-model)). `negative_eval` is **gained**, from two recall cases added after it ([section 10](#10-tests-evals-and-benchmarks)). Overtaken: recall drops expired rows by default and dream rows on request; every write publishes an event. Wrong at the old pin: the consolidation filters, belief formation, the absence of a validity interval, the merge record, the MCP surface and the version. Screened from a full clone: one Claude Code plugin manifest, a `build.rs`, an npm `postinstall` and two dependency files inside the cooldown. Nothing was installed, built or run.
 

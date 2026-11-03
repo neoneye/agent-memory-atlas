@@ -612,7 +612,7 @@ research subject and is not yet on the read path.
 Checked against the checkout at the pinned revision, from the tree root.
 
 - `git grep -n -E "\"(retracted|rejected)\"|'(retracted|rejected)'" -- '*.ts' ':!**/__tests__/**' ':!*.test.ts'` — `retracted` is written only in `packages/eval/src/backends/SemanticBackend.ts:512`; `rejected` on claims appears only in the type and the `storeFact` branch, with no caller passing it.
-- `git grep -n -E "status\s*:" -- packages/semantic-memory/src/ingestion packages/tools/src/memory` — the ingestion service and vault mapper pass `accepted`; `memory_store` passes no status.
+- `git grep -n -E "status[[:space:]]*:" -- packages/semantic-memory/src/ingestion packages/tools/src/memory` — the ingestion service and vault mapper pass `accepted`; `memory_store` passes no status.
 - `git grep -n -E "FunctionalProperty" -- ':!**/__tests__/**' ':!*.test.ts' ':!packages/eval/**'` — `livesIn` and `hasBirthday` in `ontofelia-core.ttl`; the rest are docs, examples and the engine's own check.
 - `git grep -n -E "getInferredGraph|getReadableInferredGraphs|getUserInferredGraph|:inferred" -- '*.ts' ':!**/__tests__/**' ':!*.test.ts'` — readers are `scopeGuard.ts` and the gateway graph browser; no prompt path.
 - `/usr/bin/grep -n -E "ORDER BY|LIMIT" packages/semantic-memory/src/KnowledgeEngine.ts` — `getRecentFacts` and `listKnownEntities` carry `LIMIT` with no `ORDER BY`.
@@ -628,5 +628,7 @@ Checked against the checkout at the pinned revision, from the tree root.
 - `git grep -n -l "pilot-2026"` and `/usr/bin/grep -n "eval/out" .gitignore` — the README only; `packages/eval/out/` is ignored.
 
 ## History
+
+**2026-11-03** — [`a9313c0fcc43a459fde9dd74918ea0ee7a23560e`](https://github.com/semantification-org/Ontofelia/commit/a9313c0fcc43a459fde9dd74918ea0ee7a23560e) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. It returns what its annotation states, and no claim moves.
 
 **2026-10-15** — [`a9313c0fcc43a459fde9dd74918ea0ee7a23560e`](https://github.com/semantification-org/Ontofelia/commit/a9313c0fcc43a459fde9dd74918ea0ee7a23560e) — first reading, at the head of `main`, a merge of 14 October 2026. Three marks: `scope_enforced`, `trust_state`, `negative_eval`. Screened before reading from a full clone: no auto-run surface, one build-time execution point (`packages/reasoner/build.rs`), nothing inside the cooldown, and 23 unpinned surfaces, most of them workspace package manifests resolved by the root `pnpm-lock.yaml`, unchanged for 8 days. Apache-2.0 with no rider. Read with `git grep` and `sed`; nothing was installed, built or run.

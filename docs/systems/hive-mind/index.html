@@ -760,8 +760,11 @@ nothing in the core can check it.</li>
 <ul>
 <li><code>git grep -n -i -E 'valid_(from|to|at|until)|observed_at|event_time|occurred_at' -- '*.py' hv</code>
 — no match; no valid-time field.</li>
-<li><code>git grep -n -i -E '(WHERE|AND)[^"]*\b(project|user_id|tenant|namespace|agent_id|scope)\b' -- hivemind hv hive_module_api.py</code>
-— no match; no scope predicate on any read.</li>
+<li><code>git grep -n -i -E '(WHERE|AND)[^"]*(^|[^[:alnum:]_])(project|user_id|tenant|namespace|agent_id|scope)([^[:alnum:]_]|$)' -- hivemind hv hive_module_api.py</code>
+— three docstring lines and the telemetry dashboard's session filter
+(<code>hivemind/parts/08_read_api.py:392</code>,
+<code>_tel_aggregate</code>); no scope predicate on any memory
+read.</li>
 <li><code>git grep -n -E '_salience_gate\('</code> — the definition at
 <code>integrations/hermes/__init__.py:954</code> and a docstring mention
 at <code>:880</code>; no caller.</li>
@@ -787,6 +790,15 @@ that exclude forgotten rows in <code>08_read_api.py</code>,
 — no match, and no <code>CITATION.cff</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/projectmentor/hive-mind/commit/739b63e97e116b2ea43dd4bcaa6df79addd3fef7"><code class="commit-id" title="739b63e97e116b2ea43dd4bcaa6df79addd3fef7">739b63e9…</code></a>
+— recorded searches re-run at the same pin. One recorded search uses
+<code>\b</code> or <code>\s</code> under <code>git grep -E</code>, which
+git built on macOS's regex library cannot match, so the part of its
+pattern using them matched nothing. It is rewritten with <code>-w</code>
+or POSIX classes and re-run. The scope search matches the telemetry
+dashboard's session filter as well as docstrings; no memory read carries
+a scope predicate, and no mark moves.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/projectmentor/hive-mind/commit/739b63e97e116b2ea43dd4bcaa6df79addd3fef7"><code class="commit-id" title="739b63e97e116b2ea43dd4bcaa6df79addd3fef7">739b63e9…</code></a>
 — first reading, at the head of <code>main</code>, a manifest re-signing

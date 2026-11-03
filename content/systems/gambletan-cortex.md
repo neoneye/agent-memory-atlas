@@ -507,7 +507,7 @@ Checked against the checkout at the pinned revision, from the tree root.
 
 - `git grep -n -E 'record_action\('` — the definition at `cortex-core/src/procedural.rs:31` and calls in `cortex-core/tests/test_procedural.rs` only.
 - `git grep -n -E '\.touch\(' -- cortex-core cortex-mcp-server cortex-http` — one hit, `cortex-core/tests/test_episode.rs:140`.
-- `git grep -n -E 'access_count \+?=|last_accessed\s*=' -- '*.rs' ':!*/tests/*'` — `episode.rs:233-234` (`touch`), `lib.rs:874-875` and `:1043-1044`, both near-duplicate reinforcement.
+- `git grep -n -E 'access_count \+?=|last_accessed[[:space:]]*=' -- '*.rs' ':!*/tests/*'` — `episode.rs:233-234` (`touch`), `lib.rs:874-875` and `:1043-1044`, both near-duplicate reinforcement, and fixtures in `retrieval.rs`'s test module.
 - `git grep -n -E 'for_remote_llm\(|with_include_private\('` — the definitions in `context.rs` and one call in `cortex-core/tests/test_context.rs:143`.
 - `git grep -n -E 'with_inference_fn\('` — the definition and `cortex-core/tests/test_cortex_full.rs:90`.
 - `git grep -n -E 'get_links\(' -- '*.rs'` — the trait and SQLite definitions plus test calls; no reader in any `src/`.
@@ -522,5 +522,7 @@ Checked against the checkout at the pinned revision, from the tree root.
 - `git ls-files | grep -iE 'result|score|\.jsonl$|bench'` — the bench scripts, the LoCoMo dataset and two Criterion benches; no result file.
 
 ## History
+
+**2026-11-03** — [`951aca3e6bac84669dec65865dd6f774ca13b67e`](https://github.com/gambletan/cortex/commit/951aca3e6bac84669dec65865dd6f774ca13b67e) — recorded searches re-run at the same pin. One recorded search uses `\b` or `\s` under `git grep -E`, which git built on macOS's regex library cannot match, so the part of its pattern using them matched nothing. It is rewritten with `-w` or POSIX classes and re-run. The annotation gains test fixtures it had omitted.
 
 **2026-10-15** — [`951aca3e6bac84669dec65865dd6f774ca13b67e`](https://github.com/gambletan/cortex/commit/951aca3e6bac84669dec65865dd6f774ca13b67e) — first reading, at the head of `main`, a commit of 8 October 2026. Two marks: `scope_enforced`, `negative_eval`; `human_review` withheld because the cloud inbox drain is an agent tool. MIT with no rider. Screened before reading from a full clone: three auto-run surfaces (`.claude/settings.json` with `.claude/hooks/skeptic-suggest.sh`, a SessionStart hook that reads `git log` and `git status` and prints a directive addressed to the reading agent; `server.json`, an MCP registry manifest naming a Docker image), two build-time execution points (an npm `postinstall` and an openclaw `prepublishOnly`), nothing inside the cooldown, and three unpinned surfaces. `.claude/CLAUDE.md` and `.claude/agents/` were treated as data. Nothing was installed, built or run.
