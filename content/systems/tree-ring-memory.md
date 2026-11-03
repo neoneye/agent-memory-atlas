@@ -521,4 +521,6 @@ Checked against the checkout at the pinned revision, from the tree root.
 
 ## History
 
+**2026-11-02** — [`31d7aaf5647b0325233fcf5551eed4ba23d37fce`](https://github.com/TerminallyLazy/Tree-Ring-Memory/commit/31d7aaf5647b0325233fcf5551eed4ba23d37fce) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 3 auto-run surfaces, 4 in all: hooks registered in `plugins/tree-ring-memory/hooks/claude-hooks.json` on SessionStart, Stop, SubagentStart and SubagentStop. The hook files were read at the pin as data; nothing was installed or run, and no mark changes.
+
 **2026-09-30** — [`31d7aaf5647b0325233fcf5551eed4ba23d37fce`](https://github.com/TerminallyLazy/Tree-Ring-Memory/commit/31d7aaf5647b0325233fcf5551eed4ba23d37fce) — first reading, at the head of `main`, a commit dated 17 September 2026 at workspace version 0.15.13. Two marks, `scope_enforced` and `negative_eval`. Screened before reading: 1 auto-run surface (`.claude-plugin/marketplace.json`, a plugin manifest whose hooks call the `tree-ring` binary), 0 build-time execution points, 0 unpinned surfaces and 0 files inside the cooldown; `Cargo.lock` reads 13 days old, which in a depth-1 clone is the tip's date. Twelve `AGENTS.md` files were treated as data. Read with `rg`, `awk` and `sed`; nothing installed, built or run.

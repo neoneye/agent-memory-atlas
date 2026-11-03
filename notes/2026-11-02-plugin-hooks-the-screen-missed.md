@@ -1,6 +1,6 @@
 # Plugin hooks the screen missed
 
-**Status:** ledger re-screened 2026-11-02. Report bodies and appendix entries are not edited yet; each re-read should add the surfaces below to its screen summary.
+**Status:** ledger re-screened 2026-11-02; on 2026-11-03 each of the 66 reports below gained a History entry for the re-screen, and the appendix entries, verdicts and body sentences that stated an auto-run count were corrected. The 20 reports with manifests or MCP servers only are not edited.
 
 ## What happened
 
@@ -12,7 +12,7 @@ The screen now follows each local marketplace `source`, and every nested `.claud
 
 Every ledger record with a root `.claude-plugin/` and no root `hooks/hooks.json` was screened again at its pinned revision with `scripts/screen_corpus.py --only`: 100 records, plus Understand-Anything earlier the same day. 86 gained auto-run surfaces and 14 did not. `light-mem` could not be cloned, because the upstream returns 404, and keeps its previous record.
 
-66 reports gained hook registrations, listed first. The events column lists the hook events the file names; a dash means the screen matched none of its trigger words in it. A row marked *fetched* starts an MCP server through `npx`, `uvx` or a similar launcher, so what runs is whatever the registry serves that day.
+66 reports gained hook registrations, listed first. The events column lists the events the hook files register, read from each file at the pin rather than taken from the screen's keyword match; four `hooks.json` files load a TypeScript module instead of naming events. A cell marked *fetched* runs through `npx`, `uvx` or a similar launcher, so what runs is whatever the registry serves that day. Omniclaude's hooks sit in `plugins/onex/`, which its marketplace does not list.
 
 The records also lost 464 FRESH findings. A FRESH finding is relative to the day of screening, and those dependency files have since aged out of the seven-day window. The original findings are in the git history of `notes/screening/screening.json` and in each report's History entry.
 
@@ -20,72 +20,72 @@ The records also lost 464 FRESH findings. A FRESH finding is relative to the day
 
 | Report | Hook files | Events | Plugin MCP |
 | --- | --- | --- | --- |
-| [acontext](../content/systems/acontext.md) | `src/packages/claude-code/plugin/hooks/hooks.json` | PostToolUse, SessionStart, Stop | `src/packages/claude-code/plugin/.mcp.json` |
-| [agent-working-memory](../content/systems/agent-working-memory.md) | `plugin/hooks/hooks.json` | PostToolUse, Stop, UserPromptSubmit | — |
-| [agentmemory](../content/systems/agentmemory.md) | `plugin/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `plugin/.mcp.json` (fetched) |
-| [ai-memory](../content/systems/ai-memory.md) | `plugins/claude-code/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `plugins/claude-code/.mcp.json` |
-| [aidememo](../content/systems/aidememo.md) | `plugins/claude/hooks/hooks.json` | PostToolUse, SessionStart, UserPromptSubmit | `plugins/claude/.mcp.json` |
-| [aigent-os](../content/systems/aigent-os.md) | `plugins/fleet-band/hooks/hooks.json`<br>`plugins/fleet-delivery/hooks/hooks.json` | — | — |
-| [akb](../content/systems/akb.md) | `plugins/claude/akb-claude-code/hooks/hooks.json` | SessionStart, UserPromptSubmit | `.codex/config.toml`<br>`plugins/claude/akb-wiki/.mcp.json` (fetched) |
-| [attune-ai](../content/systems/attune-ai.md) | `plugin/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `plugin/.mcp.json`<br>`plugins/attune-help/.mcp.json` (fetched) |
-| [basic-memory](../content/systems/basic-memory.md) | `plugins/claude-code/hooks/hooks.json` | SessionStart | — |
-| [beads](../content/systems/beads.md) | `plugins/beads/.claude-plugin/plugin.json` | SessionStart | — |
-| [claude-mem](../content/systems/claude-mem.md) | `cowork/hooks/hooks.json`<br>`plugin/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `plugin/.mcp.json` |
-| [claudest](../content/systems/claudest.md) | `plugins/claude-memory/hooks/hooks.json` | SessionStart, Stop | — |
-| [codemem](../content/systems/codemem.md) | `plugins/claude/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `opencode.jsonc` (fetched) |
-| [cognicore](../content/systems/cognicore.md) | `cognicore-experience/hooks/hooks.json` | PostToolUse, SessionStart | `claude-plugin/.mcp.json`<br>`cognicore-experience/.mcp.json` |
+| [acontext](../content/systems/acontext.md) | `src/packages/claude-code/plugin/hooks/hooks.json` | SessionStart, PostToolUse, Stop, Notification | `src/packages/claude-code/plugin/.mcp.json` |
+| [agent-working-memory](../content/systems/agent-working-memory.md) | `plugin/hooks/hooks.json` | UserPromptSubmit, PostToolUse, PreCompact, Stop, SessionEnd | `plugin/.claude-plugin/plugin.json` |
+| [agentmemory](../content/systems/agentmemory.md) | `plugin/hooks/hooks.json` | 12 events, among them SessionStart, UserPromptSubmit, PreToolUse, PostToolUse | `plugin/.mcp.json` (fetched) |
+| [ai-memory](../content/systems/ai-memory.md) | `plugins/claude-code/hooks/hooks.json` | 9 events, among them SessionStart, UserPromptSubmit, PreToolUse, PostToolUse | `plugins/claude-code/.mcp.json` |
+| [aidememo](../content/systems/aidememo.md) | `plugins/claude/hooks/hooks.json` | SessionStart, UserPromptSubmit, PostToolUse | `plugins/claude/.mcp.json` |
+| [aigent-os](../content/systems/aigent-os.md) | `plugins/fleet-band/hooks/hooks.json`<br>`plugins/fleet-delivery/hooks/hooks.json` | loads a TypeScript module | — |
+| [akb](../content/systems/akb.md) | `plugins/claude/akb-claude-code/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreCompact, SessionEnd | `plugins/claude/akb-wiki/.mcp.json` (fetched) |
+| [attune-ai](../content/systems/attune-ai.md) | `plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop | `plugin/.mcp.json` (fetched)<br>`plugins/attune-help/.mcp.json` (fetched) |
+| [basic-memory](../content/systems/basic-memory.md) | `plugins/claude-code/hooks/hooks.json` | SessionStart, PreCompact | — |
+| [beads](../content/systems/beads.md) | `plugins/beads/.claude-plugin/plugin.json` | SessionStart, PreCompact | — |
+| [claude-mem](../content/systems/claude-mem.md) | `cowork/hooks/hooks.json`<br>`plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop, SubagentStop, SessionEnd, Setup | `plugin/.mcp.json` |
+| [claudest](../content/systems/claudest.md) | `plugins/claude-memory/hooks/hooks.json` | SessionStart, Stop, SessionEnd | — |
+| [codemem](../content/systems/codemem.md) | `plugins/claude/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, PostToolUseFailure, Stop, SessionEnd | `plugins/claude/.claude-plugin/plugin.json` (fetched) |
+| [cognicore](../content/systems/cognicore.md) | `cognicore-experience/hooks/hooks.json` | SessionStart, PostToolUse | `claude-plugin/.mcp.json`<br>`cognicore-experience/.mcp.json` |
 | [core-redplanet](../content/systems/core-redplanet.md) | `plugin/hooks/hooks.json` | SessionStart, Stop | `plugin/.mcp.json` |
-| [cortex-hypermnesia](../content/systems/cortex-hypermnesia.md) | `.claude-plugin/plugin.json`<br>`plugins/cortex-deprecated/hooks/hooks.json`<br>`plugins/cortex-viz-deprecated/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, UserPromptSubmit | — |
-| [cortexdb](../content/systems/cortexdb.md) | `plugins/cortexdb/hooks/hooks.json` | SessionStart, UserPromptSubmit | `plugins/cortexdb/.mcp.json` |
-| [ctx](../content/systems/ctx.md) | `internal/assets/claude/hooks/hooks.json` | PostToolUse, PreToolUse, UserPromptSubmit | `internal/assets/claude/.mcp.json` |
-| [deja-vu](../content/systems/deja-vu.md) | `claude-plugin/.claude-plugin/plugin.json` | PostToolUse, PreToolUse, SessionStart, UserPromptSubmit | — |
-| [demarkus](../content/systems/demarkus.md) | `plugins/claude-code-knowledge/.claude-plugin/plugin.json`<br>`plugins/claude-code/.claude-plugin/plugin.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `plugins/claude-code/.mcp.json`<br>`plugins/cowork-memory/.mcp.json` |
-| [engram](../content/systems/engram.md) | `plugin/claude-code/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | — |
-| [engram-alpha](../content/systems/engram-alpha.md) | `claude-plugin/hooks/hooks.json` | PostToolUse, SessionStart | `claude-plugin/.mcp.json` |
-| [exomem](../content/systems/exomem.md) | `plugins/claude-code/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | `plugins/hosted/generated/claude/.mcp.json` |
+| [cortex-hypermnesia](../content/systems/cortex-hypermnesia.md) | `.claude-plugin/plugin.json`<br>`plugins/cortex-deprecated/hooks/hooks.json`<br>`plugins/cortex-viz-deprecated/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, SubagentStart, SessionEnd, Notification | `.claude-plugin/plugin.json` |
+| [cortexdb](../content/systems/cortexdb.md) | `plugins/cortexdb/hooks/hooks.json` | SessionStart, UserPromptSubmit, SessionEnd | `plugins/cortexdb/.mcp.json` |
+| [ctx](../content/systems/ctx.md) | `internal/assets/claude/hooks/hooks.json` | UserPromptSubmit, PreToolUse, PostToolUse, SessionEnd | `internal/assets/claude/.mcp.json` |
+| [deja-vu](../content/systems/deja-vu.md) | `claude-plugin/.claude-plugin/plugin.json` | SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, PreCompact | `claude-plugin/.claude-plugin/plugin.json` |
+| [demarkus](../content/systems/demarkus.md) | `plugins/claude-code-knowledge/.claude-plugin/plugin.json`<br>`plugins/claude-code/.claude-plugin/plugin.json` | SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop | `plugins/claude-code/.mcp.json`<br>`plugins/cowork-memory/.mcp.json` |
+| [engram](../content/systems/engram.md) | `plugin/claude-code/hooks/hooks.json` | SessionStart, UserPromptSubmit, SubagentStop, SessionEnd | — |
+| [engram-alpha](../content/systems/engram-alpha.md) | `claude-plugin/hooks/hooks.json` | SessionStart, PostToolUse | `claude-plugin/.mcp.json` |
+| [exomem](../content/systems/exomem.md) | `plugins/claude-code/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreCompact, Stop, SessionEnd | `plugins/claude-code/.claude-plugin/plugin.json`<br>`plugins/hosted/generated/claude/.mcp.json` |
 | [graft](../content/systems/graft.md) | `plugins/graft/hooks/hooks.json` | SessionStart, UserPromptSubmit | — |
 | [graqle](../content/systems/graqle.md) | `plugins/claude-code/graqle/hooks/hooks.json` | PreToolUse | — |
-| [headroom](../content/systems/headroom.md) | `plugins/headroom-agent-hooks/hooks/hooks.json` | PreToolUse, SessionStart | — |
-| [hindsight](../content/systems/hindsight.md) | `hindsight-integrations/claude-code/hooks/hooks.json`<br>`hindsight-integrations/zcode/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | `hindsight-integrations/claude-code/.mcp.json` |
-| [hivemind-activeloop](../content/systems/hivemind-activeloop.md) | `harnesses/claude-code/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | — |
-| [iai-pme](../content/systems/iai-pme.md) | `plugin/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | `plugin/.mcp.json`<br>`plugin/hooks/` |
-| [inite-brain](../content/systems/inite-brain.md) | `plugins/inite-brain/hooks/hooks.json` | SessionStart | `plugins/inite-brain/.mcp.json` |
-| [kage](../content/systems/kage.md) | `plugin/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `plugin/.mcp.json` (fetched) |
-| [kagura-memory-cloud](../content/systems/kagura-memory-cloud.md) | `claude-hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart | — |
-| [kipi-system](../content/systems/kipi-system.md) | `plugins/kipi-core/hooks/hooks.json`<br>`plugins/kipi-design/hooks/hooks.json`<br>`plugins/kipi-dsse/hooks/hooks.json`<br>`plugins/prd-os/hooks/hooks.json` | PostToolUse, PreToolUse, Stop | `.codex/config.toml`<br>`plugins/kipi-core/.mcp.json`<br>`plugins/kipi-notebooklm/.mcp.json` (fetched) |
-| [leteo](../content/systems/leteo.md) | `plugin/claude-code/hooks/hooks.json`<br>`plugin/zcode/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | `plugin/claude-code/.mcp.json`<br>`plugin/zcode/.mcp.json` |
-| [linggen-memory](../content/systems/linggen-memory.md) | `plugins/linggen/hooks/hooks.json` | PreToolUse, SessionStart, UserPromptSubmit | `plugins/linggen/.mcp.json`<br>`plugins/linggen/hooks/` |
-| [lorekit](../content/systems/lorekit.md) | `plugins/lorekit-claude/hooks/hooks.json` | PostToolUse, SessionStart, Stop, UserPromptSubmit | — (fetched) |
-| [mama](../content/systems/mama.md) | `packages/claude-code-plugin/.claude-plugin/plugin.json` | PostToolUse, PreToolUse, SessionStart | `packages/claude-code-plugin/.mcp.json` (fetched) |
-| [mcp-memory-service](../content/systems/mcp-memory-service.md) | `claude-hooks/.claude-plugin/hooks.json` | SessionStart, Stop, UserPromptSubmit | `claude-hooks/.mcp.json` |
-| [mem0](../content/systems/mem0.md) | `integrations/claude-code-plugin/hooks/hooks.json` | PostToolUse, SessionStart, Stop, UserPromptSubmit | `integrations/claude-code-plugin/.mcp.json` |
-| [mem9](../content/systems/mem9.md) | `claude-plugin/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | — |
-| [memini](../content/systems/memini.md) | `plugin/hooks/hooks.claude.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `plugin/.mcp.json` |
-| [memoir](../content/systems/memoir.md) | `plugins/claude-code/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | — |
-| [memoose](../content/systems/memoose.md) | `harness/hooks/hooks.json` | PostToolUse, SessionStart, Stop, UserPromptSubmit | `.claude-plugin/plugin.json` (fetched) |
-| [memora](../content/systems/memora.md) | `claude-plugin/hooks/hooks.json` | PostToolUse, SessionStart | `claude-plugin/.mcp.json` |
-| [memory-engine](../content/systems/memory-engine.md) | `packages/claude-plugin/hooks/hooks.json` | SessionStart, Stop | `packages/claude-plugin/.mcp.json` |
-| [mempalace](../content/systems/mempalace.md) | `.claude-plugin/hooks/hooks.json` | Stop | `.claude-plugin/.mcp.json`<br>`.claude-plugin/plugin.json` |
-| [memsearch](../content/systems/memsearch.md) | `plugins/claude-code/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | — |
-| [memseek](../content/systems/memseek.md) | `integrations/claude-code/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | `integrations/claude-code/.mcp.json` |
-| [memtomem](../content/systems/memtomem.md) | `packages/memtomem-claude-automation-plugin/hooks/hooks.json` | PostToolUse, SessionStart, Stop, UserPromptSubmit | `packages/memtomem-claude-plugin/.mcp.json` (fetched) |
+| [headroom](../content/systems/headroom.md) | `plugins/headroom-agent-hooks/hooks/hooks.json` | SessionStart, PreToolUse | — |
+| [hindsight](../content/systems/hindsight.md) | `hindsight-integrations/claude-code/hooks/hooks.json`<br>`hindsight-integrations/zcode/hooks/hooks.json` | SessionStart, UserPromptSubmit, Stop, SessionEnd | `hindsight-integrations/claude-code/.mcp.json` |
+| [hivemind-activeloop](../content/systems/hivemind-activeloop.md) | `harnesses/claude-code/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop, SubagentStop, SessionEnd | — |
+| [iai-pme](../content/systems/iai-pme.md) | `plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, Stop | `plugin/.mcp.json` |
+| [inite-brain](../content/systems/inite-brain.md) | `plugins/inite-brain/hooks/hooks.json` | SessionStart, PreCompact, SessionEnd | `plugins/inite-brain/.mcp.json` |
+| [kage](../content/systems/kage.md) | `plugin/hooks/hooks.json` | 9 events, among them SessionStart, UserPromptSubmit, PreToolUse, PostToolUse | `plugin/.mcp.json` (fetched) |
+| [kagura-memory-cloud](../content/systems/kagura-memory-cloud.md) | `claude-hooks/hooks.json` | SessionStart, PreToolUse, PostToolUse, PostToolUseFailure | — |
+| [kipi-system](../content/systems/kipi-system.md) | `plugins/kipi-core/hooks/hooks.json`<br>`plugins/kipi-design/hooks/hooks.json`<br>`plugins/kipi-dsse/hooks/hooks.json`<br>`plugins/prd-os/hooks/hooks.json` | PreToolUse, PostToolUse, Stop | `.codex/config.toml` (fetched)<br>`plugins/kipi-core/.mcp.json`<br>`plugins/kipi-notebooklm/.mcp.json` (fetched) |
+| [leteo](../content/systems/leteo.md) | `plugin/claude-code/hooks/hooks.json`<br>`plugin/zcode/hooks/hooks.json` | SessionStart, UserPromptSubmit, SubagentStop, SessionEnd | `plugin/claude-code/.mcp.json`<br>`plugin/zcode/.mcp.json` |
+| [linggen-memory](../content/systems/linggen-memory.md) | `plugins/linggen/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreToolUse | `plugins/linggen/.mcp.json` |
+| [lorekit](../content/systems/lorekit.md) | `plugins/lorekit-claude/hooks/hooks.json` | SessionStart, UserPromptSubmit, PostToolUseFailure, Stop (fetched) | — |
+| [mama](../content/systems/mama.md) | `packages/claude-code-plugin/.claude-plugin/plugin.json` | SessionStart, PreToolUse, PostToolUse, PreCompact | `packages/claude-code-plugin/.claude-plugin/plugin.json` (fetched)<br>`packages/claude-code-plugin/.mcp.json` (fetched) |
+| [mcp-memory-service](../content/systems/mcp-memory-service.md) | `claude-hooks/.claude-plugin/hooks.json` | SessionStart, UserPromptSubmit, Stop, SessionEnd | `claude-hooks/.mcp.json` |
+| [mem0](../content/systems/mem0.md) | `integrations/claude-code-plugin/hooks/hooks.json` | 9 events, among them SessionStart, UserPromptSubmit, PostToolUse, PostToolUseFailure | `integrations/claude-code-plugin/.mcp.json` |
+| [mem9](../content/systems/mem9.md) | `claude-plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreCompact, Stop, SessionEnd | — |
+| [memini](../content/systems/memini.md) | `plugin/hooks/hooks.claude.json` | SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, PreCompact, Stop, SessionEnd | `plugin/.mcp.json` |
+| [memoir](../content/systems/memoir.md) | `plugins/claude-code/hooks/hooks.json` | SessionStart, UserPromptSubmit, Stop, SessionEnd | — |
+| [memoose](../content/systems/memoose.md) | `harness/hooks/hooks.json` | SessionStart, UserPromptSubmit, PostToolUse, PreCompact, Stop | `.claude-plugin/plugin.json` (fetched) |
+| [memora](../content/systems/memora.md) | `claude-plugin/hooks/hooks.json` | SessionStart, PostToolUse | `claude-plugin/.mcp.json` |
+| [memory-engine](../content/systems/memory-engine.md) | `packages/claude-plugin/hooks/hooks.json` | SessionStart, Stop, SessionEnd | `packages/claude-plugin/.mcp.json` |
+| [mempalace](../content/systems/mempalace.md) | `.claude-plugin/hooks/hooks.json` | PreCompact, Stop, SessionEnd | `.claude-plugin/.mcp.json`<br>`.claude-plugin/plugin.json` |
+| [memsearch](../content/systems/memsearch.md) | `plugins/claude-code/hooks/hooks.json` | SessionStart, UserPromptSubmit, Stop, SessionEnd | — |
+| [memseek](../content/systems/memseek.md) | `integrations/claude-code/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreCompact, Stop, SessionEnd | `integrations/claude-code/.mcp.json` |
+| [memtomem](../content/systems/memtomem.md) | `packages/memtomem-claude-automation-plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, PostToolUse, Stop | `packages/memtomem-claude-plugin/.mcp.json` (fetched) |
 | [mengram](../content/systems/mengram.md) | `integrations/claude-code-plugin/hooks/hooks.json` | SessionStart, Stop | `integrations/claude-code-plugin/.mcp.json` |
-| [moltbrain](../content/systems/moltbrain.md) | `plugin/hooks/hooks.json` | PostToolUse, SessionStart, Stop, UserPromptSubmit | — |
+| [moltbrain](../content/systems/moltbrain.md) | `plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, PostToolUse, Stop | — |
 | [mushroomdb](../content/systems/mushroomdb.md) | `packaging/plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit | `packaging/plugin/.mcp.json` (fetched) |
-| [omniclaude](../content/systems/omniclaude.md) | `plugins/onex/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | — |
-| [openviking](../content/systems/openviking.md) | `examples/claude-code-memory-plugin/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `examples/claude-code-memory-plugin/.mcp.json` |
-| [ox](../content/systems/ox.md) | `claude-plugin/.claude-plugin/plugin.json`<br>`internal/pet/mod/hooks/hooks.json` | SessionStart | — |
-| [pensyve](../content/systems/pensyve.md) | `integrations/claude-code/hooks/hooks.json` | PostToolUse, SessionStart, Stop, UserPromptSubmit | — |
-| [re-call](../content/systems/re-call.md) | `plugin/hooks/hooks.json` | PreToolUse, SessionStart, UserPromptSubmit | — |
-| [rememora](../content/systems/rememora.md) | `plugin/hooks/hooks.json` | — | — |
-| [repowise](../content/systems/repowise.md) | `plugins/claude-code/hooks/hooks.json` | PostToolUse, SessionStart | `plugins/claude-code/.mcp.json` |
-| [ruflo](../content/systems/ruflo.md) | `plugin/hooks/hooks.json`<br>`plugins/ruflo-core/hooks/hooks.json`<br>`plugins/ruflo-cost-tracker/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `.claude-plugin/plugin.json`<br>`plugins/ruflo-core/.mcp.json` (fetched) |
-| [superlocalmemory](../content/systems/superlocalmemory.md) | `codex-plugin/hooks/hooks.json`<br>`plugin/hooks/hooks.json` | PostToolUse, PreToolUse, SessionStart, Stop, UserPromptSubmit | `codex-plugin/.mcp.json`<br>`plugin/.mcp.json` |
-| [temporalstore](../content/systems/temporalstore.md) | `integrations/claude-plugin/hooks/hooks.json` | PostToolUse, SessionStart, Stop, UserPromptSubmit | `integrations/claude-plugin/.mcp.json` |
-| [textfold](../content/systems/textfold.md) | `plugins/textfold/hooks/hooks.json` | — | — |
-| [the-librarian](../content/systems/the-librarian.md) | `integrations/claude/hooks/hooks.json` | PreToolUse, SessionStart, Stop, UserPromptSubmit | `integrations/claude/.mcp.json` |
-| [tree-ring-memory](../content/systems/tree-ring-memory.md) | `plugins/tree-ring-memory/hooks/claude-hooks.json` | SessionStart, Stop | — |
-| [wenlan](../content/systems/wenlan.md) | `plugin/hooks/hooks.json` | SessionStart, Stop, UserPromptSubmit | `plugin/.mcp.json` |
+| [omniclaude](../content/systems/omniclaude.md) | `plugins/onex/hooks/hooks.json` | 30 events, among them SessionStart, UserPromptSubmit, PreToolUse, PostToolUse | — |
+| [openviking](../content/systems/openviking.md) | `examples/claude-code-memory-plugin/hooks/hooks.json` | 9 events, among them SessionStart, UserPromptSubmit, PreToolUse, PostToolUse | `examples/claude-code-memory-plugin/.mcp.json` |
+| [ox](../content/systems/ox.md) | `claude-plugin/.claude-plugin/plugin.json`<br>`internal/pet/mod/hooks/hooks.json` | SessionStart, PreCompact; loads a TypeScript module | — |
+| [pensyve](../content/systems/pensyve.md) | `integrations/claude-code/hooks/hooks.json` | SessionStart, UserPromptSubmit, PostToolUse, PreCompact, Stop | — |
+| [re-call](../content/systems/re-call.md) | `plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreToolUse, PreCompact, SessionEnd | `plugin/.claude-plugin/plugin.json` |
+| [rememora](../content/systems/rememora.md) | `plugin/hooks/hooks.json` | Setup | — |
+| [repowise](../content/systems/repowise.md) | `plugins/claude-code/hooks/hooks.json` | SessionStart, PostToolUse, PostToolUseFailure | `plugins/claude-code/.mcp.json` |
+| [ruflo](../content/systems/ruflo.md) | `plugin/hooks/hooks.json`<br>`plugins/ruflo-core/hooks/hooks.json`<br>`plugins/ruflo-cost-tracker/hooks/hooks.json` | 9 events, among them SessionStart, UserPromptSubmit, PreToolUse, PostToolUse | `.claude-plugin/plugin.json` (fetched)<br>`plugins/ruflo-core/.mcp.json` |
+| [superlocalmemory](../content/systems/superlocalmemory.md) | `codex-plugin/hooks/hooks.json`<br>`plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop | `codex-plugin/.mcp.json`<br>`plugin/.mcp.json` |
+| [temporalstore](../content/systems/temporalstore.md) | `integrations/claude-plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, PostToolUse, PreCompact, Stop, SubagentStop, SessionEnd | `integrations/claude-plugin/.mcp.json` |
+| [textfold](../content/systems/textfold.md) | `plugins/textfold/hooks/hooks.json` | loads a TypeScript module | — |
+| [the-librarian](../content/systems/the-librarian.md) | `integrations/claude/hooks/hooks.json` | SessionStart, UserPromptSubmit, PreToolUse, Stop, SessionEnd | `integrations/claude/.mcp.json` |
+| [tree-ring-memory](../content/systems/tree-ring-memory.md) | `plugins/tree-ring-memory/hooks/claude-hooks.json` | SessionStart, Stop, SubagentStart, SubagentStop | — |
+| [wenlan](../content/systems/wenlan.md) | `plugin/hooks/hooks.json` | SessionStart, UserPromptSubmit, Stop | `plugin/.mcp.json` |
 
 ## Reports with plugin manifests or MCP servers only
 

@@ -413,8 +413,7 @@ two that import graph models mock them
 (`jobs/spaces/__tests__/persona-generation.logic.test.ts:32-36`,
 `services/contacts/__tests__/reconcile.test.ts:12-15`), and nothing in the
 suite exercises the providers, either search pipeline, statement resolution or
-invalidation. The screen flags a Claude Code plugin marketplace manifest as an
-auto-run surface, build-time execution in `apps/tauri/src-tauri/build.rs` and
+invalidation. The screen flags four auto-run surfaces — a Claude Code plugin marketplace manifest and the plugin under `plugin/`, whose hooks run on SessionStart and Stop and whose `.mcp.json` declares an MCP server — build-time execution in `apps/tauri/src-tauri/build.rs` and
 the MCP proxy manifest, and 52 unpinned dependency surfaces across the
 integration packages.
 
@@ -581,6 +580,8 @@ ls integrations/*/package.json | wc -l
 ```
 
 ## History
+
+**2026-11-02** — [`4a5b18d8db55d66e5dfda41b18461f359b340c42`](https://github.com/RedPlanetHQ/core/commit/4a5b18d8db55d66e5dfda41b18461f359b340c42) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 3 auto-run surfaces, 4 in all: hooks registered in `plugin/hooks/hooks.json` on SessionStart and Stop; an MCP server declared in `plugin/.mcp.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 
 **2026-09-30** — [`4a5b18d8db55d66e5dfda41b18461f359b340c42`](https://github.com/RedPlanetHQ/core/commit/4a5b18d8db55d66e5dfda41b18461f359b340c42) — audit at the unchanged pin, which is upstream HEAD. Screened: one auto-run surface, two build-time execution points and 52 unpinned surfaces, none inside the cooldown; nothing installed, built or run. Both marks stand, and the bitemporal record rests on the start of the interval ([section 5](#5-memory-data-model)). Published claims were wrong in both directions: `invalidatedBy` names the ending episode, not a statement; only Neo4j and pgvector are built, and the enum default is `neo4j`; `graphModels/` holds one `invalidAt IS NULL` filter, not twelve, and V1 never applies its own; `Task` sits in both aspect lists; there are 38 connectors; `/api/v1/search` is a third route to BM25. The unguarded end stamp is new ([section 7](#7-write-mechanics)), and the LoCoMo files pool to 88.18% ([section 10](#10-tests-evals-and-benchmarks)).
 

@@ -43,8 +43,7 @@ tracker and a scheduler over them.
 Apache-2.0 at the repository root; 71,120 lines under `src/` beside 68,820
 lines of tests holding 3,067 functions; storage over SQLite-vec, Cloudflare,
 Milvus or a hybrid; twenty-eight MCP tools plus a REST API, a web surface with
-OAuth, a CLI, ingestion, sync and backup. The screen found four auto-run
-surfaces, seven build-time execution paths, eight unpinned dependency surfaces,
+OAuth, a CLI, ingestion, sync and backup. The screen found seven auto-run surfaces, among them the plugin hooks in `claude-hooks/.claude-plugin/hooks.json`, seven build-time execution paths, eight unpinned dependency surfaces,
 two manifests inside the seven-day cooldown, and an uninstalled `pre-commit`
 hook payload; nothing was installed or run.
 
@@ -494,6 +493,8 @@ rg -n 'not in' tests --glob '*.py' | rg -i 'result|memories'            # the tw
 ```
 
 ## History
+
+**2026-11-02** — [`742f50b19abc3cb89fd0f142a4642485c67f4672`](https://github.com/doobidoo/mcp-memory-service/commit/742f50b19abc3cb89fd0f142a4642485c67f4672) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 3 auto-run surfaces, 7 in all: hooks registered in `claude-hooks/.claude-plugin/hooks.json` on SessionStart, UserPromptSubmit, Stop and SessionEnd; an MCP server declared in `claude-hooks/.mcp.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 
 **2026-09-19** — [`742f50b19abc3cb89fd0f142a4642485c67f4672`](https://github.com/doobidoo/mcp-memory-service/commit/742f50b19abc3cb89fd0f142a4642485c67f4672) — `trust_state` re-tested, and the whole `consolidation/` subtree is byte-identical to the previous pin, so every correction below is the atlas's own. Three of them. The vocabulary is four values, not three: `disputed` is written by `challenge_belief` (`belief_service.py:205`) and was present at the first reading too — though it is a marker rather than a resting state, since the same call re-derives the belief and overwrites it fourteen lines later, and it survives only if the derivation raises in between. There are four consumers, not two, and the one the record missed is the strongest: `quarantine.check_beliefs_on_store` reads only `status="active"` beliefs before letting any of them suppress an incoming memory, and a belief that quarantines three memories is itself challenged — the state that decides what may be acted on is revised by what it acted against. And the two call sites differ in the number while agreeing on the state: the session bootstrap wants `min_confidence=0.6` to *show* a belief, the quarantine gate `0.35` to *act* on one, so the acting set is wider than the presented set. The split the mark tests for is also asserted directly — `tests/test_belief_store.py:193-194` fixes `should_promote(0.9, PROVENANCE_FLOOR - 1)` at `False`, so a 90%-confident belief with one witness cannot enter the acting set. The report's spine is untouched: the memory row's quarantine flag is still read by no retrieval path. Screened again first — the surface is unchanged at seven build-time execution paths, four auto-run surfaces, eight floating dependency ranges and two auto-run agent-harness hook scripts; the FRESH count rises from 4 to 12 only because this screen ran on a `--depth 1` clone, which dates every file to the tip, so that one number is not comparable with the previous reading. Nothing was installed and no suite was run.
 

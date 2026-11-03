@@ -479,4 +479,6 @@ Checked against the checkout at the pinned revision.
 
 ## History
 
+**2026-11-02** — [`a1bc167b54922b7a3953b23d4427aa7fb46409fc`](https://github.com/gastownhall/beads/commit/a1bc167b54922b7a3953b23d4427aa7fb46409fc) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 1 auto-run surface, 7 in all: hooks declared inline in `plugins/beads/.claude-plugin/plugin.json` on SessionStart and PreCompact. The hook files were read at the pin as data; nothing was installed or run, and no mark changes.
+
 **2026-09-25** — [`a1bc167b54922b7a3953b23d4427aa7fb46409fc`](https://github.com/gastownhall/beads/commit/a1bc167b54922b7a3953b23d4427aa7fb46409fc) — first reading, at the head of `main`, a commit from the same day. One mark, `negative_eval`. Screened before reading: six auto-run surfaces (`.claude/settings.json` with two PreToolUse command filters, `.claude-plugin/`, `.devcontainer/`, `.githooks/`, `.github/copilot-instructions.md`), three build-time execution points, eleven dependency files inside the cooldown — every file in a depth-1 clone dates to the tip — and `AGENTS.md` and `CLAUDE.md` recorded as data. Read with `grep` and `sed`; nothing installed, built or run. The issue tracker is out of scope and only the memory plane is covered.

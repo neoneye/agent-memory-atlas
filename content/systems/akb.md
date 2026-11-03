@@ -258,4 +258,6 @@ you need an open-source licence.
 
 ## History
 
+**2026-11-02** — [`f3aba4598a47e77371518ee658ccc40130b15ec6`](https://github.com/dnotitia/akb/commit/f3aba4598a47e77371518ee658ccc40130b15ec6) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 7 auto-run surfaces, 10 in all: hooks registered in `plugins/claude/akb-claude-code/hooks/hooks.json` on SessionStart, UserPromptSubmit, PreCompact and SessionEnd; an MCP server declared in `plugins/claude/akb-wiki/.mcp.json`, launched from a package fetched at run time; the Codex project configuration `.codex/config.toml`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
+
 **2026-09-16** — [`f3aba4598a47e77371518ee658ccc40130b15ec6`](https://github.com/dnotitia/akb/commit/f3aba4598a47e77371518ee658ccc40130b15ec6) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: twenty-five files, three auto-run surfaces, five build-time execution points, three unpinned surfaces, ten dependency files inside the cooldown, and the agent-instruction files read as data. Nothing was installed, built or run.

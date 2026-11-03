@@ -256,7 +256,7 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-**I ran nothing.** The screen found one auto-run surface (`.claude-plugin/marketplace.json`, the consumer plugin entry — read; it declares one delegation skill and no hooks), 13 `conftest.py` execution surfaces, three uninstalled git-hook payloads under `scripts/`, no unpinned manifest, and `pyproject.toml` and `uv.lock` both changed inside the seven-day cooldown. Nothing was installed and nothing was executed.
+**I ran nothing.** The screen found five auto-run surfaces: `.claude-plugin/marketplace.json`, the consumer plugin entry — read; it points at `plugins/onex-delegate`, which declares one delegation skill and no hooks — and `plugins/onex/`, a plugin the marketplace does not list, whose `hooks/hooks.json` registers hooks on 30 events; and 13 `conftest.py` execution surfaces, three uninstalled git-hook payloads under `scripts/`, no unpinned manifest, and `pyproject.toml` and `uv.lock` both changed inside the seven-day cooldown. Nothing was installed and nothing was executed.
 
 The test tree is larger than the implementation. `tests/hooks/test_injection_tracking.py` covers the trial with pre-computed session ids that deterministically hash into each arm — testing a hash-based assignment by choosing inputs with known outputs rather than by mocking the hash. It asserts that a control session returns `pattern_count == 0` and `source == "control_cohort"`, and that both arms emit a record.
 
@@ -349,6 +349,8 @@ Run with `git grep` from the root of the checkout at the pinned commit.
 | The memory-fabric client has no production importer | `git grep -n 'memory_fabric_client' -- src plugins tests` | One import, `tests/unit/hooks/lib/test_memory_fabric_client.py:18`; the other hit is a docstring |
 
 ## History
+
+**2026-11-02** — [`ad7861d77053d701cdac37f764bcc00d5845bb87`](https://github.com/OmniNode-ai/omniclaude/commit/ad7861d77053d701cdac37f764bcc00d5845bb87) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 4 auto-run surfaces, 5 in all: hooks registered in `plugins/onex/hooks/hooks.json` on 30 events, among them SessionStart, UserPromptSubmit, PreToolUse and PostToolUse. That plugin is not the one the marketplace lists, whose entry points at `plugins/onex-delegate` and registers no hooks. The hook files were read at the pin as data; nothing was installed or run, and no mark changes.
 
 **2026-10-15** — [`ad7861d77053d701cdac37f764bcc00d5845bb87`](https://github.com/OmniNode-ai/omniclaude/commit/ad7861d77053d701cdac37f764bcc00d5845bb87) — 527 commits along `dev`. Screened first: one auto-run surface (the consumer marketplace manifest, read), 13 `conftest.py` surfaces, and both dependency manifests inside the cooldown; nothing was installed or run. The injection loop and its tests are byte-identical, and `negative_eval` holds on the same blob. `hooks.json` grew to 56 registrations, 29 of them a new capture hook, and its description shrank from 31,000 characters to 4,038 as carve-out reasoning moved into an inventory holding 37 disabled entries. The consumer plugin dropped `cloud_delegate`. Four claims were wrong at the earlier pin and are corrected in [section 2](#2-mental-model) and [section 4](#4-essential-implementation-paths): provisional patterns are excluded by default, every mapped pattern scores zero, the budget event never fires from the production caller, and the internal plugin gives the model recall skills.
 

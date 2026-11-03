@@ -301,4 +301,6 @@ project's site; the artifacts in the tree cover the local three-arm sweep.
 
 ## History
 
+**2026-11-02** — [`5eb2c9145d83ca851ef91a0dfe1639e92664303f`](https://github.com/matrixarkai/TemporalStore/commit/5eb2c9145d83ca851ef91a0dfe1639e92664303f) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 4 auto-run surfaces, 6 in all: hooks registered in `integrations/claude-plugin/hooks/hooks.json` on 7 events, among them SessionStart, UserPromptSubmit, PostToolUse and PreCompact; an MCP server declared in `integrations/claude-plugin/.mcp.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
+
 **2026-09-16** — [`5eb2c9145d83ca851ef91a0dfe1639e92664303f`](https://github.com/matrixarkai/TemporalStore/commit/5eb2c9145d83ca851ef91a0dfe1639e92664303f) — first reading, at a commit dated 15 September 2026. Screened before opening, from a shallow clone: thirteen files scanned, two auto-run surfaces, two build-time execution points, no unpinned surfaces and seven dependency files inside the seven-day cooldown. Nothing was installed, built or run, and no benchmark was executed.

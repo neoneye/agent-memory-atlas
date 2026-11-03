@@ -198,8 +198,7 @@ disclosure most tools with an LLM extraction step leave to the reader's bill.
 ## 8. Agent Integration
 
 Plugins for OpenCode 1 and 2 (the latter marked beta), Claude Code and Codex
-hooks, an MCP server, and a viewer. Screening flags two auto-run surfaces and
-eight unpinned dependency surfaces at this pin.
+hooks, an MCP server, and a viewer. Screening flags six auto-run surfaces, among them the Claude Code plugin's hooks on seven events in `plugins/claude/hooks/hooks.json`, and eight unpinned dependency surfaces at this pin.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -253,5 +252,7 @@ scopes across machines, and the boundary on the receiving side was not traced.
 | `packages/core/src/attribution-assessment.ts:16-28`, `:1185-1222` | Seven bases, two claim types, and one refusal |
 
 ## History
+
+**2026-11-02** — [`6391c66b1d1ea9757ba9a984076bb2f15673a3b7`](https://github.com/kunickiaj/codemem/commit/6391c66b1d1ea9757ba9a984076bb2f15673a3b7) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 4 auto-run surfaces, 6 in all: hooks registered in `plugins/claude/hooks/hooks.json` on 7 events, among them SessionStart, UserPromptSubmit, PreToolUse and PostToolUse; an MCP server declared in `plugins/claude/.claude-plugin/plugin.json`, launched from a package fetched at run time. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 
 **2026-09-16** — [`6391c66b1d1ea9757ba9a984076bb2f15673a3b7`](https://github.com/kunickiaj/codemem/commit/6391c66b1d1ea9757ba9a984076bb2f15673a3b7) — first reading, at a commit dated 15 September 2026. Screened before opening, from a shallow clone: thirty-three files scanned, two auto-run surfaces, one build-time execution point, eight unpinned surfaces and fourteen dependency files inside the seven-day cooldown. Nothing was installed, built or run.

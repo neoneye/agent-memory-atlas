@@ -374,6 +374,8 @@ observations` `:44`)
 
 ## History
 
+**2026-11-02** — [`1cb9a70391c7f7fd9da30d2c4c214a393fb6a639`](https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 3 auto-run surfaces, 4 in all: hooks registered in `plugin/hooks/hooks.json` on SessionStart, UserPromptSubmit, PostToolUse and Stop. The hook files were read at the pin as data; nothing was installed or run, and no mark changes.
+
 **2026-09-18** — [`1cb9a70391c7f7fd9da30d2c4c214a393fb6a639`](https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639) — re-read at the same commit. Nothing upstream had moved, so every addition is the atlas's own, and the first reading had described `src/` as though it were the whole system.
 
 It is the readable half. The hooks and the MCP server call seven API paths; `core/api/Server.ts` registers six unrelated ones plus `/api/context/inject` in `engine-service.ts`, its `RouteHandler` interface has no implementor, and every other path resolves inside `plugin/scripts/worker-service.cjs`, 1.86 MB of committed minified JavaScript, with `extension/runtime/engine-runtime.cjs` another 1.85 MB beside it. `scripts/build-worker-binary.js` compiles `./src/core/worker-service.ts`, a file this repository does not contain. So the component that receives a prompt and decides what to store ships pre-built, and section 3 now says so before any absence claim is made.

@@ -522,4 +522,6 @@ Checked against the checkout at the pinned revision.
 
 ## History
 
+**2026-11-02** — [`0a11f80409acb38eda4ccab4c7026ebbe72de393`](https://github.com/liliang-cn/cortexdb/commit/0a11f80409acb38eda4ccab4c7026ebbe72de393) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 4 auto-run surfaces, 5 in all: hooks registered in `plugins/cortexdb/hooks/hooks.json` on SessionStart, UserPromptSubmit and SessionEnd; an MCP server declared in `plugins/cortexdb/.mcp.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
+
 **2026-10-03** — [`0a11f80409acb38eda4ccab4c7026ebbe72de393`](https://github.com/liliang-cn/cortexdb/commit/0a11f80409acb38eda4ccab4c7026ebbe72de393) — first reading, at the head of `main`, v2.119.1, a commit from the same day. Three marks: `bitemporal`, `audit_log`, `negative_eval`. Screened before reading: one auto-run surface (`.claude-plugin/`), no build-time execution, twelve dependency files inside the cooldown — every file in a depth-1 clone dates to the tip — and two floating ranges with lockfiles present. `SKILL.md`, `.agents/` and the plugin's skills and commands were read as data. Read with `rg` and `sed`; nothing installed, built or run.

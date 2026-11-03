@@ -558,11 +558,13 @@ models mock them
 (<code>jobs/spaces/__tests__/persona-generation.logic.test.ts:32-36</code>,
 <code>services/contacts/__tests__/reconcile.test.ts:12-15</code>), and
 nothing in the suite exercises the providers, either search pipeline,
-statement resolution or invalidation. The screen flags a Claude Code
-plugin marketplace manifest as an auto-run surface, build-time execution
-in <code>apps/tauri/src-tauri/build.rs</code> and the MCP proxy
-manifest, and 52 unpinned dependency surfaces across the integration
-packages.</p>
+statement resolution or invalidation. The screen flags four auto-run
+surfaces — a Claude Code plugin marketplace manifest and the plugin
+under <code>plugin/</code>, whose hooks run on SessionStart and Stop and
+whose <code>.mcp.json</code> declares an MCP server — build-time
+execution in <code>apps/tauri/src-tauri/build.rs</code> and the MCP
+proxy manifest, and 52 unpinned dependency surfaces across the
+integration packages.</p>
 <p>The documentation set (<code>docs/memory/</code>) is nine pages
 covering the primitives, the storage layout, ingestion, search, aspects,
 entity types, query types and labels. It matches the code on the
@@ -749,6 +751,14 @@ rg -n -i &#39;STARTS WITH|startsWith&#39; apps/webapp/app/services/search.server
 # connector packages
 ls integrations/*/package.json | wc -l</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-11-02</strong> — <a
+href="https://github.com/RedPlanetHQ/core/commit/4a5b18d8db55d66e5dfda41b18461f359b340c42"><code class="commit-id" title="4a5b18d8db55d66e5dfda41b18461f359b340c42">4a5b18d8…</code></a>
+— re-screened at the same pin with plugins below the checkout root
+followed. The screen had not counted 3 auto-run surfaces, 4 in all:
+hooks registered in <code>plugin/hooks/hooks.json</code> on SessionStart
+and Stop; an MCP server declared in <code>plugin/.mcp.json</code>. The
+hook and MCP files were read at the pin as data; nothing was installed
+or run, and no mark changes.</p>
 <p><strong>2026-09-30</strong> — <a
 href="https://github.com/RedPlanetHQ/core/commit/4a5b18d8db55d66e5dfda41b18461f359b340c42"><code class="commit-id" title="4a5b18d8db55d66e5dfda41b18461f359b340c42">4a5b18d8…</code></a>
 — audit at the unchanged pin, which is upstream HEAD. Screened: one

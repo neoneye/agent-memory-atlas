@@ -261,10 +261,7 @@ finding that produced it.
 
 ## 8. Agent Integration
 
-This repository is installed into a harness, which is why the screening flagged
-four auto-run surfaces: a plugin marketplace manifest, `.mcp.json`, committed git
-hooks, and `.claude/settings.json` with SessionStart, UserPromptSubmit,
-PreToolUse, PostToolUse and Stop hooks. Nothing here was executed; the files were
+This repository is installed into a harness, which is why the screening flagged 21 auto-run surfaces. Four are at the root: a plugin marketplace manifest, `.mcp.json`, committed git hooks, and `.claude/settings.json` with SessionStart, UserPromptSubmit, PreToolUse, PostToolUse and Stop hooks. The rest are `.codex/config.toml`, which declares MCP servers for Codex, and the plugins under `plugins/`, four of which register their own PreToolUse, PostToolUse or Stop hooks. Nothing here was executed; the files were
 read as data.
 
 The settings file is worth reading as a design artifact. Its deny list blocks
@@ -435,6 +432,8 @@ grep -c "|| true" .claude/settings.json                          # eight of elev
 ```
 
 ## History
+
+**2026-11-02** — [`fb098216a6cba5d58c82a6b6c08b535bb068efdd`](https://github.com/assafkip/kipi-system/commit/fb098216a6cba5d58c82a6b6c08b535bb068efdd) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 17 auto-run surfaces, 21 in all: hooks registered in `plugins/kipi-core/hooks/hooks.json` (PostToolUse), `plugins/kipi-design/hooks/hooks.json` (PreToolUse and PostToolUse), `plugins/kipi-dsse/hooks/hooks.json` (PreToolUse and Stop) and `plugins/prd-os/hooks/hooks.json` (PostToolUse); MCP servers declared in `.codex/config.toml`, `plugins/kipi-core/.mcp.json` and `plugins/kipi-notebooklm/.mcp.json`, of which `.codex/config.toml` and `plugins/kipi-notebooklm/.mcp.json` launch a package fetched at run time; the other 10 are the plugin manifests and `hooks/` directories around them. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 
 **2026-09-19** — re-pinned to [`fb098216a6cba5d58c82a6b6c08b535bb068efdd`](https://github.com/assafkip/kipi-system/commit/fb098216a6cba5d58c82a6b6c08b535bb068efdd). **`human_review` is withdrawn; two marks stand.** The first reading was made on 2026-09-17, a day before the rubric narrowed, and it awarded the mark for the origin tag plus the harness that audits it. Re-tested: the origin tag is written by the assistant. The decision log is markdown with a template at `q-system/canonical/decisions.md:5-14`, and what governs its writing is `.claude/rules/sycophancy-core.md` and `auto-detection.md` — rule files addressed to the agent. So the row that says `[CLAUDE-RECOMMENDED -> APPROVED]` is the producer's own claim about a person, which is the rubric's *"status the producer can write"* on top of its *"prose"* shape, and nothing in the tree verifies it. `sycophancy-harness.py` keeps its description: it runs after the audit agent *"because the agent itself is sycophantic"*, alerts at an approval ratio of 0.7 across five or more tagged decisions, and was extracted standalone on 2026-07-01 after an instance sat at 0.88 with nothing able to notice. It audits the distribution of what was recorded, not who recorded it. `trust_state` and `negative_eval` re-verified. Screened again first; nothing installed or run.
 

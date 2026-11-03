@@ -198,8 +198,7 @@ repair by hand: every text field is ciphertext, and losing `.crypto.key` loses
 the memories, which the README says in those words. `doctor` runs 33 checks
 and its `--apply` mode renames corrupt state aside rather than deleting it.
 
-The screen at this reading reported one auto-run surface —
-`.claude-plugin/marketplace.json`, the Claude Code plugin manifest — four
+The screen reports five auto-run surfaces — `.claude-plugin/marketplace.json`, the Claude Code plugin manifest, and the plugin under `plugin/`, whose hooks run on SessionStart, UserPromptSubmit and Stop and whose `.mcp.json` declares an MCP server — four
 build-time execution paths (`setup.py`, the Tauri `build.rs`, two
 `conftest.py`) and two unpinned manifests, with every lockfile at least thirteen
 days old. Nothing was installed, built or run.
@@ -724,6 +723,8 @@ grep -rh '^def test_\|^    def test_' tests | wc -l
 ```
 
 ## History
+
+**2026-11-02** — [`c400059ac860929936719fc70a66f57ee60c712c`](https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 4 auto-run surfaces, 5 in all: hooks registered in `plugin/hooks/hooks.json` on SessionStart, UserPromptSubmit and Stop; an MCP server declared in `plugin/.mcp.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 
 **2026-09-19** — audited at the unchanged pin [`c400059ac860929936719fc70a66f57ee60c712c`](https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, and the record awarded it in the same breath as naming the reason — it is *"the editing-surface form of the mark rather than an approval queue."* That form is no longer in the definition. Taken one at a time the five tools are a protection flag (`pin` excludes a record from the erasure predicate), a deletion queue and its cancel (`forget_hint`, `rescue`), and two authoring verbs (`capture`, `teach`); none holds a memory back before it can be believed, and `src/iai_mcp/` carries no such state. The forgetting design keeps its credit in section 6 — a queued record still carries its `user-forget-hint` provenance entry, which is more than most deletion paths record. `audit_log` and `negative_eval` stand. Screened again first; nothing was installed and no suite was run.
 

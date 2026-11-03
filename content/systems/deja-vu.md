@@ -41,7 +41,7 @@ about to re-debug something you fixed in March — in a different agent."*
 
 MIT; 1,742 commits between 14 July 2026 and 10 September 2026 from thirty-one
 authors — two months of unusually dense work — 273,068 lines of Go, and 4,361
-committed test functions. The screen found three auto-run surfaces, six
+committed test functions. The screen found five auto-run surfaces, among them hooks declared inline in `claude-plugin/.claude-plugin/plugin.json`, six
 manifests inside the seven-day cooldown, one build-time execution path, five
 unpinned dependency surfaces, and agent instruction files treated as data;
 nothing was installed or run.
@@ -486,6 +486,8 @@ Checked at the pinned revision, without a clone.
 
 
 ## History
+
+**2026-11-02** — [`6a33ce289d0553b69ba9772da753cb447501f4d7`](https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 2 auto-run surfaces, 5 in all: hooks declared inline in `claude-plugin/.claude-plugin/plugin.json` on SessionStart, UserPromptSubmit, PreToolUse, PostToolUse and PreCompact; an MCP server declared in `claude-plugin/.claude-plugin/plugin.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 
 **2026-09-20** — same pin. Section 9 gained the `human_review` reasoning, which the report had not stated in either direction, and a Recorded Searches appendix carrying the three checks it rests on. The mark stays withheld and the reason is worth reading: the producer test passes in its strong form — the MCP server exposes one tool whose `mode` enum is `recall`, `context`, `blame`, `fix`, `how`, `remember`, so the agent has no adjudicating verb at all — and the mark fails on the clause before it, because nothing waits. `attachLifecycles` labels a rejected hit and still returns it. No mark changes.
 

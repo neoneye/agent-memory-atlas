@@ -418,9 +418,7 @@ search with only the alpha row, then asserts beta is absent from the
 rendering. Its own doc comment says what it proves: that the MCP layer
 threads `space` through and renders exactly what the daemon returns.
 
-**I ran no tests.** The screen flagged four auto-run surfaces, all present at
-the previous pin — `.claude-plugin/`, `.claude/hooks/`,
-`.claude/settings.json` and `.githooks/` — four `build.rs` files including a
+**I ran no tests.** The screen flagged eight auto-run surfaces: four at the root, all present at the previous pin — `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json` and `.githooks/` — and the plugin under `plugin/`, whose hooks run on SessionStart, UserPromptSubmit and Stop and whose `.mcp.json` declares an MCP server; four `build.rs` files including a
 vendored updater plugin, two npm `postinstall` scripts, and twelve dependency
 files changed inside the seven-day cooldown, `Cargo.lock` and
 `pnpm-lock.yaml` among them. A tree with active hooks and a lockfile changed
@@ -538,6 +536,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -n -i -E 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE` — no match; the Apache-2.0 text carries no rider, identical at both pins.
 
 ## History
+
+**2026-11-02** — [`80528ef32df79d0567f5bca8eaa3db8e755aeadd`](https://github.com/wenlan-app/wenlan/commit/80528ef32df79d0567f5bca8eaa3db8e755aeadd) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 4 auto-run surfaces, 8 in all: hooks registered in `plugin/hooks/hooks.json` on SessionStart, UserPromptSubmit and Stop; an MCP server declared in `plugin/.mcp.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 
 **2026-11-01** — [`80528ef32df79d0567f5bca8eaa3db8e755aeadd`](https://github.com/wenlan-app/wenlan/commit/80528ef32df79d0567f5bca8eaa3db8e755aeadd) — 257 commits on, through 0.20.5. The repository moved from `7xuanlu/wenlan` to `wenlan-app/wenlan`, and the archive fork was renamed to `agent-memory-atlas-archive/wenlan-app--wenlan` to match; the licence is unchanged. **`scope_enforced` is withdrawn as wrong at the previous pin**: an omitted Space resolves to `Global` in code identical at both commits, so a standard-profile MCP recall reads every Space ([section 6](#6-retrieval-mechanics)). `negative_eval` holds on the real-database tests; the MCP round trip it led with runs against a mock ([section 10](#10-tests-evals-and-benchmarks)). Also wrong then: "no validity axis" missed `event_date`, and the Protected tier gates daemon merges, not an agent's supersede ([section 9](#9-reliability-safety-and-trust)). Added upstream: per-sentence authorship and person-only proposal routes. `tombstone` holds. Screened from a full clone: the same auto-run surfaces, one new `build.rs`, twelve dependency files inside the cooldown, `AGENTS.md` and `CLAUDE.md` read as data. Nothing was installed, built or run.
 
