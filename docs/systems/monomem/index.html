@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Node.js MCP and REST
+memory server over one SQLite file, shared by coding agents, with
+server-stamped writers, a write-time linter and two-step replacement.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Monomem — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Node.js MCP
+and REST memory server over one SQLite file, shared by coding agents,
+with server-stamped writers, a write-time linter and two-step
+replacement.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Monomem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Node.js MCP
+and REST memory server over one SQLite file, shared by coding agents,
+with server-stamped writers, a write-time linter and two-step
+replacement.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Monomem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Monomem",
+      "description": "A self-hosted Node.js MCP and REST memory server over one SQLite file, shared by coding agents, with server-stamped writers, a write-time linter and two-step replacement.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Server-stamped writers and a replacement
+you can undo</p>
+          <h1>Monomem</h1>
+          <p class="document-deck">A self-hosted Node.js MCP and REST
+memory server over one SQLite file, shared by coding agents, with
+server-stamped writers, a write-time linter and two-step
+replacement.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/calasdan-sketch/monomem">
+              <span>Source</span>
+              <strong>calasdan-sketch/monomem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/calasdan-sketch/monomem/commit/292a312cce18e46884520a63826c91c919fe76f8" title="292a312cce18e46884520a63826c91c919fe76f8">
+              <span>Analyzed revision</span>
+              <code>292a312c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/calasdan-sketch--monomem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>calasdan-sketch--monomem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+(Calas Automations Inc.)</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>34,106
+lines of TypeScript in src/, 6,947 of them in store.ts and 2,259 in the
+benchmark harness; two runtime dependencies, the MCP SDK and
+zod</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>117
+commits, 24 October – 3 November 2026, from one author under five names
+and addresses; the first imports OneMemory 1.2.1, renamed Monomem on 2
+November</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>114
+node:test files, 30,968 lines, about 1,840 cases, plus 123 JSON
+benchmark scenarios that CI runs on three operating systems; none run
+for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Monomem is a self-hosted memory server for coding agents: one Node
+process over one SQLite file, reached by MCP, REST and a CLI. Its
+notable work is on provenance. The server stamps each note's writer from
+the authenticated token and ignores the client's claim. An admin's
+distrust list hides a writer's notes on every read path, through one
+gate a test keeps honest. Replacing a note takes a preview and a
+one-time code, and is undone by id. The weak side is the local default.
+<code>setup</code> wires every client to the stdio transport, which runs
+as admin, so the agent holds the hard delete and, with all tools
+enabled, the quarantine approval meant for a person.</p>
+<p>Every write is synchronous and model-free. A pattern linter blocks
+secrets and holds injection-shaped text in a quarantine table that no
+read sees. Optional Claude Code hooks capture tool events, and a
+deterministic distiller turns them into typed observations and one
+summary per session. The session-start context is relevance-ranked
+inside a token budget and fails closed to empty when a configured
+namespace cannot be resolved.</p>
+<p>Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>. "Auditable" rests on three logs, and none
+earns <code>audit_log</code>: the change log is purged after 90 days,
+<code>audit.log</code> rotates its oldest file away, and the one log
+never pruned covers replacements only. "One-command undo" reverses a
+replacement or an edit, not a delete.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>note row</strong>: title, body, tags, a
+namespace and a <code>kind</code>. The kind is <code>note</code> for
+anything written through a tool, or <code>observation</code> and
+<code>summary</code> for what capture distils. Every note carries
+<code>written_by</code> and <code>created_by</code>, stamped by the
+server from the connection, a free-text <code>source</code> the client
+claims, and an optional <code>confidence</code> claim from 0 to 1
+(<code>src/store.ts:1846-1854</code>, <code>:2128-2130</code>,
+<code>:2206-2211</code>). Nothing marks a note true. Search results and
+the session-start block carry the writer under an untrusted-data banner
+(<code>src/recall.ts:58-72</code>).</p>
+<p>A write the linter flags as injection never becomes a note. It waits
+as a row in <code>quarantine</code> until someone with the admin scope
+approves it, which replays the write, or rejects it, which deletes the
+row (<code>src/store.ts:6709-6777</code>). A live note can then:</p>
+<ul>
+<li><strong>change in place</strong>, with the prior title and body
+copied to <code>note_history</code> (bounded per note) and
+<code>rev</code> incremented (<code>src/store.ts:3526-3560</code>);</li>
+<li><strong>be superseded</strong>, which archives it and sets
+<code>superseded_by</code>, so every read that drops archived rows drops
+it (<code>src/store.ts:3743-3797</code>); an undo clears both and logs
+the reversal (<code>:3799-3830</code>);</li>
+<li><strong>be archived</strong> by hand, by its TTL when the sweep is
+called, or, for captured rows idle 30 days, at session end
+(<code>src/store.ts:3333-3352</code>, <code>:3414</code>);</li>
+<li><strong>be deleted</strong>, which removes the row and its history
+for good (<code>src/store.ts:3290-3294</code>,
+<code>:4107-4122</code>).</li>
+</ul>
+<p>Distrust is not a note state. It is a per-namespace list of writers,
+consulted at read time on every path; lifting the rule restores the
+notes (<code>src/trust.ts:1-20</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write is linted, held or stored; a stored note is filtered by archive, distrust and namespace on every read, and is corrected by an edit with history, a supersede that can be undone, an archive that can be restored, or a delete that takes its history</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write is linted, held or stored; a stored note is filtered by archive, distrust and namespace on every read, and is corrected by an edit with history, a supersede that can be undone, an archive that can be restored, or a delete that takes its history
+flowchart TD
+  W[&quot;state_write, REST, CLI&lt;br/&gt;capture distiller&quot;] --&gt; L{&quot;linter&lt;br/&gt;secret? injection?&quot;}
+  L --&gt;|&quot;secret&quot;| B[&quot;refused&quot;]
+  L --&gt;|&quot;injection&quot;| Q[&quot;quarantine row&lt;br/&gt;not a note&quot;]
+  L --&gt;|&quot;clean&quot;| N[&quot;live note&lt;br/&gt;written_by stamped&quot;]
+  Q --&gt;|&quot;admin approve&quot;| N
+  Q --&gt;|&quot;admin reject&quot;| X1[&quot;row deleted&quot;]
+  N --&gt; R{&quot;read filter&lt;br/&gt;archived? distrusted?&lt;br/&gt;namespace?&quot;}
+  R --&gt; C[&quot;search, list&lt;br/&gt;session-start context&quot;]
+  C ~~~ CORR
+  N --&gt; CORR
+  subgraph CORR[&quot;corrections&quot;]
+    direction TB
+    H[&quot;update: prior text to&lt;br/&gt;note_history, 20 kept&quot;]
+    S[&quot;supersede: preview + code&lt;br/&gt;archived, undo by id&quot;]
+    A[&quot;archive, TTL, decay&lt;br/&gt;restore by id&quot;]
+    D[&quot;state_delete: row and&lt;br/&gt;history gone&quot;]
+    H ~~~ S ~~~ A ~~~ D
+  end</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>One process, one file.</strong> <code>node:sqlite</code>,
+built into Node 22.16 and later, opens <code>~/.monomem/state.db</code>
+in WAL mode with <code>foreign_keys</code> and
+<code>secure_delete</code> on (<code>src/store.ts:1365-1370</code>). An
+external-content FTS5 table indexes title, body and tags through
+triggers, and FTS5 <code>secure-delete</code> is switched on so a
+deleted note's words leave the index (<code>:1857-1869</code>,
+<code>:4017-4024</code>). Vectors are raw Float32 BLOBs in
+<code>note_vectors</code>; semantic search loads the namespace's vectors
+and scores them in JavaScript (<code>:4858-4881</code>). There is no
+vector index.</p>
+<p><strong>Transports.</strong> <code>monomem mcp</code> is the stdio
+server. It stamps every write <code>stdio</code> and builds the tool
+server with the <code>admin</code> scope
+(<code>src/mcp-stdio.ts:16-21</code>). <code>monomem start</code> serves
+REST and a dashboard on <code>:8790</code> and MCP over HTTP on
+<code>:8791</code>, bound to <code>127.0.0.1</code> by default
+(<code>src/config.ts:486</code>). HTTP tokens are <code>read</code>,
+<code>write</code> or <code>admin</code> and carry a label,
+<code>requiredScope</code> maps each route to a scope
+(<code>src/api.ts:111-140</code>), and
+<code>docs/token-namespaces.md</code> pins a token to one namespace.</p>
+<p><strong>Optional services.</strong> Embeddings go to
+<code>MONOMEM_EMBED_URL</code>, default
+<code>http://localhost:11434/v1/embeddings</code>, with no loopback
+check (<code>src/embeddings.ts:43</code>). The session-summary model
+must be loopback unless <code>MONOMEM_LLM_ALLOW_REMOTE=1</code>
+(<code>src/llm.ts:31</code>, <code>:49</code>). The command runner,
+which executes HMAC-signed allowlisted commands from task notes, is
+experimental and excluded from the npm package
+(<code>docs/RUNNER.md</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing else has to run. <code>npx monomem setup</code> finds eight
+clients, shows the exact config lines, backs each file up and writes a
+stdio entry pinned to the installed version
+(<code>src/setup.ts:160-175</code>). <code>setup --undo</code> reverses
+it. No API key is needed and everything works offline; semantic search
+degrades to keyword search when the embedding endpoint is down. The
+store is one SQLite file, inspectable with any SQLite client and backed
+up by <code>VACUUM INTO</code>. A Markdown export with three-way
+re-import gives a human-editable copy. Body encryption leaves titles,
+tags, timestamps, writers and vectors readable, and the key sits beside
+the database (<code>SECURITY.md</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>state_write</code>
+(<code>src/mcp-server-core.ts</code>), <code>POST /notes</code> and the
+CLI all reach <code>Store.create</code> or <code>Store.update</code>
+(<code>src/store.ts:2418</code>, <code>:3045</code>).
+<code>lintFor</code> runs first (<code>:294-301</code>).
+<code>applyLintPolicy</code> throws on a blocked finding and returns
+<code>quarantine</code> for a held one, and <code>quarantineWrite</code>
+then stores the request (<code>:267-291</code>, <code>:2460-2474</code>,
+<code>:6586-6648</code>). The insert stamps <code>written_by</code> from
+<code>currentWriter()</code> (<code>src/actor.ts:95-103</code>) and
+appends an <code>audit.log</code> line
+(<code>src/store.ts:2583</code>).</li>
+<li><strong>Capture.</strong> <code>monomem hook &lt;event&gt;</code>
+runs on UserPromptSubmit, PreToolUse (Read), PostToolUse, Stop and
+SessionEnd (<code>src/setup.ts:512-520</code>). Events are redacted
+(<code>&lt;private&gt;</code> blocks and secrets) before they reach
+<code>capture_events</code> or a spool file
+(<code>src/capture.ts:1-13</code>). <code>src/extract.ts</code> distils
+commits, test fixes, decision phrases, redacted secrets and
+injection-shaped tool output into observations, and rebuilds one summary
+per session. Both go through <code>Store.create</code>, so they are
+linted (<code>src/extract.ts:1-17</code>). The hook runs the distiller
+on <code>stop</code> and <code>session-end</code>
+(<code>src/hook.ts:124-129</code>).</li>
+<li><strong>Retrieval.</strong> <code>runSearch</code> in
+<code>src/search-service.ts</code> dispatches keyword, semantic or
+hybrid to <code>searchRanked</code>, <code>semanticSearch</code> and
+<code>rrfMerge</code> (<code>src/store.ts:4333</code>,
+<code>:4858</code>; <code>src/search-service.ts:56</code>).
+<code>rangeFor</code> folds the distrust predicate into every query
+(<code>src/store.ts:6210-6214</code>).</li>
+<li><strong>Session start.</strong> <code>runRecall</code> resolves the
+namespace fail-closed, then <code>injectContext</code> ranks the
+namespace's notes, observations and summaries by branch, changed files
+and recency inside the token budget, behind the untrusted banner
+(<code>src/recall.ts:120-200</code>, <code>:245-269</code>,
+<code>src/context-inject.ts:172-224</code>).</li>
+<li><strong>File context.</strong> A PreToolUse hook on
+<code>Read</code> prints notes linked to the file, under the same
+namespace and distrust rules
+(<code>src/file-context.ts:42-56</code>).</li>
+<li><strong>Replace.</strong> <code>supersedePreview</code> and
+<code>supersedeConfirm</code> (<code>src/supersede.ts:144</code>,
+<code>:260</code>) call <code>Store.supersedeCommit</code> and
+<code>supersedeUndo</code> (<code>src/store.ts:3743</code>,
+<code>:3799</code>).</li>
+<li><strong>Delete.</strong> <code>state_delete</code>, admin scope,
+calls <code>Store.delete</code>, which removes the row and revives
+anything it had superseded (<code>src/store.ts:3290-3327</code>).</li>
+<li><strong>Quarantine review.</strong> <code>memory_quarantine</code>
+(<code>src/mcp-server-core.ts:1606-1647</code>),
+<code>POST /quarantine/:id/approve|reject</code>
+(<code>src/api.ts:804-829</code>) and <code>monomem quarantine</code>
+(<code>src/cli.ts:1777-1784</code>), all into
+<code>approveQuarantine</code> and <code>rejectQuarantine</code>.</li>
+<li><strong>Change feed.</strong> Triggers write <code>change_log</code>
+inside each writing transaction (<code>src/store.ts:2309-2343</code>);
+<code>memory_since</code> and <code>GET /changes</code> read it.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>notes</code> holds the record (<code>src/store.ts:1846</code>),
+and <code>store.ts</code> makes 23 <code>addColumn</code> calls on it
+across 16 schema versions: <code>rev</code> and <code>source</code>
+(v1), access counters (v3), <code>body_enc</code>,
+<code>expires_at</code> and <code>archived_at</code> (v10),
+<code>written_by</code>, <code>created_by</code> and
+<code>imported_written_by</code> (v13), attestation and merge columns
+(v14), <code>confidence</code> and the three <code>superseded_*</code>
+columns (v15), and <code>kind</code>, <code>session_id</code> and
+<code>obs_type</code> (v16).</p>
+<p><strong>Scope</strong> is <code>namespace</code>, a column on every
+note, quarantine row, change-log row and session. When
+<code>spaces.json</code> or <code>MONOMEM_SPACES</code> maps directories
+to namespaces, each process resolves one from its working directory at
+startup, writes land there, and reads cover it plus any one-way
+<code>reads_from</code> grants (<code>src/namespace.ts:1-14</code>).
+Unconfigured, the namespace is whatever the caller passes and defaults
+to <code>default</code> on write.</p>
+<p><strong>Time</strong> is <code>created_at</code>,
+<code>updated_at</code>, <code>expires_at</code>,
+<code>archived_at</code> and <code>superseded_at</code>, all
+record-side. <code>created_at</code> can be backdated only by import,
+consolidation and the benchmark's dataset loader, never by a REST or MCP
+create. No column says when a fact was true.</p>
+<p><strong>History.</strong> <code>note_history</code> keeps the title,
+body, tags, writer and confidence an update replaced, up to
+<code>MONOMEM_HISTORY_VERSIONS</code> (default 20) and 2 MB per note,
+and cascades away with the note (<code>src/store.ts:2212-2232</code>,
+<code>:152-155</code>).</p>
+<p><strong>Trust tables.</strong> <code>trust_distrust</code>
+(namespace, writer), <code>trust_attesters</code> (public keys for
+signed exports) and <code>trust_log</code>, capped at 1,000 rows per
+namespace (<code>src/store.ts:2168-2192</code>, <code>:6073</code>;
+<code>src/trust.ts:31</code>). <code>imported_unverified</code> marks an
+import without a verified attestation.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Keyword</strong> is FTS5 BM25, every word first, then notes
+matching some of the words ranked below full matches. Before that
+fallback landed in OneMemory 2.0.0, a natural-language question scored
+R@5 11.9 on LongMemEval-S (<code>docs/BENCHMARK.md</code>).
+<strong>Semantic</strong> is cosine over every vector in the namespace.
+<strong>Hybrid</strong> fuses the two with RRF at k = 60
+(<code>src/search-service.ts:56-70</code>). Any embedding failure
+degrades to keyword.</p>
+<p>Ranking then multiplies an access boost, decayed by recency of use,
+and a graded staleness penalty of 0.95 per 90 days of age. A stale note
+with an active near-twin in the similarity graph is demoted further
+(<code>src/search-service.ts:73-200</code>). <code>?explain=1</code>
+returns each factor per hit. <code>state_relevant</code> drops stop
+words, takes any keyword, and fuses per-keyword BM25 rankings with
+RRF.</p>
+<p><strong>Filters on every read.</strong>
+<code>archived_at IS NULL</code> (superseded notes included, unless
+<code>include_superseded</code>), <code>kind = 'note'</code> on the tool
+paths, the distrust fragment, and the namespace
+(<code>src/store.ts:1176-1188</code>, <code>:6210-6214</code>). With
+resolution active, an MCP read intersects the model's namespace hint
+with what the server may read
+(<code>src/mcp-server-core.ts:327-331</code>). Without it, a search or
+list that names no namespace reads all of them (<code>:621-622</code>;
+<code>src/store.ts:4284-4291</code>), and so does the session-start
+context (<code>src/recall.ts:186-187</code>).</p>
+<p><strong>Session start</strong> packs a deterministic project profile
+(300 tokens by default), the latest summary, and ranked rows into
+<code>MONOMEM_RECALL_TOKENS</code> (1,500), each row tagged with why it
+is there. A note tagged <code>never-show</code> is never injected and
+remains searchable (<code>src/context-inject.ts:10-16</code>,
+<code>:70-80</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls or capture. No model decides what is
+stored. A captured observation is a deterministic reading of tool
+events, and the decision observation is a phrase match on the user's
+prompt (<code>src/extract.ts:1-17</code>). An update is in place with
+history, optionally guarded by <code>if_rev</code>. Two contradictory
+notes both stand. The benchmark's B suite treats that as the intended
+answer, with the loser kept visible and attributed.</p>
+<p><strong>The linter</strong> has three categories
+(<code>src/lint.ts:1-54</code>). Secrets, meaning known key prefixes and
+private-key blocks, are blocked by default. Injection is 12 regular
+expressions over normalised text: instruction override, role
+reassignment, chat-template markers, system-prompt exfiltration, "do not
+tell the user", coercion naming a Monomem tool, Markdown-image
+exfiltration and raw tool-call markup (<code>:96-165</code>). It is
+quarantined by default. A bare high-entropy token only warns. The file
+calls itself <em>"best-effort hygiene, NOT a security boundary"</em>
+(<code>:31</code>). Approval and the benchmark's dataset loader skip the
+linter; consolidation runs it for secrets only
+(<code>src/store.ts:6728</code>, <code>:6756</code>;
+<code>src/consolidate.ts:773</code>).</p>
+<p><strong>Deduplication</strong> is admin-driven.
+<code>memory_consolidation_candidates</code> finds near-duplicates by
+term-frequency cosine within one namespace, scanning only the 2,000 most
+recent notes on a large store. <code>memory_consolidate</code> merges
+them and hard-deletes the sources by default
+(<code>src/consolidate.ts:1-17</code>, <code>:707-794</code>). Opt-in
+auto-consolidation merges only identical title-and-body pairs
+(<code>src/start.ts:47-60</code>).</p>
+<p><strong>Imports.</strong> <code>import --claude</code> keys each
+<code>CLAUDE.md</code> section on its source location and content hash,
+and counts archived imports as present, so archiving an imported note
+keeps it from returning and deleting it does not
+(<code>src/claude-import.ts:441-448</code>). File-sync imports keep a
+deleted note's origin id in <code>sync_deleted</code> and skip it unless
+the file changed (<code>src/store.ts:2039-2049</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent blocks only on SQLite and the regexes. A note is searchable
+the moment the call returns; an embedding is computed after the write
+and failure is swallowed. Capture hooks run asynchronously on tool
+events and spool when the database is busy. Distillation happens at Stop
+and SessionEnd, and the optional local model makes one call per session.
+No pass rewrites the store. The consolidation scan and edge rebuild are
+O(n²) and run on demand. Session-start injection is bounded by the token
+budget and <code>RECALL_MAX_CHARS</code> of 8,000, and sits in the
+SessionStart hook output, ahead of the first prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Ten tools are registered by default: <code>state_write</code>,
+<code>state_read</code>, <code>state_search</code>,
+<code>state_relevant</code>, <code>state_list</code>,
+<code>state_delete</code>, <code>catch_up</code> and the three
+<code>memory_supersede_*</code> tools
+(<code>src/mcp-server-core.ts:238-253</code>). Twenty-two more, covering
+the change feed, tasks, trust policy, quarantine, history and
+consolidation, need <code>MONOMEM_TOOLS</code>. Every MCP read returns
+behind an untrusted-data banner; REST responses do not carry it.</p>
+<p><code>SKILL.md</code> teaches the agent when to save and search. Its
+quarantine section tells the agent to approve a held write itself:
+<em>"If you have the admin scope and the user confirms the content is
+legitimate, <code>memory_quarantine</code>
+<code>{ action: "approve", id }</code>"</em>
+(<code>SKILL.md:155-161</code>). On stdio it has that scope.</p>
+<p>Replacement is built for an agent in the middle. The preview returns
+a warning listing what would stop appearing and a code bound to the
+caller, the note revisions and the replacement text, valid 10 minutes
+and once (<code>src/supersede.ts:1-15</code>,
+<code>src/store.ts:3759-3761</code>). The confirm needs the code. A
+distrusted replacer or a lower confidence also needs an admin and
+<code>acknowledge_risk: true</code>
+(<code>src/supersede.ts:283-328</code>). <code>SECURITY.md:84-86</code>
+states the limit: an agent can confirm without the user, and only the
+CLI, which asks at the keyboard, is a real gate.</p>
+<p>Claude Code gets hooks; Codex, Gemini CLI and Muse are mapped onto
+the same events (<code>src/hook.ts:1-2</code>). Adapting it to another
+agent means pointing an MCP client at the stdio command or an HTTP
+token.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="undo-covers-a-replacement-not-a-delete">Undo covers a
+replacement, not a delete</h3>
+<p>The README promises that every note <em>"is one undo away"</em>
+(<code>README.md:7</code>). That holds for two paths. A supersede is
+reversed by <code>supersedeUndo</code>, which clears
+<code>superseded_by</code> and <code>archived_at</code> and appends an
+<code>undo</code> row to <code>supersede_log</code>. An edit is reversed
+by <code>restoreVersion</code>, which writes an old version as a new
+one. <code>state_delete</code> is a <code>DELETE</code> on the row;
+<code>note_history</code> cascades with it, and
+<code>secure_delete</code> zeroes the freed pages
+(<code>src/store.ts:4107-4122</code>, <code>:2214</code>,
+<code>:1370</code>). <code>docs/replacing-memories.md:55</code> says so:
+<em>"Hard delete is unchanged"</em>. Consolidation deletes its sources
+the same way. The erasure is real, and the undo does not reach it.</p>
+<h3 id="three-logs-none-whole-and-kept">Three logs, none whole and
+kept</h3>
+<ul>
+<li><strong><code>change_log</code></strong> is written by triggers on
+every create, content update, archive and delete, with the actor and the
+note's writers, so no write path can skip it
+(<code>src/store.ts:2309-2343</code>). It holds no bodies, blanks titles
+on rename and delete, and is deleted after 90 days, hourly
+(<code>:500</code>, <code>:5589-5600</code>).
+<code>monomem changes --purge</code> empties it
+(<code>src/cli.ts:1132</code>).</li>
+<li><strong><code>audit.log</code></strong> is a JSONL file appended by
+<code>audit()</code> for create, update, delete, supersede, undo,
+history purge and quarantine decisions. Past 5 MB it rotates, and the
+sixth file is removed (<code>src/security.ts:507-553</code>). A failed
+append is swallowed (<code>:567-575</code>). Archive, restore and both
+sweeps write no line.</li>
+<li><strong><code>supersede_log</code></strong> is never deleted from,
+and covers replacements and their undos only
+(<code>src/store.ts:2238-2247</code>).</li>
+</ul>
+<p><code>trust_log</code> keeps the last 1,000 policy changes per
+namespace.</p>
+<h3 id="the-local-default-runs-as-admin">The local default runs as
+admin</h3>
+<p><code>setup</code> writes a stdio entry for each client
+(<code>src/setup.ts:160-175</code>), and stdio builds the tool server as
+<code>admin</code> (<code>src/mcp-stdio.ts:21</code>).
+<code>SECURITY.md:48</code> puts it in the threat model: stdio
+<em>"run[s] with full local trust"</em>. So the agent holds
+<code>state_delete</code> by default. Under
+<code>MONOMEM_TOOLS=all</code> it also holds
+<code>memory_quarantine</code>, <code>trust_policy</code>,
+<code>memory_history_purge</code> and <code>include_distrusted</code>.
+<code>memory_quarantine</code> checks the scope and nothing else: no
+comparison of the approver with the held row's writer
+(<code>src/mcp-server-core.ts:1622-1645</code>). The HTTP deployment,
+with a write-scoped token per client, keeps all of these out of the
+agent's reach.</p>
+<h3 id="who-wrote-this-on-one-machine">Who wrote this, on one
+machine</h3>
+<p><code>written_by</code> is the token label on HTTP and a fixed marker
+otherwise (<code>src/actor.ts:95-103</code>). Every stdio client
+therefore stamps <code>stdio</code>. Claude Code, Cursor and Codex wired
+by <code>setup</code> share one writer identity, and the distrust list
+cannot separate them. <code>docs/provenance.md</code> says to give each
+client its own token, and the README's demo uses two HTTP tokens.</p>
+<h3 id="what-the-linter-lets-through">What the linter lets through</h3>
+<p>The injection patterns need an instruction-shaped context, so a fact
+phrased as data passes, and so does any novel phrasing. The defences
+behind them are the read-side banner, a distiller that records
+injection-shaped tool output as a <code>security_alert</code> label
+without its text, and the E suite's poisoning probes.</p>
+<h3 id="retention-that-needs-a-caller">Retention that needs a
+caller</h3>
+<p>A note's TTL archives it only when <code>POST /sweep-expired</code>
+runs. No timer in <code>src/start.ts</code> calls it, and no read checks
+<code>expires_at</code> (<code>src/store.ts:3333-3352</code>,
+<code>src/api.ts:787-792</code>). A note past its deadline stays in
+search until something calls the route.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — awarded.</strong> The
+namespace is a stored key filtered on list, keyword, semantic,
+session-start and file-context reads. With resolution configured it
+comes from the server and fails closed. Without it, the model chooses,
+and an omitted namespace reads everything.</li>
+<li><strong><code>negative_eval</code> — awarded</strong> on scenarios
+A32, C06 and E04 and on <code>test/context-inject.test.ts:80-103</code>;
+see section 10.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The two logs
+covering every mutation are pruned: <code>change_log</code> after 90
+days and <code>audit.log</code> by rotation. The one never pruned
+records supersessions only.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Quarantine is
+a real waiting state that no read sees. Its approver check is the admin
+scope, which the default stdio agent holds. The approve action is one
+<code>MONOMEM_TOOLS</code> value away from that agent, and
+<code>SKILL.md</code> tells the agent to use it.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No note
+carries a status. A held write is a row in another table, rejection
+deletes it, and distrust is a policy evaluated per read.
+<code>confidence</code> and <code>imported_unverified</code> filter no
+read.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>sync_deleted</code> is keyed on a note's origin id, a delete-sync
+marker. An archived import blocks its own re-import by source location,
+keyed on a record. A deleted value written again is accepted.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Every time
+column is record time.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>npm test</code> runs 114 <code>node:test</code> files from
+<code>dist/</code>. CI runs build, test and the benchmark on Ubuntu,
+Windows and macOS with Node 22.16.0, 22 and 24, plus
+<code>npm audit</code> (<code>.github/workflows/ci.yml</code>). I ran
+none of it.</p>
+<p>The test I would copy first is
+<code>test/trust-gate-guard.test.ts</code>. It lists every raw note read
+outside <code>store.ts</code> by file, each with a
+<code>// gate-ok:</code> reason, and fails when a read appears that
+nobody classified. Its header names the four routes the 1.4.0 review
+found bypassing the distrust gate.</p>
+<p><strong>The provenance benchmark</strong>
+(<code>monomem bench</code>) is 123 JSON scenarios in five suites: stale
+memory (32), contradiction recovery (31), permission isolation (27),
+provenance retention (19) and memory poisoning (14). It runs against a
+throwaway store through the real REST API with scoped tokens, no model
+and seeded unique words, and exits 1 on any failure. The engine's checks
+are <code>top</code>, <code>has</code>, <code>lacks</code>,
+<code>no_text</code>, <code>hit_count</code>, <code>fresh_answer</code>
+and field checks (<code>src/bench/engine.ts:425-530</code>).
+<code>bench/scenarios/known-gaps.json</code> lists six gaps, all marked
+fixed.</p>
+<p><strong><code>negative_eval</code> rests on the scenarios that pair
+an exclusion with a control in the same result.</strong> A32 searches a
+query matching both superseded notes' titles and asserts the replacement
+is first and neither old note appears. C06 lists as tenant B and asserts
+B's own note is present and tenant A's canary absent. E04 asserts the
+trusted note is first and the distrusted writer's note absent. The unit
+test <code>test/context-inject.test.ts:80-103</code> asserts the
+session-start context contains the proj-a summary and not the proj-b
+observation. Not every exclusion has that shape. A02 and C05 assert a
+hit count of 0, with C05's control in a separate search, so they would
+pass against a search that returns nothing.</p>
+<p><strong>Retrieval quality.</strong>
+<code>monomem bench --longmemeval</code> and <code>--locomo</code> load
+the public datasets into throwaway stores and score whether the gold
+session or turn comes back, with no model and no judge.
+<code>docs/BENCHMARK.md</code> reports one run from 31 October 2026:
+LongMemEval-S (cleaned), 470 questions with the 30 abstentions left out,
+at R@5 95.1 for keyword, 95.3 for <code>state_relevant</code> and 96.8
+for hybrid. LoCoMo session-level keyword search scores R@5 89.1.</p>
+<p>The per-question result files are not committed. The
+<code>state_relevant</code> per-type table recomputes its own aggregate:
+470 questions, R@5 95.30 and R@10 97.44 from the six rows, against 95.3
+and 97.4 stated. The keyword and hybrid rows cannot be checked. The
+document compares these with Table 9 of the LongMemEval paper (<a
+href="https://arxiv.org/abs/2410.10813">arXiv:2410.10813</a>) and says
+the settings differ (-M against -S, user turns only). It calls -S easy
+for retrieval.</p>
+<p><code>evals/cross-device-tasks.json</code> is 10 tasks over 10 notes.
+The README calls it a regression gate, not evidence. No paper describes
+Monomem.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Stamp the writer from the connection and ignore the
+body.</strong> A <code>written_by</code> the client can set is a claim;
+one the server sets from a token is an identity a distrust rule can act
+on. Keep the client's <code>source</code> beside it, labelled as a
+claim.</li>
+<li><strong>Guard a cross-cutting filter with a test that lists its
+bypasses.</strong> Enumerate every raw read outside the store by call
+site, each with a reason, so a new route fails the suite until someone
+classifies it.</li>
+<li><strong>Fail closed at session start.</strong> When a namespace is
+configured and cannot be resolved, inject nothing. Unscoped context
+before the first prompt is the costliest place for a leak.</li>
+<li><strong>Bind a replacement code to caller, revisions and
+text.</strong> Preview writes nothing, the code works once, and any edit
+between preview and confirm fails the confirm.</li>
+<li><strong>Turn on <code>secure_delete</code> and FTS5
+<code>secure-delete</code></strong> if your delete is meant to erase,
+and say which copies it does not reach.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An admin default for the local transport.</strong> If the
+transport every installer writes carries every scope, each scope check
+on the tool surface guards nothing on a default install. Give stdio a
+write scope and keep review, delete and policy on a separate door.</li>
+<li><strong>Pruning the log you call your audit.</strong> A retention
+purge is right for a change feed and wrong for an audit trail. Keep two
+tables if you need both.</li>
+<li><strong>"One undo away" beside a hard delete.</strong> Either keep a
+deleted note restorable for a window or say plainly which verb cannot be
+undone.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who runs several coding agents on one or two
+machines and wants a shared, dependency-light store with real provenance
+plumbing. The engineering is careful and heavily tested, and the
+benchmark is a reusable artefact in its own right. It is a single
+author's project, renamed on 2 November and changing daily, so pin a
+version; <code>setup</code> does. Walk away if several people or
+untrusted agents share one store over stdio. The isolation, review and
+audit stories all assume HTTP with a scoped token per client, and the
+default install does not set that up.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often the injection patterns fire on ordinary coding notes; the
+README says there is no published false-positive rate.</li>
+<li>Whether any deployment runs <code>POST /sweep-expired</code> on a
+schedule, or whether TTLs are mostly decorative.</li>
+<li>Whether the stdio scope is meant to drop to <code>write</code> once
+HTTP tokens exist, and whether <code>SKILL.md</code>'s approve
+instruction is intended for agents.</li>
+<li>How the recall and file-context hooks behave on a store large enough
+that the O(n²) consolidation scan and the brute-force vector scan
+dominate.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>src/store.ts</code> (<code>migrate</code>,
+<code>create</code>, <code>update</code>, <code>delete</code>,
+<code>supersedeCommit</code>, <code>quarantineWrite</code>,
+<code>approveQuarantine</code>), <code>src/crypto.ts</code></li>
+<li>Write gate: <code>src/lint.ts</code>, <code>src/security.ts</code>
+(<code>scanForSecrets</code>, <code>audit</code>),
+<code>src/redact.ts</code></li>
+<li>Capture: <code>src/hook.ts</code>, <code>src/capture.ts</code>,
+<code>src/extract.ts</code>, <code>src/llm.ts</code></li>
+<li>Retrieval: <code>src/search-service.ts</code>,
+<code>src/keywords.ts</code>, <code>src/staleness.ts</code>,
+<code>src/embeddings.ts</code>, <code>src/time-parse.ts</code></li>
+<li>Context: <code>src/recall.ts</code>,
+<code>src/context-inject.ts</code>,
+<code>src/file-context.ts</code></li>
+<li>Trust and scope: <code>src/trust.ts</code>,
+<code>src/attest.ts</code>, <code>src/actor.ts</code>,
+<code>src/namespace.ts</code></li>
+<li>Replacement: <code>src/supersede.ts</code>,
+<code>src/supersede-cli.ts</code></li>
+<li>Surfaces: <code>src/mcp-server-core.ts</code>,
+<code>src/mcp-stdio.ts</code>, <code>src/mcp-http.ts</code>,
+<code>src/api.ts</code>, <code>src/cli.ts</code>,
+<code>src/setup.ts</code>, <code>src/dashboard.ts</code></li>
+<li>Background: <code>src/start.ts</code>,
+<code>src/consolidate.ts</code></li>
+<li>Tests and benchmark: <code>test/*.test.ts</code>,
+<code>src/bench/</code>, <code>bench/scenarios/</code>,
+<code>docs/BENCHMARK.md</code>,
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git</code>.</p>
+<ul>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|validfrom|event_time|occurred_at|as_of|asof' -- src</code>
+returns nothing; adding <code>created_at</code> to the pattern gives 39
+hits in <code>src/store.ts</code>.</li>
+<li><strong>No status column on notes.</strong>
+<code>git grep -n -E 'addColumn\("notes", "(status|state|verified|trust|review)' -- src</code>
+returns nothing;
+<code>git grep -c -E 'addColumn\("notes", "' -- src/store.ts</code>
+gives 23.</li>
+<li><strong>No read filters on <code>imported_unverified</code> or
+<code>confidence</code>.</strong>
+<code>git grep -n -E 'imported_unverified *(=|IS|&lt;&gt;|!=)' -- src</code>
+returns the banner text in <code>src/security.ts:85</code> and the
+benchmark adapter;
+<code>git grep -n -E 'confidence *(&gt;|&lt;|IS NOT NULL|ORDER BY)|ORDER BY[^"]*confidence' -- src</code>
+returns two range validations at <code>src/store.ts:3678</code> and
+<code>:4589</code>.</li>
+<li><strong>Nothing deletes from <code>supersede_log</code>.</strong>
+<code>git grep -n -E 'DELETE FROM supersede_log|DROP TABLE (IF EXISTS )?supersede_log' -- src</code>
+returns nothing; the same form for <code>change_log</code> gives two
+hits in <code>src/store.ts</code>.</li>
+<li><strong>The quarantine tool checks scope and no writer.</strong>
+<code>sed -n 1606,1647p src/mcp-server-core.ts | /usr/bin/grep -c -E 'written|writer|label'</code>
+gives 0; the same range has one <code>denyIfUnder</code>.</li>
+<li><strong>Archive, restore and the sweeps write no audit
+line.</strong>
+<code>sed -n 3333,3440p src/store.ts | /usr/bin/grep -c 'audit('</code>
+and
+<code>sed -n 3871,3910p src/store.ts | /usr/bin/grep -c 'audit('</code>
+both give 0.</li>
+<li><strong>No trash or undelete.</strong>
+<code>git grep -n -i -E 'deleted_notes|trash|recycle|undelete' -- src</code>
+returns nothing.</li>
+<li><strong>Nothing schedules the TTL sweep.</strong>
+<code>git grep -n -E 'sweepExpired\(' -- src</code> returns the
+definition, its call from <code>POST /sweep-expired</code>
+(<code>src/api.ts:791</code>) and nothing in
+<code>src/start.ts</code>.</li>
+<li><strong>No per-client writer label on stdio.</strong>
+<code>git grep -n -E 'MONOMEM_(WRITER|LABEL|CLIENT_LABEL)' -- src</code>
+returns nothing; <code>setProcessWriter("stdio")</code> is at
+<code>src/mcp-stdio.ts:16</code>.</li>
+<li><strong>No value-keyed rejection list.</strong>
+<code>git grep -n -i -E 'tombstone|rejected_(value|hash|text)|blocklist|denylist' -- src</code>
+returns the dropped 1.1.0-rc <code>note_tombstones</code> table and FTS5
+comments only.</li>
+<li><strong>No committed LongMemEval or LoCoMo results.</strong>
+<code>git ls-files | /usr/bin/grep -i -E 'longmem|locomo'</code> returns
+nothing.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'bibtex|@article|@misc|citation\.cff|doi\.org' -- .</code>
+returns nothing; <code>git grep -n -i arxiv -- .</code> returns the
+LongMemEval citation in <code>docs/BENCHMARK.md:304</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/calasdan-sketch/monomem/commit/292a312cce18e46884520a63826c91c919fe76f8"><code class="commit-id" title="292a312cce18e46884520a63826c91c919fe76f8">292a312c…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: no auto-run surface, <code>package.json</code> and
+<code>package-lock.json</code> inside the seven-day cooldown, one
+build-time script (<code>prepublishOnly</code>), four caret ranges
+behind the lockfile. MIT, no rider. Nothing installed, built or run. Two
+marks, <code>scope_enforced</code> and <code>negative_eval</code>;
+<code>audit_log</code> is withheld because both general mutation logs
+are pruned, and <code>human_review</code> because the default stdio
+agent holds the approver's scope (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

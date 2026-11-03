@@ -944,6 +944,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[mem-mastero](../../systems/mem-mastero/) partitions by git origin and lets the model name the checkout.** Each project and store has its own directory of notes, and every note also carries `projectId` and `storeId`; a note whose hash does not verify under the current scope fails the whole read rather than leaking into it. The MCP server never caches that scope: every tool takes an absolute `cwd`, resolves its git origin, and serves that partition. An agent working in one repository reaches another's search, save and forget by passing the other's path, and the test for it shows the second project is resolved separately, not refused. **A per-record check guards the partition's contents; only the session can guard the choice of partition.**
 
+**[Monomem](../../systems/monomem/) resolves the namespace on the server and fails the session-start context closed.** With `spaces.json` configured, each process resolves one namespace from its working directory, writes land there, and every MCP read intersects the model's namespace with that one and its `reads_from` grants (`src/mcp-server-core.ts:319-331`). When the configuration exists and cannot be resolved, the session-start hook injects nothing rather than everything, and a test asserts both halves (`src/recall.ts:120-156`, `test/context-inject.test.ts:80-103`). Unconfigured, the model names the namespace, and a read that names none reads every one. **The safe mode is opt-in, and the default install does not opt in.**
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

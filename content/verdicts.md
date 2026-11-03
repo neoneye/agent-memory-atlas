@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 768 reports.**
+**This page covers all 769 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7022,3 +7022,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0-or-later; 29,315 lines of Python outside vendored code, 33 commits from one author since 30 September 2026, published as curated releases from a private repository whose tests are excluded; seven Kotlin tests, none on memory, not run here. No marks. Herald, the router the memory server runs behind, is outside the tree.
 - Study when: you want a small single-user memory with optional local embeddings and a supersession column you can extend into a real correction path.
 - Do not copy when: the agent reads untrusted content, a corrected fact must stay corrected, or a person must approve what becomes a standing instruction.
+
+### [`monomem`](../systems/monomem/)
+- Best idea: **stamp the writer from the connection and gate every read on it.** `written_by` comes from the authenticated token and the client's claim is ignored; an admin's per-namespace distrust list then hides that writer's notes from search, list, the session-start context, the change feed and tasks, through one predicate that a test protects by listing every raw read site.
+- Second idea: a replacement in two steps, a preview that writes nothing and a one-time code bound to the caller, the note revisions and the replacement text, with the retired note archived rather than deleted and an undo by id that is itself logged.
+- Biggest risk: **the local default is admin.** `setup` wires every client to stdio, which builds its tools with the admin scope, so the agent holds a hard delete that takes the note's history, and under `MONOMEM_TOOLS=all` the quarantine approval that `SKILL.md` tells it to use.
+- Second risk: both logs that cover every mutation are pruned, the change log after 90 days and `audit.log` by rotation; and without `spaces.json` a read that names no namespace reads them all.
+- Most reusable component: `src/trust.ts` with `test/trust-gate-guard.test.ts` — one distrust predicate in JavaScript and SQL, and a test that fails on any read nobody classified.
+- Maturity impression: MIT; 34,106 lines of TypeScript, 117 commits from one author since 24 October 2026, the first importing OneMemory 1.2.1, renamed Monomem on 2 November; 114 test files and 123 benchmark scenarios in a three-OS CI matrix, not run here. Two marks, `scope_enforced` and `negative_eval`. The LongMemEval figures are documented without committed result files.
+- Study when: several coding agents on one machine share one store and you need to know who wrote each note and to replace one without losing it.
+- Do not copy when: an agent must not be able to delete or approve what it wrote, or the audit trail must outlive 90 days.

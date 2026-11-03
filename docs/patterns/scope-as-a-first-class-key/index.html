@@ -1561,6 +1561,20 @@ another's search, save and forget by passing the other's path, and the
 test for it shows the second project is resolved separately, not
 refused. <strong>A per-record check guards the partition's contents;
 only the session can guard the choice of partition.</strong></p>
+<p><strong><a href="../../systems/monomem/">Monomem</a> resolves the
+namespace on the server and fails the session-start context
+closed.</strong> With <code>spaces.json</code> configured, each process
+resolves one namespace from its working directory, writes land there,
+and every MCP read intersects the model's namespace with that one and
+its <code>reads_from</code> grants
+(<code>src/mcp-server-core.ts:319-331</code>). When the configuration
+exists and cannot be resolved, the session-start hook injects nothing
+rather than everything, and a test asserts both halves
+(<code>src/recall.ts:120-156</code>,
+<code>test/context-inject.test.ts:80-103</code>). Unconfigured, the
+model names the namespace, and a read that names none reads every one.
+<strong>The safe mode is opt-in, and the default install does not opt
+in.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

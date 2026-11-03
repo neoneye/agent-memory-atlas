@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 768 reports.</strong></p>
+<p><strong>This page covers all 769 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32000,6 +32000,44 @@ correction path.</li>
 <li>Do not copy when: the agent reads untrusted content, a corrected
 fact must stay corrected, or a person must approve what becomes a
 standing instruction.</li>
+</ul>
+<h3 id="monomem"><a
+href="../systems/monomem/"><code>monomem</code></a></h3>
+<ul>
+<li>Best idea: <strong>stamp the writer from the connection and gate
+every read on it.</strong> <code>written_by</code> comes from the
+authenticated token and the client's claim is ignored; an admin's
+per-namespace distrust list then hides that writer's notes from search,
+list, the session-start context, the change feed and tasks, through one
+predicate that a test protects by listing every raw read site.</li>
+<li>Second idea: a replacement in two steps, a preview that writes
+nothing and a one-time code bound to the caller, the note revisions and
+the replacement text, with the retired note archived rather than deleted
+and an undo by id that is itself logged.</li>
+<li>Biggest risk: <strong>the local default is admin.</strong>
+<code>setup</code> wires every client to stdio, which builds its tools
+with the admin scope, so the agent holds a hard delete that takes the
+note's history, and under <code>MONOMEM_TOOLS=all</code> the quarantine
+approval that <code>SKILL.md</code> tells it to use.</li>
+<li>Second risk: both logs that cover every mutation are pruned, the
+change log after 90 days and <code>audit.log</code> by rotation; and
+without <code>spaces.json</code> a read that names no namespace reads
+them all.</li>
+<li>Most reusable component: <code>src/trust.ts</code> with
+<code>test/trust-gate-guard.test.ts</code> — one distrust predicate in
+JavaScript and SQL, and a test that fails on any read nobody
+classified.</li>
+<li>Maturity impression: MIT; 34,106 lines of TypeScript, 117 commits
+from one author since 24 October 2026, the first importing OneMemory
+1.2.1, renamed Monomem on 2 November; 114 test files and 123 benchmark
+scenarios in a three-OS CI matrix, not run here. Two marks,
+<code>scope_enforced</code> and <code>negative_eval</code>. The
+LongMemEval figures are documented without committed result files.</li>
+<li>Study when: several coding agents on one machine share one store and
+you need to know who wrote each note and to replace one without losing
+it.</li>
+<li>Do not copy when: an agent must not be able to delete or approve
+what it wrote, or the audit trail must outlive 90 days.</li>
 </ul>
         </article>
       </div>

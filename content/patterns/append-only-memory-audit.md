@@ -542,6 +542,8 @@ report withholds `audit_log` on that ground.
 
 **[Apache Maka](../../systems/maka/) logs one of its three stores in full.** The personal assistant's index network inserts a `commits` row carrying the document key, the full new text, the cited refs and the revision inside the same transaction as each `MemoryIndexWrite` or `MemoryIndexEdit`, and no statement in the tree updates or deletes one (`packages/runtime-host/src/assistant/memory-network/corpus.ts:478-511`). The fact store beside it keeps an idempotency receipt per operation with outcomes and no content, and its correction verbs have no production caller.
 
+**[Monomem](../../systems/monomem/) keeps three mutation logs, and none is both complete and kept.** `change_log` is written by triggers inside every writing transaction, so no path skips it, and a retention purge deletes its rows after 90 days (`src/store.ts:2309-2343`, `:5589-5600`). `audit.log` gets a line from every create, update, delete, supersede and quarantine decision, rotates past 5 MB and removes its sixth file (`src/security.ts:507-575`). `supersede_log` is never deleted from and records only replacements and their undos. **A change feed and an audit trail want different retention, and one table cannot serve both.**
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.
