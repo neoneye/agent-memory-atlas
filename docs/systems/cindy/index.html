@@ -109,14 +109,14 @@ Markdown shards, an injected index and FTS5 search.</p>
               <strong>makecindy/cindy</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/makecindy/cindy/commit/82d44ec3eedb923e268ae963114a09849ee62655" title="82d44ec3eedb923e268ae963114a09849ee62655">
+            <a class="meta-pill revision-pill" href="https://github.com/makecindy/cindy/commit/e1bed8973a72a7555405fccc297ecf832851a05e" title="e1bed8973a72a7555405fccc297ecf832851a05e">
               <span>Analyzed revision</span>
-              <code>82d44ec3…</code>
+              <code>e1bed897…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-10-26</strong>
+              <strong>2026-11-03</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/makecindy--cindy" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -129,17 +129,17 @@ Markdown shards, an injected index and FTS5 search.</p>
 LICENSE is the canonical text and NOTICE names XD Inc., both read in
 full, no rider; contributions carry a DCO sign-off</strong></div>
             <div class="meta-pill fact-pill"><span>Size</span><strong>about
-1,908,000 lines of TypeScript outside tests; the memory core is 2,933
-lines in packages/maker-core/src/memory, the cindy_memory MCP server
-833, the teammate memory service, nightly learning and history search
-1,697, and an unwired per-reply review and working-memory ledger
+2,078,000 lines of TypeScript outside test files; the memory core is
+2,933 lines in packages/maker-core/src/memory, the cindy_memory MCP
+server 838, the teammate memory service, nightly learning and history
+search 1,697, and an unwired per-reply review and working-memory ledger
 1,394</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>10,286
-commits on main, 24 July 2026 (initial open-source release) – 26 October
-2026; 166 contributor entries in the GitHub API, anonymous
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>12,758
+commits on main, 24 July 2026 (initial open-source release) – 2 November
+2026; 188 contributor entries in the GitHub API, anonymous
 included</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>5,703
-test files in the tree; 157 cases in 19 memory, nightly-learning and
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>5,867
+test files in the tree; 177 cases in 21 memory, nightly-learning and
 history-search test files; maker-core and lizi-mcps are required unit
 workspaces</strong></div>
           </div>
@@ -233,7 +233,7 @@ facts, git history or task state
 summary under it, <code>memory_search</code> can find it, and
 <code>rebuildIndex</code> leaves it out of <code>MEMORY.md</code>, so it
 never reaches a prompt unasked (<code>storage.ts:533-545</code>,
-<code>packages/maker-core/src/agents/pi/index.ts:3836-3855</code>).</p>
+<code>packages/maker-core/src/agents/pi/index.ts:3841-3860</code>).</p>
 <p>A memory changes in three ways and dies in one.
 <code>mode: 'update'</code> replaces the body and keeps the old title or
 description if the new ones are empty; <code>append</code> concatenates;
@@ -358,11 +358,11 @@ results fill the limit
 <p><strong>Context assembly.</strong> Claude Code and Codex resolve the
 scope key at session start, open the store, and inject the static rules
 plus a snapshot of <code>MEMORY.md</code>
-(<code>packages/maker-core/src/agents/claude-code/index.ts:1792-1803</code>,
-<code>packages/maker-core/src/agents/codex/index.ts:3764-3775</code>). A
+(<code>packages/maker-core/src/agents/claude-code/index.ts:1802-1813</code>,
+<code>packages/maker-core/src/agents/codex/index.ts:3650-3661</code>). A
 teammate's runtime builds the same snapshot from its <code>bot:</code>
 scope and omits the rules
-(<code>apps/desktop/src/main/maker-ipc/botProfileRuntime.ts:581-597</code>).
+(<code>apps/desktop/src/main/maker-ipc/botProfileRuntime.ts:583-599</code>).
 The snapshot is taken once; a write mid-session is visible through the
 tools and not in the injected index until the next session.</p>
 <p><strong>Correction and forgetting.</strong>
@@ -378,7 +378,7 @@ store
 (<code>apps/desktop/src/renderer/components/settings/MemorySection.tsx:211-230</code>).</p>
 <p><strong>Nightly learning.</strong> <code>runNightlyLearning</code> is
 called only by the routine service
-(<code>apps/desktop/src/main/routines/service.ts:169</code>), on a cron
+(<code>apps/desktop/src/main/routines/service.ts:198</code>), on a cron
 of <code>30 3 * * *</code> by default
 (<code>apps/desktop/src/main/bot-autonomy/nightlyLearningRoutine.ts:30-46</code>).
 <code>runLocked</code> reads up to 60,000 characters of owner turns,
@@ -403,7 +403,7 @@ readers <code>readWorkingMemoryNoteForSession</code> and
 optional <code>readWorkingMemoryNote</code> and
 <code>peekWorkingMemoryRefresh</code> dependencies are never supplied.
 Its deletion pruner is wired
-(<code>apps/desktop/src/main/maker-ipc/register.ts:11327-11328</code>).</p>
+(<code>apps/desktop/src/main/maker-ipc/register.ts:11912-11913</code>).</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>The record is <code>MemoryRecord</code>: filename, slug, frontmatter
 and body, plus the file's byte size (<code>types.ts:60-71</code>).
@@ -490,7 +490,20 @@ For an ordinary session the caller scope is <code>unscoped</code> and
 the query searches all history in the account, across every working
 directory. The host can also widen a teammate's main task to account
 history for the owner's own turns
-(<code>apps/desktop/src/main/mcp-integrations/mcp-providers.ts:570-588</code>).</p>
+(<code>apps/desktop/src/main/mcp-integrations/mcp-providers.ts:725-743</code>).</p>
+<p>A task a plugin created reaches all of this as an ordinary task does.
+The account-data gate wrapped around <code>list_tools</code>,
+<code>call_tool</code> and <code>session_search</code> refuses only a
+caller with no session row, and classifies every other task by its
+source and teammate link
+(<code>apps/desktop/src/main/mcp-integrations/helperSurface.ts:21-42</code>,
+<code>cindy_memoryMcpServer.ts:67</code>, <code>:115</code>). Until 29
+October 2026 the gate also refused a plugin-owned task, and a plugin
+task whose running input had not come from the user. Commit <a
+href="https://github.com/makecindy/cindy/commit/72c6890c18a16daa1a2e29ec70a2a661413b4299"><code class="commit-id" title="72c6890c18a16daa1a2e29ec70a2a661413b4299">72c6890c…</code></a>
+removed both checks: tools depend on the task's account and role, not on
+who created it. A plugin-started task reads and writes its workdir's
+memory and searches account history.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Most memories are written by the model in the turn, through tools, on
 its own judgement guided by the injected rules. A user message starting
@@ -545,7 +558,12 @@ receives it as an SDK server per query; Codex reaches it through an HTTP
 bridge whose tool calls resolve the thread's context at call time; a Pi
 teammate gets a typed <code>bot_memory</code> tool that routes to the
 same <code>call_tool</code>
-(<code>packages/maker-core/src/agents/pi/cindy-bridge-source.ts:3504-3580</code>).</p>
+(<code>packages/maker-core/src/agents/pi/cindy-bridge-source.ts:3921-4007</code>).
+The injected rules spell out the <code>{name, args}</code> envelope for
+<code>call_tool</code>, and a schema failure returns the top-level keys
+it received beside the schema, so a model that nested or flattened the
+envelope can see which
+(<code>packages/lizi-mcps/src/cindy_memoryToolRegistry.ts:130-145</code>).</p>
 <p>Turning Maker Memory on switches each harness's native auto-memory
 off, and the prompt tells the model to ignore instructions to write
 memory through other channels (<code>manager.ts:443-493</code>).
@@ -713,7 +731,8 @@ belongs with this subsystem; this reading did not trace it in full
 <li><strong>History search:</strong>
 <code>apps/desktop/src/main/maker-host/session-search.ts</code>,
 <code>apps/desktop/src/main/localDb/botHistoryScope.ts</code>,
-<code>apps/desktop/src/main/mcp-integrations/mcp-providers.ts</code>.</li>
+<code>apps/desktop/src/main/mcp-integrations/mcp-providers.ts</code>,
+<code>apps/desktop/src/main/mcp-integrations/helperSurface.ts</code>.</li>
 <li><strong>Unwired:</strong>
 <code>apps/desktop/src/main/maker-ipc/botLearningReview.ts</code>,
 <code>botWorkingMemory.ts</code>,
@@ -730,17 +749,21 @@ belongs with this subsystem; this reading did not trace it in full
 </ul>
 <h3 id="recorded-searches">Recorded searches</h3>
 <p>Checked against the checkout at the pinned revision, from the tree
-root, with <code>git grep</code>.</p>
+root, with Apple Git 2.39 <code>git grep</code>. Its <code>-E</code> has
+no <code>\b</code>, so word boundaries use <code>-w</code>.</p>
 <ul>
 <li><code>git grep -n -i -E 'tombstone|blocklist|denylist|rejected_?value|forget_?list' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory apps/desktop/src/main/maker-ipc ':!*.test.*'</code>
 — no memory hit; the matches are message, outbox, queue and cloud-sync
 tombstones keyed on records or files.</li>
-<li><code>git grep -n -E '\bdeclined\b' -- 'apps/desktop/src/main/**' ':!*.test.*'</code>
+<li><code>git grep -n -E '\.declined' -- apps/desktop/src/main ':!*.test.*' ':!**/__tests__/**'</code>
 — the declined skill-candidate titles are written at
 <code>botNightlyLearning.ts:646</code> and read at <code>:405</code> and
-<code>:557</code>, the nightly observe filter; no memory or skill writer
-outside nightly learning reads them.</li>
-<li><code>git grep -n -E '\b(valid_?from|valid_?to|valid_?until|validFrom|validTo|validUntil|effectiveAt|effective_at|expiresAt|expires_at)\b' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory apps/desktop/src/main/maker-ipc/botNightlyLearning.ts apps/desktop/src/main/maker-ipc/botNightlyLearningState.ts apps/desktop/src/main/maker-ipc/botMemoryService.ts apps/desktop/src/shared/botMemory.ts</code>
+<code>:553</code>, the nightly observe filter (applied at
+<code>:557</code>), and persisted by
+<code>botNightlyLearningState.ts:101</code> and <code>:158</code>; the
+one other hit is a log event name in <code>localDb/index.ts</code>. No
+memory or skill writer outside nightly learning reads them.</li>
+<li><code>git grep -n -w -E '(valid_?from|valid_?to|valid_?until|validFrom|validTo|validUntil|effectiveAt|effective_at|expiresAt|expires_at)' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory apps/desktop/src/main/maker-ipc/botNightlyLearning.ts apps/desktop/src/main/maker-ipc/botNightlyLearningState.ts apps/desktop/src/main/maker-ipc/botMemoryService.ts apps/desktop/src/shared/botMemory.ts</code>
 — only the scope-resolver cache expiry at
 <code>scope-resolver.ts:105-151</code>.</li>
 <li><code>git grep -n -E 'status|verified|candidate|confidence' -- packages/maker-core/src/memory/types.ts packages/maker-core/src/memory/storage.ts packages/maker-core/src/memory/fts.ts</code>
@@ -763,20 +786,43 @@ outside nightly learning reads them.</li>
 <li><code>git grep -n -E 'readBotWorkingMemory|working-memory\.json|WORKING_MEMORY_FILE' -- . ':!*.test.*' ':!**/__tests__/**'</code>
 — read only by <code>botLearningReview.ts:140</code>, and named as
 legacy in
-<code>docs/product-rules/cindy-bots-runtime.md:258</code>.</li>
+<code>docs/product-rules/cindy-bots-runtime.md:277</code>.</li>
 <li><code>git grep -n -E 'searchSessions' -- ':!*.test.*'</code> — one
 host implementation, <code>searchSessionsWithBotScope</code>, wired at
-<code>mcp-providers.ts:570-588</code>.</li>
+<code>mcp-providers.ts:725-743</code>.</li>
+<li><code>git grep -n -E "=== 'restricted'|return 'restricted'" -- apps/desktop/src/main/mcp-integrations ':!*.test.*'</code>
+— <code>resolveHelperSurface</code> returns it only for a missing
+session row (<code>helperSurface.ts:36</code>); the other two producers,
+<code>mcp-providers.ts:959</code> and <code>:961</code>, fire on an
+account switch. Nothing refuses a plugin-created task.</li>
 <li><code>git grep -n -i -E 'secret|redact|sanitiz|inject' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory ':!*.test.*'</code>
 — no content filter on the write path.</li>
 <li><code>git grep -l -E 'embedding' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory apps/desktop/src/main/maker-ipc/botNightlyLearning.ts</code>
 — no match; the memory read path has no vector arm.</li>
+<li><code>git grep -l -i -E 'benchmark|recall@|precision@|ndcg|longmemeval|locomo' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory packages/lizi-mcps/src/__tests__ apps/desktop/src/main/maker-ipc/__tests__ apps/desktop/src/main/maker-host/__tests__</code>
+— no match; no retrieval-quality test or benchmark.</li>
 <li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|CITATION|doi\.org' -- README.md README.zh-CN.md docs/ ':!docs/legal/**'</code>
 — no paper; the hits are unrelated uses of "elicitation" and citation
 stripping. No <code>CITATION.cff</code>.</li>
 <li><code>ls .gitmodules</code> — absent.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/makecindy/cindy/commit/e1bed8973a72a7555405fccc297ecf832851a05e"><code class="commit-id" title="e1bed8973a72a7555405fccc297ecf832851a05e">e1bed897…</code></a>
+— 2,472 commits on; the memory engine, MCP tools, nightly learning,
+teammate service and history search are unchanged, and the per-reply
+review and working-memory ledger have no caller. No mark moved. One
+context change, in <a href="#6-retrieval-mechanics">§6</a>: since 29
+October plugin-created tasks pass the account-data gate, widening who
+reaches memory and <code>session_search</code>. Line anchors in nine
+changed files moved. Two recorded searches used <code>\b</code>, which
+Apple Git's <code>-E</code> lacks, and returned nothing at either pin;
+rewritten, the claims hold. The published 1,908,000 lines and 157 cases
+in 19 files did not reproduce; by file pattern the old pin gives
+1,976,668 lines and 177 cases in 21 files. Screened: the same two
+auto-run surfaces, LFS smudge disabled at clone; 4 build-time exec
+points; 83 FRESH, shallow-clone inflated; 42 unpinned. Nothing installed
+or run.</p>
 <p><strong>2026-10-26</strong> — <a
 href="https://github.com/makecindy/cindy/commit/82d44ec3eedb923e268ae963114a09849ee62655"><code class="commit-id" title="82d44ec3eedb923e268ae963114a09849ee62655">82d44ec3…</code></a>
 — first reading, at the head of <code>main</code>, from a shallow clone

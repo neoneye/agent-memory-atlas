@@ -7,13 +7,13 @@ page_kind: system
 source_name: "makecindy/cindy"
 source_url: https://github.com/makecindy/cindy
 archive_name: "makecindy--cindy"
-revision: 82d44ec3eedb923e268ae963114a09849ee62655
-revision_url: https://github.com/makecindy/cindy/commit/82d44ec3eedb923e268ae963114a09849ee62655
-analyzed_at: 2026-10-26
+revision: e1bed8973a72a7555405fccc297ecf832851a05e
+revision_url: https://github.com/makecindy/cindy/commit/e1bed8973a72a7555405fccc297ecf832851a05e
+analyzed_at: 2026-11-03
 licence: "Apache-2.0; LICENSE is the canonical text and NOTICE names XD Inc., both read in full, no rider; contributions carry a DCO sign-off"
-size: "about 1,908,000 lines of TypeScript outside tests; the memory core is 2,933 lines in packages/maker-core/src/memory, the cindy_memory MCP server 833, the teammate memory service, nightly learning and history search 1,697, and an unwired per-reply review and working-memory ledger 1,394"
-activity: "10,286 commits on main, 24 July 2026 (initial open-source release) – 26 October 2026; 166 contributor entries in the GitHub API, anonymous included"
-tests: "5,703 test files in the tree; 157 cases in 19 memory, nightly-learning and history-search test files; maker-core and lizi-mcps are required unit workspaces"
+size: "about 2,078,000 lines of TypeScript outside test files; the memory core is 2,933 lines in packages/maker-core/src/memory, the cindy_memory MCP server 838, the teammate memory service, nightly learning and history search 1,697, and an unwired per-reply review and working-memory ledger 1,394"
+activity: "12,758 commits on main, 24 July 2026 (initial open-source release) – 2 November 2026; 188 contributor entries in the GitHub API, anonymous included"
+tests: "5,867 test files in the tree; 177 cases in 21 memory, nightly-learning and history-search test files; maker-core and lizi-mcps are required unit workspaces"
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "a deleted teammate memory must not come back from the next session's index or from memory_read, with a kept memory asserted present in the same store | packages/lizi-mcps/src/__tests__/botMemoryChain.test.ts:408-464, :300-329 | real MakerMemoryManager, better-sqlite3 and tmp directories behind a real cindy_memory MCP server; after deleting delete-me, the list must equal ['keep-me'], the index must not contain the deleted title and must contain the kept one, and memory_read on the deleted filename must return NOT_FOUND; a second case writes one memory per teammate through MCP and asserts each teammate's list equals exactly its own slug | memory_search is not asserted after the delete; the boundary cases cover teammate scopes and not two workdirs; the session_search Bot predicate is tested only as SQL text against a mocked client"
@@ -98,7 +98,7 @@ and no code facts, git history or task state
 (`packages/maker-core/src/memory/system-prompt.md`). `digest` is the host's own
 type: Pi writes a compaction summary under it, `memory_search` can find it, and
 `rebuildIndex` leaves it out of `MEMORY.md`, so it never reaches a prompt
-unasked (`storage.ts:533-545`, `packages/maker-core/src/agents/pi/index.ts:3836-3855`).
+unasked (`storage.ts:533-545`, `packages/maker-core/src/agents/pi/index.ts:3841-3860`).
 
 A memory changes in three ways and dies in one. `mode: 'update'` replaces the
 body and keeps the old title or description if the new ones are empty;
@@ -213,10 +213,10 @@ filename, rejects `..`, `/` and `\`, and requires the `<type>_<slug>.md` shape
 
 **Context assembly.** Claude Code and Codex resolve the scope key at session
 start, open the store, and inject the static rules plus a snapshot of
-`MEMORY.md` (`packages/maker-core/src/agents/claude-code/index.ts:1792-1803`,
-`packages/maker-core/src/agents/codex/index.ts:3764-3775`). A teammate's
+`MEMORY.md` (`packages/maker-core/src/agents/claude-code/index.ts:1802-1813`,
+`packages/maker-core/src/agents/codex/index.ts:3650-3661`). A teammate's
 runtime builds the same snapshot from its `bot:` scope and omits the rules
-(`apps/desktop/src/main/maker-ipc/botProfileRuntime.ts:581-597`). The snapshot
+(`apps/desktop/src/main/maker-ipc/botProfileRuntime.ts:583-599`). The snapshot
 is taken once; a write mid-session is visible through the tools and not in the
 injected index until the next session.
 
@@ -230,7 +230,7 @@ memory has no per-item UI: settings offers a reset of every store
 (`apps/desktop/src/renderer/components/settings/MemorySection.tsx:211-230`).
 
 **Nightly learning.** `runNightlyLearning` is called only by the routine
-service (`apps/desktop/src/main/routines/service.ts:169`), on a cron of
+service (`apps/desktop/src/main/routines/service.ts:198`), on a cron of
 `30 3 * * *` by default
 (`apps/desktop/src/main/bot-autonomy/nightlyLearningRoutine.ts:30-46`).
 `runLocked` reads up to 60,000 characters of owner turns, sends the teammate's
@@ -252,7 +252,7 @@ in that review; its readers `readWorkingMemoryNoteForSession` and
 `createWorkingMemoryRefreshRegistry` have no caller, and the optional
 `readWorkingMemoryNote` and `peekWorkingMemoryRefresh` dependencies are never
 supplied. Its deletion pruner is wired
-(`apps/desktop/src/main/maker-ipc/register.ts:11327-11328`).
+(`apps/desktop/src/main/maker-ipc/register.ts:11912-11913`).
 
 ## 5. Memory Data Model
 
@@ -315,7 +315,20 @@ model-supplied `sessionId` only narrows inside that set
 For an ordinary session the caller scope is `unscoped` and the query searches
 all history in the account, across every working directory. The host can also
 widen a teammate's main task to account history for the owner's own turns
-(`apps/desktop/src/main/mcp-integrations/mcp-providers.ts:570-588`).
+(`apps/desktop/src/main/mcp-integrations/mcp-providers.ts:725-743`).
+
+A task a plugin created reaches all of this as an ordinary task does. The
+account-data gate wrapped around `list_tools`, `call_tool` and
+`session_search` refuses only a caller with no session row, and classifies
+every other task by its source and teammate link
+(`apps/desktop/src/main/mcp-integrations/helperSurface.ts:21-42`,
+`cindy_memoryMcpServer.ts:67`, `:115`). Until 29 October 2026 the gate also
+refused a plugin-owned task, and a plugin task whose running input had not
+come from the user. Commit
+[`72c6890c18a16daa1a2e29ec70a2a661413b4299`](https://github.com/makecindy/cindy/commit/72c6890c18a16daa1a2e29ec70a2a661413b4299)
+removed both checks: tools depend on the task's account and role, not on who
+created it. A plugin-started task reads and writes its workdir's memory and
+searches account history.
 
 ## 7. Write Mechanics
 
@@ -370,7 +383,11 @@ registers `memory_list`, `memory_read`, `memory_search`, `memory_write`,
 per query; Codex reaches it through an HTTP bridge whose tool calls resolve the
 thread's context at call time; a Pi teammate gets a typed `bot_memory` tool
 that routes to the same `call_tool`
-(`packages/maker-core/src/agents/pi/cindy-bridge-source.ts:3504-3580`).
+(`packages/maker-core/src/agents/pi/cindy-bridge-source.ts:3921-4007`).
+The injected rules spell out the `{name, args}` envelope for `call_tool`, and
+a schema failure returns the top-level keys it received beside the schema, so
+a model that nested or flattened the envelope can see which
+(`packages/lizi-mcps/src/cindy_memoryToolRegistry.ts:130-145`).
 
 Turning Maker Memory on switches each harness's native auto-memory off, and the
 prompt tells the model to ignore instructions to write memory through other
@@ -523,7 +540,8 @@ whose checks are the strictest in this repository's memory path and which covers
   `docs/product-rules/bot-routines.md`.
 - **History search:** `apps/desktop/src/main/maker-host/session-search.ts`,
   `apps/desktop/src/main/localDb/botHistoryScope.ts`,
-  `apps/desktop/src/main/mcp-integrations/mcp-providers.ts`.
+  `apps/desktop/src/main/mcp-integrations/mcp-providers.ts`,
+  `apps/desktop/src/main/mcp-integrations/helperSurface.ts`.
 - **Unwired:** `apps/desktop/src/main/maker-ipc/botLearningReview.ts`,
   `botWorkingMemory.ts`, `docs/product-rules/cindy-bots-runtime.md`.
 - **Cloud companions:** `apps/desktop/src/main/companion-cloud/host.ts`,
@@ -537,24 +555,28 @@ whose checks are the strictest in this repository's memory path and which covers
 ### Recorded searches
 
 Checked against the checkout at the pinned revision, from the tree root, with
-`git grep`.
+Apple Git 2.39 `git grep`. Its `-E` has no `\b`, so word boundaries use `-w`.
 
 - `git grep -n -i -E 'tombstone|blocklist|denylist|rejected_?value|forget_?list' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory apps/desktop/src/main/maker-ipc ':!*.test.*'` — no memory hit; the matches are message, outbox, queue and cloud-sync tombstones keyed on records or files.
-- `git grep -n -E '\bdeclined\b' -- 'apps/desktop/src/main/**' ':!*.test.*'` — the declined skill-candidate titles are written at `botNightlyLearning.ts:646` and read at `:405` and `:557`, the nightly observe filter; no memory or skill writer outside nightly learning reads them.
-- `git grep -n -E '\b(valid_?from|valid_?to|valid_?until|validFrom|validTo|validUntil|effectiveAt|effective_at|expiresAt|expires_at)\b' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory apps/desktop/src/main/maker-ipc/botNightlyLearning.ts apps/desktop/src/main/maker-ipc/botNightlyLearningState.ts apps/desktop/src/main/maker-ipc/botMemoryService.ts apps/desktop/src/shared/botMemory.ts` — only the scope-resolver cache expiry at `scope-resolver.ts:105-151`.
+- `git grep -n -E '\.declined' -- apps/desktop/src/main ':!*.test.*' ':!**/__tests__/**'` — the declined skill-candidate titles are written at `botNightlyLearning.ts:646` and read at `:405` and `:553`, the nightly observe filter (applied at `:557`), and persisted by `botNightlyLearningState.ts:101` and `:158`; the one other hit is a log event name in `localDb/index.ts`. No memory or skill writer outside nightly learning reads them.
+- `git grep -n -w -E '(valid_?from|valid_?to|valid_?until|validFrom|validTo|validUntil|effectiveAt|effective_at|expiresAt|expires_at)' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory apps/desktop/src/main/maker-ipc/botNightlyLearning.ts apps/desktop/src/main/maker-ipc/botNightlyLearningState.ts apps/desktop/src/main/maker-ipc/botMemoryService.ts apps/desktop/src/shared/botMemory.ts` — only the scope-resolver cache expiry at `scope-resolver.ts:105-151`.
 - `git grep -n -E 'status|verified|candidate|confidence' -- packages/maker-core/src/memory/types.ts packages/maker-core/src/memory/storage.ts packages/maker-core/src/memory/fts.ts` — no match.
 - `git grep -n -E 'evidence|messageId' -- packages/maker-core/src/memory ':!*.test.*'` — no match; shards keep no source.
 - `git grep -n -E 'appendFile|audit|_log\b|history' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory ':!*.test.*'` — one hit, the prompt's "Git history" line.
 - `git grep -n -E 'MAX_RUNS|MAX_DECLINED|keptRuns|fs.rm\(historyPath' -- apps/desktop/src/main/maker-ipc/botNightlyLearningState.ts` — runs capped at 30 with their backups removed, declined titles at 40.
 - `git grep -n -E "botLearningReview(\.js)?'" -- . ':!*.test.*' ':!**/__tests__/**'` — no match; the per-reply review has no importer.
 - `git grep -n -E 'readWorkingMemoryNote|peekWorkingMemoryRefresh|createWorkingMemoryRefreshRegistry|isWorkingMemoryFreshForSession|renderWorkingMemory' -- . ':!*.test.*' ':!**/__tests__/**'` — interface declarations and optional calls in `makerSendTransaction.ts`, `messageDeleteHandler.ts` and `sessionAgentSwitchHandler.ts`, and the definitions in `botWorkingMemory.ts`; nothing supplies or calls them.
-- `git grep -n -E 'readBotWorkingMemory|working-memory\.json|WORKING_MEMORY_FILE' -- . ':!*.test.*' ':!**/__tests__/**'` — read only by `botLearningReview.ts:140`, and named as legacy in `docs/product-rules/cindy-bots-runtime.md:258`.
-- `git grep -n -E 'searchSessions' -- ':!*.test.*'` — one host implementation, `searchSessionsWithBotScope`, wired at `mcp-providers.ts:570-588`.
+- `git grep -n -E 'readBotWorkingMemory|working-memory\.json|WORKING_MEMORY_FILE' -- . ':!*.test.*' ':!**/__tests__/**'` — read only by `botLearningReview.ts:140`, and named as legacy in `docs/product-rules/cindy-bots-runtime.md:277`.
+- `git grep -n -E 'searchSessions' -- ':!*.test.*'` — one host implementation, `searchSessionsWithBotScope`, wired at `mcp-providers.ts:725-743`.
+- `git grep -n -E "=== 'restricted'|return 'restricted'" -- apps/desktop/src/main/mcp-integrations ':!*.test.*'` — `resolveHelperSurface` returns it only for a missing session row (`helperSurface.ts:36`); the other two producers, `mcp-providers.ts:959` and `:961`, fire on an account switch. Nothing refuses a plugin-created task.
 - `git grep -n -i -E 'secret|redact|sanitiz|inject' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory ':!*.test.*'` — no content filter on the write path.
 - `git grep -l -E 'embedding' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory apps/desktop/src/main/maker-ipc/botNightlyLearning.ts` — no match; the memory read path has no vector arm.
+- `git grep -l -i -E 'benchmark|recall@|precision@|ndcg|longmemeval|locomo' -- packages/maker-core/src/memory packages/lizi-mcps/src/memory packages/lizi-mcps/src/__tests__ apps/desktop/src/main/maker-ipc/__tests__ apps/desktop/src/main/maker-host/__tests__` — no match; no retrieval-quality test or benchmark.
 - `git grep -n -i -E 'arxiv|bibtex|@article|@misc|CITATION|doi\.org' -- README.md README.zh-CN.md docs/ ':!docs/legal/**'` — no paper; the hits are unrelated uses of "elicitation" and citation stripping. No `CITATION.cff`.
 - `ls .gitmodules` — absent.
 
 ## History
+
+**2026-11-03** — [`e1bed8973a72a7555405fccc297ecf832851a05e`](https://github.com/makecindy/cindy/commit/e1bed8973a72a7555405fccc297ecf832851a05e) — 2,472 commits on; the memory engine, MCP tools, nightly learning, teammate service and history search are unchanged, and the per-reply review and working-memory ledger have no caller. No mark moved. One context change, in [§6](#6-retrieval-mechanics): since 29 October plugin-created tasks pass the account-data gate, widening who reaches memory and `session_search`. Line anchors in nine changed files moved. Two recorded searches used `\b`, which Apple Git's `-E` lacks, and returned nothing at either pin; rewritten, the claims hold. The published 1,908,000 lines and 157 cases in 19 files did not reproduce; by file pattern the old pin gives 1,976,668 lines and 177 cases in 21 files. Screened: the same two auto-run surfaces, LFS smudge disabled at clone; 4 build-time exec points; 83 FRESH, shallow-clone inflated; 42 unpinned. Nothing installed or run.
 
 **2026-10-26** — [`82d44ec3eedb923e268ae963114a09849ee62655`](https://github.com/makecindy/cindy/commit/82d44ec3eedb923e268ae963114a09849ee62655) — first reading, at the head of `main`, from a shallow clone (`--depth 1`) with images, video and PDFs excluded by sparse checkout; history and dates from the GitHub API. One mark, `negative_eval`. Screened before reading: two auto-run surfaces. One is a `.gitattributes` Git LFS filter, which the machine's global LFS configuration ran at checkout to fetch five sqlite-vec binaries, never executed; the other is a DCO `prepare-commit-msg` hook, inactive with `core.hooksPath` unset. Also four build-time execution points (root `postinstall`, three `build.rs`); 73 surfaces inside the cooldown, inflated by the shallow clone; 41 unpinned surfaces; `CLAUDE.md` and `AGENTS.md` read as data. Nothing installed, built or run.
