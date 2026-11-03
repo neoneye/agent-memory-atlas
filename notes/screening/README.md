@@ -9,19 +9,19 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 764 of 765 screened at the report's current pin.**
+**Progress: 766 of 766 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
-off, and 1 report(s) have no record at all.
+off, and 0 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 363 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 334 |
-| Repositories with build-time execution (`EXEC`) | 559 |
+| Repositories with an auto-run surface (`RUNS`) | 364 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 335 |
+| Repositories with build-time execution (`EXEC`) | 560 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
-| Repositories that could not be screened | 1 |
+| Repositories that could not be screened | 0 |
 
 ## Auto-run surfaces
 
@@ -190,6 +190,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`langchain`](../../content/systems/langchain.md) | `.devcontainer/devcontainer.json`, `.mcp.json`, `.vscode/settings.json` |
 | [`leankg`](../../content/systems/leankg.md) | `.claude-plugin/` |
 | [`leteo`](../../content/systems/leteo.md) | `.claude-plugin/`, `plugin/claude-code/.claude-plugin/plugin.json`, `plugin/claude-code/.mcp.json`, `plugin/claude-code/hooks/`, `plugin/claude-code/hooks/hooks.json`, `plugin/zcode/.mcp.json`, `plugin/zcode/hooks/`, `plugin/zcode/hooks/hooks.json` |
+| [`light-mem`](../../content/systems/light-mem.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md` |
 | [`lindahaviv-second-brain`](../../content/systems/lindahaviv-second-brain.md) | `.claude/settings.json` |
 | [`linggen-memory`](../../content/systems/linggen-memory.md) | `.claude-plugin/`, `plugins/linggen/.claude-plugin/plugin.json`, `plugins/linggen/.mcp.json`, `plugins/linggen/hooks/`, `plugins/linggen/hooks/hooks.json` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
@@ -392,10 +393,4 @@ These execute without a command being typed. Read before opening the tree.
 | [`zcode`](../../content/systems/zcode.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
-
-## Not screened
-
-| System | Status | Detail |
-| --- | --- | --- |
-| `light-mem` | clone-failed | fatal: repository 'https://github.com/DevEstacion/light-mem/' not found |
 

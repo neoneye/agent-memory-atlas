@@ -466,6 +466,7 @@ page_kind: comparison
 - [`master-agent-system`](../systems/master-agent-system/)
 - [`openai-codex`](../systems/openai-codex/)
 - [`understand-anything`](../systems/understand-anything/)
+- [`llm-harness-memory`](../systems/llm-harness-memory/)
 
 ## Repos Inspected
 
@@ -1236,6 +1237,7 @@ page_kind: comparison
 - [9fpqm4vqvq-ops/agent-creator-master](https://github.com/9fpqm4vqvq-ops/agent-creator-master) at [`e1e94d17ed29c6de3514021098c742f9ea4c01c9`](https://github.com/9fpqm4vqvq-ops/agent-creator-master/commit/e1e94d17ed29c6de3514021098c742f9ea4c01c9) — read only; no auto-run or build-time surface, two agent-instruction files read as data, four dependency manifests inside the seven-day cooldown and one unpinned surface, so nothing was installed, built or run. The vault, freshness auditor and QA review were read from `agent_hub/memory.py`, `agent_hub/freshness.py` and `agent_hub/core.py` against `tests/test_v03.py` and `tests/test_v04.py`; the four packages under `vendor/` were noted and not read as the subject
 - [openai/codex](https://github.com/openai/codex) at [`0a2d5f556de6e3b2c340d7f0635a1daf4040c30a`](https://github.com/openai/codex/commit/0a2d5f556de6e3b2c340d7f0635a1daf4040c30a) — read only, from a shallow clone; one auto-run surface, ten build-time execution paths, three unpinned surfaces and every dependency file inside the seven-day cooldown. Nothing was built and nothing was run. Apache-2.0
 - [Egonex-AI/Understand-Anything](https://github.com/Egonex-AI/Understand-Anything) at [`4e6d3299017a7432da15957874992837a315c5b4`](https://github.com/Egonex-AI/Understand-Anything/commit/4e6d3299017a7432da15957874992837a315c5b4) — read only; four auto-run surfaces (the `.claude-plugin/` marketplace manifest, the plugin's own manifest under `understand-anything-plugin/`, and its `hooks/` directory, whose `hooks.json` registers a `SessionStart` and a `PostToolUse` hook), one build-time script, five unpinned manifests and nothing inside the cooldown. Nothing was built and nothing was run. MIT
+- [waldnzwrld/llm-harness-memory](https://github.com/waldnzwrld/llm-harness-memory) at [`f60469fc05379dc056359e28adfcc27f25899bd4`](https://github.com/waldnzwrld/llm-harness-memory/commit/f60469fc05379dc056359e28adfcc27f25899bd4) — read only, from a shallow clone; no auto-run, build-time or unpinned surface in the checkout and an `AGENTS.md` read as data. The hooks it installs are written by `install.sh` into the user's harness settings, and were read there. The engine, outl, was read at [`97aa72bd002b57cc22f5a67b20dbf2ad6775f920`](https://github.com/outlmd/outl/commit/97aa72bd002b57cc22f5a67b20dbf2ad6775f920), its last commit before the pin, for delete and trash semantics only. Nothing was installed, built or run, and the three test runners were not run because they need outl. MIT
 
 ## What the licences actually say
 

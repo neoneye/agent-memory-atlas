@@ -397,6 +397,8 @@ permanent."*
 
 **[Hermes Fleet Memory](../../systems/hermes-fleet-memory/) lets a near-duplicate write decide another card's lifetime.** Episodic cards expire 90 days after their last write unless pinned, and a cron cleaner archives and deletes them (`server/cleaner.py:58-111`). A write within 0.95 cosine of an existing episodic card overwrites it, and the payload's `pinned` and `expires_at` come from the new write (`client/fleet_memory.py:584`, `:649`, `:657`). Repetition therefore extends a note's life, and an unpinned repetition of a pinned note returns it to the 90-day clock. **Reinforcement should only lengthen a life; an exemption a person set belongs to the record, not to the latest write.**
 
+**[llm-harness-memory](../../systems/llm-harness-memory/) reinforces the path, not only the page, and cascades its deletion over edges it guessed.** A fetch credits the page +5 and each TOC up its first `parent::` chain +5, so an index node survives while anything reached through it is used. Every page and line loses one point on each day that has a session, so a month away costs one point, and anything at zero is deleted unprompted (`memory-index:1179-1311`). A dead TOC takes every `part-of` child, and `part-of` is also typed from words such as "parent" or "under " in an ordinary line, so the credit path and the deletion path walk different graphs.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.
@@ -407,6 +409,7 @@ permanent."*
 - Bound reinforcement and prevent one retrieval loop from self-amplifying.
 - Protect rejected-value tombstones and correction history from decay.
 - Mark stale before deleting when reversibility matters.
+- If eviction cascades through a hierarchy, walk only the edges the credit path also walks, and only edges someone authored.
 - Expose last-evaluated time and effective strength to operators.
 
 ## Tests to require

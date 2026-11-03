@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 765 reports.</strong></p>
+<p><strong>This page covers all 766 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -31889,6 +31889,42 @@ need it to stay current per commit without paying a model for every
 change.</li>
 <li>Do not copy when: the memory must hold what the code does not say,
 or a wrong summary must be correctable and stay corrected.</li>
+</ul>
+<h3 id="llm-harness-memory"><a
+href="../systems/llm-harness-memory/"><code>llm-harness-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>credit that climbs the access path.</strong> A
+fetch of a page credits it +5 and every TOC above it +5, so an index
+node lives exactly as long as something reached through it is used, and
+a daily sweep can delete anything at zero without orphaning a used
+leaf.</li>
+<li>Second idea: per-line decay keyed on stable outl block ids, in a
+ledger outside the rebuildable index, so a stale line inside a live page
+ages out alone; and prompt-time pointers that only a fetch turns into
+content and credit.</li>
+<li>Biggest risk: <strong>the deletion cascade walks guessed
+edges.</strong> A dead TOC takes every <code>part-of</code> child, and
+<code>part-of</code> is typed from a line's words, so a hub whose entry
+for a leaf says "parent" or "under " is deleted with that leaf whatever
+its own frecency.</li>
+<li>Second risk: the session journaler runs
+<code>claude -p --dangerously-skip-permissions</code> over the full
+transcript, in the project directory, with every configured MCP server;
+its constraints are prompt text.</li>
+<li>Most reusable component: <code>memory-index</code>'s
+<code>cmd_touch</code> and <code>cmd_maintain</code> — credit
+propagation, page and line decay, and reference scrubbing on
+eviction.</li>
+<li>Maturity impression: MIT; 3,631 lines of Python, Bash and TypeScript
+outside tests, 57 commits from one author since 10 August 2026, three
+shell test runners needing outl, not run here. No marks. The README
+describes tag expansion and a <code>normalize</code> command that exist
+only on an unmerged branch.</li>
+<li>Study when: you want memory that stays small without curation and
+can accept losing what goes unread for about thirty active days.</li>
+<li>Do not copy when: a deletion must be explainable or undoable,
+projects must not see each other's memory, or sessions read untrusted
+content.</li>
 </ul>
         </article>
       </div>

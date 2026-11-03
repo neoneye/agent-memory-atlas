@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Cross-harness memory on an outl
+markdown graph: hooks inject a TOC and journals, a SQLite sidecar
+searches, and daily frecency decay deletes what goes unread.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="llm-harness-memory — Agent Memory Atlas">
+    <meta property="og:description" content="Cross-harness memory on an
+outl markdown graph: hooks inject a TOC and journals, a SQLite sidecar
+searches, and daily frecency decay deletes what goes unread.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="llm-harness-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="Cross-harness memory on an
+outl markdown graph: hooks inject a TOC and journals, a SQLite sidecar
+searches, and daily frecency decay deletes what goes unread.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>llm-harness-memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "llm-harness-memory",
+      "description": "Cross-harness memory on an outl markdown graph: hooks inject a TOC and journals, a SQLite sidecar searches, and daily frecency decay deletes what goes unread.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A markdown graph that forgets what goes
+unread</p>
+          <h1>llm-harness-memory</h1>
+          <p class="document-deck">Cross-harness memory on an outl
+markdown graph: hooks inject a TOC and journals, a SQLite sidecar
+searches, and daily frecency decay deletes what goes unread.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/waldnzwrld/llm-harness-memory">
+              <span>Source</span>
+              <strong>waldnzwrld/llm-harness-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/waldnzwrld/llm-harness-memory/commit/f60469fc05379dc056359e28adfcc27f25899bd4" title="f60469fc05379dc056359e28adfcc27f25899bd4">
+              <span>Analyzed revision</span>
+              <code>f60469fc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/waldnzwrld--llm-harness-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>waldnzwrld--llm-harness-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>3,631
+lines of Python, Bash and TypeScript outside tests: 1,535 in
+memory-index, 1,737 in the hook, agent scripts and installers, 359 in
+the omp and pi adapters; a 509-line AGENTS.md protocol</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>57
+commits on champion from one author, 10 August – 2 November 2026; no
+tags</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>Three
+shell runners: ten mechanical scenarios in verify.sh, model selection in
+verify-model.sh, two live-agent scenarios in verify-agent.sh; none run
+for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>llm-harness-memory is MIT-licensed cross-session memory for three
+coding-agent harnesses, Claude Code, omp and pi, built on an <a
+href="https://github.com/outlmd/outl">outl</a> markdown graph at
+<code>~/.llm-harness-memory</code>. One shell hook receives every
+harness's lifecycle events. At session start it injects the root TOC
+page and recent journals. On each prompt it searches a standard-library
+SQLite index and injects up to three pointers. At session end it starts
+a headless agent that writes the session's durable facts into today's
+journal.</p>
+<p>What is notable is the retention model. Every page and every content
+line carries an integer frecency, seeded at 30 and capped at 60. A fetch
+credits the page +5 and each ancestor TOC +5. The first session of each
+day takes one point from everything, and anything at zero is deleted
+with no prompt. Forgetting is the default here, applied mechanically,
+and the credit that climbs the parent chain is what lets a TOC outlive
+the leaves beneath it.</p>
+<p>What is weak is the machinery that makes that deletion safe. A dead
+TOC takes its whole subtree, and the subtree is built from
+<code>part-of</code> edges guessed from a line's wording. A hub whose
+entry for a leaf says "parent" or "under " becomes that leaf's
+descendant and is deleted with it. The session journaler runs
+<code>claude -p --dangerously-skip-permissions</code> over the full
+transcript in the project directory. The README describes tag expansion
+and a <code>normalize</code> command that exist only on an unmerged
+branch. No marks.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a journal bullet or a knowledge page. It becomes durable
+by being written, and it stops being a belief only by being forgotten.
+Nothing holds a state between those two.</p>
+<ol type="1">
+<li><strong>Capture.</strong> The interactive agent appends bullets
+under the day's journal sections through outl MCP tools at each
+checkpoint. At <code>SessionEnd</code>, <code>memory-dump</code> starts
+a headless agent on the transcript that adds what the journal lacks. A
+fact it judges impactful is also merged into a knowledge leaf, and its
+journal bullet is marked <code>#in-deep [[leaf]]</code>.</li>
+<li><strong>Distillation.</strong> The five newest dated journals stay.
+An older one is pending until a headless distiller merges its clusters
+into leaves and sets <code>distilled-into::</code> and
+<code>consolidated::</code> on it. The reap then deletes every aged
+journal whose <code>consolidated::</code> holds a date, without checking
+<code>distilled-into::</code>
+(<code>memory-index:1396-1416</code>).</li>
+<li><strong>Use.</strong> A <code>PostToolUse</code> hook on
+<code>outl_page_get</code> runs <code>memory-index touch</code>. The
+page gains +5, each of its content lines +2 in the ledger, and each
+ancestor up the first <code>part-of</code> edge +5
+(<code>memory-index:1314-1352</code>). A pushed search hit credits
+matched lines +1 and never the page (<code>:594-616</code>).</li>
+<li><strong>Decay and eviction.</strong> On the first interactive
+session of a calendar day, <code>maintain</code> takes one point from
+every page and line not seen today. A line at zero is deleted with
+<code>outl block delete</code>. A page at zero is deleted with
+<code>outl page delete</code>, together with every page reachable
+through its <code>part-of</code> children, and inbound
+<code>[[links]]</code> to it are scrubbed
+(<code>:1179-1293</code>).</li>
+<li><strong>Supersession.</strong> A <code>supersedes</code> edge keeps
+its target out of graph-walk results (<code>:533</code>). A keyword hit
+still returns it.</li>
+</ol>
+<p>Decay counts active days. <code>maintain</code> runs once on a day
+that has a session and subtracts one point whatever the gap, so a month
+without sessions costs one point. The README's "effective frecency =
+<code>frecency − days_since(seen)</code>" is the lazy decay of the
+unmerged <code>performance-improvements</code> branch.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a fetch credits the page and its first parent chain; the daily sweep takes a point from everything and deletes at zero, cascading over part-of edges that include ones guessed from wording</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a fetch credits the page and its first parent chain; the daily sweep takes a point from everything and deletes at zero, cascading over part-of edges that include ones guessed from wording
+flowchart TD
+  subgraph WR[&quot;writers&quot;]
+    direction TB
+    A[&quot;interactive agent&lt;br/&gt;outl MCP appends&quot;] ~~~ D[&quot;memory-dump at&lt;br/&gt;SessionEnd: headless,&lt;br/&gt;permissions skipped,&lt;br/&gt;full transcript&quot;]
+  end
+  WR --&gt; G[&quot;outl workspace&lt;br/&gt;pages/ and journals/&lt;br/&gt;projected from op log&quot;]
+  G --&gt; I[&quot;memory-index refresh&lt;br/&gt;FTS5 chunks and&lt;br/&gt;typed link edges&quot;]
+  I --&gt; P[&quot;UserPromptSubmit&lt;br/&gt;bm25 at most -8,&lt;br/&gt;three pointers&quot;]
+  P --&gt;|&quot;agent fetches&quot;| T[&quot;PostToolUse touch&lt;br/&gt;page +5, lines +2,&lt;br/&gt;first parent chain +5&quot;]
+  T ~~~ M[&quot;first session of a day:&lt;br/&gt;maintain takes 1 from&lt;br/&gt;every page and line&quot;]
+  G -.-&gt;|&quot;daily&quot;| M
+  M --&gt; Z{&quot;reached zero?&quot;}
+  Z --&gt;|&quot;a line&quot;| B[&quot;outl block delete&lt;br/&gt;restorable from trash&quot;]
+  Z --&gt;|&quot;a page&quot;| C[&quot;add every part-of child,&lt;br/&gt;authored or guessed&lt;br/&gt;from the line&#39;s words&quot;]
+  C --&gt; X[&quot;outl page delete&lt;br/&gt;kept in the op log,&lt;br/&gt;no page restore&quot;]
+  X ~~~ J[&quot;journals beyond&lt;br/&gt;the newest five&quot;]
+  J --&gt; K[&quot;memory-consolidate&lt;br/&gt;headless distiller&quot;]
+  K --&gt;|&quot;consolidated:: set&quot;| R[&quot;reap: page delete&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three things must be installed: the outl CLI and MCP server (Homebrew
+<code>outl-beta</code>, unpinned, installed by the user), Python 3.9 or
+later, and one harness. <code>install.sh</code> copies the scripts to
+<code>~/.local/bin</code>, wires the hooks, appends a
+<code>## Persistent memory</code> section to the harness's user
+instructions and builds the index. It assumes macOS and outl at
+<code>/opt/homebrew/bin</code>, with <code>OUTL_BIN</code> as the
+override.</p>
+<p>The store is the outl workspace. <code>pages/*.md</code> and
+<code>journals/*.md</code> are rendered projections of outl's CRDT op
+log under <code>ops/</code>, and every mutation goes through the outl
+CLI or MCP tools so block ids and the log stay consistent. Beside them
+sit <code>.outl/index.sqlite</code>, which is derived and rebuilt on any
+schema change, the line ledger <code>.frecency/sections.json</code>, and
+dotfiles for the daily marker, consolidation attempts, the push cache
+and the model choice.</p>
+<p>outl was read at <a
+href="https://github.com/outlmd/outl/commit/97aa72bd002b57cc22f5a67b20dbf2ad6775f920"><code class="commit-id" title="97aa72bd002b57cc22f5a67b20dbf2ad6775f920">97aa72bd…</code></a>,
+its last commit before the pin. There a delete is a <code>Move</code> to
+a trash root, and the op <em>"stays in the log forever"</em>
+(<code>crates/outl-actions/src/page.rs:400-406</code>).
+<code>outl trash restore</code> puts a block back and refuses a page
+root (<code>crates/outl-actions/src/trash.rs</code>). So an evicted line
+can be restored by hand and an evicted page cannot with the commands
+outl ships. AGENTS.md calls eviction <em>"intentional and
+unrecoverable"</em>; <code>maintain</code>'s docstring calls it
+soft-trash. Each is right about one of the two.</p>
+<p>No service runs. The operator's cost is model runs. Every session end
+with at least eight transcript lines starts one, and a daily sweep with
+a backlog starts another. The sweep itself shells out to outl three
+times per page: two property writes and one <code>page get --json</code>
+for the line ledger. It runs detached, so <code>SessionStart</code> does
+not wait for it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Hook dispatch:</strong> <code>memory-hook:34-59</code>
+parses the event and answers <code>PreCompact</code> through
+<code>systemMessage</code>; <code>:64-138</code> push retrieval;
+<code>:143-158</code> the fetch credit; <code>:163-177</code> the
+session-end journaler; <code>:180-315</code> the
+<code>SessionStart</code> injection, consolidation and daily sweep.</li>
+<li><strong>Indexing:</strong> <code>memory-index:229-251</code>
+<code>parse_md</code>; <code>:282-309</code> <code>chunk_body</code>;
+<code>:316-365</code> edge typing and <code>links_in</code>;
+<code>:446-485</code> <code>_index_files</code>.</li>
+<li><strong>Search:</strong> <code>:552-565</code>
+<code>_keyword_hits</code>; <code>:495-537</code>
+<code>_graph_expand</code>; <code>:568-631</code>
+<code>cmd_search</code>.</li>
+<li><strong>Credit, decay and eviction:</strong> <code>:1104-1131</code>
+page and line bumps; <code>:1179-1311</code> <code>cmd_maintain</code>
+with the cascade at <code>:1258-1266</code>; <code>:1314-1366</code>
+<code>cmd_touch</code>.</li>
+<li><strong>Journals:</strong> <code>:1382-1454</code> aged-journal
+selection and the reap.</li>
+<li><strong>Headless agents:</strong> <code>memory-agent:164-197</code>
+builds each harness's command line; <code>memory-dump:52-72</code>;
+<code>memory-consolidate:79-98</code>.</li>
+<li><strong>Adapters and install:</strong>
+<code>omp/llm-harness-memory.ts</code>,
+<code>pi/llm-harness-memory.ts</code>; <code>install.sh:262-329</code>
+writes hooks and allow rules.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A page is outl markdown. Four keys are hoisted to column 0:
+<code>frecency</code>, <code>seen</code>, <code>title</code> and
+<code>icon</code> (<code>memory-index:104</code>). Everything else is a
+body bullet by design: <code>type:: knowledge</code> or
+<code>type:: moc</code>, <code>parent:: [[toc]]</code>,
+<code>project::</code>, <code>updated::</code>, <code>summary::</code>,
+and optionally <code>supersedes::</code> or <code>contradicts::</code>.
+A journal is <code>journals/YYYY-MM-DD.md</code> with five template
+sections, Focus, Key Decisions, Discoveries, Action Items and Session
+Notes, plus <code>distilled-into::</code> and
+<code>consolidated::</code> once processed.</p>
+<p>The index holds <code>pages</code> (slug, kind, path, hash, title,
+summary, updated, frecency), one <code>chunks</code> row per
+<code>## heading</code> plus a synthetic title-and-summary chunk, an
+external-content FTS5 table with Porter stemming, and <code>edges</code>
+(src, dst, type, weight) with one row per source and target
+(<code>:124-163</code>). The line ledger maps slug to outl block id to
+<code>{f, seen}</code>.</p>
+<p>Edge types come from two paths, and only one of them runs on a
+canonical page. The authored path reads <code>supersedes</code>,
+<code>contradicts</code> and <code>parent</code> from
+<code>parse_md</code>'s column-0 dictionary (<code>:361-363</code>),
+which by design holds only the four hoisted keys. So
+<code>- parent:: [[x]]</code> is typed by the fallback, which tests the
+lowercased line for substrings (<code>:316-332</code>). It matches
+<code>part-of</code> because the key's own name contains "parent". The
+same test types any line containing "parent", including "apparent", or
+"under ", "part of", "belongs to", "child of" or "subpage".</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Injected at session start.</strong> The hook exports the
+<code>index</code> page through outl, falling back to the raw file. It
+adds today's journal in full under 6,000 bytes or only its Focus subtree
+above that, the Focus subtrees of the four previous journals, and a
+notice that search is active once the graph reaches 150 nodes.</p>
+<p><strong>Pushed on each prompt.</strong> A prompt that does not start
+with <code>/</code> or <code>!</code> and keeps at least two terms after
+stopwords runs <code>memory-index search --json --credit -k 3</code>.
+Keyword hits with bm25 at or below −8.0 are kept, best per slug, and
+deduplicated per session in <code>.push-cache/&lt;session&gt;</code>.
+Each is injected as <code>slug › heading — snippet</code>, a pointer the
+agent must fetch. Graph rows are never pushed.</p>
+<p><strong>Pulled by the agent.</strong>
+<code>memory-index search</code> ORs the query's non-stopword terms as
+prefix tokens and ranks chunks by bm25 with weights 10, 4 and 1 for
+title, heading and body. A recursive CTE then walks the undirected edges
+from the hit pages, one hop below 450 pages, two from 450, three from
+1,500 at the default threshold. It keeps each reached page's nearest and
+strongest arrival (<code>:495-537</code>). Hits are listed first and
+link rows after, with no fusion. The <code>memory-recall</code>
+subagent, Sonnet with read-only outl tools, walks the graph in its own
+context and returns a conclusion and slugs.</p>
+<p>The superseded filter sits only on the walk.
+<code>_keyword_hits</code> has no predicate (<code>:552-565</code>), so
+a superseded page that matches the query comes back as a hit and can be
+pushed.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are the agent's own outl MCP calls, made at checkpoints the
+protocol names, with a <code>PreCompact</code> reminder and the
+session-end journaler as backstops. Nothing blocks the agent. A page
+written mid-session reaches the index at the next <code>refresh</code>:
+the next <code>SessionStart</code>, or the next fetch, since
+<code>touch</code> refreshes after crediting (<code>:1355-1356</code>).
+Push retrieval opens the index without refreshing it, so until then a
+new page cannot be pushed.</p>
+<p>The daily sweep rewrites the whole store. <code>maintain</code>
+writes <code>frecency</code> and <code>seen</code> to every page not
+seen today through two <code>outl page prop set</code> calls each
+(<code>:1223-1229</code>). Every page's markdown therefore changes
+daily, every hash changes, and the next refresh reindexes everything.
+The op log gains two property ops per page per active day.</p>
+<p>Deduplication and contradiction are prompt instructions. The
+journaler is told to compare against today's journal, and to merge into
+a leaf any fact that <em>"reverses or supersedes a prior durable
+decision"</em>. The same prompt says <em>"NEVER delete, rewrite, or
+reword an existing journal entry or existing leaf content"</em>
+(<code>memory-dump:65-68</code>), so a reversal is appended beside the
+decision it reverses. Nothing asks for a <code>supersedes::</code>
+edge.</p>
+<p>The distiller's prompt contradicts itself. Its opening line says
+<em>"Do NOT prune, delete, or bump the frecency of any page or
+section"</em> (<code>memory-consolidate:91</code>). Its journal task
+says to <em>"touch frecency (new leaf seeds frecency:: 30; a merge is +5
+capped 60)"</em> (<code>:84</code>). The script's header still describes
+a prune task that the script no longer gives (<code>:10-11</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>For Claude Code, <code>install.sh</code> adds five hooks to
+<code>~/.claude/settings.json</code>: <code>SessionStart</code>,
+<code>PreCompact</code>, <code>SessionEnd</code>,
+<code>UserPromptSubmit</code>, and <code>PostToolUse</code> matched to
+<code>mcp__outl__outl_page_get</code>. It allows the whole
+<code>mcp__outl</code> server, <code>Task(memory-recall)</code>,
+<code>memory-index</code> subcommands, and
+<code>outl … page delete --confirm</code> and
+<code>block delete --confirm</code> on the memory workspace
+(<code>install.sh:310-329</code>). Every outl write and delete therefore
+runs without a prompt in the main session.</p>
+<p>The omp and pi adapters translate their events into the same hook
+protocol and set <code>MEMORY_HARNESS</code>, so background agents run
+on the harness that fired them. On omp, injection and the journaler are
+main-session only, and by the README subagents receive every MCP tool
+whatever their declared tools. pi has no subagents, so recall runs in
+the main thread. All harnesses share one workspace, which is the point:
+a fact written in one is recalled in the others.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-cascade-walks-guessed-edges">The cascade walks guessed
+edges</h3>
+<p><code>_part_of_maps</code> builds <code>children_of</code> from every
+<code>part-of</code> edge, authored or guessed
+(<code>memory-index:1080-1088</code>). When a page reaches zero, the
+sweep adds that page's children, then theirs, and deletes them all
+(<code>:1258-1266</code>). The docstring's guarantee is that <em>"a page
+only reaches 0 once its entire subtree is cold"</em>, because credit
+climbs the parent chain.</p>
+<p>That holds only for edges the credit path also climbs, and two kinds
+escape it. Suppose a TOC <code>proj-alpha</code> lists
+<code>- [[alpha-notes]] — notes on the parent project</code>. That line
+types an edge from <code>proj-alpha</code> to <code>alpha-notes</code>
+as <code>part-of</code>, so <code>proj-alpha</code> becomes a child of
+<code>alpha-notes</code>. When <code>alpha-notes</code> goes unread to
+zero, the sweep deletes <code>proj-alpha</code> and, through it, every
+other leaf under it, whatever their frecency. The second kind is a page
+with two <code>part-of</code> edges. <code>parent_of</code> keeps only
+the first (<code>setdefault</code>), so a fetch credits one parent, and
+the page is deleted when the other dies.</p>
+<p>This was worked from the code; nothing was run. The fixture's TOC
+entries carry none of the trigger words, and <code>verify.sh</code>
+scenario 4 exercises only the authored chain.</p>
+<h3 id="a-permission-skipping-agent-reads-the-transcript">A
+permission-skipping agent reads the transcript</h3>
+<p><code>memory-dump</code> calls <code>memory-agent</code> without
+<code>--ws</code> (<code>memory-dump:72</code>). For Claude Code that
+becomes
+<code>claude -p PROMPT --model M --dangerously-skip-permissions</code>,
+with no <code>--mcp-config</code> and no
+<code>--strict-mcp-config</code> (<code>memory-agent:166-172</code>).
+The agent inherits the hook's working directory, which is the session's
+project, and every MCP server the user has configured. omp runs with
+<code>--approval-mode yolo</code> and pi with
+<code>--approve</code>.</p>
+<p>Its input is the session transcript, which holds every tool result of
+the session: pages fetched from the web, files read, command output.
+<em>"Do NOT touch code, git, or anything outside the memory graph"</em>
+is prompt text, not a boundary. <code>memory-consolidate</code> does
+pass <code>--ws</code>, which limits MCP to outl, but its shell and file
+tools are still unprompted, and its input is journals the first agent
+wrote. This is the surface to fix first.</p>
+<h3 id="forgetting-without-a-record">Forgetting without a record</h3>
+<p>Deletion is silent by design: no prompt, no candidate list, no
+message. Nothing the system writes records what was evicted or why. The
+reap trusts <code>consolidated::</code> alone; an
+<code>unverified</code> bucket is declared and never filled
+(<code>memory-index:1409</code>). A failed distillation is retried
+twice, then handed to the interactive session with a warning
+(<code>memory-hook:257-286</code>). That bound stops a silent re-billing
+loop.</p>
+<h3 id="the-readme-describes-code-that-is-not-on-the-branch">The README
+describes code that is not on the branch</h3>
+<p>The README's tag expansion in search,
+<code>memory-index normalize</code>, the <code>.standard-version</code>
+marker, <code>doctor</code>'s tag-noise report and lazy decay are absent
+from <code>champion</code> at the pin. They are in
+<code>memory-index</code> on <code>performance-improvements</code>,
+three commits ahead of and twelve behind <code>champion</code>. The
+README text arrived with <a
+href="https://github.com/waldnzwrld/llm-harness-memory/commit/e19192fa1b9becd244355492742a19b2b83c18b7"><code class="commit-id" title="e19192fa1b9becd244355492742a19b2b83c18b7">e19192fa…</code></a>,
+1 November 2026. <code>install.sh</code> at the pin does not call
+<code>normalize</code>.</p>
+<h3 id="marks">Marks</h3>
+<p>None is carried.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — an evicted page leaves
+nothing keyed on its content, and a distiller may write the same fact
+again.</li>
+<li><strong><code>trust_state</code></strong> — there is no status
+field. <code>supersedes</code> is an edge, and it filters the walk but
+not keyword hits.</li>
+<li><strong><code>bitemporal</code></strong> — <code>updated::</code>
+and <code>seen::</code> are record times.</li>
+<li><strong><code>scope_enforced</code></strong> — one workspace serves
+every project; <code>project::</code> is never read by
+<code>memory-index</code>.</li>
+<li><strong><code>audit_log</code></strong> — outl's op log is
+append-only and holds every mutation with an actor and a clock. It is
+the engine's replication log, which this system neither writes as a
+record of its decisions nor reads, so it is git history under another
+name.</li>
+<li><strong><code>human_review</code></strong> — none; eviction removed
+its review step on purpose.</li>
+<li><strong><code>negative_eval</code></strong> — no test asserts that
+anything stays out of a result.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tests/verify.sh</code> runs ten scenarios against a fresh copy
+of a committed fixture workspace: edge building, touch propagation, leaf
+eviction with reference scrubbing, the TOC cascade, line eviction, pins
+not exempt, split detection, the journal reap, a healthy graph evicting
+nothing, and body-bullet summaries reaching FTS. It needs the outl
+binary. <code>verify-model.sh</code> covers model selection offline with
+stub CLIs. <code>verify-agent.sh</code> launches a real agent against
+the fixture for two scenarios: a fetch propagating credit, and a
+headless distiller consuming one journal.</p>
+<p>I ran none of them. outl is not installed on this machine, and
+installing an unpinned Homebrew beta is outside this reading's read-only
+posture.</p>
+<p>The assertions I read can fail. Scenario 9 compares an eviction count
+parsed from <code>maintain</code>'s JSON, and a sweep that crashed would
+produce no JSON and fail the parse. What is untested is the retrieval
+side: no case checks that a superseded page stays out of a search, and
+none ranks a result. The cascade is tested on authored edges only. No
+benchmark, evaluation result or paper is in the repository.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Credit that climbs the access path.</strong> A fetch warms
+the page and every TOC above it, so an index node lives exactly as long
+as something reached through it is used. That is the right shape for any
+decaying hierarchy.</li>
+<li><strong>Line-level decay keyed on stable block ids,</strong> in a
+ledger outside the rebuildable index, so a stale line inside a live page
+ages out alone.</li>
+<li><strong>Pointers, not content, on each prompt.</strong> Gated on a
+bm25 ceiling, capped at three, deduplicated per session, and only a
+fetch reads the page and credits it.</li>
+<li><strong>Decay per active day.</strong> A month without sessions does
+not empty the store.</li>
+<li><strong>A bounded retry before handing back.</strong> Two failed
+background distillations, then the interactive session is told to do it,
+which ends a silent re-billing loop.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Cascading deletion over inferred edges.</strong> If deletion
+walks a graph, walk only edges someone authored, and type a
+<code>parent::</code> bullet by its key rather than by the word inside
+it.</li>
+<li><strong>A permission-skipping agent over a transcript.</strong> Give
+the journaler the memory MCP server and nothing else; the transcript
+carries whatever the session read.</li>
+<li><strong>Bookkeeping in the source of truth.</strong> Writing
+counters into every page daily makes the op log mostly counters and
+reindexes the store every day; keep frecency in the ledger beside the
+line scores.</li>
+<li><strong>A README ahead of its branch.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer on macOS who already uses outl and wants
+memory that stays small without curating it. The price is that a fact
+unread for about thirty active days is gone, with no record saying it
+existed. Below 150 pages it runs on TOC descent alone, which is cheap
+and works.</p>
+<p>Walk away if a deletion must be explainable, if projects must not see
+each other's memory, or if sessions read untrusted content such as web
+pages, given what the journaler may do with it. Two fixes would change
+that verdict: running the journaler with only the outl server, and
+building the cascade from authored edges only.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will <code>performance-improvements</code> merge, and does its lazy
+decay change when a TOC can reach zero before its children?</li>
+<li>How often do real TOC entries contain a trigger word? The fixture
+has none, and the cascade's reach depends on it.</li>
+<li>Does a later outl make page roots restorable? That would turn page
+eviction from final into undoable without a change here.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Hook and agents: <code>memory-hook</code>,
+<code>memory-agent</code>, <code>memory-dump</code>,
+<code>memory-consolidate</code></li>
+<li>Index: <code>memory-index</code></li>
+<li>Protocol: <code>AGENTS.md</code>, <code>MEMORY_TEMPLATE.md</code>,
+<code>agents/memory-recall.md</code>,
+<code>skills/memory-model/SKILL.md</code>,
+<code>templates-journal.md</code></li>
+<li>Adapters: <code>omp/llm-harness-memory.ts</code>,
+<code>pi/llm-harness-memory.ts</code></li>
+<li>Install: <code>install.sh</code>, <code>upgrade.sh</code>,
+<code>uninstall.sh</code>, <code>lib.sh</code></li>
+<li>Tests: <code>tests/verify.sh</code>,
+<code>tests/verify-model.sh</code>, <code>tests/verify-agent.sh</code>,
+<code>tests/build-fixture.sh</code>, <code>tests/fixture/</code></li>
+<li>Engine, read at outl <code>97aa72b</code>:
+<code>crates/outl-actions/src/page.rs</code>,
+<code>crates/outl-actions/src/trash.rs</code>,
+<code>docs/cli.md</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No value-keyed rejection record.</strong>
+<code>git grep -n -i -E 'tombstone|reject|blocklist|suppress' -- . ':!tests/fixture'</code>
+returns model-name validation and a fixture-builder line only.</li>
+<li><strong>No status on a page.</strong>
+<code>git grep -n -i -E 'status|verified|candidate|confidence' -- memory-index</code>
+returns comments, split candidates and the never-filled
+<code>unverified</code> list.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_from|valid_until|valid_to|validfrom|event_time|occurred_at' -- .</code>
+returns nothing.</li>
+<li><strong><code>project</code> is not read.</strong>
+<code>git grep -n -E 'project' -- memory-index</code> returns three
+comments and the word "projection".</li>
+<li><strong>Tag expansion and <code>normalize</code> are
+absent.</strong>
+<code>git grep -n -E 'normalize|_tag|#topic|standard-version|tag-noise' -- memory-index install.sh memory-hook</code>
+returns one SQL comment containing "denormalized".</li>
+<li><strong>The superseded filter is on the walk only.</strong>
+<code>git grep -n -E "type='supersedes'" -- memory-index</code> returns
+the walk at <code>:533</code>, two <code>medic</code> heals and the
+<code>doctor</code> report.</li>
+<li><strong>The journaler gets no workspace scope.</strong>
+<code>git grep -n -E '"\$AGENT"' -- memory-dump memory-consolidate memory-hook</code>
+shows <code>--ws</code> on the distiller's call and not on the
+journaler's.</li>
+<li><strong>Search credit never touches page frecency.</strong>
+<code>git grep -n -E '_bump_page\(|_bump_blocks\(' -- memory-index</code>
+shows <code>_bump_page</code> called only from
+<code>cmd_touch</code>.</li>
+<li><strong>No retrieval-absence test.</strong>
+<code>git grep -n -i -E 'supersed|contradict' -- tests/verify.sh tests/verify-agent.sh</code>
+returns nothing.</li>
+<li><strong>No mutation record of its own.</strong>
+<code>git grep -n -i -E 'audit|history' -- memory-index memory-hook memory-consolidate memory-dump</code>
+returns nothing.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation|doi\.org' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/waldnzwrld/llm-harness-memory/commit/f60469fc05379dc056359e28adfcc27f25899bd4"><code class="commit-id" title="f60469fc05379dc056359e28adfcc27f25899bd4">f60469fc…</code></a>.
+First reading, with outl read at <a
+href="https://github.com/outlmd/outl/commit/97aa72bd002b57cc22f5a67b20dbf2ad6775f920"><code class="commit-id" title="97aa72bd002b57cc22f5a67b20dbf2ad6775f920">97aa72bd…</code></a>.
+Screened first: one file scanned, an <code>AGENTS.md</code> read as
+data, and no auto-run, build-time or unpinned surface in the checkout;
+the hooks it installs are written by <code>install.sh</code> into the
+user's harness configuration. Nothing installed, built or run. No marks:
+deletion is mechanical and unrecorded, and nothing carries a status (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

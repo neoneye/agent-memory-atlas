@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 765 reports.**
+**This page covers all 766 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -6992,3 +6992,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you keep a derived index of a codebase for an agent and need it to stay current per commit without paying a model for every change.
 - Do not copy when: the memory must hold what the code does not say, or a wrong summary must be correctable and stay corrected.
 
+
+### [`llm-harness-memory`](../systems/llm-harness-memory/)
+- Best idea: **credit that climbs the access path.** A fetch of a page credits it +5 and every TOC above it +5, so an index node lives exactly as long as something reached through it is used, and a daily sweep can delete anything at zero without orphaning a used leaf.
+- Second idea: per-line decay keyed on stable outl block ids, in a ledger outside the rebuildable index, so a stale line inside a live page ages out alone; and prompt-time pointers that only a fetch turns into content and credit.
+- Biggest risk: **the deletion cascade walks guessed edges.** A dead TOC takes every `part-of` child, and `part-of` is typed from a line's words, so a hub whose entry for a leaf says "parent" or "under " is deleted with that leaf whatever its own frecency.
+- Second risk: the session journaler runs `claude -p --dangerously-skip-permissions` over the full transcript, in the project directory, with every configured MCP server; its constraints are prompt text.
+- Most reusable component: `memory-index`'s `cmd_touch` and `cmd_maintain` — credit propagation, page and line decay, and reference scrubbing on eviction.
+- Maturity impression: MIT; 3,631 lines of Python, Bash and TypeScript outside tests, 57 commits from one author since 10 August 2026, three shell test runners needing outl, not run here. No marks. The README describes tag expansion and a `normalize` command that exist only on an unmerged branch.
+- Study when: you want memory that stays small without curation and can accept losing what goes unread for about thirty active days.
+- Do not copy when: a deletion must be explainable or undoable, projects must not see each other's memory, or sessions read untrusted content.
