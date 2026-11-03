@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local desktop assistant whose
+agents keep a SQLite store of rules, preferences and episodes, written
+by a background keeper and injected every turn.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Ultimate
+Assistant — Agent Memory Atlas">
+    <meta property="og:description" content="A local desktop assistant
+whose agents keep a SQLite store of rules, preferences and episodes,
+written by a background keeper and injected every turn.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Ultimate
+Assistant — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local desktop assistant
+whose agents keep a SQLite store of rules, preferences and episodes,
+written by a background keeper and injected every turn.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Ultimate Assistant — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Ultimate Assistant",
+      "description": "A local desktop assistant whose agents keep a SQLite store of rules, preferences and episodes, written by a background keeper and injected every turn.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A keeper that writes rules every turn
+obeys</p>
+          <h1>Ultimate Assistant</h1>
+          <p class="document-deck">A local desktop assistant whose
+agents keep a SQLite store of rules, preferences and episodes, written
+by a background keeper and injected every turn.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/KianJRoss/UltimateAssistant-release">
+              <span>Source</span>
+              <strong>KianJRoss/UltimateAssistant-release</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/KianJRoss/UltimateAssistant-release/commit/814a589acbe004f52ed2ffffb2c1afb539649bd8" title="814a589acbe004f52ed2ffffb2c1afb539649bd8">
+              <span>Analyzed revision</span>
+              <code>814a589a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/KianJRoss--UltimateAssistant-release" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>KianJRoss--UltimateAssistant-release</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0-or-later</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>29,315
+lines of Python in 115 files outside vendored code, 1,991 of them in the
+memory, conversation and skill stores and their tools; 6,971 lines of
+Kotlin and Java in the Android companion</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>33
+commits from one author under three addresses, 30 September – 2 November
+2026, each publishing a curated release cut from a private source
+repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>No
+Python tests: conftest.py isolates a suite SOURCE.md says the release
+excludes; seven Kotlin cases in two Android files, none on memory; none
+run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Ultimate Assistant is a local desktop assistant for Windows and Linux
+that runs a team of agents on whatever model account the user brings,
+through a separate router called Herald. Its memory is one SQLite table
+of short rules, preferences, context and episodes. Any agent writes it
+through an MCP server, a background keeper reviews every third user
+message and writes more, and each chat turn injects up to eight matches.
+Nothing sits between a model's sentence and the next prompt: no
+candidate state, no review. A <code>rule</code> that shares one word
+with the message scores at least 0.95, so model-written rules take the
+top slots on almost every turn.</p>
+<p>Correction is the strongest part, and it stops halfway.
+<code>supersede</code> keeps the old row and takes it out of every
+search, and the embedding arm refuses vectors from another model. But no
+API, panel or tool lists or searches superseded rows, and the next
+<code>remember</code> of the same text inserts it again. Beside the
+store sit learned skills: scripts an agent writes, which a later message
+runs with no agent loop and no approval.</p>
+<p>The licence is AGPL-3.0-or-later, so a modified copy offered over a
+network must offer its source. The repository is a curated release
+mirror. <code>SOURCE.md</code> says tests are excluded, and Herald,
+which hosts the MCP gateway the memory server runs behind, is installed
+from pinned wheels outside this tree. No capability mark is earned.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row in <code>memories</code>: a category from
+<code>rule</code>, <code>preference</code>, <code>context</code> and
+<code>episode</code>, a title, up to 4,000 characters of content, an
+importance from 1 to 5, an optional source conversation and message id,
+three timestamps, a status and an optional embedding
+(<code>memory_store.py:84-106</code>). The categories differ in one
+place only: <code>rule</code> gets a score floor in retrieval
+(<code>:310-311</code>).</p>
+<p>Every write becomes a belief at once. <code>remember</code> collapses
+whitespace, then looks for an <strong>active</strong> row of the same
+category whose lowercased content is identical. If one exists it
+rewrites that row's title, importance, source and
+<code>updated_at</code>; otherwise it inserts a new row whose status
+defaults to <code>active</code> (<code>:186-238</code>). There is no
+candidate, pending or unverified state, and no step that checks a claim
+before the next turn can retrieve it.</p>
+<p>The state machine has three exits from <code>active</code>:</p>
+<ul>
+<li><strong>Superseded.</strong> <code>supersede(old, new)</code>
+requires the replacement to exist and be active, then sets
+<code>status='superseded'</code> and <code>superseded_by</code>
+(<code>:328-338</code>). Every search and listing query filters on
+<code>status = 'active'</code>, so the row leaves retrieval and listing.
+No call moves it back.</li>
+<li><strong>Deleted.</strong> <code>delete</code> removes the row; a
+trigger removes its FTS entry (<code>:340-343</code>,
+<code>:134-136</code>). Nothing records that it existed.</li>
+<li><strong>Overwritten.</strong> <code>update</code> replaces category,
+title, content, importance and embedding in place, with no prior version
+kept (<code>:345-372</code>).</li>
+</ul>
+<p>Who moves a memory: every agent (all six list
+<code>assistant_memory</code>), the background keeper, and the user
+through the Memory panel, which can add, edit and forget but not
+supersede. The prompt tells agents to save without being asked and to
+supersede when the user's current words conflict with a memory
+(<code>agents/core.md:14</code>). Retrieved memories enter the prompt as
+user context under a note that saved rules and preferences may guide
+behaviour and that current intent takes precedence
+(<code>web_ui.py:1564-1573</code>).</p>
+<p>Three other things outlive a session. The transcript is the source
+record, searchable by the agents' conversation tools. Each conversation
+has one rolling summary. Learned skills are procedural memory, covered
+in section 8. The <code>life/</code> package holds commitments, routines
+and nudges with deadlines the clock acts on; it is task state and is
+kept out of this reading.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every writer lands in one active pool at once; supersede and forget take a row out of it, and nothing stops the same text coming back from the transcript</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every writer lands in one active pool at once; supersede and forget take a row out of it, and nothing stops the same text coming back from the transcript
+flowchart TD
+  subgraph writers[&quot;Writers, none reviewed&quot;]
+    direction TB
+    CHAT[&quot;any agent, mid-turn&lt;br/&gt;remember_for_user&quot;]
+    KEEP[&quot;background keeper&lt;br/&gt;every 3 user messages&quot;]
+    PANEL[&quot;Memory panel&lt;br/&gt;importance 5&quot;]
+    CHAT ~~~ KEEP ~~~ PANEL
+  end
+  writers --&gt; DEDUP{&quot;active row with same&lt;br/&gt;category and text?&quot;}
+  DEDUP --&gt;|&quot;yes&quot;| BUMP[&quot;rewrite title,&lt;br/&gt;importance, updated_at&quot;]
+  DEDUP --&gt;|&quot;no&quot;| NEW[&quot;insert&lt;br/&gt;status active&quot;]
+  BUMP --&gt; POOL[&quot;active pool&quot;]
+  NEW --&gt; POOL
+  POOL --&gt; READ[&quot;every chat turn&lt;br/&gt;search message, top 8&lt;br/&gt;rule + one shared word&lt;br/&gt;scores at least 0.95&quot;]
+  READ ~~~ OUT
+  subgraph OUT[&quot;Exits&quot;]
+    direction TB
+    SUP[&quot;supersede&lt;br/&gt;row kept, never read&quot;]
+    DEL[&quot;forget&lt;br/&gt;row deleted&quot;]
+    SUP ~~~ DEL
+  end
+  POOL --&gt; OUT
+  OUT --&gt; TRANS[&quot;transcript keeps&lt;br/&gt;the original words&quot;]
+  TRANS --&gt; AGAIN[&quot;keeper or agent&lt;br/&gt;saves the same text&quot;]
+  AGAIN --&gt; DEDUP</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The app is one FastAPI process, <code>web_ui.py</code>, bound to
+<code>127.0.0.1:8765</code> (<code>web_ui.py:2609</code>,
+<code>:2628</code>). It serves the chat UI and a REST API behind an app
+token, and holds one <code>MemoryStore</code> for its own reads and the
+panel's writes (<code>:62</code>). Models are reached only through
+Herald, a separate router installed by <code>setup.ps1</code> as two
+wheels pinned by SHA-256 in <code>herald.json</code>. The agents run
+inside Herald, either on Herald's own harness or as a provider CLI in
+its own agent loop.</p>
+<p>The memory MCP server is <code>memory_tools.py</code>, a FastMCP
+stdio process. On first use the app registers it with Herald as a
+project-scoped tool instance and binds it to the assistant's part under
+the alias <code>assistant_memory</code>
+(<code>assistant.py:126-131</code>, <code>:281-307</code>). Each agent
+is its own Herald part and lists the aliases it sees in its front matter
+(<code>agents/__init__.py:38-41</code>). The server opens the same
+database file the app does, by a path from the environment
+(<code>memory_tools.py:16-18</code>).</p>
+<p>Persistence is three SQLite files under
+<code>%LOCALAPPDATA%\UltimateAssistant\data</code>, or
+<code>~/.ultimate-assistant/</code> when that variable is unset:
+<code>memory.sqlite3</code>, <code>conversations.sqlite3</code> and
+<code>tasks.sqlite3</code> (<code>settings.py:41-67</code>). Skills live
+as folders under the settings directory with an
+<code>index.sqlite</code> of example embeddings
+(<code>skills.py:11-13</code>). Retrieval is FTS5, or <code>LIKE</code>
+where the SQLite build lacks it, plus optional cosine over vectors from
+a local Ollama embedding model.</p>
+<p>Secondary devices run <code>ui_proxy.py</code>, which forwards their
+requests to the main node's app through Herald, so every paired device
+reads and writes the one store. <code>knowledge.py</code> reads a
+separate "College Assistant" FTS index read-only, and chat injects up to
+five excerpts as untrusted reference data
+(<code>knowledge.py:17-42</code>, <code>web_ui.py:1559-1563</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Everything runs on one PC: Python 3.13, Herald, and a model account
+of any kind — a provider CLI subscription, an API key or a local model.
+The memory store needs no key and no service; the panel writes without a
+model, and embeddings are off until the user names an Ollama model
+(<code>web_ui.py:1143-1155</code>). Setup installs
+<code>requirements.txt</code>, whose 13 requirements float with
+<code>&gt;=</code>. The store is one ordinary SQLite table a person can
+open and repair. The FTS index is rebuilt from the table on every open,
+so a hand edit is re-indexed on the next start
+(<code>memory_store.py:139-143</code>).</p>
+<p>What this tree cannot show is Herald. The tool gateway that decides
+which part sees <code>assistant_memory</code>, the harness that runs the
+agents, the models behind <code>_ask_fast</code>, and the encrypted
+"worker memory" that <code>ORCHESTRATION.md:32-33</code> describes are
+all in the <code>herald-release</code> wheels, which I did not download
+or read. Every claim below about who can call a tool rests on the
+assistant's own registration code, not on the gateway that enforces
+it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema and index.</strong> <code>MemoryStore.__init__</code>
+creates <code>memories</code>, adds <code>superseded_by</code>,
+<code>embedding_model</code> and <code>embedding_dimension</code> by
+<code>ALTER TABLE</code>, and creates <code>memories_active</code> on
+<code>(status, importance DESC)</code>
+(<code>memory_store.py:77-107</code>).
+<code>_initialize_lexical_index</code> creates the FTS5 table and three
+triggers, then deletes and repopulates the whole index
+(<code>:109-146</code>). Every SQL write to <code>memories</code> is in
+this file.</li>
+<li><strong>Agent write.</strong> <code>remember_for_user</code>
+validates the category and calls <code>remember</code> with optional
+<code>source_conversation_id</code> and <code>source_message_id</code>
+(<code>memory_tools.py:28-47</code>). The chat turn tells the model
+those ids for the current turn in a turn note
+(<code>web_ui.py:1543-1545</code>).</li>
+<li><strong>Background write.</strong> After a chat reply is stored,
+<code>_keep_memory_later</code> runs if memory tools are bound
+(<code>web_ui.py:1756-1757</code>). It counts user messages since the
+conversation's mark in <code>_memory_marks</code>, an in-process dict,
+and returns below three (<code>:239-254</code>). Otherwise it posts the
+new messages, cut to 1,500 characters each and 12,000 in all, as a task
+for the <code>companion</code> agent to <code>/api/agents/run</code>
+from a daemon thread (<code>:255-276</code>).</li>
+<li><strong>Panel write.</strong> <code>POST</code>, <code>PUT</code>
+and <code>DELETE /api/memories</code> call <code>remember</code>,
+<code>update</code> and <code>delete</code>
+(<code>web_ui.py:1232-1261</code>); the form posts importance 5
+(<code>ui/index.html:1183</code>).</li>
+<li><strong>Retrieval.</strong> <code>search</code> builds lexical
+candidates, loads every active embedded row of the configured model,
+scores, cuts to the limit and stamps <code>last_accessed_at</code>
+(<code>memory_store.py:248-326</code>).</li>
+<li><strong>Injection.</strong> The chat turn calls
+<code>_memories.search(message, limit=8)</code> before routing
+(<code>web_ui.py:1421</code>) and appends the hits as a system message
+(<code>:1564-1573</code>). An agent run outside chat injects six,
+matched on its task text (<code>:1856-1860</code>).</li>
+<li><strong>Correction.</strong> <code>update_assistant_memory</code>,
+<code>supersede_assistant_memory</code> and
+<code>forget_assistant_memory</code>
+(<code>memory_tools.py:50-84</code>) over <code>update</code>,
+<code>supersede</code> and <code>delete</code>
+(<code>memory_store.py:328-372</code>).</li>
+<li><strong>Conversation memory.</strong> <code>compaction_batch</code>
+selects up to 50 messages or 30,000 characters older than the 20 most
+recent (<code>conversation_store.py:124-152</code>).
+<code>_summarize_history</code> asks a model to fold them into the
+rolling summary with <code>[#id]</code> citations
+(<code>web_ui.py:470-500</code>), and <code>save_memory</code>
+overwrites it (<code>conversation_store.py:154-162</code>).</li>
+<li><strong>Skills.</strong> <code>_distill_skill_later</code> asks the
+builder to save a skill after any tool-using turn
+(<code>web_ui.py:212-236</code>, <code>:1754-1755</code>);
+<code>_find_skill</code> and <code>_skill_turn</code> run a matched
+skill as the turn (<code>:284-344</code>).</li>
+<li><strong>Tests.</strong> None for any path above; see section
+10.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> has <code>id</code> (a UUID4),
+<code>category</code>, <code>title</code>, <code>content</code>,
+<code>importance</code>, <code>source_conversation_id</code>,
+<code>source_message_id</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>last_accessed_at</code>,
+<code>status</code> (default <code>active</code>),
+<code>embedding</code> as JSON text, <code>superseded_by</code>,
+<code>embedding_model</code> and <code>embedding_dimension</code>
+(<code>memory_store.py:84-105</code>). Content length, category and
+importance are validated in the store and again on the HTTP models
+(<code>web_ui.py:662-670</code>).</p>
+<p><strong>Scope.</strong> There is no scope column. One database per OS
+user profile serves every agent, every conversation and every paired
+device. That matches the product, which is one person's assistant.
+Herald's project and part scoping governs which tools an agent sees, not
+which rows it reads.</p>
+<p><strong>Provenance.</strong> The source ids are optional tool
+arguments. The model fills them from a turn note, and
+<code>remember</code> keeps the old ids when a dedup call passes none
+(<code>memory_store.py:217-218</code>). The embedding carries its model
+name and dimension, set by the store from configuration rather than by
+the caller (<code>:70-74</code>), and <code>_public_memory</code> strips
+both from API output (<code>:21</code>, <code>:65-67</code>).</p>
+<p><strong>Time.</strong> <code>created_at</code> and
+<code>updated_at</code> are record times; <code>updated_at</code> moves
+on every dedup hit and edit. <code>last_accessed_at</code> is written on
+every retrieval hit (<code>:320-325</code>) and read by nothing. There
+is no time at which a fact held.</p>
+<p><strong>Versioning.</strong> <code>superseded_by</code> names the
+replacement and is written by <code>supersede</code> alone. It has no
+reader. <code>update</code> keeps no prior content.</p>
+<p><strong>Separation.</strong> Categories label the row, and only rules
+are treated differently. Transcripts, conversation summaries, skills and
+the external knowledge index are separate stores. The summary is one row
+per conversation, holding <code>summary</code>,
+<code>through_message_id</code> and <code>updated_at</code>, overwritten
+on each fold (<code>conversation_store.py:50-56</code>,
+<code>:154-162</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Candidates.</strong> The query's terms are every run of two
+or more word characters, apostrophes or hyphens, casefolded
+(<code>memory_store.py:249</code>). The lexical arm ORs the quoted terms
+in FTS5, joined to active rows, and falls back to a <code>LIKE</code>
+per term (<code>:149-179</code>). The vector arm loads every active row
+with an embedding from the configured model and a recorded dimension
+(<code>:258-262</code>). Both sets are merged by id.</p>
+<p><strong>Scoring.</strong> For each candidate, <code>overlap</code> is
+the share of query terms present as whole words in title and content.
+With a usable vector the score is
+<code>0.62·cosine + 0.20·overlap + 0.13·importance/5 + 0.05·recency</code>
+against a threshold of 0.28; without one it is
+<code>0.68·overlap + 0.24·importance/5 + 0.08·recency</code> against
+0.36 (<code>:304-309</code>). Recency is
+<code>1/(1 + age_days/180)</code> on <code>updated_at</code>. Ties break
+on importance, then <code>updated_at</code>, then id
+(<code>:314-317</code>).</p>
+<p><strong>The rule floor.</strong> A <code>rule</code> scores at least
+0.95 when <code>overlap</code> is non-zero or its cosine is at least
+0.25 (<code>:310-311</code>). Overlap counts any shared term, two-letter
+words included, and the FTS5 table is created with the default tokenizer
+and no stop list (<code>:118-121</code>). A rule containing "the" or
+"my" is a candidate for any message containing that word, and outranks
+every non-rule on it. With eight or more such rules, nothing but rules
+reaches the chat prompt. A cosine of 0.25 is a low bar for most
+embedding models, so with vectors on the floor applies to nearly every
+rule.</p>
+<p><strong>Vector provenance.</strong> A vector is compared only when
+its stored model equals the configured one and its dimension equals the
+query's (<code>:288-292</code>). Changing the embedding model therefore
+drops every old vector from the vector arm instead of comparing
+incompatible spaces. Nothing re-embeds the old rows, so they fall back
+to lexical matching until edited.</p>
+<p><strong>Injection.</strong> Chat injects the top eight as JSON with
+id, category, title, content, importance, <code>updated_at</code> and
+the source ids (<code>web_ui.py:1564-1573</code>). The MCP
+<code>search_assistant_memory</code> returns <code>_public_memory</code>
+rows, which drop only <code>embedding_model</code> and
+<code>embedding_dimension</code>. With embeddings on, each hit carries
+its whole vector as a JSON string into the model's context
+(<code>memory_tools.py:21-25</code>, <code>memory_store.py:21</code>,
+<code>:65-67</code>).</p>
+<p><strong>Failure modes.</strong> Over-recall of rules, above.
+Near-duplicates: dedup is exact text, so a keeper that rephrases a fact
+adds a second row and both match. And one shared word lets an
+importance-5 panel memory pass the lexical threshold on a long message,
+since importance and recency alone score 0.32 of the 0.36.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen three ways, with no extraction code in any of them: the
+model decides what to save and in what words.</p>
+<ul>
+<li><strong>Hot path.</strong> An agent calls
+<code>remember_for_user</code> mid-turn. The prompt asks it to save
+durable facts unprompted, to search before saving and to update rather
+than duplicate (<code>agents/core.md:14</code>). The tool description
+asks it to check with the user before saving inferred sensitive or
+uncertain details (<code>memory_tools.py:33</code>). Neither is
+enforced.</li>
+<li><strong>Keeper.</strong> Every third user message in a conversation,
+a background companion run receives the new transcript and is told to
+search, then remember, update or supersede, keeping each memory to one
+or two sentences (<code>web_ui.py:256-265</code>). Its marks live in a
+process dict, so after a restart the next qualifying turn hands it the
+last 12,000 characters of the whole conversation again
+(<code>:240</code>, <code>:250-255</code>).</li>
+<li><strong>Panel.</strong> The user adds, edits or forgets a row.</li>
+</ul>
+<p><strong>Dedup and update.</strong> The only consolidation is the
+exact-text match among active rows of the same category. A hit rewrites
+importance with the new call's value, so a keeper re-saving a panel
+memory at the default 3 lowers it from 5
+(<code>memory_store.py:214-227</code>). <code>update</code> takes any id
+and does not check status, so an edit to a superseded row succeeds and
+stays invisible.</p>
+<p><strong>Conflict.</strong> Detection is the model's job. The
+supersede tool says not to infer which of two conflicting memories is
+correct (<code>memory_tools.py:79</code>). Two contradictory active rows
+are both retrieved.</p>
+<p><strong>Agent-generated and hostile input.</strong> The keeper reads
+assistant messages as well as user ones, and an assistant reply can
+carry text from a web page, a file or a tool. The prompts say such
+material is data, not instructions (<code>agents/core.md:12</code>). No
+code checks what is saved, and a saved <code>rule</code> gets the floor
+above.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A hot-path write is a tool call inside the turn, plus one Ollama
+embedding call with a 20-second timeout when vectors are on
+(<code>memory_store.py:35-49</code>). It is retrievable on the next
+turn. A keeper write lands when a full agent run finishes, under a
+900-second request timeout, and only after three user messages; the lag
+is that run's duration, likely seconds to minutes. Nothing rewrites the
+whole store, but the MCP server constructs a new
+<code>MemoryStore</code> on every tool call
+(<code>memory_tools.py:16-18</code>), and each construction deletes and
+rebuilds the whole FTS index (<code>memory_store.py:139-143</code>).</p>
+<p>Each chat turn runs one search, which loads and JSON-parses every
+embedded active row and computes cosine in Python, so its cost grows
+with the store. Injection is bounded at eight rows of at most 4,000
+characters. The memory block sits after the turn notes, and the turn
+notes carry a fresh <code>activity_id</code> every turn
+(<code>web_ui.py:1556</code>, <code>:1620-1624</code>). Everything after
+the first system message therefore differs per turn, which limits a
+provider's prefix cache to that first message.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>All six agents list <code>assistant_memory</code>: companion,
+builder, operator, planner, researcher and tutor
+(<code>agents/*.md:4</code>). Each therefore holds remember, update,
+supersede, forget and search, plus <code>list_conversations</code>,
+<code>read_conversation</code> and <code>search_conversations</code>
+(<code>memory_tools.py:92-115</code>). Builder and operator also hold a
+shell and the filesystem, and the shared prompt grants administrator
+authority on the user's devices (<code>agents/core.md:9</code>). The
+memory database is a file in the user's profile, so the MCP verbs are
+not the only way an agent can change it.</p>
+<p>Context arrives automatically: up to eight memories, the time, the
+desktop's window list, a list of other conversations by title, and open
+tasks for agents that hold the task tool. A user's own files under
+<code>&lt;settings dir&gt;/agents</code> override a base agent of the
+same name, and <code>agent_tools</code> in <code>settings.json</code>
+adds tool aliases per agent
+(<code>agents/__init__.py:77-107</code>).</p>
+<p><strong>Learned skills</strong> are the procedural half. After any
+turn in which an agent used tools, <code>_distill_skill_later</code>
+asks the builder in the background whether the work should become a
+skill (<code>web_ui.py:212-236</code>). <code>save_skill</code> writes a
+PowerShell, Python or bash script with typed parameters and example
+phrasings, and runs it at once if the agent supplies
+<code>test_parameters</code> (<code>skill_tools.py:33-67</code>). A
+failed test run is reported to the agent and the skill stays saved.</p>
+<p>On a later message, <code>find</code> shortlists skills by embedding
+or word overlap and asks a decision model or a fast model to confirm the
+match and fill parameters (<code>skills.py:248-270</code>,
+<code>:436-460</code>). <code>_skill_turn</code> then runs the script as
+the whole turn, with no agent loop, and adds the user's message as a new
+example for that skill (<code>web_ui.py:317-335</code>).</p>
+<p>Nothing a person sees stands between a saved script and its next run.
+The rule against skills that send, delete or buy is prompt text
+(<code>agents/core.md:18</code>). <code>created_by</code> exists in the
+definition and no caller passes it (<code>skills.py:196</code>,
+<code>:213</code>). Teach mode records a user's demonstration with
+password fields hidden, and an agent turns it into a skill the same way
+(<code>teach_store.py:1-13</code>,
+<code>skill_tools.py:119-140</code>).</p>
+<p>The memory server would be easy to adapt for another agent: it is a
+stdio FastMCP module whose only dependency is a database path.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="a-models-sentence-becomes-a-standing-instruction">A model's
+sentence becomes a standing instruction</h3>
+<p>The write path has no gate and the read path has a floor. An agent,
+or the keeper reviewing a reply that quoted a web page, can save a
+<code>rule</code>. From then on that rule is injected on every message
+that shares a word with it, ranked above everything that is not a rule,
+under a note saying saved rules may guide behaviour. The defences are
+prompts: the core prompt calls web pages and tool output data, and the
+injection note says current intent wins. Nothing records whether a rule
+came from the user's words or the model's.</p>
+<h3 id="correction-keeps-a-record-nobody-reads">Correction keeps a
+record nobody reads</h3>
+<p><code>supersede</code> is the right shape: the old row is kept,
+linked to its replacement and removed from every search. But no route,
+tool or panel lists superseded rows, <code>superseded_by</code> has no
+reader, and nothing records when or why the row was retired.
+<code>remember</code> checks only active rows for a duplicate, so the
+superseded text is accepted again as a new active row. Forget is a hard
+delete with nothing left behind, and the transcript keeps the original
+words, which the keeper and the conversation tools read.</p>
+<h3 id="deletion-stops-at-the-memory-table">Deletion stops at the memory
+table</h3>
+<p>Forgetting a memory leaves it in the transcript, in the conversation
+summary if a fold captured it, and in any skill built from the same
+turn. The README says the transcript remains the source record
+(<code>README.md:184-195</code>). Clearing a conversation deletes its
+messages, activity and summary and leaves its memories
+(<code>conversation_store.py:218-222</code>).</p>
+<h3 id="the-app-token">The app token</h3>
+<p>Every memory route requires <code>x-ultimate-assistant-token</code>,
+compared in constant time (<code>web_ui.py:691-695</code>). The token is
+generated per process and written into the HTML that <code>GET /</code>
+serves without authentication (<code>:54</code>, <code>:698-700</code>).
+It stops a cross-origin page, which cannot read that response. It does
+not stop a local process, including an agent with a shell, from fetching
+the page and calling the API.</p>
+<h3 id="concurrency">Concurrency</h3>
+<p>The app and the MCP server open the same file with a 10-second busy
+timeout. Dedup runs its <code>SELECT</code> before Python's
+<code>sqlite3</code> opens the implicit transaction at the
+<code>INSERT</code>, so two processes saving the same text at the same
+moment can both miss the other and write two rows
+(<code>memory_store.py:209-236</code>). The <code>RLock</code> beside it
+serialises writers within one process only.</p>
+<h3 id="marks">Marks</h3>
+<p>None is carried.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — <code>remember</code>
+deduplicates against <code>status = 'active'</code> only
+(<code>memory_store.py:210-213</code>). The text of a superseded row is
+inserted again as a new active row, and a deleted one leaves nothing to
+compare against. No write path reads a superseded or deleted value.</li>
+<li><strong><code>trust_state</code></strong> — <code>status</code> has
+two values, <code>active</code> and <code>superseded</code>, and every
+search does filter on it. But every row enters <code>active</code> and
+is retrieved on the next turn. <code>superseded</code> is reached only
+by replacement, so it marks a position in a correction chain, not a
+judgement made before belief. There is no candidate state.</li>
+<li><strong><code>bitemporal</code></strong> — <code>created_at</code>,
+<code>updated_at</code> and <code>last_accessed_at</code> are all record
+times.</li>
+<li><strong><code>scope_enforced</code></strong> — no scope column
+exists; the boundary is the OS user profile, which is a physical
+partition.</li>
+<li><strong><code>audit_log</code></strong> — no event table records
+memory mutations. <code>supersede</code> keeps the row and records
+neither time nor actor; <code>update</code> overwrites;
+<code>delete</code> removes. The preparation store's
+<code>context_revisions</code> keeps revisions of task contexts, which
+are task state.</li>
+<li><strong><code>human_review</code></strong> — the Memory panel edits
+and deletes after the write has landed, and every agent holds the same
+verbs. No memory waits for a person.</li>
+<li><strong><code>negative_eval</code></strong> — no test of any memory
+path is committed.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The tree has no Python tests. <code>apps/assistant/conftest.py</code>
+points <code>HERALD_DATA_DIR</code> and <code>LOCALAPPDATA</code> at
+temporary directories and turns off usage reporting for a pytest suite,
+and <code>SOURCE.md:9</code> says tests are excluded from the published
+source. The only committed tests are seven Kotlin cases in the Android
+companion: six for voice progress cues and one instrumented
+bridge-transport test. None touches memory. I ran nothing.</p>
+<p>The orchestration notes record "App regression: 32 passed" and a
+Herald regression of 472 passing (<code>ORCHESTRATION.md:55</code>).
+Neither suite is in this tree, so neither figure can be checked
+here.</p>
+<p><code>tools/decisions/route_bench.py</code> is a committed benchmark
+of pre-turn agent routing. Its published results on Hugging Face
+(<code>Krioasns/system1-decision-routing-bench</code>) score deciders on
+62 prompts for agent choice and whether a turn needs tools. The one
+prompt in it that names memory is a routing case for the builder
+(<code>route_bench.py:41</code>). No paper is associated with the
+project.</p>
+<p>Before trusting the store I would want three cases: a superseded
+memory absent from search while its replacement is present in the same
+result; a rule that does not outrank a relevant preference on an
+unrelated message; and <code>remember</code> of a superseded memory's
+text refused or flagged.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Record the embedding model and dimension on every vector,
+and compare only like with like.</strong> A model change then degrades
+to lexical recall instead of ranking against an incompatible space.</li>
+<li><strong>Keep the superseded row and link it to its
+replacement.</strong> It is one column and it is what makes an audit or
+an undo possible later; add the reader the first time you add the
+writer.</li>
+<li><strong>Rebuild a derived index from the table on open, with
+triggers between opens.</strong> Hand edits and interrupted migrations
+repair themselves.</li>
+<li><strong>Give the background reviewer a mark per
+conversation</strong>, so it reads only what is new; persist the mark,
+or a restart replays the conversation into it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A category that bypasses relevance.</strong> A score floor
+on any overlap turns a category into a standing instruction; gate it on
+a real match, or inject a small fixed set of user-authored rules
+separately.</li>
+<li><strong>Dedup that consults only live rows.</strong> It is the step
+that lets a corrected value back in; check the retired rows too, by
+value.</li>
+<li><strong>Returning storage columns from a model-facing tool.</strong>
+A vector serialised as JSON is tokens the model pays for and cannot
+use.</li>
+<li><strong>Executable procedural memory with no person in the admission
+path.</strong> A prompt rule about what a script may do is not a
+constraint on the script.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants an assistant that remembers
+preferences across devices with no service to run, and who will read the
+Memory panel. The store is small enough to read in an afternoon and
+repair by hand. Walk away if memory must be correctable in the strong
+sense, if untrusted content passes through conversations, or if you need
+to know who wrote a belief. The design trusts the model at every write
+and gives rules a permanent place in the prompt. It is a one-author
+project, public since 30 September 2026, whose tests are not
+published.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How Herald's gateway binds <code>assistant_memory</code> to each
+agent part, and whether a provider CLI running as its own instance keeps
+native memory files of its own.</li>
+<li>What the 32 app tests cover, and whether any exercise supersession
+or the rule floor.</li>
+<li>How many rules a real store accumulates, and how often rules fill
+all eight slots.</li>
+<li>Whether the keeper re-saves corrected or forgotten facts after a
+restart in practice.</li>
+<li>What the "worker memory" in Herald's encrypted vaults holds, and
+whether anything reads it back across sessions.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema:
+<code>apps/assistant/ultimate_assistant/memory_store.py</code>,
+<code>conversation_store.py</code>, <code>settings.py</code></li>
+<li>Write path: <code>memory_tools.py</code>, <code>web_ui.py</code>
+(<code>_keep_memory_later</code>, <code>/api/memories</code>),
+<code>agents/core.md</code></li>
+<li>Retrieval and injection: <code>memory_store.py</code>
+(<code>search</code>), <code>web_ui.py</code> (<code>_chat_turn</code>,
+<code>run_agent</code>), <code>knowledge.py</code></li>
+<li>Background: <code>web_ui.py</code> (<code>_keep_memory_later</code>,
+<code>_distill_skill_later</code>, <code>_summarize_history</code>)</li>
+<li>MCP and registration: <code>memory_tools.py</code>,
+<code>assistant.py</code> (<code>_ensure_memory_tools</code>,
+<code>EVERY_AGENT_TOOLS</code>), <code>agents/__init__.py</code>,
+<code>agents/*.md</code>, <code>mcp-bundle.json</code></li>
+<li>Procedural memory: <code>skills.py</code>,
+<code>skill_tools.py</code>, <code>teach.py</code>,
+<code>teach_store.py</code></li>
+<li>UI: <code>ui/index.html</code> (<code>refreshMemories</code>)</li>
+<li>Task state, not read as memory: <code>life/</code>,
+<code>life_capture.py</code>, <code>task_store.py</code></li>
+<li>Tests: <code>apps/assistant/conftest.py</code>,
+<code>companions/android/app/src/test/</code>,
+<code>companions/android/app/src/androidTest/</code></li>
+<li>Docs: <code>SOURCE.md</code>, <code>apps/assistant/README.md</code>,
+<code>apps/assistant/ORCHESTRATION.md</code>,
+<code>tools/decisions/README.md</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git</code>. <code>M</code> is
+<code>apps/assistant/ultimate_assistant</code>.</p>
+<ul>
+<li><strong>No Python tests.</strong>
+<code>git ls-files -- '*test*' '*Test*'</code> returns
+<code>apps/assistant/conftest.py</code> and the two Kotlin files;
+<code>git grep -n -E 'def test_' -- '*.py'</code> returns nothing.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_(from|to|until)|valid_at|event_time|occurred_at|expires_at' -- $M/memory_store.py $M/memory_tools.py</code>
+returns nothing; adding <code>|created_at</code> to the pattern matches
+two lines of <code>memory_store.py</code>.</li>
+<li><strong>No query selects a superseded row.</strong>
+<code>git grep -n -w superseded -- '*.py' ':!apps/assistant/ultimate_assistant/life/'</code>
+returns the writer at <code>memory_store.py:336</code>, the tool's
+return key at <code>memory_tools.py:82</code>, and two unrelated tables
+in <code>canvas_feeds.py</code> and
+<code>phone/overlay_presentation.py</code>.
+<code>git grep -n -E 'superseded_by'</code> returns the migration and
+the writer.</li>
+<li><strong><code>last_accessed_at</code> has no reader.</strong>
+<code>git grep -n -E 'last_accessed_at'</code> returns the schema and
+the writer.</li>
+<li><strong>Every write to the table is in one file.</strong>
+<code>git grep -n -E 'INSERT INTO memories|UPDATE memories|DELETE FROM memories' -- '*.py'</code>
+returns <code>memory_store.py</code> only, and the one
+<code>UPDATE</code> that sets <code>status</code> sets it to
+<code>superseded</code>.</li>
+<li><strong>No candidate state.</strong>
+<code>git grep -n -i -E "'(pending|candidate|draft|unverified|rejected)'" -- $M/memory_store.py $M/memory_tools.py</code>
+returns nothing;
+<code>git grep -c -E "'active'" -- $M/memory_store.py</code> returns
+9.</li>
+<li><strong>No scope key.</strong>
+<code>git grep -n -i -E 'user_id|project_id|agent_id|tenant|scope|owner' -- $M/memory_store.py $M/memory_tools.py</code>
+returns nothing;
+<code>git grep -c -i -E 'category|importance' -- $M/memory_store.py</code>
+returns 29.</li>
+<li><strong>No mutation record.</strong>
+<code>git grep -n -i -E 'audit|history|revision' -- $M/memory_store.py $M/memory_tools.py</code>
+returns the supersede docstring, the supersede tool description and the
+conversation-history reads.</li>
+<li><strong>Keeper marks are in-process.</strong>
+<code>git grep -n -E '_memory_marks' -- '*.py'</code> returns three
+lines of <code>web_ui.py</code>: the dict, a read and an
+assignment.</li>
+<li><strong>No caller sets a skill's author.</strong>
+<code>git grep -n -E 'created_by' -- '*.py'</code> returns the parameter
+and the assignment in <code>skills.py</code>.</li>
+<li><strong>No approval step for skills.</strong>
+<code>git grep -n -i -E 'approv|confirm' -- $M/skills.py $M/skill_tools.py</code>
+returns one docstring, about a model confirming a match;
+<code>git grep -n -i -E 'skill' -- $M/ui/index.html</code> returns
+nothing, while <code>memor</code> matches 54 lines of the same
+file.</li>
+<li><strong>No re-embedding.</strong>
+<code>git grep -n -i -E 'backfill|re-?embed' -- '*.py'</code> returns
+nothing; <code>git grep -c -i -E 'embed' -- '*.py'</code> matches many
+files.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|citation'</code>
+returns a routing keyword list in <code>agents/dispatch.py</code> and a
+comment in <code>VoiceController.kt</code>; there is no
+<code>CITATION</code> file.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/KianJRoss/UltimateAssistant-release/commit/814a589acbe004f52ed2ffffb2c1afb539649bd8"><code class="commit-id" title="814a589acbe004f52ed2ffffb2c1afb539649bd8">814a589a…</code></a>.
+First reading, from a full clone at the head of <code>main</code> (2
+November 2026, release 0.4.5). Screened first: no auto-run surface,
+<code>apps/assistant/conftest.py</code> executes on pytest collection,
+and two requirements files float (13 and 4 entries); nothing inside the
+cooldown, no agent-instruction file. AGPL-3.0-or-later, no rider. Herald
+is installed from pinned wheels and was not read. Nothing installed,
+built or run. No marks: dedup consults only active rows,
+<code>status</code> is a supersession lifecycle with no candidate state,
+and no memory test is committed (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

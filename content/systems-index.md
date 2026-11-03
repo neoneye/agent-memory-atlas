@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **767 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **768 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -841,6 +841,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 <ul class="az">
 <li><a class="az-row" href="../systems/ulpia/"><span class="az-id">Ulpia</span><span class="az-what">The refusal is the differentiating claim, so the refusal is what gets measured — in both directions</span><code class="az-repo">richard-wollyce/ulpia</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/ultimateassistant/"><span class="az-id">Ultimate Assistant</span><span class="az-what">A keeper that writes rules every turn obeys</span><code class="az-repo">KianJRoss/UltimateAssistant-release</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/ultracontext/"><span class="az-id">UltraContext</span><span class="az-what">Every read carries the project key except the one that forks</span><code class="az-repo">ultracontext/ultracontext</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/understand-anything/"><span class="az-id">Understand Anything</span><span class="az-what">A codebase graph kept current per commit</span><code class="az-repo">Egonex-AI/Understand-Anything</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/universal-memory-engine/"><span class="az-id">Universal Memory Engine</span><span class="az-what">A suppression the write gate obeys</span><code class="az-repo">12ziyad/universal-memory-engine</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>

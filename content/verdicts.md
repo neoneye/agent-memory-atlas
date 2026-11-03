@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 767 reports.**
+**This page covers all 768 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7012,3 +7012,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 4,715 lines of dependency-free Node.js outside tests, 27 commits from one author since 18 October 2026, the knowledge layer added on 1 November; 25 test scripts in a three-OS CI matrix, not run here. No marks. Every forget-exclusion test checks absence without a control in the same result.
 - Study when: you sync agent memory between machines through storage you own and need a deletion to survive replicas and replays.
 - Do not copy when: a restated fact must stay rejected, captured text must be checked before it returns as context, or projects must not be reachable from one another's sessions.
+
+### [`ultimateassistant`](../systems/ultimateassistant/)
+- Best idea: **check the embedding space before comparing a vector.** Every stored vector carries the model and dimension that produced it, set by the store from configuration, and search compares only vectors from the configured model, so switching models degrades to lexical recall rather than ranking across incompatible spaces.
+- Second idea: supersession that keeps the corrected row, linked to its replacement and out of every read, beside an FTS index rebuilt from the table on every open.
+- Biggest risk: **a rule outranks relevance.** Any `rule` sharing one word of two or more letters with the message scores at least 0.95, and agents and a background keeper write rules with no candidate state, so model-written rules take the top of the eight injected slots on nearly every turn.
+- Second risk: a superseded row has no reader and dedup checks only active rows, so the corrected text is accepted again; learned skill scripts run on a later message with no agent loop and no approval.
+- Most reusable component: `apps/assistant/ultimate_assistant/memory_store.py` — `_embedding_provenance`, the model-filtered vector load in `search`, and `_initialize_lexical_index`.
+- Maturity impression: AGPL-3.0-or-later; 29,315 lines of Python outside vendored code, 33 commits from one author since 30 September 2026, published as curated releases from a private repository whose tests are excluded; seven Kotlin tests, none on memory, not run here. No marks. Herald, the router the memory server runs behind, is outside the tree.
+- Study when: you want a small single-user memory with optional local embeddings and a supersession column you can extend into a real correction path.
+- Do not copy when: the agent reads untrusted content, a corrected fact must stay corrected, or a person must approve what becomes a standing instruction.

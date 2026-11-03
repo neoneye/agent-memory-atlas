@@ -100,6 +100,14 @@ supplies them; otherwise retrieval is one flat top-*k*. Diversity keyed on categ
 rather than document is the right generalization once a system has several memory
 kinds.
 
+[Ultimate Assistant](../../systems/ultimateassistant/) is the inversion: it keys
+precedence on category, not a quota. Any `rule` that shares one word of two or
+more letters with the message, or reaches a cosine of 0.25, scores at least
+0.95, above every other memory, and chat injects the top eight
+(`apps/assistant/ultimate_assistant/memory_store.py:310-311`, `web_ui.py:1421`).
+A store with eight such rules sends nothing else, however well a preference or
+an episode matches the question.
+
 [Hindsight](../../systems/hindsight/) applies the same idea one level earlier, by
 retrieval arm: per-arm caps keep graph fan-out from monopolizing the candidate pool.
 
