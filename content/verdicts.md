@@ -6844,15 +6844,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`hy-memory`](../systems/hy-memory/)
 
-- Best idea: **build the scope envelope in the broker, from the grant.** MemHub's `authorizeHost` verifies the host's secret, checks the requested scope against the grant, and writes the grant's own scopes into `x-one-memory-*` headers; Core refuses a scope outside them, drops disjoint memories, and takes the workspace from the host process rather than from a tool argument.
-- Second idea: **refuse a model write resting on evidence a person overruled.** A person's delete or correction marks the evidence ids it rested on, and a later model write citing them is refused; the same fact from a new conversation is remembered again, by design and by test.
-- Biggest risk: **the SDK trusts the writer model's target ids.** The reconcile prompt lists real memory UUIDs, and whatever `memory_id` comes back is shadowed or superseded with no check that it was among the candidates shown.
-- Second risk: **deleting a correction resurrects the value it replaced.** Deleting a supersession chain's head restores its predecessor to `active`, and no record of the rejected value is kept.
-- Third risk: the SDK's bundled HTTP server answers any origin with no credential, and the OpenClaw tools take a model-supplied `userId`.
+- Best idea: **build the scope envelope in the broker, from the grant.** MemHub's `authorizeHost` verifies the host's secret, checks the requested scope against the grant, and writes the grant's own scopes and tools into `x-one-memory-*` headers; Core parses them strictly, refuses any route off its allow-list, and takes the workspace from the host process rather than from a tool argument.
+- Second idea: **refuse a model's target that was never offered.** The coding reconciler freezes each draft's candidate set and drops an UPDATE or DELETE aimed at any other experience, and a failed reconcile stores nothing and rolls back the raw turn, so a retry cannot duplicate.
+- Biggest risk: **the chat reconciler trusts the writer model's target ids.** The reconcile prompt lists real memory UUIDs, and whatever `memory_id` comes back is shadowed or superseded with no check that it was among the candidates shown.
+- Second risk: **MemHub checks a scope it never applies.** Its memories live in the SDK with no per-memory scope, so recall searches the whole library whatever workspace scope the grant allows, and a revoked source's memories stay recallable.
+- Third risk: deleting a correction resurrects the value it replaced, the SDK's bundled HTTP server answers any origin with no credential, and the OpenClaw tools take a model-supplied `userId`.
 - Most reusable component: `memhub/apps/core/src/one_memory/external_memory_access.py` — a strict parser for a broker-built grant envelope and a route allow-list that refuses everything else, including id-addressed reads.
-- Maturity impression: Apache-2.0, published 16 October 2026 as a single-commit snapshot: 75,578 lines of SDK Python with 1,238 test functions run in CI, and MemHub's 80,944 lines of Core Python and 32,739 of host-bridge TypeScript with 4,282 Core test functions. The model card's benchmark table cannot be recomputed from the tree. Two marks: `audit_log`, `negative_eval`.
-- Study when: you are building a governed recall surface for several coding hosts on one machine, or an extract-and-reconcile writer and want its failure paths spelled out.
-- Do not copy when: the SDK alone must hold a scope against a model, a deleted correction must stay deleted, or you need a harness to compare memory writers.
+- Maturity impression: Apache-2.0, 307 commits on `main` between 16 October and 2 November 2026: 102,877 lines of SDK Python with 1,507 test functions run in CI, and MemHub's 78,792 lines of Core Python and 32,338 of host-bridge TypeScript with 3,049 Core test functions. The model card's benchmark table cannot be recomputed from the tree. Two marks: `audit_log`, `negative_eval`.
+- Study when: you are building a broker that authenticates several coding hosts on one machine, or an extract-and-reconcile writer and want its failure paths spelled out.
+- Do not copy when: the SDK alone must hold a scope against a model, a deleted correction must stay deleted, a grant must narrow what a host reads, or you need a harness to compare memory writers.
 
 ### [`maka`](../systems/maka/)
 

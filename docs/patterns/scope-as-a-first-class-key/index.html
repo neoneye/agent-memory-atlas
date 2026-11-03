@@ -1487,23 +1487,26 @@ scans every note with an empty chain and no retraction check
 (<code>src/main.rs:417-448</code>), and the bundled skill lists it ahead
 of the MCP tools. <strong>A skill that tells the agent which command to
 run is part of the read surface.</strong></p>
-<p><strong><a href="../../systems/hy-memory/">Hy-Memory</a> holds the
-boundary in the app and not in the library under it.</strong> MemHub's
+<p><strong><a href="../../systems/hy-memory/">Hy-Memory</a> checks the
+host in the app and filters memories only by user.</strong> MemHub's
 broker authenticates a host's grant secret and writes the grant's own
 scopes into a header envelope; Core refuses any requested scope outside
-it, drops memories disjoint from it, and refuses every envelope request
-to a route off its allow-list, including the id-addressed memory read
-(<code>memhub/apps/core/src/one_memory/external_memory_access.py:27-35</code>,
-<code>:116-195</code>). The workspace comes from the host process, under
+it and every envelope request to a route off its allow-list, including
+the id-addressed memory read
+(<code>memhub/apps/core/src/one_memory/external_memory_access.py:24-29</code>,
+<code>:66-142</code>). The workspace comes from the host process, under
 a comment saying a model can name a directory it is not in
-(<code>memhub/packages/host-bridge/src/mcp-session.ts:95-101</code>).
-The SDK it wraps filters search on a caller-supplied user key, leaves
-get, update and delete by id unscoped, and ships OpenClaw tools whose
+(<code>memhub/packages/host-bridge/src/mcp-session.ts:72-79</code>).
+Recall then searches every memory of the user and attaches no scope to a
+hit, so the scope the envelope checked never reaches the query
+(<code>memhub/apps/core/src/one_memory/recall.py:228-319</code>). The
+SDK under it filters search on a caller-supplied user key, leaves get,
+update and delete by id unscoped, and ships OpenClaw tools whose
 <code>userId</code> argument the model fills
 (<code>plugins/openclaw/tools/memory-search.ts:17-31</code>). The report
 withholds the mark on that agent surface. <strong>A scope argument the
-model can fill is a request; only one rebuilt from the grant is a
-boundary.</strong></p>
+model can fill is a request; one rebuilt from the grant is a boundary
+only when the query receives it.</strong></p>
 <p><strong><a href="../../systems/mind/">Mind</a> applies the space
 predicate on every read and lets the model name the space, including all
 of them.</strong> Each search channel, list, count, orientation preview

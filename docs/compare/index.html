@@ -12995,55 +12995,64 @@ Coding a per-function diff chain</td>
 <td>Chroma by default, or Qdrant or FAISS, for chat nodes; Kuzu or Neo4j
 for the schema and intention graph in ultra mode; SQLite for history,
 the operations cache, coding facts, experiences and diff threads. MemHub
-adds its own SQLite ledger of evidence, governed memories, versions and
-grants</td>
+keeps memories only in the SDK's stores and uses its own SQLite database
+for grants, sources, queues and call events; its legacy evidence and
+governed-memory tables are dropped at cutover</td>
 <td>Vector search over layers filtered by user, agent or session key,
 status active and latest, with optional BM25 fusion, tag and entity
 boosts, a local cross-encoder, graph expansion in ultra and
-evolution-chain expansion of hits. Coding adds lexical and
-workspace-scoped search and attaches diff chains. MemHub re-filters HY's
-ranked ids through its ledger</td>
+evolution-chain expansion of hits. Coding adds lexical search,
+workspace, branch, agent and session filters and attaches diff chains.
+MemHub recall searches user local across every agent and re-reads each
+hit, keeping active ones</td>
 <td>Synchronous in add(): the raw turn is stored, one model call
 extracts facts, intentions and basic info, a second compares them with
-the user's candidate memories and returns ADD, UPDATE, SUPERSEDE or
-DELETE ops, which the writer applies; the raw turn is then shadowed.
-Summaries and graph projection run as background tasks</td>
+the user's same-source candidates and returns ADD, UPDATE, SUPERSEDE or
+DELETE ops, which the writer applies; the raw turn is then shadowed. A
+failed reconcile stores nothing and rolls the raw turn back. Summaries
+and graph projection run as background tasks</td>
 <td>UPDATE rewrites a fact in place; SUPERSEDE marks the old fact
 superseded and links it; the reconciler's DELETE shadows it.
 client.update re-embeds by id; client.delete hard-deletes vector and
 graph rows and restores a deleted chain head's predecessor to active.
-MemHub deletes softly and queues the HY delete</td>
+MemHub's person routes check ownership, then call the SDK's update and
+delete</td>
 <td>SDK: an isolation key of user, agent and session, with search
 requiring user_ids and filtering on them; reconcile candidates are
 user-wide across agents by design; get, update and delete by id are
 unscoped, and the OpenClaw tools take a model-supplied userId. Coding:
-workspace and branch filters. MemHub: grant envelopes with all-apps,
-workspace and source scopes on every external read</td>
+workspace, branch, agent and session filters. MemHub: a broker-built
+grant envelope checks host, tool and requested scope, then recall
+searches all of user local with no per-memory scope</td>
 <td>Python SDK, a stdlib HTTP server on 127.0.0.1 with no authentication
 and CORS open to any origin, an OpenClaw plugin with six tools and
-auto-recall and auto-capture hooks; MemHub ships an MCP server, a recall
-broker, Claude Code and other host hooks, a desktop app and a CLI</td>
+auto-recall and auto-capture hooks, and a Hermes provider whose user and
+agent come from configuration; MemHub ships an MCP server with recall,
+write and a diagnostic trace, a recall broker, Claude Code and other
+host installers, a desktop app and a CLI</td>
 <td>Episode summaries and graph projection scheduled after writes;
 System 2 schema induction, cross-domain sweeps and forget-marker
 retirement only when evolve() or sweep() is called in ultra mode;
-MemHub's processing runner imports transcripts from granted sources and
-calls HY ingest</td>
+MemHub's durable queue sends imported transcript windows and hand-added
+memories to SDK add, and in ultra runs evolve once a night per user</td>
 <td>No epistemic state. SHADOW and SUPERSEDED are lifecycle states that
 the read filters honour; NEGATED and CONFLICTED have no writer,
 schema_status is never set, and source_type and confidence rank. MemHub
-writes every memory confirmed on arrival and converts legacy candidate
-rows to confirmed</td>
+holds no state of its own: recall keeps SDK rows whose status is
+active</td>
 <td>A grant envelope that a model cannot widen, built by the broker and
-re-checked by Core; a correction ledger that refuses a model write
-resting on evidence a person overruled; a zero-LLM diff chain recording
+parsed strictly by Core; a coding reconciler that drops any target
+outside the candidates it offered; a reconcile failure that stores
+nothing and rolls back the raw turn; a zero-LLM diff chain recording
 each version of edited code; exact-list negative tests on real
 stores</td>
-<td>One model setting drives write and read-side model calls;
-model-chosen target ids are applied without checking they were among the
-candidates; deleting a correction resurrects the value it replaced; the
-SDK server has no authentication and open CORS; the OpenClaw tools let
-the model name any user, so no shipped agent surface holds a scope on
-the SDK; no harness for the published model numbers</td>
+<td>One model setting drives write and read-side model calls; the chat
+reconciler applies model-chosen target ids without checking they were
+among the candidates; deleting a correction resurrects the value it
+replaced; the SDK server has no authentication and open CORS; the
+OpenClaw tools let the model name any user; MemHub recall applies
+neither the granted scope nor source revocation; no harness for the
+published model numbers</td>
 </tr>
 <tr>
 <td><a
