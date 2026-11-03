@@ -9,7 +9,7 @@ source_url: https://github.com/GabrielMartinMoran/mind
 archive_name: "GabrielMartinMoran--mind"
 revision: 4e9a41e9432810269553e7a369d05d0bd1f36852
 revision_url: https://github.com/GabrielMartinMoran/mind/commit/4e9a41e9432810269553e7a369d05d0bd1f36852
-analyzed_at: 2026-10-28
+analyzed_at: 2026-11-03
 licence: "MIT; LICENSE read in full, no rider"
 size: "18,998 lines of TypeScript in src/; the store, MCP handlers and checkpoint code are 7,861 of them, autosync 2,490 and agent setup 1,884. The web app (12,602 lines in web/src) and the benchmark harnesses (38,430 lines in benchmarks/) sit outside the core"
 activity: "140 commits on main by 2 contributors, 27 April 2025 – 26 October 2026; the pin is the head of main, the v1.7.0 release commit"
@@ -591,5 +591,7 @@ Checked against the checkout at the pinned revision, from the tree root.
 - `git grep -l -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- . ':!bun.lock' ':!benchmarks/agent-memory/bun.lock'` — no match, and no `CITATION.cff`.
 
 ## History
+
+**2026-11-03** — [`4e9a41e9432810269553e7a369d05d0bd1f36852`](https://github.com/GabrielMartinMoran/mind/commit/4e9a41e9432810269553e7a369d05d0bd1f36852) — the head of `main` has not moved, so the pin stands. Every recorded search returns what the appendix says, and every line anchor in the report resolves to the cited code. The six withheld marks were tested again against the rubric with the same result, and section 9 keeps its reasons. One commit sits on `develop` and not on `main`: [`d22d60b412ba06657d7b15738775d82af6f048f9`](https://github.com/GabrielMartinMoran/mind/commit/d22d60b412ba06657d7b15738775d82af6f048f9) stops folding Cyrillic `й` and `ё` in the matching tokenizer. No claim here depends on it. Screened again: no auto-run surface and nothing inside the cooldown. Nothing was installed or run.
 
 **2026-10-28** — [`4e9a41e9432810269553e7a369d05d0bd1f36852`](https://github.com/GabrielMartinMoran/mind/commit/4e9a41e9432810269553e7a369d05d0bd1f36852) — first reading, at the head of `main`, the v1.7.0 release commit of 26 October 2026, from a shallow clone (`--depth 1`); history from the GitHub API. One mark, `negative_eval`. Screened before reading: no auto-run surface; two build-time execution points, the `Makefile` and a `prepare: husky install` script; 14 dependency surfaces inside the cooldown, inflated because the shallow clone dates every file to the tip; two unpinned surfaces with `bun.lock` present, 17 floating ranges at the root and 2 in the benchmark; `AGENTS.md` and its `CLAUDE.md` symlink read as data. The hosted benchmark run was checked through the API and its artifact not downloaded. Nothing was installed, built or run.
