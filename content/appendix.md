@@ -470,6 +470,7 @@ page_kind: comparison
 - [`mem-mastero`](../systems/mem-mastero/)
 - [`ultimateassistant`](../systems/ultimateassistant/)
 - [`monomem`](../systems/monomem/)
+- [`sol0mon`](../systems/sol0mon/)
 
 ## Repos Inspected
 
@@ -1244,12 +1245,13 @@ page_kind: comparison
 - [Shaf2665/mem-mastero](https://github.com/Shaf2665/mem-mastero) at [`f0221b2757cea4dafad3dd928ddcc2d13de2f170`](https://github.com/Shaf2665/mem-mastero/commit/f0221b2757cea4dafad3dd928ddcc2d13de2f170) — read only, from a full clone, at the head of `main` on 1 November 2026; four auto-run surfaces, all the plugin's own (the `.claude-plugin/` marketplace and plugin manifests, the `hooks/` directory, and `hooks/hooks.json` registering SessionStart, Stop and SessionEnd commands), no build-time or unpinned surface, and `package.json`, which names no dependencies, inside the seven-day cooldown. Nothing was installed, built or run, and the 25 test scripts were not run. MIT
 - [KianJRoss/UltimateAssistant-release](https://github.com/KianJRoss/UltimateAssistant-release) at [`814a589acbe004f52ed2ffffb2c1afb539649bd8`](https://github.com/KianJRoss/UltimateAssistant-release/commit/814a589acbe004f52ed2ffffb2c1afb539649bd8) — read only, from a full clone, at the head of `main` on 2 November 2026; no auto-run surface, one execution point on pytest collection (`apps/assistant/conftest.py`), two floating requirements files (`apps/assistant/requirements.txt` with 13 unpinned entries and `components/canvas-overlay/requirements.txt` with 4), nothing inside the seven-day cooldown and no agent-instruction file. Herald, which `setup.ps1` installs from SHA-256-pinned wheels named in `herald.json`, was not downloaded or read. Nothing was installed, built or run, and no tests were run. AGPL-3.0-or-later
 - [calasdan-sketch/monomem](https://github.com/calasdan-sketch/monomem) at [`292a312cce18e46884520a63826c91c919fe76f8`](https://github.com/calasdan-sketch/monomem/commit/292a312cce18e46884520a63826c91c919fe76f8) — read only, from a full clone, at the head of `main` on 3 November 2026; no auto-run surface, one build-time script (`prepublishOnly` running `npm run build`), four caret ranges behind a committed lockfile, and `package.json` and `package-lock.json` inside the seven-day cooldown. `SKILL.md`, `skills/monomem-mem/SKILL.md` and `.github/` were read as data. Nothing was installed, built or run, and neither the 114 test files nor the benchmark was run. MIT
+- [sh1618112233/Sol0mon](https://github.com/sh1618112233/Sol0mon) at [`2bd65e33d973b8357843e7ce95999976845fe9ec`](https://github.com/sh1618112233/Sol0mon/commit/2bd65e33d973b8357843e7ce95999976845fe9ec) — read only, from a full clone, at the head of `main` on 13 October 2026; no auto-run or build-time surface, an execution point on pytest collection in each copy's `tests/conftest.py` (`Sol0mon/` and `Sol0mon-Windows/`), nothing unpinned, nothing inside the seven-day cooldown and no agent-instruction file. `Sol0mon/` was read; `Sol0mon-Windows/` differs from it in three files. Nothing was installed, built or run, and no tests were run. No licence: no LICENSE file, and the README says none has been selected
 
 ## What the licences actually say
 
 A licence is an operational caveat, not a memory mechanism, so it lives in the
 appendix — but a reader deciding whether they can *use* something needs it.
-"Publicly readable source" is not "open source": **nineteen carry a licence
+"Publicly readable source" is not "open source": **twenty carry a licence
 that is not open source**, each named in its own report and collected here.
 
 | Licence | Systems |
@@ -1259,14 +1261,14 @@ that is not open source**, each named in its own report and collected here.
 | Non-commercial — read and run, do not build a product on it | [Memento](../systems/memento/) (PolyForm Noncommercial 1.0.0), [Project Golem](../systems/project-golem/) (its own source-available non-commercial licence), [NouGenShards](../systems/nougenshards/) (its own source-available licence; inspection and personal use granted, commercial use, competing hosted services and use to build competing AI memory or retrieval products prohibited) |
 | Conditional MIT — three added conditions, revocable at the author's discretion | [Z-Waif](../systems/z-waif/) (a 2% royalty on gross income above $100,000 lifetime; an "ethical treatment" clause *"DEFINED AT SugarcaneDefender's SOLE DESCRECION"*; and — the one that constrains the memory itself — no collection or storage of "user logs, character configurations, or other user data" without consent obtained through terms the user "MUST ACCEPT UPON OPENING" the software) |
 | Conditional BSD — branding may not be altered above fifty users | [Open WebUI](../systems/open-webui/) (the "Open WebUI License": BSD-3 plus a fourth clause making removal of the branding "a material breach" in any deployment reaching fifty end users in a rolling thirty days, absent a written permission or an enterprise licence) |
-| All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (whose README asserts MIT with no licence file under it), [SESA](../systems/sesa/) (no licence file, which defaults to this) and [Master Agent System](../systems/master-agent-system/) (no licence file at the root, beside vendored packages that carry their own) |
+| All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (whose README asserts MIT with no licence file under it), [SESA](../systems/sesa/) (no licence file, which defaults to this), [Master Agent System](../systems/master-agent-system/) (no licence file at the root, beside vendored packages that carry their own) and [Sol0mon](../systems/sol0mon/) (no licence file, and a README saying none has been selected) |
 
 Two things this table is not. It is **not a complete licence taxonomy of the
 corpus**: it collects what the reports happened to record, and a report is
 written about mechanisms, so a permissive licence usually goes unmentioned. The
-rest have not each been checked — the honest claim is that nineteen are known
+rest have not each been checked — the honest claim is that twenty are known
 non-open-source and the others are unrecorded, not that the others are MIT. And
-it is **not a reason to skip those nineteen**: every mechanism in this atlas is
+it is **not a reason to skip those twenty**: every mechanism in this atlas is
 described so it can be re-implemented rather than copied, which is the only way a
 restrictively licensed system can be read usefully. What changes is what you may
 do with the code afterwards, and that is worth knowing before you open the file

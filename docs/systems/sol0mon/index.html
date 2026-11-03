@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A multi-model debate pipeline that
+stores verifier-graded architecture decisions in SQLite and replays the
+resolved ones as immutable constraints for a coding agent.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Sol0mon — Agent Memory Atlas">
+    <meta property="og:description" content="A multi-model debate
+pipeline that stores verifier-graded architecture decisions in SQLite
+and replays the resolved ones as immutable constraints for a coding
+agent.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sol0mon — Agent Memory Atlas">
+    <meta name="twitter:description" content="A multi-model debate
+pipeline that stores verifier-graded architecture decisions in SQLite
+and replays the resolved ones as immutable constraints for a coding
+agent.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Sol0mon — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Sol0mon",
+      "description": "A multi-model debate pipeline that stores verifier-graded architecture decisions in SQLite and replays the resolved ones as immutable constraints for a coding agent.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Verifier verdicts that bind the build</p>
+          <h1>Sol0mon</h1>
+          <p class="document-deck">A multi-model debate pipeline that
+stores verifier-graded architecture decisions in SQLite and replays the
+resolved ones as immutable constraints for a coding agent.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/sh1618112233/Sol0mon">
+              <span>Source</span>
+              <strong>sh1618112233/Sol0mon</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/sh1618112233/Sol0mon/commit/2bd65e33d973b8357843e7ce95999976845fe9ec" title="2bd65e33d973b8357843e7ce95999976845fe9ec">
+              <span>Analyzed revision</span>
+              <code>2bd65e33…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-03</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sh1618112233--Sol0mon" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>sh1618112233--Sol0mon</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>None;
+no LICENSE file, the README says no licence has been selected, and
+GitHub reports none, so all rights reserved by default</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>41,153
+lines of Python in 83 modules of Sol0mon/, outside tests/, 17 root test
+scripts and eight manual browser probes; Sol0mon-Windows/ duplicates the
+tree with three files changed</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4
+commits on 13 October 2026, one author under two
+addresses</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>52
+pytest files in tests/ and 17 root test scripts, 23,986 lines;
+run_all_tests.py runs 23 of them as scripts and counts a timeout as a
+skip; no CI; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Sol0mon puts one question to ChatGPT and Gemini through their
+websites, extracts the points they disagree on, debates each one and has
+a separate verifier model grade it. The results persist as architecture
+decisions, which a coding agent later receives as constraints it must
+honour. The notable part is the verdict: each disputed claim is stored
+as <code>RESOLVED</code>, <code>UNRESOLVED</code> or
+<code>EQUIVALENT</code>, and one canonical reader lets only resolved
+claims become build constraints. The weak part is correction. On every
+workspace the shipped CLI can reach, the follow-up path looks decisions
+up under a key the build wrote under another name, so a decision a
+follow-up contradicts stays settled.</p>
+<p>The second weakness is the human channel. A question the governor
+cannot settle waits in a SQLite queue and blocks the build, but the only
+resolver is a Python function no shipped command calls. The person's
+chosen option is written and never read, so their answer reaches memory
+only if they retype it as a follow-up question.</p>
+<p>There is no licence. The README says none has been selected
+(<code>README.md:9</code>, <code>:180-182</code>) and the repository
+carries no LICENSE file, so the code is all rights reserved by default:
+readable, not reusable. One mark, <code>trust_state</code>, is earned,
+by the verifier verdict and its reader.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>decision about a dispute</strong>. A dispute is
+a point where the two debating models' answers conflict, given a
+<code>normalized_key</code> by a validator model
+(<code>_eval_validate</code>, <code>debate_engine.py:238</code>; key
+fallback at <code>:609-610</code>). After bounded debate rounds,
+<code>verify_all_disputes</code> sends every dispute to a verifier
+model, which returns per dispute a status, a confidence, a finding
+naming the winner and a list of <code>rejected_options</code>
+(<code>verification_engine.py:187-224</code>). The status is clamped to
+the three legal values with <code>UNRESOLVED</code> as the default
+(<code>:425-427</code>). Records are filed into three buckets
+(<code>:513-524</code>).</p>
+<p>Resolved and equivalent claims are settled. Unresolved claims go to
+governance, which ends each one as a verified decision, a verified
+tradeoff or <code>HUMAN_REQUIRED</code>
+(<code>debate_engine.py:950-982</code>). The whole result, both models'
+final text included, is appended as one row to <code>debates</code>
+(<code>answer_memory.py:230-313</code>). A debate whose verification
+score is under 90 with unresolved claims is stored too, with
+<code>[FAILED VERIFICATION]</code> as its synthesis
+(<code>debate_engine.py:1026-1036</code>).</p>
+<p>A stored verdict never changes. No code path updates a claim inside
+<code>verification_result</code>; the one <code>UPDATE</code> on
+<code>debates</code> merges four execution keys into that blob
+(<code>answer_memory.py:486-587</code>). A later contradiction is a new
+row, linked by <code>parent_answer_id</code> when it came through a
+workspace.</p>
+<p>Beliefs change in the <strong>workspace</strong>, a second store. A
+workspace row holds <code>verified_decisions</code>,
+<code>verified_tradeoffs</code> and <code>resolved_disputes</code> as
+JSON lists (<code>workspace_manager.py:315-341</code>). Membership in
+<code>verified_decisions</code> is the belief. A follow-up question
+removes the decisions it affects from those lists and re-debates them
+(<code>workspace_debate_engine.py:194-251</code>). If the re-debate
+resolves, a decision returns under whatever key the validator model
+gives the reopened text. If it deadlocks, the decision is gone
+(<code>:281-308</code>). Nothing records which value it replaced, and
+nothing marks the old value rejected.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a verdict is fixed when the debate is saved; a build replays only RESOLVED claims, into a workspace keyed where the follow-up path does not look</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a verdict is fixed when the debate is saved; a build replays only RESOLVED claims, into a workspace keyed where the follow-up path does not look
+flowchart TD
+  DEB[&quot;sol0mon debate&lt;br/&gt;ChatGPT and Gemini&lt;br/&gt;over the browser&quot;] --&gt; VER{&quot;verifier model&lt;br/&gt;one verdict&lt;br/&gt;per dispute&quot;}
+  VER --&gt;|&quot;RESOLVED&quot;| RES[&quot;debates row&lt;br/&gt;resolved_claims&quot;]
+  VER --&gt;|&quot;UNRESOLVED or&lt;br/&gt;unknown value&quot;| UNR[&quot;debates row&lt;br/&gt;unresolved_claims&quot;]
+  UNR --&gt; GOV[&quot;governance:&lt;br/&gt;HUMAN_REQUIRED filed&lt;br/&gt;under standalone_debate&quot;]
+  GOV --&gt; HUM[&quot;resolver is a&lt;br/&gt;Python function;&lt;br/&gt;chosen_option unread&quot;]
+  RES --&gt; BLD[&quot;sol0mon build answer N&lt;br/&gt;RESOLVED claims become&lt;br/&gt;MUST constraints&quot;]
+  UNR -.-&gt;|&quot;excluded&quot;| BLD
+  BLD --&gt; WS[&quot;workspace row&lt;br/&gt;verified_decisions&lt;br/&gt;keyed dispute_key&quot;]
+  WS --&gt; FU[&quot;resume --follow-up&lt;br/&gt;last 10 decisions&lt;br/&gt;sent as SETTLED&quot;]
+  FU --&gt; IMP{&quot;impact analyzer&lt;br/&gt;matches on&lt;br/&gt;normalized_key&quot;}
+  IMP --&gt;|&quot;hit in&lt;br/&gt;resolved_disputes&quot;| RED[&quot;re-debated;&lt;br/&gt;new key from&lt;br/&gt;a model&quot;]
+  IMP --&gt;|&quot;dispute_key rows&quot;| STAY[&quot;verified copy&lt;br/&gt;survives the filter,&lt;br/&gt;stays SETTLED&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>All paths below are under <code>Sol0mon/</code> unless they name the
+root.</p>
+<p>The repository holds two copies of one Python application.
+<code>Sol0mon-Windows/</code> differs from <code>Sol0mon/</code> in
+three files: <code>implementation_executor.py</code> runs pytest through
+<code>sys.executable</code> rather than <code>python3</code>
+(<code>Sol0mon-Windows/implementation_executor.py:88</code>,
+<code>:109</code>), the warm-up self-check in
+<code>tests/test_debate_warmup.py</code> uses <code>tempfile</code>
+instead of <code>/tmp</code>, and the README is rewritten. Everything
+here was read in <code>Sol0mon/</code>.</p>
+<p><strong>Debate.</strong> <code>chat_session.py</code> attaches
+Playwright to a Chrome the user started with
+<code>--remote-debugging-port=9222</code> and signed in to ChatGPT and
+Gemini (<code>chat_session.py:76</code>). <code>gpt_worker.py</code> and
+<code>gemini_worker.py</code> drive the two sites.
+<code>debate_engine.py</code> runs warm-up rounds, conflict extraction
+and up to 15 rounds per dispute against a 92% consensus threshold
+(<code>debate_engine.py:43-44</code>).</p>
+<p><strong>Verification and governance.</strong>
+<code>provider_router.generate</code>
+(<code>provider_router.py:293</code>) sends verifier and governance
+prompts to Cerebras, Groq, OpenRouter or a local Ollama, keyed from
+<code>.env</code>.</p>
+<p><strong>Stores.</strong> <code>answer_memory.db</code> holds the
+<code>debates</code> table. <code>database/workspaces.db</code> holds
+<code>workspaces</code> and <code>unified_human_decisions</code>. Both
+paths are relative to the process's working directory
+(<code>answer_memory.py:5</code>; <code>workspace_manager.py:31</code>;
+<code>human_decision_store.py:39</code>). A build also writes
+<code>answer.json</code>, <code>decisions.json</code> and
+<code>build_state.json</code> under <code>workspaces/&lt;id&gt;/</code>
+(<code>build_pipeline.py:132-157</code>).</p>
+<p><strong>Build.</strong>
+<code>build_pipeline.run_build_pipeline</code> resurrects an answer,
+generates a specification through another debate, plans stages and runs
+<code>opencode run --auto --dir &lt;working_dir&gt;</code> as a
+subprocess (<code>coding_agents/opencode_agent.py:5</code>), with
+bounded repair. <code>build_finalizer.py</code> then reconciles the
+answer row and registers the workspace in SQL.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>An operator needs Python 3.12, Chrome with a dedicated signed-in
+profile, ChatGPT and Gemini accounts, and either a verifier API key or a
+running Ollama. The debate cannot run offline or headless without those
+sessions. <code>requirements.txt</code> pins 85 packages exactly,
+LangChain, LangGraph, Playwright and three provider SDKs among them. No
+installer exists beyond the README's venv steps. The stores are plain
+SQLite with JSON in TEXT columns and are repairable with
+<code>sqlite3</code>. Running the CLI from a different directory opens
+two new, empty stores.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>CLI.</strong> <code>sol0mon_cli.py:351-410</code> registers
+<code>debate</code>, <code>build answer &lt;id&gt;</code>,
+<code>resume [workspace_id] [--follow-up]</code> and
+<code>status</code>.</li>
+<li><strong>Debate write.</strong> <code>_cmd_debate</code> calls
+<code>pipeline_runner.execute(args.prompt)</code> with no memory ids
+(<code>sol0mon_cli.py:58</code>); <code>execute</code> runs
+<code>DebateEngine.run</code> (<code>pipeline_runner.py:22-41</code>).
+<code>_synthesize_and_return</code> computes the synthesis, the
+execution decision and a deterministic human answer, then calls
+<code>memory.save_debate</code>
+(<code>debate_engine.py:1154-1220</code>).</li>
+<li><strong>Verdict.</strong> <code>verify_all_disputes</code>
+(<code>verification_engine.py:226-552</code>);
+<code>_persist_rejected_options</code> keeps the model's list or derives
+one from the finding (<code>:114-126</code>).</li>
+<li><strong>Prior-debate context.</strong>
+<code>AnswerMemory.build_context</code> renders prior rows'
+<code>decision_summary</code> and <code>[STATUS] key: decision</code>
+lines (<code>answer_memory.py:589-632</code>), prepended when
+<code>memory_ids</code> is passed
+(<code>debate_engine.py:427-434</code>). No CLI command passes
+<code>memory_ids</code>.</li>
+<li><strong>Resurrection.</strong> <code>build answer N</code> reaches
+<code>answer_selector.select_answer</code>
+(<code>answer_selector.py:54-78</code>) and
+<code>answer_loader.get_answer_by_id</code>, which shapes the row and
+derives <code>verified_decisions</code> from
+<code>resolved_claims</code> only (<code>answer_loader.py:32-97</code>).
+<code>_source_result_from_answer</code> sets <code>human_required</code>
+to <code>[]</code> (<code>build_pipeline.py:72-80</code>).
+<code>_create_workspace_from_answer</code> writes
+<code>decisions.json</code> (<code>:132-157</code>).</li>
+<li><strong>Constraints.</strong>
+<code>build_prompt_generator.extract_constraints</code> frames each
+verified decision as an immutable rule
+(<code>build_prompt_generator.py:121-137</code>);
+<code>build_spec_engine</code> renders winners through
+<code>decision_model.decision_records</code>
+(<code>build_spec_engine.py:200-225</code>;
+<code>decision_model.py:496-514</code>).</li>
+<li><strong>Finalizer.</strong> <code>update_build_result</code> merges
+the effective execution verdict into the answer row
+(<code>answer_memory.py:486-587</code>;
+<code>build_finalizer.py:309-317</code>).
+<code>upsert_build_workspace</code> writes the SQL workspace row from
+<code>decisions.json</code> (<code>build_finalizer.py:395-408</code>;
+<code>workspace_manager.py:586-750</code>).</li>
+<li><strong>Follow-up.</strong>
+<code>resume &lt;ws&gt; --follow-up</code> reaches
+<code>workspace_orchestrator.follow_up_workspace</code>, which starts
+<code>WorkspaceDebateEngine.resume_workspace</code> in a thread
+(<code>workspace_resume_ui.py:418-447</code>;
+<code>workspace_orchestrator.py:158-186</code>;
+<code>workspace_debate_engine.py:141-465</code>).</li>
+<li><strong>Human queue.</strong> <code>enqueue_human_decision</code>
+calls <code>HumanDecisionStore.create</code>
+(<code>human_decision_store.py:123-179</code>); the build gate reads
+<code>load_pending</code> (<code>build_pipeline.py:287-299</code>);
+<code>resume</code> reports <code>blocked_pending_humans</code>
+(<code>resume.py:217-225</code>).</li>
+<li><strong>Repair memory.</strong> <code>RepairMemory</code> records
+attempts and blacklists a failed
+<code>(strategy, files, failure signature)</code> fingerprint
+(<code>repair_memory.py:322-340</code>). Its only constructor calls are
+in <code>NativeValidationEngine</code>
+(<code>validation_engine.py:1494-1503</code>), which no shipped path
+builds.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong><code>debates</code></strong>
+(<code>answer_memory.py:43-133</code>): <code>id</code>,
+<code>created_at</code>, <code>question</code>, <code>gpt_final</code>,
+<code>gemini_final</code>, <code>synthesized_answer</code>,
+<code>consensus_score</code>, <code>conflict_severity</code>,
+<code>conflict_points</code>, and by migration
+<code>resolved_decisions</code>, <code>decision_summary</code>,
+<code>validated_disputes</code>, <code>verification_result</code>,
+<code>parent_answer_id</code>, <code>workspace_id</code> and
+<code>human_answer</code>. The comment above the schema says <em>"Drop
+raw gpt_final/gemini_final transcript columns"</em> (<code>:38</code>).
+Both columns stay <code>NOT NULL</code>, and <code>save_debate</code>
+writes them. The project's <code>docs/memory_requirements.md</code> says
+memory is <em>"NOT to store debate transcripts"</em>.</p>
+<p><code>resolved_decisions</code> is a compact per-dispute list with
+<code>status</code> of <code>resolved</code>, <code>unresolved</code> or
+<code>unverified</code>, and <code>decision</code>, <code>winner</code>,
+<code>rationale</code> and <code>finding</code> all filled from the same
+finding text (<code>answer_memory.py:164-221</code>).</p>
+<p><strong><code>workspaces</code></strong>
+(<code>workspace_manager.py:315-341</code>): one row per workspace,
+every list a JSON TEXT column. <code>save_workspace</code> rewrites all
+of them on every call (<code>:460-560</code>).
+<code>architecture_constraints</code> is filled from prior debates when
+a workspace is created with <code>memory_ids</code>
+(<code>:392-440</code>), and no module outside
+<code>workspace_manager.py</code> reads it.</p>
+<p><strong><code>unified_human_decisions</code></strong>
+(<code>human_decision_store.py:96-107</code>):
+<code>(workspace_id, decision_id)</code> key, the full decision as JSON,
+<code>resolved</code>, <code>chosen_option</code>,
+<code>resolved_at</code>, <code>priority</code>.</p>
+<p><strong>Keys.</strong> A dispute's identity is
+<code>normalized_key</code>, chosen by a model. Two writers name it
+differently: the debate engine writes <code>normalized_key</code>
+(<code>workspace_debate_engine.py:354-389</code>), and
+<code>_to_verified_decisions</code> writes <code>dispute_key</code>
+(<code>answer_loader.py:56-71</code>), which is what a build-registered
+workspace stores.</p>
+<p><strong>Time.</strong> <code>created_at</code> on each row,
+<code>updated_at</code> on workspaces, <code>resolved_at</code> on human
+decisions. No validity interval exists.</p>
+<p><strong>Scope.</strong> The workspace is the partition. The answer
+table is global and read by integer id. Human decisions carry
+<code>workspace_id</code> and every read filters on it
+(<code>human_decision_store.py:311-370</code>). The plain debate path
+files its human decisions under the literal id
+<code>standalone_debate</code> (<code>debate_engine.py:345</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is by key, never by relevance. <code>build answer N</code>
+loads row <code>N</code>. A follow-up loads one workspace row and builds
+two injections from it:</p>
+<ul>
+<li><code>get_constraint_context</code> takes the last ten
+<code>verified_decisions</code>, prints
+<code>[normalized_key]: decision</code> for each, and ends <em>"The
+above decisions are SETTLED from prior interactions. Do not contradict
+them."</em> (<code>workspace_manager.py:249-259</code>);</li>
+<li>per reopened or new dispute, an <code>ArchitectureMemory</code>
+built from the same list injects up to <code>MAX_CONSTRAINTS</code>
+decisions by priority weight
+(<code>workspace_debate_engine.py:261-289</code>;
+<code>debate_engine.py:143-160</code>).</li>
+</ul>
+<p>For a build-registered workspace every decision has an empty
+<code>normalized_key</code>. The constraint context then prints
+<code>[]: &lt;finding&gt;</code>, and the
+<code>ArchitectureMemory</code> keys all of them under <code>""</code>,
+so only the last survives the loop
+(<code>workspace_debate_engine.py:262-271</code>).</p>
+<p><code>search_debates</code> matches <code>LIKE</code> on four columns
+(<code>answer_memory.py:413-455</code>). Its only caller is
+<code>answer_loader.search_answers</code>, which nothing outside tests
+calls. It escapes <code>%</code> and <code>_</code> with backslashes,
+under a comment calling this a security measure. The query has no
+<code>ESCAPE</code> clause, so SQLite reads each backslash literally. A
+query containing <code>_</code>, such as any normalized key, then
+matches only text with a backslash in that position.</p>
+<p><code>build_context</code> caps prior-debate context at 8,000
+characters by keeping the tail (<code>debate_engine.py:45</code>,
+<code>:431-433</code>). It is unreachable from the CLI.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a side effect of a pipeline stage, and no model or
+agent is handed a memory tool. The debating models are web chat sessions
+with no tool surface into Sol0mon. The verifier and governor return JSON
+that the engine validates and stores. The coding agent receives
+constraints as prompt text.</p>
+<p><strong>Debate rows</strong> are append-only apart from the
+finalizer's merge. A save happens once per completed or failed debate,
+after synthesis.</p>
+<p><strong>Workspace rows</strong> come from two writers on CLI paths:
+the finalizer's upsert after a build, and <code>save_workspace</code>
+during a follow-up. <code>add_verified_decision</code> dedups by
+<code>normalized_key</code>, and appends every decision that has none
+(<code>workspace_manager.py:218-225</code>). A follow-up stores a
+dispute the verifier resolved with
+<code>decision = d.dispute_text</code>, the dispute's description,
+rather than the finding that names the winner
+(<code>workspace_debate_engine.py:384-389</code>).</p>
+<p><strong>The finalizer's upsert replaces the decision state.</strong>
+It writes <code>verified_decisions</code> and
+<code>resolved_disputes</code> from <code>decisions.json</code> and
+every other list from its defaults, <code>impact_audit_trail</code>
+included (<code>workspace_manager.py:643-700</code>).
+<code>resume.py:665-705</code> runs the finalizer again after a resumed
+build. A follow-up's reopenings on a build workspace, and its audit
+trail, are overwritten by the next resumed build of that workspace.</p>
+<p><strong>Execution verdict.</strong> The comment at
+<code>debate_engine.py:1181-1184</code> calls the saved execution
+decision <em>"immutable on disk"</em>. <code>update_build_result</code>
+replaces it with the effective post-override verdict and keeps no prior
+value (<code>answer_memory.py:546-574</code>).</p>
+<p><strong>Human decisions.</strong> <code>create</code> upserts by
+<code>decision_id</code>, or by semantic key among unresolved rows only
+(<code>human_decision_store.py:181-207</code>). A question already
+answered is therefore queued again as a new pending row when governance
+raises it next time. <code>save_pending</code> deletes the workspace's
+pending rows and re-inserts the given list (<code>:396-420</code>).</p>
+<p><strong>Deletion.</strong> <code>delete_debate</code>,
+<code>delete_workspace</code> and <code>HumanDecisionStore.delete</code>
+exist. Each has no caller outside self-checks and tests.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The debate is the expensive, blocking part: two browser sessions,
+warm-up rounds, up to 15 rounds per dispute and a verifier call per
+batch, all inline in the CLI process. The memory write itself is one
+SQLite insert at the end. A debate is retrievable by id as soon as
+<code>save_debate</code> returns. No background pass reads or rewrites
+the stores. A follow-up injects at most ten decisions plus the original
+prompt, ahead of the follow-up text, into a fresh browser message.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no MCP server, SDK or hook. Sol0mon is the orchestrator, and
+the models it orchestrates are given no verb over memory. The coding
+agent is OpenCode run with <code>--auto</code> in the build workspace's
+directory, and it has a general shell.</p>
+<p>The CLI has four commands and no memory command: no list, search,
+delete, reopen or resolve. A user picks prior work by answer id for
+<code>build</code> and from a numbered page of recent workspaces for
+<code>resume</code> (<code>workspace_resume_ui.py:288</code>). The
+project's engineering spec documents the workspace API,
+<code>resolve_human_requirement</code> included, as Python calls
+(<code>docs/sol0mon_engineering_spec.md:4415-4428</code>).</p>
+<p>Adapting it means replacing the browser workers. The decision model,
+<code>decision_records</code> and the impact analyzer are pure functions
+over dicts and would lift out cleanly.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-follow-up-cannot-find-a-built-workspaces-decisions">The
+follow-up cannot find a built workspace's decisions</h3>
+<p><code>sol0mon resume</code> lists SQL workspace rows, and on CLI
+paths only the build finalizer writes them. The decisions in those rows
+come from <code>_to_verified_decisions</code> and are keyed
+<code>dispute_key</code>. The follow-up path reads
+<code>normalized_key</code> everywhere a verified decision is matched.
+That covers the impact analyzer's gather
+(<code>workspace_impact_analyzer.py:101-130</code>, which falls back to
+<code>dispute_key</code> for tradeoffs only, at <code>:117</code>), the
+removal filter (<code>workspace_debate_engine.py:243-250</code>),
+<code>reopen_dispute</code> (<code>:483-506</code>) and the constraint
+context. The analyzer can still hit the dispute through
+<code>resolved_disputes</code>, which the finalizer fills from
+<code>resolved_decisions</code>, keyed <code>normalized_key</code>. The
+removal then drops the <code>resolved_disputes</code> entry and leaves
+the <code>verified_decisions</code> copy in place.</p>
+<p>The decision a follow-up contradicts therefore stays in
+<code>verified_decisions</code>. It is injected as settled into that
+follow-up's prompt and into every later one. No test runs a follow-up
+against a finalizer-written row: the <code>resume_workspace</code> tests
+build their workspaces in memory, and those that seed decisions key them
+<code>normalized_key</code>.</p>
+<h3
+id="every-follow-up-opens-by-sending-the-decision-it-reopens-as-settled">Every
+follow-up opens by sending the decision it reopens as settled</h3>
+<p>On any workspace, <code>constraint_context</code> is computed at
+<code>workspace_debate_engine.py:181</code>, before the impact analysis
+at <code>:194</code> and the removal at <code>:243</code>. The first
+prompt of the follow-up therefore lists the decision under <em>"Do not
+contradict them"</em>, beside a follow-up that contradicts it
+(<code>:205-218</code>). The per-dispute injections exclude it, because
+the <code>ArchitectureMemory</code> is built after the removal.</p>
+<h3 id="a-reopened-decision-loses-its-identity">A reopened decision
+loses its identity</h3>
+<p>A reopened dispute re-enters as text,
+<code>[REOPENED] &lt;decision&gt;</code> plus context
+(<code>workspace_debate_engine.py:552-584</code>).
+<code>_build_dispute_queue</code> sends that text to the validator
+model, which may classify it <code>EQUIVALENT</code>, score it under 70,
+or give it a new <code>normalized_key</code>
+(<code>debate_engine.py:592-619</code>). A decision can therefore leave
+the workspace with no replacement, or return under a key the next
+follow-up does not associate with the original.</p>
+<h3 id="governances-verdict-does-not-reach-the-build">Governance's
+verdict does not reach the build</h3>
+<p>When the verifier leaves a claim unresolved and governance then
+settles it as a verified decision, the outcome is recorded on the
+dispute inside <code>validated_disputes</code>. Neither
+<code>debate_engine.py</code> nor <code>governance.py</code> writes
+<code>resolved_claims</code>, so the claim stays in
+<code>unresolved_claims</code>. Resurrection reads only the verifier's
+buckets, so the build treats a governance-settled decision as unresolved
+and never offers it as a constraint.</p>
+<h3 id="the-persons-answer-has-no-reader">The person's answer has no
+reader</h3>
+<p>Governance writes <code>HUMAN_REQUIRED</code> items to the queue, and
+the build gate refuses to run while any is pending for its workspace
+(<code>build_pipeline.py:287-299</code>). Resolution goes through
+<code>HumanDecisionStore.resolve</code>, which sets
+<code>resolved</code>, <code>chosen_option</code> and
+<code>resolved_at</code> (<code>human_decision_store.py:240-273</code>).
+No production module reads <code>chosen_option</code> or
+<code>resolved_list</code>. The spec's documented flow is to call
+<code>resolve_human_requirement</code> and then submit a follow-up that
+states the choice in prose
+(<code>docs/sol0mon_engineering_spec.md:4425-4428</code>).</p>
+<p>The gate also misses the source debate's own questions. A standalone
+debate files them under <code>standalone_debate</code>
+(<code>debate_engine.py:345</code>), and resurrection sets
+<code>human_required</code> to <code>[]</code>
+(<code>build_pipeline.py:77</code>), so
+<code>aggregate_human_decisions</code> never runs for a resurrected
+build (<code>:1143-1145</code>). A persisted
+<code>STOP_HUMAN_REQUIRED</code> verdict passes the pre-workspace gate
+by design (<code>build_pipeline.py:84-88</code>;
+<code>execution_decision.py:499-501</code>). In this reading the build
+workspace's queue is filled only by repair exhaustion
+(<code>implementation_executor.py:220-245</code>;
+<code>staged_executor.py:174-206</code>).</p>
+<h3 id="failed-verification-is-a-resurrectable-answer">Failed
+verification is a resurrectable answer</h3>
+<p>A <code>[FAILED VERIFICATION]</code> row carries
+<code>conflict_severity = FAILED_VERIFICATION</code>, and no reader
+branches on that value. <code>build answer N</code> on such a row builds
+from its resolved claims and recomputes an execution decision from the
+prompt, because the row stores none.</p>
+<h3 id="provenance-and-injection">Provenance and injection</h3>
+<p>Both models' answers come from web pages and are stored whole. A
+dispute's text and the verifier's finding are model output, passed into
+later prompts and, through <code>extract_constraints</code>, into the
+coding agent's prompt as rules it must honour. Nothing screens stored
+text for instructions. The XML-like delimiters in
+<code>build_context</code> and the follow-up prompt are the only
+separation.</p>
+<h3 id="marks">Marks</h3>
+<p>One is carried.</p>
+<ul>
+<li><strong><code>trust_state</code></strong> — earned by the verdict
+and its reader. The verifier's status is discrete, clamped fail-closed,
+and stored per dispute. <code>decision_records</code>, which every
+renderer and the spec go through, admits only <code>RESOLVED</code>
+claims. <code>_to_verified_decisions</code> does the same for the
+constraints, and unresolved claims compute
+<code>STOP_UNRESOLVED_DISPUTES</code>
+(<code>execution_decision.py:333-346</code>). The limits: the verdict is
+a model's and fixed at write, so a stored claim cannot move from
+resolved to rejected. The workspace's notion of belief is list
+membership, not a field.</li>
+<li><strong><code>tombstone</code></strong> — withheld.
+<code>rejected_options</code> is keyed on the option's value, but it is
+consulted only to render and validate the same answer
+(<code>decision_renderer.py:836</code>, <code>:967</code>;
+<code>validation.py:147-160</code>). No later debate, follow-up or
+extraction reads it. The repair blacklist is keyed on a fingerprint of
+the repair and consulted before re-applying one, and it is test-only
+(section 4).</li>
+<li><strong><code>bitemporal</code></strong> — withheld; only record
+times exist.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. The memory
+proper is partitioned by workspace row and the answer table is global;
+the <code>workspace_id</code> predicate sits on the human queue, which
+holds questions rather than beliefs.</li>
+<li><strong><code>audit_log</code></strong> — withheld.
+<code>impact_audit_trail</code> and <code>research_audit_trail</code>
+are JSON arrays inside the row, rewritten by every save. They omit the
+decision values that changed and the removal <code>reopen_dispute</code>
+makes, and the finalizer resets them.</li>
+<li><strong><code>human_review</code></strong> — withheld on both ends.
+The resolver has no entrypoint a person reaches without writing Python,
+and its output has no reader.</li>
+<li><strong><code>negative_eval</code></strong> — withheld; see section
+10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I did not run any test. <code>tests/</code> holds 52 pytest files
+with 721 test functions, and 17 <code>test_*.py</code> scripts sit at
+the root. <code>run_all_tests.py</code> runs 16 of the
+<code>tests/</code> files, six root scripts and
+<code>test_suite.py</code> as subprocesses, not through pytest. It
+reports a missing file or a 120-second timeout as <code>SKIP</code> and
+returns success for both (<code>run_all_tests.py:66-78</code>). The
+other 36 <code>tests/</code> files,
+<code>test_human_decision_store.py</code>,
+<code>test_repair_memory.py</code> and
+<code>test_workspace_impact_analysis.py</code> among them, run only
+under pytest. No CI configuration is committed.</p>
+<p><strong>Tests that need state the repository does not ship.</strong>
+<code>tests/test_answer55_regression.py</code> and
+<code>tests/test_build_answer_55_e2e.py</code> resurrect answer 55 from
+the real <code>answer_memory.db</code>
+(<code>tests/test_answer55_regression.py:24-25</code>).
+<code>.gitignore</code> excludes <code>*.db</code>, and no database is
+committed. On a fresh clone the resurrection returns an error and those
+tests fail rather than skip.</p>
+<p><strong>The strongest memory test</strong> is
+<code>test_resume_workspace_only_affected_redebated</code>
+(<code>tests/test_workspace_impact_analysis.py:335-394</code>). After
+the follow-up <em>"Assume PostgreSQL cannot be used."</em>, it asserts
+that <code>database_choice</code> and <code>storage_strategy</code> are
+absent from <code>verified_decisions</code> and
+<code>resolved_disputes</code>, while <code>provider_routing</code> and
+<code>deployment_model</code> are present in the same sets. It also
+checks the audit entry. The case is populated and cannot pass on an
+empty result.</p>
+<p><code>negative_eval</code> is withheld anyway. The assertion is on
+stored state after a write, not on what any read returns. The prompt the
+same run sent, which listed <code>database_choice</code> as settled, is
+not checked. The fixture uses the <code>normalized_key</code> shape that
+the CLI-reachable workspaces do not have. The answer-55 assertions that
+rejected options are never recommended run against a stubbed spec and
+the uncommitted database. The human-queue case asserting <code>db</code>
+absent after <code>save_pending</code>
+(<code>tests/test_human_decision_store.py:151-167</code>) is populated
+but concerns a work queue, not memory.</p>
+<p>There is no retrieval evaluation and no benchmark. No paper is
+associated with the project, and the README links no hosted result.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Grade each disagreement separately and store the grade
+beside the claim.</strong> A per-dispute
+<code>RESOLVED</code>/<code>UNRESOLVED</code> verdict with a finding and
+the rejected options makes "the models agreed" an inspectable
+record.</li>
+<li><strong>Clamp an unknown verdict to the withholding state.</strong>
+Anything the grader returns outside the vocabulary becomes
+<code>UNRESOLVED</code>, so a malformed reply cannot promote a
+claim.</li>
+<li><strong>Route every consumer through one reader.</strong>
+<code>decision_records</code> is the only sanctioned way to read
+decisions, and it encodes the status filter once.</li>
+<li><strong>Reopen by impact, not by rerun.</strong> A deterministic
+token and dependency pass that picks which prior decisions a follow-up
+touches keeps the rest stable and costs no model call.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two writers naming one key differently.</strong> When a
+projection writes <code>dispute_key</code> and the consumer reads
+<code>normalized_key</code>, every lookup silently misses. Normalise
+identity at the store boundary, and test the round trip through the real
+writer.</li>
+<li><strong>Assembling the prompt before applying the
+correction.</strong> Compute the constraint context after removals, or
+the model is told to honour the decision it is being asked to
+reconsider.</li>
+<li><strong>Letting a model re-key a decision on reopen.</strong> Carry
+the original key through the re-debate, or correction loses track of
+what it corrected.</li>
+<li><strong>A second verdict that never updates the first.</strong> When
+a later stage settles what an earlier one left open, write the result
+where the readers look.</li>
+<li><strong>A review queue whose answer is discarded.</strong> If the
+person's choice only unblocks a gate, the system has asked for a
+decision and kept none of it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a research harness for one person who wants two frontier chat
+products argued against each other before committing to an architecture,
+and who will drive it from a terminal with a signed-in browser beside
+it. It is not a memory system to adopt. The stores serve one pipeline,
+the browser workers are fragile by construction, and nothing about the
+CLI is meant for another program to call. The code is all rights
+reserved, so the ideas can be borrowed and the files cannot. Walk away
+if decisions must be correctable: the correction path the shipped CLI
+reaches does not remove what it reopens.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether any workspace in the author's own database was created
+through <code>submit_workspace</code>, the only writer of debate-native
+workspaces, and from what entrypoint.</li>
+<li>How often the validator model drops or re-keys a reopened dispute in
+practice.</li>
+<li>Whether the human-resolution flow is used at all, given it needs a
+Python call and a retyped follow-up.</li>
+<li>Whether the answer-55 suite passes on the author's machine, and
+against which database contents.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Answer store: <code>answer_memory.py</code>,
+<code>answer_loader.py</code>, <code>answer_selector.py</code></li>
+<li>Verdict and decision model: <code>verification_engine.py</code>,
+<code>governance.py</code>, <code>decision_model.py</code>,
+<code>decision_renderer.py</code>, <code>validation.py</code></li>
+<li>Debate: <code>debate_engine.py</code>,
+<code>conflict_extractor.py</code>, <code>chat_session.py</code>,
+<code>gpt_worker.py</code>, <code>gemini_worker.py</code>,
+<code>provider_router.py</code></li>
+<li>Workspaces and follow-ups: <code>workspace_manager.py</code>,
+<code>workspace_debate_engine.py</code>,
+<code>workspace_impact_analyzer.py</code>,
+<code>workspace_orchestrator.py</code>,
+<code>workspace_resume_ui.py</code>,
+<code>workspace_knowledge.py</code></li>
+<li>Human queue: <code>human_decision_store.py</code>,
+<code>human_decision_queue.py</code>,
+<code>human_decision_manager.py</code></li>
+<li>Build: <code>build_pipeline.py</code>,
+<code>build_prompt_generator.py</code>,
+<code>build_spec_engine.py</code>, <code>build_finalizer.py</code>,
+<code>execution_decision.py</code>, <code>resume.py</code>,
+<code>implementation_executor.py</code>,
+<code>staged_executor.py</code></li>
+<li>Unwired: <code>repair_memory.py</code> with
+<code>validation_engine.NativeValidationEngine</code>,
+<code>artifacts.ArtifactStore</code>, <code>sol0mon_graph.py</code>,
+<code>pipeline_scheduler.py</code></li>
+<li>CLI and tests: <code>sol0mon_cli.py</code>,
+<code>run_all_tests.py</code>, <code>tests/conftest.py</code>,
+<code>tests/test_workspace_impact_analysis.py</code>,
+<code>tests/test_human_decision_store.py</code>,
+<code>tests/test_answer55_regression.py</code>,
+<code>tests/test_execution_decision_v2.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>; <code>:!</code> pathspecs exclude
+tests.</p>
+<ul>
+<li><strong>No production resolver of a human decision.</strong>
+<code>git grep -n -E 'resolve_human_requirement|resolve_human_decision|resolve_human_item|hdm\.resolve' -- 'Sol0mon/*.py' ':!Sol0mon/tests' ':!Sol0mon/test_*'</code>
+returns the definitions, two <code>suggested_action</code> strings, and
+self-check lines in <code>human_decision_queue.py</code> and
+<code>workspace_manager.py</code>.</li>
+<li><strong>No reader of the chosen option.</strong>
+<code>git grep -n -E 'chosen_option|resolved_list|load_resolved' -- 'Sol0mon/*.py' ':!Sol0mon/tests' ':!Sol0mon/test_*'</code>
+returns the store, the queue, the manager shim, the orchestrator's
+return dict and self-checks.</li>
+<li><strong>No CLI path passes memory ids.</strong>
+<code>git grep -n -E 'memory_ids' -- Sol0mon/sol0mon_cli.py Sol0mon/workspace_resume_ui.py</code>
+returns nothing; the same pattern matches
+<code>Sol0mon/pipeline_runner.py</code> five times.</li>
+<li><strong>The workspace model never reads
+<code>dispute_key</code>.</strong>
+<code>git grep -n -E 'dispute_key' -- Sol0mon/workspace_manager.py</code>
+returns nothing; in <code>Sol0mon/workspace_impact_analyzer.py</code> it
+matches the tradeoff line <code>:117</code> only.</li>
+<li><strong>No SQL workspace writer on the debate path.</strong>
+<code>git grep -n -E 'workspace_mgr|workspace_manager' -- Sol0mon/debate_engine.py Sol0mon/pipeline_runner.py</code>
+returns nothing.</li>
+<li><strong>Governance never writes the verifier's buckets.</strong>
+<code>git grep -n -E 'resolved_claims' -- Sol0mon/debate_engine.py Sol0mon/governance.py</code>
+returns two reads of <code>unresolved_claims</code>,
+<code>debate_engine.py:867</code> and <code>:992</code>.</li>
+<li><strong>Rejected options are not read across debates.</strong>
+<code>git grep -n -E 'rejected_options' -- Sol0mon/debate_engine.py Sol0mon/workspace_debate_engine.py Sol0mon/workspace_manager.py Sol0mon/conflict_extractor.py Sol0mon/answer_loader.py</code>
+returns nothing; <code>Sol0mon/decision_model.py</code> matches 21
+times.</li>
+<li><strong>No reader of the failed-verification marker.</strong>
+<code>git grep -n -E 'FAILED_VERIFICATION' -- 'Sol0mon/*.py' ':!Sol0mon/tests' ':!Sol0mon/test_*'</code>
+returns the two writers, <code>debate_engine.py:1032</code> and
+<code>workspace_debate_engine.py:875</code>.</li>
+<li><strong>No <code>ESCAPE</code> clause on the LIKE search.</strong>
+<code>git grep -n -i -E 'escape' -- Sol0mon/answer_memory.py</code>
+returns the comment at <code>:417</code> only.</li>
+<li><strong>Repair memory is test-only.</strong>
+<code>git grep -n -E 'NativeValidationEngine\(|get_validation_engine\(' -- 'Sol0mon/*.py'</code>
+returns <code>tests/</code> files and
+<code>validation_engine.py</code>'s own definition and self-check below
+its <code>__main__</code> at <code>:1962</code>.</li>
+<li><strong>The artifact store has no caller.</strong>
+<code>git grep -n -E 'ArtifactStore' -- 'Sol0mon/*.py' ':!Sol0mon/tests'</code>
+returns <code>artifacts.py</code> only.</li>
+<li><strong>No shipped delete.</strong>
+<code>git grep -n -E 'delete_debate|delete_workspace\(|store\.delete\(' -- 'Sol0mon/*.py' ':!Sol0mon/tests' ':!Sol0mon/test_*'</code>
+returns definitions, <code>HumanDecisionQueue.delete_decision</code>
+(called from <code>test_suite.py:759</code> only) and self-checks.</li>
+<li><strong><code>architecture_constraints</code> has no reader outside
+its module.</strong>
+<code>git grep -n -E 'architecture_constraints' -- 'Sol0mon/*.py' ':!Sol0mon/tests' ':!Sol0mon/test_*'</code>
+matches <code>Sol0mon/workspace_manager.py</code> only.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|effective_at|occurred_at|event_time' -- 'Sol0mon/*.py'</code>
+returns nothing; <code>created_at</code> matches
+<code>Sol0mon/answer_memory.py</code> ten times.</li>
+<li><strong>No committed database or CI.</strong>
+<code>git ls-files | grep -E '\.(db|sqlite3?)$'</code> and
+<code>git ls-files | grep -E '^\.github|\.ya?ml$'</code> both return
+nothing.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv\.org/abs|bibtex|@article|@misc|doi\.org' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-03</strong> — <a
+href="https://github.com/sh1618112233/Sol0mon/commit/2bd65e33d973b8357843e7ce95999976845fe9ec"><code class="commit-id" title="2bd65e33d973b8357843e7ce95999976845fe9ec">2bd65e33…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: no auto-run surface, an execution point on pytest
+collection in each copy's <code>tests/conftest.py</code>, nothing
+unpinned and nothing inside the seven-day cooldown. No licence: the
+README says none has been selected. Nothing installed, built or run. One
+mark, <code>trust_state</code>, for the verifier's per-dispute verdict
+and the resolved-only reader; <code>human_review</code> and
+<code>negative_eval</code> withheld (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

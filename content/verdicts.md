@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 769 reports.**
+**This page covers all 770 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7032,3 +7032,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 34,106 lines of TypeScript, 117 commits from one author since 24 October 2026, the first importing OneMemory 1.2.1, renamed Monomem on 2 November; 114 test files and 123 benchmark scenarios in a three-OS CI matrix, not run here. Two marks, `scope_enforced` and `negative_eval`. The LongMemEval figures are documented without committed result files.
 - Study when: several coding agents on one machine share one store and you need to know who wrote each note and to replace one without losing it.
 - Do not copy when: an agent must not be able to delete or approve what it wrote, or the audit trail must outlive 90 days.
+
+### [`sol0mon`](../systems/sol0mon/)
+- Best idea: **grade every disagreement and let only the resolved ones bind the build.** A verifier model returns `RESOLVED`, `UNRESOLVED` or `EQUIVALENT` per dispute, clamped to `UNRESOLVED` on any other value, and `decision_records`, the one sanctioned reader, admits only resolved claims as the coding agent's immutable constraints.
+- Second idea: a deterministic impact analysis that reopens only the prior decisions a follow-up's words and key dependencies touch, and keeps the rest with their research evidence.
+- Biggest risk: **a follow-up cannot find a built workspace's decisions.** The build registers them keyed `dispute_key` and the follow-up path matches `normalized_key`, so a decision a follow-up contradicts stays in the list injected as settled; every follow-up's opening prompt is also assembled before the reopened decision is removed.
+- Second risk: a person's resolution of a `HUMAN_REQUIRED` question is stored and never read, through a Python function no CLI command calls, and a resurrected build never inherits its source debate's open questions.
+- Most reusable component: `Sol0mon/decision_model.py` with `Sol0mon/workspace_impact_analyzer.py` — a resolved-only decision accessor and a model-free reopen analysis.
+- Maturity impression: no licence, so all rights reserved; 41,153 lines of Python, shipped twice in near-identical copies, four commits from one author on 13 October 2026; 52 pytest files and 17 test scripts with no CI, two needing an uncommitted database, not run here. One mark, `trust_state`.
+- Study when: you want disagreement between models turned into graded, keyed decisions that a later stage must obey.
+- Do not copy when: a decision must stay correctable after something is built on it, or a person's ruling must become the decision.
