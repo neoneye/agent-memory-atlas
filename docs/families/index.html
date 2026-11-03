@@ -6147,28 +6147,25 @@ change merges, where <code>eval/queries.jsonl</code> holds two queries.
 See <a href="../systems/hatchdoor/">Hatchdoor</a>.</p>
 <p><strong><a href="../systems/omnimem/">OmniMem</a> is where this
 family's <em>dead ends</em> become a mechanism rather than a
-note.</strong> A self-hosted MCP server on Valkey for Claude Code,
-Cursor, Copilot and seven other agents, it lets an episodic memory carry
-effort, outcome and a graveyard of abandoned approaches; every recall
-begins with a keyword scan of that graveyard before anything is
-embedded, a hit is returned first at full score, an abandoned outcome is
-weighted ×0.1 whatever it cost, and an approach abandoned at effort 4 or
-5 is suppressed as a topic automatically. The suppression is a Valkey
-set consulted on every recall that drops any candidate whose content
-contains a member — the read-path form of the rejected-value tombstone,
-and the report credits it, with the caveat that the key is a substring
-and hides the memory that recorded the abandonment along with everything
-else that mentions the word. The lifecycle is visibility, not belief:
-active, deprioritised with a reason and reinstate hints, archived,
-deleted, each a multiplier on the score, and no state says a memory is
-true. Contradictions are found by a negation heuristic over similar rows
-and recorded as links on both, and nothing in the tree removes a link —
-the dashboard's two resolution buttons archive one side and leave the
-other warning. The reason handed to <code>archive</code> is dropped, the
-<code>force</code> flag that skips the duplicate check also skips the
-contradiction check and fact extraction, and the skill compiler is the
-one writer that will not commit without a reviewed draft pinned to the
-body it was diffed against.</p>
+note.</strong> A self-hosted MCP server for Claude Code, Cursor, Copilot
+and seven other agents, shipped as one Rust binary over SQLite, it lets
+an episodic memory carry effort, outcome and a graveyard of abandoned
+approaches. Every recall opens with a word-boundary keyword scan of that
+graveyard before anything is embedded, and a Claude Code pre-tool-use
+hook denies a mutating tool call that names a dead end, handing back
+what worked instead. Topic suppression is a set written only by
+<code>suppress_topic</code> and consulted by the recall pipeline, which
+drops any candidate mentioning a member — the read-path form of the
+rejected-value tombstone, and the report credits it — while the briefing
+the session-start hook injects does not apply it. The graveyard scan
+itself carries no state and no project predicate and covers the oldest
+5,000 episodic keys. The lifecycle is visibility, not belief: active,
+deprioritised with a reason and reinstate hints, archived, deleted, with
+extracted facts following their source through each, and no state says a
+memory is true. Contradiction links on both rows are removed by nothing,
+the reason handed to <code>archive</code> is dropped, and the skill
+compiler is the one writer that will not commit without a reviewed draft
+pinned to the body it was diffed against.</p>
 <p><strong><a href="../systems/reporecall/">Reporecall</a> puts a memory
 layer under a code index and keeps the memory's state in the wrong
 place.</strong> A Claude Code hook daemon — tree-sitter chunks, a call

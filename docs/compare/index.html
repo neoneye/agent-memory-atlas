@@ -23182,57 +23182,61 @@ refreshes</td>
 </tr>
 <tr>
 <td><a href="../systems/omnimem/"><code>omnimem</code></a></td>
-<td>A Valkey hash under <code>mem:&lt;namespace&gt;:&lt;ulid&gt;</code>
-in one of five namespaces — episodic, project, knowledge, preference,
-skill — with a 384-dimension embedding, a lifecycle <code>state</code>,
-a <code>surface_score</code>, and on episodic rows an effort score, an
-outcome and a JSON graveyard of abandoned approaches</td>
-<td>Valkey with valkey-search: one HNSW cosine index per namespace over
-the vector plus tag and numeric fields, AOF-persisted in a Docker
-volume; a <code>topics:suppressed</code> set, <code>log:recall:</code>
-hashes with a 30-day TTL, a <code>queue:enrich</code> list and
-<code>meta:</code> hashes beside the memories</td>
-<td>A keyword fast-path over the graveyard before embedding, then KNN
-per namespace with the state and project filters pushed into the query,
-scored as similarity × surface score × recency decay × experience weight
-× a temporal boost when the query names a date, suppressed topics
-dropped, deprioritised rows with a matching reinstate hint pinned to
-0.6, extracted facts collapsed into their verbatim source</td>
-<td><code>remember</code> embeds, refuses a near-duplicate above cosine
-0.92 unless forced, warns on a negation-pattern contradiction among
-similar rows, stores, and queues Claude Haiku fact extraction that
-writes facts to the knowledge and preference namespaces at half surface
-score; <code>force=True</code> skips all three checks</td>
-<td>A four-state lifecycle — active, deprioritised (×0.2, with a reason
-and reinstate hints), archived (×0, excluded from search), deleted (key
-removed) — driven by MCP tools, the web UI and a maintenance pass that
-archives the older members of duplicate clusters and expired RSS
-articles; <code>forget</code> previews before it deletes</td>
-<td><code>project</code> on every row, pushed into the search filter for
-three of four searchable namespaces and re-applied in Python for all,
-with a bulk deprioritise, reinstate and delete per project</td>
-<td>A FastMCP server of 44 tools over Streamable HTTP or SSE with OAuth
-2.1 for claude.ai, a 199-line instruction block delivered on connect, a
-Starlette web UI on a second port sharing the same memory package, an
-RSS worker, and connection guides for ten agents</td>
-<td>An enrichment thread consuming the extraction queue; an RSS ingester
-on a schedule; a maintenance pass every tenth briefing per project —
-dedup, negation-pattern contradiction scan, knowledge expiry; a daily
-skill scan that proposes drafts and writes nothing</td>
-<td>A lifecycle state with a stored reason and a surface multiplier, an
-experience weight, and append-only contradiction links; no state records
-whether a memory is believed true, and a link is never resolved</td>
-<td>A graveyard checked by keyword before any embedding, surfaced first
-and auto-suppressed when a costly approach is abandoned; a skill
-compiler with no model in the loop whose write path commits only a
-reviewed, sha-pinned draft; a <code>why_did_you_mention</code> tool over
-a 30-day recall log</td>
-<td>A contradiction link is appended to both rows and removed by
-nothing, so the briefing warns until one side is archived by hand; the
-reason given to <code>archive</code> is discarded; a suppressed topic is
-a substring over every memory's content; and <code>force=True</code>
-bypasses the duplicate check, the contradiction check and enrichment
-together</td>
+<td>A JSON record of string fields in one SQLite row under
+<code>mem:&lt;namespace&gt;:&lt;ulid&gt;</code>, in one of five
+namespaces — episodic, project, knowledge, preference, skill — with a
+384-dimension vector in a side table, a lifecycle state, a surface
+score, licence and provenance labels, and on episodic rows effort,
+outcome, breakthrough, lesson and a JSON graveyard of abandoned
+approaches</td>
+<td>One SQLite file: a memories table whose state, project and timestamp
+columns are generated from the record, a vectors table loaded into an
+in-process matrix and searched exactly, a kv table for
+topics:suppressed, 30-day recall logs and counters, and a durable
+enrichment queue</td>
+<td>A word-boundary keyword scan of the graveyard before embedding, up
+to three warnings ahead of the results; then exact KNN per namespace
+over keys pre-filtered in SQL by state and project, suppressed topics
+dropped by word match, scored as similarity × surface × recency ×
+experience × a date boost, extracted facts folded into their source, a
+floor on raw similarity</td>
+<td>remember embeds, refuses a near-duplicate at cosine 0.92 in the same
+project, warns on a negation-pattern contradiction, stores, and queues
+Claude fact extraction that writes facts and preferences at surface 0.5
+carrying enriched_from and as_of; force skips all three; a Claude Code
+session-end hook writes a redacted session record</td>
+<td>A four-state lifecycle — active, deprioritised (x0.2, with a reason
+and reinstate hints), archived (x0, excluded in SQL), deleted (row
+removed) — that extracted facts follow and return from; driven by MCP
+tools, the settings panel and a maintenance pass that archives older
+duplicates and expired articles; forget previews before it deletes</td>
+<td>project on every row, applied in SQL to every searched namespace and
+re-checked in Rust, and on the briefing's episodic and experience reads;
+the graveyard scan behind recall warnings and the pre-tool-use hook
+reads every project and every state</td>
+<td>One binary: 48 MCP tools over streamable HTTP with bearer or OAuth
+2.1 auth and an 89-line instruction block, a desktop tray app whose
+settings panel is served to its own window over omnimem://, an RSS
+thread, and Claude Code hooks for session start, pre-tool-use and
+session end</td>
+<td>An enrichment worker polling the queue table; RSS ingestion on a
+schedule; a maintenance pass every tenth briefing per project — dedup, a
+negation scan that reports without linking, article expiry; a daily
+skill scan that proposes drafts</td>
+<td>A lifecycle state with a stored deprioritise reason, a surface
+multiplier and an experience weight; provenance says who is speaking and
+is never filtered on; contradiction links appended to both rows and
+never resolved</td>
+<td>A graveyard matched on word boundaries before any embedding and
+enforced at the point of action by a hook that denies a mutating tool
+call and returns the way out; facts that follow their source through
+every per-memory transition; a skill write that commits only a stashed,
+sha-pinned draft</td>
+<td>The graveyard scan reads every project and every state over the
+oldest 5,000 episodic keys, so another project's or an archived memory's
+dead end denies a tool call described as this project's, and a newer one
+may never warn; contradiction links are cleared by nothing; archive and
+suppression reasons are discarded; force bypasses three checks</td>
 </tr>
 <tr>
 <td><a href="../systems/omnimemory/"><code>omnimemory</code></a></td>
