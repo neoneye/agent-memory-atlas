@@ -231,6 +231,29 @@ stops being read.</p>
 <p><strong>Skip it if</strong> nothing automatically writes memory. A
 store only a human edits resolves conflicts at the keyboard.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<h3 id="read-these-first">Read these first</h3>
+<ul>
+<li><a href="../../systems/memanto/">Memanto</a> — typed findings and
+the full non-binary disposition set, <code>keep_both</code> and a
+person-written <code>manual</code> replacement included;
+<code>remove_both</code> deletes without a tombstone, so it misses
+requirement 5.</li>
+<li><a href="../../systems/daimon/">Daimon</a> — the disposition offered
+inside the briefing where the stale claim is read, a content-keyed
+tombstone on <code>forget</code>, and a human verdict that silences
+re-detection.</li>
+<li><a href="../../systems/breadcrumbs/">breadcrumbs</a> — a check that
+a supersession reaches the read path, which reports
+<code>unexercised</code> rather than clean when nothing could have
+failed.</li>
+<li><a href="../../systems/ouroboros-agent-os/">Ouroboros</a> — a
+deterministic, model-free disposition ladder that writes the loser's
+reason where the next write sees it.</li>
+<li><a href="../../systems/mateclaw/">MateClaw</a> — the near-miss: a
+queue, an authenticated actor and a recorded verdict, and no read path
+that acts on it.</li>
+</ul>
+<h3 id="every-instance">Every instance</h3>
 <p><a href="../../systems/memanto/">Memanto</a> types the finding and
 offers a non-binary disposition set. A scheduled local LLM pass writes a
 dated JSON report typed as
@@ -559,6 +582,29 @@ highest-priority kind, <code>contradiction</code>, reads
 is unsure, leaves the note in every search while every scan selects
 <code>state = 0</code>, so a stale note is never offered for resolution
 again.</p>
+<p><a href="../../systems/sol0mon/">Sol0mon</a> gives every disputed
+claim a verdict and loses the disposition between two stores. A verifier
+model grades each dispute <code>RESOLVED</code>, <code>UNRESOLVED</code>
+or <code>EQUIVALENT</code>, with a finding and the rejected options, and
+only resolved claims become a build's immutable constraints. A follow-up
+question reopens the decisions it touches by
+<code>normalized_key</code>, but a build-registered workspace stores its
+decisions under <code>dispute_key</code>, so a contradicted decision
+stays settled. The human channel fails requirement 4 from the other
+side: an unsettled question blocks the build in a SQLite queue whose
+only resolver is a Python function no shipped command calls, and the
+chosen option is never read. Nothing records which value a re-debate
+replaced.</p>
+<p><a href="../../systems/active-memory-index/">ActiveMemoryIndex</a>
+resolves an explicit correction and attaches the disposition to rows,
+not to the value. Add stores an update only when the user's quoted
+statement is a substring of a user turn. On the first Search that needs
+it, a verifier judges the 20 nearest earlier memories and stores a
+verdict per <code>(update_id, item_id)</code> pair, and a router decides
+per question whether a past value is wanted. A failed model call
+withholds nothing, which keeps requirement 3. Requirement 5 is the miss:
+a later restatement of the old value is a new row no verdict names, and
+Search returns it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

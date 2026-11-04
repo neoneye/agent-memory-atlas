@@ -121,6 +121,16 @@ resolves conflicts at the keyboard.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [Memanto](../../systems/memanto/) — typed findings and the full non-binary disposition set, `keep_both` and a person-written `manual` replacement included; `remove_both` deletes without a tombstone, so it misses requirement 5.
+- [Daimon](../../systems/daimon/) — the disposition offered inside the briefing where the stale claim is read, a content-keyed tombstone on `forget`, and a human verdict that silences re-detection.
+- [breadcrumbs](../../systems/breadcrumbs/) — a check that a supersession reaches the read path, which reports `unexercised` rather than clean when nothing could have failed.
+- [Ouroboros](../../systems/ouroboros-agent-os/) — a deterministic, model-free disposition ladder that writes the loser's reason where the next write sees it.
+- [MateClaw](../../systems/mateclaw/) — the near-miss: a queue, an authenticated actor and a recorded verdict, and no read path that acts on it.
+
+### Every instance
+
 [Memanto](../../systems/memanto/) types the finding and offers a non-binary
 disposition set. A scheduled local LLM pass writes a dated JSON report typed as
 `contradiction | update | duplicate | conflict` with old and new ids, and a
@@ -310,6 +320,10 @@ reader sees.
 [Harness Evolution as Learning](../../systems/harness-evolution/) shows the disposition being chosen by list position. Its ACE-style updater detects near-duplicate bullets by character-trigram cosine above 0.85 and always keeps the earlier one, so when a newer bullet negates an older one — *"Text messages should not end with my first name."* scores 0.931 against the positive form — the correction is the one discarded, and the history still records the add as applied. The TEPA baseline in the same repository resolves the same situation the other way: one active precedent per attribute key, the newer write revokes the older, and the revoked entry stays archived with `revoked_at` and `revoked_by`.
 
 [Graft](../../systems/graft/) wires detection to resolution and then lets one disposition fall out of both. A scan caches candidates with deterministic ids, `maintain resolve` applies one verb per candidate with the transition, a dismissal keyed on an evidence digest and an audit row in one transaction, and `restore` inverts every verb. Two edges are missing. The highest-priority kind, `contradiction`, reads `CONTRADICTS` edges that only a test fixture writes. And `stale`, the disposition the skill recommends when the agent is unsure, leaves the note in every search while every scan selects `state = 0`, so a stale note is never offered for resolution again.
+
+[Sol0mon](../../systems/sol0mon/) gives every disputed claim a verdict and loses the disposition between two stores. A verifier model grades each dispute `RESOLVED`, `UNRESOLVED` or `EQUIVALENT`, with a finding and the rejected options, and only resolved claims become a build's immutable constraints. A follow-up question reopens the decisions it touches by `normalized_key`, but a build-registered workspace stores its decisions under `dispute_key`, so a contradicted decision stays settled. The human channel fails requirement 4 from the other side: an unsettled question blocks the build in a SQLite queue whose only resolver is a Python function no shipped command calls, and the chosen option is never read. Nothing records which value a re-debate replaced.
+
+[ActiveMemoryIndex](../../systems/active-memory-index/) resolves an explicit correction and attaches the disposition to rows, not to the value. Add stores an update only when the user's quoted statement is a substring of a user turn. On the first Search that needs it, a verifier judges the 20 nearest earlier memories and stores a verdict per `(update_id, item_id)` pair, and a router decides per question whether a past value is wanted. A failed model call withholds nothing, which keeps requirement 3. Requirement 5 is the miss: a later restatement of the old value is a new row no verdict names, and Search returns it.
 
 ## Tests to require
 
