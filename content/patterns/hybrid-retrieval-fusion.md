@@ -253,6 +253,8 @@ between a retriever that degrades and one that degrades silently.
 
 [nano-brain](../../systems/nano-brain/) shows what a relaxation step does to the predicates around it. Its `HybridSearch` retries an empty AND lexical leg with a separate OR query that keeps the workspace predicate and has no time-range or tag parameters, so a time-filtered `memory_query` can fuse out-of-window lexical hits with an in-window vector leg. The same server's `memory_search` runs the same fallback and refuses it whenever a time filter or tags are set, with the reason in a comment. Build the fallback by changing only the match clause, or test every relaxed path with a filter the first query applied.
 
+**[Vanilla RAG Memory](../../systems/vanilla-rag-memory/) proves its lexical arm contributes with an embedder built to be wrong.** It fuses cosine with BM25 by weighted reciprocal rank at k = 60, over one user's rows, so document frequencies are per user (`src/vanilla_rag/memory_store.py:486-511`). `MisleadingEmbedder` gives the one document holding the target term a vector orthogonal to every query. The test asserts dense mode misses that document and hybrid mode over the same file returns it first (`tests/test_memory_store.py:39-49`, `:183-198`). Under the default `hybrid` mode, multiple-choice options are appended to the BM25 query, so a distractor's words pull up chunks that mention the wrong answer. **Make one arm fail on purpose, and assert the fusion recovers.**
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.

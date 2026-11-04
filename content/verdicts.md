@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 772 reports.**
+**This page covers all 773 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7042,6 +7042,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no licence, so all rights reserved; 41,153 lines of Python, shipped twice in near-identical copies, four commits from one author on 13 October 2026; 52 pytest files and 17 test scripts with no CI, two needing an uncommitted database, not run here. One mark, `trust_state`.
 - Study when: you want disagreement between models turned into graded, keyed decisions that a later stage must obey.
 - Do not copy when: a decision must stay correctable after something is built on it, or a person's ruling must become the decision.
+
+### [`vanilla-rag-memory`](../systems/vanilla-rag-memory/)
+- Best idea: **load one user's rows and run every arm inside them.** `WHERE user_id = ?` is the first step of the only content read, and cosine, BM25 with its document statistics, the optional cross-encoder and the same-session neighbour window all index into that list.
+- Second idea: an embedding identity stored on first open, folding in the model, the query prefix and the contextual window, so a database refuses to open under any other; and idempotent Adds re-checked inside `BEGIN IMMEDIATE` after embedding outside it.
+- Biggest risk: **a message the tokenizer cannot see is acknowledged and dropped.** `TOKEN_PATTERN` matches CJK ideographs, ASCII word runs and punctuation only, so a Cyrillic, Hangul or kana message produces no chunk while Add returns 200, and an Add with no matching message answers 500 on every retry.
+- Second risk: the Dockerfile bakes in the 0.4.0 `enhanced` configuration while the README validates 0.6.0 `hybrid`; and deletion is a prefix script that collects its targets outside its transaction and keeps no record.
+- Most reusable component: `src/vanilla_rag/memory_store.py` — `SQLiteMemoryStore.add` and `search`: double-checked idempotent writes, the identity guard and per-user weighted RRF.
+- Maturity impression: no licence, so all rights reserved; 2,055 lines of Python, four commits from one author, 4–11 August 2026; 25 unittest cases with no CI, the four API cases skipped without FastAPI, not run here. Two marks, `scope_enforced` and `negative_eval`; the README's LoCoMo figures have no committed result files.
+- Study when: you are implementing the same Add/Search contract or want a minimal reference for holding a per-user boundary across fused retrieval arms.
+- Do not copy when: messages arrive in scripts outside ASCII and the CJK block, memory must be corrected or forgotten on request, or callers sharing the API key must not read each other's users.
 
 ### [`active-memory-index`](../systems/active-memory-index/)
 - Best idea: **make every model correction quote text you can find.** An explicit update is accepted only when stage 1's quote is in a user turn and the new value is in that turn, and an earlier memory is withheld only when the verifier's quoted old value is in that memory; each verdict is stored per update and memory, so a pair costs one call.

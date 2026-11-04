@@ -472,6 +472,7 @@ page_kind: comparison
 - [`monomem`](../systems/monomem/)
 - [`sol0mon`](../systems/sol0mon/)
 - [`active-memory-index`](../systems/active-memory-index/)
+- [`vanilla-rag-memory`](../systems/vanilla-rag-memory/)
 - [`refind`](../systems/refind/)
 
 ## Repos Inspected
@@ -1249,13 +1250,14 @@ page_kind: comparison
 - [calasdan-sketch/monomem](https://github.com/calasdan-sketch/monomem) at [`292a312cce18e46884520a63826c91c919fe76f8`](https://github.com/calasdan-sketch/monomem/commit/292a312cce18e46884520a63826c91c919fe76f8) — read only, from a full clone, at the head of `main` on 3 November 2026; no auto-run surface, one build-time script (`prepublishOnly` running `npm run build`), four caret ranges behind a committed lockfile, and `package.json` and `package-lock.json` inside the seven-day cooldown. `SKILL.md`, `skills/monomem-mem/SKILL.md` and `.github/` were read as data. Nothing was installed, built or run, and neither the 114 test files nor the benchmark was run. MIT
 - [sh1618112233/Sol0mon](https://github.com/sh1618112233/Sol0mon) at [`2bd65e33d973b8357843e7ce95999976845fe9ec`](https://github.com/sh1618112233/Sol0mon/commit/2bd65e33d973b8357843e7ce95999976845fe9ec) — read only, from a full clone, at the head of `main` on 13 October 2026; no auto-run or build-time surface, an execution point on pytest collection in each copy's `tests/conftest.py` (`Sol0mon/` and `Sol0mon-Windows/`), nothing unpinned, nothing inside the seven-day cooldown and no agent-instruction file. `Sol0mon/` was read; `Sol0mon-Windows/` differs from it in three files. Nothing was installed, built or run, and no tests were run. No licence: no LICENSE file, and the README says none has been selected
 - [linxuhao/ActiveMemoryIndex](https://github.com/linxuhao/ActiveMemoryIndex) at [`22f8287ce0ac02ed493fbbb0f6f8cc7e9556aa3d`](https://github.com/linxuhao/ActiveMemoryIndex/commit/22f8287ce0ac02ed493fbbb0f6f8cc7e9556aa3d) — read only, from a shallow clone, at the head of `main` on 16 October 2026, with commit and author counts from the GitHub API; no auto-run, build-time, cooldown or unpinned surface. `README.md`, `RELEASE.md`, `SUBMISSION.md` and `docs/` were read as data, and the cited Zenodo preprint's abstract and metadata were read. Nothing was installed, built or run, and neither the 31 test files nor the offline bench was run. MIT
+- [wenxiaof345-ctrl/vanilla-rag-memory](https://github.com/wenxiaof345-ctrl/vanilla-rag-memory) at [`31ab7bf9cfa3ee3c4f986e82f6e7a00b134ba8ca`](https://github.com/wenxiaof345-ctrl/vanilla-rag-memory/commit/31ab7bf9cfa3ee3c4f986e82f6e7a00b134ba8ca) — read only, from a shallow clone, at the head of `main` on 11 August 2026; history from the GitHub API. No auto-run or build-time surface, nothing inside the seven-day cooldown, no agent-instruction file, and two unpinned surfaces (`pyproject.toml` with no lockfile, `requirements.txt` with ranges). The server, store, admin script, replay and smoke scripts and the offline FAISS path were read; the tokenizer pattern was re-typed into a scratch script and run on sample strings. Nothing was installed, built or run, and no tests were run. No licence: no LICENSE file, and no licence statement in the README or `pyproject.toml`
 - [imlrz/ReFind](https://github.com/imlrz/ReFind) at [`a80175ca0eeb52a938d7cab7a602bc780de8a577`](https://github.com/imlrz/ReFind/commit/a80175ca0eeb52a938d7cab7a602bc780de8a577) — read only, from a shallow clone, at the head of `main` on 14 August 2026, with commit and author counts from the GitHub API; no auto-run, build-time or cooldown surface, and one unpinned surface, `pyproject.toml` with no lockfile beside it. The paper, [arXiv:2608.12888](https://arxiv.org/abs/2608.12888), was read on arXiv for its method and ablation tables, and the leaderboard page for its stated process. Nothing was installed, built or run, and the eight pytest cases were not run. MIT
 
 ## What the licences actually say
 
 A licence is an operational caveat, not a memory mechanism, so it lives in the
 appendix — but a reader deciding whether they can *use* something needs it.
-"Publicly readable source" is not "open source": **twenty carry a licence
+"Publicly readable source" is not "open source": **twenty-one carry a licence
 that is not open source**, each named in its own report and collected here.
 
 | Licence | Systems |
@@ -1265,14 +1267,14 @@ that is not open source**, each named in its own report and collected here.
 | Non-commercial — read and run, do not build a product on it | [Memento](../systems/memento/) (PolyForm Noncommercial 1.0.0), [Project Golem](../systems/project-golem/) (its own source-available non-commercial licence), [NouGenShards](../systems/nougenshards/) (its own source-available licence; inspection and personal use granted, commercial use, competing hosted services and use to build competing AI memory or retrieval products prohibited) |
 | Conditional MIT — three added conditions, revocable at the author's discretion | [Z-Waif](../systems/z-waif/) (a 2% royalty on gross income above $100,000 lifetime; an "ethical treatment" clause *"DEFINED AT SugarcaneDefender's SOLE DESCRECION"*; and — the one that constrains the memory itself — no collection or storage of "user logs, character configurations, or other user data" without consent obtained through terms the user "MUST ACCEPT UPON OPENING" the software) |
 | Conditional BSD — branding may not be altered above fifty users | [Open WebUI](../systems/open-webui/) (the "Open WebUI License": BSD-3 plus a fourth clause making removal of the branding "a material breach" in any deployment reaching fifty end users in a rolling thirty days, absent a written permission or an enterprise licence) |
-| All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (whose README asserts MIT with no licence file under it), [SESA](../systems/sesa/) (no licence file, which defaults to this), [Master Agent System](../systems/master-agent-system/) (no licence file at the root, beside vendored packages that carry their own) and [Sol0mon](../systems/sol0mon/) (no licence file, and a README saying none has been selected) |
+| All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (whose README asserts MIT with no licence file under it), [SESA](../systems/sesa/) (no licence file, which defaults to this), [Master Agent System](../systems/master-agent-system/) (no licence file at the root, beside vendored packages that carry their own), [Sol0mon](../systems/sol0mon/) (no licence file, and a README saying none has been selected) and [Vanilla RAG Memory](../systems/vanilla-rag-memory/) (no licence file, and no licence statement in the README or `pyproject.toml`) |
 
 Two things this table is not. It is **not a complete licence taxonomy of the
 corpus**: it collects what the reports happened to record, and a report is
 written about mechanisms, so a permissive licence usually goes unmentioned. The
-rest have not each been checked — the honest claim is that twenty are known
+rest have not each been checked — the honest claim is that twenty-one are known
 non-open-source and the others are unrecorded, not that the others are MIT. And
-it is **not a reason to skip those twenty**: every mechanism in this atlas is
+it is **not a reason to skip those twenty-one**: every mechanism in this atlas is
 described so it can be re-implemented rather than copied, which is the only way a
 restrictively licensed system can be read usefully. What changes is what you may
 do with the code afterwards, and that is worth knowing before you open the file

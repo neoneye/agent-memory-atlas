@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A FastAPI baseline for the Agent
+Memory Leaderboard's Add/Search API: message chunks and vectors in
+SQLite, ranked per user by dense search fused with BM25.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Vanilla RAG
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A FastAPI baseline for the
+Agent Memory Leaderboard's Add/Search API: message chunks and vectors in
+SQLite, ranked per user by dense search fused with BM25.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Vanilla RAG
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A FastAPI baseline for the
+Agent Memory Leaderboard's Add/Search API: message chunks and vectors in
+SQLite, ranked per user by dense search fused with BM25.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Vanilla RAG Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Vanilla RAG Memory",
+      "description": "A FastAPI baseline for the Agent Memory Leaderboard's Add/Search API: message chunks and vectors in SQLite, ranked per user by dense search fused with BM25.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One user_id predicate under every ranking
+arm</p>
+          <h1>Vanilla RAG Memory</h1>
+          <p class="document-deck">A FastAPI baseline for the Agent
+Memory Leaderboard's Add/Search API: message chunks and vectors in
+SQLite, ranked per user by dense search fused with BM25.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/wenxiaof345-ctrl/vanilla-rag-memory">
+              <span>Source</span>
+              <strong>wenxiaof345-ctrl/vanilla-rag-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/wenxiaof345-ctrl/vanilla-rag-memory/commit/31ab7bf9cfa3ee3c4f986e82f6e7a00b134ba8ca" title="31ab7bf9cfa3ee3c4f986e82f6e7a00b134ba8ca">
+              <span>Analyzed revision</span>
+              <code>31ab7bf9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-04</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/wenxiaof345-ctrl--vanilla-rag-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>wenxiaof345-ctrl--vanilla-rag-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>None;
+no LICENSE file, no licence statement in the README or pyproject.toml,
+and GitHub reports none, so all rights reserved by
+default</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>2,055
+lines of Python outside tests: 1,400 in src/vanilla_rag, 613 of them in
+memory_store.py, and 655 in scripts/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4
+commits from one author, 4–11 August 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>25
+unittest cases in five files, 558 lines; the four API cases skip without
+FastAPI; no CI; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Vanilla RAG Memory is a single-process FastAPI server that implements
+the Agent Memory Leaderboard's synchronous Add/Search contract. Add
+stores each message as verbatim chunks with a vector in SQLite; Search
+returns one user's best chunks as evidence and never generates an
+answer. The notable part is how little can leak: one
+<code>user_id</code> predicate loads the candidate rows, and dense
+scoring, BM25 statistics, reranking and the neighbour window all run
+inside that set. The weakness is the tokenizer under the chunker. It
+matches no Cyrillic, Hangul or kana, so such a message is never stored
+while Add answers 200, which the contract defines as persisted.</p>
+<p>Nothing else is memory in the sense of belief. There is no
+extraction, no consolidation, no update, no status and no history; a
+chunk is evidence until an operator deletes its user's prefix with a
+script. The README calls it a naive baseline and the code matches that
+description. An offline path builds a FAISS index over a JSONL corpus
+for ordinary RAG benchmarking and shares only the embedder with the
+server.</p>
+<p>There is no licence. The repository has no LICENSE file and neither
+the README nor <code>pyproject.toml</code> names one, so the code is all
+rights reserved by default: readable, not reusable. Two marks are
+earned, <code>scope_enforced</code> and <code>negative_eval</code>, both
+on the user boundary.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>chunk of one message</strong> as the caller
+sent it: role, content, the caller's millisecond timestamp,
+<code>user_id</code>, <code>session_id</code> and the
+<code>request_id</code> of the Add that carried it. Content is never
+rewritten. A message longer than 320 tokens becomes several overlapping
+chunks, each an independent row (<code>memory_store.py:157-176</code>,
+<code>:375-392</code>).</p>
+<p>The state machine has three states and two transitions:</p>
+<ul>
+<li><strong>absent</strong> until an Add commits it, which happens at
+most once per <code>request_id</code>;</li>
+<li><strong>retrievable</strong> from the moment Add returns, to any
+Search naming the same <code>user_id</code>;</li>
+<li><strong>gone</strong> when
+<code>scripts/memory_admin.py purge-prefix</code> deletes every row
+whose <code>user_id</code> starts with a prefix.</li>
+</ul>
+<p>Nothing moves a chunk between those states except the caller and the
+operator. The system holds no view on whether a chunk is true, current
+or contradicted. Two chunks saying opposite things are both retrievable
+and ranked by similarity alone. The contract gives judgement to the
+organiser: Search returns evidence and the organiser's platform runs the
+answer model and the grader (<code>README.md:18</code>,
+<code>docs/competition-contract.md:36-41</code>).</p>
+<p>The only identity rule is idempotency. A repeated Add with the same
+<code>request_id</code>, user, session and payload hash writes nothing
+and succeeds; the same <code>request_id</code> with anything different
+is refused with 409 (<code>memory_store.py:302-310</code>,
+<code>:356-373</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one Add becomes verbatim chunks of one user; every Search arm runs inside that user's rows, and a message the tokenizer cannot see is acknowledged and never stored</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one Add becomes verbatim chunks of one user; every Search arm runs inside that user&#39;s rows, and a message the tokenizer cannot see is acknowledged and never stored
+flowchart TD
+  ADD[&quot;POST /add&lt;br/&gt;request_id, user_id,&lt;br/&gt;session_id, messages&quot;] --&gt; SEEN{&quot;request_id&lt;br/&gt;stored before?&quot;}
+  SEEN --&gt;|&quot;same user, session, hash&quot;| SAME[&quot;200, nothing written&quot;]
+  SEEN --&gt;|&quot;anything differs&quot;| CONF[&quot;409 conflict&quot;]
+  SEEN --&gt;|&quot;new&quot;| TOK[&quot;regex tokens: CJK&lt;br/&gt;ideographs, ASCII words,&lt;br/&gt;punctuation&quot;]
+  TOK --&gt;|&quot;no token matched&quot;| LOST[&quot;message not stored&lt;br/&gt;Add returns 200&quot;]
+  TOK --&gt; CHUNK[&quot;chunk = text span from&lt;br/&gt;first to last token&quot;]
+  CHUNK --&gt; ROW[&quot;memories row&lt;br/&gt;user_id, vector, text&quot;]
+  ROW --&gt; LOAD[&quot;POST /search&lt;br/&gt;WHERE user_id = ?&quot;]
+  LOAD --&gt; RANK[&quot;cosine on every row&lt;br/&gt;BM25 on the same rows&lt;br/&gt;weighted RRF&quot;]
+  RANK --&gt; WIN[&quot;top 20 seeds plus&lt;br/&gt;same-session neighbours&quot;]
+  WIN --&gt; OUT[&quot;up to top_k chunks&lt;br/&gt;as evidence&quot;]
+  OUT ~~~ PURGE[&quot;purge-prefix script&quot;]
+  PURGE --&gt; GONE[&quot;rows deleted&lt;br/&gt;nothing recorded&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python process, <code>uvicorn vanilla_rag.api:app</code> with one
+worker, holds one <code>SQLiteMemoryStore</code> built once from
+environment variables (<code>api.py:65-111</code>,
+<code>Dockerfile:28</code>). The store opens a new SQLite connection per
+call with a 60-second busy timeout and WAL journaling
+(<code>memory_store.py:245-254</code>).</p>
+<p><strong>Persistence.</strong> Three tables
+(<code>memory_store.py:257-286</code>):</p>
+<ul>
+<li><code>add_requests</code>: <code>request_id</code> primary key,
+<code>user_id</code>, <code>session_id</code>,
+<code>payload_hash</code>, ingestion <code>created_at</code>;</li>
+<li><code>memories</code>: chunk id, <code>request_id</code> foreign
+key, <code>user_id</code>, <code>session_id</code>, <code>role</code>,
+<code>content</code>, <code>source_timestamp</code>,
+<code>created_at</code>, a float32 <code>embedding</code> BLOB and its
+<code>dimension</code>, with an index on <code>user_id</code>;</li>
+<li><code>store_metadata</code>: one row,
+<code>embedding_identity</code>.</li>
+</ul>
+<p><strong>Embedding.</strong> <code>SentenceTransformerEmbedder</code>
+loads <code>BAAI/bge-small-en-v1.5</code> by default, normalises
+vectors, and prefixes queries with BGE's retrieval instruction for
+English BGE models (<code>embeddings.py:14-41</code>). Its identity is
+the model name plus the query prefix, and the store appends
+<code>|context=v1:&lt;n&gt;</code> when contextual embedding is on. A
+database records the identity on first open and refuses to open under
+any other (<code>memory_store.py:202-213</code>,
+<code>:288-299</code>).</p>
+<p><strong>Optional reranker.</strong>
+<code>MEMORY_RERANKER_MODEL</code> loads a sentence-transformers
+<code>CrossEncoder</code> with <code>trust_remote_code=False</code>, in
+float16 on CUDA (<code>reranking.py:13-51</code>).</p>
+<p><strong>Offline path.</strong>
+<code>vanilla_rag.cli index|ask|evaluate|prepare-hotpot</code> chunks a
+JSONL corpus, builds a <code>faiss.IndexFlatIP</code>, saves it beside
+<code>chunks.jsonl</code>, and reports recall, MRR, answer-in-context,
+exact match and token F1 (<code>cli.py:30-76</code>,
+<code>index.py:12-57</code>, <code>evaluation.py:31-74</code>). It has
+no user key and no Add path; it is a benchmark harness, not part of the
+service.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The service needs Python 3.10 to 3.12 with torch and
+sentence-transformers, or Docker, and network access to Hugging Face on
+first start unless a local model directory is configured
+(<code>README.md:25-39</code>). No LLM key is needed to store or search;
+<code>OPENAI_API_KEY</code> serves only the offline
+<code>--generator openai</code> path (<code>generation.py:19-38</code>).
+It runs fully offline once the model is cached.</p>
+<p><code>MEMORY_API_KEY</code> must be set or Add and Search answer 503,
+unless <code>ALLOW_UNAUTHENTICATED=true</code>
+(<code>api.py:114-129</code>). The store is one SQLite file that
+<code>sqlite3</code> reads directly, but the vectors are opaque BLOBs
+and a row edited by hand keeps its old embedding. Requirements are
+ranges with no lockfile (<code>requirements.txt</code>,
+<code>pyproject.toml:10-21</code>).</p>
+<p><strong>The image and the README describe different
+services.</strong> The README freezes 0.6.0 as <code>hybrid</code>
+retrieval, lexical weight 0.5, no context messages, no option views and
+a result window of one around 20 seeds, and its <code>docker run</code>
+passes those values explicitly (<code>README.md:52-57</code>,
+<code>:73-78</code>, <code>:155-156</code>). The <code>Dockerfile</code>
+bakes in <code>enhanced</code>, lexical weight 0.25, one context message
+and option weight 0.2 (<code>Dockerfile:8-12</code>). That is the 0.4.0
+configuration, from the 5 August commit that last changed the file. A
+platform that builds the repository and sets only the key, which the
+README names as a submission route (<code>README.md:21-23</code>), runs
+0.4.0's ranking.</p>
+<p>The two configurations also write incompatible databases, since the
+context setting is part of the identity. <code>compose.yaml</code> tags
+its image <code>0.4.0</code> and reads <code>.env</code>, whose example
+matches the README.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Add.</strong> <code>add_memory</code>
+(<code>api.py:171-182</code>) builds <code>MemoryMessage</code>s and
+calls <code>SQLiteMemoryStore.add</code>
+(<code>memory_store.py:355-453</code>). It hashes user, session and
+messages; returns early on an identical prior request and raises
+<code>RequestConflictError</code> on a different one
+(<code>:356-373</code>). It splits each message with
+<code>split_memory_text</code>, derives each chunk id as
+<code>mem_</code> plus 24 hex characters of SHA-256 over
+<code>request_id:message:chunk</code>, and computes the embedding text
+(<code>:375-392</code>). It embeds every chunk under
+<code>_embedding_lock</code> (<code>:394-398</code>), then opens
+<code>BEGIN IMMEDIATE</code>, repeats the request_id check, and inserts
+the request row and every chunk (<code>:400-447</code>).</li>
+<li><strong>Search.</strong> <code>search_memory</code>
+(<code>api.py:185-188</code>) calls
+<code>SQLiteMemoryStore.search</code>
+(<code>memory_store.py:455-553</code>): load the user's rows
+(<code>:458-468</code>), build the query views (<code>:470-477</code>),
+embed them (<code>:478-484</code>), score and fuse
+(<code>:486-511</code>), rerank (<code>:513-531</code>), window
+(<code>:533-537</code>, <code>:555-583</code>), and render each hit
+(<code>:538-553</code>, <code>:585-606</code>).</li>
+<li><strong>Delete.</strong>
+<code>scripts/memory_admin.py purge-prefix --user-prefix P --confirm</code>
+(<code>memory_admin.py:35-51</code>).</li>
+<li><strong>Health.</strong> <code>health</code> returns
+<code>stats()</code> without authentication
+(<code>api.py:166-168</code>,
+<code>memory_store.py:608-613</code>).</li>
+<li><strong>Replay.</strong> <code>scripts/local_benchmark.py</code>
+splits a normalised record into Adds of at most 20 messages and 2,000
+words, the organiser's boundaries, and scores answer-in-context and
+evidence recall over Search results
+(<code>local_benchmark.py:28-43</code>, <code>:71-123</code>);
+<code>scripts/prepare_public_data.py</code> converts LoCoMo and
+LongMemEval into that format.</li>
+<li><strong>Tests.</strong> <code>tests/test_memory_store.py</code> for
+the store; <code>tests/test_api.py</code> for the routes, skipped
+without FastAPI.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memories</code> row is the whole data model
+(<code>memory_store.py:265-277</code>). There is no status, confidence,
+version, supersession pointer or expiry column, and no table besides the
+three above.</p>
+<p><strong>Scope</strong> is <code>user_id</code>, a non-empty string
+from the request (<code>api.py:26-30</code>, <code>:40-44</code>). The
+contract makes it the only isolation boundary and says
+<code>session_id</code> is provenance, not a filter
+(<code>docs/competition-contract.md:21-23</code>). The service stores
+<code>session_id</code> and uses it only to keep the neighbour window
+inside one conversation (<code>memory_store.py:576-577</code>). The API
+key is shared by every caller, so the boundary separates evaluation
+users from one another, not callers.</p>
+<p><strong>Time.</strong> <code>source_timestamp</code> is the caller's
+message time. <code>memories.created_at</code> is that time rendered as
+ISO 8601, or wall-clock time when the caller sent none
+(<code>memory_store.py:312-316</code>, <code>:387</code>). The ingestion
+time lives on <code>add_requests.created_at</code>
+(<code>:420-423</code>), and nothing reads it. Search returns
+<code>source_timestamp</code> when present and otherwise
+<code>created_at</code>, so a row without a caller time reports its
+ingestion time as its date (<code>:541</code>).</p>
+<p><strong>Provenance</strong> is <code>request_id</code>,
+<code>session_id</code> and <code>role</code>. The role is free text of
+at least one character. The pinned commit, dated 11 August, widened the
+schema from <code>user</code> and <code>assistant</code> to any role and
+lifted the 20-message cap per Add (<code>api.py:20-30</code>,
+<code>test_api.py:81-103</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search is exhaustive over one user. It loads every row of that
+<code>user_id</code>, stacks the embeddings into a matrix and multiplies
+by the query vectors (<code>memory_store.py:458-466</code>,
+<code>:486-490</code>). Cost is linear in that user's chunks on every
+query, BM25 included, and there is no vector index on the service
+path.</p>
+<p><strong>Query views.</strong> With <code>options</code> present,
+<code>hybrid</code> and <code>dense</code> append them to the query as
+one text, for the dense and the BM25 query alike. <code>enhanced</code>
+keeps the bare query and adds one view per option, then raises a row's
+dense score by
+<code>option_view_weight × max(best option score − base score, 0)</code>
+(<code>:470-477</code>, <code>:491-496</code>). Under
+<code>hybrid</code> a distractor option's words weigh as much as the
+correct option's, so a chunk mentioning a wrong answer is pulled up
+too.</p>
+<p><strong>Fusion.</strong> In <code>hybrid</code> and
+<code>enhanced</code>, BM25 (k1 1.5, b 0.75) is computed over the same
+rows, so document frequency and average length are per user
+(<code>:128-154</code>, <code>:500</code>). Dense rank contributes
+<code>1/(k + rank + 1)</code> for every row, lexical rank
+<code>lexical_weight/(k + rank + 1)</code> for rows with a positive
+BM25, <code>k</code> 60, ties broken by dense score
+(<code>:501-511</code>). The lexical tokenizer casefolds ASCII word
+runs, takes CJK ideographs one per token, and drops punctuation
+(<code>:41-46</code>).</p>
+<p><strong>Rerank.</strong> An optional cross-encoder scores the top
+<code>max(top_k, 200)</code> candidates against the bare query and
+reorders them; rows outside the candidate set get <code>-inf</code>,
+reported as score 0 (<code>:513-531</code>, <code>:542-544</code>).</p>
+<p><strong>Window.</strong> With <code>MEMORY_RESULT_WINDOW=1</code>,
+the default, each of the top 20 results pulls in the row before and
+after it in insertion order when that row shares its
+<code>session_id</code>, then the remaining ranks fill to
+<code>top_k</code> (<code>:555-583</code>). A neighbour keeps its own
+score, so the returned list is not in score order, although the contract
+says relevance order.</p>
+<p><strong>Rendering.</strong> Each hit's content is
+<code>[role | ISO time] text</code>, or with
+<code>MEMORY_TEMPORAL_ENRICHMENT=true</code>, a message date plus each
+relative-date phrase a regex finds, resolved against it in the form
+<code>&lt;phrase&gt; = January 19, 2023</code> (<code>:585-606</code>,
+<code>:77-125</code>). Search returns at most <code>top_k</code>, capped
+at 100 by the request schema (<code>api.py:44</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Add is the only writer. There is no extraction prompt, no
+deduplication across requests, no merge and no conflict detection; the
+same sentence sent in two requests is two rows.</p>
+<p><strong>What the chunker keeps.</strong> <code>TOKEN_PATTERN</code>
+is <code>[一-鿿]|[A-Za-z0-9_]+|[^\w\s]</code>
+(<code>chunking.py:8</code>). A chunk is the original text from its
+first matched token to its last (<code>memory_store.py:162-172</code>).
+Every other letter, Latin with diacritics included, is a word character
+outside both letter alternatives and matches nothing. I copied the
+pattern and the split loop into a scratch script and ran them on sample
+strings. <code>Привет мир</code>, <code>안녕하세요</code> and
+<code>こんにちは</code> produced no chunk.
+<code>Я живу в Berlin с мамой</code> was stored as <code>Berlin</code>.
+<code>Zürich café</code> became <code>Zürich caf</code>.</p>
+<p>The consequences follow from <code>add</code>. A message with no
+match contributes no row and the Add returns 200 with every field
+echoed, against a contract that reads 200 as every message persisted
+(<code>docs/competition-contract.md:16-17</code>). An Add in which no
+message matches raises <code>ValueError</code> before any write
+(<code>memory_store.py:391-392</code>). The route catches only
+<code>RequestConflictError</code>, so the caller sees a 500 and every
+retry repeats it (<code>api.py:174-177</code>). No test covers a script
+outside ASCII and the CJK block; the one non-ASCII case,
+<code>test_memory_store.py:178-181</code>, is Chinese.</p>
+<p><strong>Contextual embedding.</strong> With
+<code>MEMORY_CONTEXT_MESSAGES=n</code>, a chunk's vector is computed
+over its role and text plus excerpts of up to <code>n</code>
+neighbouring messages from the same Add
+(<code>memory_store.py:318-342</code>). The stored content is the chunk
+alone. Context never crosses an Add boundary, so the first message of
+each Add has no predecessor.</p>
+<p><strong>Concurrency.</strong> Embedding runs outside any transaction;
+the insert runs under <code>BEGIN IMMEDIATE</code> after a second
+request_id check, so concurrent identical retries write once and all
+succeed (<code>memory_store.py:394-447</code>,
+<code>test_memory_store.py:171-176</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Add blocks the caller on embedding every chunk on the server's model,
+under a process-wide lock that Search also takes
+(<code>memory_store.py:242</code>, <code>:394</code>,
+<code>:478</code>), so Adds and Searches serialise on the embedder. A
+chunk is retrievable the instant Add returns; there is no deferred
+stage. No background pass exists and nothing rewrites the store. Search
+returns up to 100 chunks and the caller decides how many reach a prompt;
+the service injects nothing.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no agent integration in the usual sense. The client is an
+evaluation harness that posts conversations and questions; there are no
+tools, hooks, MCP server or prompt. Authentication accepts
+<code>X-Api-Key</code>, <code>Authorization: Bearer</code> or
+<code>Authorization: Token</code> and compares with
+<code>hmac.compare_digest</code> (<code>api.py:114-129</code>). Request
+validation errors are logged and returned with location, type and
+message only, never the submitted content, and a test holds that
+(<code>api.py:145-163</code>, <code>test_api.py:105-135</code>).</p>
+<p>Adapting it to another client means writing that client: the two
+routes are a clean store-and-search pair keyed by a caller-chosen user
+string.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3
+id="the-boundary-is-one-predicate-and-three-reads-sit-outside-it">The
+boundary is one predicate, and three reads sit outside it</h3>
+<p>The search read is the only read of memory content, and it carries
+the predicate before any scoring (<code>memory_store.py:458-466</code>).
+Every later stage indexes into that row list. That includes the BM25
+corpus statistics, which a shared lexical index would compute across
+users. Three reads omit <code>user_id</code>, and none returns
+content:</p>
+<ul>
+<li><code>stats()</code> counts requests, memories and distinct users
+across the database and is served unauthenticated on
+<code>/health</code> (<code>memory_store.py:608-613</code>,
+<code>api.py:166-168</code>);</li>
+<li>Add's request_id lookups are global
+(<code>memory_store.py:358-373</code>, <code>:403-418</code>), so
+posting another user's <code>request_id</code> answers 409 and reveals
+that it exists;</li>
+<li>the admin script's statistics run over the whole file
+(<code>memory_admin.py:9-14</code>).</li>
+</ul>
+<p><code>user_id</code> itself is whatever the caller sends under the
+shared key. Against the evaluator that is the contract. Against any
+second party holding the key there is no boundary.</p>
+<h3 id="deletion-is-a-script-with-a-gap-between-its-two-halves">Deletion
+is a script, with a gap between its two halves</h3>
+<p>The contract requires evaluation data to be deleted within 30 days of
+a run (<code>docs/competition-contract.md:29-34</code>). The only
+deletion is <code>purge-prefix</code>, run by hand. It collects matching
+<code>request_id</code>s, then opens <code>BEGIN IMMEDIATE</code>,
+deletes <code>memories</code> by prefix and <code>add_requests</code> by
+the collected list (<code>memory_admin.py:37-49</code>). An Add for that
+prefix committing between the collection and the transaction loses its
+rows but keeps its request row. A retry of that Add then finds the
+request, counts zero rows and answers 200
+(<code>memory_store.py:362-373</code>). The script runs no
+<code>VACUUM</code> and sets no <code>secure_delete</code>, so deleted
+text stays in free pages of the SQLite file until they are reused.</p>
+<h3 id="fail-closed-configuration">Fail-closed configuration</h3>
+<p>A database written under one embedding identity cannot be opened
+under another, so switching the model, the BGE query prefix or the
+context setting fails at startup rather than mixing vector spaces
+(<code>memory_store.py:288-299</code>,
+<code>test_memory_store.py:225-226</code>). An unset API key fails
+closed with 503. The README's pre-run checklist lists rate limiting
+(<code>README.md:341</code>), and <code>src/</code> implements none.</p>
+<h3 id="marks">Marks</h3>
+<p>Two are carried.</p>
+<ul>
+<li><strong><code>scope_enforced</code></strong> — <code>user_id</code>
+is on every row and <code>WHERE user_id = ?</code> is the first step of
+the only content read; every ranking arm runs inside its result. The
+limits are in the subsection above.</li>
+<li><strong><code>negative_eval</code></strong> —
+<code>test_user_isolation</code> asserts that a search for u1 on u2's
+word is non-empty, then that no hit holds u2's text
+(<code>test_memory_store.py:96-101</code>). Two rows and
+<code>top_k</code> 10 with no score threshold mean a missing predicate
+returns u2's row, so the case can fail both ways. It drives the store,
+not the HTTP route.</li>
+</ul>
+<p>Five are withheld.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — purge deletes rows and
+records nothing; the same text can be added again under a new
+<code>request_id</code>.</li>
+<li><strong><code>trust_state</code></strong> — no status of any kind
+exists on a row.</li>
+<li><strong><code>bitemporal</code></strong> — one time per chunk, the
+caller's message time or the ingestion time in its absence; the
+request's ingestion time has no reader, and nothing expresses a validity
+interval.</li>
+<li><strong><code>audit_log</code></strong> — <code>add_requests</code>
+is an idempotency key, deleted by the same purge it would have to
+record.</li>
+<li><strong><code>human_review</code></strong> — nothing waits for
+anyone; Add commits immediately.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Five unittest files hold 25 cases. <code>test_memory_store.py</code>
+has 13, driven by a deterministic hashing embedder, so no model is
+downloaded. They cover idempotent and persistent Add, conflict,
+concurrent retries, user isolation, contextual embedding text, the
+identity refusal, option views, the reranker handoff, temporal rendering
+and the neighbour window. <code>test_api.py</code> has four route cases
+behind <code>skipUnless(FASTAPI_AVAILABLE)</code>, so an environment
+without FastAPI reports them skipped (<code>test_api.py:11</code>,
+<code>:35</code>). There is no CI configuration. I did not run any of
+them.</p>
+<p><code>test_hybrid_search_recovers_exact_lexical_match</code> builds
+an embedder that scores the target row lowest, asserts dense mode misses
+it and hybrid mode finds it over the same file
+(<code>test_memory_store.py:183-198</code>). That makes the lexical
+arm's contribution an assertion that can fail rather than an
+average.</p>
+<p><code>scripts/local_smoke.py</code> runs eight HTTP checks against a
+live server. Its cross-user check asserts only absence
+(<code>local_smoke.py:102-105</code>), so an empty result passes it; the
+store test above is the one that can fail.</p>
+<p>The README reports public-data regressions for three versions
+(<code>README.md:153-182</code>). For 0.6.0 they are evidence recall
+0.927652 at top 100 and judge accuracy 76.9175% with
+<code>gpt-4o-mini</code> on 1,382 LoCoMo-Refined questions. For 0.4.0
+they are a paired comparison on 1,533 LoCoMo10 questions and a load
+test. Each is labelled as not an official result. No result file,
+per-question output or run log is committed, since
+<code>artifacts/</code> is gitignored, so none recomputes from the tree.
+No paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Apply the scope where rows are loaded, not where results are
+filtered.</strong> When every arm, corpus statistics and a reranker
+included, indexes into one pre-filtered list, adding an arm cannot add a
+leak.</li>
+<li><strong>Fold every setting that changes the vector space into a
+stored identity</strong> and refuse to open a store under another.
+Model, query prefix and contextual window all qualify.</li>
+<li><strong>Re-check idempotency inside the write transaction.</strong>
+Embed outside it, then take the lock and look again, so expensive work
+stays outside the lock and concurrent retries write once.</li>
+<li><strong>Test fusion with an embedder built to be wrong.</strong> A
+dense arm that ranks the target last proves the lexical arm earns its
+place.</li>
+<li><strong>Pair every exclusion with a populated assertion on the same
+query.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A tokenizer as the gate on what gets stored.</strong> If the
+chunker cannot see a script, the write acknowledges text it discarded.
+Chunk by characters, or fail the request when tokenization drops
+content.</li>
+<li><strong>Two sources of defaults for one release.</strong> The image
+and the README name different configurations, and only one was
+validated.</li>
+<li><strong>A delete that reads its targets outside its own
+transaction.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone entering the same leaderboard, or anyone who wants
+a reference for what a contract-compliant baseline does and how a user
+boundary should be held. It is small enough to read in an hour. Walk
+away if memory must be corrected, forgotten on request, or judged; none
+of that exists. Walk away as well if users write in a script outside
+ASCII and the CJK block, until the tokenizer changes. The code is all
+rights reserved, so the ideas can be borrowed and the files cannot.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Which configuration the organiser's build ran, and whether it set
+the retrieval variables or only the key.</li>
+<li>Whether any evaluation suite sends messages outside ASCII and the
+CJK block, and how many Adds returned 200 having stored nothing.</li>
+<li>How Search latency grows with a user's row count, since every query
+is a full scan with Python BM25.</li>
+<li>Whether a licence is intended.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage, write and retrieval:
+<code>src/vanilla_rag/memory_store.py</code></li>
+<li>HTTP surface and configuration: <code>src/vanilla_rag/api.py</code>,
+<code>.env.example</code>, <code>Dockerfile</code>,
+<code>compose.yaml</code></li>
+<li>Embedding, reranking, tokenizer:
+<code>src/vanilla_rag/embeddings.py</code>,
+<code>src/vanilla_rag/reranking.py</code>,
+<code>src/vanilla_rag/chunking.py</code></li>
+<li>Deletion: <code>scripts/memory_admin.py</code></li>
+<li>Contract: <code>docs/competition-contract.md</code></li>
+<li>Offline benchmark: <code>src/vanilla_rag/cli.py</code>,
+<code>index.py</code>, <code>pipeline.py</code>,
+<code>evaluation.py</code>, <code>datasets.py</code>,
+<code>generation.py</code></li>
+<li>Replay, smoke, load: <code>scripts/local_benchmark.py</code>,
+<code>scripts/prepare_public_data.py</code>,
+<code>scripts/local_smoke.py</code>,
+<code>scripts/load_test.py</code></li>
+<li>Tests: <code>tests/test_memory_store.py</code>,
+<code>tests/test_api.py</code>, <code>tests/test_core.py</code>,
+<code>tests/test_public_data.py</code>,
+<code>tests/test_load_test.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git</code>.</p>
+<ul>
+<li><strong>No licence.</strong>
+<code>git grep -n -i -E 'licen[cs]e|copyright|rights reserved|spdx' -- .</code>
+returns nothing, and
+<code>git ls-files | /usr/bin/grep -i -E 'licen|copying|notice'</code>
+returns nothing; the GitHub API reports <code>license: null</code>.</li>
+<li><strong>Every SQL read of the store.</strong>
+<code>git grep -n -E 'FROM (memories|add_requests|store_metadata)' -- src scripts</code>
+returns 15 lines. <code>user_id</code> is in the predicate at
+<code>memory_store.py:462</code> and in the two prefix statements of
+<code>memory_admin.py</code>; the others are the request_id lookups, the
+identity read and the global counts.</li>
+<li><strong>No delete or forget in the service.</strong>
+<code>git grep -n -i -E 'delete|forget|purge' -- src</code> returns
+nothing; the same pattern over <code>scripts</code> returns
+<code>memory_admin.py</code> eight times.</li>
+<li><strong>No update or delete route.</strong>
+<code>git grep -n -E '@app\.(delete|put|patch)' -- src</code> returns
+nothing; <code>git grep -n -E '@app\.(get|post)' -- src</code> returns
+the three routes.</li>
+<li><strong>No status on a row.</strong>
+<code>git grep -n -i -E 'status|trust|verified' -- src/vanilla_rag/memory_store.py</code>
+returns nothing; the same pattern over
+<code>src/vanilla_rag/api.py</code> returns the HTTP status lines.</li>
+<li><strong>No validity time or retention job.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|expires?_?at|ttl|retention' -- src scripts</code>
+returns nothing.</li>
+<li><strong>Add catches one exception type.</strong>
+<code>git grep -n -E 'except' -- src/vanilla_rag/api.py</code> returns
+line 176, <code>except RequestConflictError</code>.</li>
+<li><strong>No script ranges beyond the CJK block.</strong>
+<code>git grep -n -i -E 'u3040|u30ff|uac00|u0400' -- src</code> returns
+nothing; <code>git grep -n -E 'u4e00' -- src</code> returns
+<code>chunking.py:8</code>.</li>
+<li><strong>The ingestion time has no reader.</strong>
+<code>git grep -n 'created_at' -- src</code> returns the
+<code>add_requests</code> insert at <code>memory_store.py:422</code>
+and, for reads, only the <code>memories</code> select and its two
+renderings (<code>:461</code>, <code>:541</code>,
+<code>:604</code>).</li>
+<li><strong>The one non-ASCII test is Chinese.</strong>
+<code>LC_ALL=C git grep -n -I -E $'[\x80-\xff]' -- tests</code> returns
+<code>test_memory_store.py:179</code> and <code>:181</code>; the same
+command over <code>README.md</code> counts 112 lines.</li>
+<li><strong>No background work.</strong>
+<code>git grep -n -i -E 'thread|schedul|cron|background|asyncio|create_task' -- src</code>
+returns the two <code>threading.RLock</code> locks and their imports
+only.</li>
+<li><strong>No VACUUM or secure delete.</strong>
+<code>git grep -n -i -E 'vacuum|secure_delete' -- .</code> returns
+nothing.</li>
+<li><strong>No rate limit.</strong>
+<code>git grep -n -i -E 'rate.?limit|throttl' -- src</code> returns
+nothing.</li>
+<li><strong>No CI and no committed results.</strong>
+<code>git ls-files .github</code> returns nothing;
+<code>git grep -n -E '0\.927652|76\.9175' -- .</code> returns
+<code>README.md:157</code> and <code>:159</code> only.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|citation' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-04</strong> — <a
+href="https://github.com/wenxiaof345-ctrl/vanilla-rag-memory/commit/31ab7bf9cfa3ee3c4f986e82f6e7a00b134ba8ca"><code class="commit-id" title="31ab7bf9cfa3ee3c4f986e82f6e7a00b134ba8ca">31ab7bf9…</code></a>.
+First reading, at the head of <code>main</code> on 11 August 2026, from
+a shallow clone; history from the GitHub API. Screened first: no
+auto-run surface, no build-time execution, nothing inside the seven-day
+cooldown, and two unpinned surfaces, <code>pyproject.toml</code> with no
+lockfile and range-pinned <code>requirements.txt</code>. No licence.
+Nothing installed, built or run; the tokenizer regex was re-typed into a
+scratch script and run on sample strings. Two marks:
+<code>scope_enforced</code> for the one <code>user_id</code> predicate
+every ranking arm runs under, and <code>negative_eval</code> for a
+cross-user case with a populated control (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

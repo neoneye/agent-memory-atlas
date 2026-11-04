@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 772 reports.</strong></p>
+<p><strong>This page covers all 773 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32074,6 +32074,45 @@ with no CI, two needing an uncommitted database, not run here. One mark,
 keyed decisions that a later stage must obey.</li>
 <li>Do not copy when: a decision must stay correctable after something
 is built on it, or a person's ruling must become the decision.</li>
+</ul>
+<h3 id="vanilla-rag-memory"><a
+href="../systems/vanilla-rag-memory/"><code>vanilla-rag-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>load one user's rows and run every arm inside
+them.</strong> <code>WHERE user_id = ?</code> is the first step of the
+only content read, and cosine, BM25 with its document statistics, the
+optional cross-encoder and the same-session neighbour window all index
+into that list.</li>
+<li>Second idea: an embedding identity stored on first open, folding in
+the model, the query prefix and the contextual window, so a database
+refuses to open under any other; and idempotent Adds re-checked inside
+<code>BEGIN IMMEDIATE</code> after embedding outside it.</li>
+<li>Biggest risk: <strong>a message the tokenizer cannot see is
+acknowledged and dropped.</strong> <code>TOKEN_PATTERN</code> matches
+CJK ideographs, ASCII word runs and punctuation only, so a Cyrillic,
+Hangul or kana message produces no chunk while Add returns 200, and an
+Add with no matching message answers 500 on every retry.</li>
+<li>Second risk: the Dockerfile bakes in the 0.4.0 <code>enhanced</code>
+configuration while the README validates 0.6.0 <code>hybrid</code>; and
+deletion is a prefix script that collects its targets outside its
+transaction and keeps no record.</li>
+<li>Most reusable component:
+<code>src/vanilla_rag/memory_store.py</code> —
+<code>SQLiteMemoryStore.add</code> and <code>search</code>:
+double-checked idempotent writes, the identity guard and per-user
+weighted RRF.</li>
+<li>Maturity impression: no licence, so all rights reserved; 2,055 lines
+of Python, four commits from one author, 4–11 August 2026; 25 unittest
+cases with no CI, the four API cases skipped without FastAPI, not run
+here. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>; the README's LoCoMo figures have no
+committed result files.</li>
+<li>Study when: you are implementing the same Add/Search contract or
+want a minimal reference for holding a per-user boundary across fused
+retrieval arms.</li>
+<li>Do not copy when: messages arrive in scripts outside ASCII and the
+CJK block, memory must be corrected or forgotten on request, or callers
+sharing the API key must not read each other's users.</li>
 </ul>
 <h3 id="active-memory-index"><a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a></h3>
