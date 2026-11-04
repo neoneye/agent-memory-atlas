@@ -6202,21 +6202,21 @@ note.</strong> A self-hosted MCP server for Claude Code, Cursor, Copilot
 and seven other agents, shipped as one Rust binary over SQLite, it lets
 an episodic memory carry effort, outcome and a graveyard of abandoned
 approaches. Every recall opens with a word-boundary keyword scan of that
-graveyard before anything is embedded, and a Claude Code pre-tool-use
-hook denies a mutating tool call that names a dead end, handing back
-what worked instead. Topic suppression is a set written only by
-<code>suppress_topic</code> and consulted by the recall pipeline, which
-drops any candidate mentioning a member — the read-path form of the
-rejected-value tombstone, and the report credits it — while the briefing
-the session-start hook injects does not apply it. The graveyard scan
-itself carries no state and no project predicate and covers the oldest
-5,000 episodic keys. The lifecycle is visibility, not belief: active,
-deprioritised with a reason and reinstate hints, archived, deleted, with
-extracted facts following their source through each, and no state says a
-memory is true. Contradiction links on both rows are removed by nothing,
-the reason handed to <code>archive</code> is dropped, and the skill
-compiler is the one writer that will not commit without a reviewed draft
-pinned to the body it was diffed against.</p>
+graveyard, kept to the caller's project by default, before anything is
+embedded, and a Claude Code pre-tool-use hook denies a mutating tool
+call that names a dead end, handing back what worked instead. Topic
+suppression is a set written only by <code>suppress_topic</code> and
+consulted by the recall pipeline, which drops any candidate mentioning a
+member — the read-path form of the rejected-value tombstone — while the
+briefing and the graveyard do not apply it. Beside the visibility
+lifecycle sits a <code>trust</code> column: an extracted fact starts
+<code>candidate</code> and only a person confirms it, in the settings
+window or the CLI; <code>rejected</code> is excluded from recall in SQL;
+a model-confirmed contradiction disputes both sides, and an agent's
+verdict on one, like its skill write, becomes a question the MCP client
+puts to the person. Five marks. The mutation log it keeps is pruned
+after ninety days by default, which is why <code>audit_log</code> is not
+among them.</p>
 <p><strong><a href="../systems/reporecall/">Reporecall</a> puts a memory
 layer under a code index and keeps the memory's state in the wrong
 place.</strong> A Claude Code hook daemon — tree-sitter chunks, a call

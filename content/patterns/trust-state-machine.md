@@ -427,6 +427,8 @@ visible only in the data.
 
 [Sol0mon](../../systems/sol0mon/) earns the mark on a verdict that never moves. A verifier model grades each disputed claim `RESOLVED`, `UNRESOLVED` or `EQUIVALENT`, an unknown value is clamped to `UNRESOLVED`, and `decision_records`, the one reader every renderer and the build specification go through, admits only resolved claims, so only those reach the coding agent as immutable constraints (`decision_model.py:496-514`, `answer_loader.py:32-72`). Nothing changes a stored verdict. A governance ruling on a claim the verifier left open is recorded beside it and never moves it between buckets, and the follow-up path tracks belief as membership in a JSON list rather than as a status.
 
+**[OmniMem](../../systems/omnimem/) puts belief on its own column beside a visibility lifecycle.** `state` is active, deprioritised, archived or deleted; `trust` is `candidate`, `accepted`, `disputed`, `superseded` or `rejected`, a generated column whose default makes an extracted fact a candidate (`crates/omnimem-store/src/schema.rs:18-25`). Every recall search excludes `rejected` in SQL, a superseded memory appears only inside its winner's hit, and the briefing and the skill compiler take only `accepted` (`crates/omnimem-engine/src/recall.rs:725-783`, `skills.rs:155-162`). Only a person confirms a candidate, through the settings window or the CLI, and only a model-confirmed contradiction disputes; a heuristic link disputes nothing. The weights on `candidate` and `disputed` reorder and never filter, and the graveyard behind its recall warnings and pre-tool-use hook ignores trust altogether.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

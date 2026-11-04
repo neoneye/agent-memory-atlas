@@ -892,6 +892,19 @@ create, update, delete, supersede and quarantine decision, rotates past
 <code>supersede_log</code> is never deleted from and records only
 replacements and their undos. <strong>A change feed and an audit trail
 want different retention, and one table cannot serve both.</strong></p>
+<p><strong><a href="../../systems/omnimem/">OmniMem</a> builds the log
+and gives it a lifetime.</strong> The <code>audit</code> table takes one
+row per state change, delete, suppression, trust verdict, resolution and
+skill write, inserted in the change's own transaction with an actor set
+per entry point and the MCP client's name, and <code>forget</code>
+scrubs the forgotten text from earlier rows while keeping them
+(<code>crates/omnimem-store/src/audit.rs:1-23</code>,
+<code>:401-450</code>, <code>:573-630</code>). The default level is
+<code>lifecycle</code>, and <code>writes</code> and <code>full</code>
+add the rest. The default retention deletes every row older than ninety
+days, at startup and on each maintenance pass
+(<code>audit.rs:822-831</code>), so the report withholds the mark;
+<code>AUDIT_RETENTION_DAYS=0</code> keeps the whole log.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

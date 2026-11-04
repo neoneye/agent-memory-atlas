@@ -544,6 +544,8 @@ report withholds `audit_log` on that ground.
 
 **[Monomem](../../systems/monomem/) keeps three mutation logs, and none is both complete and kept.** `change_log` is written by triggers inside every writing transaction, so no path skips it, and a retention purge deletes its rows after 90 days (`src/store.ts:2309-2343`, `:5589-5600`). `audit.log` gets a line from every create, update, delete, supersede and quarantine decision, rotates past 5 MB and removes its sixth file (`src/security.ts:507-575`). `supersede_log` is never deleted from and records only replacements and their undos. **A change feed and an audit trail want different retention, and one table cannot serve both.**
 
+**[OmniMem](../../systems/omnimem/) builds the log and gives it a lifetime.** The `audit` table takes one row per state change, delete, suppression, trust verdict, resolution and skill write, inserted in the change's own transaction with an actor set per entry point and the MCP client's name, and `forget` scrubs the forgotten text from earlier rows while keeping them (`crates/omnimem-store/src/audit.rs:1-23`, `:401-450`, `:573-630`). The default level is `lifecycle`, and `writes` and `full` add the rest. The default retention deletes every row older than ninety days, at startup and on each maintenance pass (`audit.rs:822-831`), so the report withholds the mark; `AUDIT_RETENTION_DAYS=0` keeps the whole log.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

@@ -14088,37 +14088,42 @@ href="../systems/omnimem/"><code>omnimem</code></a></h3>
 <li>Best idea: <strong>the graveyard, checked by keyword before anything
 is embedded and enforced at the point of action.</strong> An episodic
 memory carries effort, outcome and a list of abandoned approaches; every
-recall scans that list on word boundaries first and leads with up to
-three warnings carrying the reason and what worked instead, and a Claude
-Code pre-tool-use hook denies a mutating tool call that names one.</li>
-<li>Biggest risk: <strong>the graveyard is the one read without a
-predicate.</strong> Its scan covers the oldest 5,000 episodic keys with
-no state and no project, so an archived memory or another project's dead
-end denies a tool call the refusal calls this project's, and past that
-size a new dead end never warns. A contradiction link is cleared by
-nothing, the reason given to <code>archive</code> is discarded, and
-<code>force=true</code> disables the duplicate check, the contradiction
-check and fact extraction together.</li>
-<li>Most reusable component: <code>compile_skill</code>'s
-<code>propose</code> and <code>write</code> pair in
-<code>compiler.rs</code> — a draft stashed with the sha of the body it
-was diffed against, and a write that commits only that stash and refuses
-when the base moved; no model in the loop, and the settings panel runs
-the same function.</li>
-<li>Maturity impression: MIT, 406 commits on main at release 7.0.5,
-45,230 lines of Rust across eleven crates with 388 test functions that
-run against an in-memory SQLite store, one binary shipped as server
-packages, desktop installers and a Docker image, OAuth 2.1 with hashed
-tokens, and a committed benchmark harness with no results in the
-tree.</li>
+recall scans that list on word boundaries first, within the caller's
+project by default, and leads with up to three warnings carrying the
+reason and what worked instead, and a Claude Code pre-tool-use hook
+denies a mutating tool call that names one.</li>
+<li>Biggest risk: <strong>the record of what changed expires, and two
+readers skip the filters recall applies.</strong> The audit log is
+deleted after ninety days by default; the briefing and the graveyard
+ignore suppressed topics, and the graveyard ignores trust, so a rejected
+memory's dead end still denies a tool call. The person-only verbs sit
+behind a CLI with no terminal check and a client's elicitation dialog,
+and <code>force=true</code> disables the duplicate check, the
+contradiction check and fact extraction together.</li>
+<li>Most reusable component: the elicitation gate in
+<code>crates/omnimem-mcp/src/handler.rs</code> —
+<code>compile_skill(mode="write")</code> and
+<code>check_contradictions(mode="resolve")</code> intercepted before
+dispatch and put to the person as a one-boolean form the model never
+answers, committing exactly the stashed draft that was shown, and
+parking the proposal for the settings window when the client cannot
+ask.</li>
+<li>Maturity impression: MIT, 438 commits on main at release 7.0.8,
+57,813 lines of Rust across eleven crates with 556 test functions that
+run against an in-memory SQLite store, including a negative-recall suite
+whose excluded rows are asserted near-duplicates of the query; one
+binary shipped as server packages, desktop installers and a Docker
+image; a committed benchmark harness with no results in the tree. Five
+marks: <code>tombstone</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>human_review</code>,
+<code>negative_eval</code>.</li>
 <li>Study when: you want a memory that remembers what failed and why and
-stops the agent before it repeats it, or a worked example of a
-suppression consulted on the read path and of extracted facts that
-follow their source through the lifecycle.</li>
-<li>Do not copy when: you need the store to say what it believes — the
-lifecycle records visibility, not truth — or a record of who changed
-what: mutations bump a timestamp and write to a process log, and the
-archive reason never reaches the row.</li>
+stops the agent before it repeats it, a store that keeps visibility and
+belief on separate columns, or extracted facts that wait for a person
+before they reach the briefing.</li>
+<li>Do not copy when: you need a mutation history that outlives a
+quarter without changing a default, or a human gate that holds against
+an agent with a shell on the same machine.</li>
 </ul>
 <h3 id="tempomem"><a
 href="../systems/tempomem/"><code>tempomem</code></a></h3>

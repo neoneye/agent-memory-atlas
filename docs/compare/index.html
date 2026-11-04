@@ -23282,58 +23282,68 @@ refreshes</td>
 <td>A JSON record of string fields in one SQLite row under
 <code>mem:&lt;namespace&gt;:&lt;ulid&gt;</code>, in one of five
 namespaces — episodic, project, knowledge, preference, skill — with a
-384-dimension vector in a side table, a lifecycle state, a surface
-score, licence and provenance labels, and on episodic rows effort,
-outcome, breakthrough, lesson and a JSON graveyard of abandoned
+384-dimension vector in a side table, a lifecycle state, a trust value,
+a surface score, licence and provenance labels, and on episodic rows
+effort, outcome, breakthrough, lesson and a JSON graveyard of abandoned
 approaches</td>
-<td>One SQLite file: a memories table whose state, project and timestamp
-columns are generated from the record, a vectors table loaded into an
-in-process matrix and searched exactly, a kv table for
-topics:suppressed, 30-day recall logs and counters, and a durable
-enrichment queue</td>
-<td>A word-boundary keyword scan of the graveyard before embedding, up
-to three warnings ahead of the results; then exact KNN per namespace
-over keys pre-filtered in SQL by state and project, suppressed topics
-dropped by word match, scored as similarity × surface × recency ×
-experience × a date boost, extracted facts folded into their source, a
-floor on raw similarity</td>
+<td>One SQLite file: a memories table whose state, trust, project and
+timestamp columns are generated from the record, a vectors table loaded
+into an in-process matrix and searched exactly, a kv table for
+suppressed topics and their reasons, pending resolutions, 30-day recall
+logs and counters, an audit table, and a durable enrichment queue</td>
+<td>A word-boundary keyword scan of the graveyard, kept to the caller's
+project by default, before embedding, up to three warnings ahead of the
+results; then exact KNN per namespace over keys pre-filtered in SQL by
+state, project and trust, suppressed topics dropped by word match,
+scored as similarity × surface × recency × experience × a date boost × a
+trust weight, superseded memories folded into their winner, extracted
+facts folded into their source, a floor on raw similarity</td>
 <td>remember embeds, refuses a near-duplicate at cosine 0.92 in the same
-project, warns on a negation-pattern contradiction, stores, and queues
-Claude fact extraction that writes facts and preferences at surface 0.5
-carrying enriched_from and as_of; force skips all three; a Claude Code
-session-end hook writes a redacted session record</td>
+project, warns on a negation-pattern contradiction, stores as accepted,
+and queues Claude fact extraction that writes facts and preferences at
+surface 0.5 as candidates carrying enriched_from and as_of; force skips
+all three checks; a Claude Code session-end hook writes a redacted
+session record</td>
 <td>A four-state lifecycle — active, deprioritised (x0.2, with a reason
-and reinstate hints), archived (x0, excluded in SQL), deleted (row
-removed) — that extracted facts follow and return from; driven by MCP
-tools, the settings panel and a maintenance pass that archives older
-duplicates and expired articles; forget previews before it deletes</td>
+and reinstate hints), archived (x0, excluded in SQL, with a reason),
+deleted (row removed, its text scrubbed from the audit log) — that
+extracted facts follow; a contradiction resolved as supersedes, both
+valid, both wrong, false positive or reopened, recorded on both links
+with its history; forget previews before it deletes</td>
 <td>project on every row, applied in SQL to every searched namespace and
-re-checked in Rust, and on the briefing's episodic and experience reads;
-the graveyard scan behind recall warnings and the pre-tool-use hook
-reads every project and every state</td>
+re-checked in Rust, on the briefing's reads, and to the graveyard and
+the pre-tool-use hook under the default GRAVEYARD_SCOPE=project; an
+unscoped recall and warn_if_abandoned read every project's dead
+ends</td>
 <td>One binary: 48 MCP tools over streamable HTTP with bearer or OAuth
-2.1 auth and an 89-line instruction block, a desktop tray app whose
-settings panel is served to its own window over omnimem://, an RSS
-thread, and Claude Code hooks for session start, pre-tool-use and
-session end</td>
+2.1 auth and a 96-line instruction block, MCP elicitation for the two
+gated calls, a desktop tray app whose settings panel is served to its
+own window over omnimem://, a CLI for trust, contradictions and the
+audit log, an RSS thread, and Claude Code hooks for session start,
+pre-tool-use and session end</td>
 <td>An enrichment worker polling the queue table; RSS ingestion on a
-schedule; a maintenance pass every tenth briefing per project — dedup, a
-negation scan that reports without linking, article expiry; a daily
-skill scan that proposes drafts</td>
-<td>A lifecycle state with a stored deprioritise reason, a surface
-multiplier and an experience weight; provenance says who is speaking and
-is never filtered on; contradiction links appended to both rows and
-never resolved</td>
+schedule; a maintenance pass every tenth briefing per project — audit
+pruning, dedup, a negation scan that links and, when the model confirms,
+disputes, article expiry; a daily skill scan that proposes drafts; a
+release check against the Forgejo API unless UPDATE_CHECK is off</td>
+<td>A trust value per memory, set by person, model-confirmed
+contradiction or resolution and acted on by every recall and the
+briefing; a lifecycle state with a stored reason; provenance says who is
+speaking and is never filtered on; an audit log of state changes,
+deletes and suppressions, pruned after 90 days by default</td>
 <td>A graveyard matched on word boundaries before any embedding and
 enforced at the point of action by a hook that denies a mutating tool
-call and returns the way out; facts that follow their source through
-every per-memory transition; a skill write that commits only a stashed,
-sha-pinned draft</td>
-<td>The graveyard scan reads every project and every state over the
-oldest 5,000 episodic keys, so another project's or an archived memory's
-dead end denies a tool call described as this project's, and a newer one
-may never warn; contradiction links are cleared by nothing; archive and
-suppression reasons are discarded; force bypasses three checks</td>
+call and returns the way out; an extracted fact that stays a candidate
+until a person confirms it; an agent's skill write and contradiction
+verdict turned into a question the client puts to the person; a
+negative-recall suite whose excluded rows are asserted near-duplicates
+of the query</td>
+<td>Audit rows older than 90 days are deleted at startup and on every
+maintenance pass by default; the briefing and the graveyard ignore
+suppressed topics; the graveyard ignores trust and state, so a rejected
+or archived memory's dead end still denies a tool call; the human gates
+rest on a CLI any shell can run and on a client that does not
+auto-accept; force bypasses three checks</td>
 </tr>
 <tr>
 <td><a href="../systems/omnimemory/"><code>omnimemory</code></a></td>
@@ -34719,7 +34729,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>195 of 773:</em> <a
+<p><em>196 of 773:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -34855,7 +34865,7 @@ href="../systems/octop-memory/"><code>octop-memory</code></a>, <a
 href="../systems/oh-my-hermes/"><code>oh-my-hermes</code></a>, <a
 href="../systems/omi/"><code>omi</code></a>, <a
 href="../systems/omniintelligence/"><code>omniintelligence</code></a>,
-<a
+<a href="../systems/omnimem/"><code>omnimem</code></a>, <a
 href="../systems/one-agent-many-hats/"><code>one-agent-many-hats</code></a>,
 <a href="../systems/ontofelia/"><code>ontofelia</code></a>, <a
 href="../systems/open-graph-memory/"><code>open-graph-memory</code></a>,
@@ -35667,7 +35677,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>96 of 773:</em> <a
+<p><em>97 of 773:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -35729,6 +35739,7 @@ href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/obelyth-cortex/"><code>obelyth-cortex</code></a>, <a
 href="../systems/octop-memory/"><code>octop-memory</code></a>, <a
 href="../systems/oh-my-hermes/"><code>oh-my-hermes</code></a>, <a
+href="../systems/omnimem/"><code>omnimem</code></a>, <a
 href="../systems/one-agent-many-hats/"><code>one-agent-many-hats</code></a>,
 <a href="../systems/openkb/"><code>openkb</code></a>, <a
 href="../systems/openvurp/"><code>openvurp</code></a>, <a

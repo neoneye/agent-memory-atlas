@@ -325,6 +325,8 @@ reader sees.
 
 [ActiveMemoryIndex](../../systems/active-memory-index/) resolves an explicit correction and attaches the disposition to rows, not to the value. Add stores an update only when the user's quoted statement is a substring of a user turn. On the first Search that needs it, a verifier judges the 20 nearest earlier memories and stores a verdict per `(update_id, item_id)` pair, and a router decides per question whether a past value is wanted. A failed model call withholds nothing, which keeps requirement 3. Requirement 5 is the miss: a later restatement of the old value is a new row no verdict names, and Search returns it.
 
+[OmniMem](../../systems/omnimem/) writes the verdict onto the link and never deletes the link. A contradiction is a link on both rows, `verified` when the model confirmed it, and a resolution — `supersedes`, `both_valid`, `both_wrong`, `false_positive` or `reopened` — is added to both with its winner, reason, `resolved_by` and the history of earlier verdicts (`crates/omnimem-engine/src/resolution.rs:1-21`, `:354-495`). The scan skips a resolved pair, so it is not relinked, and the briefing and hooks stop warning about it while recall shows the verdict. The loser becomes `superseded` and is folded into its winner's hit, or `rejected` under `both_wrong`. An agent's verdict is a proposal the MCP client puts to the person, or parks for the settings window for a week. Requirement 5 holds for the pair and not for the claim: a restatement of the loser in new words is a new accepted row, which only a later scan can link.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

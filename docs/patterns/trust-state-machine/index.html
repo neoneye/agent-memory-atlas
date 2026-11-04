@@ -752,6 +752,23 @@ constraints (<code>decision_model.py:496-514</code>,
 A governance ruling on a claim the verifier left open is recorded beside
 it and never moves it between buckets, and the follow-up path tracks
 belief as membership in a JSON list rather than as a status.</p>
+<p><strong><a href="../../systems/omnimem/">OmniMem</a> puts belief on
+its own column beside a visibility lifecycle.</strong>
+<code>state</code> is active, deprioritised, archived or deleted;
+<code>trust</code> is <code>candidate</code>, <code>accepted</code>,
+<code>disputed</code>, <code>superseded</code> or <code>rejected</code>,
+a generated column whose default makes an extracted fact a candidate
+(<code>crates/omnimem-store/src/schema.rs:18-25</code>). Every recall
+search excludes <code>rejected</code> in SQL, a superseded memory
+appears only inside its winner's hit, and the briefing and the skill
+compiler take only <code>accepted</code>
+(<code>crates/omnimem-engine/src/recall.rs:725-783</code>,
+<code>skills.rs:155-162</code>). Only a person confirms a candidate,
+through the settings window or the CLI, and only a model-confirmed
+contradiction disputes; a heuristic link disputes nothing. The weights
+on <code>candidate</code> and <code>disputed</code> reorder and never
+filter, and the graveyard behind its recall warnings and pre-tool-use
+hook ignores trust altogether.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>
