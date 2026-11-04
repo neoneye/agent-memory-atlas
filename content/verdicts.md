@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 771 reports.**
+**This page covers all 772 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7042,6 +7042,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no licence, so all rights reserved; 41,153 lines of Python, shipped twice in near-identical copies, four commits from one author on 13 October 2026; 52 pytest files and 17 test scripts with no CI, two needing an uncommitted database, not run here. One mark, `trust_state`.
 - Study when: you want disagreement between models turned into graded, keyed decisions that a later stage must obey.
 - Do not copy when: a decision must stay correctable after something is built on it, or a person's ruling must become the decision.
+
+### [`active-memory-index`](../systems/active-memory-index/)
+- Best idea: **make every model correction quote text you can find.** An explicit update is accepted only when stage 1's quote is in a user turn and the new value is in that turn, and an earlier memory is withheld only when the verifier's quoted old value is in that memory; each verdict is stored per update and memory, so a pair costs one call.
+- Second idea: store each chunk twice, verbatim turns and extracted facts, and deliver the turns first; the README's own LoCoMo runs put the reorder ahead of every retrieval change it tried.
+- Biggest risk: **the suppression is keyed on earlier rows, not the value.** A later Add restating a replaced value is a new row no verdict names and is returned, which a test asserts; only the 20 earlier rows nearest the update are judged at all.
+- Second risk: nothing can be deleted, by route or SQL; and the chunk-memory delivery mode concatenates withheld turns back into the chunks it returns.
+- Most reusable component: `app/updates.py` with `app/tokens.py` — quote-gated, fail-open withholding with persisted pair verdicts, and a per-request token budget sized to the reader's window.
+- Maturity impression: MIT; 4,342 lines of Python in the service and 3,589 in the offline bench harness and scripts, 126 commits from one author, 3 August – 16 October 2026; 31 network-free test files, not run here. Two marks, `scope_enforced` and `negative_eval`. The bench figures are the project's own local runs, and the repository claims no official score.
+- Study when: you need an Add/Search memory service for a benchmark contract, or want to correct a value from the user's own words without rewriting stored text.
+- Do not copy when: a corrected value must stay corrected through later restatements, a user's memory must be erasable, or callers need separate authorisation per user.
 
 ### [`refind`](../systems/refind/)
 - Best idea: **build every derived structure inside the request, from one scoped read.** `list_chunks` filters `WHERE i.user_id = ?`, and the BM25 index, the neighbour map the context window walks and the direct fallback are all built from its result per Search, so the planner's tool calls have no second read for the predicate to be missing from.

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 771 reports.</strong></p>
+<p><strong>This page covers all 772 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32074,6 +32074,42 @@ with no CI, two needing an uncommitted database, not run here. One mark,
 keyed decisions that a later stage must obey.</li>
 <li>Do not copy when: a decision must stay correctable after something
 is built on it, or a person's ruling must become the decision.</li>
+</ul>
+<h3 id="active-memory-index"><a
+href="../systems/active-memory-index/"><code>active-memory-index</code></a></h3>
+<ul>
+<li>Best idea: <strong>make every model correction quote text you can
+find.</strong> An explicit update is accepted only when stage 1's quote
+is in a user turn and the new value is in that turn, and an earlier
+memory is withheld only when the verifier's quoted old value is in that
+memory; each verdict is stored per update and memory, so a pair costs
+one call.</li>
+<li>Second idea: store each chunk twice, verbatim turns and extracted
+facts, and deliver the turns first; the README's own LoCoMo runs put the
+reorder ahead of every retrieval change it tried.</li>
+<li>Biggest risk: <strong>the suppression is keyed on earlier rows, not
+the value.</strong> A later Add restating a replaced value is a new row
+no verdict names and is returned, which a test asserts; only the 20
+earlier rows nearest the update are judged at all.</li>
+<li>Second risk: nothing can be deleted, by route or SQL; and the
+chunk-memory delivery mode concatenates withheld turns back into the
+chunks it returns.</li>
+<li>Most reusable component: <code>app/updates.py</code> with
+<code>app/tokens.py</code> — quote-gated, fail-open withholding with
+persisted pair verdicts, and a per-request token budget sized to the
+reader's window.</li>
+<li>Maturity impression: MIT; 4,342 lines of Python in the service and
+3,589 in the offline bench harness and scripts, 126 commits from one
+author, 3 August – 16 October 2026; 31 network-free test files, not run
+here. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>. The bench figures are the project's own
+local runs, and the repository claims no official score.</li>
+<li>Study when: you need an Add/Search memory service for a benchmark
+contract, or want to correct a value from the user's own words without
+rewriting stored text.</li>
+<li>Do not copy when: a corrected value must stay corrected through
+later restatements, a user's memory must be erasable, or callers need
+separate authorisation per user.</li>
 </ul>
 <h3 id="refind"><a
 href="../systems/refind/"><code>refind</code></a></h3>

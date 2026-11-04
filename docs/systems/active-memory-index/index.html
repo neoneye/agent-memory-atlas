@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Add/Search memory
+service for a memory leaderboard, storing verbatim turns and extracted
+facts per user and withholding values a user explicitly replaced.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ActiveMemoryIndex — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Add/Search
+memory service for a memory leaderboard, storing verbatim turns and
+extracted facts per user and withholding values a user explicitly
+replaced.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ActiveMemoryIndex — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Add/Search
+memory service for a memory leaderboard, storing verbatim turns and
+extracted facts per user and withholding values a user explicitly
+replaced.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ActiveMemoryIndex — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ActiveMemoryIndex",
+      "description": "A self-hosted Add/Search memory service for a memory leaderboard, storing verbatim turns and extracted facts per user and withholding values a user explicitly replaced.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A replaced value withheld, one earlier
+memory at a time</p>
+          <h1>ActiveMemoryIndex</h1>
+          <p class="document-deck">A self-hosted Add/Search memory
+service for a memory leaderboard, storing verbatim turns and extracted
+facts per user and withholding values a user explicitly replaced.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/linxuhao/ActiveMemoryIndex">
+              <span>Source</span>
+              <strong>linxuhao/ActiveMemoryIndex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/linxuhao/ActiveMemoryIndex/commit/22f8287ce0ac02ed493fbbb0f6f8cc7e9556aa3d" title="22f8287ce0ac02ed493fbbb0f6f8cc7e9556aa3d">
+              <span>Analyzed revision</span>
+              <code>22f8287c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-04</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/linxuhao--ActiveMemoryIndex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>linxuhao--ActiveMemoryIndex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>4,342
+lines of Python in the service (app/), 3,589 in the offline bench
+harness and scripts, 108 of shell; 61 committed bench result
+files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>126
+commits from one author under four spellings of one name and one
+address, 3 August – 16 October 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>31
+network-free test files with fake providers, 4,359 lines, plain scripts
+and unittest; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ActiveMemoryIndex is a self-hosted FastAPI service implementing the
+Add/Search contract of the Agent Memory Leaderboard. Each chunk is
+stored twice per user, as verbatim timestamped turns and as gpt-4o-mini
+first-person facts, in one SQLite file. Search ranks by cosine against
+the question fused with a first-person "Did I tell you about…?" recall
+question. The notable mechanism is an opt-in correction path: an
+explicit replacement detected at Add, a model verdict per earlier memory
+on whether it states the replaced value, and those memories withheld
+from current-value questions. Its weakness is the key. The suppression
+attaches to each earlier memory, not the value, and nothing in the
+service can be deleted.</p>
+<p>The update and as-of mechanisms are off in code and on in the shipped
+academic profile, <code>.env.academic.example</code>; this reading holds
+for that profile unless a paragraph says otherwise. Two marks:
+<code>scope_enforced</code>, because every content read carries a
+<code>user_id</code> predicate, and <code>negative_eval</code>, because
+a test asserts the replaced value absent beside the new one in the same
+response. The bench figures in the tree are the project's own local
+runs, reported here as claims.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <code>items</code> row of kind <code>raw</code> or
+<code>fact</code>. A <code>raw</code> row is one message, stored whole
+as <code>[YYYY-MM-DD HH:MM] I: text</code> for the user or
+<code>Assistant: text</code> for anyone else
+(<code>app/main.py:308-328</code>). A <code>fact</code> row is one line
+from a gpt-4o-mini extraction over the chunk, or the current-value
+sentence an update renders. The README's framing is that the turn is the
+primary source and the fact a lossy paraphrase of it, and delivery
+orders turns first for that reason
+(<code>app/main.py:467-476</code>).</p>
+<p>A row is created by <code>/add</code> and never changed or removed.
+The service exposes three routes, <code>/add</code>,
+<code>/search</code> and <code>/health</code>, and no SQL statement in
+<code>app/</code> deletes or updates an item. Every row is therefore in
+one state, stored, for the life of the database file.</p>
+<p>What can change is whether a row is <em>returned</em>. Two mechanisms
+withhold a row from one Search without touching it:</p>
+<ul>
+<li><strong>Explicit update.</strong> When a user says in words that a
+value is replaced or was wrong, Add stores an <code>updates</code>
+record. On the first Search that needs it, a verifier judges each
+candidate earlier memory, and the verdict is stored in
+<code>update_checks</code> keyed on the pair
+<code>(update_id, item_id)</code>. A memory judged replaced is left out
+of a Search whose returned set would hold it, unless a router says the
+question asks for a past value or a dated state.</li>
+<li><strong>As-of selection.</strong> For a question about the state at
+a stated date, a model reads the times each candidate states, and code
+withholds items not valid in that period
+(<code>app/asof.py:276-294</code>). The readings live in process memory
+and are never stored.</li>
+</ul>
+<p>Neither is a belief state. A memory carries no status, and a replaced
+verdict is a fact about one update and one earlier row, which the next
+question's router may cancel. The service treats everything it stores as
+evidence for a reader model and never produces an answer itself.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an explicit update suppresses the earlier memories a verifier confirms, one pair at a time; a later restatement of the old value is a new row that no verdict names</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an explicit update suppresses the earlier memories a verifier confirms, one pair at a time; a later restatement of the old value is a new row that no verdict names
+flowchart TD
+  subgraph add[&quot;/add, one chunk&quot;]
+    direction TB
+    RAW[&quot;verbatim turns&lt;br/&gt;[stamp] I: text&quot;]
+    FACT[&quot;gpt-4o-mini facts&lt;br/&gt;first person, stamped&quot;]
+    UPD[&quot;stage 1: label + quote&lt;br/&gt;stage 2: subject, attribute,&lt;br/&gt;new and old value&quot;]
+    RAW ~~~ FACT ~~~ UPD
+  end
+  add --&gt; ROWS[&quot;items + updates rows&lt;br/&gt;keyed on user_id&lt;br/&gt;one commit&quot;]
+  ROWS --&gt; CAND{&quot;earlier Add, names&lt;br/&gt;subject and old value,&lt;br/&gt;lacks the new value?&quot;}
+  CAND --&gt;|&quot;20 nearest&quot;| VER[&quot;verifier quotes the value&lt;br/&gt;DIFFERENT, quote found&lt;br/&gt;verbatim in the item&quot;]
+  VER --&gt; CHK[&quot;update_checks row&lt;br/&gt;update_id + item_id&lt;br/&gt;replaced 0 or 1&quot;]
+  CHK --&gt; TRIAL{&quot;a replaced item in&lt;br/&gt;the trial selection?&quot;}
+  TRIAL --&gt;|&quot;yes&quot;| ROUTER{&quot;router: past value&lt;br/&gt;or time-scoped?&quot;}
+  ROUTER --&gt;|&quot;no&quot;| OUT[&quot;item left out,&lt;br/&gt;slot refilled&quot;]
+  ROUTER --&gt;|&quot;yes, or call failed&quot;| KEEP[&quot;returned as usual&quot;]
+  TRIAL --&gt;|&quot;no&quot;| KEEP
+  CAND --&gt;|&quot;later Add restating&lt;br/&gt;the old value&quot;| KEEP</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One process: <code>uvicorn app.main:app --workers 1</code> in a
+<code>python:3.11-slim</code> image (<code>Dockerfile</code>). FastAPI
+serves the three routes; a pure-ASGI admission valve in front bounds
+concurrent <code>/add</code> and <code>/search</code> and answers 429
+with <code>Retry-After</code> before authentication runs
+(<code>app/main.py:52-108</code>).</p>
+<p><strong>Store.</strong> One SQLite file in WAL mode,
+<code>synchronous=NORMAL</code>, under a process-wide <code>RLock</code>
+(<code>app/store.py:155-185</code>). <code>items</code> holds every row
+with its vector as a float32 BLOB; <code>requests</code> records each
+<code>(request_id, user_id)</code> for idempotency;
+<code>embedding_metadata</code> records the embedding backend, model,
+dimensions, endpoint and preprocessing. A database whose identity
+differs, or an unlabelled populated one under a remote embedder, refuses
+to start (<code>app/store.py:126-152</code>). The <code>updates</code>
+and <code>update_checks</code> tables are created only when an update
+switch is on (<code>:173-178</code>).</p>
+<p><strong>Retrieval cache.</strong> Each user's rows load into a
+<code>UserIndex</code>: items, a numpy matrix, and maps from id, chunk
+digest and fact key to row (<code>app/store.py:99-123</code>). The cache
+is an <code>OrderedDict</code> keyed on <code>user_id</code>, evicted
+least-recently-used once the total exceeds
+<code>AMI_CACHE_MAX_ITEMS</code>, 1,000,000 rows by default
+(<code>:279-289</code>). Every Search is a brute-force matrix product
+over the user's rows; there is no ANN index.</p>
+<p><strong>Models.</strong> In the academic profile,
+<code>text-embedding-v4</code> at 1024 dimensions through DashScope's
+OpenAI-compatible endpoint, and <code>gpt-4o-mini</code> for extraction,
+the recall question, the update stages, the router and the as-of
+classifier and time reader. The code default embedder is
+<code>BAAI/bge-small-en-v1.5</code> on CPU, baked into the image
+(<code>app/config.py:43-58</code>).</p>
+<p><strong>Limits.</strong> Every model and embedding call is clipped to
+an 85-second request deadline counted from arrival, and a call that
+cannot finish is a 503 before anything persists
+(<code>app/deadline.py</code>). Every Search's returned set is bounded
+by a token budget derived from the platform's 117,760-token Answer
+window (<code>app/tokens.py:103-120</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>docker compose up -d</code> with an env file. The academic
+profile needs two paid APIs, OpenAI and DashScope, at startup and on
+every Add and Search. With no <code>OPENAI_API_KEY</code> the service
+starts and stores verbatim turns only; with the default BGE backend it
+runs offline in that degraded mode. Authentication defaults to bearer
+and refuses to start with an empty or placeholder token
+(<code>app/config.py:453-470</code>); compose binds the port to
+<code>127.0.0.1</code>. The store is a SQLite file a person can query,
+but nothing in the service edits or removes a row, so repair means SQL
+by hand or a new <code>AMI_DB_PATH</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Add.</strong> <code>add</code>
+(<code>app/main.py:748-841</code>) checks auth, starts the deadline, and
+takes a per-<code>(request_id, user_id)</code> lock so overlapping
+platform retries serialise (<code>store.request_gate</code>,
+<code>app/store.py:200-214</code>). A seen request returns its echo.
+<code>build_items</code> writes the raw rows; update detection starts on
+a thread beside extraction (<code>app/main.py:773-774</code>,
+<code>app/updates.py:295-298</code>); <code>llm.extract_facts</code>
+returns the facts (<code>app/llm.py:324-339</code>). Rendered update
+sentences are appended as facts (<code>app/main.py:806-822</code>),
+everything is embedded, and <code>store.add</code> commits items, update
+records and the request id in one transaction
+(<code>app/store.py:226-271</code>).</li>
+<li><strong>Extraction.</strong> <code>EXTRACT_SYSTEM</code> asks for at
+most 24 atomic, first-person, dated facts with names and numbers kept
+verbatim (<code>app/llm.py:26-36</code>). <code>_parse_facts</code>
+takes a JSON object, falling back only to bulleted, numbered or
+bracketed lines, so prose replies store nothing
+(<code>:231-253</code>).</li>
+<li><strong>Update detection.</strong> Stage 1 labels the user's
+value-bearing statements with seven intents and a verbatim quote
+(<code>UPDATE_INTENT_SYSTEM</code>, <code>app/llm.py:617</code>).
+<code>accept_statements</code> keeps only
+<code>EXPLICIT_REPLACEMENT</code> and <code>CORRECTION</code> whose
+quote is a substring of a user turn
+(<code>app/updates.py:224-248</code>). Stage 2 extracts subject,
+attribute, new and old value, <code>relative</code>,
+<code>subject_is_user</code>, two language tags and a current-value
+sentence (<code>UPDATE_EXTRACT5_SYSTEM</code>,
+<code>app/llm.py:649</code>). <code>parse_updates</code> drops a record
+whose new value is not in the user turn and an old value the turn does
+not contain (<code>app/updates.py:173-211</code>).</li>
+<li><strong>Search.</strong> <code>_search</code>
+(<code>app/main.py:867-1008</code>) loads the user's index, sets the
+token budget, starts the as-of classifier beside the recall rewrite, and
+ranks (<code>rank</code>, <code>:338-358</code>). It computes the
+withheld set, runs a trial selection, and asks the router only when a
+withheld item would be returned (<code>:894-904</code>). It adds as-of
+withholding (<code>:905-915</code>) and selects (<code>select</code>,
+<code>:485-562</code>). The response is cut to the token budget
+(<code>:1008</code>).</li>
+<li><strong>Withholding.</strong> <code>updates.withheld</code>
+(<code>app/updates.py:465-481</code>) reads the user's absolute records,
+resolves them through <code>candidates</code>, <code>resolve</code> and
+<code>_chunk_facts</code> (<code>:326-457</code>), and caches the result
+per user until the user's row or record count changes.</li>
+<li><strong>As-of.</strong> <code>asof.classify</code>
+(<code>app/asof.py:146-166</code>), <code>times</code>
+(<code>:219-269</code>), <code>select_withheld</code>
+(<code>:297-332</code>).</li>
+<li><strong>Schema.</strong> <code>SCHEMA</code> and
+<code>UPDATE_SCHEMA</code> (<code>app/store.py:26-79</code>).</li>
+<li><strong>Background.</strong> None. No thread, timer or job touches
+the store between requests.</li>
+<li><strong>API.</strong> <code>/add</code>, <code>/search</code>,
+<code>/health</code>; contract models at
+<code>app/main.py:152-179</code>, with <code>extra="allow"</code> so
+unknown fields are logged by name rather than dropped.</li>
+<li><strong>Tests.</strong> <code>tests/</code>, 31 files;
+<code>scripts/smoke_contract.py</code> against a live instance.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>items</code> has <code>id</code>, <code>user_id</code>,
+<code>session_id</code>, <code>request_id</code>, <code>kind</code>,
+<code>parent_id</code>, <code>content</code>, <code>created_at</code>,
+<code>seq</code>, <code>vec</code>, <code>event_date</code> and
+<code>fact_key</code> (<code>app/store.py:27-40</code>).
+<code>parent_id</code> is always <code>None</code> on the write path; a
+fact's chunk is recovered from its id. An id is
+<code>sha1(user_id + "\0" + request_id)[:16]</code> followed by
+<code>-r&lt;position&gt;</code> for a turn or <code>-f&lt;n&gt;</code>
+for a fact (<code>:188-193</code>), so two users sending the same
+<code>request_id</code> cannot overwrite each other through
+<code>INSERT OR REPLACE</code>.</p>
+<p><code>updates</code> holds one row per detected update:
+<code>item_id</code> of the user turn, <code>subject</code>,
+<code>attribute</code>, <code>new_value</code>, optional
+<code>old_value</code>, <code>relative</code>, <code>statement</code>,
+<code>subject_is_user</code> and <code>created_at</code>.
+<code>update_checks</code> holds one verdict per
+<code>(update_id, item_id)</code>: <code>replaced</code> as 0 or 1 and
+the quote the verifier gave (<code>app/store.py:54-79</code>). Both
+carry <code>user_id</code>.</p>
+<p><strong>Scope</strong> is <code>user_id</code>, a column on every
+table and the key of the cache. <code>session_id</code> is stored and
+never read on any path. <strong>Time</strong> is the message's own
+timestamp, supplied by the caller in milliseconds and rescaled when it
+looks like seconds (<code>app/main.py:229-243</code>). Every fact of a
+chunk gets the first turn's timestamp (<code>:801</code>). The store
+keeps no time of its own: there is no ingestion timestamp, only
+<code>seq</code>. <code>event_date</code> is a research column written
+only under <code>AMI_EVENT_DATES_AT_ADD</code> or
+<code>AMI_EVENT_DATES_ADD_CALL</code>, both off in code and in the
+academic profile.</p>
+<p>There is no version chain, TTL, pin, status or deletion marker on an
+item.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Scoring.</strong> The question and a recall question are
+embedded, and each row scores
+<code>(1 - w)·sim(query) + w·sim(recall)</code> with
+<code>w = 0.5</code> (<code>app/main.py:345-352</code>).
+<code>RECALL_SYSTEM</code> asks for one first-person question in the
+register of a chat log, naming the entities and never answering
+(<code>app/llm.py:48-57</code>). The README identifies this as HyDE with
+a recall question as the hypothesis. No lexical arm runs on the release
+path; an FTS5 channel was built and removed, and its negative result is
+kept in <code>bench/results/ordering_ab_all10.txt</code>.</p>
+<p><strong>Selection.</strong> <code>select</code> walks rows by score
+and takes each one that is new by its first 120 normalised characters
+and fits three budgets: <code>min(top_k, AMI_RETURN_LIMIT)</code> items
+(100), 400,000 characters, and the counted token budget
+(<code>app/main.py:485-530</code>). A memory that does not fit the token
+budget is skipped, never cut, and 50 consecutive misses stop the scan.
+Each selected turn brings its neighbours within the same chunk at radius
+1, and they spend slots from the same <code>top_k</code>
+(<code>:364-382</code>, <code>:548-557</code>).</p>
+<p><strong>Ordering.</strong> The selected set is sorted turns first,
+facts second, each block keeping its relevance order
+(<code>AMI_RAW_FIRST</code>, <code>app/main.py:467-476</code>). This
+changes order and never membership.</p>
+<p><strong>Token budget.</strong> Memories get
+<code>(117,760 − 1,024) / 1.15 − tokens(query) − tokens(options)</code>
+tokens, each costing its tokens plus 20, counted with tiktoken
+<code>o200k_base</code> (<code>app/tokens.py:96-110</code>). A question
+that fills the window alone returns <code>[]</code>.</p>
+<p><strong>Withholding</strong> runs before the final selection, so a
+withheld slot is refilled from the ranking. Section 9 covers which
+delivery paths honour it.</p>
+<p><strong>Research arms,</strong> each off in code and in the academic
+profile: an agentic reflect-and-requery round, reserved second-round
+slots, a cross-encoder reranker, a direct-corpus agent that greps the
+user's rows with model-written regexes, chunk and adaptive-chunk
+delivery, fact-first selection, event-date rendering and supersession
+marks by fact key or cosine.</p>
+<p><strong>Failure modes.</strong> Stale values are the main one.
+Without the update switches, the old and new values of an attribute are
+both returned, and the README's own oracle study is the reason
+withholding exists. Over-recall is deliberate: 100 items per Search.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Add is synchronous and model-mediated. Every non-empty message
+becomes a raw row; one extraction call per chunk produces up to 24
+facts; with <code>AMI_UPDATE_DETECT</code> a stage-1 call runs beside
+it, and a stage-2 call follows only when stage 1 accepted a statement. A
+failed extraction stores the turns without facts and returns 200, unless
+<code>AMI_EXTRACT_REQUIRED</code> turns it into a 429 or 503 before
+persistence. A failed update call means no update for that chunk
+(<code>app/updates.py:284-292</code>).</p>
+<p>Deduplication is by <code>(request_id, user_id)</code> only. The same
+sentence in two Adds is two rows, collapsed at read time by
+<code>content_key</code>. There is no consolidation and no conflict
+detection beyond the explicit-update path, which fires only when the
+user's own words say a value is replaced or was wrong.
+<code>NEW_INFO</code>, "I now lead a team of five", is labelled and
+ignored by design.</p>
+<p>A rendered update sentence ("My gym time is 6 pm.") is stored as a
+fact only for an absolute update whose two language tags agree
+(<code>app/updates.py:136-149</code>).</p>
+<p><strong>Agent-generated facts.</strong> Extraction reads the
+assistant's turns too and attributes them by name or as "the other
+person", so an assistant's claim can become a fact. Update records can
+only anchor in a user turn (<code>app/updates.py:184</code>,
+<code>:238</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The Add blocks on one extraction call, the update calls in parallel
+with it, and the embedding batches, all under the 85-second deadline. A
+memory is searchable when Add returns 200. A Search makes a
+recall-question call and an as-of classification in parallel, then
+embeds two texts. The first Search after an update adds verifier calls
+for its candidate pairs; their verdicts are stored, so each pair is
+judged once. A withholding Search adds one router call, cached per
+question. No pass rewrites the store. Each Search returns up to 100
+memories inside the platform's Answer window; the service controls no
+prompt cache.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no agent surface. The caller is the evaluation platform,
+which sends conversation chunks to <code>/add</code> and questions with
+optional answer options to <code>/search</code>, and hands the returned
+memories to its own answer model. No model inside the service can write
+or delete a memory by choice; every model call is an extraction, a
+classification or a verdict whose output code validates. Adapting it to
+another agent means calling two HTTP routes. The contract has no session
+lifecycle, no compaction boundary and no injection hook.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scope">Scope</h3>
+<p>The scope predicate sits on the one read the retriever uses.
+<code>_search</code> calls <code>store.get(request.user_id)</code>
+(<code>app/main.py:870</code>), which returns the cached index or loads
+it with <code>SELECT … FROM items WHERE user_id = ? ORDER BY seq</code>
+(<code>app/store.py:298-301</code>). Every later step works on that
+index. Update records and verdicts are read with the same predicate
+(<code>:347-360</code>). The only SQL reads without it are the
+embedding-identity checks and the two counts in the authenticated
+<code>/health</code> (<code>:139</code>, <code>:150</code>,
+<code>:322-323</code>).</p>
+<p>The in-process caches agree. The as-of time cache is keyed on item
+ids, which hash the user; the router and as-of classifier caches are
+keyed on the question and hold only booleans, a kind and a period
+(<code>app/updates.py:95-125</code>,
+<code>app/asof.py:117-166</code>).</p>
+<p>The boundary is between <code>user_id</code> values, not between
+callers. One shared secret authorises any <code>user_id</code>, which is
+the contest contract.</p>
+<h3 id="what-the-withholding-keys-on">What the withholding keys on</h3>
+<p>The durable record is a verdict on a pair, and the pair names an
+earlier row. <code>candidates</code> admits only rows <em>earlier</em>
+than the update: an earlier Add, by message timestamp when both have
+one, otherwise by row order, and never a row of the update's own Add
+(<code>app/updates.py:307-323</code>). A later Add restating the old
+value is a new row that no verdict names, and it is returned. The test
+suite pins this as intended: <em>"a later restatement of the old value
+is never withheld"</em> (<code>tests/test_updates.py:214</code>).</p>
+<p>Two further limits follow from the shape:</p>
+<ul>
+<li><strong>Twenty candidates.</strong> Candidates are cut to the 20
+nearest the update turn by cosine (<code>AMI_UPDATE_CANDIDATES</code>,
+<code>app/updates.py:355-356</code>). A value stated in more earlier
+rows than that leaves the rest unjudged and visible.</li>
+<li><strong>The router decides per question.</strong> A replaced row is
+returned to a question the router reads as past-value or time-scoped,
+and to every question when the router call fails
+(<code>app/updates.py:100-125</code>). That is the design: the stored
+text is evidence of what was said, and only a current-value question
+loses it.</li>
+</ul>
+<p>Every model call on this path fails open, so an outage returns both
+values.</p>
+<h3 id="which-delivery-paths-honour-it">Which delivery paths honour
+it</h3>
+<p>The default <code>select</code>, the neighbour window, the reserved
+second round, the agentic round, the direct-corpus agent's picks and
+adaptive-chunk delivery all consult the withheld set
+(<code>app/main.py:514</code>, <code>:589-615</code>, <code>:936</code>,
+<code>:961</code>, <code>:974</code>). <strong>Chunk-memory delivery
+does not.</strong> With <code>AMI_CHUNK_MEMORY</code>,
+<code>select</code> passes each hit's whole chunk to <code>take</code>
+under the id <code>&lt;digest&gt;-c0</code>, which is never in the set,
+and the chunk text concatenates every turn including the withheld ones
+(<code>:400-413</code>, <code>:540-545</code>). The trial at
+<code>:899-904</code> then contains no withheld id, so the router is
+never asked. The switch is off in code and in the academic profile.</p>
+<p>The direct-corpus agent has a narrower gap. Its picks are filtered by
+a set computed from the vector trial, so a replaced row the agent
+reaches below the vector cut passes unfiltered when the trial held
+none.</p>
+<h3 id="search-writes">Search writes</h3>
+<p><code>resolve</code> inserts verdicts into <code>update_checks</code>
+during a Search (<code>app/updates.py:399</code>). A read can therefore
+change the store, and a verdict given once is final for that pair.</p>
+<h3 id="deletion-and-privacy">Deletion and privacy</h3>
+<p>Nothing is deleted. There is no route, function or SQL statement in
+<code>app/</code> that removes an item, an update or a verdict. A user's
+data leaves only with the database file. The optional request log,
+<code>AMI_REQUEST_LOG</code>, writes every Search's question, options
+and returned ids to a JSON-lines file (<code>app/main.py:30-40</code>,
+<code>:856-863</code>).</p>
+<h3 id="input-handling">Input handling</h3>
+<p>Only a user turn can anchor an update, and its quote and new value
+must appear in that turn verbatim. One edge: the speaker label is
+<code>I</code> for role <code>user</code> and
+<code>role.capitalize()</code> otherwise (<code>app/main.py:317</code>),
+so a message whose role is <code>i</code> is also labelled
+<code>I</code> and passes <code>is_user_turn</code>
+(<code>app/updates.py:91-92</code>).</p>
+<p>Containment uses <code>mentions</code>, whose boundary is
+<code>(?&lt;![a-z0-9])…(?![a-z0-9])</code> over the lowercased text
+(<code>app/updates.py:75-88</code>). The boundary class is ASCII. In
+Cyrillic, Greek or another alphabetic non-Latin script, a value
+therefore matches inside a longer word, so the old-value and new-value
+guards are looser there. The language-neutral allowlist accepts the
+pattern as an escaped literal
+(<code>tests/test_language_neutral.py:44-45</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code></strong> — awarded; the
+<code>user_id</code> predicate is on the retriever's only load and on
+both update reads.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The record of a
+replaced value is an <code>updates</code> row, and what suppresses is a
+verdict keyed on <code>(update_id, item_id)</code> for rows earlier than
+the update. Re-extraction is not consulted: a later row stating the old
+value is returned, by design and by test.</li>
+<li><strong><code>trust_state</code></strong> — withheld. Items carry no
+status. <code>replaced</code> is a two-valued verdict on a pair, its
+effect is cancelled per question by the router, and nothing holds a
+memory as candidate or rejected.</li>
+<li><strong><code>bitemporal</code></strong> — withheld.
+<code>created_at</code> is the message time, and the store keeps no
+record time. The as-of reader extracts times from text per question into
+process memory; <code>event_date</code> has producers only behind
+research switches off in every committed profile.</li>
+<li><strong><code>audit_log</code></strong> — withheld. The store is
+append-only because nothing removes, not because mutations are logged;
+the request log records request metadata outside the store, off by
+default.</li>
+<li><strong><code>human_review</code></strong> — withheld. There is no
+surface for a person.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The 31 files under <code>tests/</code> are plain scripts with an exit
+code or unittest cases, network-free, with fake LLM and embedder; the
+README runs them in the image. <code>RELEASE.md</code> reports 31 files
+and 0 failures for rc5 and rc6. I did not run them.</p>
+<p><strong><code>negative_eval</code> is earned on the update
+path.</strong> <code>test_admission.py</code> drives the ASGI app at the
+release version, stores "My gym time is 7 pm." then "Update: my gym time
+is now 6 pm.", and asserts <code>"7 pm"</code> absent and
+<code>"6 pm"</code> present in the same response
+(<code>tests/test_admission.py:337-339</code>). The same test first
+shows <code>"7 pm"</code> returned when the verifier or router fails
+(<code>:331-336</code>), so the fixture is populated.
+<code>test_updates.py</code> asserts, at version 1, the replaced turn
+and fact absent. In the same result it asserts the new value, an
+other-attribute row and an other-subject row present, and exactly two
+rows fewer than without withholding
+(<code>tests/test_updates.py:204-216</code>). Both patch the update
+switches on.</p>
+<p><strong>Other cases.</strong> <code>test_language_neutral.py</code>
+parses <code>app/</code> and fails on any regex or string collection not
+on its allowlist, and its
+<code>test_the_scanner_finds_what_it_must</code> runs the scanner on a
+planted sample, so the check can fail. <code>test_concurrency.py</code>
+pins overlapping retries to one write and a colliding
+<code>request_id</code> from another user to a separate row.
+<code>test_parse_facts.py</code> pins the extraction fallback.
+<code>test_adaptive_chunk.py</code> asserts withheld turns never enter a
+chunk; <code>test_chunk_memory.py</code> has no withheld case.</p>
+<p><strong>Bench.</strong> <code>bench/</code> holds an offline LoCoMo
+harness that imports the platform's answer and judge prompts, with
+aggregates in <code>bench/results/</code>. The README's ordering result,
+.5887 for relevance order against .6333 verbatim-first over 1,540
+questions, recomputes from the three run means in
+<code>bench/results/ordering_ab_all10.txt</code>; the per-question files
+are not committed. The explicit-update evidence on MQuAKE-Remastered,
+"+65 to +70 correct of 400", cites
+<code>bench/results/explicit_update_*.md</code> files that are on a
+research branch and not in this tree. The README states that no official
+score exists and that the official evaluation run had not started. All
+of these are the project's own local measurements with a local
+judge.</p>
+<p><strong>Paper.</strong> The README cites the author's preprint <em>An
+Index, Not a Store: The Model Does Remember — It Just Needs Its
+Notebook</em>, Zenodo, 14 August 2026 (<a
+href="https://doi.org/10.5281/zenodo.21405963">doi:10.5281/zenodo.21405963</a>).
+I read its abstract and metadata. It studies a LoRA adapter on a frozen
+model as a recognition index, on the author's own audits and the InMind
+benchmark, and describes none of this service's mechanisms. The README
+says its numbers do not transfer.</p>
+<p><strong>Missing.</strong> A test of withholding under chunk-memory
+delivery; a case where a later restatement of a replaced value is
+expected out; any retrieval-quality test that runs in CI, of which there
+is none in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Store the turn and the extraction, and deliver the turn
+first.</strong> The extraction is a retrieval key; the turn is what the
+reader trusts. Ordering by provenance changes no membership and is cheap
+to A/B.</li>
+<li><strong>Gate a model's correction on a quote you can find.</strong>
+Stage 1's quote must be in a user turn, the new value must be in that
+turn, and the verifier's quoted old value must be in the memory it
+condemns. Each model output is checked against stored text before it
+acts.</li>
+<li><strong>Store the verdict, not the decision.</strong> Persisting
+<code>(update, item, replaced)</code> means each pair costs one model
+call, and the per-question gate stays cheap.</li>
+<li><strong>Fail open on every optional model call</strong>, and say so
+in tests: a timeout in the verifier or router returns both values rather
+than an error.</li>
+<li><strong>Size the response to the reader's window per
+request</strong>, counting the question and options against a published
+budget.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Keying a correction on the rows that existed when it was
+made.</strong> A correction that consults only earlier rows is undone by
+the next restatement. If a replaced value must stay replaced, key the
+rejection on subject, attribute and value, and check it when a later row
+is written.</li>
+<li><strong>A delivery mode that rebuilds content from the
+store</strong> without re-applying the suppression set. Every path that
+concatenates rows has to filter them again, by construction or by
+test.</li>
+<li><strong>A store with no delete.</strong> A personal memory service
+needs a way to remove a user's rows that is not dropping the file.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a competition entry built to a two-route contract, and it is
+good at that job: measured knobs, documented negative results, admission
+control and deadlines tuned to a platform's retry policy. It is a
+reasonable base for an evaluation harness or for studying provenance
+ordering and quoted-evidence correction. Walk away if you need memory a
+user can correct permanently or erase, per-caller authorisation, or a
+store that runs without two paid APIs. One author wrote it in ten weeks
+against one benchmark's shape.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often the router's past-value reading fires on real
+current-value questions, and so how often a replaced value is shown
+anyway.</li>
+<li>Whether the 20-candidate cap is reached on long histories, and what
+share of earlier mentions stays unjudged.</li>
+<li>What the platform evaluation measures once it runs, and whether the
+explicit-update gain on synthetic streams appears there.</li>
+<li>Whether the <code>academic-v4-20261022-rc6mm</code> tag, on a branch
+that diverges from <code>main</code> by one commit adding multimodal
+content arrays, becomes the release.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>app/store.py</code></li>
+<li>Write path: <code>app/main.py</code> (<code>add</code>,
+<code>build_items</code>), <code>app/llm.py</code>
+(<code>EXTRACT_SYSTEM</code>, <code>extract_facts</code>,
+<code>_parse_facts</code>)</li>
+<li>Retrieval: <code>app/main.py</code> (<code>rank</code>,
+<code>select</code>, <code>select_adaptive</code>,
+<code>neighbours</code>, <code>order</code>, <code>_search</code>),
+<code>app/tokens.py</code>, <code>app/embed.py</code></li>
+<li>Correction: <code>app/updates.py</code>, <code>app/llm.py</code>
+(update, verifier and router prompts), <code>app/asof.py</code></li>
+<li>Limits: <code>app/deadline.py</code>, the admission valve in
+<code>app/main.py</code>, <code>app/config.py</code></li>
+<li>Research arms: <code>app/dci.py</code>,
+<code>app/rerank.py</code></li>
+<li>Tests and bench: <code>tests/</code>,
+<code>scripts/smoke_contract.py</code>, <code>bench/</code>,
+<code>bench/results/</code></li>
+<li>Deployment: <code>Dockerfile</code>,
+<code>docker-compose.yml</code>, <code>.env.example</code>,
+<code>.env.academic.example</code></li>
+<li>Documentation: <code>README.md</code>, <code>RELEASE.md</code>,
+<code>SUBMISSION.md</code>, <code>docs/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No delete or update path.</strong>
+<code>git grep -n -i -E 'delete|forget|purge|drop table|remove' -- 'app/*.py' 'scripts/*.py'</code>
+returns two comments in <code>app/config.py</code> and two list removals
+in <code>app/main.py:90</code> and <code>:654</code>;
+<code>git grep -n -E '@app\.(get|post|put|delete|patch)'</code> returns
+<code>/health</code>, <code>/add</code> and <code>/search</code>.</li>
+<li><strong>Every content read carries the user.</strong>
+<code>git grep -n -E 'FROM (items|updates|update_checks|requests)' -- app</code>
+returns eight reads; the four without <code>user_id = ?</code> are the
+identity check, the dimension check and the two <code>/health</code>
+counts.</li>
+<li><strong>No record time or validity interval.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|expires?_?at|ingested_at|recorded_at|inserted_at' -- app</code>
+returns nothing;
+<code>git grep -c -i -E 'created_at|event_date' -- app/store.py</code>
+returns 16.</li>
+<li><strong>No status on an item.</strong>
+<code>git grep -n -E 'status|verified|trust|confidence' -- app/store.py</code>
+returns nothing.</li>
+<li><strong>No mutation log.</strong>
+<code>git grep -n -i -E 'audit|event_log' -- app</code> returns
+nothing.</li>
+<li><strong>Chunk-memory delivery skips the withheld set.</strong>
+<code>git grep -n -E 'chunk_memory|withheld' -- app/main.py</code> shows
+<code>withheld</code> at <code>:514</code> and in
+<code>select_adaptive</code>, and <code>chunk_memory</code> called at
+<code>:543</code> with no <code>withheld</code> reference in
+<code>chunk_memory</code> (<code>:400-413</code>).</li>
+<li><strong>The explicit-update result files are not in the
+tree.</strong>
+<code>git ls-files | grep -i -E 'explicit_update|beam_capacity'</code>
+returns nothing; <code>git ls-files | grep -c -i asof_selection</code>
+returns 2.</li>
+<li><strong>Paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi' -- README.md SUBMISSION.md RELEASE.md</code>
+returns cited related work and the Zenodo DOI at
+<code>README.md:561</code> and <code>SUBMISSION.md:177</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-04</strong> — <a
+href="https://github.com/linxuhao/ActiveMemoryIndex/commit/22f8287ce0ac02ed493fbbb0f6f8cc7e9556aa3d"><code class="commit-id" title="22f8287ce0ac02ed493fbbb0f6f8cc7e9556aa3d">22f8287c…</code></a>.
+First reading, from a shallow clone at the head of <code>main</code>;
+commit and author counts from the GitHub API. Screened first: no
+auto-run, build-time, cooldown or unpinned surface. MIT, no rider.
+Nothing installed, built or run. Two marks: <code>scope_enforced</code>
+for the <code>user_id</code> predicate on every content read, and
+<code>negative_eval</code> for a replaced value asserted absent beside
+its update in one response. <code>tombstone</code> is withheld because
+suppression is keyed on earlier rows, not the value (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
