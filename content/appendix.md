@@ -471,6 +471,7 @@ page_kind: comparison
 - [`ultimateassistant`](../systems/ultimateassistant/)
 - [`monomem`](../systems/monomem/)
 - [`sol0mon`](../systems/sol0mon/)
+- [`refind`](../systems/refind/)
 
 ## Repos Inspected
 
@@ -1246,6 +1247,7 @@ page_kind: comparison
 - [KianJRoss/UltimateAssistant-release](https://github.com/KianJRoss/UltimateAssistant-release) at [`814a589acbe004f52ed2ffffb2c1afb539649bd8`](https://github.com/KianJRoss/UltimateAssistant-release/commit/814a589acbe004f52ed2ffffb2c1afb539649bd8) — read only, from a full clone, at the head of `main` on 2 November 2026; no auto-run surface, one execution point on pytest collection (`apps/assistant/conftest.py`), two floating requirements files (`apps/assistant/requirements.txt` with 13 unpinned entries and `components/canvas-overlay/requirements.txt` with 4), nothing inside the seven-day cooldown and no agent-instruction file. Herald, which `setup.ps1` installs from SHA-256-pinned wheels named in `herald.json`, was not downloaded or read. Nothing was installed, built or run, and no tests were run. AGPL-3.0-or-later
 - [calasdan-sketch/monomem](https://github.com/calasdan-sketch/monomem) at [`292a312cce18e46884520a63826c91c919fe76f8`](https://github.com/calasdan-sketch/monomem/commit/292a312cce18e46884520a63826c91c919fe76f8) — read only, from a full clone, at the head of `main` on 3 November 2026; no auto-run surface, one build-time script (`prepublishOnly` running `npm run build`), four caret ranges behind a committed lockfile, and `package.json` and `package-lock.json` inside the seven-day cooldown. `SKILL.md`, `skills/monomem-mem/SKILL.md` and `.github/` were read as data. Nothing was installed, built or run, and neither the 114 test files nor the benchmark was run. MIT
 - [sh1618112233/Sol0mon](https://github.com/sh1618112233/Sol0mon) at [`2bd65e33d973b8357843e7ce95999976845fe9ec`](https://github.com/sh1618112233/Sol0mon/commit/2bd65e33d973b8357843e7ce95999976845fe9ec) — read only, from a full clone, at the head of `main` on 13 October 2026; no auto-run or build-time surface, an execution point on pytest collection in each copy's `tests/conftest.py` (`Sol0mon/` and `Sol0mon-Windows/`), nothing unpinned, nothing inside the seven-day cooldown and no agent-instruction file. `Sol0mon/` was read; `Sol0mon-Windows/` differs from it in three files. Nothing was installed, built or run, and no tests were run. No licence: no LICENSE file, and the README says none has been selected
+- [imlrz/ReFind](https://github.com/imlrz/ReFind) at [`a80175ca0eeb52a938d7cab7a602bc780de8a577`](https://github.com/imlrz/ReFind/commit/a80175ca0eeb52a938d7cab7a602bc780de8a577) — read only, from a shallow clone, at the head of `main` on 14 August 2026, with commit and author counts from the GitHub API; no auto-run, build-time or cooldown surface, and one unpinned surface, `pyproject.toml` with no lockfile beside it. The paper, [arXiv:2608.12888](https://arxiv.org/abs/2608.12888), was read on arXiv for its method and ablation tables, and the leaderboard page for its stated process. Nothing was installed, built or run, and the eight pytest cases were not run. MIT
 
 ## What the licences actually say
 

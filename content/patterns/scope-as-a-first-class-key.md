@@ -946,6 +946,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[Monomem](../../systems/monomem/) resolves the namespace on the server and fails the session-start context closed.** With `spaces.json` configured, each process resolves one namespace from its working directory, writes land there, and every MCP read intersects the model's namespace with that one and its `reads_from` grants (`src/mcp-server-core.ts:319-331`). When the configuration exists and cannot be resolved, the session-start hook injects nothing rather than everything, and a test asserts both halves (`src/recall.ts:120-156`, `test/context-inject.test.ts:80-103`). Unconfigured, the model names the namespace, and a read that names none reads every one. **The safe mode is opt-in, and the default install does not opt in.**
 
+**[ReFind](../../systems/refind/) has one content query and builds everything else from its result.** `list_chunks` filters `WHERE i.user_id = ?`, and each Search constructs a fresh BM25 index from that list, so the planner model's `search_chatrecord` calls, the two-neighbour context expansion and the direct fallback read only that user's turns (`app/store.py:187-199`, `app/retriever.py:101-104`). Two users sharing a `session_id` cannot reach each other's neighbours, and a populated test whose fixture shares one would fail if the predicate went. The predicate is missing from one write-path lookup: `request_id` is unique across users, so a reused id is a 409 naming the collision. The key is a body field on an unauthenticated port. **A predicate cannot be forgotten on a read that does not exist.**
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Agent Memory Leaderboard
+Add/Search service for a paper's retriever: raw chat turns in SQLite,
+searched per user by a GPT-4o-mini planner over BM25.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ReFind — Agent Memory Atlas">
+    <meta property="og:description" content="An Agent Memory Leaderboard
+Add/Search service for a paper's retriever: raw chat turns in SQLite,
+searched per user by a GPT-4o-mini planner over BM25.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ReFind — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Agent Memory
+Leaderboard Add/Search service for a paper's retriever: raw chat turns
+in SQLite, searched per user by a GPT-4o-mini planner over BM25.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ReFind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ReFind",
+      "description": "An Agent Memory Leaderboard Add/Search service for a paper's retriever: raw chat turns in SQLite, searched per user by a GPT-4o-mini planner over BM25.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A planner searching raw chat turns, one
+user at a time</p>
+          <h1>ReFind</h1>
+          <p class="document-deck">An Agent Memory Leaderboard
+Add/Search service for a paper's retriever: raw chat turns in SQLite,
+searched per user by a GPT-4o-mini planner over BM25.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/imlrz/ReFind">
+              <span>Source</span>
+              <strong>imlrz/ReFind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/imlrz/ReFind/commit/a80175ca0eeb52a938d7cab7a602bc780de8a577" title="a80175ca0eeb52a938d7cab7a602bc780de8a577">
+              <span>Analyzed revision</span>
+              <code>a80175ca…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-04</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/imlrz--ReFind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>imlrz--ReFind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>1,173
+lines of Python in app/, 306 of them in the SQLite store and 265 in the
+planner loop; four pinned runtime dependencies</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>9
+commits from one author, 7–14 August 2026; the pin is the head of main
+and adds the paper citation</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>8
+pytest cases in one 256-line file, with a scripted planner and no
+network, plus a 45-line smoke script; the CI workflow was removed on 7
+August 2026; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ReFind is a FastAPI service that packages a paper's retriever for the
+Agent Memory Leaderboard's Add/Search contract. Add stores raw chat
+messages in SQLite with no model call. Search rebuilds a BM25 index over
+one user's turns and lets GPT-4o-mini spend four actions searching it
+and keeping hits. The scope boundary is unusually tight, because every
+derived structure is built per request from one
+<code>user_id</code>-filtered read. The memory beneath it is thin:
+nothing can be corrected or deleted, the port is unauthenticated, and
+result ids come from positional pairing that a late turn reshuffles.</p>
+<p>It is a contest submission, and the repository says so in
+<code>docs/SUBMISSION.md</code> and <code>docs/METHOD_CARD.md</code>.
+The method card lists every departure from the paper, and the README
+links a leaderboard placing that this report does not use as evidence
+about the mechanism. Two marks: <code>scope_enforced</code>, for the one
+content query and the per-request index built from it, and
+<code>negative_eval</code>, for a populated isolation test whose fixture
+would leak if the predicate went.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one chat message as the caller sent it: role, content and
+an optional source timestamp in Unix milliseconds, inside an Add request
+that names <code>request_id</code>, <code>user_id</code> and
+<code>session_id</code> (<code>app/models.py:8-22</code>). Nothing is
+extracted, summarised or judged. Every stored message is equally true
+and equally retrievable until it expires.</p>
+<p>The unit the retriever ranks does not exist on disk. At each Search,
+<code>list_chunks</code> sorts a session's turns by timestamp, then the
+ordinal parsed from <code>request_id</code>, then insertion order, and
+pairs them two by two by position (<code>app/store.py:233-288</code>).
+Each pair gets an id hashed from user, session and its source positions.
+So a record's identity and content are functions of what else has
+arrived, and an out-of-order Add regroups every later pair in that
+session.</p>
+<p>The lifecycle has two states. A message is stored from the moment Add
+returns 200. It is deleted when the process starts and its ingest time
+is older than <code>RETENTION_DAYS</code>
+(<code>app/store.py:291-299</code>). No state withholds a stored
+message, no path corrects one, and a message cannot be removed on
+request.</p>
+<p>Belief is formed downstream. The planner chooses what to keep with
+<code>take_note</code>, and the leaderboard's own answer model reads
+what ReFind returns. The service deliberately has no answer stage.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Add commits raw turns with no model; each Search rebuilds pairs and a BM25 index from one user-filtered query, so the planner and neighbour expansion can only see that user's turns</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Add commits raw turns with no model; each Search rebuilds pairs and a BM25 index from one user-filtered query, so the planner and neighbour expansion can only see that user&#39;s turns
+flowchart TD
+  ADD[&quot;POST /v1/memories/add&lt;br/&gt;request_id, user_id,&lt;br/&gt;session_id, messages&quot;] --&gt; IDEM{&quot;request_id stored?&lt;br/&gt;checked across users&quot;}
+  IDEM --&gt;|&quot;same payload hash&quot;| NOOP[&quot;200, nothing written&quot;]
+  IDEM --&gt;|&quot;other payload&quot;| CONF[&quot;409 conflict&quot;]
+  IDEM --&gt;|&quot;new&quot;| ROWS[&quot;ingestions + messages&lt;br/&gt;committed before 200&quot;]
+  ROWS --&gt; SRCH[&quot;POST /v1/memories/search&lt;br/&gt;query, user_id, top_k&quot;]
+  SRCH --&gt; LIST[&quot;list_chunks&lt;br/&gt;WHERE user_id = ?&quot;]
+  LIST --&gt; PAIR[&quot;sort turns per session&lt;br/&gt;pair by position&lt;br/&gt;id = hash of positions&quot;]
+  PAIR --&gt; IDX[&quot;BM25Index&lt;br/&gt;built per request&quot;]
+  IDX --&gt; LOOP[&quot;planner, 4 actions:&lt;br/&gt;search_chatrecord&lt;br/&gt;take_note, finish_search&quot;]
+  LOOP --&gt; NOTES[&quot;kept hits, at most 10&lt;br/&gt;each with 2 neighbours&lt;br/&gt;on either side&quot;]
+  NOTES --&gt; OUT[&quot;evidence blocks&lt;br/&gt;capped at top_k&quot;]
+  LOOP --&gt;|&quot;nothing kept or hit&quot;| FB[&quot;direct BM25 on the&lt;br/&gt;question, up to top_k&quot;]
+  FB --&gt; OUT
+  OUT ~~~ RET[&quot;delete_expired&lt;br/&gt;ingest time past 30 days&lt;br/&gt;at process start only&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One FastAPI application, <code>app.main:app</code>, built by
+<code>create_app</code> (<code>app/main.py:23-116</code>). It registers
+<code>/v1/memories/add</code>, <code>/v1/memories/search</code> and
+<code>/health</code>, plus <code>/add</code> and <code>/search</code> as
+aliases kept out of the schema. Routes carry no dependency or header
+check.</p>
+<p><code>MemoryStore</code> (<code>app/store.py:83-306</code>) owns one
+SQLite file in WAL mode with foreign keys on and a 30-second busy
+timeout per connection. Writes take a process-local <code>RLock</code>.
+<code>ReFindRetriever</code> (<code>app/retriever.py:71-265</code>)
+composes the store, <code>BM25Index</code>
+(<code>app/bm25.py:19-132</code>), a stop-word tokenizer with a compact
+stemmer (<code>app/tokenizer.py</code>) and
+<code>OpenAICompatibleLLM</code> (<code>app/llm.py:16-73</code>), a bare
+<code>httpx</code> client for an OpenAI-compatible chat endpoint.
+OpenRouter is the default base URL.</p>
+<p>Settings come from environment variables only
+(<code>app/config.py:32-68</code>). <code>RETRIEVAL_MODE</code> is
+<code>agent</code> or <code>bm25</code>, and <code>RETENTION_DAYS</code>
+is refused outside 1 to 30. The index is rebuilt in memory for every
+Search; nothing caches it.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The Docker image pins <code>python:3.11-slim</code> by digest,
+installs four <code>==</code>-pinned requirements, runs as a non-root
+user with one uvicorn worker, and keeps the database in
+<code>/data</code> (<code>Dockerfile</code>). There is no lockfile, so
+transitive dependencies float. Storing needs no key. Searching in the
+declared <code>agent</code> mode needs an LLM key and fails with HTTP
+502 without one (<code>app/retriever.py:105-108</code>,
+<code>app/main.py:77-81</code>). The <code>bm25</code> mode runs fully
+offline. The store is two plain SQLite tables, readable and repairable
+with the <code>sqlite3</code> shell.</p>
+<p>The README states that the container runs without endpoint
+authentication so the competition maintainer can call it directly, and
+the image binds <code>0.0.0.0:8000</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Add.</strong> <code>add_memory</code>
+(<code>app/main.py:58-67</code>) calls <code>MemoryStore.add</code>
+(<code>app/store.py:131-174</code>). It hashes the whole canonical
+payload, looks the <code>request_id</code> up, returns early on an
+identical retry and raises <code>ConflictingRequestError</code> on a
+different payload, which the route maps to 409. Otherwise it inserts one
+<code>ingestions</code> row and one <code>messages</code> row per
+message in the same transaction.</li>
+<li><strong>Search entry.</strong> <code>search_memory</code>
+(<code>app/main.py:69-89</code>) calls
+<code>ReFindRetriever.search</code>
+(<code>app/retriever.py:94-111</code>). That calls
+<code>list_chunks(user_id)</code> and builds a <code>BM25Index</code>
+from the result before the mode is consulted.</li>
+<li><strong>Turn reconstruction.</strong> <code>list_chunks</code>
+(<code>app/store.py:176-289</code>) selects every message joined to its
+ingestion for one <code>user_id</code>, groups by
+<code>session_id</code>, sorts each session by one of three keys
+depending on what every turn carries, and pairs positions
+<code>[0,1]</code>, <code>[2,3]</code> and so on.</li>
+<li><strong>Agent loop.</strong> <code>_agent_search</code>
+(<code>app/retriever.py:130-231</code>) sends <code>SYSTEM_PROMPT</code>
+and the question, parses <code>Action:</code> and
+<code>Action Input:</code> by regex (<code>:51-68</code>), and runs up
+to <code>AGENT_MAX_ITERATIONS</code> actions. A search adds its anchors
+to <code>excluded_ids</code>, a note keeps hits from the last search by
+1-based index, and anything else is answered with a correction.</li>
+<li><strong>Fallbacks.</strong> With no notes, the last search's hits
+are kept; with none of those either, <code>_direct_search</code> runs
+BM25 on the question and options at <code>top_k</code>
+(<code>app/retriever.py:214-225</code>, <code>:113-128</code>).</li>
+<li><strong>Ranking.</strong> <code>BM25Index.search</code>
+(<code>app/bm25.py:65-99</code>) scores every record, fuses with session
+rank in <code>_rrf_with_session_ranking</code> (<code>:101-124</code>),
+then skips excluded and out-of-range anchors and expands each survivor
+with <code>_context</code> (<code>:126-132</code>).</li>
+<li><strong>Retention.</strong> <code>delete_expired</code>
+(<code>app/store.py:291-299</code>), called from
+<code>MemoryStore._initialize</code> (<code>:129</code>) and the FastAPI
+lifespan (<code>app/main.py:35-38</code>).</li>
+<li><strong>Tests.</strong> <code>tests/test_api.py</code>, through
+<code>TestClient</code> and a <code>ScriptedPlanner</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Two tables (<code>app/store.py:103-128</code>):</p>
+<ul>
+<li><code>ingestions</code>: <code>sequence</code> autoincrement key,
+<code>request_id</code> <code>UNIQUE</code>, <code>user_id</code>,
+<code>session_id</code>, <code>memory_id</code> <code>UNIQUE</code>,
+<code>payload_hash</code>, and <code>created_at</code> set to the
+server's UTC clock. An index covers
+<code>(user_id, sequence)</code>.</li>
+<li><code>messages</code>:
+<code>(ingestion_sequence, message_index)</code> key, <code>role</code>,
+<code>content</code> and a nullable <code>timestamp_ms</code>, cascading
+on delete from <code>ingestions</code>.</li>
+</ul>
+<p><code>memory_id</code> is <code>mem_</code> plus 24 hex digits of
+SHA-256 over user and request id (<code>:45-47</code>). It is written,
+and selected at <code>:191</code>, and no code reads it after that. The
+ids Search returns are the pair ids from
+<code>_conversation_memory_id</code> (<code>:61-68</code>), which hash
+user, session and the list of <code>(request_id, message_index)</code>
+positions in the pair.</p>
+<p><strong>Scope</strong> is <code>user_id</code> on every ingestion,
+with <code>session_id</code> as a grouping key inside it.
+<code>request_id</code> is unique across the whole table, not per
+user.</p>
+<p><strong>Time</strong> is two fields. <code>timestamp_ms</code> is
+when the message was said, supplied by the caller and optional; it
+drives the planner's date filter and the rendered
+<code>[2024-01-01T00:00:00Z]</code> prefix. <code>created_at</code> is
+when the row arrived; it drives retention and is returned as
+<code>created_at</code>. Neither is a validity interval for a stated
+fact, and no read asks what the store held at a past time.</p>
+<p>No row carries a status, a confidence, a correction link or a
+TTL.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Index.</strong> Each pair's rendered content, timestamps and
+role labels included, is lowercased, split on <code>[^\W_]+</code>,
+stripped of stop words and stemmed
+(<code>app/tokenizer.py:118-125</code>,
+<code>app/store.py:26-34</code>). So <code>user</code>,
+<code>assistant</code> and date fragments such as <code>2024</code> are
+indexed terms. The stemmer is Porter's step 1 only: plurals,
+<code>-eed</code>, <code>-ed</code>, <code>-ing</code> and final
+<code>y</code> (<code>app/tokenizer.py:99-115</code>). Non-ASCII tokens
+pass unstemmed.</p>
+<p><strong>Scoring.</strong> BM25 with <code>k1 = 1.2</code> and
+<code>b = 0.75</code>, with the <code>+1</code> inside the IDF log so
+every term scores positive (<code>app/bm25.py:45-63</code>). With
+<code>SESSION_RRF</code> on, each record's rank is fused with its
+session's rank by summed BM25, at <code>k = 60</code>
+(<code>:101-124</code>). When one <code>session_id</code> covers a whole
+sample, the session term is a constant and the order is the BM25 order,
+which a test pins (<code>tests/test_api.py:146-174</code>).</p>
+<p><strong>Filtering after ranking.</strong> Date bounds and the
+seen-anchor set are applied while walking the ranked list
+(<code>app/bm25.py:89-98</code>). IDF and session sums are computed over
+the user's whole history, out-of-range records included.
+<code>_within_dates</code> admits every record without a timestamp, and
+admits everything when either date fails to parse
+(<code>:135-150</code>). A planner that writes a malformed date gets an
+unfiltered search and no error.</p>
+<p><strong>Agent loop.</strong> The planner sees five hits per search,
+each as a <code>Result n</code> block with its session id and its
+neighbours, the anchor marked <code>[MATCH]</code>
+(<code>app/retriever.py:233-246</code>). With the declared budget of
+four actions, the largest kept set is ten hits, from search, note,
+search, note. The leaderboard's recommended <code>top_k</code> of 100 is
+a cap the agent path cannot reach. When the planner keeps and finds
+nothing, the direct fallback returns up to <code>top_k</code> hits, so a
+planner that fails can return more evidence than one that succeeds.</p>
+<p><strong>Output.</strong> Each kept hit becomes one block of its
+anchor and up to two neighbours each side within the session,
+de-duplicated inside the block and not across blocks
+(<code>app/retriever.py:248-265</code>). The score is the fused score
+divided by <code>1 + 0.03 * rank</code>. The order is the order of
+<code>take_note</code>, not chronology.</p>
+<p><strong>Cost.</strong> Every Search tokenizes the user's whole
+history before the first model call. In agent mode it then makes up to
+four sequential chat completions, each with a 120-second timeout and
+three attempts (<code>app/llm.py:48-73</code>). An LLM failure is a 502,
+not a BM25 answer.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Add is the only write. It is synchronous, deterministic and
+model-free: the messages are committed before the 200
+(<code>app/store.py:131-174</code>). A stored turn is searchable on the
+next request, since the index is rebuilt per Search.</p>
+<p>Idempotency is by payload hash. An identical replay writes nothing
+and returns the same body; a replay with any changed field is refused
+(<code>tests/test_api.py:46-80</code>). Content is not deduplicated. Two
+requests carrying the same sentence are two turns.</p>
+<p>Update, merge, consolidation and conflict detection are absent, and
+no endpoint deletes anything. Input validation is Pydantic with
+<code>extra="forbid"</code>, a <code>user</code> or
+<code>assistant</code> role and non-empty content
+(<code>app/models.py:8-22</code>). Content is stored as sent,
+uninspected.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes do not wait on a model and no background pass exists. The lag
+before a memory is retrievable is the Add's own commit. The read side
+carries the cost: a full re-tokenization of the user's history per
+Search, and up to four model calls. Injection is bounded by
+<code>top_k</code> and, in agent mode, by the ten-hit ceiling, each hit
+up to five pairs long.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration is the contest's HTTP contract. A harness posts Adds
+as a conversation is replayed and posts Search with the question; ReFind
+returns ordered evidence for the platform's own answer model. It ships
+no agent framework adapter, MCP server or session hook.</p>
+<p>The agent inside ReFind is the planner. It holds three verbs, all
+over a read-only index: <code>search_chatrecord</code> with keywords and
+optional dates, <code>take_note</code> by result number, and
+<code>finish_search</code> (<code>app/retriever.py:15-35</code>). It
+cannot write, delete or widen scope. A malformed action costs one
+iteration and draws a correction message.</p>
+<p>Adapting it to another agent would mean replacing the HTTP boundary
+with whatever names the user and adding the missing delete.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-scope-boundary-is-one-query-wide">The scope boundary is one
+query wide</h3>
+<p><code>list_chunks</code> is the only query that reads message
+content, and it filters <code>WHERE i.user_id = ?</code>
+(<code>app/store.py:187-199</code>). <code>search</code> builds the
+<code>BM25Index</code> from that list inside the request
+(<code>app/retriever.py:101-104</code>). The planner's
+<code>search_chatrecord</code> calls query that index object
+(<code>:178-186</code>). Neighbour expansion walks
+<code>_session_positions</code>, which holds positions inside the same
+index (<code>app/bm25.py:31</code>, <code>:126-132</code>). Two users
+sharing a <code>session_id</code> therefore cannot see each other's
+neighbours, and the direct fallback takes the same index
+(<code>app/retriever.py:218</code>). The service keeps no cache or
+shared index for a predicate to be missing from.</p>
+<p>Two queries lack the predicate, both off the content path.
+<code>count_users</code> is a <code>COUNT(DISTINCT user_id)</code> with
+no caller (<code>app/store.py:301-306</code>). The idempotency lookup
+reads <code>request_id</code> across all users (<code>:136-139</code>),
+so a request id another user already holds is a 409 that names the
+collision. It returns no content, and it lets one tenant block another's
+id.</p>
+<h3 id="the-scope-key-is-a-claim">The scope key is a claim</h3>
+<p>No route authenticates, and <code>user_id</code> is a body field
+(<code>app/models.py:32-38</code>). Anyone who can reach the port reads
+any user's turns by naming the id. That is the contest's stated
+deployment; for any other one it means the filter is a correctness
+boundary, not a security one.</p>
+<h3 id="retention-runs-at-startup">Retention runs at startup</h3>
+<p>The README says records past the retention window are deleted
+automatically. <code>delete_expired</code> runs when
+<code>MemoryStore</code> is constructed and again in the lifespan hook,
+so only at process start (<code>app/store.py:129</code>,
+<code>app/main.py:35-38</code>). A container that stays up 40 days holds
+40 days of turns until it restarts. The window is measured on ingest
+time. The cascade removes the messages, and the tree issues no
+<code>VACUUM</code> or <code>secure_delete</code>.</p>
+<h3 id="stored-text-reaches-the-planner">Stored text reaches the
+planner</h3>
+<p>Turn content enters the planner's prompt as an
+<code>Observation:</code> user message
+(<code>app/retriever.py:190</code>, <code>:205-210</code>). An injected
+instruction there can steer which of the user's own hits are kept or end
+the loop early. It cannot reach another user or write anything. Returned
+evidence goes verbatim to the platform's answer model, which is outside
+this tree.</p>
+<h3 id="identity-is-recomputed-on-every-read">Identity is recomputed on
+every read</h3>
+<p>Pair ids hash their source positions, and positions depend on sort
+order. A session's first turn arriving after its third regroups every
+pair, changing their ids and contents. Pairing reads position, not role
+(<code>app/store.py:264-288</code>), so a session opening with an
+assistant turn, or carrying two user turns in a row, pairs across
+exchanges. Within the contest's add-then-search protocol neither bites,
+because ingestion finishes before questions start.</p>
+<h3 id="concurrency">Concurrency</h3>
+<p>The write lock is per process and the image runs one worker. Under
+several workers, two racing Adds of one new <code>request_id</code>
+would meet the <code>UNIQUE</code> constraint, which surfaces as an
+unhandled <code>IntegrityError</code> rather than the 409 or the retry
+no-op.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — awarded.</strong> One stored
+key, one predicate, and every read the planner, the neighbour walk and
+the fallback make goes through the index built from its result. The
+limit is the unauthenticated claim above.</li>
+<li><strong><code>negative_eval</code> — awarded.</strong> See section
+10.</li>
+<li><strong><code>tombstone</code></strong> — no rejected value is
+recorded, and no path can reject one.</li>
+<li><strong><code>trust_state</code></strong> — no status field; every
+turn is returned on equal terms.</li>
+<li><strong><code>bitemporal</code></strong> — <code>timestamp_ms</code>
+is when a message was said and <code>created_at</code> when it arrived.
+Neither says when a stated fact held, and no read closes an interval or
+asks as of a record time.</li>
+<li><strong><code>audit_log</code></strong> — Add is insert-only, but
+the one mutation, the retention delete, writes no event.</li>
+<li><strong><code>human_review</code></strong> — the HTTP contract is
+the only surface.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tests/test_api.py</code> holds eight cases run through
+FastAPI's <code>TestClient</code>, in <code>bm25</code> mode except one
+that injects a <code>ScriptedPlanner</code>. I did not run them. The
+hosted CI workflow was deleted on 7 August 2026 in a commit titled
+<em>"remove unavailable hosted CI"</em>, so the tree runs them on no
+push.</p>
+<p>The cases cover synchronous, idempotent Add with a search hit
+(<code>:46-71</code>), a 409 on a conflicting replay
+(<code>:74-80</code>), user isolation (<code>:83-102</code>), the agent
+path returning a kept hit without an answer (<code>:119-132</code>),
+schema rejection (<code>:135-143</code>), session RRF inside one session
+(<code>:146-174</code>), timestamp order beating arrival order
+(<code>:177-210</code>), and the ordinal tie-break with sessions kept
+apart (<code>:213-256</code>). Retention, the date filter, the
+fallbacks, an LLM failure and a late turn's effect on returned ids are
+untested.</p>
+<p><strong><code>negative_eval</code> is earned by the isolation
+case.</strong> It writes two Luna turns for <code>run:user-0</code> and
+<code>"Secret cat Orion."</code> for <code>other:user</code>, then
+searches <code>cat Luna</code> for the first user at
+<code>top_k=1</code>. It asserts exactly one result and that the result
+lacks <code>Orion</code>. The result is populated, so an empty retriever
+fails. The fixture can fail the other way too: the other user's turn
+shares the default <code>session_id</code>, so without the predicate it
+sorts between the two Luna turns, pairs with the first, and becomes the
+top hit. I traced that by reading <code>list_chunks</code>, not by
+running it. The case runs in <code>bm25</code> mode; the agent mode
+reads the same <code>list_chunks</code> and has no isolation case of its
+own.</p>
+<p><strong>The paper.</strong> The README cites <a
+href="https://arxiv.org/abs/2608.12888">arXiv:2608.12888</a>, <em>When
+Your Agent Opens the Chat App: Agent-Controlled Search over Raw Chat
+Logs Rivals Structured Memory</em>, submitted 13 August 2026 and revised
+16 August. The id resolves to that title. Its main table runs
+GPT-4o-mini on MemoryAgentBench, and its ablations and backend
+comparison run GPT-5-mini on LongMemEval-S and M. The arXiv page links
+no code.</p>
+<p>The service implements the paper's retrieval stage closely: the three
+tool names, BM25 at <code>k1 = 1.2</code> and <code>b = 0.75</code>,
+session RRF at <code>k = 60</code>, two neighbours each side, five hits
+per search and four iterations. It departs in five places:</p>
+<ul>
+<li>The answer stage is omitted, as the README and method card say.</li>
+<li>The paper's seen-session skip becomes a seen-anchor skip. The method
+card gives the reason, a platform that puts one session id on a whole
+sample. The paper's ablation removes the skip entirely rather than
+substituting it, so the substitute is unmeasured; removal cost 9.3
+points on LongMemEval-M.</li>
+<li>The paper's turn is a user utterance with its assistant response;
+the code pairs adjacent positions whatever their roles.</li>
+<li>The paper applies the date range before BM25 scoring; the code
+filters after scoring and fusion.</li>
+<li>The paper says Porter stemming; the code implements Porter's first
+step.</li>
+</ul>
+<p><code>CITATION.cff</code> and <code>docs/METHOD_CARD.md</code> cite a
+different title, <em>A Human-Inspired Search Interface for
+Conversational Memory</em>, with an author list that includes Zhendong
+Mao and omits two arXiv authors. The manuscript repository the method
+card links, <code>imlrz/wyaoca-paper</code>, returned 404 from the
+GitHub API on 4 November 2026.</p>
+<p><strong>The leaderboard.</strong> The tree commits no result file.
+The leaderboard page, read as text on 4 November 2026, says participants
+provide Add and Search and the platform runs answering, evaluation and
+review. The fetched text carried no ReFind row and named no commit for
+any entry, so the page ties no score to this pin. <a
+href="../llm-wiki-cli/">llm-wiki-cli</a> commits an adapter for the same
+Add/Search contract.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Build every derived structure inside the request, from the
+scoped read.</strong> When the index, the neighbour map and the fallback
+all come from one filtered list, there is no second read for the
+predicate to be missing from.</li>
+<li><strong>Hash the whole payload for idempotency and refuse a
+mismatch.</strong> A retry is free and a reused id with other content
+fails loudly instead of overwriting.</li>
+<li><strong>Give the retrieval model only selection verbs.</strong> A
+planner that can search, keep and stop over a read-only index turns
+prompt injection into a ranking problem rather than a write.</li>
+<li><strong>Fail when the declared mode lacks its model.</strong> A 502
+is visible where a silent drop to the baseline would contaminate every
+result.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Ids computed from read-time grouping.</strong> An id that
+changes when an earlier record arrives cannot be cited, corrected or
+deleted later. Store the pairing, or key results on source rows.</li>
+<li><strong>Filters that fail open.</strong> An unparsable date bound
+should be an error to the planner, not an unfiltered search.</li>
+<li><strong>Retention that runs only at startup.</strong> A stated
+window needs a scheduled sweep, or a predicate on the read.</li>
+<li><strong>A client-chosen id unique across tenants.</strong> Scope the
+uniqueness to the tenant, or one tenant can probe and block another's
+ids.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>ReFind is a benchmark harness for a retrieval method, and a good one
+to read for that. It is small, deterministic on the write side and
+explicit about its departures from the paper. As memory for a product it
+is a starting point at most. It has no authentication, no deletion on
+request, no correction and no stable identity for what it returns, and
+every Search costs a full re-tokenization of the user's history plus up
+to four model calls. Take the loop and the per-request index, and supply
+the store yourself.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the paper's four iterations count every action,
+<code>take_note</code> and <code>finish_search</code> included, as the
+service's loop does, or four searches.</li>
+<li>Whether the hosted evaluation ran this commit. Every commit after 7
+August 2026 edits only the README, so the code matches that day's
+merge.</li>
+<li>How the seen-anchor skip compares with the paper's seen-session skip
+on data where sessions are real.</li>
+<li>How Search latency grows with history, since every request
+re-tokenizes it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>app/store.py</code></li>
+<li>Contract and routes: <code>app/models.py</code>,
+<code>app/main.py</code></li>
+<li>Retrieval: <code>app/bm25.py</code>, <code>app/tokenizer.py</code>,
+<code>app/retriever.py</code></li>
+<li>Model client and settings: <code>app/llm.py</code>,
+<code>app/config.py</code>, <code>.env.example</code></li>
+<li>Deployment: <code>Dockerfile</code>,
+<code>docker-compose.yml</code>, <code>pyproject.toml</code>,
+<code>requirements.txt</code></li>
+<li>Method and submission: <code>README.md</code>,
+<code>docs/METHOD_CARD.md</code>, <code>docs/SUBMISSION.md</code>,
+<code>CITATION.cff</code></li>
+<li>Tests: <code>tests/test_api.py</code>,
+<code>scripts/smoke_test.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>. Each empty result was checked against a
+control in the same scope.</p>
+<ul>
+<li><strong>Three SQL reads, one of them on content.</strong>
+<code>git grep -n -E 'SELECT' -- app</code> returns
+<code>app/store.py:137</code>, <code>:190</code> and
+<code>:304</code>.</li>
+<li><strong>No delete path besides retention.</strong>
+<code>git grep -n -i -E 'delete|forget|remove' -- app</code> returns
+<code>delete_expired</code>, its two callers and the
+<code>ON DELETE CASCADE</code> clause only.</li>
+<li><strong>No authentication on the routes.</strong>
+<code>git grep -n -i -E 'auth|Depends|Header|Security|api_key' -- app/main.py</code>
+returns nothing at exit 1;
+<code>git grep -c -E 'add_api_route' -- app/main.py</code> returns
+4.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|as_of|expires?_?at|supersed' -- app</code>
+returns nothing at exit 1;
+<code>git grep -c -i -E 'timestamp' -- app/store.py</code> returns
+22.</li>
+<li><strong>No status field.</strong>
+<code>git grep -n -i -E 'status|verified|candidate|rejected|confidence' -- app</code>
+returns HTTP status codes, the health literal and a parser loop
+variable.</li>
+<li><strong>No vacuum or secure delete.</strong>
+<code>git grep -n -i -E 'vacuum|secure_delete' -- .</code> returns
+nothing at exit 1; <code>git grep -c -E 'PRAGMA' -- app/store.py</code>
+returns 3.</li>
+<li><strong>No embedding arm.</strong>
+<code>git grep -n -i -E 'embedding|vector|cosine|faiss' -- app</code>
+returns nothing at exit 1;
+<code>git grep -c -i -E 'bm25' -- app/retriever.py</code> returns
+5.</li>
+<li><strong>No cached index.</strong>
+<code>git grep -n -i -E 'cache|lru' -- app</code> returns nothing at
+exit 1; <code>git grep -n -E 'BM25Index\(' -- app</code> returns the one
+construction, at <code>app/retriever.py:104</code>.</li>
+<li><strong>No scheduled work.</strong>
+<code>git grep -n -i -E 'schedule|interval|asyncio|thread|repeat|cron' -- app</code>
+returns the write lock's <code>threading</code> import and
+<code>RLock</code> only.</li>
+<li><strong><code>memory_id</code> is never read back.</strong>
+<code>git grep -n -E 'memory_id"\]' -- app</code> returns nothing at
+exit 1, against <code>git grep -n -E 'memory_id' -- app</code>, which
+returns the schema, the insert and the select at
+<code>app/store.py:191</code>.</li>
+<li><strong><code>count_users</code> has no caller.</strong>
+<code>git grep -n -E 'count_users' -- .</code> returns its definition
+only.</li>
+<li><strong>Pairing does not read the role.</strong>
+<code>git grep -n -E 'role' -- app/store.py</code> returns the content
+renderer, the schema, the insert, the select and the row copy at
+<code>:224</code>, none inside the pairing loop at
+<code>:264-288</code>.</li>
+<li><strong>The paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@misc|doi' -- .</code> returns the
+README badge, link and BibTeX block.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-04</strong> — <a
+href="https://github.com/imlrz/ReFind/commit/a80175ca0eeb52a938d7cab7a602bc780de8a577"><code class="commit-id" title="a80175ca0eeb52a938d7cab7a602bc780de8a577">a80175ca…</code></a>.
+First reading, from a shallow clone at the head of <code>main</code>;
+commit and author counts from the GitHub API. Screened first: no
+auto-run, build-time or cooldown surface, and one floating surface,
+<code>pyproject.toml</code> with no lockfile. MIT, no rider. Nothing
+installed, built or run. Two marks: <code>scope_enforced</code>, for the
+one user-filtered content query every derived structure is built from,
+and <code>negative_eval</code>, for a populated isolation case whose
+fixture would leak without the predicate (<a
+href="#9-reliability-safety-and-trust">section 9</a>, <a
+href="#10-tests-evals-and-benchmarks">section 10</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

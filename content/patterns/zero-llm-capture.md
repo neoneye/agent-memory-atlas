@@ -298,6 +298,8 @@ is the thing a deletion request has to survive.
 
 [aigent-OS](../../systems/aigent-os/) captures by regex on the operator's own words and makes the scan, not the match, the gate. A UserPromptSubmit hook strips tool output, code and tables from the prompt, matches seven explicit and five correction patterns, and appends each hit as an `unscanned` row (`daemons/memory-capture.sh:111-179`, `:272-279`). An injection guard then promotes a clean row to `staged` and marks a hostile one `blocked`, keeping its text as evidence (`daemons/memory-candidates-guard.mjs:55-92`). The queue file lives in an indexed vault directory and the search reads no status, so a blocked phrase is searchable after the next re-index.
 
+[ReFind](../../systems/refind/) moves the model to the read side entirely. Add commits raw messages to SQLite before HTTP 200, with a payload hash that makes a retry free and a conflicting replay a 409, and no model, extraction or index work on the write (`app/store.py:131-174`). Search rebuilds a BM25 index per request and spends up to four GPT-4o-mini actions choosing evidence, and it fails with a 502 rather than falling back to BM25 when the declared agent mode has no model. The trade is the one this page predicts in reverse: nothing is lost to a provider outage at write time, and every question pays a full re-tokenization of the user's history plus the model calls.
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.

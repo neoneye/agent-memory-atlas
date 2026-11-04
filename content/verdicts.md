@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 770 reports.**
+**This page covers all 771 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7042,3 +7042,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no licence, so all rights reserved; 41,153 lines of Python, shipped twice in near-identical copies, four commits from one author on 13 October 2026; 52 pytest files and 17 test scripts with no CI, two needing an uncommitted database, not run here. One mark, `trust_state`.
 - Study when: you want disagreement between models turned into graded, keyed decisions that a later stage must obey.
 - Do not copy when: a decision must stay correctable after something is built on it, or a person's ruling must become the decision.
+
+### [`refind`](../systems/refind/)
+- Best idea: **build every derived structure inside the request, from one scoped read.** `list_chunks` filters `WHERE i.user_id = ?`, and the BM25 index, the neighbour map the context window walks and the direct fallback are all built from its result per Search, so the planner's tool calls have no second read for the predicate to be missing from.
+- Second idea: a retrieval model with selection verbs only — search, keep by result number, finish — over a read-only index, so text injected into a stored turn can steer which of the user's hits are kept and nothing else.
+- Biggest risk: **result ids are recomputed from positional pairing on every read.** A turn arriving out of order regroups every later pair in its session, changing ids and contents, and the pairing ignores role, so an assistant-first session pairs across exchanges.
+- Second risk: no authentication, so `user_id` is a claim; no delete on request, and the stated retention window is applied only at process start; an unparsable date bound silently filters nothing.
+- Most reusable component: `app/retriever.py` with `app/bm25.py` — the four-action planner loop with seen-anchor exclusion, session RRF at k = 60 and a two-neighbour context window.
+- Maturity impression: MIT; 1,173 lines of Python, nine commits from one author, 7–14 August 2026, packaged as a contest submission for the paper at [arXiv:2608.12888](https://arxiv.org/abs/2608.12888); eight pytest cases in a 256-line file and no CI, not run here. Two marks, `scope_enforced` and `negative_eval`; the isolation case is populated and its fixture shares a session id across users, so it would fail without the predicate.
+- Study when: you want an agentic lexical retriever over raw chat logs, or a reference implementation of the Agent Memory Leaderboard Add/Search contract.
+- Do not copy when: memory must be correctable or deletable on request, results must keep stable ids, or the port is reachable by anyone who should not read every user.

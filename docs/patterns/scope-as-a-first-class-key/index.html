@@ -1575,6 +1575,21 @@ rather than everything, and a test asserts both halves
 model names the namespace, and a read that names none reads every one.
 <strong>The safe mode is opt-in, and the default install does not opt
 in.</strong></p>
+<p><strong><a href="../../systems/refind/">ReFind</a> has one content
+query and builds everything else from its result.</strong>
+<code>list_chunks</code> filters <code>WHERE i.user_id = ?</code>, and
+each Search constructs a fresh BM25 index from that list, so the planner
+model's <code>search_chatrecord</code> calls, the two-neighbour context
+expansion and the direct fallback read only that user's turns
+(<code>app/store.py:187-199</code>,
+<code>app/retriever.py:101-104</code>). Two users sharing a
+<code>session_id</code> cannot reach each other's neighbours, and a
+populated test whose fixture shares one would fail if the predicate
+went. The predicate is missing from one write-path lookup:
+<code>request_id</code> is unique across users, so a reused id is a 409
+naming the collision. The key is a body field on an unauthenticated
+port. <strong>A predicate cannot be forgotten on a read that does not
+exist.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

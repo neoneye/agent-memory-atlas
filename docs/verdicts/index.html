@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 770 reports.</strong></p>
+<p><strong>This page covers all 771 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32074,6 +32074,46 @@ with no CI, two needing an uncommitted database, not run here. One mark,
 keyed decisions that a later stage must obey.</li>
 <li>Do not copy when: a decision must stay correctable after something
 is built on it, or a person's ruling must become the decision.</li>
+</ul>
+<h3 id="refind"><a
+href="../systems/refind/"><code>refind</code></a></h3>
+<ul>
+<li>Best idea: <strong>build every derived structure inside the request,
+from one scoped read.</strong> <code>list_chunks</code> filters
+<code>WHERE i.user_id = ?</code>, and the BM25 index, the neighbour map
+the context window walks and the direct fallback are all built from its
+result per Search, so the planner's tool calls have no second read for
+the predicate to be missing from.</li>
+<li>Second idea: a retrieval model with selection verbs only — search,
+keep by result number, finish — over a read-only index, so text injected
+into a stored turn can steer which of the user's hits are kept and
+nothing else.</li>
+<li>Biggest risk: <strong>result ids are recomputed from positional
+pairing on every read.</strong> A turn arriving out of order regroups
+every later pair in its session, changing ids and contents, and the
+pairing ignores role, so an assistant-first session pairs across
+exchanges.</li>
+<li>Second risk: no authentication, so <code>user_id</code> is a claim;
+no delete on request, and the stated retention window is applied only at
+process start; an unparsable date bound silently filters nothing.</li>
+<li>Most reusable component: <code>app/retriever.py</code> with
+<code>app/bm25.py</code> — the four-action planner loop with seen-anchor
+exclusion, session RRF at k = 60 and a two-neighbour context
+window.</li>
+<li>Maturity impression: MIT; 1,173 lines of Python, nine commits from
+one author, 7–14 August 2026, packaged as a contest submission for the
+paper at <a
+href="https://arxiv.org/abs/2608.12888">arXiv:2608.12888</a>; eight
+pytest cases in a 256-line file and no CI, not run here. Two marks,
+<code>scope_enforced</code> and <code>negative_eval</code>; the
+isolation case is populated and its fixture shares a session id across
+users, so it would fail without the predicate.</li>
+<li>Study when: you want an agentic lexical retriever over raw chat
+logs, or a reference implementation of the Agent Memory Leaderboard
+Add/Search contract.</li>
+<li>Do not copy when: memory must be correctable or deletable on
+request, results must keep stable ids, or the port is reachable by
+anyone who should not read every user.</li>
 </ul>
         </article>
       </div>
