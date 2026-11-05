@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 776 reports.**
+**This page covers all 777 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7102,3 +7102,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 9,658 lines of Python and 2,158 of Rust outside tests, 163 commits from 8 October to 5 November 2026, pre-release 0.1.0-alpha.14; 411 Python and 31 Rust test functions run in CI, not run here. All seven marks, written with this atlas's rubric in view and each tested against the code.
 - Study when: you want a local encrypted memory in which a model proposes and only a person confirms, with rejections that survive changes of case, spacing and look-alike characters.
 - Do not copy when: earlier versions must stay readable as text, the agent has a general shell and review must mean a person, or a reviewed entry must be safe from the agent's delete.
+
+### [`immune`](../systems/immune/)
+- Best idea: **a store that refuses to be emptied by a failed read.** `readJSON` returns null only for a missing file; a present file that does not parse is copied aside and the command aborts, and every JSON write goes through a temporary file and a rename, so a locked or half-written file cannot become an empty store the next save persists.
+- Second idea: an embedding cache tagged with the engine that wrote each row and reused only on a match, and on the optional daemon a dedup in which cosine proposes eight candidates and a cross-encoder decides.
+- Biggest risk: **whatever the scan proposes becomes a standing instruction.** Strategies the Haiku scan reports are auto-added with model-set effectiveness and injected before every prompt matching their domain keywords, with no untrusted-data framing; the sanitizer never runs on a rule.
+- Second risk: the archive housekeep writes is read by no path, so an archived rule is relearned; unlocked commands write whole SQLite images back over locked writes; and every FTS rebuild drops the session rows `get-context` searches.
+- Most reusable component: `readJSON` and `writeJSON` in `immune-adapter.js:92-113`, with the engine-tagged cache in `readCachedEmbedding` and `storeCachedEmbedding` (`:1599-1618`).
+- Maturity impression: MIT; 2,800 lines of Node.js in the runtime, 46 commits from one author, 4 March – 6 October 2026, published to npm; no test suite, and the benchmark scripts read an uncommitted corpus and do not exercise the shipped write or housekeep paths. No marks.
+- Study when: you want review findings from a cheap model to accumulate as rules a coding agent sees before it writes, with no service to run.
+- Do not copy when: projects or people must not share rules, scanned material may be hostile, or a rule must be deletable and stay deleted.

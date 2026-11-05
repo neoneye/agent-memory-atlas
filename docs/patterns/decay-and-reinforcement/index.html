@@ -694,6 +694,18 @@ and anything at zero is deleted unprompted
 <code>part-of</code> child, and <code>part-of</code> is also typed from
 words such as "parent" or "under " in an ordinary line, so the credit
 path and the deletion path walk different graphs.</p>
+<p><strong><a href="../../systems/immune/">Immune</a> pauses its clock
+with a global offset, and one reader ignores the pause.</strong> A rule
+is hot while it is critical, seen three times or seen in the last 30
+days, and heat adds a 90-day recency term
+(<code>immune-adapter.js:295-301</code>, <code>:490-502</code>).
+<code>freeze</code> and <code>unfreeze</code> add the frozen days to one
+total that <code>daysDiffAdjusted</code> subtracts from every item's age
+(<code>:137-150</code>), so a rule first seen after a 60-day freeze
+reads as zero days old for 60 days. The prompt hook decides hot from raw
+dates (<code>immune-inject.js:20-32</code>). Reinforcement is the scan
+model reporting a match. <strong>Subtract a pause only from the
+intervals it covers, and give every reader the same clock.</strong></p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

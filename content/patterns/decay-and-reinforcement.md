@@ -399,6 +399,8 @@ permanent."*
 
 **[llm-harness-memory](../../systems/llm-harness-memory/) reinforces the path, not only the page, and cascades its deletion over edges it guessed.** A fetch credits the page +5 and each TOC up its first `parent::` chain +5, so an index node survives while anything reached through it is used. Every page and line loses one point on each day that has a session, so a month away costs one point, and anything at zero is deleted unprompted (`memory-index:1179-1311`). A dead TOC takes every `part-of` child, and `part-of` is also typed from words such as "parent" or "under " in an ordinary line, so the credit path and the deletion path walk different graphs.
 
+**[Immune](../../systems/immune/) pauses its clock with a global offset, and one reader ignores the pause.** A rule is hot while it is critical, seen three times or seen in the last 30 days, and heat adds a 90-day recency term (`immune-adapter.js:295-301`, `:490-502`). `freeze` and `unfreeze` add the frozen days to one total that `daysDiffAdjusted` subtracts from every item's age (`:137-150`), so a rule first seen after a 60-day freeze reads as zero days old for 60 days. The prompt hook decides hot from raw dates (`immune-inject.js:20-32`). Reinforcement is the scan model reporting a match. **Subtract a pause only from the intervals it covers, and give every reader the same clock.**
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code skill whose Haiku
+scan learns error patterns and best-practice strategies into two local
+JSON stores, injecting strategies before each matching prompt.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Immune — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code skill whose
+Haiku scan learns error patterns and best-practice strategies into two
+local JSON stores, injecting strategies before each matching prompt.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Immune — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code skill whose
+Haiku scan learns error patterns and best-practice strategies into two
+local JSON stores, injecting strategies before each matching prompt.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Immune — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Immune",
+      "description": "A Claude Code skill whose Haiku scan learns error patterns and best-practice strategies into two local JSON stores, injecting strategies before each matching prompt.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Antibodies that check outputs, never
+memories</p>
+          <h1>Immune</h1>
+          <p class="document-deck">A Claude Code skill whose Haiku scan
+learns error patterns and best-practice strategies into two local JSON
+stores, injecting strategies before each matching prompt.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Mnemoclaw/immune">
+              <span>Source</span>
+              <strong>Mnemoclaw/immune</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Mnemoclaw/immune/commit/28248347372d027bd711b605dddda84481f17109" title="28248347372d027bd711b605dddda84481f17109">
+              <span>Analyzed revision</span>
+              <code>28248347…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Mnemoclaw--immune" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Mnemoclaw--immune</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>2,800
+lines of Node.js in the runtime, 2,197 of them in immune-adapter.js; 996
+in an optional dashboard, 592 in two benchmark scripts, and 461 lines of
+skill and scan-agent prompt</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>46
+commits from one author under several git identities, 4 March – 6
+October 2026; tag v5.3.4 is the head of main</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>No
+test suite and no CI test job; two self-check CLI commands and two
+benchmark scripts, none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Immune is a Claude Code skill that turns a cheap model's review of
+agent output into two local rule stores: antibodies, defects to look for
+after generation, and strategies, practices injected before it. The
+prompt hook is small, local and model-free, and the v5.3.4 store refuses
+to overwrite itself after a failed read. The weak side is the learning
+loop: whatever the scan proposes and the duplicate check does not match
+is written with model-chosen severity and effectiveness, no stored rule
+is ever deleted, and the archive housekeeping writes is read by no
+path.</p>
+<p>The "Immune" half is not a rejected-value tombstone. An antibody
+describes a mistake in generated <em>content</em>, phrased as the safe
+action, and reaches only the scan agent's prompt; it never blocks a
+memory write. Duplicate checks compare a new rule against live rules of
+its own type only. The hybrid vector and FTS4 search the README leads
+with is a CLI command the skill's own workflow never calls. No
+capability mark is earned.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>rule</strong>. An antibody holds
+<code>pattern</code>, <code>correction</code>, <code>severity</code>
+(<code>critical</code>, <code>warning</code>, <code>info</code>) and
+<code>domains</code>. A strategy holds <code>pattern</code>,
+<code>example</code>, <code>effectiveness</code> in 0 to 1, and
+<code>domains</code>. Both carry <code>seen_count</code>,
+<code>first_seen</code> and <code>last_seen</code>
+(<code>immune-adapter.js:548-559</code>). The scan agent is told to
+write both fields of an antibody as the desired action, never the
+harmful one, because a rule naming a destructive command tends to be
+reproduced when injected
+(<code>agents/immune-scan.md:105-116</code>).</p>
+<p>Beside the rules sit session logs, one short summary per scan, and a
+running score baseline per domain set (<code>cmdLogSession</code>,
+<code>cmdScore</code>, <code>immune-adapter.js:1148-1176</code>,
+<code>:1292-1345</code>).</p>
+<p>The lifecycle has three states, all derived except the last:</p>
+<ul>
+<li><strong>hot</strong> — an antibody that is <code>critical</code>,
+seen three times, or seen in the last 30 days; a strategy with
+<code>effectiveness &gt;= 0.7</code> or the same counts
+(<code>isHotAntibody</code>, <code>isHotStrategy</code>,
+<code>immune-adapter.js:490-502</code>);</li>
+<li><strong>cold</strong> — anything else, summarised to the scan agent
+as keywords;</li>
+<li><strong>archived</strong> — moved by <code>housekeep</code> to
+<code>archived_antibodies.json</code> or
+<code>archived_strategies.json</code>.</li>
+</ul>
+<p>Every input to hot follows from a model's report. The scan agent
+reports severity and a strategy's effectiveness, and the main agent
+increments <code>seen_count</code> and sets <code>last_seen</code> when
+the scan reports a match (<code>skill.md:190-194</code>,
+<code>:232-235</code>). A <code>critical</code> antibody is hot forever,
+and housekeep skips it (<code>immune-adapter.js:1861</code>).</p>
+<p>Nothing is treated as candidate or verified. A rule is written and
+applied, and it leaves the live set only when housekeep archives it.
+There is no correction verb, no supersession and no delete. A write with
+an existing id replaces the whole object (<code>cmdAddAntibody</code>,
+<code>immune-adapter.js:748-749</code>).</p>
+<p>Time is adjustable. <code>freeze</code> and <code>unfreeze</code>
+accumulate <code>total_frozen_days</code>, which
+<code>daysDiffAdjusted</code> subtracts from the age of every item
+(<code>immune-adapter.js:137-150</code>, <code>:1800-1819</code>). The
+offset is global, so a rule first seen after a 60-day freeze reads as
+zero days old for its first 60 days. The prompt hook computes hot from
+raw dates and ignores the freeze
+(<code>immune-inject.js:20-32</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the scan proposes, the agent writes with no gate, hot is derived from model-set fields, and the archive is a dead end</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the scan proposes, the agent writes with no gate, hot is derived from model-set fields, and the archive is a dead end
+flowchart TD
+  SRC[&quot;output or whole&lt;br/&gt;conversation to scan&quot;] --&gt; SCAN[&quot;immune-scan agent&lt;br/&gt;Haiku, no tools&quot;]
+  SCAN --&gt; REC[&quot;JSON: matches, threats,&lt;br/&gt;strategies, model-set&lt;br/&gt;severity, effectiveness&quot;]
+  REC --&gt; DUP{&quot;agent ran&lt;br/&gt;check-duplicate?&quot;}
+  DUP --&gt;|&quot;duplicate&quot;| BUMP[&quot;update-*&lt;br/&gt;seen_count + 1&lt;br/&gt;last_seen = today&quot;]
+  DUP --&gt;|&quot;no, or skipped&quot;| ADD[&quot;add-antibody&lt;br/&gt;add-strategy&lt;br/&gt;no gate, id overwrites&quot;]
+  subgraph stores[&quot;Two JSON stores&quot;]
+    direction TB
+    AB[&quot;immune_memory.json&lt;br/&gt;antibodies&quot;]
+    CS[&quot;cheatsheet_memory.json&lt;br/&gt;strategies&quot;]
+    AB ~~~ CS
+  end
+  ADD --&gt; stores
+  BUMP --&gt; stores
+  stores --&gt; HOT{&quot;hot: critical,&lt;br/&gt;effectiveness &gt;= 0.7,&lt;br/&gt;seen &gt;= 3, or &lt; 30 days&quot;}
+  HOT --&gt;|&quot;antibodies&quot;| SP[&quot;next scan prompt&lt;br/&gt;top 15, cold as keywords&quot;]
+  HOT --&gt;|&quot;strategies&quot;| INJ[&quot;UserPromptSubmit hook&lt;br/&gt;top 5 in imm XML&quot;]
+  INJ ~~~ HK[&quot;housekeep, only past&lt;br/&gt;500 or 300 items&quot;]
+  HK --&gt; ARC[&quot;archived_*.json&lt;br/&gt;read by nothing&quot;]
+  ARC --&gt; RE[&quot;same rule&lt;br/&gt;learned again&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>immune init</code> copies six files and the
+<code>agents/</code> directory into
+<code>~/.claude/skills/immune/</code>
+(<code>bin/immune.js:18-26</code>). They are
+<code>immune-adapter.js</code>, a CLI with 28 commands;
+<code>immune-inject.js</code>, the prompt hook;
+<code>sanitizer.js</code>; <code>config.yaml</code>;
+<code>package.json</code>; and the <code>skill.md</code> and
+<code>agents/immune-scan.md</code> prompts. Every adapter command is a
+fresh Node process, so each loads sql.js, reads the whole SQLite image
+into memory and, for a vector command, loads the embedding model
+(<code>getDB</code>, <code>immune-adapter.js:533-545</code>).</p>
+<p><strong>Storage.</strong> The JSON files are primary and every rule
+write writes them first. Since v5.3.4, <code>writeJSON</code> writes a
+temporary file and renames it, and <code>readJSON</code> returns null
+only for a missing file. A file that exists and does not parse is copied
+aside and the command aborts, so a transient read failure cannot produce
+an empty store that the next save would persist
+(<code>immune-adapter.js:92-113</code>). The SQLite image holds mirror
+tables, an FTS4 table with the porter tokenizer, the embedding cache,
+<code>session_logs</code> and <code>stats</code>
+(<code>initSchema</code>, <code>:547-582</code>). The last two exist
+only there.</p>
+<p><strong>Vectors.</strong> With no daemon the engine is in-process
+<code>Xenova/all-MiniLM-L6-v2</code> through
+<code>@xenova/transformers</code>. If <code>GET /health</code> on
+<code>127.0.0.1:8091</code> answers, the adapter uses that daemon's
+2048-dimension encoder with asymmetric
+<code>query:</code>/<code>passage:</code> roles and a cross-encoder
+(<code>resolveEmbedEngine</code>, <code>:1504-1528</code>). Once a
+process has used the daemon, a daemon failure disables the vector stage
+rather than falling back to MiniLM. Cache rows carry the engine tag and
+are reused only on a match, so 384- and 2048-dimension vectors are never
+compared (<code>readCachedEmbedding</code>, <code>:1599-1610</code>).
+The daemon is not in this repository.</p>
+<p><strong>Model.</strong> Only the scan calls a model: the skill spawns
+<code>immune-scan</code> with <code>model: haiku</code> and
+<code>tools: []</code> (<code>agents/immune-scan.md:1-5</code>),
+resolved through Claude Code's model aliases.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run.
+<code>npm install -g @mnemoclaw/immune &amp;&amp; immune init</code>
+copies the runtime files into the skill directory and runs
+<code>npm install --omit=dev</code> there
+(<code>bin/immune.js:181-251</code>). The three dependencies float and
+no lockfile is committed or published. If
+<code>@xenova/transformers</code> fails to import at runtime, the
+adapter runs <code>npm install @xenova/transformers@2.17.2</code> itself
+(<code>immune-adapter.js:1435-1456</code>). The first vector call
+downloads about 22 MB of model. Search, dedup and the hook work offline;
+the scan needs a model endpoint. The JSON stores are readable and
+editable by hand, and editing them is the only way to delete a rule.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Scan and learn.</strong> <code>/immune</code> runs
+<code>skill.md</code>: <code>get-context</code>, then
+<code>get-strategies</code> and <code>get-antibodies</code> for hot and
+cold tiers with no query (<code>skill.md:72</code>, <code>:87-95</code>,
+<code>:132-140</code>). It builds a <code>&lt;scan_request&gt;</code>
+and spawns the scan agent (<code>:150-176</code>). For each reported
+match it runs <code>update-antibody --increment_seen</code>. For each
+new threat it runs <code>check-duplicate</code>, then either
+<code>update-antibody</code> or, with
+<code>auto_add_threats: true</code>, <code>add-antibody</code>
+(<code>:196-213</code>). Strategies follow the same shape, with an
+effectiveness the agent computes as <code>old*0.8 + new*0.2</code>
+(<code>:226-240</code>). The session ends with <code>score</code> and
+<code>log-session</code>.</li>
+<li><strong>Direct writes.</strong> <code>cmdAddAntibody</code> and
+<code>cmdAddStrategy</code> check only required fields, fill defaults,
+upsert by id into JSON and SQLite
+(<code>immune-adapter.js:736-787</code>). <code>cmdImport</code> does
+the same for a pack file (<code>:789-839</code>).
+<code>cmdUpdateStrategy</code> accepts any float for effectiveness
+(<code>:865</code>).</li>
+<li><strong>Gated write.</strong> <code>cmdFlushPending</code> applies
+<code>qualityGate</code> (id, a pattern of 20 characters or more,
+severity and correction for antibodies), then
+<code>findBestDuplicate</code> against the live items of the same type,
+sets <code>quality_gate = 1</code> and writes (<code>:1349-1428</code>).
+The skill calls it only near compaction
+(<code>skill.md:305-309</code>).</li>
+<li><strong>Dedup.</strong> <code>findBestDuplicate</code> uses
+embeddings when any engine is up and Jaccard plus longest common word
+run plus a domain bonus otherwise (<code>:1786-1796</code>,
+<code>:1752-1784</code>). On the daemon, cosine proposes up to eight
+candidates above 0.40 and the cross-encoder decides at 0.45
+(<code>:1672-1702</code>).</li>
+<li><strong>Retrieval.</strong> <code>cmdGetAntibodies</code> and
+<code>cmdGetStrategies</code> (<code>:642-734</code>);
+<code>cmdSearch</code> with <code>fts4Search</code>,
+<code>embeddingSearch</code> and <code>reciprocalRankFusion</code>
+(<code>:880-1061</code>); <code>cmdGetContext</code>
+(<code>:1178-1209</code>).</li>
+<li><strong>Prompt hook.</strong> <code>immune-inject.js</code> reads
+the prompt from stdin, sanitizes it, matches
+<code>domain_keywords</code> from <code>config.yaml</code>, and prints
+up to five hot strategies (<code>:132-177</code>).</li>
+<li><strong>Housekeeping.</strong> <code>cmdHousekeep</code>
+(<code>immune-adapter.js:1821-1948</code>),
+<code>cmdRetentionCleanup</code> (<code>:1271-1288</code>),
+<code>cmdFreeze</code>, <code>cmdUnfreeze</code>.</li>
+<li><strong>Concurrency.</strong> Eleven commands take a
+<code>proper-lockfile</code> lock with a 10-second stale window
+(<code>:2174-2186</code>). <code>import</code>, <code>freeze</code>,
+<code>unfreeze</code>, <code>retention-cleanup</code>,
+<code>search</code>, <code>check-duplicate</code> and the
+<code>get-*</code> commands do not.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The two JSON documents are
+<code>{version, antibodies|strategies, stats}</code>. The SQLite mirror
+tables add <code>quality_gate INTEGER DEFAULT 0</code>, which
+<code>cmdFlushPending</code> sets to 1 and no query reads
+(<code>immune-adapter.js:552</code>, <code>:1365</code>). The migration
+state carries a <code>phase</code> that <code>migrate-advance</code>
+increments and no branch reads (<code>:1125-1133</code>).</p>
+<p><strong>Scope.</strong> The store lives in the adapter's own
+directory (<code>IMMUNE_DIR = __dirname</code>, <code>:10</code>), so
+one installation serves every project the user opens.
+<code>domains</code> is a topic tag from a fixed keyword list —
+<code>code</code>, <code>writing</code>, <code>travel</code> and others
+in <code>config.yaml:60-67</code>. <code>domainMatch</code> admits any
+item tagged <code>_global</code> (<code>:504-507</code>), and since
+v5.2.2 an absent domain list means no filter
+(<code>:643-655</code>).</p>
+<p><strong>Time.</strong> <code>first_seen</code> and
+<code>last_seen</code> are dates the agent may pass explicitly; the
+skill passes today (<code>skill.md:211</code>). There is no validity
+time.</p>
+<p><strong>Session memory.</strong> <code>log-session</code> appends a
+markdown block to <code>context/YYYY-MM-DD.md</code>, inserts a
+<code>session_logs</code> row, and inserts a sanitized copy of the
+summary into FTS4 (<code>:1155-1173</code>). <code>index-context</code>
+chunks <code>MEMORY.md</code>, <code>USER.md</code> and
+<code>context/*.md</code> into FTS4 at 1,600 characters
+(<code>:1211-1253</code>). Its <code>MEMORY_MD</code> is
+<code>~/.claude/skills/MEMORY.md</code>, and the comment's environment
+override has no reader (<code>:17</code>).</p>
+<p><strong>Archive.</strong> <code>housekeep</code> writes each archived
+item with an <code>archived_at</code> entry of id, date and reason
+(<code>:1873-1880</code>). Nothing reads either archive file.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The skill's own reads take <strong>no query</strong>.
+<code>get-antibodies --tier hot --limit 15</code> filters by domain and
+hot, then sorts by severity and <code>seen_count</code> and keeps 15
+(<code>immune-adapter.js:677-686</code>). Model-labelled
+<code>critical</code> antibodies therefore fill the scan's slots ahead
+of any warning, however relevant the warning. Cold items go to the scan
+as comma-separated keywords. <code>get-strategies</code> sorts by
+effectiveness.</p>
+<p><strong>With <code>--query</code></strong>, the same commands rerank
+by <code>0.6 × text similarity + 0.4 × heat</code>, where heat weighs
+severity or effectiveness, recency over 90 days and frequency
+(<code>heatScore</code>, <code>:295-301</code>). Similarity is daemon or
+MiniLM cosine, with TF-IDF and trigram Jaccard as fallback.
+<code>finalizeResults</code> drops scores below 0.08 except criticals
+and guarantees the top three criticals a place (<code>:432-453</code>).
+At 200 items or more, an FTS4 prefilter narrows the candidates
+first.</p>
+<p><strong><code>search</code></strong> runs the vector and FTS4 engines
+in parallel and fuses them by RRF at k = 60 (<code>cmdSearch</code>,
+<code>:1024-1061</code>). It is the README's headline feature and is
+reached from the CLI and the benchmark scripts only. FTS4 queries quote
+each token after stripping <code>"^()*</code>, so a stored or queried
+term cannot inject MATCH syntax (<code>:458-468</code>).</p>
+<p><strong><code>get-context</code></strong> searches FTS4 session
+chunks and returns the most recent <code>session_logs</code> rows within
+90 days (<code>:1178-1209</code>).</p>
+<p><strong>The prompt hook</strong> scores domains by keyword hits,
+keeps the top one or two, adds <code>_global</code>, and injects up to
+five hot strategies by effectiveness
+(<code>immune-inject.js:60-115</code>). It injects nothing when no
+domain keyword matches.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen in the skill's flow, synchronously, after the scan
+returns. Each is one CLI call composed by the main agent as a shell
+command with the JSON payload in single quotes
+(<code>skill.md:211</code>, <code>:238</code>). A scanned pattern
+containing an apostrophe ends that argument unless the agent escapes
+it.</p>
+<p>The admission rules depend on which verb the agent runs:</p>
+<ul>
+<li><code>add-*</code>: required fields only; an existing id is
+replaced. The skill names ids <code>AB-{next_number}</code>, a counter
+the agent computes.</li>
+<li><code>flush-pending</code>: the quality gate and the duplicate
+check.</li>
+<li><code>check-duplicate</code> followed by <code>add-*</code>: the
+duplicate check, if the agent runs it first, which <code>skill.md</code>
+asks for.</li>
+<li><code>import</code>: required fields only, without the lock.</li>
+</ul>
+<p>A duplicate is reactivated rather than refused: its count and date
+are bumped, which also makes it hot. The scan agent is told to report a
+threat even when it overlaps a cold pattern, because "the orchestrator
+handles deduplication" (<code>agents/immune-scan.md:30</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A scan is one Haiku call and about a dozen adapter processes, each
+paying the sql.js load. <code>check-duplicate</code> embeds the new
+pattern and every existing item missing from the cache. A local-engine
+cache miss writes the whole SQLite image once per item
+(<code>storeCachedEmbedding</code>,
+<code>immune-adapter.js:1612-1618</code>). Scoring an item reads
+<code>migration_state.json</code> through <code>getFrozenDays</code>, so
+filtering and reranking N items reads it up to 2N times. A new rule is
+retrievable as soon as its command returns. No background pass runs. The
+hook adds at most five strategy lines to the submitted prompt, below any
+cached prefix.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent is the orchestrator. <code>skill.md</code> is a procedure
+the main model follows, and every write is a Bash call it composes; the
+adapter takes whatever it is given. The hook reads
+<code>config.yaml</code> for domain keywords, and the skill's conditions
+name its <code>auto_add_*</code> flags. The adapter reads no
+configuration, so its dedup thresholds are constants
+(<code>immune-adapter.js:28-47</code>). The config gives the daemon
+threshold as 0.75 in one section and 0.80 in another
+(<code>config.yaml:119</code>, <code>:162</code>),
+<code>daemon-status</code> reports 0.80
+(<code>immune-adapter.js:1116</code>), and the code uses 0.75
+(<code>:37</code>).</p>
+<p><strong>Hooks the screen cannot see.</strong> The README asks the
+user to add a <code>UserPromptSubmit</code> hook to
+<code>~/.claude/settings.json</code> running
+<code>node …/immune-inject.js</code> with a 10-second timeout
+(<code>README.md:272-290</code>). It reads stdin,
+<code>config.yaml</code> and <code>cheatsheet_memory.json</code>, writes
+XML to stdout, and makes no network call. No hook runs
+<code>immune-adapter.js</code>. The <code>immune</code> bin runs
+<code>npm install</code> in the skill directory and
+<code>node immune-adapter.js stats</code>, and during
+<code>immune init</code> at most once a day
+<code>npm view @mnemoclaw/immune version</code>
+(<code>bin/immune.js:158-179</code>, <code>:318-343</code>). Nothing in
+the tree writes <code>settings.json</code>.</p>
+<p>The skill mentions a host called Chimera that receives the cheatsheet
+as XML for its own prompts (<code>skill.md:123-124</code>). Chimera is
+not in this repository.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scanned-content-becomes-standing-instructions">Scanned content
+becomes standing instructions</h3>
+<p>The scan reads arbitrary output, or with <code>/immune scan</code>
+the whole conversation. Its <code>new_strategies_detected</code> are
+written with <code>auto_add_strategies: true</code>, and a hot strategy
+is printed into every later prompt whose keywords match its domain. The
+hook escapes <code>&lt;</code>, <code>&gt;</code> and <code>&amp;</code>
+in the pattern and frames nothing as untrusted data; the <code>id</code>
+attribute is not escaped (<code>immune-inject.js:121-127</code>). A
+scanned web page that reads like a best practice can become a rule
+applied to the next month of prompts. The scan agent having no tools
+limits what it can do, not what it can propose.</p>
+<h3 id="what-the-sanitizer-covers">What the sanitizer covers</h3>
+<p><code>sanitizer.js</code> replaces seven patterns with
+<code>[REDACTED]</code>: UUIDs, <code>sk-</code> keys, bearer tokens,
+GitHub tokens, Wrangler SQL commands, <code>ANTHROPIC_API_KEY=</code>
+and quoted password literals. It runs on the FTS copy of a session
+summary, on files <code>index-context</code> reads, and on the hook's
+prompt, which is used only for keyword matching. It never runs on an
+antibody or strategy, on the <code>session_logs</code> row, or on the
+markdown log. The README describes it as stripping secrets before
+storage (<code>README.md:302</code>). It does nothing about instructions
+in stored text.</p>
+<h3 id="what-v533-changed">What v5.3.3 changed</h3>
+<p>The commit titled <em>"les fichiers de memoire sont reconnus comme
+donnees utilisateur"</em> adds the two JSON stores to
+<code>USER_PRESERVED_GLOBS</code> in the installer
+(<code>bin/immune.js:41-48</code>). <code>hasUserData</code> then
+reports a prior install correctly; every branch copies the same runtime
+files and never touches the stores (<code>:194-217</code>). It changes a
+log line. It is not prompt-injection handling.</p>
+<h3 id="data-loss">Data loss</h3>
+<ul>
+<li><strong>The FTS index forgets sessions.</strong>
+<code>rebuildFTS</code> deletes every row and re-indexes antibodies and
+strategies only (<code>immune-adapter.js:614-638</code>). It runs on
+every <code>flush-pending</code>, <code>index</code>, archiving
+<code>housekeep</code>, and on a search over an empty index.
+<code>get-context</code> searches rows of type <code>session</code>,
+which only <code>log-session</code> writes, so after a rebuild its text
+search finds no session logged before it. <code>index-context</code>
+re-adds the same text as <code>context</code> rows, which
+<code>get-context</code> does not search; its <code>session_logs</code>
+list is unaffected.</li>
+<li><strong>Unlocked commands write back stale images.</strong>
+<code>saveDB</code> writes the process's in-memory image over the file,
+not atomically (<code>:584-588</code>). A <code>search</code> or
+<code>check-duplicate</code> that loaded the image before a locked
+<code>log-session</code> or <code>score</code> finished overwrites that
+row on its next cache write. <code>session_logs</code> and the baselines
+have no other copy.</li>
+<li><strong>Overwrite by id.</strong> A miscounted <code>AB-{n}</code>
+replaces an existing antibody.</li>
+</ul>
+<h3 id="the-score-normalizes-itself">The score normalizes itself</h3>
+<p><code>score</code> deducts 20, 10 and 5 points per reported critical,
+warning and info, updates a Welford mean per domain set, and passes
+anything at or above one standard deviation below the running mean
+(<code>:1292-1345</code>). A domain that always scores badly therefore
+passes.</p>
+<h3 id="marks">Marks</h3>
+<p>None is carried.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — an antibody is a defect to
+look for in output, keyed on an agent-chosen id, and it reaches only the
+scan prompt. No write consults it as a refusal. Duplicate checks compare
+a new item against live items of its own type, so a strategy
+recommending what an antibody forbids is admitted, and an archived rule
+is relearned as new.</li>
+<li><strong><code>trust_state</code></strong> — hot and cold are derived
+from model-set severity, effectiveness and counts;
+<code>quality_gate</code> is written and read by nothing.</li>
+<li><strong><code>bitemporal</code></strong> — <code>first_seen</code>
+and <code>last_seen</code> are record dates.</li>
+<li><strong><code>scope_enforced</code></strong> — one store per
+installation; domains are topics.</li>
+<li><strong><code>audit_log</code></strong> — writes overwrite in place;
+<code>archived_at</code> records archival only, in a file nothing
+reads.</li>
+<li><strong><code>human_review</code></strong> — auto-add is on; the one
+review step is the instruction to "note it for manual review"
+(<code>skill.md:242-243</code>). The dashboard renders HTML and changes
+nothing.</li>
+<li><strong><code>negative_eval</code></strong> — no case asserts that
+material stays out of a result; see section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There is no test suite. <code>package.json</code> has no
+<code>test</code> script and the one workflow publishes to npm
+(<code>.github/workflows/publish.yml</code>). I ran nothing.</p>
+<p>Two adapter commands check themselves. <code>similarity-test</code>
+scores six fixed pairs, four expected duplicates and two not, against
+the Jaccard and embedding thresholds
+(<code>immune-adapter.js:1972-2023</code>). Its not-duplicate cases are
+write decisions, not retrieval. <code>retrieval-test</code> runs eight
+queries whose expected ids are null unless a gitignored
+<code>immune_test_ids.json</code> supplies them, and reports
+<code>NO_EXPECTATION</code> otherwise (<code>:2027-2099</code>). Nothing
+runs either one.</p>
+<p><code>benchmark/BENCHMARKS.md</code> publishes retrieval,
+generalization, learning-curve and housekeep-safety figures over 121
+antibodies and 121 strategies of the author's production data. No figure
+from it is reproduced here. The corpus is not committed,
+<code>benchmark/results/</code> is gitignored
+(<code>.gitignore:27</code>), and two of the three case files
+<code>run-blind.js</code> reads are absent
+(<code>benchmark/run-blind.js:124</code>, <code>:171</code>).</p>
+<p>The scripts also show what the figures measure:</p>
+<ul>
+<li><code>run-blind.js</code> prints its empty-memory pass as a constant
+and never writes the learned patterns to the store. It counts an error
+as detected when a quarter of its description's words appear in the code
+snippet, whatever the store holds (<code>:182</code>,
+<code>:194-211</code>).</li>
+<li><code>run-learning.js</code> keeps its antibodies in an in-memory
+array seeded with the answer key's own error patterns, and matches those
+back (<code>:47-48</code>, <code>:225-238</code>). Its housekeep is an
+in-script filter on critical or seen twice (<code>:116-127</code>), not
+<code>cmdHousekeep</code>.</li>
+<li>The committed <code>cases-learning-blind.json</code> has 12 cases
+and 19 errors and no difficulty field, which the published by-difficulty
+table needs.</li>
+</ul>
+<p><code>BENCHMARKS.md</code> itself says there is no end-to-end quality
+test and that the blind agents were instructed by the author
+(<code>:177-181</code>). No paper is associated with the project; the
+README cites Cormack et al. for RRF.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Fail loudly on an unreadable store.</strong> Return empty
+only for a missing file; copy a present-but-unparseable one aside and
+abort, so the next save cannot persist an empty load. Pair it with
+write-temp-and-rename.</li>
+<li><strong>Tag cached embeddings with the engine that made
+them</strong> and reuse a row only on a match. Switching models then
+re-embeds instead of comparing vectors from two spaces.</li>
+<li><strong>Let a cross-encoder decide dedup, with cosine only
+proposing.</strong> When the same-rule and different-rule cosine bands
+overlap, a threshold cannot separate them and a pairwise judge can.</li>
+<li><strong>Phrase injected rules as the desired action.</strong> A rule
+that names the harmful command puts that command in the prompt.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An archive the write path never reads.</strong> Archiving as
+cleanup, then deduplicating against the live set only, guarantees the
+archived rule returns.</li>
+<li><strong>Model-reported fields as the retention key.</strong> If the
+writer sets severity, it decides what is permanent.</li>
+<li><strong>A derived index rebuilt from a subset of its
+sources.</strong> Rebuilding from the primary tables silently drops rows
+that exist only in the index.</li>
+<li><strong>Whole-file database images written by unlocked
+readers.</strong> A cache write from a read command is a write.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants the agent's review habits to
+accumulate across projects with no service to run, and who reads the
+JSON files from time to time. The store is small, local and editable.
+Walk away if several people or projects must not share rules, if scanned
+material is untrusted, or if a rule must be removable and stay removed.
+The project is one author's, the tests are self-checks, and the
+benchmark scripts do not exercise the shipped paths.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How Chimera and the MnemoClaw stack call the adapter, and whether
+antibodies reach a generation prompt there, as the scan agent's phrasing
+rule assumes.</li>
+<li>How often scan output carrying an apostrophe breaks the agent's
+shell call in practice, given French domain keywords.</li>
+<li>Whether any user reaches the 500-antibody cap that housekeep needs
+before it archives anything.</li>
+<li>The embed daemon's behaviour, which is outside this repository.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage, schema, I/O: <code>immune-adapter.js</code>
+(<code>readJSON</code>, <code>writeJSON</code>, <code>initSchema</code>,
+<code>saveDB</code>, <code>syncToSQLite</code>,
+<code>rebuildFTS</code>)</li>
+<li>Write path: <code>immune-adapter.js</code>
+(<code>cmdAddAntibody</code>, <code>cmdAddStrategy</code>,
+<code>cmdImport</code>, <code>cmdUpdate*</code>,
+<code>cmdFlushPending</code>, <code>findBestDuplicate*</code>)</li>
+<li>Retrieval: <code>immune-adapter.js</code> (<code>cmdGet*</code>,
+<code>rerankItems</code>, <code>cmdSearch</code>,
+<code>cmdGetContext</code>)</li>
+<li>Context assembly: <code>immune-inject.js</code>,
+<code>skill.md</code>, <code>agents/immune-scan.md</code></li>
+<li>Maintenance: <code>immune-adapter.js</code>
+(<code>cmdHousekeep</code>, <code>cmdFreeze</code>,
+<code>cmdRetentionCleanup</code>, <code>cmdIndexContext</code>)</li>
+<li>Install and update: <code>bin/immune.js</code>,
+<code>package.json</code>, <code>config.yaml</code></li>
+<li>Privacy: <code>sanitizer.js</code></li>
+<li>Benchmarks and self-checks: <code>benchmark/</code>,
+<code>cmdSimilarityTest</code>, <code>cmdRetrievalTest</code></li>
+<li>Dashboard: <code>tools/viz/immune-viz.js</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git</code>.</p>
+<ul>
+<li><strong>No delete, forget or reject verb.</strong>
+<code>git grep -n -i -E "'(delete|remove|forget|reject|prune|purge)[a-z-]*'" -- '*.js'</code>
+returns one keyword string in <code>benchmark/run-blind.js:41</code>
+only.</li>
+<li><strong>The archives have no reader.</strong>
+<code>git grep -n -E 'ARCHIVE_AB|ARCHIVE_CS' -- '*.js'</code> returns
+the constants and <code>cmdHousekeep</code>'s writes;
+<code>git grep -n -i 'archiv' -- tools/viz/immune-viz.js</code> returns
+nothing.</li>
+<li><strong><code>quality_gate</code> is never read.</strong>
+<code>git grep -n 'quality_gate' -- '*.js'</code> returns the schema,
+the two upserts and the two assignments in
+<code>cmdFlushPending</code>.</li>
+<li><strong><code>phase</code> has no reader.</strong>
+<code>git grep -n -E '\.phase|sessions_in_phase|parity' -- '*.js'</code>
+returns <code>getMigrationState</code>, <code>cmdMigrateAdvance</code>
+and the benchmark's own <code>phase</code>.</li>
+<li><strong>The adapter reads no configuration.</strong>
+<code>git grep -n -E 'config\.yaml|yaml' -- '*.js'</code> returns
+<code>bin/immune.js:22</code> and <code>immune-inject.js</code>
+only.</li>
+<li><strong>The sanitizer never touches a rule.</strong>
+<code>git grep -n 'sanitize(' -- '*.js'</code> returns
+<code>immune-adapter.js:1169</code>, <code>:1218</code>,
+<code>:1229</code>, <code>:1241</code> and
+<code>immune-inject.js:159</code>.</li>
+<li><strong>The skill never calls search.</strong>
+<code>git grep -n -E 'immune-adapter\.js (search|index|import|housekeep|retention-cleanup|index-context)' -- skill.md</code>
+returns nothing; the same pattern with <code>get-context</code> added
+matches line 72.</li>
+<li><strong>The hook never reads antibodies.</strong>
+<code>git grep -n -i 'antibod' -- immune-inject.js</code> returns
+nothing.</li>
+<li><strong>No <code>MEMORY_MD</code> override.</strong>
+<code>git grep -n 'process.env.MEMORY_MD'</code> returns nothing;
+<code>git grep -n 'process.env.EMBED_PORT'</code> matches once.</li>
+<li><strong>No scheduler.</strong>
+<code>git grep -n -E 'setInterval|setTimeout|cron|schedule' -- '*.js' ':!benchmark'</code>
+returns nothing.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|validfrom|event_time|occurred_at|expires?_?at' -- '*.js'</code>
+returns nothing.</li>
+<li><strong>No test files.</strong>
+<code>git ls-files | grep -i -E 'test|spec'</code> returns nothing.</li>
+<li><strong>Missing benchmark inputs.</strong>
+<code>git ls-files | grep -E 'generalization|learning-curve'</code>
+returns nothing.</li>
+<li><strong>No hook registration in code.</strong>
+<code>git grep -n -i -E 'settings\.json|UserPromptSubmit|hooks' -- .</code>
+returns the README's instructions and a comment in
+<code>immune-inject.js:5</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|citation'</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/Mnemoclaw/immune/commit/28248347372d027bd711b605dddda84481f17109"><code class="commit-id" title="28248347372d027bd711b605dddda84481f17109">28248347…</code></a>.
+First reading, from a full clone at tag v5.3.4. Screened first: no
+auto-run surface, nothing in the cooldown, and one unpinned surface,
+<code>package.json</code> with three floating ranges and no lockfile.
+The README asks users to register <code>immune-inject.js</code> as a
+<code>UserPromptSubmit</code> hook by hand. MIT, no rider. Nothing
+installed, built or run. No marks: the negative-pattern store is advice
+to a scan prompt, not a refusal on any write path, and every status-like
+field is model-set or unread (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
