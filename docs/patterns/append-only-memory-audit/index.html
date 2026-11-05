@@ -920,6 +920,22 @@ earlier bodies stay readable through <code>/history</code> and
 workspace, which drops its knowledge rows and the separate
 <code>workspace_audit</code> rows with no receipt
 (<code>:568-589</code>).</p>
+<p><strong><a href="../../systems/graphicle/">Graphicle</a> keeps its
+strict log for deletions.</strong> <code>am_deletion_receipts</code>
+takes one receipt per <code>memory.delete</code>,
+<code>source.forget</code>, connector delete, project delete and session
+forget, each with the requesting credential, a sequence and the previous
+receipt's digest. <code>deletion.verify</code> recomputes the chain, and
+nothing outside a tamper test updates or deletes a row
+(<code>crates/graphicle/src/deletion.rs:1880-1930</code>,
+<code>crates/graphicle/tests/it/deletion.rs:276-283</code>). A receipt
+names deleted documents by one-way hash, so it proves a deletion without
+keeping what was deleted. Saves and reviews go to
+<code>repo_memory_revisions</code> instead, and two paths rewrite its
+latest row's <code>data</code> in place
+(<code>crates/graphicle/src/claims.rs:237</code>,
+<code>crates/graphicle/src/workflows.rs:423</code>). <strong>A deletion
+log can be the strict one when the save journal is not.</strong></p>
 <p><strong><a
 href="../../systems/obsidian-second-brain/">obsidian-second-brain</a>
 appends the log line and leaves the log inside the tool's

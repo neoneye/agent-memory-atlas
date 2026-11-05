@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 780 reports.**
+**This page covers all 781 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7142,3 +7142,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 22,415 lines of Python in the package, 13,220 of them the memory core; 414 commits on master, 6 April – 10 July 2026, 373 from one author; 846 pytest functions run in CI with mock embeddings, not run here. No marks. The README's CTI 75.0% recomputes from the committed per-category results; its LoCoMo 22.0% is in no committed file.
 - Study when: you are building threat-intelligence memory and want regex entity extraction, alias tables, Sigma and YARA ingest and write-time poisoning defences to borrow.
 - Do not copy when: notes must stay current and correct over time, an agent must know what was superseded, or tenants and an audit trail must live in the store.
+
+### [`graphicle`](../systems/graphicle/)
+- Best idea: **a memory is withheld the moment the code symbol it quotes changes.** Every producer records the sha256 of each cited source and anchors a quote to its enclosing function, so a reviewed memory is withheld on an edit inside that symbol and stays current through other edits to the file.
+- Second idea: forgetting checked against a store that never saw the data. A forget deletes the source and every artifact computed while it was visible, verifies in the same transaction, and appends a hash-chained receipt that names documents by one-way hash; a test compares the result with a fork that never ingested them.
+- Biggest risk: **a rejection is keyed on the whole record.** A rejected claim's id hashes its wording, evidence and dates, and a forgotten document's tombstone hashes its id, so a reworded claim or the same text under a new id returns as a fresh draft or source.
+- Second risk: the approve verb is on no MCP tool, but `graphicle call learning.review` runs under the local owner session an agent's shell shares; two paths rewrite the latest journal revision in place; and in Core every workspace credential reads every project unless a revocation names it.
+- Most reusable component: `crates/graphicle/src/deletion.rs` with its fork-equivalence test in `crates/graphicle/tests/it/forgetting.rs:422-513` — a forget whose result is checked against a store that never saw the data.
+- Maturity impression: Apache-2.0; 270,028 lines of Rust outside tests, 144,619 of them the Graphify-port engine; 65 commits from 3 authors, 14 October – 3 November 2026, tag v0.1.12; 2,260 Rust and 209 Python test functions run in CI, not run here. Six marks, all but tombstone. The README's LoCoMo figures have no committed per-question records.
+- Study when: you want a coding agent to propose decisions about a codebase that a person approves, and that stop being served when the code they describe changes.
+- Do not copy when: memory must work unattended, a rejected statement must stay rejected in other words, or the reviewer must be someone the agent's shell cannot act as.

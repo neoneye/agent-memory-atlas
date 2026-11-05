@@ -1035,6 +1035,8 @@ decision.
 
 **[Cindy](../../systems/cindy/) keeps a value-keyed rejection for skill drafts and none for memories.** When a person declines a candidate skill, the nightly routine stores the candidate's title in `declined` and drops any later observation with that exact title before it reaches the candidate list (`apps/desktop/src/main/maker-ipc/botNightlyLearning.ts:553-560`, `:646`). It is consulted, which is the form this page argues for, and it is narrow: keyed on a model-written title, capped at 40 entries, and read by no other skill writer. Memory has nothing of the kind. `memory_delete`, consolidation and the nightly delete unlink the shard, and the next `memory_write` of the same claim lands as a new file.
 
+**[Graphicle](../../systems/graphicle/) keeps two durable rejections, both keyed on a record.** A forgotten connector document leaves a hash of connector and document id in `am_forgotten_sources`, which every import consults, so a resent document is skipped and the later turns of a forgotten session are blocked before they exist (`crates/graphicle/src/deletion.rs:242-276`, `crates/graphicle/src/connectors.rs:440`). A rejected claim keeps its `am_claims` row, whose id is the sha256 of the scope and the whole claim object, so the identical proposal replays as rejected (`crates/graphicle-memory/src/semantic.rs:183`, `crates/graphicle/src/claims.rs:58-66`). The same text under a new document id, or the claim reworded or citing another quote, is a new source or draft. **Hashing the evidence into the key turns a rejection into a deduplication.**
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

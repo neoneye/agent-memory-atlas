@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 71 systems of
-780 carry the mark, and <a
+781 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>71 systems of
-780 in the atlas carry the mark.</strong> The
+781 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -1707,6 +1707,21 @@ entries, and read by no other skill writer. Memory has nothing of the
 kind. <code>memory_delete</code>, consolidation and the nightly delete
 unlink the shard, and the next <code>memory_write</code> of the same
 claim lands as a new file.</p>
+<p><strong><a href="../../systems/graphicle/">Graphicle</a> keeps two
+durable rejections, both keyed on a record.</strong> A forgotten
+connector document leaves a hash of connector and document id in
+<code>am_forgotten_sources</code>, which every import consults, so a
+resent document is skipped and the later turns of a forgotten session
+are blocked before they exist
+(<code>crates/graphicle/src/deletion.rs:242-276</code>,
+<code>crates/graphicle/src/connectors.rs:440</code>). A rejected claim
+keeps its <code>am_claims</code> row, whose id is the sha256 of the
+scope and the whole claim object, so the identical proposal replays as
+rejected (<code>crates/graphicle-memory/src/semantic.rs:183</code>,
+<code>crates/graphicle/src/claims.rs:58-66</code>). The same text under
+a new document id, or the claim reworded or citing another quote, is a
+new source or draft. <strong>Hashing the evidence into the key turns a
+rejection into a deduplication.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

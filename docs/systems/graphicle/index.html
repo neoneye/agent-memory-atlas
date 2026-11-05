@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust code-graph and memory
+server for coding agents, whose agent-written memories wait for review
+and are withheld when a quoted source changes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Graphicle — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust code-graph and
+memory server for coding agents, whose agent-written memories wait for
+review and are withheld when a quoted source changes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Graphicle — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust code-graph and
+memory server for coding agents, whose agent-written memories wait for
+review and are withheld when a quoted source changes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Graphicle — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Graphicle",
+      "description": "A Rust code-graph and memory server for coding agents, whose agent-written memories wait for review and are withheld when a quoted source changes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Reviewed memory that goes stale with the
+code symbol it quotes</p>
+          <h1>Graphicle</h1>
+          <p class="document-deck">A Rust code-graph and memory server
+for coding agents, whose agent-written memories wait for review and are
+withheld when a quoted source changes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Graphicle-AI/graphicle">
+              <span>Source</span>
+              <strong>Graphicle-AI/graphicle</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Graphicle-AI/graphicle/commit/7b8e41b7f12f63ccd5185b59bf363994148820e0" title="7b8e41b7f12f63ccd5185b59bf363994148820e0">
+              <span>Analyzed revision</span>
+              <code>7b8e41b7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Graphicle-AI--graphicle" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Graphicle-AI--graphicle</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>270,028
+lines of Rust outside test directories and vendored grammars: 144,619 in
+the graph engine, 108,767 in the program, 17,177 in the memory library;
+37,623 lines of Python in tools, benchmarks, SDK and demo</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>65
+commits from 3 authors, 14 October – 3 November 2026, 55 of them from
+one; the pin is tag v0.1.12</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,260
+Rust test functions (1,024 in the program, 179 in the memory library,
+1,057 in the graph engine) and 209 Python test functions, run in CI on
+macOS and Linux; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Graphicle is one Rust program for coding agents: it indexes a
+repository into a code graph, a port of Graphify, and keeps a project
+memory beside it in one SQLite file, both served over one MCP server. A
+memory must quote its sources verbatim. Whatever an agent or a model
+writes is a draft that no read path serves until a credential holding
+<code>approve</code> accepts it, and a reviewed memory is withheld once
+a file, document or code symbol it quotes changes.</p>
+<p>Two mechanisms stand out. Staleness follows the code symbol a quote
+sits in, so an edit outside that symbol leaves the memory current.
+Forgetting deletes a source and everything derived from it, checks the
+result in the same transaction, appends a hash-chained receipt, and is
+tested against a fork that never ingested the source. The weak points
+sit beside that core. A rejection is keyed on the whole claim record, so
+a reworded claim returns as a fresh draft. The revision journal is
+rewritten in place on two paths. An agent with a shell can run the same
+<code>graphicle call learning.review</code> a person uses.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <code>repo_memories</code> row: a kind (decision,
+preference, procedure, task_state, note, observation, reflection), a
+title and body, a state, and a <code>data</code> object holding the
+evidence (<code>schema.sql:102-110</code>). Every producer passes
+through <code>dependencies</code>, which refuses a quote absent from a
+source the caller may read and records the sha256 of each source it
+rests on (<code>memory.rs:203-237</code>). A quote inside one code
+symbol is also anchored to that symbol's <code>stable_id</code> and
+revision.</p>
+<p>The stored state is one of three (<code>save</code>,
+<code>memory.rs:487-503</code>):</p>
+<ul>
+<li><strong>draft</strong> — written by <code>memory.propose</code>, an
+extraction or interpretation job, a refresh proposal,
+<code>reflect --retain</code>, <code>memory.import</code> or
+<code>memory.import_pack</code> (<code>operations.rs:169-232</code>,
+<code>claims.rs:106-116</code>, <code>workflows.rs:955-965</code>,
+<code>packs.rs:549-551</code>). Never recalled.</li>
+<li><strong>reviewed</strong> — written only by <code>note</code>, a
+member statement, and by <code>apply_review</code> approving a draft
+(<code>memory.rs:591-655</code>, <code>:668-760</code>).</li>
+<li><strong>retired</strong> — a rejected draft, a fact a later claim
+superseded, corrected or retracted, or a memory retired by
+<code>memory.state</code> (<code>claims.rs:182-216</code>,
+<code>operations.rs:150-155</code>).</li>
+</ul>
+<p>A fourth condition is derived on every read, not stored.
+<code>list_of</code> recomputes each memory's dependencies against the
+current sources and sets <code>stale</code> with reasons such as
+<code>symbol_changed:&lt;id&gt;</code>,
+<code>source_changed_or_unavailable:&lt;id&gt;</code> or
+<code>projection_pending</code> (<code>memory.rs:319-356</code>,
+<code>:399-452</code>). Every read path skips a memory that is not
+reviewed or is stale. A memory dies by retirement or by deletion;
+nothing decays or expires.</p>
+<p>The model-interpretation path adds claims.
+<code>propose_observations</code> validates a claim's quotes and stores
+it with an <code>ADD</code>, <code>KEEP</code>, <code>CONFIRM</code>,
+<code>SUPERSEDE</code>, <code>CORRECT</code> or <code>RETRACT</code>
+action as a draft memory plus an <code>am_claims</code> row
+(<code>claims.rs:32-136</code>). Approving a <code>SUPERSEDE</code>
+retires the target memory and stamps <code>invalid_at</code> from the
+new claim's <code>valid_at</code> (<code>claims.rs:139-262</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every agent or model write lands as a draft; only a caller with approve makes it reviewed, and a reviewed memory is served only while every source it quotes is unchanged</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every agent or model write lands as a draft; only a caller with approve makes it reviewed, and a reviewed memory is served only while every source it quotes is unchanged
+flowchart TD
+  subgraph writers[&quot;Writers holding propose&quot;]
+    direction TB
+    PM[&quot;propose_memory over MCP&lt;br/&gt;quotes must be verbatim&quot;]
+    PO[&quot;propose_observations&lt;br/&gt;claim id = hash of claim&quot;]
+    JOB[&quot;extract, reflect jobs&lt;br/&gt;configured model&quot;]
+    PM ~~~ PO ~~~ JOB
+  end
+  writers --&gt; DRAFT[&quot;state = draft&lt;br/&gt;no read serves it&quot;]
+  DRAFT --&gt; RV{&quot;learning.review&lt;br/&gt;approve permission&lt;br/&gt;browser app or CLI&quot;}
+  NOTE[&quot;note, a member&lt;br/&gt;statement, approve&lt;br/&gt;permission&quot;] --&gt; REV
+  RV --&gt;|&quot;approve,&lt;br/&gt;sources current&quot;| REV[&quot;state = reviewed&quot;]
+  RV --&gt;|&quot;reject&quot;| RET[&quot;state = retired&lt;br/&gt;claim row rejected&quot;]
+  REV --&gt; FRESH{&quot;every quoted file,&lt;br/&gt;symbol and document&lt;br/&gt;unchanged?&quot;}
+  FRESH --&gt;|&quot;yes&quot;| SERVE[&quot;recall, session start,&lt;br/&gt;memory.search&quot;]
+  FRESH --&gt;|&quot;no&quot;| STALE[&quot;stale, withheld&lt;br/&gt;symbol_changed:id&quot;]
+  SERVE ~~~ SUP
+  SUP[&quot;approved SUPERSEDE,&lt;br/&gt;CORRECT or RETRACT&lt;br/&gt;of a reviewed memory&quot;] --&gt; RET2[&quot;state = retired&quot;]
+  RET2 ~~~ FORGET
+  FORGET[&quot;memory.delete,&lt;br/&gt;source.forget,&lt;br/&gt;session forget&quot;] --&gt; GONE[&quot;rows deleted,&lt;br/&gt;receipt hash-chained&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three Cargo workspaces under <code>crates/</code>.
+<code>graphicle-graph</code> is the engine, a Rust port of Graphify
+0.9.95 with vendored tree-sitter grammars. <code>graphicle-memory</code>
+is a library with no network or model calls: passage ingestion, BM25,
+packing, temporal rules, recall selection and document deltas, reachable
+as Rust calls, JSON lines or a C ABI. <code>graphicle</code> is the
+program: the SQLite store, the permission model, MCP over stdio and
+HTTP, the browser app, the job worker, connectors and every CLI
+command.</p>
+<p>All state is one SQLite file in the data folder
+(<code>~/Library/Application Support/Graphicle</code> or
+<code>$XDG_DATA_HOME/graphicle</code>). The schema files are
+<code>schema.sql</code>, <code>workflow_schema.sql</code>,
+<code>temporal_schema.sql</code> and <code>product_schema.sql</code>.
+Several tables in them have no writer in Core
+(<code>gf_observations</code>, <code>gf_mental_models</code>,
+<code>gf_hints</code>, <code>gf_served</code>), kept so a store a
+commercial edition opened stays readable (<code>store_compat.rs</code>).
+An extension registry (<code>extension.rs</code>) is how other editions
+add operations.</p>
+<p>Optional backends: a Qdrant index the worker can query for the dense
+arm (<code>vector.rs:252</code>), a Neo4j projection of the graph
+(<code>graph.rs</code>), and answer models over Ollama,
+OpenAI-compatible, Anthropic, Gemini or Azure endpoints. Recall itself
+calls no model.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run beyond the binary. Install is a Homebrew tap, a
+release archive or <code>install.sh</code> piped from the latest
+release. <code>graphicle setup</code> syncs the folder, builds the
+graph, connects the agents it finds, installs capture hooks and git
+hooks, and backs up every file it changes;
+<code>graphicle disconnect</code> reverses it. No API key is needed to
+store or recall. The store is SQLite, inspectable with any client. A
+memory's <code>data</code> carries hashes the next read re-checks, so a
+hand edit to a cited source makes the memory stale rather than
+corrupting it. The only automatic network request is a daily release
+check.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Agent proposal.</strong> MCP <code>propose_memory</code>
+maps to <code>memory.propose</code> (<code>api.rs:1768-1773</code>),
+which requires <code>propose</code>, checks kind, sizes and 1–20 quotes
+of at least 8 characters, replays an idempotency key only for an
+identical proposal fingerprint, validates every quote through
+<code>dependencies</code>, anchors symbols, and saves a draft with
+authority <code>agent_proposed_draft</code>
+(<code>operations.rs:169-217</code>).</li>
+<li><strong>Member statement.</strong> <code>note</code> requires
+<code>approve</code>, validates evidence the same way, attaches recall
+metadata, handles <code>supersedes</code>, and saves as reviewed with
+authority <code>member_reviewed_statement</code>
+(<code>memory.rs:591-655</code>).</li>
+<li><strong>Review.</strong> <code>learning.review</code> →
+<code>review_memory</code> → <code>apply_review</code>. The draft's
+current revision must be given and a stale draft cannot be approved.
+Approval writes reviewed and rejection retired; a refresh draft is
+applied onto its target; <code>claims::apply_memory_review</code> moves
+the claim row (<code>memory.rs:657-760</code>,
+<code>claims.rs:139-262</code>).</li>
+<li><strong>Save and journal.</strong> <code>save</code> upserts the row
+under an optimistic revision check scoped to the repository, inserts a
+<code>repo_memory_revisions</code> row, invalidates caches, records
+dependencies and symbol pins, and appends a <code>memory_saved</code>
+event (<code>memory.rs:487-551</code>).</li>
+<li><strong>Recall.</strong> <code>context</code> and MCP
+<code>recall_project</code> build a snapshot of the sources and memories
+the principal may read, add each reviewed, non-stale memory as a
+candidate row (<code>query.rs:795-840</code>), rank with BM25 and
+optional arms, and pack.</li>
+<li><strong>Session start.</strong> The SessionStart hook prints open
+work state, the titles of current reviewed memories and the latest
+captured turns within 8,000 characters (<code>capture.rs:47</code>,
+<code>:1237-1300</code>).</li>
+<li><strong>Structured search.</strong> <code>memory.search</code> (MCP
+<code>search_project_memory</code>) applies the reviewed and fresh gate,
+selects a revision by <code>known_at</code>, then
+<code>recall::eligibility</code> on scope, validity and recall state
+(<code>structured_memory.rs:140-239</code>,
+<code>recall.rs:142-172</code>).</li>
+<li><strong>Forgetting.</strong> <code>memory.delete</code> deletes a
+memory with its dependents and historical versions and writes a receipt
+(<code>operations.rs:156-167</code>). <code>source.forget</code>,
+connector delete and project delete go through
+<code>deletion::forget</code> (<code>deletion.rs:1142</code>). Session
+forget installs a block on the session's later turns, then forgets its
+documents (<code>capture.rs:1099-1140</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>repo_memories</code> has <code>id</code>,
+<code>repository_id</code>, <code>kind</code>, <code>revision</code>,
+<code>state</code>, <code>title</code>, <code>body</code>,
+<code>data</code>, <code>created_at</code>, <code>updated_at</code>;
+<code>repo_memory_revisions</code> keeps one row per
+<code>(memory_id, revision)</code> with the full record
+(<code>schema.sql:102-110</code>). Inside <code>data</code>:
+<code>dependencies</code> (file path → sha256),
+<code>evidence_links</code>, <code>native_sources</code> (connector
+documents), <code>evidence</code> (the quotes), symbol links,
+<code>notes</code> (parent memories), <code>authority</code>, and for a
+reviewed draft a <code>review</code> object with maintainer, reason,
+decision, time and method.</p>
+<p><code>authority</code> labels where a memory came from:
+<code>agent_proposed_draft</code>,
+<code>unreviewed_model_interpretation</code>,
+<code>unreviewed_ai_draft</code>,
+<code>unreviewed_model_reflection</code>,
+<code>unreviewed_import</code>, <code>member_reviewed_statement</code>
+or <code>member_reviewed_ai_interpretation</code>. It is a label; the
+gate is <code>state</code>.</p>
+<p><strong>Validity.</strong> A structured note's <code>recall</code>
+object holds <code>name</code>, <code>aliases</code>,
+<code>scopes</code>, a recall <code>state</code> (<code>active</code>,
+<code>historical</code>, <code>resolved</code>,
+<code>open_question</code>), <code>valid_from</code>,
+<code>valid_to</code> and <code>superseded_by</code>
+(<code>recall.rs:12-18</code>). Record time is the journal's
+<code>created_at</code>. Claims hold <code>valid_at</code> and
+<code>invalid_at</code> from the source, <code>knowledge_at</code> from
+the proposal clock, and a <code>retirement</code> stamp when a later
+claim retires them (<code>claims.rs:118</code>, <code>:185</code>,
+<code>:200</code>). An ordinary note has only <code>created_at</code>
+and <code>updated_at</code>.</p>
+<p><strong>Scope.</strong> Every memory carries
+<code>repository_id</code>. The upsert's
+<code>WHERE repo_memories.repository_id=excluded.repository_id</code>
+refuses an id from another repository (<code>memory.rs:531-536</code>).
+Captured sessions are connector documents under an owner-only ACL, and
+<code>acl_allows</code> checks every connector document's ACL per
+credential (<code>memory.rs:74-160</code>).</p>
+<p><strong>Graph history.</strong> <code>gf_nodes</code> and
+<code>gf_edges</code> carry <code>valid_from_episode</code> and
+<code>valid_to_episode</code>, and <code>gf_timeline</code> holds
+<code>valid_us</code> beside <code>recorded_us</code>
+(<code>temporal_schema.sql:1-8</code>). The only producer in Core is the
+projection, which passes the recording time as both clocks
+(<code>graph_projection.rs:424-433</code>), so the graph's two axes are
+equal for every row Core writes.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is lexical first and calls no model. Passages and reviewed
+memories are ranked by Porter-stemmed BM25, with a speaker-scoped arm
+and focused evidence windows on by default. <code>query_variants</code>
+add further BM25 arms, and a configured local embedding profile adds a
+dense arm over <code>am_vectors</code> at weight 0.5
+(<code>query.rs:2465-2500</code>). A code-graph arm and document-to-code
+links contribute for code questions. Arms are fused by weighted
+reciprocal rank
+(<code>graphicle-memory/src/retrieval.rs:183-188</code>). Packing
+enforces a token ceiling counted with cl100k_base and cites every
+excerpt by path and lines.</p>
+<p>A memory enters recall as one more candidate, after the same
+eligibility gate structured search uses, up to
+<code>MAX_RECALL_MEMORIES</code> (<code>query.rs:806-825</code>). The
+packet's coverage reports stale, unapproved and omitted memory counts,
+so a caller can see what was withheld.</p>
+<p><code>memory.search</code> is a separate selector over structured
+notes only. <code>match_mode: "identity"</code> matches declared names
+and aliases with no fuzzy fallback; <code>as_of</code> filters by
+validity; <code>known_at</code> picks the revision recorded by then;
+<code>include_history</code> admits historical states. The response
+states <code>semantic_entailment_verified: false</code>.</p>
+<p>Failure modes the code admits: a memory whose quotes span two
+symbols, sit in a module header or cite prose keeps the whole-file rule,
+so any edit to the file withholds it. A paraphrased question with no
+lexical overlap and no dense arm configured finds nothing.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Four write channels. An agent proposes over MCP
+(<code>propose_memory</code>, <code>propose_observations</code>,
+<code>propose_memory_refresh</code>, published with
+<code>--allow-learning</code>). A configured model writes drafts through
+<code>extract</code>, <code>refresh</code> and
+<code>reflect --retain</code> jobs. Observer jobs write dated notes per
+source unit into <code>am_observer_notes</code>, derived evidence
+deleted with its source and not a memory row. A person writes reviewed
+notes directly or approves drafts.</p>
+<p>Every channel must quote. A quote that is not a substring of a
+current authorized source fails the write
+(<code>memory.rs:212-222</code>). Claims are validated in the library:
+speaker, modality, conditions, time basis, and a cited anchor for
+source-relative dates
+(<code>graphicle-memory/src/semantic.rs:36-196</code>).</p>
+<p><strong>Deduplication</strong> is by key, not content.
+<code>memory.propose</code> replays an idempotency key whose proposal
+fingerprint matches and refuses a mismatched one
+(<code>operations.rs:194-196</code>). A claim's id is the sha256 of its
+scope and whole claim object (<code>semantic.rs:183</code>), so an
+identical claim proposed again returns its prior row, rejected or not
+(<code>claims.rs:58-66</code>). Two contradictory member notes are both
+served. Supersession is explicit and needs the target's revision and a
+<code>valid_from</code> (<code>structured_memory.rs:41-94</code>).</p>
+<p>Captured sessions are sources, not memories. The Stop hook spawns a
+detached import of the completed turns into the agent-sessions
+connector, dropping <code>&lt;private&gt;</code> spans, redacting
+credentials and replacing tool payloads over 16 KiB with their size and
+hash (<code>capture.rs:41</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Proposals are synchronous and model-free: quote validation, an upsert
+and a journal row. A draft is never retrievable; a reviewed note is
+retrievable on commit. Session capture runs detached after each answer
+and never blocks the client. Extraction, refresh and reflection run only
+when asked, under <code>--max-calls</code> and token budgets. The opt-in
+observer queues a model round once uncovered connector text reaches
+<code>threshold_tokens</code>, 30,000 by default
+(<code>auto_observe.rs:35</code>). No pass rewrites the store. Staleness
+is recomputed for every memory on every listing, linear in the memory
+count, which is bounded by <code>lifecycle::MAX_MEMORIES</code>.
+Session-start injection is at most 8,000 characters, ahead of the first
+prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>graphicle setup</code> writes an MCP entry for each client it
+finds and, for Claude Code and Codex, capture hooks: SessionStart, Stop,
+PreCompact and SessionEnd for Claude Code, SessionStart, Stop and
+SessionEnd for Codex (<code>agent_setup.rs:1230-1246</code>). Optional
+guard hooks on PreToolUse redirect Bash, Grep, Read and Glob to the
+graph tools, and an optional UserPromptSubmit hook adds a context
+packet.</p>
+<p>Claude Code gets an essentials set of five tools. Other clients get
+the whole server, whose entry carries <code>--allow-learning</code> and
+therefore the three propose tools (<code>agent_setup.rs:365-388</code>).
+The agent can read, search, browse sessions and propose. It cannot
+approve, retire, delete or forget through a tool: the registry holds no
+such tool, and <code>tools/call</code> dispatches only registered names
+(<code>api.rs:2359-2365</code>). It cannot name a repository either,
+because the handler refuses a <code>repository_id</code> or
+<code>workspace_id</code> argument (<code>api.rs:2384-2386</code>). On a
+workspace connection it chooses among the projects the credential may
+read with <code>repo</code>.</p>
+<p><code>work_state_write</code> gives the agent append-only to-do
+state, shown at session start labelled as not reviewed and never used by
+recall or answers.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="who-can-approve">Who can approve</h3>
+<p>The gate is the <code>approve</code> permission on a credential. The
+owner and the <code>reviewer</code> role hold it; <code>agent</code>,
+<code>collector</code>, <code>runner</code> and <code>reader</code> do
+not (<code>store.rs:118-132</code>). No MCP tool reaches
+<code>learning.review</code>, <code>note</code>,
+<code>memory.state</code> or <code>memory.delete</code>. The one
+model-review path in <code>apply_review</code>, a
+<code>model_review</code> argument stamped internally, has no caller in
+Core (<code>memory.rs:660</code>).</p>
+<p>A person approves in the browser app, whose form appears only for a
+draft and a credential with <code>approve</code>
+(<code>web/app.js:66</code>), or with
+<code>graphicle call learning.review</code>. That command and
+<code>graphicle mcp</code> both run with the saved local session, the
+workspace owner's capability unless <code>graphicle login</code> stored
+another key (<code>cli.rs:1665</code>, <code>local.rs:78-103</code>). An
+agent with a general shell in the same account can therefore run it; the
+committed test approves exactly that way
+(<code>easy_setup.rs:1458-1466</code>). The <code>maintainer</code>
+field is a supplied string.</p>
+<h3 id="staleness-as-a-trust-decision">Staleness as a trust
+decision</h3>
+<p>A reviewed memory is not sent back for review when its source
+changes; it is withheld. Staleness covers a changed file, a changed or
+missing symbol, a moved file followed by content, a pending graph
+projection, an inaccessible source and an inaccessible parent memory
+(<code>memory.rs:319-356</code>, <code>:455-484</code>). A memory
+derived from a source the reader cannot read is invisible to that
+reader.</p>
+<h3 id="forgetting">Forgetting</h3>
+<p><code>deletion.rs</code> states its own contract: the store after
+forgetting should equal one that never ingested the documents. It
+deletes originals and versions, single-source derivatives (observer
+notes, vectors, extraction drafts) and every multi-source artifact
+computed since the documents first became visible (caches, jobs, events,
+model drafts). It verifies in the same transaction and records residue
+it does not own rather than deleting it (<code>deletion.rs:1-31</code>,
+<code>:139-156</code>). Forgotten connector documents leave a one-way
+hash keyed on connector and document id in
+<code>am_forgotten_sources</code>, which imports consult
+(<code>deletion.rs:242-276</code>). Backups, provider retention and
+exports taken before the deletion are listed as not covered.</p>
+<h3 id="journal-integrity">Journal integrity</h3>
+<p><code>repo_memory_revisions</code> is the history
+<code>memory.history</code> and <code>known_at</code> read. Two paths
+rewrite the latest row's <code>data</code> in place: approving a
+superseding claim removes the target from <code>notes</code> and adds
+<code>historical_target</code> (<code>claims.rs:219-240</code>), and a
+workflow's visibility inheritance (<code>workflows.rs:408-426</code>).
+The text and state of a revision are not touched.</p>
+<h3 id="access">Access</h3>
+<p>In Core, <code>repo_readable</code> lets every non-owner credential
+read every project in its workspace unless a <code>revoked</code> row
+names it (<code>graph_projection.rs:1583-1612</code>). Narrower
+repository scopes come from an installed extension. Connector documents
+carry their own ACL and default to owner-only.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — earned.
+<code>draft</code>, <code>reviewed</code> and <code>retired</code> are a
+stored field, every agent and model writer produces <code>draft</code>,
+and every read path filters to <code>reviewed</code> and not stale:
+recall (<code>query.rs:806-815</code>), the indexed query
+(<code>indexed_query.rs:503-508</code>), session start
+(<code>capture.rs:1252-1260</code>), structured search and claim reads
+(<code>claims.rs:11-30</code>).</li>
+<li><strong><code>bitemporal</code></strong> — earned on structured
+notes and claims. <code>valid_from</code> and <code>valid_to</code> are
+set by <code>note</code> and <code>propose_memory</code> callers, and
+<code>known_at</code> selects by the journal's record time
+(<code>structured_memory.rs:144-185</code>). The code graph's two clocks
+are equal for every row Core writes.</li>
+<li><strong><code>scope_enforced</code></strong> — earned.
+<code>list_of</code> filters on <code>repository_id</code>
+(<code>memory.rs:405-409</code>), resolved by <code>repo()</code>
+against workspace and revocation (<code>store.rs:1214-1226</code>); the
+model cannot supply the key over MCP.</li>
+<li><strong><code>audit_log</code></strong> — earned on
+<code>am_deletion_receipts</code>: an append-only, hash-chained receipt
+per deletion with sequence, previous digest, operation and requesting
+credential, never updated or deleted outside a tamper test
+(<code>deletion.rs:1880-1930</code>). Saves and reviews are journalled
+in <code>repo_memory_revisions</code>, with the in-place rewrites
+above.</li>
+<li><strong><code>human_review</code></strong> — earned on reach. Drafts
+are never served, the approve verb is on no tool the agent holds, and
+real producers fill the queue that the app drains. The limit is the
+shell, as stated above.</li>
+<li><strong><code>negative_eval</code></strong> — earned; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld.
+<code>am_forgotten_sources</code> is keyed on a hash of connector and
+document id, so the same text under another document id is imported. A
+rejected claim's row is keyed on the hash of the whole claim object,
+evidence, conditions and dates included, so only an identical proposal
+is refused. A reworded claim, or one citing another quote, is a new
+draft.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI builds, lints and tests each crate on macOS and Linux, with a
+Windows job and an MSRV job (<code>.github/workflows/ci.yml</code>). I
+did not run any test.</p>
+<p>The memory tests are integration tests in
+<code>crates/graphicle/tests/it/</code>. <code>memory_symbols.rs</code>
+holds the staleness matrix: a quote in a symbol, an edit inside it,
+beside it, above it, a move, a rename, and the expected served or
+withheld outcome (<code>:294-380</code>). <code>forgetting.rs</code>
+forks a store, ingests two private documents into one copy, runs
+embedding, observer, extraction and four answer probes in both, forgets
+the documents, reruns, and asserts equal state digests, equal answers
+and a verified receipt (<code>:422-513</code>). <code>deletion.rs</code>
+rewrites a stored receipt and asserts the chain reports broken
+(<code>:276-283</code>).</p>
+<p><code>negative_eval</code> rests on two cases with populated
+controls. <code>project_identity.rs:378-379</code> asserts that
+<code>context</code> run inside folder <code>a</code> contains
+<code>Notes of a.</code> and not <code>Notes of b.</code>, in one
+output. <code>forgetting.rs</code> asserts the cardiologist fact reached
+an answer before forgetting (<code>:440-444</code>) and reaches none
+after (<code>:492-497</code>), against a fork whose derived tables are
+asserted non-empty (<code>:474-490</code>). The answer is the first
+retrieved excerpt echoed by a stub model, so the case tests retrieval,
+not a model. A third, <code>workspace_scope.rs:721-800</code>, asserts a
+revoked project absent from recall, listing and MCP calls; its
+<code>all()</code> over cited projects would also pass on an empty
+list.</p>
+<p>The README's memory comparison, LoCoMo-10 87.7 against seven systems
+with call counts, is documentation only.
+<code>docs/benchmarks.md:1352-1353</code> states that the protocol,
+per-question verdicts and analysis scripts are not in the repository, so
+no memory figure recomputes from the tree. The code-graph speed and
+parity figures have committed JSON under <code>docs/evidence/</code> and
+<code>docs/benchmarks/</code>, which this reading did not recompute. No
+paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make every non-human write a draft and keep the approve verb
+off the agent's tool list.</strong> A permission name per verb
+(<code>propose</code> against <code>approve</code>) and a registry that
+maps tool names to operations make the boundary a table you can
+read.</li>
+<li><strong>Quote, then hash what the quote sits on.</strong> A memory
+that records the sha256 of each cited source can be withheld exactly
+when its ground moves, with no sweep.</li>
+<li><strong>Anchor a quote to the smallest enclosing symbol.</strong> It
+turns "any edit to the file" into "an edit to the function", which is
+what makes code-tied memory usable on an active repository.</li>
+<li><strong>Test forgetting against a fork that never saw the
+data.</strong> A state digest over every table, with minted ids masked,
+is a deletion claim a reader can check.</li>
+<li><strong>Chain deletion receipts and name deleted things by one-way
+hash.</strong> The receipt then proves a deletion without keeping what
+was deleted.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A rejection keyed on the whole proposal.</strong> Hashing
+evidence and wording into the key lets the next paraphrase walk past the
+rejection. Key the refusal on the normalised statement and its
+subject.</li>
+<li><strong>A journal rewritten for convenience.</strong> Two in-place
+updates of the latest revision are enough to make <code>known_at</code>
+answer with data never recorded at that time.</li>
+<li><strong>An approval command reachable by the session the agent runs
+under.</strong> A separate reviewer credential, or a terminal check on
+the approve path, is what makes "a person approved" mean it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team or a single developer who wants a coding agent to
+accumulate decisions about a codebase and will review what it proposes.
+The review step is the product: without someone approving drafts in the
+app, recall serves only what a member wrote as a note. It is a large,
+young, single-vendor binary with a commercial edition beside it, so
+adopting it means trusting a release channel rather than reading the
+code you run. Walk away if you want unattended memory, conversational
+personal memory with no code behind it, or a library to embed rather
+than a program to run.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often reviewed memories go stale on a busy repository, and
+whether reviewers approve refresh drafts or let memories lapse.</li>
+<li>Whether the commercial edition's extension narrows
+<code>repo_readable</code> and separates the reviewer credential from
+the session the agent runs under.</li>
+<li>What the unpublished memory-benchmark records show per question, and
+which retrieval switches the LoCoMo-10 arm used.</li>
+<li>How the per-read staleness pass performs at the memory-count
+bound.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>crates/graphicle/src/schema.sql</code>,
+<code>workflow_schema.sql</code>, <code>temporal_schema.sql</code>,
+<code>store.rs</code>, <code>store_compat.rs</code></li>
+<li>Memory lifecycle: <code>memory.rs</code>,
+<code>operations.rs</code>, <code>claims.rs</code>,
+<code>structured_memory.rs</code>, <code>symbols.rs</code>,
+<code>symbol_links.rs</code>, <code>packs.rs</code></li>
+<li>Retrieval: <code>query.rs</code>, <code>indexed_query.rs</code>,
+<code>memory_evidence.rs</code>,
+<code>crates/graphicle-memory/src/retrieval.rs</code>,
+<code>recall.rs</code>, <code>packing.rs</code></li>
+<li>Capture and context: <code>capture.rs</code>,
+<code>prompt_hook.rs</code>, <code>work_state.rs</code>,
+<code>agent_setup.rs</code></li>
+<li>Background: <code>jobs.rs</code>, <code>workflows.rs</code>,
+<code>observer.rs</code>, <code>auto_observe.rs</code></li>
+<li>Forgetting: <code>deletion.rs</code></li>
+<li>MCP, API, CLI, app: <code>api.rs</code>, <code>cli.rs</code>,
+<code>web/app.js</code></li>
+<li>Tests: <code>crates/graphicle/tests/it/forgetting.rs</code>,
+<code>deletion.rs</code>, <code>memory_symbols.rs</code>,
+<code>project_identity.rs</code>, <code>workspace_scope.rs</code>,
+<code>easy_setup.rs</code>, <code>structured_memory.rs</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No MCP tool maps to an approve-level memory verb.</strong>
+<code>git grep -n -E '"(learning\.review|note|memory\.state|memory\.delete)", *(true|false)\)' -- crates/graphicle/src/api.rs</code>
+returns nothing; the same pattern with <code>memory\.propose</code>
+matches <code>api.rs:1773</code>.</li>
+<li><strong>The model-review path has no caller.</strong>
+<code>git grep -n 'apply_review(' -- crates</code> returns the
+definition and the member call at <code>memory.rs:660</code>, which
+passes <code>None</code>.</li>
+<li><strong>Only two writers set a memory reviewed.</strong>
+<code>git grep -n -E 'memory::save\(' -- crates/graphicle/src</code>
+lists the callers outside <code>memory.rs</code>; every one passes
+<code>draft</code> or <code>retired</code> except
+<code>structured_memory.rs:113</code>, which re-saves a reviewed memory
+unchanged in state, and the in-file callers at
+<code>memory.rs:642</code> and <code>:706</code> are <code>note</code>
+and <code>apply_review</code>.</li>
+<li><strong>Receipts are never rewritten outside a test.</strong>
+<code>git grep -n -E '(DELETE FROM|UPDATE) am_deletion_receipts' -- crates</code>
+returns <code>tests/it/deletion.rs:278</code> only.</li>
+<li><strong>The journal is rewritten on two paths.</strong>
+<code>git grep -n 'UPDATE repo_memory_revisions' -- crates</code>
+returns <code>claims.rs:237</code>, <code>workflows.rs:423</code> and
+two test fixtures.</li>
+<li><strong>The graph timeline has one producer.</strong>
+<code>git grep -n -E 'temporal_graph::observe\(|^ *observe\($' -- crates/graphicle/src</code>
+returns <code>graph_projection.rs:425</code> and the migration baseline
+at <code>temporal_graph.rs:34</code>.</li>
+<li><strong>Edition tables with no Core writer.</strong>
+<code>git grep -n -E 'INTO (gf_observations|gf_mental_models|gf_hints|gf_served|gf_outcomes|am_alias_proposals|gf_alias_proposals|am_entities|am_entity_links)' -- crates/graphicle/src crates/graphicle-memory/src</code>
+returns the two entity writes in <code>claims.rs</code> only.</li>
+<li><strong>No value-keyed rejection.</strong>
+<code>git grep -n -E 'am_forgotten_sources|state=.rejected.' -- crates/graphicle/src</code>
+returns the id-hash tombstone in <code>deletion.rs</code> and the claim
+rejection at <code>claims.rs:158</code>.</li>
+<li><strong>Agent instructions name no approval command.</strong>
+<code>git grep -n -i -E 'learning\.review' -- crates/graphicle/src/agent_instructions.rs crates/graphicle/src/muse_code_skill.md packaging</code>
+returns nothing.</li>
+<li><strong>No memory-benchmark records.</strong>
+<code>git ls-files | /usr/bin/grep -i -E 'locomo|longmemeval|beam|verdict'</code>
+returns one qualification script and licence texts.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md docs crates/graphicle/README.md crates/graphicle-memory/README.md</code>
+returns two lines of <code>docs/code-signing.md</code> describing a
+fetcher.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/Graphicle-AI/graphicle/commit/7b8e41b7f12f63ccd5185b59bf363994148820e0"><code class="commit-id" title="7b8e41b7f12f63ccd5185b59bf363994148820e0">7b8e41b7…</code></a>.
+First reading, from a full clone at tag v0.1.12. Screened first: one
+auto-run surface (<code>server.json</code>, an MCP Registry manifest
+naming release <code>.mcpb</code> archives by sha256), sixteen cargo
+<code>build.rs</code> files, nine manifests and lockfiles inside the
+seven-day cooldown, and <code>sdk/python/pyproject.toml</code> with no
+lockfile. Apache-2.0, no rider in any of the four licence files. Nothing
+installed, built or run. Six marks: drafts gate recall and only
+<code>approve</code> clears them, structured notes carry validity beside
+journal time, deletion receipts are hash-chained; the tombstone is
+withheld because rejection is keyed on the record (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
