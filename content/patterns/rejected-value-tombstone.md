@@ -531,6 +531,8 @@ first row's reason and time.
 
 **[MGI-Mind](../../systems/mgi-mind/) needs no rejection table, because a fact's id is its value.** The id is a UUIDv5 of subject, predicate and object, so a re-assertion lands on the row an invalidate marked `valid = false`, and `add_fact_core` reads that field under the duel's locks and returns verdict `invalidated` without writing. Every fact writer reaches that function — MCP, HTTP, CLI, ingest and the extractor — and only `restore` clears it, a verb the agent also holds. The match is the exact string, so a change of case walks past, and a value that merely lost a duel is not covered: re-adding it starts a fresh duel it can win.
 
+[KYB](../../systems/kyb/) flags a revival and accepts it. Deleting a knowledge entry is an admin-only retraction that the snapshot search dates, and a later create of the same key, checked against every key that ever existed, answers `revived: true` with a hint to read the history first (`src/main.rs:488-536`). The marker is keyed on the entry's key, so the revived write lands, and the same statement under another key is a new entry with nothing to compare it against.
+
 ### Sorted by what actually stops the value
 
 The mark covers four different mechanisms. The table sorts the holders this page

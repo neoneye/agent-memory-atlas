@@ -250,6 +250,8 @@ gains a closed copy and an open copy that both claim validity from the start.
 
 [MGI-Mind](../../systems/mgi-mind/) has a world-time start and a record-time end. `valid_from` is written only when a caller passes it to `mind_fact add`, HTTP `/fact/add` or `mgimind fact add --valid-from`, and `query_fact_as_of` with `world_time` tests it in place of `created_at`, falling back per fact (`src/knowledge.rs:930-954`). `valid_until` is the clock at retirement on both axes, and the code comment beside the world-time test says a world-time end would need its own field. A successor dated into the past therefore overlaps its predecessor on the world axis until the moment it was recorded, and the one committed case queries an instant outside that overlap. `valid_from` is stored as given and compared as a string.
 
+[KYB](../../systems/kyb/) has one clock and reads it correctly. `as_of` resolves each key's newest version committed at or before T, drops a key whose dated retraction marker is newer, and only then lets that version match the words and filters, so a superseded value that still says the word cannot answer (`src/index.rs:659-670`, `:685-745`). The markers are published with the index documents as one generation. The world-time fields beside it, an incident's `started_at` to `resolved_at` and its `affected` windows, are stored and returned, and no query reads them.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal

@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **782 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **783 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -401,6 +401,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/knowledge-worker/"><span class="az-id">knowledge-worker</span><span class="az-what">The excerpt has to appear in the source</span><code class="az-repo">rahulmranga/knowledge-worker</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/kube-coder/"><span class="az-id">kube-coder</span><span class="az-what">Scope on every retrieval arm</span><code class="az-repo">imran31415/kube-coder</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/kwipu/"><span class="az-id">Kwipu</span><span class="az-what">Notes as a graph, answers as citations</span><code class="az-repo">benmaster82/Kwipu</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/kyb/"><span class="az-id">KYB</span><span class="az-what">A shared git canon whose past answers come out right</span><code class="az-repo">alex09x/kyb</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 </ul>
 
 ## L

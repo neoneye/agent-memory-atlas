@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 782 reports.**
+**This page covers all 783 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7162,3 +7162,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 18,781 lines of Python outside tests, 101 commits reachable from the pin, 16 June – 23 July 2026; 289 pytest functions run in CI, not run here. No marks; two exact-list negative cases test a governance package the shipped read path never engages, and the synthetic eval backend returns each case's own expected hit.
 - Study when: you run Hermes with Hindsight and GBrain on your own Linux host and want rebuild, health and alerting jobs and a recall diagnostic around them.
 - Do not copy when: the agent must receive the recall each turn, two profiles share a Hindsight bank, or ranking must work for topics other than one person's.
+
+### [`kyb`](../systems/kyb/)
+- Best idea: **a snapshot chosen before the query is matched.** `as_of` picks each key's version current at T, drops a key whose dated retraction marker is newer, and only then lets that version match, so an old wording or status cannot answer for a key whose current version no longer says it.
+- Second idea: retraction markers published with the index documents as one generation, so a search that began before a rebuild judges by its own markers; and a create that answers `revived` when a deliberately retracted key comes back.
+- Biggest risk: **any writer overwrites any key.** One flat key space, a knowledge upsert with no expected version and no trust state, so two agents disagreeing about a host resolve by write order and the first version survives only in history.
+- Second risk: `KYB_AUTH` defaults to off, which grants every caller admin, retraction included; a token is a role and never a scope; and a secret the seven regexes miss stays in git history after a retraction.
+- Most reusable component: `current_version_per_key` and `collapse_to_latest_per_key` in `src/index.rs:685-800`, with the generation-pairing test at `src/index.rs:1324-1362`.
+- Maturity impression: MIT; 7,772 lines of Rust in src/ outside tests; 245 commits from one author, 22 July – 3 November 2026, release 0.3.3; 230 Rust test functions and 14 CI scripts, not run here. One mark, `negative_eval`. The README's search-quality table has no committed base or results.
+- Study when: you want an operations team's agents to share what they learn about hosts, deploys and incidents in a git repository a person can read and revert, with correct answers about the past.
+- Do not copy when: tenants or projects must not read each other's memory, two writers to one key must detect the conflict, or an agent's claim must be checked before others act on it.

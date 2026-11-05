@@ -522,6 +522,16 @@ successor dated into the past therefore overlaps its predecessor on the
 world axis until the moment it was recorded, and the one committed case
 queries an instant outside that overlap. <code>valid_from</code> is
 stored as given and compared as a string.</p>
+<p><a href="../../systems/kyb/">KYB</a> has one clock and reads it
+correctly. <code>as_of</code> resolves each key's newest version
+committed at or before T, drops a key whose dated retraction marker is
+newer, and only then lets that version match the words and filters, so a
+superseded value that still says the word cannot answer
+(<code>src/index.rs:659-670</code>, <code>:685-745</code>). The markers
+are published with the index documents as one generation. The world-time
+fields beside it, an incident's <code>started_at</code> to
+<code>resolved_at</code> and its <code>affected</code> windows, are
+stored and returned, and no query reads them.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

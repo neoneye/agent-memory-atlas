@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 782 reports.</strong></p>
+<p><strong>This page covers all 783 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32557,6 +32557,41 @@ diagnostic around them.</li>
 <li>Do not copy when: the agent must receive the recall each turn, two
 profiles share a Hindsight bank, or ranking must work for topics other
 than one person's.</li>
+</ul>
+<h3 id="kyb"><a href="../systems/kyb/"><code>kyb</code></a></h3>
+<ul>
+<li>Best idea: <strong>a snapshot chosen before the query is
+matched.</strong> <code>as_of</code> picks each key's version current at
+T, drops a key whose dated retraction marker is newer, and only then
+lets that version match, so an old wording or status cannot answer for a
+key whose current version no longer says it.</li>
+<li>Second idea: retraction markers published with the index documents
+as one generation, so a search that began before a rebuild judges by its
+own markers; and a create that answers <code>revived</code> when a
+deliberately retracted key comes back.</li>
+<li>Biggest risk: <strong>any writer overwrites any key.</strong> One
+flat key space, a knowledge upsert with no expected version and no trust
+state, so two agents disagreeing about a host resolve by write order and
+the first version survives only in history.</li>
+<li>Second risk: <code>KYB_AUTH</code> defaults to off, which grants
+every caller admin, retraction included; a token is a role and never a
+scope; and a secret the seven regexes miss stays in git history after a
+retraction.</li>
+<li>Most reusable component: <code>current_version_per_key</code> and
+<code>collapse_to_latest_per_key</code> in
+<code>src/index.rs:685-800</code>, with the generation-pairing test at
+<code>src/index.rs:1324-1362</code>.</li>
+<li>Maturity impression: MIT; 7,772 lines of Rust in src/ outside tests;
+245 commits from one author, 22 July – 3 November 2026, release 0.3.3;
+230 Rust test functions and 14 CI scripts, not run here. One mark,
+<code>negative_eval</code>. The README's search-quality table has no
+committed base or results.</li>
+<li>Study when: you want an operations team's agents to share what they
+learn about hosts, deploys and incidents in a git repository a person
+can read and revert, with correct answers about the past.</li>
+<li>Do not copy when: tenants or projects must not read each other's
+memory, two writers to one key must detect the conflict, or an agent's
+claim must be checked before others act on it.</li>
 </ul>
         </article>
       </div>

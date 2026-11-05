@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 782 of 782 screened at the report's current pin.**
+**Progress: 783 of 783 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 371 |
+| Repositories with an auto-run surface (`RUNS`) | 372 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 342 |
-| Repositories with build-time execution (`EXEC`) | 569 |
+| Repositories with build-time execution (`EXEC`) | 570 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -188,6 +188,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`kleos`](../../content/systems/kleos.md) | `.githooks/`, `hooks/` |
 | [`klypix-mcp`](../../content/systems/klypix-mcp.md) | `server.json` |
 | [`knowl`](../../content/systems/knowl.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
+| [`kyb`](../../content/systems/kyb.md) | `server.json` |
 | [`langchain`](../../content/systems/langchain.md) | `.devcontainer/devcontainer.json`, `.mcp.json`, `.vscode/settings.json` |
 | [`leankg`](../../content/systems/leankg.md) | `.claude-plugin/` |
 | [`leteo`](../../content/systems/leteo.md) | `.claude-plugin/`, `plugin/claude-code/.claude-plugin/plugin.json`, `plugin/claude-code/.mcp.json`, `plugin/claude-code/hooks/`, `plugin/claude-code/hooks/hooks.json`, `plugin/zcode/.mcp.json`, `plugin/zcode/hooks/`, `plugin/zcode/hooks/hooks.json` |

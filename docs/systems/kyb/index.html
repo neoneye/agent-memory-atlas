@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust HTTP and MCP server keeping
+an agent fleet's infrastructure notes, incidents and tasks as Markdown
+in git, searched by BM25 and vectors.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="KYB — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust HTTP and MCP server
+keeping an agent fleet's infrastructure notes, incidents and tasks as
+Markdown in git, searched by BM25 and vectors.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KYB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust HTTP and MCP server
+keeping an agent fleet's infrastructure notes, incidents and tasks as
+Markdown in git, searched by BM25 and vectors.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>KYB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "KYB",
+      "description": "A Rust HTTP and MCP server keeping an agent fleet's infrastructure notes, incidents and tasks as Markdown in git, searched by BM25 and vectors.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A shared git canon whose past answers come
+out right</p>
+          <h1>KYB</h1>
+          <p class="document-deck">A Rust HTTP and MCP server keeping an
+agent fleet's infrastructure notes, incidents and tasks as Markdown in
+git, searched by BM25 and vectors.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/alex09x/kyb">
+              <span>Source</span>
+              <strong>alex09x/kyb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/alex09x/kyb/commit/0934013b8d15ce0e9041a9fc5d41374995779c2a" title="0934013b8d15ce0e9041a9fc5d41374995779c2a">
+              <span>Analyzed revision</span>
+              <code>0934013b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/alex09x--kyb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>alex09x--kyb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>7,772
+lines of Rust in src/ outside tests: 1,900 in main.rs, 999 in the MCP
+bridge, 846 in the index; a 3,833-line web console and a 995-line Bash
+CLI beside it</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>245
+commits from one author under four git identities that .mailmap joins,
+22 July – 3 November 2026; release 0.3.3</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>230
+Rust test functions in 6,455 lines, many expanded by rstest cases (the
+README says 421 cases), plus 14 shell, Python and Node scripts in CI;
+none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>KYB (Know Your Business) is a single Rust server that keeps a fleet's
+shared operational memory — which hosts and services exist, what broke,
+what is pending — as Markdown files in one git repository. It serves
+that memory over HTTP, a stateless MCP endpoint and a web console. Its
+strength is time: every write is a commit, and a point-in-time query
+picks each key's version current at that instant before it matches a
+word, with retractions dated in the index. Its weakness is the write
+side: one flat key space, any writer overwrites any key with no version
+check, and whatever an agent writes is current.</p>
+<p>There is no model on the write path and no scope on the read path. A
+token grants a role, never a subset of entries. One mark is earned,
+<code>negative_eval</code>, on the snapshot search's retraction tests. A
+retracted key that is written again is reported as <code>revived</code>
+and accepted, which is the nearest thing to a tombstone in the tree.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>entry</strong>: a key, a title, a Markdown
+body and frontmatter, stored at
+<code>&lt;kind&gt;/&lt;key&gt;.md</code>. The key's prefix fixes the
+kind — <code>inc-</code> for an incident report, <code>task-</code> for
+a task, anything else knowledge (<code>src/store.rs:22-30</code>,
+<code>src/model.rs:305-330</code>). A write with identical content is a
+no-op (<code>same_content</code>, <code>src/model.rs:250-274</code>).
+Any other write replaces the file and commits it, so the commit sha is
+the version id (<code>Store::upsert</code>,
+<code>src/store.rs:305-321</code>).</p>
+<p>An entry is in one of four positions, all derived from git rather
+than stored as a field:</p>
+<ul>
+<li><strong>live</strong> — the file is in the tree; default search,
+<code>GET</code> and listings see it.</li>
+<li><strong>superseded</strong> — an older commit's blob; only
+<code>history=true</code>, <code>as_of</code>,
+<code>changed_between</code> and <code>GET ?at=&lt;sha&gt;</code> see
+it.</li>
+<li><strong>archived</strong> — an incident resolved or a task done or
+dropped; the file leaves the tree in the same locked write, and its last
+version stays in default search (<code>archive_locked</code>,
+<code>src/main.rs:719-744</code>).</li>
+<li><strong>retracted</strong> — knowledge deleted by an admin; it
+leaves default search and <code>GET</code>, history keeps it, and the
+index records the instant.</li>
+</ul>
+<p>A retracted key can always be written again. The create then answers
+<code>revived: true</code> with a hint to read the history first
+(<code>src/main.rs:488-536</code>). Nothing in the system judges whether
+an entry is true. The MCP instructions and the skill ask the agent to
+write back what it verified (<code>src/mcp.rs:65-71</code>), so belief
+is whatever the last writer of a key said.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a version is current from its commit until the next commit to its key; a retraction is a dated marker the snapshot search reads, and writing the key again is accepted and flagged</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a version is current from its commit until the next commit to its key; a retraction is a dated marker the snapshot search reads, and writing the key again is accepted and flagged
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    CLI[&quot;kyb CLI and web console&quot;]
+    MCP[&quot;MCP tool call&lt;br/&gt;replayed as HTTP&quot;]
+    CLI ~~~ MCP
+  end
+  writers --&gt; LOCK[&quot;one write lock&lt;br/&gt;validate, secret regexes&quot;]
+  LOCK --&gt; COMMIT[&quot;git commit&lt;br/&gt;sha = version id&quot;]
+  COMMIT --&gt; LIVE[&quot;live: file in tree&lt;br/&gt;default search&quot;]
+  LIVE --&gt;|&quot;same key rewritten&quot;| SUP[&quot;superseded version&lt;br/&gt;history and as_of only&quot;]
+  LIVE --&gt;|&quot;incident or task closed&quot;| ARC[&quot;archived: out of tree&lt;br/&gt;still in default search&quot;]
+  LIVE --&gt;|&quot;admin deletes knowledge&quot;| RET[&quot;retracted: out of tree&lt;br/&gt;dated marker in index&quot;]
+  RET --&gt; SNAP{&quot;as_of T:&lt;br/&gt;newest version at T&lt;br/&gt;newer than any marker?&quot;}
+  SUP --&gt; SNAP
+  SNAP --&gt;|&quot;yes&quot;| ANS[&quot;answers for its key&quot;]
+  SNAP --&gt;|&quot;no&quot;| GONE[&quot;no row for the key&quot;]
+  RET --&gt;|&quot;same key written again&quot;| REV[&quot;accepted as created&lt;br/&gt;revived: true&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>kyb-server</code> is one axum binary. <code>build_app</code>
+merges the HTTP router with an <code>/mcp</code> router that replays
+tool calls through the same router (<code>src/main.rs:290-327</code>).
+Writes are serialised by one <code>tokio::Mutex</code> around the
+tantivy <code>IndexWriter</code>; reads take no lock
+(<code>src/main.rs:43-50</code>).</p>
+<ul>
+<li><strong>Canon.</strong> A git repository opened per operation
+through <code>git2</code>, initialised on first start; flat pre-v2
+layouts migrate on open (<code>Store::open</code>,
+<code>src/store.rs:114-122</code>). There is no remote and no push.</li>
+<li><strong>Index.</strong> Tantivy, rebuilt from the whole history on
+every start, with a head document per live key and a history document
+per version (<code>SearchIndex::reindex</code>,
+<code>src/index.rs:474-521</code>). Retraction markers and documents are
+published together as one generation (<code>:451-470</code>).</li>
+<li><strong>Vectors.</strong> <code>multilingual-e5-small</code> int8
+through ONNX Runtime, one vector per live or archived key, held in
+memory and cached on disk by a hash of the embedded text and the model
+fingerprint (<code>src/embed.rs:190-310</code>). With no model directory
+the server runs lexical-only.</li>
+<li><strong>Auth and audit.</strong> A token book of SHA-256 hashes
+outside the canon, re-read when its mtime changes
+(<code>src/auth.rs:499-519</code>), and an append-only JSONL request log
+(<code>src/audit.rs</code>).</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing else has to run.
+<code>cargo install knowyourbusiness --locked</code> or
+<code>docker compose up -d</code> gives a server on
+<code>127.0.0.1:9310</code>. The container binds <code>0.0.0.0</code>
+inside, and compose publishes it on <code>KYB_PUBLISH_ADDR</code>,
+default <code>127.0.0.1</code> (<code>docker-compose.yml:12</code>,
+<code>Dockerfile:37</code>). It works offline with no API key. The image
+downloads the model from Hugging Face's <code>resolve/main</code> with
+no checksum at build time (<code>Dockerfile:6-11</code>). The canon is
+plain Markdown in git and can be read, edited and reverted by hand. An
+uncommitted hand edit is served as the head version
+(<code>src/store.rs:938-945</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>POST /knowledge</code> →
+<code>upsert</code> → <code>locked_write</code>
+(<code>src/main.rs:545-559</code>, <code>:439-474</code>). Under the
+lock <code>commit_locked</code> validates, writes and commits, upserts
+the head document and reloads the index, then reports near-twin keys and
+<code>revived</code> (<code>:476-543</code>). The embedding is
+recomputed after the lock is released, behind a generation ticket
+(<code>:459-472</code>).</li>
+<li><strong>Incidents and tasks.</strong> <code>upsert_incident</code>
+stamps the timeline and returns structure <code>hints</code>
+(<code>src/main.rs:642-717</code>); <code>close_entry</code> requires a
+resolution and archives in the same section (<code>:746-793</code>);
+<code>transition_task</code> is a partial update read under the lock
+(<code>:978-1104</code>).</li>
+<li><strong>Search.</strong> <code>search</code> parses filters and the
+temporal options, chooses hybrid only for a current-state text query
+(<code>src/main.rs:1575-1687</code>), and calls
+<code>SearchIndex::search_in</code> (<code>src/index.rs:540-680</code>);
+<code>hybrid</code> fuses (<code>src/main.rs:1689-1750</code>).</li>
+<li><strong>Snapshot.</strong> <code>current_version_per_key</code>
+picks each key's newest version at T and drops keys retracted after it
+(<code>src/index.rs:685-745</code>);
+<code>collapse_to_latest_per_key</code> keeps only those rows
+(<code>:753-800</code>).</li>
+<li><strong>Read one.</strong> <code>get_one</code> serves the tree, an
+archived version or <code>?at=&lt;sha&gt;</code>; retracted knowledge is
+a 404 at head (<code>src/main.rs:1305-1335</code>). History, diff and
+related are <code>:1489</code>, <code>:1349</code> and
+<code>:1503</code>; export is <code>src/export.rs</code>.</li>
+<li><strong>Retract or archive.</strong> <code>remove</code> requires
+admin for knowledge, then <code>remove_committed</code> deletes the
+file, the head document and the vector and dates the marker
+(<code>src/main.rs:1771-1843</code>).</li>
+<li><strong>MCP.</strong> <code>mcp_post</code> → <code>call_tool</code>
+→ <code>plan</code> → <code>forward</code>, which builds an HTTP request
+carrying the caller's <code>Authorization</code> header and runs it
+through the API router (<code>src/mcp.rs:112-167</code>,
+<code>:244-281</code>, <code>:349-392</code>).</li>
+<li><strong>Auth.</strong> <code>auth_mw</code> →
+<code>Auth::decide</code> → <code>need</code>
+(<code>src/auth.rs:636-655</code>, <code>:522-550</code>,
+<code>:419-434</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Entry</code> carries key, title, kind, body, tags, refs and
+<code>updated_at</code> for every kind
+(<code>src/model.rs:117-168</code>). Incidents add service, hosts,
+severity, status (<code>open</code>, <code>mitigated</code>,
+<code>resolved</code>), linked knowledge keys, <code>resolution</code>,
+<code>detection</code>, <code>affected</code> windows of
+<code>{scope, from, to}</code> and four timeline stamps. Tasks add
+status (<code>open</code>, <code>in_progress</code>,
+<code>blocked</code>, <code>done</code>, <code>dropped</code>),
+priority, <code>blocked_reason</code>, <code>assignee</code>,
+<code>parent_task</code> and deadline fields
+(<code>src/model.rs:17-40</code>). These statuses are work lifecycle,
+not belief.</p>
+<p><strong>Time.</strong> The read path queries one clock, the commit
+time. <code>committed_at</code> is paired with a walk sequence that
+breaks one-second ties (<code>src/index.rs:580-605</code>). The incident
+timeline and <code>affected</code> windows are world time the writer
+supplies. They are stored on the hit and returned, and no query filters
+or ranks on them; <code>affected</code> is stored-only
+(<code>src/index.rs:68-69</code>, <code>:226</code>).</p>
+<p><strong>Scope.</strong> None on any read. The trace:</p>
+<ul>
+<li><code>need</code> maps a method and path to a role, and
+<code>decide</code> resolves a token to a principal and that role
+(<code>src/auth.rs:419-434</code>, <code>:522-550</code>). Nothing else
+about the principal reaches a handler except <code>remove</code>'s admin
+check (<code>src/main.rs:1785</code>) and the commit signature.</li>
+<li><code>SearchOpts</code> has tags, kind, status, service, priority,
+assignee and parent task, all taken from the query string
+(<code>src/index.rs:171-195</code>).</li>
+<li>The MCP bridge forwards the caller's <code>Authorization</code>
+header to every replayed request, so a tool reads what the token reads
+over REST (<code>src/mcp.rs:376-378</code>).</li>
+<li>The web console calls the same routes with the same token
+(<code>src/web/js/00-core.js:126-140</code>).</li>
+<li><code>X-Kyb-Workspace</code>, <code>_ctx</code> and client
+<code>_meta</code> become commit trailers and the <code>by</code> field
+of history (<code>src/mcp.rs:283-347</code>,
+<code>src/auth.rs:145-175</code>). No read path consults them.</li>
+</ul>
+<p>So every token, the anonymous <code>KYB_ANON=read</code> role and
+every caller under the default <code>KYB_AUTH=off</code> read the whole
+base. The boundary is the server: one <code>KYB_DATA</code> repository
+per process.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Lexical.</strong> Tantivy BM25 runs over key, title, body,
+tags, a metadata field, resolution and detection. Title is boosted 2.0,
+and tags, key and metadata 1.5 (<code>src/index.rs:545-564</code>).
+Every text field uses tantivy's Russian Snowball stemmer
+(<code>:30</code>, <code>:272-276</code>). The code comment says bodies
+are mostly Russian and Latin identifiers pass through unstemmed, while
+the skill asks for English entries. Query syntax errors are parsed
+leniently. Default search reads head documents only;
+<code>history=true</code> reads every version.</p>
+<p><strong>Hybrid.</strong> Only a non-empty, current-state,
+relevance-sorted query with a model loaded goes hybrid
+(<code>src/main.rs:1647-1654</code>). The lexical side fetches at least
+24, and the vector side scores every stored vector by cosine and keeps
+24 (<code>src/embed.rs:494-502</code>). <code>fuse_lists</code> sums
+weighted reciprocal ranks with k = 60 and weight 0.6 on the vector side
+(<code>:509-525</code>). A vector-only candidate is admitted only if its
+live document passes the same filters
+(<code>src/main.rs:1710-1734</code>). A model failure leaves the lexical
+order.</p>
+<p><strong>Time.</strong> <code>as_of</code> and
+<code>changed_between</code> read the history world and collapse to one
+row per key. For <code>as_of</code>, the snapshot is computed first and
+only that version may match, so a superseded version that still contains
+the word does not answer (<code>src/index.rs:659-670</code>,
+<code>:685-745</code>). Both stay lexical by an explicit guard, because
+vectors exist for head versions only
+(<code>src/main.rs:1635-1646</code>).</p>
+<p><strong>Budget.</strong> Default 10 hits, 100 at most, 1,000 for a
+tag listing with no text (<code>src/main.rs:1583-1584</code>). Hits
+carry full bodies. A read answer gains a <code>deadlines</code> block of
+up to five late or nearly due tasks
+(<code>src/deadline_api.rs:86</code>). Nothing is injected into a
+session unless the operator adds the optional SessionStart hook that
+prints deadlines (<code>skills/kyb/SKILL.md:435-445</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit. An agent calls <code>kyb_add</code>,
+<code>kyb_incident</code>, <code>kyb_task</code> or their siblings, or
+the CLI, or a person uses the console. No extraction, no summarisation
+and no model call happens anywhere on a write.</p>
+<p>Deduplication is the key. Identical content is a no-op; a different
+body under the same key is a new version. A create reports existing keys
+at 0.85 similarity or above, retracted ones included, so
+<code>nats-stream</code> beside <code>nats-streams</code> is flagged and
+accepted (<code>src/main.rs:516-529</code>,
+<code>src/model.rs:1379-1447</code>). There is no conflict detection
+between entries.</p>
+<p>Two concurrent writes to one key are serialised and the second wins.
+The knowledge upsert takes no expected version, so a writer that never
+read the first version replaces it; both stay in history. Task
+transitions and closes re-read the stored version under the lock, so
+partial updates do not lose each other
+(<code>src/main.rs:427-438</code>).</p>
+<p>Every field is scanned against seven regexes for GitHub, Slack,
+OpenAI and AWS tokens, private keys and <code>password:</code> pairs
+(<code>src/model.rs:499-520</code>). A secret they miss is committed,
+and a retraction removes it from the tree and not from git history.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks on a git commit, a tantivy commit and reader reload,
+then one embedding of title plus the first 1,200 characters
+(<code>src/main.rs:190-197</code>). It is searchable lexically when the
+request returns. Every start walks the whole history to rebuild the
+index. A history index of every key's versions is built once and
+extended by new commits (<code>src/main.rs:148-165</code>). No pass
+rewrites the canon.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP endpoint is stateless: <code>GET</code> and
+<code>DELETE</code> answer 405, batches work, and
+<code>tools/list</code> is built from the routes in the binary
+(<code>src/mcp.rs:86-106</code>, <code>:757-998</code>). It registers
+fifteen tools, six of them writes. <code>rm</code> and
+<code>reindex</code> are deliberately absent (<code>:73-77</code>), so
+an agent over MCP can archive by closing an incident or task but cannot
+retract knowledge. <code>?readonly=1</code> drops the write tools, and
+the module's own comment calls it a guard rail rather than a boundary
+(<code>:39-43</code>).</p>
+<p><code>skills/install.sh</code> copies the CLI and hook to
+<code>~/.local/bin</code> and installs <code>SKILL.md</code> for Claude
+Code, Codex and Antigravity. It appends a pointer section to each
+agent's global <code>CLAUDE.md</code>, <code>AGENTS.md</code> or
+<code>GEMINI.md</code>, and registers a PreToolUse hook in
+<code>~/.claude/settings.json</code>
+(<code>skills/install.sh:24-132</code>). The hook adds <code>_ctx</code>
+with agent, session and workspace to every kyb tool call and makes no
+permission decision (<code>skills/kyb/bin/kyb-hook:56-80</code>). The
+CLI checks <code>/healthz</code> capabilities before a temporal query
+and refuses rather than let an older server answer with today's data
+(<code>src/main.rs:1865-1878</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-default-is-admin-for-everyone">The default is admin for
+everyone</h3>
+<p><code>KYB_AUTH</code> defaults to <code>off</code>, and under it
+<code>decide</code> returns the admin role for every request
+(<code>src/auth.rs:457-472</code>, <code>:523-525</code>).
+<code>compat</code> gives a caller who sends no token admin too. Only
+<code>required</code> refuses a caller without one. The startup line
+states the mode in force (<code>:483-497</code>), and the README says
+plainly that <code>off</code> trusts the network. On the default bind
+that network is loopback. A bind to a LAN address without
+<code>required</code> lets any host on it retract knowledge.</p>
+<h3 id="attribution-is-a-claim">Attribution is a claim</h3>
+<p>With tokens on, the commit author is the token's principal
+(<code>src/store.rs:128-133</code>). The <code>Kyb-Agent</code>,
+<code>Kyb-Session</code> and <code>Kyb-Workspace</code> trailers come
+from client headers, from <code>_ctx</code> in the tool arguments, or
+from client metadata (<code>src/mcp.rs:283-347</code>). A model can put
+any <code>_ctx</code> in its own arguments. The code calls this
+forensics rather than identity, and it grants nothing.</p>
+<h3 id="mutation-record">Mutation record</h3>
+<p>The request log records timestamp, client address, method, path,
+query, status, duration, actor and attribution for every request outside
+a polling list (<code>src/audit.rs:32-73</code>). For
+<code>POST /knowledge</code>, <code>/incidents</code> and
+<code>/tasks</code> the key is in the body, so the line names no entry.
+The record of what changed, by whom, is the git log.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code></strong> — withheld. A retraction
+marker is keyed on the entry's key and dated, and it governs only what a
+snapshot sees. Writing the retracted key again is accepted with
+<code>revived: true</code>; the same statement under another key is a
+new entry. The index code calls these markers tombstones
+(<code>src/index.rs:107-118</code>); they suppress a record and do not
+refuse a value.</li>
+<li><strong><code>trust_state</code></strong> — withheld. Live, archived
+and retracted are derived from the tree and the kind, not a field, and
+nothing marks an entry unverified.</li>
+<li><strong><code>bitemporal</code></strong> — withheld.
+<code>as_of</code> reads commit time; the incident timeline and
+<code>affected</code> windows are world-time payload that no query
+reads.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. There is no
+stored scope key; a token is a role, and the server process is the
+partition (section 5).</li>
+<li><strong><code>audit_log</code></strong> — withheld. The request log
+cannot name the entry a body-keyed write changed, and the git history
+that can is not credited.</li>
+<li><strong><code>human_review</code></strong> — withheld. No entry
+waits in a state; the console and the agent write through the same
+routes with the same roles.</li>
+<li><strong><code>negative_eval</code></strong> — earned, on the
+snapshot search; see section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is 230 Rust test functions in <code>#[cfg(test)]</code>
+modules and three test files, and CI adds fourteen scripts. Those
+scripts drive the CLI, the MCP endpoint against a release build, the web
+console in a browser at 100% coverage, compose binding and citation
+metadata (<code>.github/workflows/ci.yml</code>). I did not run any of
+them.</p>
+<p><code>negative_eval</code> rests on two index tests over a populated
+result:</p>
+<ul>
+<li><code>as_of_pairs_documents_with_the_tombstones_of_their_own_generation</code>
+writes and retracts <code>a</code> and <code>b</code>, both saying
+<em>"a fact that was retracted"</em>, keeps <code>kept</code>, and
+asserts the search for <code>fact</code> returns exactly
+<code>["kept"]</code>. It checks this from a generation held before a
+reindex, across the reindex and after it, having first asserted the
+markers were renumbered (<code>src/index.rs:1324-1362</code>).</li>
+<li><code>as_of_collapses_a_busy_key_to_one_row</code> writes eight
+versions of <code>busy</code> and one <code>other</code>, all matching,
+and asserts two rows whose <code>busy</code> body is revision 7
+(<code>src/index.rs:1212-1237</code>).</li>
+</ul>
+<p>The head search's retraction checks are weaker.
+<code>archived_entries_live_in_default_search</code> asserts an empty
+result for the retracted note's words, with the archived incident shown
+present by a different query (<code>src/index.rs:1137-1140</code>).
+<code>api_full_flow</code> asserts <code>count == 0</code> after the
+delete of the only entry (<code>src/main.rs:2150-2154</code>). Both pass
+against a search that returns nothing.</p>
+<p><code>published_claims</code> pairs sentences in the README and the
+blog post with the behaviour they describe, failing when the sentence or
+the behaviour moves (<code>src/main.rs:4016-4201</code>). The vector
+tests run without a model, and <code>golden_vector_is_stable</code>
+skips without one; CI downloads the model for it
+(<code>src/embed.rs:578-600</code>).</p>
+<p><code>scripts/eval-search.sh</code> holds 14 paraphrase questions
+with expected keys written for a different base. The README's table —
+1/14 and 2/14 lexical, 3/14 and 4/14 hybrid, on a 643-entry base — comes
+from no committed artifact and cannot be recomputed. The README states
+the ceiling problem itself. There is no paper; the citation is a Zenodo
+software deposit of the v0.3.3 source, and a separate Zenodo slide deck
+reports no evaluation.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Choose the snapshot before matching the query.</strong> Pick
+each key's version current at T, then let only that version answer, so
+an old wording or an old status cannot stand in for a key whose current
+version no longer says it.</li>
+<li><strong>Date the deletion where the snapshot can read it</strong>,
+and publish the markers with the documents as one generation, so a
+search that started before a rebuild judges its documents by its own
+markers.</li>
+<li><strong>Tell a writer when a key it creates was deliberately
+removed</strong>, and compare new keys against every key that ever
+existed, not just the live ones.</li>
+<li><strong>Gate a client on the server's advertised
+capabilities</strong> before asking a question an older server would
+silently answer with current data.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An upsert with no expected version on shared
+memory.</strong> Two agents that never read each other's write leave the
+second as truth with nothing to say a conflict happened.</li>
+<li><strong>A default auth mode that grants admin.</strong> A loopback
+default limits who reaches it, and the first LAN bind turns every caller
+into an admin.</li>
+<li><strong>A request log as the audit of body-keyed writes.</strong> It
+records that a write happened and not to what.</li>
+<li><strong>A stemmer chosen for one language</strong> when the entries'
+convention is another.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>KYB suits a small operations team running several coding agents
+against one network, who want what those agents learn about hosts,
+deploys and incidents in one place they can read in git and revert by
+hand. It is one binary with no service dependency, and its maintenance
+budget is low. It assumes trusted writers: anything an agent writes is
+current, and two agents disagreeing about a key resolve by write order.
+Walk away if tenants, projects or customers must not read each other's
+memory. Walk away too if an agent's claim must be checked before others
+act on it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often two agents overwrite the same key in practice, and whether
+the <code>similar</code> and <code>revived</code> hints change what they
+do.</li>
+<li>How a startup reindex behaves on a history of tens of thousands of
+commits.</li>
+<li>How lexical recall fares on English entries under the Russian
+stemmer, measured on a committed base.</li>
+<li>Whether the 14-question evaluation will be committed with its base
+and raw results.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage: <code>src/store.rs</code>, <code>src/model.rs</code></li>
+<li>Index and retrieval: <code>src/index.rs</code>,
+<code>src/embed.rs</code>, <code>src/main.rs</code>
+(<code>search</code>, <code>hybrid</code>)</li>
+<li>Writes and lifecycle: <code>src/main.rs</code>
+(<code>locked_write</code>, <code>commit_locked</code>,
+<code>close_entry</code>, <code>transition_task</code>,
+<code>remove</code>), <code>src/deadline.rs</code></li>
+<li>Relations and export: <code>src/links.rs</code>,
+<code>src/export.rs</code></li>
+<li>Auth and audit: <code>src/auth.rs</code>, <code>src/audit.rs</code>,
+<code>src/config.rs</code></li>
+<li>MCP, web, CLI, install: <code>src/mcp.rs</code>,
+<code>src/web.rs</code>, <code>src/web/</code>,
+<code>skills/kyb/bin/kyb</code>, <code>skills/kyb/bin/kyb-hook</code>,
+<code>skills/install.sh</code>, <code>skills/kyb/SKILL.md</code></li>
+<li>Tests and eval: the <code>#[cfg(test)]</code> modules,
+<code>src/deadline_tests.rs</code>,
+<code>src/deadline_api_tests.rs</code>,
+<code>src/tag_regressions.rs</code>, <code>scripts/test-*</code>,
+<code>scripts/eval-search.sh</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No scope key on a read module.</strong>
+<code>git grep -n -i -E 'workspace|namespace|tenant|owner' -- src/index.rs src/export.rs src/links.rs src/deadline_api.rs src/web.rs</code>
+returns a comment on task ownership filters
+(<code>src/index.rs:54</code>) and one test line.</li>
+<li><strong>The principal reaches one handler.</strong>
+<code>git grep -n -E 'auth::role\(|SESSION\.try_with|auth::signature|auth::by\(' -- 'src/*.rs'</code>
+returns the admin check in <code>remove</code>
+(<code>src/main.rs:1785</code>), the commit signature and trailers
+(<code>src/store.rs:131</code>, <code>:216</code>, <code>:299</code>),
+<code>whoami</code> and the <code>role()</code> accessor in
+<code>src/auth.rs</code>.</li>
+<li><strong>No model call anywhere.</strong>
+<code>git grep -n -i -E 'reqwest|hyper::client|openai|anthropic|ollama|llm|completion' -- 'src/*.rs' Cargo.toml</code>
+returns nothing.</li>
+<li><strong>No injection hook installed.</strong>
+<code>git grep -n -E 'SessionStart|UserPromptSubmit|PostToolUse' -- skills/install.sh skills/kyb/bin/</code>
+returns nothing; the SessionStart recipe is text in
+<code>skills/kyb/SKILL.md</code>.</li>
+<li><strong>No committed evaluation result.</strong>
+<code>git ls-files | /usr/bin/grep -i -E 'eval|result|bench|\.jsonl'</code>
+returns <code>scripts/eval-search.sh</code> only.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|validity|event_time|occurred_at' -- 'src/*.rs'</code>
+returns nothing;
+<code>git grep -c -E 'committed_at' -- src/index.rs</code> returns
+29.</li>
+<li><strong>No expected-version write.</strong>
+<code>git grep -n -i -w -E 'if_match|expected_sha|base_sha|etag' -- 'src/*.rs' 'src/web/js/*.js' skills/</code>
+returns nothing.</li>
+<li><strong>No review or verification state.</strong>
+<code>git grep -n -i -E 'verified|candidate|quarantin|pending_review|approved' -- 'src/*.rs'</code>
+returns fusion comments, the incident root-cause hint and two prompt
+strings.</li>
+<li><strong>No git remote.</strong>
+<code>git grep -n -E 'remote|push\(|fetch' -- src/store.rs</code>
+returns <code>Vec::push</code> calls and a revwalk push only.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|@article|doi\.org' -- . ':!Cargo.lock'</code>
+returns the Zenodo software DOIs in <code>README.md</code> and
+<code>docs/index.html</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/alex09x/kyb/commit/0934013b8d15ce0e9041a9fc5d41374995779c2a"><code class="commit-id" title="0934013b8d15ce0e9041a9fc5d41374995779c2a">0934013b…</code></a>.
+First reading, from a full clone. Screened first: one auto-run surface,
+<code>server.json</code>, an MCP Registry manifest, and one build-time
+execution point, <code>build.rs</code>, which concatenates the web
+console's files; nothing inside the seven-day cooldown and no unpinned
+surface. MIT, no rider. Nothing installed, built or run. One mark,
+<code>negative_eval</code>, on the snapshot search's retraction tests;
+<code>scope_enforced</code> is withheld because a token grants a role
+and no read takes a scope (<a href="#5-memory-data-model">section
+5</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
