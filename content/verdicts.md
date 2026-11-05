@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 781 reports.**
+**This page covers all 782 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7152,3 +7152,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 270,028 lines of Rust outside tests, 144,619 of them the Graphify-port engine; 65 commits from 3 authors, 14 October – 3 November 2026, tag v0.1.12; 2,260 Rust and 209 Python test functions run in CI, not run here. Six marks, all but tombstone. The README's LoCoMo figures have no committed per-question records.
 - Study when: you want a coding agent to propose decisions about a codebase that a person approves, and that stop being served when the code they describe changes.
 - Do not copy when: memory must work unattended, a rejected statement must stay rejected in other words, or the reviewer must be someone the agent's shell cannot act as.
+
+### [`hermes-memory-installer`](../systems/hermes-memory-installer/)
+- Best idea: **an index with nothing to lose.** Every rebuild deletes and re-derives each table from the agent's sessions and the full Hindsight list in one transaction, so a failed run keeps the old index and a deleted source leaves within 15 minutes, embeddings included, since they are joined to live objects on every read.
+- Second idea: live Hindsight recall gated three ways, by a need test on local hits, an opt-in flag and a file-backed circuit with a 600-second cooldown, with a queue that hands the skipped call to a background worker.
+- Biggest risk: **the recall it computes reaches no prompt.** The maintenance cycle writes fused results for four fixed queries to `TIERED_CONTEXT.md` and `PROACTIVE_RECALL.md`, nothing in the tree reads either, and the skill's documented command uses flags the script does not define.
+- Second risk: the policy layer keys rows by object id while the read path passes `object:`-prefixed ids, so no policy ever applies, and the writer's empty `valid_to` would class every active row expired if one did; supersession is recency inside a 40-character title prefix, withheld on one of five layers.
+- Most reusable component: `rebuild_index` in `scripts/memory_governance_rebuild.py:1840-2200`, with the live-recall circuit and refresh queue in `scripts/tiered_context_injector.py:475-579`.
+- Maturity impression: MIT; 18,781 lines of Python outside tests, 101 commits reachable from the pin, 16 June – 23 July 2026; 289 pytest functions run in CI, not run here. No marks; two exact-list negative cases test a governance package the shipped read path never engages, and the synthetic eval backend returns each case's own expected hit.
+- Study when: you run Hermes with Hindsight and GBrain on your own Linux host and want rebuild, health and alerting jobs and a recall diagnostic around them.
+- Do not copy when: the agent must receive the recall each turn, two profiles share a Hindsight bank, or ranking must work for topics other than one person's.

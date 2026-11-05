@@ -311,6 +311,20 @@ Extraction waits for a session to be idle six hours and takes two
 sessions per start by default, and both phases skip when less than 25%
 of a Codex usage window remains. The retention prune runs before the
 quota check because it spends no tokens.</p>
+<p><a href="../../systems/hermes-memory-installer/">Hermes Memory
+Installer</a> gates a remote recall three ways and lets it fail closed,
+for a reason its own operations log records. Live Hindsight recall runs
+only when <code>should_use_live_hindsight</code> finds too few direct
+hits among five local layers, the operator has set
+<code>MEMORY_LIVE_HINDSIGHT_ENABLED</code>, and a circuit file is not
+open (<code>scripts/tiered_context_injector.py:425-443</code>,
+<code>:1536</code>). A timeout opens the circuit for 600 seconds and
+queues the query for a background worker that drains oldest-first. The
+project's optimization report gives the direction: client timeouts did
+not cancel the server's work, and 19 abandoned recall requests had piled
+up (<code>docs/memory-quality-optimization-report.md:399-422</code>). A
+second gate, <code>should_use_expensive_fallbacks</code>, keeps the
+embedding and archive scans behind the same hit count.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Feed the gate turns that plainly need memory and turns that plainly

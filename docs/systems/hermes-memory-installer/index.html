@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An installer and cron-driven
+sidecar for Hermes that rebuilds a SQLite index over the agent's
+sessions and Hindsight facts and writes fused recall to Markdown.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hermes Memory
+Installer — Agent Memory Atlas">
+    <meta property="og:description" content="An installer and
+cron-driven sidecar for Hermes that rebuilds a SQLite index over the
+agent's sessions and Hindsight facts and writes fused recall to
+Markdown.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hermes Memory
+Installer — Agent Memory Atlas">
+    <meta name="twitter:description" content="An installer and
+cron-driven sidecar for Hermes that rebuilds a SQLite index over the
+agent's sessions and Hindsight facts and writes fused recall to
+Markdown.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hermes Memory Installer — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Hermes Memory Installer",
+      "description": "An installer and cron-driven sidecar for Hermes that rebuilds a SQLite index over the agent's sessions and Hindsight facts and writes fused recall to Markdown.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A rebuilt recall index whose answers land
+in a file</p>
+          <h1>Hermes Memory Installer</h1>
+          <p class="document-deck">An installer and cron-driven sidecar
+for Hermes that rebuilds a SQLite index over the agent's sessions and
+Hindsight facts and writes fused recall to Markdown.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mage0535/hermes-memory-installer">
+              <span>Source</span>
+              <strong>mage0535/hermes-memory-installer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mage0535/hermes-memory-installer/commit/049d9ac628e516da2462cf7bada5460aec3d62a3" title="049d9ac628e516da2462cf7bada5460aec3d62a3">
+              <span>Analyzed revision</span>
+              <code>049d9ac6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mage0535--hermes-memory-installer" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mage0535--hermes-memory-installer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>18,781
+lines of Python outside tests, 16,162 of them in scripts/, plus the
+759-line hermes-memory CLI; memory_governance_rebuild.py alone is
+3,038</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>101
+commits reachable from the pin, 16 June – 23 July 2026, under five
+author names; the release tags v0.1.0 to v3.1.1 share no ancestor with
+it</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>289
+pytest functions in 26 files, 6,591 lines, run by pytest -q in the
+release-check workflow; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Hermes Memory Installer copies a set of Python maintenance scripts
+into a <a href="../hermes-agent/">Hermes Agent</a> home and schedules
+them beside two services the operator runs, <a
+href="../hindsight/">Hindsight</a> and <a href="../gbrain/">GBrain</a>.
+Its own memory is one derived SQLite file that a cron job deletes and
+rebuilds every 15 minutes from the agent's sessions and the full
+Hindsight list. Its notable part is retrieval engineering: five
+governance layers, an intent router, and a live Hindsight call behind a
+need test, a timeout and a circuit breaker. Its weak part is the last
+step. The fused recall is written to two Markdown files that nothing in
+the repository reads into a prompt.</p>
+<p>The rest of the sidecar is optional and mostly inert. A
+<code>governance/</code> package adds a policy table with validity
+columns and a superseded pointer, a temporal lookup and a mid-term
+buffer, all off by default. The only writer of policy rows keys them by
+object id; the only read-path caller passes ids with an
+<code>object:</code> prefix, so no candidate ever matches a policy. No
+capability mark is earned: the package's two exact-list negative tests
+exercise functions the recall path never engages. The ranking rules name
+one deployment's topics, and the evaluation harness's synthetic backend
+scores each case's fixture hits against that case's own expected
+field.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The sidecar holds no belief of its own. A memory is a <strong>memory
+object</strong>, built fresh on every rebuild by
+<code>build_memory_object_rows</code>
+(<code>scripts/memory_governance_rebuild.py:1615-1838</code>). Each
+Hindsight fact and each session's title, summary and first user message
+is normalized to lowercase ASCII and CJK words. The object id is the
+first 16 hex characters of the SHA-1 of that text
+(<code>:557-567</code>), so two sources with identical normalized text
+merge into one object.</p>
+<p>Every object enters <code>active</code> (<code>:1644</code>,
+<code>:1711</code>). Confidence is a constant per source: 0.72 for a
+Hindsight fact, raised to 0.82 for an <code>observation</code> and 0.78
+for a <code>world</code> fact, and about 0.64 for a session. Freshness
+is 0.60 or 0.72 for Hindsight, and for a session falls linearly from 0.9
+by 1/120 a day to a floor of 0.35 (<code>:591-599</code>).</p>
+<p>The one state transition is supersession inside a <strong>conflict
+group</strong>. The group key is the entity type plus the first 40
+characters of the normalized title, stripped of years, small numbers and
+hex strings (<code>:807-816</code>). In each group of two or more, the
+object ranked highest by version tag, freshness, confidence and source
+mix stays <code>active</code>. The others are marked
+<code>superseded</code>, with <code>valid_to</code> set to the winner's
+<code>valid_from</code> (<code>:1811-1836</code>). Nothing compares what
+the objects say. Two objects titled "Provider Config: x" are resolved
+the same way whether they agree or disagree.</p>
+<p>An object dies when its source does. The rebuild begins with
+<code>DELETE FROM memory_objects</code> (<code>:1910</code>), so a fact
+deleted from Hindsight or a session deleted from <code>state.db</code>
+leaves the index at the next run. There is no forget verb, no rejection
+and no record of what was dropped.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every 15 minutes the index is deleted and rebuilt from its sources, a conflict group keeps its freshest object active, and the recall built on it is written to a file nothing in the tree reads</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every 15 minutes the index is deleted and rebuilt from its sources, a conflict group keeps its freshest object active, and the recall built on it is written to a file nothing in the tree reads
+flowchart TD
+  subgraph sources[&quot;Sources, run elsewhere&quot;]
+    direction TB
+    S1[&quot;Hermes state.db&lt;br/&gt;sessions and messages&quot;]
+    S2[&quot;Hindsight bank hermes&lt;br/&gt;full memories/list&quot;]
+    S1 ~~~ S2
+  end
+  sources --&gt; RB[&quot;rebuild every 15 min&lt;br/&gt;DELETE all, re-derive&quot;]
+  RB --&gt; OBJ[&quot;memory object&lt;br/&gt;id = sha1 of text&lt;br/&gt;status active&quot;]
+  OBJ --&gt; CG{&quot;same conflict group?&lt;br/&gt;entity + title prefix&quot;}
+  CG --&gt;|&quot;freshest&quot;| ACT[&quot;active&quot;]
+  CG --&gt;|&quot;the rest&quot;| SUP[&quot;superseded&lt;br/&gt;valid_to = winner&#39;s&quot;]
+  ACT --&gt; OL[&quot;object layer&lt;br/&gt;status = active&quot;]
+  SUP ~~~ HC[&quot;hindsight_cache layer&lt;br/&gt;no status filter&lt;br/&gt;raw fact returned&quot;]
+  OL --&gt; FUSE[&quot;RRF over L2 and L3&lt;br/&gt;intent quotas&quot;]
+  HC --&gt; FUSE
+  FUSE --&gt; MD[&quot;TIERED_CONTEXT.md&lt;br/&gt;PROACTIVE_RECALL.md&lt;br/&gt;four fixed queries&quot;]
+  MD --&gt; NONE[&quot;no reader in the tree&quot;]
+  NONE ~~~ POL[&quot;memory_policy rows&lt;br/&gt;id = mem:hash&quot;]
+  POL --&gt; MISS[&quot;candidates carry&lt;br/&gt;object:mem:hash&lt;br/&gt;no id ever matches&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The repository is an installer plus everything it installs.
+<code>install.sh</code> installs PyYAML with pip if the import fails,
+then runs <code>installer/install.py</code>
+(<code>install.sh:13-18</code>). The installer copies 43 scripts from
+<code>scripts/</code> into <code>$AGENT_HOME/scripts/</code> through a
+staging directory with per-file rollback
+(<code>installer/install.py:99-143</code>, <code>:708-758</code>). It
+backs up and patches the agent's <code>config.yaml</code>,
+<code>config.json</code> or <code>claude_config.json</code>. It sets
+<code>memory.provider: hindsight</code> only when no provider is set,
+and records the sidecar version and scripts path
+(<code>:657-705</code>). Three flags deploy the memory-quality packages
+to <code>$AGENT_HOME/memory-sidecar/</code>, create the
+<code>memory_policy</code> table, and write a cron block whose every
+line is commented <code># REMEDIATION-PAUSED</code>
+(<code>:43-54</code>, <code>:1012-1020</code>).</p>
+<p>At run time there are three stores. The agent's own
+<code>state.db</code> is read for sessions and messages, and
+<code>auto_archive_sessions.py</code> also writes to it. The sidecar's
+<code>memory_governance.db</code> holds every index. Markdown output
+lands under <code>$AGENT_HOME/memories/</code>. Hindsight is read over
+HTTP at <code>127.0.0.1:8890</code>, bank <code>hermes</code>
+(<code>memory_governance_rebuild.py:57-63</code>). GBrain is written
+over its MCP endpoint at <code>localhost:8787/mcp</code>, with a bearer
+token taken from the environment or scraped from the agent's
+<code>config.yaml</code> (<code>session_to_gbrain.py:30-57</code>). An
+embedding endpoint is optional and used only when
+<code>EMBEDDING_API_URL</code> is set
+(<code>memory_governance_rebuild.py:2884-2909</code>).</p>
+<p>Everything is cron. <code>docs/ops/server-root.cron</code> is the
+author's own crontab, committed: a governance rebuild under
+<code>flock</code> every 15 minutes, gbrain archiving every six hours, a
+live-recall refresh worker every ten minutes, weekly session retirement,
+and a set of observability jobs.
+<code>memory_maintenance_cycle.py</code> runs session archiving, the
+rebuild, a Hindsight consolidation drain, recall generation and a health
+snapshot in order (<code>:152-216</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>An operator needs Python 3.9 or later, PostgreSQL 16, a running
+Hindsight, a running GBrain, and an agent home with
+<code>state.db</code>. The installer's default mode 3 runs
+<code>sudo apt-get install … postgresql postgresql-contrib</code> or the
+dnf and yum equivalent through
+<code>subprocess.run(command, shell=True)</code> when any of the three
+services is missing (<code>installer/install.py:884-899</code>,
+<code>:964-968</code>). It installs distribution packages only.</p>
+<p>It never fetches Hindsight or GBrain, and the two project links it
+prints for them, <code>HindsightTechnologySolutions/hindsight</code> and
+<code>hi-ogawa/gbrain</code>, both returned 404 from the GitHub API on 5
+November 2026 (<code>:902-907</code>, <code>README.md:80-81</code>). The
+API paths the scripts call are those of <a
+href="../hindsight/">Hindsight</a>, and the MCP tool names those of <a
+href="../gbrain/">GBrain</a>. Without Hindsight the rebuild retries each
+page 24 times five seconds apart and then raises
+(<code>memory_governance_rebuild.py:1176-1205</code>), so the index
+never builds. Nothing works offline beyond the agent's own session
+search. The governance database is plain SQLite and disposable, since a
+forced rebuild recreates it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Install.</strong> <code>main</code>
+(<code>installer/install.py:972-1041</code>) runs environment checks,
+optional package bootstrap, <code>install_sidecar</code>
+(<code>:810-850</code>) and the optional memory-quality deploy and
+cron.</li>
+<li><strong>Rebuild.</strong> <code>rebuild_index</code>
+(<code>memory_governance_rebuild.py:1840-2200</code>) skips when the
+governance file's mtime is later than <code>state.db</code>'s and under
+900 seconds old (<code>:1534-1541</code>). It deletes nine tables, reads
+every session with its first user and last assistant message, fetches
+the whole Hindsight list, builds hubs and objects, refreshes the
+knowledge-note index, and embeds active objects. One commit closes it,
+so a failure mid-way leaves the previous index.</li>
+<li><strong>Knowledge notes.</strong> <code>knowledge_notes.py</code>
+indexes Markdown under <code>$AGENT_HOME/knowledge/notes</code>, skipped
+when a signature of the directory is unchanged.</li>
+<li><strong>Recall.</strong> <code>generate</code>
+(<code>tiered_context_injector.py:1803-1883</code>) builds L1 (recent
+sessions), and per query L2 (<code>get_l2</code>, FTS5 and LIKE over
+<code>state.db</code>, <code>:1238-1355</code>) and L3
+(<code>get_l3</code>, <code>:1358-1686</code>). It fuses them with
+<code>rrf_fuse</code> (<code>:1165-1182</code>), applies feedback,
+routes, and writes both files atomically.</li>
+<li><strong>gbrain archive.</strong> <code>session_to_gbrain.py</code>
+writes one page per session file with tags, a timeline entry,
+regex-extracted Chinese relation wikilinks and links to topic hubs
+(<code>:535-600</code>, <code>:603-656</code>), checkpointed by
+processed file name.</li>
+<li><strong>Session retirement.</strong>
+<code>auto_archive_sessions.py</code> copies sessions older than 30 days
+into an <code>archives</code> table and deletes them from
+<code>sessions</code> (<code>:39-50</code>); no file in the tree creates
+<code>archives</code>.</li>
+<li><strong>Policy, temporal, MTM.</strong>
+<code>governance/inject_policy.py</code>,
+<code>governance/policy.py</code>, <code>governance/temporal.py</code>,
+<code>mtm/consolidator.py</code>, each a CLI or library behind a
+flag.</li>
+<li><strong>Live refresh.</strong>
+<code>live_hindsight_refresh_worker.py</code> drains
+<code>recall_refresh_queue</code> oldest-first and writes results into
+<code>hindsight_index</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_objects</code>
+(<code>memory_governance_rebuild.py:1391-1413</code>) carries
+<code>object_id</code>, <code>object_type</code>,
+<code>entity_type</code>, <code>source_kind</code>
+(<code>session</code>, <code>hindsight</code> or <code>mixed</code>),
+<code>title</code>, <code>summary</code> (up to four distinct parts,
+1,600 characters), <code>entities</code>, <code>hub_ids</code>,
+<code>source_refs</code> as JSON, <code>status</code>,
+<code>confidence</code>, <code>freshness</code>,
+<code>valid_from</code>, <code>valid_to</code>,
+<code>version_tag</code>, <code>conflict_group</code>,
+<code>last_seen_at</code> and <code>indexed_at</code>.
+<code>version_tag</code> is <code>current</code> when freshness reaches
+0.82 and a year-month otherwise (<code>:794-804</code>).</p>
+<p><code>valid_from</code> is Hindsight's <code>mentioned_at</code> or
+the session's <code>started_at</code>, the time the source was said, and
+<code>valid_to</code> is empty unless the object lost its conflict group
+(<code>:1647-1648</code>, <code>:1714-1715</code>, <code>:1835</code>).
+<code>hindsight_index</code> copies Hindsight's
+<code>occurred_start</code> and <code>occurred_end</code>
+(<code>:2049-2050</code>), and no read in the tree selects them.</p>
+<p>Six tables are declared and never written:
+<code>orphan_messages</code>, <code>session_repair_map</code>,
+<code>session_lineage_repair</code>, <code>recovered_fragments</code>,
+<code>memory_aliases</code> and <code>memory_relations</code>
+(<code>:1253-1324</code>). Two views over them are created at
+<code>:1496-1519</code>, one joining the session index to
+<code>session_lineage_repair</code>.</p>
+<p><code>memory_policy</code> (<code>governance/policy.py:27-34</code>)
+holds importance, a tier CHECKed to <code>core</code>, <code>mtm</code>
+or <code>archive</code>, policy confidence, source layer, sanitized
+provenance, an eviction flag, <code>fact_key</code>,
+<code>conflict_group</code>, <code>valid_from</code>,
+<code>valid_to</code>, <code>superseded_by</code>, and
+<code>created_at</code> and <code>updated_at</code>. It lives in the
+governance file and is not among the tables a rebuild deletes, so its
+rows outlive the objects they name.</p>
+<p><strong>Scope</strong> is the directory. Every path derives from
+<code>AGENT_HOME</code>, then <code>HERMES_HOME</code>, then
+<code>~/.hermes</code> (<code>runtime_paths.py:10</code>), and no row
+carries a user, agent or project key. The Hindsight bank is a separate
+default, <code>hermes</code>, in three scripts
+(<code>memory_governance_rebuild.py:60</code>,
+<code>tiered_context_injector.py:62</code>,
+<code>memory_guardian.py:24</code>). Two profiles with different homes
+and no <code>HINDSIGHT_BANK</code> override therefore index the same
+facts. <code>profile_isolation_check.py</code> runs the acceptance check
+under two homes with only <code>AGENT_HOME</code> and <code>PATH</code>
+in the environment and checks that each passes, not that either is
+missing the other's data (<code>:12-40</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>L3 asks five governance layers in a fixed order: hubs, objects,
+knowledge notes, indexed sessions and the Hindsight cache
+(<code>tiered_context_injector.py:1470-1533</code>). Each layer runs
+FTS5 <code>bm25</code> with a LIKE fallback, then a stack of keyword
+predicates. Of the five, the object layer filters
+<code>status = 'active'</code>
+(<code>memory_governance_rebuild.py:2609</code>, <code>:2629</code>,
+<code>:2651</code>, <code>:2682</code>). The hub, session and
+Hindsight-cache layers filter on no status. A superseded object's source
+fact is returned through <code>hindsight_cache</code>, so supersession
+removes the derived row and not the text.</p>
+<p>Candidates pass <code>add_candidate</code>
+(<code>tiered_context_injector.py:1375-1467</code>), which drops cron
+sessions, applies per-intent coverage rules and keeps the
+higher-priority layer when two rows share a normalized title and
+snippet. The intent classifier returns <code>dossier</code>,
+<code>knowledge</code>, <code>system</code>, <code>relationship</code>,
+<code>recent</code>, <code>project</code> or <code>general</code> from
+marker tuples (<code>:247-262</code>). Each intent has a layer quota
+plan (<code>:265-287</code>). The markers and hub keywords are one
+deployment's subjects. <code>BASE_MEMORY_HUB_DEFS</code> defines hubs
+for the Hermes system, coding, A-share stocks and social media, and the
+injector's <code>RELATIONSHIP_MARKERS</code> names a partner
+relationship (<code>memory_governance_rebuild.py:289-310</code>,
+<code>tiered_context_injector.py:157-164</code>).</p>
+<p>Three expensive paths sit behind gates. Live Hindsight recall runs
+only when <code>should_use_live_hindsight</code> finds too few direct
+hits, the operator set <code>MEMORY_LIVE_HINDSIGHT_ENABLED</code>, and
+the circuit file is closed
+(<code>tiered_context_injector.py:425-443</code>, <code>:1536</code>). A
+failure opens the circuit for 600 seconds and queues the query for the
+background worker (<code>:1588-1591</code>, <code>:488-502</code>,
+<code>:546-579</code>). <code>should_use_expensive_fallbacks</code>
+(<code>:446-462</code>) gates a LIKE scan of <code>semantics.db</code>,
+FTS over <code>archives_fts</code> in <code>state.db</code>, and the
+object embeddings. The embedding path prefilters with FTS or LIKE over
+active objects, keeps only rows with the best term coverage, and ranks
+those by cosine (<code>memory_governance_rebuild.py:2830-2874</code>,
+<code>:2951-2995</code>). Despite its name, the <code>semantics</code>
+layer reads <code>semantics.db</code> with <code>content LIKE</code>,
+and its only writer, <code>sync_embeddings.py</code>, is not
+installed.</p>
+<p>Fusion adds <code>1/(60 + rank)</code> and 0.05 times the layer score
+per list, then <code>rerank_fused</code> applies intent rules
+(<code>tiered_context_injector.py:1165-1182</code>,
+<code>:783-895</code>). Feedback moves a candidate by at most 0.012
+(<code>:1756-1769</code>). <code>route_context</code> labels the result
+<code>inject_all</code>, <code>inject_one</code> or
+<code>fallback_session_search</code> by score bands
+(<code>:1772-1779</code>). The label is printed into the file; nothing
+acts on it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The sidecar never writes a fact of its own. Its writes are
+re-derivations: the governance rebuild, a gbrain page per session file,
+and the two Markdown files. The rebuild is extractive and model-free. It
+takes text as Hindsight and the agent stored it, filters cron sessions
+and short rows, and assigns hubs and entity types by keyword
+(<code>memory_governance_rebuild.py:1615-1735</code>).
+<code>add_specialized_provider_object</code> adds a second object for
+text about model providers and gateways (<code>:713-779</code>).</p>
+<p>Correction is supersession by freshness inside a title-prefix group,
+recomputed from scratch on every rebuild. Deduplication is the text
+hash; a fact restated in different words is a different object.
+<code>recall_feedback</code>, written by <code>--feedback-key</code> and
+<code>--rating</code> from the CLI, keys on a hash of slug, title and
+snippet and only nudges rank
+(<code>tiered_context_injector.py:1706-1730</code>).</p>
+<p><code>governance/inject_policy.py --apply</code> scores every object
+by a keyword heuristic and upserts a policy row whose
+<code>valid_to</code> is the object's: an empty string for an active
+object (<code>inject_policy.py:44-74</code>).
+<code>current_policies</code> admits a row only when
+<code>valid_to</code> is NULL or later than the current time, and
+<code>inactive_policy_ids</code> treats any other <code>valid_to</code>
+as expired (<code>policy.py:106-137</code>). An empty string sorts below
+every timestamp. So every policy row this writer produces for an active
+object is classed expired. The installer schedules the decay pass,
+paused, and nothing schedules the injection
+(<code>installer/install.py:52</code>). <code>superseded_by</code> is in
+the upsert and in both filters, and no caller passes it.</p>
+<p><code>MidTermMemory.retain</code> appends to a JSONL buffer that
+<code>consolidate</code> promotes, merges or evicts by keyword score
+under <code>MTM_ENABLED</code> (<code>mtm/consolidator.py:24-90</code>).
+<code>retain</code> has no caller outside tests, so in an installation
+the buffer stays empty.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks the agent, because nothing runs in its process. The
+lag before a new session or Hindsight fact is retrievable is the rebuild
+interval, 15 minutes under the committed cron, plus Hindsight's own
+extraction lag. The lag before it reaches the Markdown files is the
+maintenance cycle's schedule.</p>
+<p>Every rebuild reads every session row with two correlated subqueries
+and pages through the entire Hindsight bank 200 at a time
+(<code>memory_governance_rebuild.py:1860-1898</code>,
+<code>:1176-1205</code>). With an embedding endpoint it re-embeds every
+active object on every rebuild. The write lock is held from the first
+<code>DELETE</code> to the final commit, across the Hindsight fetch and
+its retries. The Markdown output is bounded: L1 is a recent-sessions
+table, and each recall section holds five fused rows of about 200
+characters.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The sidecar has no MCP server, tool or hook of its own. It reaches
+the agent in three ways. It sets the agent's memory provider to
+Hindsight when none is configured, so per-turn recall is whatever the
+agent's Hindsight provider does. It adds three skills,
+<code>memory-starter-kit</code>, <code>memory-archivist</code> and
+<code>memory-proactive</code>, as Markdown under <code>skills/</code>.
+And it writes <code>$AGENT_HOME/memories/TIERED_CONTEXT.md</code> and
+<code>PROACTIVE_RECALL.md</code>
+(<code>tiered_context_injector.py:59-60</code>).</p>
+<p>Nothing in the tree reads those two files. The <a
+href="../hermes-agent/">Hermes Agent</a> report, at its own pin, finds
+Hermes injecting <code>MEMORY.md</code> and <code>USER.md</code> from
+that directory. A file beside them is unread unless the agent opens it.
+The maintenance cycle generates recall for four fixed queries,
+<code>memory</code>, <code>stock</code> and two Chinese system queries
+(<code>memory_maintenance_cycle.py:29-34</code>). The output does not
+depend on what the agent is working on.</p>
+<p>The <code>memory-proactive</code> skill tells the agent to run
+<code>tiered_context_injector.py --query</code>, with
+<code>--min-score</code>, <code>--max-results</code> and
+<code>--domains</code> as knobs
+(<code>skills/memory-proactive/SKILL.md:25-33</code>). The script's
+parser defines <code>--recall</code>, <code>--test</code>,
+<code>--feedback-key</code>, <code>--rating</code> and
+<code>--note</code> only
+(<code>tiered_context_injector.py:1890-1894</code>), so the documented
+example exits with a usage error. The <code>--test</code> path does
+print fused JSON for one query, which an agent with a shell could
+use.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-policy-layer-cannot-reach-the-read-path">The policy layer
+cannot reach the read path</h3>
+<p>With <code>MEMORY_POLICY_RANKING_ENABLED=true</code>,
+<code>trim_l3_candidates</code> passes every L3 candidate to
+<code>apply_policy_to_candidates</code>
+(<code>tiered_context_injector.py:302-307</code>). That function looks
+each candidate up by <code>session_id</code>, stripping a
+<code>hindsight:</code> prefix
+(<code>governance/policy.py:149-155</code>). The candidates' ids are
+session ids, <code>hindsight:&lt;id&gt;</code>,
+<code>hub:&lt;id&gt;</code>, note ids,
+<code>object:mem:&lt;hash&gt;</code> and
+<code>semantic:mem:&lt;hash&gt;</code>
+(<code>memory_governance_rebuild.py:2340</code>, <code>:2435</code>,
+<code>:2786</code>, <code>:2984</code>). Policy rows are keyed
+<code>mem:&lt;hash&gt;</code> or
+<code>mtm:&lt;n&gt;:&lt;time&gt;</code>. No id matches, so the boost and
+the expiry filter are both no-ops, and the shadow log built on the same
+function reports no change (<code>memory_ops/shadow_log.py:54</code>).
+Were the prefix stripped, the empty <code>valid_to</code> would drop
+every governed object instead.</p>
+<h3 id="supersession-is-recency-inside-a-title-prefix">Supersession is
+recency inside a title prefix</h3>
+<p>The conflict group is lexical. Objects whose titles share 40
+normalized characters, once digits and hex runs are removed, compete,
+and the freshest wins. Different facts with similar titles collide, and
+the same fact under two titles never meets itself. The loser is withheld
+on one of five layers only. <code>version_tag</code> and
+<code>freshness</code> drive the outcome, and both come from timestamps,
+so the latest mention wins whether or not it is right.</p>
+<h3 id="deletion-and-what-survives-it">Deletion and what survives
+it</h3>
+<p>Deletion is the sources' job. A Hindsight fact removed upstream, or a
+session removed from <code>state.db</code>, is gone from every
+governance index within one rebuild interval, including the embeddings,
+which are joined to live objects
+(<code>memory_governance_rebuild.py:2838-2839</code>). Four things
+survive it: the gbrain page written for the session, which no script
+deletes; the <code>memory_policy</code> row;
+<code>recall_feedback</code> rows; and the last Markdown files until the
+next cycle. When the embedding endpoint fails,
+<code>replace_canonical_semantic_index</code> returns before its
+<code>DELETE</code>, so the previous vectors stay
+(<code>:2911-2944</code>). The join to <code>memory_objects</code> keeps
+them from being returned once their object is gone.</p>
+<p><code>auto_archive_sessions.py</code> deletes session rows older than
+30 days from the agent's own <code>sessions</code> table. The
+architecture document's first goal is that the sidecar does not delete
+source data (<code>ARCHITECTURE.md:21</code>). The deleted sessions'
+messages stay in <code>messages</code>, which L2 reaches only through a
+join on <code>sessions</code>.</p>
+<h3 id="hardcoded-deployment-in-a-public-package">Hardcoded deployment
+in a public package</h3>
+<p>The README calls the repository clean of server-specific paths. The
+<code>hermes-memory audit-repo</code> step in CI scans <code>.py</code>,
+<code>.md</code>, <code>.sh</code>, <code>.yaml</code>,
+<code>.yml</code>, <code>.json</code> and <code>.j2</code> files for
+<code>/root/.hermes</code> (<code>bin/hermes-memory:82</code>,
+<code>:92-95</code>). <code>docs/ops/server-root.cron</code> is the one
+<code>.cron</code> file, so the scan skips it. It names
+<code>/root/.hermes</code> on 23 of its 30 entries and a public IPv4
+address for a security-audit job. <code>compact_memory.py</code>, not
+installed, lists a person's name among its protected keywords. The hub
+and marker tuples encode one person's subjects into the public ranking
+code.</p>
+<h3 id="trust-and-injection">Trust and injection</h3>
+<p>No path asks whether a stored text is true. Hindsight facts and
+session text are indexed and copied into gbrain as they are, and
+snippets reach the Markdown files with no framing as untrusted data. The
+gbrain token falls back to the first <code>Authorization: Bearer</code>
+string in the agent's <code>config.yaml</code>
+(<code>session_to_gbrain.py:37-49</code>).
+<code>memory_guardian.py</code> restarts <code>hindsight.service</code>
+through <code>systemctl</code> when a consolidation operation looks
+stuck, behind a cooldown (<code>:366-393</code>).</p>
+<p>The live-recall circuit is guarded more closely than any other path
+in the sidecar. The project's own optimization report records that
+client timeouts did not cancel server work and that 19 abandoned recall
+requests had accumulated, which is why live recall is opt-in
+(<code>docs/memory-quality-optimization-report.md:399-422</code>).</p>
+<h3 id="marks">Marks</h3>
+<p>None is carried.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — nothing records a rejected
+value; a source deletion is forgotten by re-derivation and a restated
+fact is a new object.</li>
+<li><strong><code>trust_state</code></strong> — <code>status</code> is
+<code>active</code> or <code>superseded</code>, and the object layer
+filters on it. Every object enters <code>active</code>, the status is
+recomputed from freshness on every rebuild, and there is no candidate
+state. <code>superseded_by</code> and the MTM statuses have no product
+writer.</li>
+<li><strong><code>bitemporal</code></strong> — <code>valid_from</code>
+is the time the source said it, and <code>valid_to</code> is another
+object's mention time. Hindsight's <code>occurred_*</code> columns are
+copied and never read. <code>temporal_retrieve</code> reads policy rows
+only, from no caller.</li>
+<li><strong><code>scope_enforced</code></strong> — no row has a scope
+key; the home directory is a physical partition, and the Hindsight bank
+is shared by default.</li>
+<li><strong><code>audit_log</code></strong> — <code>repair_runs</code>
+records rebuild runs, and recall metrics, feedback and the shadow log
+record reads. Nothing records a mutation of a memory.</li>
+<li><strong><code>human_review</code></strong> —
+<code>--feedback-key</code> rates a candidate and changes rank; nothing
+waits for a person.</li>
+<li><strong><code>negative_eval</code></strong> — withheld. Two
+exact-list cases in the governance package are populated and can fail,
+but neither can fire on the product's recall path; <a
+href="#10-tests-evals-and-benchmarks">section 10</a> gives the
+reasons.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is 289 pytest functions in 26 files. The release-check
+workflow runs <code>pytest -q</code>, the repository audit, an installer
+dry run, a two-iteration isolation soak, the synthetic recall benchmark
+and a checksum verify
+(<code>.github/workflows/release-check.yml</code>). I did not run any of
+it.</p>
+<p>The near-miss for <code>negative_eval</code> is two cases. In
+<code>tests/test_policy_injection_and_ranking.py:45-58</code>, three
+policy rows are injected, <code>m2</code> with an expired
+<code>valid_to</code>. The test requires the ranked list to equal
+exactly <code>['m1', 'm3']</code> although <code>m2</code> entered with
+the highest score. In
+<code>tests/test_gbrain_feeder_and_temporal_mtm.py:47-64</code>, current
+mode must return exactly <code>['current']</code> and historical mode
+over the same two rows must return both states. Both are populated and
+both can fail.</p>
+<p>Neither reaches the system's retrieval: the fixtures write
+<code>valid_to</code> as NULL where the producer writes an empty string,
+<code>temporal_retrieve</code> has no product caller, and the policy
+filter never matches a live candidate (<a
+href="#the-policy-layer-cannot-reach-the-read-path">section 9</a>). They
+test two functions, not recall, so the mark is withheld. No case asserts
+that a superseded object stays out of a recall result.</p>
+<p>The evaluation harness cannot fail on its default backend.
+<code>memory_eval/registry_default.py</code> builds 40 cases, each
+carrying one <code>synthetic_hit</code> whose content contains its own
+expected field. <code>SyntheticAdapter.recall</code> returns those hits
+(<code>memory_eval/adapters.py:42-57</code>), so recall@k is 1.0 by
+construction. The live adapter queries Hindsight's
+<code>/v1/recall</code> with bank <code>default</code>
+(<code>:60-84</code>), a different route and bank from the injector's.
+Neither adapter calls the sidecar's own retrieval.</p>
+<p><code>scripts/synthetic_recall_benchmark.py</code> seeds five
+sessions and runs only <code>get_l2</code>. It sets
+<code>l3_count</code> to the L2 count and fills <code>top_sources</code>
+from a table keyed on the expected titles (<code>:94-118</code>). The
+acceptance check that requires source <code>knowledge</code> for the
+architecture query is therefore met by that table, not by a
+knowledge-layer hit (<code>scripts/recall_samples.py:93-122</code>).</p>
+<p>There is no paper, no committed result file beyond release notes, and
+no retrieval-quality benchmark against a labelled set.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the derived index disposable.</strong> Delete and
+rebuild from sources in one transaction, and keep nothing in it that a
+rebuild cannot recreate. A failure leaves the previous index; a source
+deletion propagates by itself.</li>
+<li><strong>Gate a slow remote recall three ways.</strong> A need test
+on local hits, an operator flag, and a file-backed circuit with a
+cooldown, with a queue that lets a background worker make the call the
+foreground skipped.</li>
+<li><strong>Join embeddings to the live rows on every read</strong>, so
+a stale vector table left by a failed re-embed returns nothing whose row
+is gone.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Writing recall where nothing reads it.</strong> Generating
+context for fixed queries into a file beside the agent's memory looks
+like injection in a demo and changes no answer.</li>
+<li><strong>Keying one table by the bare id and the reader by a prefixed
+one.</strong> Make one function build the id, use it on both sides, and
+test with ids produced by the real writer.</li>
+<li><strong>A sentinel the comparison misreads.</strong> An empty string
+for "no end" passes <code>IS NOT NULL</code> and sorts before every
+time; write NULL or test the writer's output.</li>
+<li><strong>An eval backend that returns its own expected
+answer.</strong> Recall@k on fixtures that contain the expected field
+measures the metric code.</li>
+<li><strong>Topic markers in the ranking code.</strong> They make the
+system fit one person's history and silently mis-rank everyone
+else's.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is one operator's production tooling around Hermes, Hindsight
+and GBrain, published with the deployment in it. It suits someone who
+runs that exact stack on a Linux host with root, who wants rebuild,
+health and alerting cron jobs and a recall diagnostic CLI. It does not
+suit anyone looking for a memory layer. The sidecar stores nothing of
+its own, and per-turn recall is the Hindsight provider's. The policy and
+temporal additions do not take effect. Expect to rewrite the hub
+definitions, intent markers and fixed queries before its ranking means
+anything for another user.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the author's agent reads <code>TIERED_CONTEXT.md</code>
+through a prompt or skill outside this tree; the gray-deploy runbook
+checks that a title appears in the file, not in an answer.</li>
+<li>Whether Hermes's <code>state.db</code> has an <code>archives</code>
+table with the same columns as <code>sessions</code>, without which
+<code>auto_archive_sessions.py</code> fails each batch and stops after
+four errors.</li>
+<li>Where the history before 16 June 2026 went; tags v0.1.0 to v3.1.1
+point at commits with no common ancestor with the pin.</li>
+<li>How often a conflict group joins two unrelated objects, which only a
+run against a real bank would show.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Installer: <code>install.sh</code>, <code>install_cli.sh</code>,
+<code>installer/install.py</code>,
+<code>installer/config_patch.py</code>,
+<code>installer/check_env.py</code></li>
+<li>Governance index and queries:
+<code>scripts/memory_governance_rebuild.py</code>,
+<code>scripts/knowledge_notes.py</code>,
+<code>scripts/state_db_schema.py</code>,
+<code>scripts/memory_family_registry.py</code>,
+<code>scripts/query_expansion.py</code></li>
+<li>Recall and output: <code>scripts/tiered_context_injector.py</code>,
+<code>scripts/live_hindsight_refresh_worker.py</code>,
+<code>scripts/recall_samples.py</code></li>
+<li>Archiving: <code>scripts/session_to_gbrain.py</code>,
+<code>scripts/archive_sessions.py</code>,
+<code>scripts/auto_archive_sessions.py</code>,
+<code>scripts/auto_session_summary.py</code></li>
+<li>Background and health:
+<code>scripts/memory_maintenance_cycle.py</code>,
+<code>scripts/memory_guardian.py</code>,
+<code>docs/ops/server-root.cron</code>,
+<code>bin/hermes-memory</code></li>
+<li>Memory-quality packages: <code>governance/</code>,
+<code>mtm/</code>, <code>gbrain_edges/</code>,
+<code>memory_eval/</code>, <code>memory_ops/</code>,
+<code>runtime_paths.py</code></li>
+<li>Skills: <code>skills/memory-starter-kit/</code>,
+<code>skills/memory-archivist/</code>,
+<code>skills/memory-proactive/</code></li>
+<li>Tests and CI: <code>tests/</code>,
+<code>.github/workflows/release-check.yml</code>,
+<code>scripts/synthetic_recall_benchmark.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing reads the Markdown output.</strong>
+<code>git grep -n -E 'TIERED_CONTEXT|PROACTIVE_RECALL' -- . ':!tests' ':!*.md'</code>
+returns the writer, the maintenance cycle's script path and the CLI's
+gray-deploy file names only.</li>
+<li><strong>No caller passes <code>superseded_by</code>.</strong>
+<code>git grep -n 'superseded_by=' -- . ':!tests'</code> returns the
+upsert's <code>excluded.superseded_by</code> and the row reader in
+<code>governance/policy.py</code>.</li>
+<li><strong><code>temporal_retrieve</code> has no caller.</strong>
+<code>git grep -n 'temporal_retrieve' -- . ':!tests' ':!*.md'</code>
+returns its definition.</li>
+<li><strong><code>MidTermMemory.retain</code> has no caller.</strong>
+<code>git grep -n -E '\.retain\(' -- . ':!tests'</code> returns nothing;
+the same pattern matches twice in <code>tests/</code>.</li>
+<li><strong>Nothing schedules the policy injection.</strong>
+<code>git grep -n 'inject_policy' -- . ':!tests'</code> returns the
+paused <code>--decay</code> cron line in
+<code>installer/install.py:52</code> and documentation.</li>
+<li><strong>Declared tables with no writer.</strong>
+<code>git grep -n -i -E 'INTO[[:space:]]+(memory_relations|memory_aliases|orphan_messages|session_repair_map|session_lineage_repair|recovered_fragments)' -- .</code>
+returns nothing;
+<code>INTO[[:space:]]+(memory_objects|memory_relations)</code> matches
+in the rebuild and four test files.</li>
+<li><strong>Nothing creates <code>archives</code>.</strong>
+<code>git grep -n -i -E 'CREATE (VIRTUAL )?TABLE[^(]*archives' -- .</code>
+returns nothing.</li>
+<li><strong><code>occurred_*</code> is written, never read.</strong>
+<code>git grep -n -E 'occurred_(start|end)' -- . ':!tests' ':!*.md'</code>
+returns the schema and the two insert paths.</li>
+<li><strong>No tombstone or forget verb.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|forget|forgotten' -- . ':!tests' ':!*.md'</code>
+returns nothing; adding <code>superseded</code> to the alternation
+matches in four files.</li>
+<li><strong>No scope key on the read path.</strong>
+<code>git grep -n -i -E 'user_id|tenant|scope_id|bank_id' -- scripts/memory_governance_rebuild.py scripts/tiered_context_injector.py governance</code>
+returns nothing; across the tree <code>bank_id</code> appears in the
+eval adapter and the uninstalled <code>memory_reflect.py</code>.</li>
+<li><strong>The skill's flags are not defined.</strong>
+<code>git grep -n -E 'add_argument\("--(query|min-score|max-results|domains)' -- scripts/tiered_context_injector.py</code>
+returns nothing; <code>--(recall|test)</code> returns two lines.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|citation' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/mage0535/hermes-memory-installer/commit/049d9ac628e516da2462cf7bada5460aec3d62a3"><code class="commit-id" title="049d9ac628e516da2462cf7bada5460aec3d62a3">049d9ac6…</code></a>.
+First reading, from a depth-1 clone at the head of <code>main</code>,
+with history from the GitHub API. Screened first: no auto-run or
+build-time surface, nothing inside the seven-day cooldown, and one
+unpinned surface, <code>requirements.txt</code> with
+<code>PyYAML&gt;=6.0</code> and <code>langsmith&gt;=0.1.0</code>. The
+installer runs distribution package installs through a shell when
+services are missing, and <code>install.sh</code> pip-installs PyYAML
+unpinned. MIT, no rider. Nothing installed, built or run. No marks: the
+governance package's two exact-list negative cases test
+<code>temporal_retrieve</code>, which has no caller, and a policy filter
+the read path never engages, and <code>trust_state</code>'s active and
+superseded status is recomputed by freshness on every rebuild with no
+candidate state (<a href="#marks">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **781 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **782 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -327,6 +327,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/helm/"><span class="az-id">Helm</span><span class="az-what">Confidence-ratcheted SQLite memory</span><code class="az-repo">GOODMAN-PRO/helm</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hermes-agent/"><span class="az-id">Hermes Agent</span><span class="az-what">Prompt-cache-bounded memory</span><code class="az-repo">NousResearch/hermes-agent</code><span class="az-caps"><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hermes-fleet-memory/"><span class="az-id">Hermes Fleet Memory</span><span class="az-what">A domain-firewalled Qdrant memory shared across a Hermes fleet</span><code class="az-repo">amrlazw/hermes-fleet-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
+<li><a class="az-row" href="../systems/hermes-memory-installer/"><span class="az-id">Hermes Memory Installer</span><span class="az-what">A rebuilt recall index whose answers land in a file</span><code class="az-repo">mage0535/hermes-memory-installer</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/hestia/"><span class="az-id">Hestia</span><span class="az-what">Determinism over intelligence</span><code class="az-repo">thefullnacho/hestia</code><span class="az-caps"><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hexis/"><span class="az-id">Hexis</span><span class="az-what">Reconsolidation after a belief changes</span><code class="az-repo">quixiai/hexis</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/hillock/"><span class="az-id">Hillock</span><span class="az-what">A gate on what the model sees</span><code class="az-repo">roandejager/Hillock</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>

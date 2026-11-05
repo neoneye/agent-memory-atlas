@@ -184,6 +184,8 @@ the one that matters — is unknown in every case.
 
 [OpenAI Codex](../../systems/openai-codex/) gates its most expensive memory step, a full consolidation agent run, with a git diff. Phase 2 syncs the selected inputs into the memory folder and asks whether the workspace changed against the last successful baseline; when nothing changed and the required files validate, the job succeeds without spawning the agent. Two cheaper gates sit in front of that. Extraction waits for a session to be idle six hours and takes two sessions per start by default, and both phases skip when less than 25% of a Codex usage window remains. The retention prune runs before the quota check because it spends no tokens.
 
+[Hermes Memory Installer](../../systems/hermes-memory-installer/) gates a remote recall three ways and lets it fail closed, for a reason its own operations log records. Live Hindsight recall runs only when `should_use_live_hindsight` finds too few direct hits among five local layers, the operator has set `MEMORY_LIVE_HINDSIGHT_ENABLED`, and a circuit file is not open (`scripts/tiered_context_injector.py:425-443`, `:1536`). A timeout opens the circuit for 600 seconds and queues the query for a background worker that drains oldest-first. The project's optimization report gives the direction: client timeouts did not cancel the server's work, and 19 abandoned recall requests had piled up (`docs/memory-quality-optimization-report.md:399-422`). A second gate, `should_use_expensive_fallbacks`, keeps the embedding and archive scans behind the same hit count.
+
 ## Tests to require
 
 - Feed the gate turns that plainly need memory and turns that plainly do not,
