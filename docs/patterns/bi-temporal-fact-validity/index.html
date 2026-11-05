@@ -496,6 +496,19 @@ and <code>observed_at</code>
 No read path filters, ranks or returns them; the Recall fact projection
 carries content, kind and <code>observedAt</code> only
 (<code>packages/runtime-host/src/server/execution-composition.ts:890-894</code>).</p>
+<p><a href="../../systems/particles/">Particles</a> gates a world-time
+start differently from an end. The extractor keeps a
+<code>valid_from</code> only with a parseable date, an
+<code>EVENT</code> or <code>STATE</code> kind and a confidence at the
+floor, and drops the future-date condition its <code>valid_until</code>
+gate applies, so a 2019 start lands on a row asserted today (core
+<code>particles/extraction/general.py:3173-3281</code>). A window query
+reads it across statuses and closes a retired state at the earliest of
+its own end, its successor's start and its retirement
+(<code>particles/operations/query/window.py:266-321</code>). It passes
+the diagnostic on the start and not on the end, since extraction drops a
+past <code>valid_until</code>, and the start is rewritten in place with
+no history.</p>
 <p><a href="../../systems/mgi-mind/">MGI-Mind</a> has a world-time start
 and a record-time end. <code>valid_from</code> is written only when a
 caller passes it to <code>mind_fact add</code>, HTTP

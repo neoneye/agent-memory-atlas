@@ -25715,48 +25715,58 @@ the project's former name</td>
 <tr>
 <td><a href="../systems/particles/"><code>particles</code></a></td>
 <td>A particle: one claim-granular sentence with confidence, uncertainty
-kind, asserting principal, status and reason, subject ids, tags and
-provenance refs to corpus snapshots; corpus entries hold the verbatim
-source</td>
-<td>SQLAlchemy over a local SQLite file by default or Postgres;
-embeddings as JSON on the particle row; a content-addressed blob store
-for the append-only corpus</td>
-<td>Cosine over every ACTIVE embedding loaded per query, filtered by
-tag, subject, structured claim, recency and an optional project
-observer, ranked by effective confidence composed from trust, recency
-and utility at read time; an LLM answer cites the hits; a zero-LLM
-digest at session start</td>
-<td>Deposit then LLM claim extraction, inline or in a nightly cycle;
-agents assert one claim at a time over MCP with an excerpt deposited as
-provenance. Every candidate is routed: exact-duplicate suppression,
-retired-value hold, then the conflict ladder</td>
-<td>Nothing is edited. Supersede and retract move status; a
-contradiction quarantines the newcomer behind an INCONSISTENCY record;
-operator corpus delete is the one hard delete</td>
-<td>One store per database; an optional project observer derived from
-project tags on the source corpus entries, honoured only when the MCP
-server is launched bound or the hook config says project, and only after
-a rescope has run; lifted by an all_projects argument on every scoped
-tool</td>
+kind, asserting principal, status and reason, a world-time start and
+kind beside an expiry, subject ids, tags and provenance refs to corpus
+snapshots; corpus entries hold the verbatim source</td>
+<td>SQLAlchemy over a local SQLite file; a Postgres URL is accepted but
+no driver ships and the deployment is documented as deferred; embeddings
+as JSON on the particle row; a content-addressed blob store for the
+append-only corpus</td>
+<td>Cosine over every ACTIVE embedding, decoded once per process and
+refreshed from a change journal, filtered by tag, subject, structured
+claim, recency, an optional world-time window and a project observer,
+ranked by 0.6 cosine plus 0.4 effective confidence from trust and
+recency; an LLM answer whose citations are checked against the shown
+set; a zero-LLM digest at session start; the facade's search_nodes is a
+substring match, with no fusion</td>
+<td>Deposit then LLM claim extraction, inline or in a nightly cycle,
+with a gated world-time start; agents assert one claim at a time over
+MCP with an excerpt deposited as provenance. Every candidate is routed:
+exact-duplicate suppression, retired-value hold, then the conflict
+ladder</td>
+<td>Nothing is edited but the world-time record. Supersede and retract
+move status; a contradiction quarantines the newcomer behind an
+INCONSISTENCY record; operator corpus delete is the one hard delete and
+counts the judgments it erases</td>
+<td>One store per database; a project observer derived from project tags
+on the source corpus entries, bound by particles init claude-code for
+the MCP server and the hooks after a rescope; lifted by an all_projects
+argument on four MCP reads, absent from the subject, lint, event, show
+and facade tools; a bound agent may not mutate or link outside its
+view</td>
 <td>Read MCP server with eight opt-in write tools, a drop-in replacement
 for the reference memory server, Claude Code session-start digest and
-session-end harvest hooks, FastAPI HTTP engine, CLI, LangChain retriever
-and tools, exporters</td>
-<td>A nightly consolidation cycle: extract catch-up, reconcile sweep,
-contradiction census with an LLM second reading, disclosure records,
-curation queue, utility mining, MEMORY.md projection</td>
+session-end harvest hooks, FastAPI HTTP engine with per-client role
+keys, CLI, LangChain retriever and tools, exporters and an interchange
+bundle</td>
+<td>A nightly consolidation cycle: extract catch-up, reconcile and
+update sweeps, paraphrase and re-anchor passes, a held-claim release
+pass, contradiction census with an LLM second reading, disclosure
+records, curation queue, utility mining, MEMORY.md projection and a
+closure measure</td>
 <td>Discrete status with a quarantine; value tombstone on judgment
-retirements; review via CLI or HTTP turns rulings into source-trust
-statements; agent writes clamped to 0.90 confidence and
-own-beliefs-only</td>
+retirements; review via CLI or an operator-keyed HTTP route turns
+rulings into source-trust statements; agent writes clamped to 0.90
+confidence and own-beliefs-only</td>
 <td>Server-built trust, status and identity on agent writes; a retired
 value held for review on both write paths; a transition table enforced
-at one seam; an append-only operator event log; a published LongMemEval
-headline that recomputes from committed per-question records</td>
-<td>Project scope is opt-in and widenable by the caller; brute-force
-cosine over every ACTIVE row; review DISCARD does not arm the tombstone;
-with the default dev-key a loopback engine accepts operator mutations
-and review with no credential, against its own comments</td>
+at one seam; an append-only operator event log; a world-time window read
+across statuses; a published LongMemEval headline that recomputes from
+committed per-question records</td>
+<td>Project scope is widenable by the caller on four reads and absent on
+others; brute-force cosine over every ACTIVE row; review DISCARD does
+not arm the tombstone; the review CLI needs no credential or terminal;
+valid_from is overwritten in place</td>
 </tr>
 <tr>
 <td><a href="../systems/pensyve/"><code>pensyve</code></a></td>
@@ -35066,7 +35076,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>129 of 776:</em> <a
+<p><em>130 of 776:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -35164,6 +35174,7 @@ href="../systems/omega-memory/"><code>omega-memory</code></a>, <a
 href="../systems/openmemory/"><code>openmemory</code></a>, <a
 href="../systems/openzync-core/"><code>openzync-core</code></a>, <a
 href="../systems/ostk-recall/"><code>ostk-recall</code></a>, <a
+href="../systems/particles/"><code>particles</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/plur/"><code>plur</code></a>, <a
 href="../systems/plur1bus/"><code>plur1bus</code></a>, <a

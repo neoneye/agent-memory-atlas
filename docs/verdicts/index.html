@@ -30425,39 +30425,39 @@ ladder, so a source that restates the value produces a held candidate
 behind a retired-value record rather than a fresh <code>ACTIVE</code>
 claim. One review lifts it; the trust cascade is barred from doing
 so.</li>
-<li>Biggest risk: <strong>project scope is a lens the caller
-holds.</strong> The observer is off unless the MCP server is launched
-with <code>--project-observer cwd</code>, the Claude Code hooks default
-to the whole store, <code>query</code>, <code>particles_list</code>,
-<code>particle_search</code> and <code>graph_view</code> take
-<code>all_projects=True</code>, and <code>link_add</code> can tie any
-two particles into one co-evidential group, which widens scope by
-inference.</li>
+<li>Biggest risk: <strong>project scope is a lens the caller can
+lift.</strong> <code>particles init claude-code</code> binds the MCP
+server and the hooks to the session's project, but <code>query</code>,
+<code>particles_list</code>, <code>particle_search</code> and
+<code>graph_view</code> take <code>all_projects=True</code>, a committed
+test pins that widening as the caller's, and the subject, lint, event
+and <code>particle_show</code> tools carry no observer.</li>
 <li>Most reusable component:
-<code>particles/ingest/routing.py:96-107</code> with
-<code>particles/ingest/duplicate_suppression.py:147-208</code> — one
+<code>particles/ingest/routing.py:71-107</code> with
+<code>particles/ingest/duplicate_suppression.py:158-176</code> — one
 ordered router (suppress into a live twin, hold a retired twin, run the
 ladder, insert) and an explicit list of which retirements are judgments
 about the value.</li>
-<li>Second risk: <strong>the operator surface trusts loopback.</strong>
-With the default <code>dev-key</code>, <code>_verify_key</code> returns
-for any loopback peer, so <code>POST /review</code> and the operator
-supersede and retract routes take no credential, beside comments saying
-they never ride that skip; <code>reviewer_id</code> is a supplied
-string.</li>
-<li>Maturity impression: Apache-2.0; 117,215 lines of Python in the
-engine plus 37,084 in the pinned core; 33 commits on main by 1
-contributor, 17 August – 4 October 2026, each a squashed release export;
-6,805 test functions. Five marks: <code>tombstone</code>,
-<code>trust_state</code>, <code>audit_log</code>,
-<code>human_review</code>, <code>negative_eval</code>. A LongMemEval
-headline of 0.804 that recomputes from committed per-question records.
-Two auto-run surfaces and two build-time execution points at this pin;
-nothing was installed or run.</li>
+<li>Second risk: <strong>the review CLI answers any local
+shell.</strong> The HTTP review route needs an operator key and a
+keyless engine refuses every write, but <code>particles review</code>
+resolves in-process with no credential and no terminal check, and
+<code>reviewer_id</code> is a supplied string.</li>
+<li>Maturity impression: Apache-2.0; 160,752 lines of Python in the
+engine plus 48,414 in the pinned core; 55 commits on main by 1
+contributor, 17 August – 1 November 2026, each a squashed release
+export; 9,916 test functions. Six marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>audit_log</code>, <code>human_review</code>,
+<code>negative_eval</code>. A LongMemEval headline of 0.804 that
+recomputes from committed per-question records. Two auto-run surfaces
+and two build-time execution points at this pin; nothing was installed
+or run.</li>
 <li>Study when: you want contradictions kept and queued for a person
 instead of resolved by recency, a value tombstone that survives
-re-extraction, or agent writes whose trust-bearing fields the agent
-cannot supply.</li>
+re-extraction, a world-time start a source can date before the row that
+records it, or agent writes whose trust-bearing fields the agent cannot
+supply.</li>
 <li>Do not copy when: several people or projects share one engine and
 must not see each other, the store will grow past what a per-query load
 of every embedding can serve, or you cannot run a nightly LLM
