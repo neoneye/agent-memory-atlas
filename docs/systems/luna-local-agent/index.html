@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local voice companion whose
+model writes, corrects and forgets one-sentence facts, beside idle-time
+episode notes, lessons, subject pages and per-person fact files.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Luna — Agent Memory Atlas">
+    <meta property="og:description" content="A local voice companion
+whose model writes, corrects and forgets one-sentence facts, beside
+idle-time episode notes, lessons, subject pages and per-person fact
+files.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Luna — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local voice companion
+whose model writes, corrects and forgets one-sentence facts, beside
+idle-time episode notes, lessons, subject pages and per-person fact
+files.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Luna — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Luna",
+      "description": "A local voice companion whose model writes, corrects and forgets one-sentence facts, beside idle-time episode notes, lessons, subject pages and per-person fact files.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A household companion whose forget stops at
+the fact</p>
+          <h1>Luna</h1>
+          <p class="document-deck">A local voice companion whose model
+writes, corrects and forgets one-sentence facts, beside idle-time
+episode notes, lessons, subject pages and per-person fact files.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/fswolf/luna-local-agent">
+              <span>Source</span>
+              <strong>fswolf/luna-local-agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/fswolf/luna-local-agent/commit/659ddcf2952f805a3d090eeabc8055644e2505af" title="659ddcf2952f805a3d090eeabc8055644e2505af">
+              <span>Analyzed revision</span>
+              <code>659ddcf2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/fswolf--luna-local-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>fswolf--luna-local-agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>19,084
+lines of Python in the memory code and the turn runtime around it: mind/
+8,691 (2,044 of them mood), core/ 4,801, llm/ 2,700, memory-manager/
+767, and 2,125 in six memory files under senses/, life/, tools/ and
+commands/; 62,393 outside tests in all</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>308
+commits from two authors, 30 July – 5 November 2026, 304 of them from
+the maintainer</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>800
+unittest methods in 68 files, 11,633 lines, run offline in CI on Ubuntu;
+none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Luna is a local voice companion built from several models on LM
+Studio or llama.cpp, with a persona, moods and a household of recognised
+speakers. Its memory is one-sentence facts the model writes, corrects
+and forgets through tools, plus notes an idle loop writes about
+conversations, its own mistakes and the subjects it knows most about.
+What is notable is the attention to repetition and drift: offers it
+raises unprompted remember being declined, and a lesson the agent
+proposes waits for an on-screen yes. What is weak is that forgetting
+stops at the fact. The episode notes, the running summary and the
+transcript built from the same conversation keep serving what was
+forgotten.</p>
+<p>Speaker scoping has the same edge. Facts, preferences and subject
+pages follow the turn's speaker, each enrolled person's in their own
+file. The owner's episode notes, projects, recipes, history summary and
+knowledge-folder passages reach every turn that is not stream chat, a
+stranger's included. Two marks: <code>human_review</code> on agent-noted
+lessons and recipes, and <code>negative_eval</code> on the per-person
+partition.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Luna keeps several kinds of memory, each with its own writer.</p>
+<ul>
+<li><strong>Facts</strong> about the owner: one sentence each, at most
+220 characters, with no line break and none of the persona's verbal tics
+(<code>_looks_like_valid_fact</code>,
+<code>mind/longterm.py:482-492</code>). A fact has no status. It is
+active, retired on the SQLite backend, or gone.</li>
+<li><strong>Per-person facts</strong>: one JSON file per enrolled
+person, and an in-memory list for a guest met this session
+(<code>senses/people.py:430-493</code>).</li>
+<li><strong>User preferences</strong>: a key-value block in
+<code>memory.json</code> that only the memory page writes
+(<code>memory-manager/manager.py:219-229</code>).</li>
+<li><strong>Episode notes</strong>: two to four first-person sentences
+per finished conversation, and per game session played alone.</li>
+<li><strong>Lessons</strong> about her own behaviour,
+<strong>recipes</strong> for multi-step jobs, <strong>projects</strong>
+that span sessions, one <strong>feeling</strong> line per game.</li>
+<li><strong>Pages</strong>: a short note per subject with three or more
+facts, joined up from those facts and the matching episode notes.</li>
+<li><strong>History</strong>: the last <code>max_raw_messages</code>
+turns plus a running summary, and a transcript archive that
+summarisation never touches.</li>
+</ul>
+<p>A fact becomes a belief the moment it is written. Every write lands
+active and is in the next prompt. It stops being one in three ways, and
+the code keeps them apart deliberately. A <strong>change in the
+world</strong> retires the old row with a timestamp and a pointer to its
+replacement (<code>factstore.replace</code>,
+<code>mind/factstore.py:323-361</code>). A <strong>correction</strong>
+rewrites the row in place with no history, on the reasoning that a
+misheard fact was never true (<code>factstore.update</code>,
+<code>:364-377</code>). A <strong>forget</strong> deletes the row,
+because keeping a retired copy <em>"would be doing the opposite of what
+they asked"</em> (<code>:380-392</code>).</p>
+<p>The deletion is of the fact alone. The conversation that produced it
+stays in the transcript, in the running summary, and in the episode note
+written from it. The page on its subject keeps it until the next dream
+pass rewrites the page. Each of those is read back into the prompt or
+through a tool.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a fact is written mid-turn and filed by speaker; forget deletes the row, while the notes, summary and page built from the same conversation keep serving it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a fact is written mid-turn and filed by speaker; forget deletes the row, while the notes, summary and page built from the same conversation keep serving it
+flowchart TD
+  subgraph writers[&quot;Fact writers&quot;]
+    direction TB
+    TOOL[&quot;remember_fact, update_fact&lt;br/&gt;the model mid-turn&quot;]
+    EXT[&quot;fallback extractor&lt;br/&gt;models without tools&quot;]
+    TIDY[&quot;idle tidy pass, sqlite&lt;br/&gt;merge or retire a pair&quot;]
+    TOOL ~~~ EXT ~~~ TIDY
+  end
+  writers --&gt; WHO{&quot;who is speaking?&quot;}
+  WHO --&gt;|&quot;enrolled or met&quot;| PFILE[&quot;that person&#39;s file&lt;br/&gt;or session memory&quot;]
+  WHO --&gt;|&quot;owner&quot;| FACT[&quot;owner fact&lt;br/&gt;memory.json or facts.db&quot;]
+  FACT --&gt; PROMPT[&quot;prompt: matching facts&lt;br/&gt;plus the newest third&quot;]
+  FACT --&gt;|&quot;REPLACE, CONFLICT&quot;| RET[&quot;retired row&lt;br/&gt;hidden, restorable&quot;]
+  FACT --&gt;|&quot;forget_fact&quot;| DEL[&quot;row deleted&lt;br/&gt;value not kept&quot;]
+  DEL --&gt; PAGE[&quot;subject page keeps it&lt;br/&gt;until the next dream&quot;]
+  CONV[&quot;the same conversation&quot;] --&gt; DERIV[&quot;episode note, summary,&lt;br/&gt;transcript search&quot;]
+  DEL ~~~ CONV
+  PAGE --&gt; BACK[&quot;the forgotten subject&lt;br/&gt;can come back&quot;]
+  DERIV --&gt; BACK</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Luna is one Python process with a full-screen terminal interface, a
+voice loop and a local web server on <code>127.0.0.1:8792</code> for the
+live view, thought viewer, settings and memory page. Memory is
+in-process, with no service of its own.</p>
+<ul>
+<li><strong>Facts</strong>: <code>mind/longterm.py</code> chooses
+between the capped list in <code>agent/memory.json</code> and the table
+in <code>agent/facts.db</code> on every call, per
+<code>long_term_memory.backend</code> (<code>backend</code>,
+<code>:142-174</code>). <code>mind/factstore.py</code> holds the table:
+<code>facts(id, fact, subject, created_at, superseded_at, superseded_by, embedding)</code>
+with an external-content FTS5 index kept in sync by insert, delete and
+update triggers (<code>:49-82</code>). The <code>embedding</code> column
+is reserved and unused.</li>
+<li><strong>Notebook</strong>: <code>agent/notebook.db</code> holds
+<code>lessons</code>, <code>episodes</code>, <code>play</code>, a
+<code>meta</code> key-value table, and the <code>pages</code> table from
+<code>mind/pages.py</code> (<code>mind/notebook.py:42-71</code>).</li>
+<li><strong>People</strong>: <code>agent/people/&lt;name&gt;.json</code>
+with face and voice prints and facts
+(<code>senses/people.py:1-31</code>).</li>
+<li><strong>History</strong>: <code>history/conversation.json</code> and
+<code>history/transcript.jsonl</code>
+(<code>core/history.py:33-34</code>,
+<code>core/transcript.py:35-36</code>).</li>
+<li><strong>Embeddings</strong>: an optional embedding server on
+<code>:8081</code> and reranker on <code>:8082</code>, with vectors
+cached in <code>agent/embeddings.db</code> keyed by a SHA-1 of model and
+text (<code>mind/embedmem.py:99-131</code>).</li>
+</ul>
+<p>The background is two threads. <code>reflect._loop</code> wakes every
+two minutes and, when the assistant is idle, writes episode notes and
+game notes. Once <code>self.reflect_every_hours</code> (20) has passed
+and Luna has been idle for ten minutes, it runs the dream pass, the fact
+tidy and the page writer (<code>mind/reflect.py:974-1014</code>).
+History folding runs on its own worker
+(<code>core/history.py:420-438</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Everything is local and no API key is needed to store anything. The
+installer picks a model for the graphics card and installs the voice
+stack. Facts work with only the chat model; recall by meaning needs the
+embedding server, and falls back to word matching when it is down. Every
+store is a JSON file or a SQLite file a person can open. The memory page
+edits facts and the notebook while Luna runs.</p>
+<p>The default backend is the JSON list.
+<code>config.example.json</code> sets <code>sqlite</code>, and
+<code>launch.py</code> seeds <code>config.json</code> from it only when
+<code>config.json</code> is missing (<code>launch.py:68-77</code>). At
+this commit <code>config.json</code> is tracked, with no
+<code>backend</code> key, so a fresh clone runs the capped list. On that
+backend there is no tidy pass, no <code>REPLACE</code>, no retired
+state, and the oldest fact is dropped past 30.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Tool writes.</strong> <code>remember_fact</code>,
+<code>update_fact</code> and <code>forget_fact</code>
+(<code>tools/memory.py:17-130</code>) call
+<code>longterm.add_fact</code>, <code>update_fact</code> and
+<code>forget_fact</code> (<code>mind/longterm.py:495-526</code>,
+<code>:435-474</code>, <code>:397-432</code>). The editing pair finds
+its target by phrase: exact match, then containment, then a word score
+that must lead the runner-up by half again, or the candidates go back to
+the model to ask the user (<code>find_fact</code>,
+<code>:344-394</code>). Each of the three first checks
+<code>_guest()</code> and routes to the speaker's file.</li>
+<li><strong>Fallback extraction.</strong> Only when the model has no
+tool calling, after every remembered turn,
+<code>extract_in_background</code> starts a thread
+(<code>llm/turns.py:540-542</code>,
+<code>mind/longterm.py:713-738</code>). On SQLite the prompt shows
+twelve facts found by the same search the conversation uses and accepts
+<code>NONE</code>, <code>NEW | subject | fact</code> or
+<code>REPLACE | old | new</code>. A replacement it cannot place degrades
+to an add (<code>:548-662</code>).</li>
+<li><strong>Prompt assembly.</strong> <code>build_system_prompt</code>
+(<code>llm/prompts.py:261-306</code>) adds, for any turn not from stream
+chat: <code>build_memory_prompt</code> (preferences unless a guest is
+speaking, <code>relevant_facts</code>, the pages block, the knowledge
+block, <code>:25-67</code>); <code>build_self_prompt</code> (lessons,
+the latest episode, six game feelings, related episodes, projects,
+recipes, <code>:77-150</code>); the running summary (<code>:264</code>);
+and the offer line (<code>:293</code>). The stored turns are replayed
+after it (<code>llm/turns.py:199-227</code>).</li>
+<li><strong>Fact selection.</strong> <code>relevant_facts</code>
+(<code>mind/longterm.py:270-298</code>): under
+<code>context_facts</code> every fact; over it, the newest third always,
+and the rest by <code>embedmem.select</code>, else FTS5 bm25, else word
+overlap.</li>
+<li><strong>Episodes.</strong> <code>summarize_episodes</code> cuts the
+transcript where silence exceeded <code>self.idle_minutes</code>, and
+writes each finished session with one model call
+(<code>mind/reflect.py:226-291</code>).</li>
+<li><strong>Dream.</strong> <code>dream</code> reads up to 400
+thought-log rows since the last pass. It keeps the ones with a review
+flag or low token confidence, and the ones whose next user turn, within
+ten minutes, starts with "no", "wrong" or "actually". It writes at most
+three lessons (<code>mind/reflect.py:460-586</code>).</li>
+<li><strong>Tidy.</strong> <code>tidy_facts</code> compares pairs above
+0.82 cosine or 0.5 word overlap in which at least one fact is new since
+the last pass. At most six model calls per pass: <code>SAME</code>
+rewrites one row and retires the other, <code>CONFLICT</code> retires
+the losing side (<code>mind/reflect.py:641-744</code>).</li>
+<li><strong>Pages.</strong> <code>pages.write</code> keys each page on a
+SHA-1 of its sorted facts and episode ids, rewrites up to three changed
+pages per pass, and deletes pages whose subject fell below three facts
+(<code>mind/pages.py:164-226</code>).</li>
+<li><strong>Offers.</strong> <code>offers.line</code> picks at most one
+offer per turn from the last background scan
+(<code>life/offers.py:253-291</code>); <code>stop_offering</code> mutes
+it (<code>tools/offers.py:14-27</code>,
+<code>life/offers.py:294-306</code>).</li>
+<li><strong>Memory page.</strong> <code>apply</code> maps add, edit,
+retire, restore and delete onto row ids, and the notebook actions onto
+<code>notebook.py</code>
+(<code>memory-manager/manager.py:194-285</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>On SQLite a fact has <code>created_at</code> and
+<code>superseded_at</code>, both wall-clock record time.
+<code>superseded_at</code> NULL means active. Every read that serves a
+turn filters on it: <code>active_facts</code>, <code>search</code> (in
+the bm25 query and in the newest-third query), <code>export_facts</code>
+and the duplicate check in <code>add</code>
+(<code>mind/factstore.py:151-160</code>, <code>:233-290</code>,
+<code>:296-320</code>). <code>superseded_by</code> is set by
+<code>replace</code> and by nothing else. The tidy merge retires one row
+and rewrites the other with no pointer between them
+(<code>mind/reflect.py:711-718</code>).</p>
+<p><code>add</code> refuses a duplicate only among active rows, so the
+text of a retired fact is admitted again as a new active row.
+<code>import_facts</code>, which absorbs the JSON list when the backend
+flips to SQLite, skips a text present in either state
+(<code>mind/factstore.py:458-484</code>). That rule is what keeps a
+superseded fact from returning through a flip. It covers retirement
+only. A fact forgotten on the JSON side was never removed from
+<code>facts.db</code>, which <code>export_facts</code> left as the
+superset, so flipping back to SQLite serves it again.</p>
+<p>The JSON backend is a list of strings. Duplicates are exact-match
+only, and past <code>max_facts</code> the oldest entries are deleted
+(<code>mind/longterm.py:511-523</code>).</p>
+<p>Lessons carry <code>from_ids</code> (the thought-log rows they came
+from), <code>hits</code>, <code>last_used</code>, <code>retired</code>
+and <code>origin</code>, <code>dream</code> or <code>self</code>. Past
+<code>max_lessons</code> (40) the least-used lesson is retired
+(<code>mind/notebook.py:250-258</code>). Episodes carry start, end, turn
+count and summary. Nothing links an episode to the facts written during
+it.</p>
+<p><strong>Scope</strong> is the speaker of the turn, carried in
+<code>turnctx.current().speaker</code>: None for the owner, a name for
+an enrolled person or a session guest, or <code>STRANGER</code>
+(<code>core/turnctx.py:47</code>,
+<code>senses/people.py:383-390</code>). Facts route on it physically,
+the owner's to <code>memory.json</code> or <code>facts.db</code> and
+everyone else's to their own file, so no fact row carries a speaker. A
+stranger stores nothing and reads none
+(<code>senses/people.py:433-440</code>). Preferences, pages, the
+heavy-mood line and the offer line check the speaker
+(<code>llm/prompts.py:35</code>, <code>mind/pages.py:265</code>,
+<code>life/offers.py:212-228</code>). The notebook, history, transcript,
+projects, recipes and knowledge index carry no speaker and are not
+filtered on one.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Under <code>context_facts</code> (25 by default, 40 and 60 in the
+larger presets) every fact goes into every prompt. Over it,
+<code>embedmem.select</code> keeps the newest third regardless, embeds
+the turn, and takes the closest of the rest above
+<code>EMBED_MIN_SCORE</code> 0.35. When more pass than fit, the reranker
+reorders up to 24 (<code>mind/embedmem.py:273-311</code>). With no
+embedding server, SQLite runs an FTS5 OR-query of quoted terms ordered
+by bm25, and JSON runs a word-overlap score that favours short facts
+(<code>mind/factstore.py:218-290</code>,
+<code>mind/longterm.py:301-332</code>). Each of these returns the chosen
+facts oldest first under the heading <em>"Things learned over
+time"</em>.</p>
+<p>Lessons, episodes and pages use the same embedding ranker with a
+fallback to shared words. Episodes riding in every prompt need a score
+of 0.45 and two shared words, stricter than the
+<code>recall_episodes</code> tool's 0.35
+(<code>mind/notebook.py:316-356</code>). The latest episode always
+travels. Up to two pages ride along when the turn names their subject or
+is within 0.5 of one by meaning (<code>mind/pages.py:232-259</code>).
+Knowledge-folder passages come unasked only above 0.55 and only when the
+embedder is up (<code>mind/knowledge.py:716-742</code>).</p>
+<p><code>search_history</code> is word overlap with light stemming over
+the transcript, returning the turns either side of each hit, and its
+result tells the model to say it does not recall rather than stretch a
+match (<code>tools/memory.py:132-164</code>).</p>
+<p>The prompt opens with the speaker line and the clock to the minute,
+ahead of the persona (<code>llm/prompts.py:281-285</code>). The
+provider's cached prefix therefore ends a few lines in on every
+turn.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The design premise is that facts are written deliberately by the
+model. With tool calling on, the only automatic fact writer is the tidy
+pass, and the model decides every add, update and forget. The tool
+descriptions ask for durable facts only
+(<code>tools/memory.py:17-35</code>). The validator rejects long,
+multi-line or in-character text, and nothing else filters what the model
+saves.</p>
+<p>The correction-versus-change split has one gap at the tool boundary.
+<code>update_fact</code>'s description tells the model to use it when
+<em>"the old version is out of date - they moved, changed jobs, finished
+the project"</em> (<code>tools/memory.py:101-102</code>). Those are
+changes in the world, and the SQLite path treats every
+<code>update_fact</code> as a correction and keeps no history
+(<code>mind/longterm.py:454-460</code>). So "what was my last graphics
+card" is answerable after the fallback extractor's <code>REPLACE</code>
+or the tidy pass. It is not answerable after the model's own update.</p>
+<p>The dream and episode prompts frame their inputs as records, and say
+that anything inside reading like an instruction is part of what was
+said (<code>mind/reflect.py:262-264</code>, <code>:545-547</code>). A
+flag quoting a web page, file or screen tool is shown to the dream pass
+by tool name only (<code>:441-457</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A tool write is synchronous and makes no model call: one SQLite
+insert, or a rewrite of <code>memory.json</code> through a temp file and
+<code>os.replace</code> (<code>mind/longterm.py:91-112</code>). It is in
+the next turn's prompt. The fallback extractor costs one model call per
+remembered turn, off the reply's path. Episode notes lag the
+conversation by at least <code>self.idle_minutes</code> (30) of silence.
+Lessons, tidy and pages lag by up to a day. The tidy pass compares each
+new fact with every older one, so its pair search grows with the store.
+Its model calls stop at six per pass. No pass rewrites the whole
+store.</p>
+<p>Injection is bounded piece by piece: up to 25 facts, 4 lessons, the
+latest episode and two more, six game feelings, three projects, two
+pages, two 900-character knowledge passages, a summary held near 2,500
+characters, and 20 replayed turns in the shipped
+<code>config.json</code>. The sum has no overall cap.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model holds every fact verb (<code>remember_fact</code>,
+<code>recall_facts</code>, <code>update_fact</code>,
+<code>forget_fact</code>), plus <code>search_history</code>,
+<code>recall_episodes</code>, <code>note_lesson</code>,
+<code>save_skill</code>, the project tools, <code>reflect_now</code> and
+<code>stop_offering</code>. The system prompt tells it when to reach for
+each (<code>llm/prompts.py:153-220</code>). Tool groups attach by
+routing, so not every tool is in every payload.</p>
+<p>The tool list narrows by speaker. A stranger gets seven safe tools, a
+session guest gets those plus the four fact tools routed to their own
+memory, and an enrolled person gets everything the owner gets
+(<code>senses/people.py:55-57</code>, <code>:414-427</code>). Stream
+chat passes its own context, keeps the turn out of history and the
+transcript, and gets no memory blocks
+(<code>llm/turns.py:181-190</code>, <code>:508-515</code>).</p>
+<p>Lessons and recipes the agent proposes go through an approval popup
+(section 9). <code>reflect_now</code> runs the whole idle pass at most
+once an hour, after the current reply
+(<code>mind/reflect.py:938-971</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3
+id="forgetting-reaches-the-fact-and-nothing-built-from-it">Forgetting
+reaches the fact and nothing built from it</h3>
+<p>The companion failure that hurts is raising something the user asked
+to drop. Luna answers it for offers and not for facts.
+<code>forget_fact</code> deletes the row
+(<code>mind/factstore.py:380-392</code>) or pops the list entry. It does
+not touch the episode note written from the conversation that produced
+the fact. That note is the "last conversation" block until a later
+episode replaces it, and a related episode afterwards
+(<code>llm/prompts.py:103-122</code>). Nor does it touch the running
+summary, the transcript <code>search_history</code> reads, the thought
+log, or the cached embedding.</p>
+<p>The subject page is rewritten only on the next dream pass, because
+its key hashes the facts under it (<code>mind/pages.py:164-166</code>).
+Until then it rides along whenever the subject is named. The rewrite
+takes the matching episode notes as input, so it can restate the
+forgotten fact from them (<code>:156-161</code>, <code>:172-183</code>).
+No record of the forgotten value survives anywhere. A later mention, or
+the model's own reading of an old episode, can save it again.</p>
+<p>On the JSON backend there is a second path back. A fact forgotten
+while the JSON list is in charge stays active in <code>facts.db</code>
+from the last SQLite period. Flipping back to SQLite serves it again,
+because <code>import_facts</code> only adds (section 5).</p>
+<h3 id="speaker-scoping-covers-facts-not-the-rest-of-the-prompt">Speaker
+scoping covers facts, not the rest of the prompt</h3>
+<p>The README says a stranger gets <em>"none of your memories"</em> and
+that nothing of the owner's leaks into an enrolled housemate's turns.
+For facts, preferences and pages that holds. For the rest it does not. A
+stranger's or a housemate's spoken or typed turn reaches
+<code>ask</code> with no <code>context</code>
+(<code>core/assistant.py:395-400</code>), so <code>private</code> is
+true (<code>llm/turns.py:203</code>). The prompt then carries the
+owner's running summary, the latest episode note and related ones,
+lessons, projects, recipes, the situation block, and up to two passages
+from the owner's knowledge folder. The stored conversation is replayed
+after it. None of those sources reads the speaker.</p>
+<p><code>docs/who.md</code> states the shared history as intended,
+<em>"She's in one room, so everyone sees the same conversation"</em>. It
+says nothing about the episode notes, projects or knowledge passages. An
+enrolled housemate also holds <code>search_history</code>,
+<code>recall_episodes</code> and <code>search_docs</code>, which read
+the same unscoped stores.</p>
+<h3 id="what-the-agent-cannot-write-without-a-person">What the agent
+cannot write without a person</h3>
+<p><code>note_lesson</code> refuses on a turn that called a web, file,
+screen or clipboard tool. It caps self-noted lessons at three per
+session, then pops the approval window used for file writes
+(<code>tools/introspect.py:359-410</code>). <code>ui.ask_approval</code>
+returns False with no terminal app running, and True only on a keypress
+(<code>ui/approval.py:30-92</code>). <code>save_skill</code> does the
+same through the turn's approver when one is set
+(<code>:449-480</code>). Discord's <code>auto</code> mode approves an
+unguarded request without asking, and a recipe is guarded only when its
+turn read outside content (<code>plugins/discord.py:171-178</code>,
+<code>tools/introspect.py:462</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>human_review</code></strong> — awarded on agent-noted
+lessons and recipes. Each waits in the popup until a person answers, and
+the agent's tool registry has no approve verb. Its limits: dream-pass
+lessons land without it, so does every fact and episode note, and
+Discord's <code>auto</code> mode approves most recipes.</li>
+<li><strong><code>negative_eval</code></strong> — awarded on the
+per-person partition and the pages block; see section 10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. A forget leaves
+nothing behind. Three mechanisms come close, each keyed on something
+other than a rejected memory value. <code>import_facts</code> refuses a
+retired text, on the backend flip only. The offer mute is keyed on a
+hash of the fact's text, and it suppresses a mention, not a memory
+(<code>life/offers.py:143-144</code>, <code>:203-210</code>).
+<code>game_feelings_forgotten</code> keeps a forgotten game's feeling
+from being re-derived from old notes, and the next play session clears
+it (<code>mind/notebook.py:459-480</code>).</li>
+<li><strong><code>trust_state</code></strong> — withheld. A fact is
+active or retired, and retired means superseded. Nothing holds a fact as
+unconfirmed, and every write lands active.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Both timestamps
+are record time.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. The
+boundary is a file per person, chosen by the speaker, with no key on a
+row and no predicate on a query.</li>
+<li><strong><code>audit_log</code></strong> — withheld.
+<code>facts.db</code> has no event table. The application log records
+<code>superseded</code> lines and no add, update or forget
+(<code>mind/longterm.py:632</code>, <code>:640</code>).</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>The JSON backend and the memory page race.</strong> The page
+rewrites <code>memory.json</code>, and <code>longterm._sync</code>
+reloads it by mtime before each change
+(<code>mind/longterm.py:62-88</code>). A backend switch calls
+<code>save</code> without that reload (<code>:164-168</code>).</li>
+<li><strong>Restore re-activates a superseded fact beside its
+replacement.</strong> <code>restore_row</code> clears
+<code>superseded_at</code> and <code>superseded_by</code> with no check
+for the row that replaced it
+(<code>mind/factstore.py:431-442</code>).</li>
+<li><strong>The offer mute is keyed on wording.</strong> A fact reworded
+by <code>update_fact</code> or merged by the tidy pass hashes to a new
+key, so a muted birthday offer returns.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tests/</code> holds 800 unittest methods in 68 files, run in CI
+on Ubuntu with Python 3.12 and no model or server
+(<code>.github/workflows/tests.yml</code>,
+<code>tests/offline.py</code>). I did not run them.</p>
+<p><code>negative_eval</code> rests on two committed cases, both
+populated:</p>
+<ul>
+<li><code>tests/test_voices.py:145-170</code>. With Shannon speaking,
+<code>relevant_facts("cats")</code> must equal exactly her one fact, and
+the patched owner store must never see <code>add</code> or
+<code>search</code>. With the owner speaking and Shannon's fact on disk,
+<code>get_facts()</code> must equal exactly the owner's one fact.</li>
+<li><code>tests/test_pages.py:88-96</code>. The owner's pages block must
+contain the Shannon page, and a guest's must be empty for a query naming
+Shannon, against the same written pages.</li>
+</ul>
+<p>Both are scope-boundary cases. None asserts about content: no case
+checks that a retired fact stays out of <code>search</code>, or that a
+forgotten fact stays out of the prompt, an episode or a page.
+<code>tests/test_errors_mind.py:254-263</code> installs a trigger that
+makes retirement fail and asserts that <code>replace</code> rolls back
+the insert too. <code>tests/test_offers.py:80-99</code> asserts that a
+muted offer stays out of later turns, including a date muted for every
+year. <code>tests/test_ladder.py:102-106</code> asserts a stranger
+stores no fact, which is an empty-result assertion and carries no weight
+for the mark.</p>
+<p>No case drives <code>note_lesson</code> or <code>save_skill</code>,
+so the approval gate is read from the code. <code>evals/</code> wraps
+two external AI-safety experiments, fetched at setup, with no results
+committed and nothing about memory. No paper is associated with the
+project. The one arXiv citation in the tree, in
+<code>docs/reasoning.md</code>, is for an introspection probe.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Separate "that was wrong" from "that changed".</strong> A
+correction rewrites in place; a change retires the old row with a
+timestamp and a pointer to its replacement, so the past stays
+answerable. Then make sure every tool that can express a change reaches
+the second path.</li>
+<li><strong>Give proactive mentions their own memory.</strong> Per item:
+when it was raised, how often, a cooldown that grows after repeats, a
+cap, and a permanent mute, all persisted so a restart does not reset
+them.</li>
+<li><strong>Gate the agent's self-instructions harder than its
+facts.</strong> A lesson rides in every later prompt. Refuse one noted
+on a turn that read outside content, and hold the rest for a person's
+yes.</li>
+<li><strong>Pick the contradiction candidates by the conversation's own
+search.</strong> The extractor's REPLACE sees the twelve facts the same
+retriever would serve, not the newest 25, so it keeps working as the
+store outgrows its window.</li>
+<li><strong>Make a failed parse degrade to coexistence.</strong> A
+garbled <code>REPLACE</code> becomes an add, so the worst outcome is a
+duplicate, never a lost or wrongly retired fact.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A forget that knows one store.</strong> If a fact can be
+restated from an episode note, a summary or a page, deleting the fact
+row is not forgetting. Either record the forgotten value and check it on
+every derivation, or propagate the forget to everything built from the
+conversation.</li>
+<li><strong>Scoping the store, not the prompt.</strong> Routing facts by
+speaker is half of a boundary. Every block assembled into the prompt
+needs the same speaker check, or the context builder carries what the
+store kept apart.</li>
+<li><strong>A superset that only gains.</strong> A backend switch that
+adds and never deletes restores whatever was forgotten on the other
+side.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person building a companion on their own machine who
+wants to read and edit everything it keeps. The engineering is careful
+where a solo companion fails: atomic writes, bad-file quarantine, locked
+databases that do not fail a turn, injection framing on every background
+prompt. Walk away if other people's privacy is the requirement. The
+household model scopes the fact store and leaves the notes, history and
+documents shared. Walk away too if "forget that" must hold. The design
+treats the fact as the memory, and it is one of five places the same
+sentence lives.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often the model calls <code>update_fact</code> for a change in
+the world, and loses the old value, compared with the extractor's
+<code>REPLACE</code> on a model without tools.</li>
+<li>Whether the shared episode notes and knowledge passages on a
+housemate's turn are intended, as the shared history is, or an unscoped
+context builder.</li>
+<li>Whether <code>config.json</code> stays tracked; once it is
+untracked, fresh installs start on SQLite.</li>
+<li>How the tidy pass's pair search behaves at a few thousand facts,
+where each new fact is compared with every older one.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Facts: <code>mind/longterm.py</code>,
+<code>mind/factstore.py</code>, <code>mind/embedmem.py</code>,
+<code>tools/memory.py</code></li>
+<li>People and scope: <code>senses/people.py</code>,
+<code>core/turnctx.py</code>, <code>core/assistant.py</code></li>
+<li>Notebook and idle passes: <code>mind/notebook.py</code>,
+<code>mind/reflect.py</code>, <code>mind/pages.py</code>,
+<code>mind/projects.py</code>, <code>mind/skills.py</code>,
+<code>tools/introspect.py</code></li>
+<li>Prompt assembly and turns: <code>llm/prompts.py</code>,
+<code>llm/turns.py</code>, <code>llm/session.py</code></li>
+<li>History: <code>core/history.py</code>,
+<code>core/transcript.py</code>, <code>mind/thoughtlog.py</code></li>
+<li>Offers: <code>life/offers.py</code>,
+<code>tools/offers.py</code></li>
+<li>Knowledge folder: <code>mind/knowledge.py</code></li>
+<li>Editor and commands: <code>memory-manager/manager.py</code>,
+<code>commands/memory.py</code>, <code>ui/approval.py</code>,
+<code>plugins/discord.py</code></li>
+<li>Config: <code>config/mind.py</code>, <code>config.json</code>,
+<code>config.example.json</code>, <code>launch.py</code></li>
+<li>Tests: <code>tests/test_voices.py</code>,
+<code>tests/test_pages.py</code>, <code>tests/test_offers.py</code>,
+<code>tests/test_errors_mind.py</code>,
+<code>tests/test_ladder.py</code>,
+<code>tests/test_game_feelings.py</code>,
+<code>tests/test_play_memory.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>The self-prompt sources read no speaker.</strong>
+<code>git grep -n -E 'speaker|guest\(' -- mind/notebook.py mind/projects.py mind/skills.py mind/knowledge.py mind/situation.py core/history.py</code>
+returns nothing; the same pattern over <code>mind/pages.py</code>
+matches line 265.</li>
+<li><strong>Forget reaches no derived store.</strong>
+<code>git grep -n -E 'forget_fact|factstore\.remove|delete_row' -- mind/notebook.py mind/pages.py core/transcript.py core/history.py mind/embedmem.py</code>
+returns nothing; with <code>-c</code> over <code>tools/memory.py</code>
+and <code>mind/longterm.py</code> it counts 3 and 2.</li>
+<li><strong>The embedding cache is never pruned.</strong>
+<code>git grep -n -i -E 'delete|drop|vacuum' -- mind/embedmem.py</code>
+returns nothing;
+<code>git grep -n -E 'INSERT' -- mind/embedmem.py</code> matches line
+130.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|occurred|event_time|effective' -- mind/factstore.py mind/longterm.py mind/notebook.py</code>
+returns nothing;
+<code>git grep -c -E 'created_at' -- mind/factstore.py</code> counts
+6.</li>
+<li><strong>No status on a fact.</strong>
+<code>git grep -n -i -E 'verified|candidate|pending|status' -- mind/factstore.py</code>
+returns nothing; <code>git grep -c -i status -- mind/longterm.py</code>
+counts 3.</li>
+<li><strong>No event table.</strong>
+<code>git grep -n -E 'CREATE (TABLE|VIRTUAL TABLE|TRIGGER)' -- mind/factstore.py</code>
+returns <code>facts</code>, <code>facts_fts</code> and the three sync
+triggers only.</li>
+<li><strong>No test drives the approval gate.</strong>
+<code>git grep -n -E 'note_lesson|save_skill|_approve_skill' -- tests/</code>
+returns nothing;
+<code>git grep -n 'approver' -- tools/introspect.py</code> matches lines
+459-462 only, inside <code>_approve_skill</code>.</li>
+<li><strong>No content-level exclusion test on the fact store.</strong>
+<code>git grep -n -E 'superseded_at|retire_row|factstore\.search|active_facts|factstore\.replace|factstore\.remove' -- tests/</code>
+returns the rollback case in
+<code>tests/test_errors_mind.py:258-263</code> and a patched
+<code>active_facts</code> in <code>tests/test_offers.py:147</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- .</code>
+returns <code>docs/reasoning.md:347</code> only.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/fswolf/luna-local-agent/commit/659ddcf2952f805a3d090eeabc8055644e2505af"><code class="commit-id" title="659ddcf2952f805a3d090eeabc8055644e2505af">659ddcf2…</code></a>.
+First reading, from a depth-1 clone at the head of <code>main</code>,
+with history from the GitHub API. Screened first: no auto-run or
+build-time surface, two unpinned requirements files, and both flagged
+FRESH only because a shallow clone dates every file to the tip; their
+last changes were 17 October and 26 September 2026. MIT, no rider.
+Nothing installed, built or run. Two marks: <code>human_review</code> on
+agent-noted lessons and recipes, <code>negative_eval</code> on the
+per-person partition; tombstone withheld because a forget leaves no
+record and reaches no derived store (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

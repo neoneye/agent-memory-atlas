@@ -267,6 +267,21 @@ drops disputed reflections before any ranker scores them. Its
 anti-repeat module attacks the same repetition problem from the
 generation end, with a BM25 corpus over the agent's own prior
 output.</p>
+<p><strong><a href="../../systems/luna-local-agent/">Luna</a></strong>
+puts the state on what it raises unprompted rather than on what it
+retrieves. Each offer, a nearly full disk or a remembered date with no
+reminder, keeps <code>[last asked, times]</code> in
+<code>notebook.db</code>, so its twelve- or twenty-four-hour cooldown
+survives a restart, and entries older than 90 days are dropped. A date
+is offered at most twice, and something still wrong after three mentions
+waits six times as long (<code>life/offers.py:196-200</code>,
+<code>:232-250</code>). <code>stop_offering</code> mutes the item for
+good, and a date's mute drops the date so it holds every year. The key
+is eight hex digits of a SHA-1 of the fact's text, so a fact reworded by
+<code>update_fact</code> or merged by the idle tidy is a new item and
+comes up again (<code>life/offers.py:143-144</code>,
+<code>:203-210</code>). <code>tests/test_offers.py:80-99</code> pins the
+mute and its yearly form.</p>
 <p><strong><a href="../../systems/mini-agi/">mini-AGI</a></strong> is
 the counter-case on a unit that is not text: a working set kept stable
 with no activation state at all. Each forward may use the 32 expert

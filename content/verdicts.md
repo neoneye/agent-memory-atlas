@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 786 reports.**
+**This page covers all 787 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7202,3 +7202,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 27,440 lines of TypeScript in src/ outside tests, plus an 11,815-line legacy engine; 330 commits, 23 February – 3 November 2026, the SQLite engine from 12 September; 1,236 Vitest cases run in CI, not run here. Five marks, all but tombstone and human_review. The README's LoCoMo recall@10 of 73.57 against Mem0's 63.72 recomputes from the committed per-question files; its LongMemEval-S answer accuracy has no committed per-question file.
 - Study when: you need an embeddable, offline store where a corrected premise must stop the advice built on it, and questions about the past must be answered as of then.
 - Do not copy when: memory must organise itself from conversation, a person must approve what the agent learns, or erasure must leave an audit trail of what was forgotten.
+
+### [`luna-local-agent`](../systems/luna-local-agent/)
+- Best idea: **a proactive mention that remembers being declined.** Each offer Luna raises unprompted keeps when it was raised and how often in `notebook.db`, so its cooldown survives a restart; a date comes up at most twice, and `stop_offering` mutes the item for good, every year for a date.
+- Second idea: a correction and a change in the world are different writes, `update` rewriting in place and `replace` retiring the old row with a pointer to the new; and a lesson the agent proposes is refused on a turn that read outside content, then waits for an on-screen yes.
+- Biggest risk: **forget stops at the fact.** `forget_fact` deletes the row and nothing else, so the episode note, the running summary, the transcript and, until the next dream pass, the subject page built from the same conversation keep serving it, and nothing records that it was forgotten.
+- Second risk: speaker scoping covers facts, preferences and pages only, and a stranger's or a housemate's turn receives the owner's episode notes, projects, recipes, history summary and knowledge-folder passages; `update_fact`, described to the model for changes in the world, keeps no history; a forget on the default JSON backend returns when the backend flips to SQLite.
+- Most reusable component: `life/offers.py:184-306`, the per-item asked counts, cooldowns and mute, with `replace` and `update` in `mind/factstore.py:323-377`.
+- Maturity impression: MIT; 19,084 lines of Python in the memory code and the turn runtime, 62,393 outside tests; 308 commits from two authors, 30 July – 5 November 2026; 800 unittest methods run offline in CI, not run here. Two marks: `human_review` on agent-noted lessons and recipes, `negative_eval` on the per-person partition.
+- Study when: you are building a companion that must not nag, and want offer hysteresis and an approval gate on self-written instructions in one readable codebase.
+- Do not copy when: "forget that" must hold across every store, several people share the device and must not see each other's notes, or you need the old value after a change the model recorded.

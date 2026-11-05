@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 786 reports.</strong></p>
+<p><strong>This page covers all 787 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32712,6 +32712,47 @@ must be answered as of then.</li>
 <li>Do not copy when: memory must organise itself from conversation, a
 person must approve what the agent learns, or erasure must leave an
 audit trail of what was forgotten.</li>
+</ul>
+<h3 id="luna-local-agent"><a
+href="../systems/luna-local-agent/"><code>luna-local-agent</code></a></h3>
+<ul>
+<li>Best idea: <strong>a proactive mention that remembers being
+declined.</strong> Each offer Luna raises unprompted keeps when it was
+raised and how often in <code>notebook.db</code>, so its cooldown
+survives a restart; a date comes up at most twice, and
+<code>stop_offering</code> mutes the item for good, every year for a
+date.</li>
+<li>Second idea: a correction and a change in the world are different
+writes, <code>update</code> rewriting in place and <code>replace</code>
+retiring the old row with a pointer to the new; and a lesson the agent
+proposes is refused on a turn that read outside content, then waits for
+an on-screen yes.</li>
+<li>Biggest risk: <strong>forget stops at the fact.</strong>
+<code>forget_fact</code> deletes the row and nothing else, so the
+episode note, the running summary, the transcript and, until the next
+dream pass, the subject page built from the same conversation keep
+serving it, and nothing records that it was forgotten.</li>
+<li>Second risk: speaker scoping covers facts, preferences and pages
+only, and a stranger's or a housemate's turn receives the owner's
+episode notes, projects, recipes, history summary and knowledge-folder
+passages; <code>update_fact</code>, described to the model for changes
+in the world, keeps no history; a forget on the default JSON backend
+returns when the backend flips to SQLite.</li>
+<li>Most reusable component: <code>life/offers.py:184-306</code>, the
+per-item asked counts, cooldowns and mute, with <code>replace</code> and
+<code>update</code> in <code>mind/factstore.py:323-377</code>.</li>
+<li>Maturity impression: MIT; 19,084 lines of Python in the memory code
+and the turn runtime, 62,393 outside tests; 308 commits from two
+authors, 30 July – 5 November 2026; 800 unittest methods run offline in
+CI, not run here. Two marks: <code>human_review</code> on agent-noted
+lessons and recipes, <code>negative_eval</code> on the per-person
+partition.</li>
+<li>Study when: you are building a companion that must not nag, and want
+offer hysteresis and an approval gate on self-written instructions in
+one readable codebase.</li>
+<li>Do not copy when: "forget that" must hold across every store,
+several people share the device and must not see each other's notes, or
+you need the old value after a change the model recorded.</li>
 </ul>
         </article>
       </div>

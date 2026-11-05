@@ -154,6 +154,19 @@ repetition up to thirty, and a hard filter drops disputed reflections before any
 ranker scores them. Its anti-repeat module attacks the same repetition problem
 from the generation end, with a BM25 corpus over the agent's own prior output.
 
+**[Luna](../../systems/luna-local-agent/)** puts the state on what it raises
+unprompted rather than on what it retrieves. Each offer, a nearly full disk or a
+remembered date with no reminder, keeps `[last asked, times]` in `notebook.db`,
+so its twelve- or twenty-four-hour cooldown survives a restart, and entries
+older than 90 days are dropped. A date is offered at most twice, and something
+still wrong after three mentions waits six times as long
+(`life/offers.py:196-200`, `:232-250`). `stop_offering` mutes the item for good,
+and a date's mute drops the date so it holds every year. The key is eight hex
+digits of a SHA-1 of the fact's text, so a fact reworded by `update_fact` or
+merged by the idle tidy is a new item and comes up again
+(`life/offers.py:143-144`, `:203-210`). `tests/test_offers.py:80-99` pins the
+mute and its yearly form.
+
 **[mini-AGI](../../systems/mini-agi/)** is the counter-case on a unit that is not
 text: a working set kept stable with no activation state at all. Each forward
 may use the 32 expert weight files its whole text since position 0 has voted
