@@ -552,6 +552,8 @@ report withholds `audit_log` on that ground.
 
 **[obsidian-second-brain](../../systems/obsidian-second-brain/) appends the log line and leaves the log inside the tool's reach.** Every MCP save, update, replace and move appends one dated `action | description` line to `Logs/<day>.md` or `log.md` (`integrations/obsidian-mcp-server/vault_ops.py:794-809`, `:880-895`). To the same server the log is an ordinary vault note: `obsidian_replace_text` accepts it, and an edit to a bookkeeping surface skips bookkeeping, so rewriting the log leaves no line (`:50`, `:788-791`). Writes made with the agent's own file tools, which is how the commands write, are logged only when the model follows the prompt. The report withholds the mark.
 
+**[ZizkaDB](../../systems/zizkadb/) makes the memory table its own log and chains the deletions into it.** No path rewrites an event's content in `events`, and a correction is a new event naming the old one. Each insert checksums the row's content and audit fields and links it to the agent's previous chain hash under the agent row lock (`core/services/event_write.py:322-390`). Forget and retention move each deleted row's link and checksum into `event_tombstones` with a reason and a time, and seal the batch with a receipt digest, so `verify_chain` walks across an erasure (`core/services/audit_chain.py:150-218`). The chain is unkeyed, a tombstone names no actor, and deleting an agent or an account removes its tombstones with it.
+
 
 ## Tests to require
 

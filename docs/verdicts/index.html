@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 784 reports.</strong></p>
+<p><strong>This page covers all 785 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32631,6 +32631,44 @@ revocation that sticks.</li>
 <li>Do not copy when: memories must stay on your machine, the dependency
 graph is the reason you came, or more than one person shares the server
 under one key.</li>
+</ul>
+<h3 id="zizkadb"><a
+href="../systems/zizkadb/"><code>zizkadb</code></a></h3>
+<ul>
+<li>Best idea: <strong>an erasure that is a link in the chain.</strong>
+Forget and retention move each deleted row's chain link and checksum
+into a tombstone and seal the batch with a receipt digest, so the
+per-agent hash chain verifies across the deletion without keeping any
+content.</li>
+<li>Second idea: scope from the credential rather than the request. The
+tenant comes from the key's hash or the JWT, an agent key binds to its
+first agent atomically and refuses every other, and the Qdrant filter
+carries both keys.</li>
+<li>Biggest risk: <strong>supersession has two unchecked
+writers.</strong> A <code>supersedes</code> key placed in raw metadata
+skips the same-agent check and the reader matches it on tenant alone, so
+one agent can hide another's event; import keeps the old ids in the
+link, so every explicit correction is lost on a move.</li>
+<li>Second risk: context is the ten newest events first, then keyword or
+vector hits, each value cut to 80 characters; forget matches only a
+top-level, string-valued data key and keeps no record of the value, so
+the next event naming the subject is served.</li>
+<li>Most reusable component: <code>delete_and_tombstone</code> and
+<code>record_head_break</code> in
+<code>core/services/audit_chain.py:77-218</code>, with the vector-first
+forget in <code>core/api/memory.py:392-415</code>.</li>
+<li>Maturity impression: AGPL-3.0 with an MIT MCP server; 13,707 lines
+of Python in <code>core/</code>, 880 commits under 27 author names, 10
+May – 4 November 2026; 727 core pytest functions, 175 of them against a
+real Postgres in CI, not run here. Three marks:
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</li>
+<li>Study when: you want one Postgres store to be both the audit record
+of what your agents did and the memory the next run reads, with a chain
+you can verify.</li>
+<li>Do not copy when: memory must distil facts or reconcile
+contradictions, corrections must survive a migration, or several agents
+in one tenant must not affect each other's recall.</li>
 </ul>
         </article>
       </div>

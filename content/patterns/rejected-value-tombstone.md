@@ -820,6 +820,8 @@ suite carrying only the first would pass on a store that had stopped accepting
 writes at all — the same trap this atlas keeps finding in exclusion tests that
 never assert anything is still returned.
 
+**[ZizkaDB](../../systems/zizkadb/) takes the other branch: its erasure keeps the trace and neither the value nor a digest of it.** `forget` selects events whose top-level data key equals the given value, deletes them and their vectors, and leaves a tombstone of each row's chain link and checksum (`core/api/memory.py:366-415`). The value is logged only as the first 12 hex digits of its SHA-256, and no table stores it. Nothing refuses the next event carrying `user_id = alice`, which is stored and served as though no erasure had happened. That is the price of retaining nothing about the subject, and it is why the mark is withheld.
+
 ### The refusal that reaches the inference
 
 [RCK](../../systems/rck/) is the instance that closes the loop this page has

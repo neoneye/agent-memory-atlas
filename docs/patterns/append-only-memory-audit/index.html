@@ -949,6 +949,18 @@ bookkeeping surface skips bookkeeping, so rewriting the log leaves no
 line (<code>:50</code>, <code>:788-791</code>). Writes made with the
 agent's own file tools, which is how the commands write, are logged only
 when the model follows the prompt. The report withholds the mark.</p>
+<p><strong><a href="../../systems/zizkadb/">ZizkaDB</a> makes the memory
+table its own log and chains the deletions into it.</strong> No path
+rewrites an event's content in <code>events</code>, and a correction is
+a new event naming the old one. Each insert checksums the row's content
+and audit fields and links it to the agent's previous chain hash under
+the agent row lock (<code>core/services/event_write.py:322-390</code>).
+Forget and retention move each deleted row's link and checksum into
+<code>event_tombstones</code> with a reason and a time, and seal the
+batch with a receipt digest, so <code>verify_chain</code> walks across
+an erasure (<code>core/services/audit_chain.py:150-218</code>). The
+chain is unkeyed, a tombstone names no actor, and deleting an agent or
+an account removes its tombstones with it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

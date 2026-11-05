@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 72 systems of
-784 carry the mark, and <a
+785 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>72 systems of
-784 in the atlas carry the mark.</strong> The
+785 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -1352,6 +1352,17 @@ acknowledgement. A suite carrying only the first would pass on a store
 that had stopped accepting writes at all — the same trap this atlas
 keeps finding in exclusion tests that never assert anything is still
 returned.</p>
+<p><strong><a href="../../systems/zizkadb/">ZizkaDB</a> takes the other
+branch: its erasure keeps the trace and neither the value nor a digest
+of it.</strong> <code>forget</code> selects events whose top-level data
+key equals the given value, deletes them and their vectors, and leaves a
+tombstone of each row's chain link and checksum
+(<code>core/api/memory.py:366-415</code>). The value is logged only as
+the first 12 hex digits of its SHA-256, and no table stores it. Nothing
+refuses the next event carrying <code>user_id = alice</code>, which is
+stored and served as though no erasure had happened. That is the price
+of retaining nothing about the subject, and it is why the mark is
+withheld.</p>
 <h3 id="the-refusal-that-reaches-the-inference">The refusal that reaches
 the inference</h3>
 <p><a href="../../systems/rck/">RCK</a> is the instance that closes the

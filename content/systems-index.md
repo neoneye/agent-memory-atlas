@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **784 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **785 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -930,4 +930,5 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/zer0dex/"><span class="az-id">zer0dex</span><span class="az-what">The citation file says the query wiring is your job</span><code class="az-repo">hermes-labs-ai/zer0dex</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/zerostack/"><span class="az-id">ZeroStack</span><span class="az-what">One global file, one project slug</span><code class="az-repo">gi-dellav/zerostack</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/zettelforge/"><span class="az-id">ZettelForge</span><span class="az-what">Superseded by one shared entity, then served anyway</span><code class="az-repo">ThreatRecall/zettelforge</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/zizkadb/"><span class="az-id">ZizkaDB</span><span class="az-what">A hash-chained event log served back as memory</span><code class="az-repo">ZIZKA-AI-SL/ZizkaDB</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>

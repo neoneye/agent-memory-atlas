@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 784 reports.**
+**This page covers all 785 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7182,3 +7182,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 5,612 lines of Python outside tests; 61 commits, 16 September – 4 October 2026, 55 from one maintainer; 67 pytest functions run in CI, not run here. Four marks: `tombstone` and `scope_enforced` on the opt-in gateway, `trust_state` on the facts ledger, `negative_eval`. The README's DeepEval table is a dictionary of constants.
 - Study when: you want a short list of project constants that every coding agent reads at session start, served from one SQLite file, with a revocation that sticks.
 - Do not copy when: memories must stay on your machine, the dependency graph is the reason you came, or more than one person shares the server under one key.
+
+### [`zizkadb`](../systems/zizkadb/)
+- Best idea: **an erasure that is a link in the chain.** Forget and retention move each deleted row's chain link and checksum into a tombstone and seal the batch with a receipt digest, so the per-agent hash chain verifies across the deletion without keeping any content.
+- Second idea: scope from the credential rather than the request. The tenant comes from the key's hash or the JWT, an agent key binds to its first agent atomically and refuses every other, and the Qdrant filter carries both keys.
+- Biggest risk: **supersession has two unchecked writers.** A `supersedes` key placed in raw metadata skips the same-agent check and the reader matches it on tenant alone, so one agent can hide another's event; import keeps the old ids in the link, so every explicit correction is lost on a move.
+- Second risk: context is the ten newest events first, then keyword or vector hits, each value cut to 80 characters; forget matches only a top-level, string-valued data key and keeps no record of the value, so the next event naming the subject is served.
+- Most reusable component: `delete_and_tombstone` and `record_head_break` in `core/services/audit_chain.py:77-218`, with the vector-first forget in `core/api/memory.py:392-415`.
+- Maturity impression: AGPL-3.0 with an MIT MCP server; 13,707 lines of Python in `core/`, 880 commits under 27 author names, 10 May – 4 November 2026; 727 core pytest functions, 175 of them against a real Postgres in CI, not run here. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you want one Postgres store to be both the audit record of what your agents did and the memory the next run reads, with a chain you can verify.
+- Do not copy when: memory must distil facts or reconcile contradictions, corrections must survive a migration, or several agents in one tenant must not affect each other's recall.

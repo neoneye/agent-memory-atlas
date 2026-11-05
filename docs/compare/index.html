@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-784, generated from each report's frontmatter —
+785, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-784, generated from each report's frontmatter —
+785, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-784, generated from each report's frontmatter —
+785, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 784, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 785, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-784, generated from each report's frontmatter —
+785, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 784 systems by the seven mechanisms
+filters all 785 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -35070,6 +35070,49 @@ head</td>
 recall then ignore; a 30-day expiry every note inherits; evolved text
 never re-indexed in LanceDB; mutation events only in a rotating log</td>
 </tr>
+<tr>
+<td><a href="../systems/zizkadb/"><code>zizkadb</code></a></td>
+<td>An event row: agent, type, a JSON data payload, an optional parent
+event, session, metadata carrying importance and supersedes, timestamp,
+sequence number, a SHA-256 checksum and a per-agent chain hash</td>
+<td>Postgres as the source of truth for events, tombstones, receipts and
+chain heads, with a GIN full-text index; optional Qdrant for vectors
+when embeddings are on; Redis for caches and rate limits; one all-in-one
+container or a compose stack</td>
+<td>context_for packs the ten newest events, then keyword or vector hits
+weighted by relevance, importance and a 30-day recency half-life, into a
+2,000-token block; search fuses Postgres full-text and Qdrant by RRF;
+superseded events are dropped after retrieval</td>
+<td>The application, framework callbacks or the MCP log_event tool post
+events; each insert is synchronous with its checksum and chain link;
+secret-named keys are redacted before storage; no extraction or model
+call</td>
+<td>A new event naming an old one in supersedes, or a later STATE_SET or
+STATE_DELETE of every key, hides the old event from memory without
+deleting it; forget deletes events whose top-level data key equals a
+string; retention deletes by age; both leave sealed tombstones</td>
+<td>tenant_id from the credential on every query; agent_id bound to the
+API key on first use and enforced on reads and writes; self-hosted runs
+one agent per install</td>
+<td>REST API, Python and TypeScript SDKs, LangChain, LangGraph, CrewAI
+and LiveKit loggers, a stdio MCP server with log, search, context, why,
+time-travel and forget tools, a CLI and a Next.js dashboard</td>
+<td>An embedding worker polling every two seconds for pending events,
+with retries and a dead state; an hourly retention purge inside the API
+process when a period is set; no consolidation or summarisation
+pass</td>
+<td>Integrity, not belief: a checksum and per-agent hash chain prove the
+record unchanged, and erasures are sealed; nothing marks an event
+candidate or verified, and every logged event is served</td>
+<td>Credential-derived scope on every read; deletions that leave a
+verifiable trace without keeping content; tamper tests that inject the
+fault through raw SQL; vectors deleted before rows under the embed
+worker's lock</td>
+<td>A supersedes link set through raw metadata skips the same-agent
+check and can hide any event in the tenant; import keeps old ids in
+supersedes, so superseded facts return after a move; context values are
+cut to 80 characters; telemetry defaults on</td>
+</tr>
 </tbody>
 </table></div>
 <!-- END GENERATED MATRIX -->
@@ -35150,7 +35193,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>72 of 784:</em> <a
+<p><em>72 of 785:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -35226,7 +35269,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>199 of 784:</em> <a
+<p><em>199 of 785:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -35432,7 +35475,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>131 of 784:</em> <a
+<p><em>131 of 785:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -35571,7 +35614,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>329 of 784:</em> <a
+<p><em>330 of 785:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -35911,12 +35954,13 @@ href="../systems/yantrikdb/"><code>yantrikdb</code></a>, <a
 href="../systems/yantrikdb-hermes-plugin/"><code>yantrikdb-hermes-plugin</code></a>,
 <a href="../systems/yesmem/"><code>yesmem</code></a>, <a
 href="../systems/yourmemory/"><code>yourmemory</code></a>, <a
-href="../systems/zep/"><code>zep</code></a></p>
+href="../systems/zep/"><code>zep</code></a>, <a
+href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Append-only mutation audit</strong> — A named append-only
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>261 of 784:</em> <a
+<p><em>262 of 785:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -36184,11 +36228,12 @@ href="../systems/widemem-ai/"><code>widemem-ai</code></a>, <a
 href="../systems/xerj/"><code>xerj</code></a>, <a
 href="../systems/yantrikdb/"><code>yantrikdb</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
-<a href="../systems/yourmemory/"><code>yourmemory</code></a></p>
+<a href="../systems/yourmemory/"><code>yourmemory</code></a>, <a
+href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>99 of 784:</em> <a
+<p><em>99 of 785:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -36291,7 +36336,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>498 of 784:</em> <a
+<p><em>499 of 785:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -36805,7 +36850,8 @@ href="../systems/yantrikdb-hermes-plugin/"><code>yantrikdb-hermes-plugin</code><
 <a href="../systems/yantrikdb-mcp/"><code>yantrikdb-mcp</code></a>, <a
 href="../systems/yesmem/"><code>yesmem</code></a>, <a
 href="../systems/zer0dex/"><code>zer0dex</code></a>, <a
-href="../systems/zerostack/"><code>zerostack</code></a></p>
+href="../systems/zerostack/"><code>zerostack</code></a>, <a
+href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
 <p>Three observations follow from the counts, stated no more strongly
@@ -36825,8 +36871,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-498 repositories of
-784 assert that particular material must
+499 repositories of
+785 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -36899,7 +36945,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 784 is the real figure for the second kind, and
+of 785 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not
