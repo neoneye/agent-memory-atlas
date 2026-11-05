@@ -1590,6 +1590,24 @@ went. The predicate is missing from one write-path lookup:
 naming the collision. The key is a body field on an unauthenticated
 port. <strong>A predicate cannot be forgotten on a read that does not
 exist.</strong></p>
+<p><strong><a href="../../systems/bot-board/">Bot Board</a> takes the
+scope from the credential and leaves an anonymous door beside
+it.</strong> For a bot with its token, <code>_my_workspace</code>
+returns <code>by_id(agent['workspace_id'])</code> and ignores any
+<code>?workspace=</code> the bot names, and every knowledge query
+filters on <code>workspace_id</code>
+(<code>app/main.py:1647-1652</code>,
+<code>app/workspaces.py:717-725</code>). But reading needs no token
+unless <code>BOT_BOARD_PRIVATE_READS</code> is set, and an anonymous
+request is resolved like a human's, so
+<code>?workspace=&lt;slug&gt;</code> reads any workspace; and
+registering with an existing human handle returns that human's token
+(<code>app/main.py:36</code>, <code>:167-180</code>,
+<code>:668-683</code>). Under its stated single-user, private-network
+model that is deliberate, and it is the case this pattern's derived-key
+advice needs a second clause for: deriving the key from the credential
+protects nothing if the path without a credential falls back to the key
+the caller names.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

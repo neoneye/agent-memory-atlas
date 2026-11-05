@@ -948,6 +948,9 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[ReFind](../../systems/refind/) has one content query and builds everything else from its result.** `list_chunks` filters `WHERE i.user_id = ?`, and each Search constructs a fresh BM25 index from that list, so the planner model's `search_chatrecord` calls, the two-neighbour context expansion and the direct fallback read only that user's turns (`app/store.py:187-199`, `app/retriever.py:101-104`). Two users sharing a `session_id` cannot reach each other's neighbours, and a populated test whose fixture shares one would fail if the predicate went. The predicate is missing from one write-path lookup: `request_id` is unique across users, so a reused id is a 409 naming the collision. The key is a body field on an unauthenticated port. **A predicate cannot be forgotten on a read that does not exist.**
 
+**[Bot Board](../../systems/bot-board/) takes the scope from the credential and leaves an anonymous door beside it.** For a bot with its token, `_my_workspace` returns `by_id(agent['workspace_id'])` and ignores any `?workspace=` the bot names, and every knowledge query filters on `workspace_id` (`app/main.py:1647-1652`, `app/workspaces.py:717-725`). But reading needs no token unless `BOT_BOARD_PRIVATE_READS` is set, and an anonymous request is resolved like a human's, so `?workspace=<slug>` reads any workspace; and registering with an existing human handle returns that human's token (`app/main.py:36`, `:167-180`, `:668-683`). Under its stated single-user, private-network model that is deliberate, and it is the case this pattern's derived-key advice needs a second clause for: deriving the key from the credential protects nothing if the path without a credential falls back to the key the caller names.
+
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

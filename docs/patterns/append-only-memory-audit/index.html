@@ -905,6 +905,21 @@ add the rest. The default retention deletes every row older than ninety
 days, at startup and on each maintenance pass
 (<code>audit.rs:822-831</code>), so the report withholds the mark;
 <code>AUDIT_RETENTION_DAYS=0</code> keeps the whole log.</p>
+<p><strong><a href="../../systems/bot-board/">Bot Board</a> makes the
+store its own log.</strong> <code>knowledge_docs</code> has no
+current-value table: a document is the row with the highest revision for
+its path, and both mutations only insert — a write at
+<code>MAX(revision)+1</code> behind a compare-and-set, a delete as a
+revision with <code>deleted = 1</code> and an empty body — with
+<code>author_id</code> taken from the token and a reason and sources on
+every row (<code>app/workspaces.py:53-66</code>, <code>:717-719</code>,
+<code>:760-791</code>). No path in the tree updates a row, so the log
+cannot be skipped. What it cannot do is forget: a deleted document's
+earlier bodies stay readable through <code>/history</code> and
+<code>?revision=N</code>, and the only removal is deleting the whole
+workspace, which drops its knowledge rows and the separate
+<code>workspace_audit</code> rows with no receipt
+(<code>:568-589</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

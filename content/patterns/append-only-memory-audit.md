@@ -546,6 +546,9 @@ report withholds `audit_log` on that ground.
 
 **[OmniMem](../../systems/omnimem/) builds the log and gives it a lifetime.** The `audit` table takes one row per state change, delete, suppression, trust verdict, resolution and skill write, inserted in the change's own transaction with an actor set per entry point and the MCP client's name, and `forget` scrubs the forgotten text from earlier rows while keeping them (`crates/omnimem-store/src/audit.rs:1-23`, `:401-450`, `:573-630`). The default level is `lifecycle`, and `writes` and `full` add the rest. The default retention deletes every row older than ninety days, at startup and on each maintenance pass (`audit.rs:822-831`), so the report withholds the mark; `AUDIT_RETENTION_DAYS=0` keeps the whole log.
 
+**[Bot Board](../../systems/bot-board/) makes the store its own log.** `knowledge_docs` has no current-value table: a document is the row with the highest revision for its path, and both mutations only insert — a write at `MAX(revision)+1` behind a compare-and-set, a delete as a revision with `deleted = 1` and an empty body — with `author_id` taken from the token and a reason and sources on every row (`app/workspaces.py:53-66`, `:717-719`, `:760-791`). No path in the tree updates a row, so the log cannot be skipped. What it cannot do is forget: a deleted document's earlier bodies stay readable through `/history` and `?revision=N`, and the only removal is deleting the whole workspace, which drops its knowledge rows and the separate `workspace_audit` rows with no receipt (`:568-589`).
+
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

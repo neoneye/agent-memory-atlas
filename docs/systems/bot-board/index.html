@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted message board for
+coding-harness bots, whose per-workspace knowledge base keeps every
+revision with author, reason and sources.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Bot Board — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted message board
+for coding-harness bots, whose per-workspace knowledge base keeps every
+revision with author, reason and sources.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Bot Board — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted message
+board for coding-harness bots, whose per-workspace knowledge base keeps
+every revision with author, reason and sources.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Bot Board — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Bot Board",
+      "description": "A self-hosted message board for coding-harness bots, whose per-workspace knowledge base keeps every revision with author, reason and sources.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A revisioned knowledge base shared by a
+fleet of coding bots</p>
+          <h1>Bot Board</h1>
+          <p class="document-deck">A self-hosted message board for
+coding-harness bots, whose per-workspace knowledge base keeps every
+revision with author, reason and sources.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jalemieux/bot_board">
+              <span>Source</span>
+              <strong>jalemieux/bot_board</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jalemieux/bot_board/commit/9d77791b3fd8e8378d6d98d32700547e077dd1a2" title="9d77791b3fd8e8378d6d98d32700547e077dd1a2">
+              <span>Analyzed revision</span>
+              <code>9d77791b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jalemieux--bot_board" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jalemieux--bot_board</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>13,461
+lines of Python in 17 files under app/, 810 of them in the workspace and
+knowledge-base module; 4,616 in the launcher, keeper, routines runner,
+installer and client</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>833
+commits under 11 author names, 3 September – 4 November 2026, most of
+them by the project's own bots; the pin is tagged v1.0.251; the GitHub
+repository is a read-only mirror of a self-hosted Forgejo</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>532
+unittest functions in 74 files (13,996 lines); the knowledge base is
+exercised in 5 of them; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Bot Board is a self-hosted message board on which coding-harness
+sessions — Claude Code, Codex, Copilot, OpenCode — claim threads, hand
+off work and talk to each other and to one human. Its memory is one
+knowledge base per workspace: a set of Markdown documents at paths,
+every one kept as numbered revisions. A write must name the revision it
+was based on, and is refused otherwise. Every revision records who wrote
+it, why and from which messages, and a delete appends a revision rather
+than removing one. The weak side is the boundary around it. A bot is
+confined to its workspace only while it uses its own token, and the
+board as installed lets anyone read without one. Nothing in the store
+says whether a document is settled, disputed or wrong.</p>
+<p>The project is built by its own fleet: most of its 833 commits are
+authored by bot handles, and the GitHub repository describes itself as a
+read-only mirror of a Forgejo instance. Three marks:
+<code>scope_enforced</code>, for knowledge reads keyed on the token's
+workspace; <code>audit_log</code>, because the knowledge table only ever
+grows and each row names its author and reason; and
+<code>negative_eval</code>, for a test in which a deleted document and
+another workspace's documents must stay out of populated lists.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a document such as <code>decisions/decisions.md</code> in
+one workspace. Its state is the highest-numbered row for that path. A
+write sends a body, the revision the writer read, a reason and a list of
+sources; the board appends revision <em>n+1</em> if <em>n</em> is still
+current and refuses with 409 if it is not. A delete appends a revision
+with an empty body and <code>deleted = 1</code>, which hides the path
+from list, search and get, while every earlier body stays readable in
+the history.</p>
+<p>There is no state between written and true. The README says so
+directly — <em>"There is no approval step. The knowledge base is the
+workspace's memory, and anyone working in the workspace may add to
+it"</em>. The bot guide carries what the store does not: write a
+decision as settled only when the thread settled it, search before
+writing, and when something contradicts an entry, <em>"do not overwrite
+it: say so in the thread, quote both, and ask which holds"</em>
+(<code>AGENTS.md:60-68</code>, <code>:183-188</code>). Those are
+instructions to the model. Nothing in the board checks them.</p>
+<p>Until 20 October 2026 the design was different. Project context had
+<code>draft</code>, <code>publish</code> and <code>empty</code> modes,
+<em>"later bot edits are drafts"</em>, and a separate route let a human
+approve a draft (<code>904c5a3^:app/main.py:268-269</code>,
+<code>:853</code>). The commit that introduced workspaces replaced that
+with <code>knowledge_docs</code> and migrated only the latest published
+revision of each context, leaving the rest in a renamed table
+(<code>app/workspaces.py:133-151</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — A write lands only if it names the current revision, and both write and delete append rows; reads take the highest revision per path, history keeps every body, and only deleting the whole workspace removes anything</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: A write lands only if it names the current revision, and both write and delete append rows; reads take the highest revision per path, history keeps every body, and only deleting the whole workspace removes anything
+flowchart TD
+    W[&quot;Bot, human or admin bot&lt;br/&gt;PUT /api/knowledge/path&lt;br/&gt;body, base_revision,&lt;br/&gt;reason, sources&quot;]
+    S{&quot;Workspace from token&lt;br/&gt;bot: its own&lt;br/&gt;anonymous: any named&quot;}
+    C{&quot;Under the write lock:&lt;br/&gt;base_revision equals&lt;br/&gt;MAX(revision)?&quot;}
+    R[&quot;409: read again,&lt;br/&gt;merge, retry&quot;]
+    A[&quot;INSERT revision n+1&lt;br/&gt;author from token&quot;]
+    D[&quot;DELETE appends revision&lt;br/&gt;body empty, deleted = 1&quot;]
+    T[(&quot;knowledge_docs&lt;br/&gt;append-only rows&lt;br/&gt;UNIQUE workspace,&lt;br/&gt;path, revision&quot;)]
+    Q[&quot;List, search, get:&lt;br/&gt;highest revision&lt;br/&gt;per path, deleted = 0&quot;]
+    H[&quot;History, ?revision=N:&lt;br/&gt;every row, including&lt;br/&gt;bodies before a delete&quot;]
+    X[&quot;Only erasure: a human&lt;br/&gt;deletes the archived&lt;br/&gt;workspace by typed slug&quot;]
+    W --&gt; S
+    S --&gt; C
+    C --&gt;|no| R
+    C --&gt;|yes| A
+    D --&gt; T
+    A --&gt; T
+    T --&gt; Q
+    T --&gt; H
+    T -.-&gt; X</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One FastAPI process (<code>app/main.py</code>, 2,573 lines; the pages
+in <code>app/web.py</code>, 3,570) over one SQLite database. The
+knowledge base and the workspace boundary are in
+<code>app/workspaces.py</code>; messages, claims and receipts in
+<code>app/db.py</code>; skills and profiles in
+<code>app/registry.py</code>; scheduled jobs in
+<code>app/routines.py</code>; the five-minute sweep that releases and
+nudges stalled threads in <code>app/progress.py</code>. Writes serialise
+on one process-wide <code>threading.Lock</code>
+(<code>app/db.py:169</code>), which is sufficient because the board runs
+as a single uvicorn process (<code>Dockerfile:44</code>,
+<code>run.sh:76</code>).</p>
+<p>The other half runs on each machine that hosts bots.
+<code>bin/bot</code> launches and resumes harness sessions, waking one
+only when a message is for it; <code>bin/keeper</code> reports the
+machine's bots to the board and starts or stops them as the fleet page
+asks. A bot's whole configuration is its environment: board address,
+handle and token.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Installation is a <code>curl … | bash</code> line or a Docker Compose
+file with a Forgejo beside it. Four pinned runtime dependencies
+(<code>requirements.txt</code>). The security model is explicit and
+narrow: bots run their harness with permission prompts bypassed, so
+<em>"anyone who can post on your board can run commands on every machine
+your bots run on"</em>, and the board is meant for
+<code>127.0.0.1</code> or a private tailnet
+(<code>SECURITY.md:3-29</code>). That model is the context for every
+boundary finding below: the board is single-user by design, and the
+workspace is an organisational boundary between one person's bots, not a
+security boundary between people.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>PUT /api/knowledge/{path}</code> →
+<code>knowledge_put</code> (<code>app/main.py:1691-1697</code>) →
+<code>_my_workspace</code> → <code>can_write</code> →
+<code>kb_put</code> (<code>app/workspaces.py:760-777</code>): validate
+the path against <code>PATH_RE</code> and a 200,000-byte cap, refuse an
+archived workspace, then under the lock compare
+<code>base_revision</code> with <code>MAX(revision)</code> and insert
+the next row.</li>
+<li><strong>Delete.</strong> <code>DELETE /api/knowledge/{path}</code> →
+<code>kb_delete</code> (<code>app/workspaces.py:780-791</code>): the
+same compare-and-set, then a row with <code>deleted = 1</code> and an
+empty body.</li>
+<li><strong>Read.</strong> <code>GET /api/knowledge</code> →
+<code>kb_list</code> (<code>:722-743</code>);
+<code>GET /api/knowledge/{path}</code> → <code>kb_get</code>
+(<code>:746-751</code>) or, with <code>?revision=N</code>,
+<code>kb_revision</code> (<code>:804-810</code>); <code>/history</code>
+→ <code>kb_history</code> (<code>:794-801</code>).</li>
+<li><strong>Admin and human access.</strong> The same verbs under
+<code>/api/workspaces/{slug}/knowledge/…</code>
+(<code>app/main.py:1709-1733</code>), resolved by
+<code>_workspace_for</code> (<code>:1563-1572</code>).</li>
+<li><strong>Seeding.</strong> Creating a workspace or channel with seed
+material posts one thread in the admin workspace
+(<code>app/workspaces.py:642-670</code>); an admin bot claims it and
+writes documents through the workspace routes.</li>
+<li><strong>Erasure.</strong> <code>DELETE /api/workspaces/{slug}</code>
+→ <code>workspaces.delete</code> (<code>:568-589</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>knowledge_docs</code> (<code>app/workspaces.py:53-66</code>):
+<code>workspace_id</code>, <code>path</code>, <code>revision</code>,
+<code>body</code>, <code>reason</code>, <code>sources</code> (a JSON
+list of strings), <code>deleted</code>, <code>author_id</code>,
+<code>created_at</code>, with
+<code>UNIQUE(workspace_id, path, revision)</code>. There is no document
+table: the current document is a query, <code>_CURRENT</code>
+(<code>:717-719</code>), selecting the row whose revision equals the
+path's maximum.</p>
+<p>Provenance is recorded on every revision and checked on none.
+<code>sources</code> is <code>[str(s) for s in sources]</code>
+(<code>:776</code>); a message id, a URL and an arbitrary phrase are
+stored alike, and nothing resolves them. <code>author_id</code> is not a
+claim: it comes from the token that made the request.</p>
+<p>Channels refer into the knowledge base by path, each reference
+optionally <code>mandatory</code> (<code>:321-329</code>). A reference
+names a path, not a revision, so a channel always points at whatever is
+current, and at a 404 once the document is deleted.</p>
+<p><code>workspace_audit</code> (<code>:67-71</code>) records
+workspace-level actions — creating a workspace or channel, changing a
+channel, archiving, setting bots, deleting a channel (<code>:348</code>,
+<code>:368</code>, <code>:396</code>, <code>:413</code>,
+<code>:557</code>, <code>:607</code>). Knowledge writes do not go there,
+and nothing in <code>app/</code> reads the table.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval in the ranking sense. Nothing embeds, scores or
+selects documents for a prompt; the board never copies the knowledge
+base into one (<code>README.md:309-310</code>). What it serves is a
+directory and a filter. <code>kb_list</code> returns every current,
+undeleted document ordered by path; with <code>q</code> it keeps those
+whose path or body contains the string, case-insensitively, and attaches
+an excerpt of up to about 200 characters around the first hit
+(<code>:722-743</code>).</p>
+<p>The model does the selecting. The launcher puts the guide in the
+session's prompt (<code>app/main.py:634-663</code>), and the guide tells
+the bot to skim <code>INDEX.md</code> early, follow its pointers, and
+read any reference its channel marks mandatory before starting
+(<code>AGENTS.md:162-171</code>). When a bot belongs to a workspace, the
+identity section composed for it names the knowledge index as where
+<em>"its shared memory starts"</em> (<code>app/registry.py:692</code>).
+So recall quality is the quality of the index document that bots
+maintain, and of the model's judgement in following it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is synchronous and blocks only the HTTP call: the row is
+committed before the response returns, and the next read sees it. No
+model runs on the board's side of a write, and no background pass
+rewrites the store.</p>
+<p>The compare-and-set is the mechanism worth taking.
+<code>kb_put</code> reads <code>MAX(revision)</code> inside
+<code>db._write_lock</code> and refuses unless the caller's
+<code>base_revision</code> equals it, with the message <em>"read it
+again, merge, and retry"</em> (<code>app/workspaces.py:770-773</code>);
+the <code>UNIQUE</code> constraint backs it at the database level. Two
+bots editing <code>decisions.md</code> at once cannot silently overwrite
+each other; the second gets a 409 and has to merge.</p>
+<p>Who may write is <code>can_write</code> (<code>:177-180</code>): any
+human, any admin bot, or a bot whose <code>workspace_id</code> is the
+workspace's. There is no state a write lands in other than current.</p>
+<p>The README describes a <em>knowledge reconciler</em>: a scheduled job
+whose bot reads the conversation since the last pass and updates
+documents, telling decisions from debates and citing sources
+(<code>README.md:327-343</code>). In the tree it is a routine an admin
+bot writes on request, paused until a human approves it, and <em>"what
+it must do is in the routine's prompt"</em>
+(<code>ADMIN.md:185-189</code>). The one shipped routine,
+<code>docs/routines/board-daily-care/</code>, is board maintenance. No
+reconciler prompt is committed.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing runs per write beyond one SQLite insert. Each read of the
+current document set is a correlated <code>MAX(revision)</code> subquery
+per path, over a table that never shrinks. That is cheap at one person's
+scale and is the cost of keeping history in the same table as the
+current value.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A bot is a harness session launched by <code>bin/bot</code> with a
+handle, a workspace and a token in its environment. It reads and writes
+memory over plain HTTP with that token, using the six verbs the guide
+lists (<code>AGENTS.md:173-189</code>). There is no MCP server and no
+tool schema: the harness's own shell and HTTP access are the interface.
+Admin bots — any bot in the <code>admin</code> workspace — read and
+write every workspace through the
+<code>/api/workspaces/{slug}/knowledge</code> routes and do the
+seeding.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-workspace-boundary-is-cooperative">The workspace boundary is
+cooperative</h3>
+<p>For a bot that sends its token, the boundary is tight.
+<code>_my_workspace</code> (<code>app/main.py:1647-1652</code>) returns
+the bot's own workspace whenever the agent is a scoped bot, so
+<code>?workspace=other</code> is ignored on <code>/api/knowledge</code>;
+the named routes refuse a bot from another workspace with 403
+(<code>:1567-1569</code>); and every knowledge query filters on
+<code>workspace_id</code>. A bot registered without a workspace gets 400
+on <code>/api/knowledge</code> and 403 on another workspace's named
+route.</p>
+<p>Two documented defaults make that boundary a convention. Reading
+needs no token unless <code>BOT_BOARD_PRIVATE_READS</code> is set
+(<code>app/main.py:36</code>, <code>:177-179</code>;
+<code>SECURITY.md:16</code>), and an anonymous request is treated like a
+human: <code>_my_workspace</code> resolves
+<code>?workspace=&lt;slug&gt;</code> through
+<code>_workspace_for</code>, whose bot check is skipped when there is no
+agent. A bot that runs <code>curl</code> without its header reads any
+workspace's knowledge, history included. And registration hands out
+human tokens: posting <code>kind: human</code> with an existing human
+handle returns a fresh token for that identity, with the comment
+<em>"The network the board is on is the lock"</em>
+(<code>:668-683</code>). A human can read, write and delete everywhere.
+Under the stated threat model — one person, a private network — this is
+a deliberate simplification. For memory it means the scope key keeps
+cooperative bots apart and does not keep out a bot with a shell that
+decides to look.</p>
+<h3 id="deletion-hides-and-does-not-forget">Deletion hides and does not
+forget</h3>
+<p><code>kb_delete</code> appends a deleted revision;
+<code>kb_revision</code> and <code>kb_history</code> apply no
+<code>deleted</code> filter, so the body of every revision before the
+delete stays readable to any writer of the workspace
+(<code>app/workspaces.py:794-810</code>). The test asserts exactly this:
+<em>"delete keeps history"</em>
+(<code>tests/test_workspaces.py:231-234</code>). That is the right
+default for a shared document set and the wrong one for a secret pasted
+into a decision log. The only way to remove text is to delete the whole
+workspace, which a human may do after archiving it, moving its bots and
+typing its slug (<code>:568-589</code>).</p>
+<h3 id="a-deletion-is-not-a-rejection">A deletion is not a
+rejection</h3>
+<p>A deleted path can be written again. <code>kb_current_revision</code>
+counts the deleted row, so a fresh <code>PUT</code> with
+<code>base_revision: 0</code> gets <em>"is at revision 2, not 0"</em>,
+and a retry with 2 recreates the document as revision 3. The deleted
+revision records a reason; nothing consults it. A bot that rediscovers a
+dropped approach and writes it down again is not stopped, and the
+guide's only defence is to search first.</p>
+<h3 id="contradiction-and-status-live-in-prose">Contradiction and status
+live in prose</h3>
+<p>Whether a document is a decision or a proposal, and what to do when
+two documents disagree, are rules in <code>AGENTS.md:60-68</code> and
+<code>:183-188</code>. The store has no field for either. Every current
+revision is equally authoritative to every reader, and a bot that
+ignores the guide writes a debate as a rule with nothing to flag it.</p>
+<h3 id="concurrency">Concurrency</h3>
+<p>The lock is a <code>threading.Lock</code> and the board is one
+process, so the compare-and-set is sound as deployed. A second worker
+process would share the database and not the lock, leaving the
+<code>UNIQUE</code> constraint as the guard; that would turn a lost race
+into an integrity error rather than a silent overwrite.</p>
+<h3 id="marks">Marks</h3>
+<p><code>scope_enforced</code> is awarded for the token-derived
+workspace on every knowledge read, with the anonymous-read and
+human-handle limits stated in its record. <code>audit_log</code> is
+awarded because <code>knowledge_docs</code> is append-only on every
+reachable path: both mutations insert, nothing updates, and each row
+carries the token's author and a reason. The table is the store and its
+log at once, which answers <em>"why does the workspace believe
+this"</em> with the revision, its author and its sources. Its limit is
+erasure: deleting a workspace drops its knowledge rows and its
+<code>workspace_audit</code> rows together and leaves no receipt. That
+happens only when the memory it describes is deleted with it, on a
+human's typed confirmation, and never as a retention sweep.
+<code>negative_eval</code> is awarded for
+<code>tests/test_workspaces.py:204-237</code>.</p>
+<p>Four withheld. <code>tombstone</code>: the deleted revision is keyed
+on a path, not a value, and does not stop the path or its content from
+being written again. <code>trust_state</code>: no status column; the
+draft-and-approve design that would have been the nearest thing was
+removed on 20 October 2026. <code>bitemporal</code>: one
+<code>created_at</code> per revision, which is record time.
+<code>human_review</code>: there is no approval step for knowledge, and
+the README says so; routine versions do wait for a human's yes on
+<code>/routines</code>, which governs scheduled jobs, not memory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is 532 <code>unittest</code> functions across 74 files, run
+in CI by <code>.github/workflows/tests.yml</code>. I read the knowledge
+tests and did not run them; <code>requirements.txt</code> changed inside
+the screen's seven-day cooldown, so nothing was installed.</p>
+<p><code>test_knowledge_is_revisioned_scoped_and_shared_with_admin_bots</code>
+(<code>tests/test_workspaces.py:204-237</code>) is the memory test, and
+it is a good one. It writes revision 1, confirms a stale write with
+<code>base_revision: 0</code> returns 409, writes revision 2, reads
+revision 1 back by number and checks the history order. For search, it
+checks that <code>q=traders</code> returns only
+<code>lore/factions.md</code>. It then checks isolation from both sides:
+milo, a bot in another workspace, gets an empty list, a 404 for game's
+<code>INDEX.md</code> and a 403 on the named route, in a test that has
+just asserted two documents in game. The assertions are non-vacuous
+because the fixture guarantees the material exists: had the
+<code>workspace_id</code> predicate been dropped, milo's list would hold
+two documents. The delete case is stricter still: after deleting
+<code>lore/factions.md</code>, the list must equal exactly
+<code>['INDEX.md', 'decisions/decisions.md']</code>, so the deleted path
+is absent from a populated result with its neighbours present.</p>
+<p><code>tests/test_delete_workspace.py:55-74</code> asserts that
+deleting a workspace leaves zero <code>knowledge_docs</code> rows for it
+and frees the slug. <code>tests/test_hardening.py:126-140</code> covers
+<code>BOT_BOARD_PRIVATE_READS=true</code> for the pages. No committed
+test exercises an anonymous read of a named workspace's knowledge with
+private reads off, which is the default.</p>
+<p>There is no benchmark and no paper. A search of the README and docs
+for <code>arxiv</code>, <code>doi</code>, <code>bibtex</code> and
+<code>CITATION</code> finds nothing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Compare-and-set on a revision number, with the error telling
+the writer what to do.</strong> It is the cheapest defence against two
+agents overwriting each other's memory, and <em>"read it again, merge,
+and retry"</em> turns the conflict into a step the model can take.</li>
+<li><strong>The store as its own log.</strong> Appending revisions and
+computing the current one makes history, authorship and the reason for
+every change impossible to skip, because no other write path
+exists.</li>
+<li><strong>Scope from the credential, not the request.</strong>
+<code>_my_workspace</code> ignores the workspace a bot asks for and uses
+the one its token belongs to.</li>
+<li><strong>Memory as pointers.</strong> An index document and
+per-channel references keep context out of the prompt until the work
+calls for it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A boundary with an anonymous door.</strong> If memory is
+scoped per agent, an unauthenticated read path that falls back to
+"whatever the caller names" removes the scope for any agent that can
+drop a header. Require the token, or give the anonymous path
+nothing.</li>
+<li><strong>Delete that keeps the body readable to every
+writer.</strong> Keep history, but give a deletion a way to remove its
+text — a redacted revision with a receipt keeps the log answering
+<em>what changed</em>.</li>
+<li><strong>Contradiction handling only in the prompt.</strong> A rule
+that says "do not overwrite, ask which holds" needs a state to land in —
+disputed, open — or the next bot cannot tell the rule was ever
+invoked.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Bot Board suits one person running a fleet of their own coding agents
+on a private network who wants those agents to share durable project
+notes without a vector store or a model in the write path. It suits the
+case because it does little: documents, revisions, a lock and a filter.
+It does not suit anyone whose bots are not all theirs, anyone who needs
+memory to carry a verdict alongside its text, or anyone who must be able
+to remove a single sentence. If your agents already share a git
+repository, a <code>docs/</code> directory with pull requests gives you
+most of this with review on top; the board's addition is the
+compare-and-set and the token-scoped API that work without a forge.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the unpublished reconciler prompt ever mark a document as
+superseded or disputed, or does it only rewrite? Its routines live in a
+running board's database, not in the tree.</li>
+<li>Would the project accept a deleted revision that also clears earlier
+bodies, or is full readability of history a deliberate choice?</li>
+<li>Is the anonymous read path meant to cover knowledge at all? The
+pages need it for a browser without a token; the bots do not.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>app/workspaces.py</code> — workspace boundary,
+<code>knowledge_docs</code>, <code>workspace_audit</code>,
+compare-and-set writes, deletion, migration from project context.</li>
+<li><code>app/main.py</code> — auth (<code>current_agent</code>,
+<code>optional_agent</code>), registration, <code>_my_workspace</code>,
+<code>_workspace_for</code>, the knowledge routes.</li>
+<li><code>app/db.py</code> — the write lock, <code>scope</code>,
+messages and claims.</li>
+<li><code>app/registry.py</code> — skills, profiles, and the identity
+text that points a bot at its knowledge index.</li>
+<li><code>AGENTS.md</code>, <code>ADMIN.md</code> — the guide served to
+bots and admin bots, including the rules for writing knowledge.</li>
+<li><code>SECURITY.md</code> — the threat model and the two
+defaults.</li>
+<li><code>tests/test_workspaces.py</code>,
+<code>tests/test_delete_workspace.py</code>,
+<code>tests/test_hardening.py</code> — the knowledge, isolation and
+private-read tests.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run at the pin, from the repository root.</p>
+<pre class="sh"><code># no UPDATE of knowledge_docs anywhere; DELETE only in workspace deletion and one test
+git grep -n &#39;knowledge_docs&#39; -- .
+
+# workspace_audit is written and never read
+git grep -n &#39;workspace_audit&#39; -- app tests
+
+# no reconciler prompt is committed; the only shipped routine is board-daily-care
+git grep -n -i &#39;reconcil&#39; -- . &#39;:!README.md&#39;
+git ls-files docs/routines
+
+# anonymous reads are the default
+git grep -n -E &#39;READ_TOKEN_REQUIRED *=|BOT_BOARD_PRIVATE_READS&#39; -- app docs/REFERENCE.md
+
+# no paper
+git grep -n -i -E &#39;arxiv|bibtex|doi\.org|CITATION&#39; -- README.md docs
+
+# the draft-and-approve context routes before 20 October 2026
+git show 904c5a3^:app/main.py | grep -n -i -E &#39;approve|draft&#39;</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — First reading at <code>9d77791</code>
+(v1.0.251). Screened with <code>scripts/screen_repo.py</code>: no
+auto-run or build-time execution; <code>requirements.txt</code> inside
+the seven-day cooldown, so nothing was installed and no test was run.
+Three marks: <code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

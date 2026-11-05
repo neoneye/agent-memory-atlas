@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 773 reports.</strong></p>
+<p><strong>This page covers all 774 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32194,6 +32194,43 @@ Add/Search contract.</li>
 <li>Do not copy when: memory must be correctable or deletable on
 request, results must keep stable ids, or the port is reachable by
 anyone who should not read every user.</li>
+</ul>
+<h3 id="bot-board"><a
+href="../systems/bot-board/"><code>bot-board</code></a></h3>
+<ul>
+<li>Best idea: <strong>compare-and-set on a revision number, in a table
+that is also the log.</strong> <code>kb_put</code> refuses a write whose
+<code>base_revision</code> is not the current one with <em>"read it
+again, merge, and retry"</em>, and both mutations only ever insert, so
+every document's history, author, reason and sources are complete by
+construction.</li>
+<li>Second idea: the workspace comes from the bot's token rather than
+the request, so a scoped bot asking for another workspace's knowledge on
+<code>/api/knowledge</code> simply gets its own.</li>
+<li>Biggest risk: <strong>the workspace boundary is
+cooperative.</strong> Reading needs no token by default and an anonymous
+read sees any workspace it names; registering under an existing human
+handle returns that human's token. A bot with a shell can cross either
+way.</li>
+<li>Second risk: a delete hides a document without forgetting it —
+earlier bodies stay readable to every writer, the path can be written
+again, and the only erasure is deleting the whole workspace; settled
+versus disputed is a prompt rule with no field behind it.</li>
+<li>Most reusable component: <code>app/workspaces.py:717-810</code> —
+the current-revision query, the compare-and-set writer, the deletion
+revision and the history readers, about ninety lines.</li>
+<li>Maturity impression: MIT; 13,461 lines of Python in
+<code>app/</code>, 833 commits from 3 September to 4 November 2026, most
+of them authored by the project's own bots, tagged v1.0.251; 532
+unittest functions in 74 files, not run here. Three marks,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: several agents share durable project notes and must not
+overwrite each other, and you want history and attribution without a
+forge or a model in the write path.</li>
+<li>Do not copy when: the agents sharing the store are not all trusted
+by one person, a single sentence must be erasable, or memory must carry
+a verdict beside its text.</li>
 </ul>
         </article>
       </div>

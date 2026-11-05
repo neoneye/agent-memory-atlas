@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 773 reports.**
+**This page covers all 774 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7072,3 +7072,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 1,173 lines of Python, nine commits from one author, 7–14 August 2026, packaged as a contest submission for the paper at [arXiv:2608.12888](https://arxiv.org/abs/2608.12888); eight pytest cases in a 256-line file and no CI, not run here. Two marks, `scope_enforced` and `negative_eval`; the isolation case is populated and its fixture shares a session id across users, so it would fail without the predicate.
 - Study when: you want an agentic lexical retriever over raw chat logs, or a reference implementation of the Agent Memory Leaderboard Add/Search contract.
 - Do not copy when: memory must be correctable or deletable on request, results must keep stable ids, or the port is reachable by anyone who should not read every user.
+
+### [`bot-board`](../systems/bot-board/)
+- Best idea: **compare-and-set on a revision number, in a table that is also the log.** `kb_put` refuses a write whose `base_revision` is not the current one with *"read it again, merge, and retry"*, and both mutations only ever insert, so every document's history, author, reason and sources are complete by construction.
+- Second idea: the workspace comes from the bot's token rather than the request, so a scoped bot asking for another workspace's knowledge on `/api/knowledge` simply gets its own.
+- Biggest risk: **the workspace boundary is cooperative.** Reading needs no token by default and an anonymous read sees any workspace it names; registering under an existing human handle returns that human's token. A bot with a shell can cross either way.
+- Second risk: a delete hides a document without forgetting it — earlier bodies stay readable to every writer, the path can be written again, and the only erasure is deleting the whole workspace; settled versus disputed is a prompt rule with no field behind it.
+- Most reusable component: `app/workspaces.py:717-810` — the current-revision query, the compare-and-set writer, the deletion revision and the history readers, about ninety lines.
+- Maturity impression: MIT; 13,461 lines of Python in `app/`, 833 commits from 3 September to 4 November 2026, most of them authored by the project's own bots, tagged v1.0.251; 532 unittest functions in 74 files, not run here. Three marks, `scope_enforced`, `audit_log` and `negative_eval`.
+- Study when: several agents share durable project notes and must not overwrite each other, and you want history and attribution without a forge or a model in the write path.
+- Do not copy when: the agents sharing the store are not all trusted by one person, a single sentence must be erasable, or memory must carry a verdict beside its text.
