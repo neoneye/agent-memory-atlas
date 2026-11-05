@@ -17376,6 +17376,64 @@ be what the main context does with a value it replaces: whether the
 earlier value stays queryable and marked replaced, and whether a
 cascading delete leaves anything that stops re-extraction from writing
 the deleted record back.</li>
+<li><strong><code>YoKONCy/TriviumDB</code> was examined and has no
+report: it is an embedded vector, graph and document database, and every
+memory semantic in it is one a caller builds on top.</strong>
+Apache-2.0, at <a
+href="https://github.com/YoKONCy/TriviumDB/commit/7edf8ceacd85cd71944a3471ac05df377995a172"><code class="commit-id" title="7edf8ceacd85cd71944a3471ac05df377995a172">7edf8cea…</code></a>,
+a commit of 30 October 2026; about 70,700 lines of Rust in
+<code>src/</code>, inline test modules included, with PyO3 and napi-rs
+bindings, a CLI and a nightly HTTP server. A node is a caller-supplied
+vector, a JSON payload, optional sparse text and labelled weighted edges
+under one <code>NodeId</code>. Writes go through a WAL;
+<code>delete</code> clears the vector slot, the property and text index
+entries and both edge directions
+(<code>src/database/mod.rs:1860-1873</code>,
+<code>src/storage/memtable.rs:2962</code>). Reads are TQL,
+<code>search_hybrid</code>, and SA-PPR spreading activation with FISTA
+residual recall and DPP diversification. Nothing in the engine calls a
+model, assigns a status, records why a value changed, or retires
+anything on its own. The documented agent pattern is a caller-written
+payload of type <code>memory</code> with a date, and the node checklist
+recommends a <code>created_at</code> field so the caller can filter by
+time and clean up (<code>docs/best-practices.md:204-270</code>). Scope
+is the same: <code>payload_filter</code> is documented as multi-agent
+isolation by <code>agent_id</code>
+(<code>src/database/config.rs:154-155</code>), an arbitrary predicate
+the caller must pass on every query, beside one database file per agent
+under a shared <code>ResourceRuntime</code>. <strong>The one stateful
+recall policy is real and is deliberately not memory.</strong> With
+<code>enable_refractory_fatigue</code>, the top 15 nodes of a diffusion
+are marked in a <code>HashMap&lt;NodeId, u8&gt;</code>, and the next
+query that reaches one scales its energy by 0.15 and clears the mark
+(<code>src/graph/traversal.rs:87-95</code>, <code>274-285</code>;
+<code>src/storage/memtable.rs:619</code>, <code>1652-1693</code>). The
+map starts empty at every open and no storage file writes it; the engine
+refuses it in batch search and on read-only handles, whose error calls
+it process-local (<code>src/database/mod.rs:556</code>,
+<code>990</code>). It is a diversity heuristic over one process's query
+sequence, and nothing it holds could turn out to be false. The README's
+paper, <a href="https://arxiv.org/abs/2605.02171">arXiv:2605.02171</a>
+(<em>QuIVer: Rethinking ANN Graph Topology via Training-Free Binary
+Quantization</em>, Wenxuan Xiao, Zhiyou Wang and Chengcheng Li, v1 4 May
+2026, cs.DB), is about the ANN index and does not mention memory.
+Screened before reading: no auto-run surface, three build-time execution
+points (<code>build.rs</code>,
+<code>src/index/quiver/corrected_sm/build.rs</code>, an npm
+<code>prepublishOnly</code>), seven dependency surfaces inside the
+cooldown and one floating range; <code>AGENTS.md</code> was treated as
+data, and nothing was installed, built or run. Searches:
+<code>git grep -n -i -E 'decay|ttl|expire|forget|consolidat|supersed|contradict' -- src crates/triviumdb-server/src crates/triviumdb-cli python</code>
+matches <code>settled</code>, <code>little-endian</code> and a
+<code>TimeDecayHook</code> fixture inside the <code>#[cfg(test)]</code>
+module that opens at <code>src/hook.rs:687</code>;
+<code>git grep -n -i -w -E 'mcp|llm|openai|anthropic|chat' -- src crates python ':!crates/triviumdb-server/web'</code>
+returns nothing, and the same pattern matches
+<code>README_QUIVER.md</code>;
+<code>git grep -n -i fatigue -- src/storage</code> hits
+<code>memtable.rs</code> alone. A layer that put lifecycle, provenance
+or a correction path on these nodes would be the report, with this
+engine in its <code>storage</code> row.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
