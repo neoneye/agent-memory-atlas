@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A cross-CLI skill and Claude Code
+plugin that keeps memory as AI-first Obsidian notes, with an MCP server,
+freshness-aware search and a shared agent logbook.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="obsidian-second-brain — Agent Memory Atlas">
+    <meta property="og:description" content="A cross-CLI skill and
+Claude Code plugin that keeps memory as AI-first Obsidian notes, with an
+MCP server, freshness-aware search and a shared agent logbook.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="obsidian-second-brain — Agent Memory Atlas">
+    <meta name="twitter:description" content="A cross-CLI skill and
+Claude Code plugin that keeps memory as AI-first Obsidian notes, with an
+MCP server, freshness-aware search and a shared agent logbook.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>obsidian-second-brain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "obsidian-second-brain",
+      "description": "A cross-CLI skill and Claude Code plugin that keeps memory as AI-first Obsidian notes, with an MCP server, freshness-aware search and a shared agent logbook.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Superseded notes that rank lower and are
+returned anyway</p>
+          <h1>obsidian-second-brain</h1>
+          <p class="document-deck">A cross-CLI skill and Claude Code
+plugin that keeps memory as AI-first Obsidian notes, with an MCP server,
+freshness-aware search and a shared agent logbook.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/eugeniughelbur/obsidian-second-brain">
+              <span>Source</span>
+              <strong>eugeniughelbur/obsidian-second-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/eugeniughelbur/obsidian-second-brain/commit/deff215377f0ecae68deed1074046f883425388e" title="deff215377f0ecae68deed1074046f883425388e">
+              <span>Analyzed revision</span>
+              <code>deff2153…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/eugeniughelbur--obsidian-second-brain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>eugeniughelbur--obsidian-second-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>20,043
+lines of Python outside tests, 5,162 of them the research toolkit; 4,464
+of shell and 399 of TypeScript; 2,554 lines of command prompts and a
+1,395-line SKILL.md</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>653
+commits from 53 contributors, bots included, 480 of them the
+maintainer's, 24 March – 4 November 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>908
+pytest functions in 98 files, run in CI on Ubuntu and Windows, plus a
+node suite for the Obsidian lint plugin; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>obsidian-second-brain makes an Obsidian vault an agent's memory. It
+is 49 slash commands, compiled from one source to eight agent CLIs, that
+tell the model how to read and write notes, plus a Claude Code plugin
+with three hooks and a twelve-tool MCP server over the same vault. Its
+strength is the deterministic layer around a model that writes: guarded
+edits, a quote checker on contradictions, and a search that reads a
+note's own <code>status</code> and <code>supersedes</code> fields. Its
+weakness is that each guard advises rather than withholds. A superseded
+or rejected note is multiplied by 0.6 and returned, and every correction
+verb is one the agent holds.</p>
+<p>Most of the memory behaviour is prompt text, not code.
+<code>references/ai-first-rules.md</code> and the command files decide
+what is saved, where, and how a contradiction is resolved; the agent
+carries it out with its own file tools. The code owns search,
+validation, the MCP bookkeeping, maintenance scripts and Crew, a shared
+logbook in which several agents record jobs and leave each other
+lessons. No code path deletes a note. No capability mark is earned, and
+section 9 names the near-miss behind each one. MIT, with no rider.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>note</strong>: a markdown file with
+<code>type</code>, <code>date</code>, <code>tags</code> and
+<code>ai-first: true</code> in its frontmatter, a
+<code>## For future agent</code> preamble, and wikilinks to every
+person, project and concept it names
+(<code>references/ai-first-rules.md:9-104</code>). Per-type schemas add
+a <code>status</code> vocabulary, for example
+<code>proposed | accepted | superseded</code> on an ADR and
+<code>open | resolved</code> on a conflict note (<code>:282</code>,
+<code>:396</code>). External claims carry an inline
+<code>(as of 2026-04, source)</code> stamp, and a
+<code>confidence</code> of <code>stated</code>, <code>high</code>,
+<code>medium</code> or <code>speculation</code> where the model judges
+one applies.</p>
+<p>How a note becomes a belief is a prompt. <code>/obsidian-save</code>
+tells the model to scan the conversation for decisions, people, tasks
+and ideas, search for an existing note, and create or append
+(<code>commands/obsidian-save.md:12-30</code>). There is no candidate
+state. A note is true from the moment it is written, and its
+<code>confidence</code> label is read by nothing in the code (Recorded
+searches).</p>
+<p>How it stops being one is also a prompt, with one deterministic step.
+<code>/obsidian-reconcile</code> has subagents return each contradiction
+as two quoted lines with paths. <code>scripts/verify_quotes.py</code>
+drops any pair whose quotes do not occur verbatim in the named notes
+(<code>verify_quotes.py:53-96</code>). The model then rewrites the older
+note with a <code>## History</code> line, or writes a
+<code>Conflict - Topic.md</code> with <code>status: open</code> for the
+user (<code>commands/obsidian-reconcile.md:26-47</code>). The old value
+survives only as prose.</p>
+<p>A note leaves belief in three weaker ways. Its <code>status</code>
+set to one of ten stale values, or a <code>supersedes:</code> link from
+another result, multiplies its search score by 0.6. Merging rewrites the
+loser as a <code>type: redirect</code> stub
+(<code>scripts/merge_notes.py:1-33</code>). Archiving prefixes the
+filename with <code>_archived_</code>, which search does not read. None
+of these removes the note from search.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every path out of belief lowers a score or rewrites prose; none withholds the note, and the human-only lesson decision is a CLI the agent can run</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every path out of belief lowers a score or rewrites prose; none withholds the note, and the human-only lesson decision is a CLI the agent can run
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    CMD[&quot;slash command prompts&lt;br/&gt;agent&#39;s own Write / Edit&quot;]
+    MCP[&quot;MCP save, update,&lt;br/&gt;replace, move&quot;]
+    BG[&quot;PostCompact agent&lt;br/&gt;opt-in, two env flags&quot;]
+    CMD ~~~ MCP ~~~ BG
+  end
+  writers --&gt; NOTE[&quot;vault note&lt;br/&gt;status, supersedes,&lt;br/&gt;confidence, updated&quot;]
+  NOTE --&gt;|&quot;MCP writes only&quot;| LOG[&quot;log.md or Logs/day&lt;br/&gt;one appended line&quot;]
+  LOG --&gt; EDIT[&quot;obsidian_replace_text&lt;br/&gt;can rewrite the log,&lt;br/&gt;and is not logged&quot;]
+  NOTE --&gt; RANK{&quot;stale status, or&lt;br/&gt;superseded by&lt;br/&gt;another hit?&quot;}
+  RANK --&gt;|&quot;yes&quot;| FADE[&quot;score x 0.6&lt;br/&gt;returned anyway&quot;]
+  RANK --&gt;|&quot;no&quot;| HIT[&quot;ranked hit&quot;]
+  FADE --&gt; OUT[&quot;MCP search result&lt;br/&gt;or recall brief&quot;]
+  HIT --&gt; OUT
+  OUT ~~~ LES
+  LES[&quot;Crew lesson&lt;br/&gt;status open&quot;] --&gt; DEC{&quot;crew.py keep / drop&lt;br/&gt;no actor check&quot;}
+  DEC --&gt;|&quot;keep&quot;| RULE[&quot;copied into the&lt;br/&gt;agent&#39;s CLAUDE.md&quot;]
+  DEC --&gt;|&quot;drop&quot;| DROP[&quot;row marked dropped,&lt;br/&gt;shown by every show&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>The skill.</strong> <code>commands/</code> holds 49 command
+prompts; <code>scripts/build.sh</code> and <code>adapters/</code>
+compile them for Claude Code (an identity copy), Codex CLI, Gemini CLI,
+OpenCode, Hermes, Pi, a unified <code>.agents/skills</code> tree and
+Grok Bot (<code>architecture.md:24-35</code>). At run time a command
+reads and writes vault files with the host agent's tools and shells out
+to Python scripts for deterministic work: health checks, link repair,
+merges, quote checks, research fetches.</p>
+<p><strong>The plugin.</strong> <code>.claude-plugin/plugin.json</code>
+registers the commands and one MCP server, started as
+<code>uv run --no-project --with "mcp&lt;2" python integrations/obsidian-mcp-server/server.py</code>.
+<code>hooks/hooks.json</code> registers three hooks:</p>
+<ul>
+<li><strong>SessionStart</strong> runs
+<code>hooks/load_vault_context.sh</code>. It finds a Python that runs
+and executes <code>load_vault_context.py</code>, which injects the
+skill's install path and, when the session's <code>cwd</code> is inside
+the vault, the vault's <code>_CLAUDE.md</code> operating manual if it
+fits under 9,500 characters, else a pointer saying it is not loaded
+(<code>load_vault_context.py:56-57</code>, <code>:84-100</code>,
+<code>:168-197</code>). It injects no note content.
+<code>architecture.md:165</code> says it injects <code>index.md</code>
+and the recent log as well; the code passes only their paths.</li>
+<li><strong>PostToolUse</strong> on
+<code>Write|Edit|MultiEdit|NotebookEdit|create_file</code> runs
+<code>hooks/validate-ai-first.sh</code>, a 529-line check of
+frontmatter, preamble, banned characters, secrets and tag syntax on
+vault markdown. It returns a warning to the model and never reverts the
+write (<code>validate-ai-first.sh:13-61</code>).</li>
+<li><strong>PostCompact</strong> runs
+<code>hooks/obsidian-bg-agent.sh</code> asynchronously. It exits at once
+unless both <code>OBSIDIAN_VAULT_PATH</code> and
+<code>OBSIDIAN_BG_AGENT_ENABLED=1</code> are set (<code>:35-40</code>).
+When armed, it reads the newest <code>isCompactSummary</code> entry from
+the transcript and runs
+<code>claude --dangerously-skip-permissions --strict-mcp-config --tools "Read,Write,Edit,Glob,Grep" -p</code>
+in the vault on a prompt that frames the summary as untrusted data
+(<code>:97-108</code>, <code>:134-205</code>,
+<code>:224-244</code>).</li>
+</ul>
+<p><code>hooks/obsidian-recall.py</code>, a bounded UserPromptSubmit
+recall, and the Hermes <code>on_session_finalize</code> consolidation
+ship as example configurations only and are not registered by the
+plugin. <code>scripts/setup.sh</code> adds the PostCompact entry to
+<code>~/.claude/settings.json</code> and never sets the enable flag
+(<code>setup.sh:116-145</code>). <code>install.sh</code> registers the
+SessionStart hook for the non-plugin install
+(<code>install.sh:75-94</code>).</p>
+<p><strong>The MCP server.</strong> <code>vault_ops.py</code> is
+stdlib-only. Search walks the vault newest-first up to 10,000 files,
+scores lexically, and fuses a semantic arm when
+<code>.obsidian-semantic-index.json</code> exists and an embedding
+endpoint answers (<code>vault_ops.py:221-245</code>,
+<code>:595-680</code>). The index is built on demand by
+<code>scripts/eval/semantic_search.py --build</code> against local
+Ollama <code>bge-m3</code> by default, or any OpenAI-compatible
+endpoint.</p>
+<p><strong>Crew.</strong> <code>scripts/crew.py</code> is one
+standard-library file. <code>/crew setup</code> copies it to
+<code>~/.config/crew/</code> and merges <code>show --new --hook</code>
+into SessionStart and UserPromptSubmit for Claude Code and Codex, and
+sessionStart and postToolUse for Cursor. It also writes a marked
+team-rules block into each agent's global rules file
+(<code>crew.py:426-538</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run for the vault itself. The commands need a host CLI
+and the vault on disk; the scripts and the MCP server need Python and
+<code>uv</code>. Semantic search needs Ollama or an embedding API, and
+the research commands use Perplexity, Grok and Gemini when keyed and
+about ten free sources otherwise. No key is needed to store anything.
+The store is the user's own markdown and is repairable by hand in
+Obsidian.</p>
+<p>The MCP server's dependency is resolved at every launch:
+<code>--with "mcp&lt;2"</code> installs the newest 1.x from the index,
+with no lockfile behind it (<code>plugin.json</code>,
+<code>server.py:31-39</code>). The Telegram journal is a launchd job
+polling every 60 seconds and filing voice, text and images into the
+vault through Whisper and Claude vision
+(<code>integrations/telegram-journal/telegram_journal.py:1-23</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Command writes.</strong>
+<code>commands/obsidian-save.md:12-30</code> spawns subagents per note
+type that search, then create or append with the host's file tools.
+Every writing command repeats the AI-first and anti-fabrication
+rules.</li>
+<li><strong>MCP writes.</strong> <code>obsidian_save_note</code> refuses
+an existing path and writes frontmatter with <code>source: mcp</code>
+(<code>vault_ops.py:898-969</code>). <code>obsidian_update_note</code>
+appends a section or merges scalar fields and stamps
+<code>updated</code> (<code>:981-1038</code>).
+<code>obsidian_replace_text</code> swaps one unique block
+(<code>:1041-1070</code>). <code>obsidian_move_note</code> copies with
+<code>O_EXCL</code>, reads back, then unlinks the source
+(<code>:1073-1181</code>). All four refuse paths outside the vault and
+under <code>_PROTECTED_WRITE_DIRS</code>, and update and replace refuse
+a note that changed since the call read it (<code>:50</code>,
+<code>:1510-1525</code>).</li>
+<li><strong>Bookkeeping.</strong> After each MCP write
+<code>_bookkeep</code> validates the note, adds an <code>index.md</code>
+entry for a new one, appends one line to
+<code>Logs/&lt;day&gt;.md</code> or <code>log.md</code>, and runs
+<code>OBSIDIAN_POST_WRITE_CMD</code> if set (<code>:794-809</code>,
+<code>:880-895</code>). A write to <code>log.md</code>,
+<code>index.md</code> or <code>logs/</code> skips this step
+(<code>_is_bookkeeping_surface</code>, <code>:788-791</code>).</li>
+<li><strong>Search.</strong> <code>search</code> (<code>:595-680</code>)
+scores each note through the cached <code>_scan_entry</code>
+(<code>:420-464</code>), sorts, calls <code>_semantic_fuse</code>
+(<code>:531-592</code>), then <code>_freshness_rerank</code>
+(<code>:158-193</code>).</li>
+<li><strong>Context injection.</strong> SessionStart injects the manual
+only. The opt-in recall hook calls
+<code>vault_ops.search(..., semantic=False)</code>, drops
+<code>raw/</code> results, abstains unless the top hit shares a term
+with the prompt, and injects at most four notes in 900 characters
+(<code>obsidian-recall.py:63-132</code>).</li>
+<li><strong>Correction.</strong> <code>/obsidian-reconcile</code> with
+<code>verify_quotes.py</code>; <code>scripts/merge_notes.py</code> with
+<code>/obsidian-merge</code>; <code>scripts/freshness_lint.py</code>,
+which flags volatile present-tense claims without an <code>as of</code>
+stamp; and <code>scripts/checkin.py</code>, which asks the owner whether
+old person and project notes hold and stamps <code>last-checked</code>
+(<code>checkin.py:1-24</code>, <code>:267-289</code>).</li>
+<li><strong>Crew.</strong> <code>append_job</code>
+(<code>crew.py:175-182</code>), <code>add_lesson</code>
+(<code>:227-247</code>), <code>records</code> and <code>show</code>
+(<code>:250-299</code>), <code>decide</code>
+(<code>:352-393</code>).</li>
+<li><strong>Background.</strong>
+<code>hooks/obsidian-bg-agent.sh</code>,
+<code>hooks/obsidian-hermes-session-end.sh</code>, the Telegram
+journal.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The schema is the frontmatter vocabulary in
+<code>references/ai-first-rules.md</code>, not a type in code. The MCP
+server writes <code>type</code>, <code>date</code>, <code>tags</code>,
+<code>ai-first</code> and <code>source: mcp</code> on save and
+<code>updated</code> on every update (<code>vault_ops.py:935-944</code>,
+<code>:1013</code>). <code>validate_note</code> checks presence of the
+four required keys, the preamble and resolvable wikilinks
+(<code>:1184-1255</code>). The <code>status</code> vocabulary differs
+per type. Search is its one retrieval reader; <code>checkin.py</code>
+skips closed statuses when choosing notes to ask about, the OKF export
+maps stale ones to <code>deprecated</code>, and
+<code>vault_stats.py</code> counts them (<code>checkin.py:41</code>,
+<code>:143</code>, <code>export_okf.py:168-185</code>).</p>
+<p>Time is three dates, all set by whoever writes the note:
+<code>date</code>, <code>updated</code>, and on checked notes
+<code>last-checked</code>. <code>_note_age_days</code> takes the newest
+of <code>updated</code> and <code>date</code> from the first 400
+characters, else the file's mtime (<code>vault_ops.py:142-155</code>).
+The <code>as of</code> stamps are prose, read only by
+<code>freshness_lint.py</code>.</p>
+<p>Relations are wikilinks, plus a <code>relations:</code> block or a
+legacy <code>supersedes:</code> scalar whose inverse is
+<code>superseded_by</code>. <code>scripts/link_graph.py --lint</code>
+flags unknown edge types, dangling targets and two notes that supersede
+each other (<code>link_graph.py:60-86</code>). Search reads
+<code>supersedes:</code> only within its own candidate set.</p>
+<p><strong>Scope</strong> is the vault: one directory per installation,
+named by <code>OBSIDIAN_VAULT_PATH</code>, with no key on a note.
+<code>_SKIP_DIRS</code> keeps <code>.obsidian</code>, <code>.git</code>,
+<code>.trash</code>, <code>.claude</code>, templates and agent build
+directories out of every scan (<code>vault_ops.py:42-44</code>). A Crew
+lesson is one table row:
+<code>ID | Date | From | For | Kind | Status | Text | Evidence</code>,
+with status <code>open</code>, <code>kept</code> or <code>dropped</code>
+(<code>crew.py:35</code>, <code>:227-247</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Inside the Claude Code skill, retrieval is the model's: commands tell
+it to read <code>index.md</code>, search by name and folder, and read
+files. The MCP search is the one ranked path, used by other MCP clients,
+the recall hook and the eval.</p>
+<p><strong>Lexical arm.</strong> Query terms drop stopwords and tokens
+of two characters or fewer; CJK runs become overlapping bigrams
+(<code>vault_ops.py:79-104</code>). Each term scores
+<code>5 × (1 + log1p(title count))</code> on the stem and
+<code>1 + log1p(body count)</code> on the body, the body divided by
+<code>1 + log1p(len/1000)</code>. Counts are substring matches
+(<code>:634-650</code>). A static weight multiplies the score: 0.15 for
+<code>raw/</code> and <code>log.md</code>, 0.5 for log, daily and
+dev-log types, 1.5 for person, company, tool and entity notes, and 0.6
+for a stale status (<code>:106-119</code>, <code>:445-452</code>).</p>
+<p><strong>Semantic arm.</strong> A note scores its best chunk's cosine.
+The fusion takes the top 25 of each arm, at k = 60, with the semantic
+vote weighted 20 to the lexical vote's 1 (<code>:236-257</code>,
+<code>:561-586</code>). A single-term query skips it
+(<code>:613-618</code>). Any failure falls back to lexical. A stderr
+warning fires when more than 5% of notes are missing from the index,
+which never invalidates itself (<code>:258-266</code>,
+<code>:507-528</code>).</p>
+<p><strong>Rerank.</strong> <code>_freshness_rerank</code> rescores the
+fused list by rank: a stale status or a <code>supersedes:</code> link
+from another candidate each multiply by 0.6, and a query containing
+<code>current</code>, <code>now</code>, <code>today</code>,
+<code>still</code>, <code>latest</code> or <code>actual</code> adds a
+recency factor between 0.6 and 1.0 (<code>:158-202</code>). The ten
+stale values are <code>superseded</code>, <code>declined</code>,
+<code>rejected</code>, <code>archived</code>, <code>obsolete</code>,
+<code>cancelled</code>, <code>closed</code>, <code>parked</code>,
+<code>inactive</code> and <code>done</code> (<code>:127-128</code>). The
+results go back with path, title and a 320-character snippet, at most
+20.</p>
+<p>Failure modes follow from the shape. A rejected note that is the only
+strong match ranks first. A supersession edge is seen only when both
+notes are in the same result list. A note written since the last index
+build is invisible to the semantic arm on a non-English query.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are hot-path and model-authored. A command runs in the
+session, and the model decides what is vault-worthy, searches for
+duplicates and writes. Dedup is the instruction "search before creating
+anything"; the MCP save refuses only an existing filename
+(<code>vault_ops.py:948-954</code>). No extraction runs in code, and no
+step checks a claim before it is stored. The validator hook checks form,
+not content.</p>
+<p>Updates edit in place. Through MCP an update appends or merges scalar
+fields and cannot rewrite the body; <code>replace_text</code> rewrites
+one exact block. Both compare the file with what they read and refuse on
+a difference, which turns a concurrent writer's lost update into a
+reported error (<code>:1510-1525</code>). The appends to
+<code>index.md</code> and <code>log.md</code> carry the same race,
+unguarded, and the docstring says so.</p>
+<p>Deletion is outside the code. The MCP surface has no delete verb. The
+one script that unlinks a vault file removes an archived chat's
+superseded parts under <code>raw/sessions/</code>
+(<code>session_archive.py:321-324</code>).
+<code>references/write-rules.md:142</code> tells the model never to
+delete and to archive instead. A delete happens only when the agent or
+the person removes a file.</p>
+<p>Untrusted input is handled by framing.
+<code>ai-first-rules.md:120-136</code> tells the model to record
+instruction-shaped source text as a claim, the background prompt
+brackets the summary as untrusted, and the recall brief and Crew header
+say the lines are records. The PostCompact agent's tool list makes that
+a boundary: it has no Bash and no network, only <code>Read</code>,
+<code>Write</code>, <code>Edit</code>, <code>Glob</code> and
+<code>Grep</code> (<code>obsidian-bg-agent.sh:224-240</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Command writes block the session for as long as the model and its
+subagents take. A note is searchable lexically as soon as its file
+exists, and semantically after the next manual index build. The
+PostCompact agent is asynchronous and adds one headless model run per
+compaction, with a 120-second lock against bursts
+(<code>obsidian-bg-agent.sh:84-92</code>). The Hermes hook runs at most
+once every six hours by default. No pass rewrites the whole store.
+Injection per turn is the manual at SessionStart, up to 9,500
+characters, and 900 characters of recall when armed; both sit in the
+session's opening or per-prompt context.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds every verb. In Claude Code it writes with its own
+file tools, and through MCP it can save, append, set any scalar
+frontmatter field including <code>status</code>, replace text and move
+notes. The update tool's description tells the model that a stale status
+fades a note in all future search, and the response echoes
+<code>faded</code> when one is set (<code>server.py:115-138</code>,
+<code>vault_ops.py:1030-1037</code>). <code>obsidian_get_skill</code>
+returns a command's playbook for the model to execute with the other
+tools (<code>server.py:205-213</code>).</p>
+<p>Session lifecycle is covered by the SessionStart manual and, when
+armed, by the PostCompact propagation, which is the one
+compaction-boundary write. Adapting it to another agent is the project's
+premise: the eight adapters translate command bodies, and the MCP server
+serves any client. On hosts without hooks, the validation rests on the
+prompt text alone (<code>architecture.md:162</code>).</p>
+<p><strong>Crew</strong> is the cross-agent channel. Each agent records
+<code>add --agent X --area --did --where</code> after a job and reads
+the others' new records on its next hook through a per-agent,
+per-session cursor of line hashes (<code>crew.py:269-299</code>).
+Lessons are addressed <code>--for</code> one agent or <code>all</code>.
+Inputs are folded to one line, <code>|</code> is replaced and
+<code>&lt;</code> and <code>&gt;</code> are escaped, so a record cannot
+forge a table cell or a rules-block marker (<code>:38-48</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="a-status-that-ranks-and-never-withholds">A status that ranks and
+never withholds</h3>
+<p>The project's account of the failure is exact: a "what is current"
+query ranked a superseded note above the one that held. Its fix is a
+multiplier. <code>_STALE_STATUSES</code> is read in three places, two
+that multiply the score by <code>_STATUS_FADE = 0.6</code> and one that
+reports the fade to the caller (<code>vault_ops.py:139</code>,
+<code>:183</code>, <code>:451</code>, <code>:1033</code>). No search
+read excludes a note on status. A <code>rejected</code> decision that is
+the strongest term match comes back first, and a weaker one comes back
+lower. The test pins the near-tie
+(<code>tests/test_freshness.py:31-46</code>).</p>
+<h3 id="the-operation-log-is-a-note-the-agent-can-edit">The operation
+log is a note the agent can edit</h3>
+<p>Every MCP mutation appends one dated line naming the action and the
+note. The log file is not in <code>_PROTECTED_WRITE_DIRS</code>, so
+<code>obsidian_replace_text</code> and <code>obsidian_update_note</code>
+accept <code>log.md</code> or a <code>Logs/</code> day file like any
+other note (<code>vault_ops.py:50</code>, <code>:1057-1067</code>).
+Neither edit is logged, because <code>_bookkeep</code> skips bookkeeping
+surfaces (<code>:788-791</code>, <code>:885</code>). The command path
+writes its log lines as model prose, and the PostCompact agent holds
+<code>Write</code> and <code>Edit</code> over the whole vault.</p>
+<h3 id="the-human-decision-on-a-lesson">The human decision on a
+lesson</h3>
+<p>Crew's header says only an explicit human keep promotes a rule
+(<code>crew.py:29-32</code>). <code>keep</code> and <code>drop</code>
+are argparse subcommands with no actor or terminal check
+(<code>:566-568</code>, <code>:352-393</code>). The rules block that
+<code>setup</code> installs in every agent's global rules file gives the
+exact command and says to run it only when the human asks
+(<code>:409-423</code>, <code>commands/crew.md:80-90</code>). The agent
+that wrote a lesson can therefore keep it. A kept lesson becomes a
+marked section in that agent's <code>CLAUDE.md</code>,
+<code>AGENTS.md</code> or Cursor rule with
+<code>alwaysApply: true</code>. A dropped lesson is kept as evidence and
+returned by every <code>show</code>, since <code>records</code> reads
+lessons without a status filter (<code>:259-265</code>).</p>
+<h3 id="data-loss-and-supply-chain">Data loss and supply chain</h3>
+<p>The vault is the user's files, and no code path deletes a note. The
+MCP move refuses an existing destination and removes the source only
+after a byte-exact read-back (<code>vault_ops.py:1095-1170</code>).
+<code>update.sh</code> runs <code>git pull</code> on the skill checkout
+with no pin, and the MCP server installs the newest <code>mcp</code> 1.x
+at each launch. The PostCompact agent runs with
+<code>--dangerously-skip-permissions</code>, behind two environment
+flags.</p>
+<h3 id="marks">Marks</h3>
+<p>None is carried.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — no write path compares a
+new value with a rejected one. The MCP save checks only the filename
+(<code>vault_ops.py:948-954</code>), and <code>add_lesson</code>
+consults no dropped row. A merge's redirect stub, an archive prefix and
+a dropped lesson are each keyed on a file or a row id.</li>
+<li><strong><code>trust_state</code></strong> — <code>status</code> is a
+discrete field with <code>rejected</code> and <code>superseded</code>
+among its values, and every retrieval read spends it as a 0.6 weight;
+the check-in scan's skip of closed statuses decides what to re-ask, not
+what to believe. Crew's <code>open | kept | dropped</code> gates the
+copy into a rules file, and <code>show</code> returns all three.</li>
+<li><strong><code>bitemporal</code></strong> — <code>date</code>,
+<code>updated</code> and <code>last-checked</code> are record and review
+times. The <code>as of</code> stamps are text read by a linter, and no
+query takes an as-of time.</li>
+<li><strong><code>scope_enforced</code></strong> — the vault is a
+physical partition. Crew's <code>for</code> column does filter
+<code>show</code> (<code>crew.py:261-262</code>), but it routes lessons
+within one shared log rather than bounding one: <code>digest</code>
+returns every row, the reader names itself, and the system's stated
+purpose is that every agent reads every other's records.</li>
+<li><strong><code>audit_log</code></strong> — the MCP log is an append
+on one path, inside a note the same tool surface can rewrite without a
+trace, beside a command path that logs in prose.</li>
+<li><strong><code>human_review</code></strong> — Crew's keep is a CLI
+verb the installed rules tell the agent how to run. Conflict notes with
+<code>status: open</code> and check-in cards are resolved by the agent
+applying the person's answer. The Obsidian plugin is a read-only lint
+view.</li>
+<li><strong><code>negative_eval</code></strong> — no committed case
+asserts that a superseded, rejected or dropped item is absent from a
+populated result. See section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>pytest -q</code> runs 908 test functions in CI on Ubuntu and on
+Windows, after a ruff gate and three generator checks; the Obsidian
+plugin's lint has its own node suite
+(<code>.github/workflows/ci.yml:12-90</code>). I did not run them.</p>
+<p>The guarded writes are covered closely.
+<code>test_mcp_vault_ops_safety.py</code>,
+<code>test_concurrent_writes.py</code> and
+<code>test_mcp_bookkeeping.py</code> test path escapes, protected
+directories, stale-read refusal and that each write reports its log
+line. <code>test_crew.py</code> covers parallel writers, cursor
+consumption, marker injection, and that only <code>keep</code> writes a
+rules file (<code>:160-215</code>).</p>
+<p><code>negative_eval</code> is withheld because the populated
+exclusions keep out something other than a memory.
+<code>test_mcp_vault_ops_skips_claude_dir</code> asserts
+<code>wiki/Real.md</code> present and every <code>.claude/</code> path
+absent in one search (<code>tests/test_smoke.py:973-988</code>). The
+excluded files are agent configuration, and the case tests which files
+the store is. <code>test_vault_scan_finds_cjk_topic</code> asserts an
+unrelated note absent beside a match, which is retrieval precision
+(<code>tests/test_research_cjk_and_models.py:63-78</code>). The
+freshness test asserts a superseded note loses rank 1 and is returned
+(<code>tests/test_freshness.py:46</code>). No case sends a lesson to one
+agent and asserts it absent from another's <code>show</code>.</p>
+<p><code>scripts/eval/BENCHMARK.md</code> defines a seeded 300-note
+synthetic corpus with three query sets and reports, at v0.14.0, keyword
+recall@10 of 100% on both engines, paraphrase recall@1 of 25.0% lexical
+against 66.7% hybrid, and multilingual 4.2% against 62.5%. No run output
+is committed, so the table does not recompute from the tree. Its
+arithmetic is consistent with 12, 12 and 24 cases. It states that the
+hybrid rows were not re-run after two corpus-hash changes.
+<code>scripts/eval/behavior_eval.py</code> adds an answer-level eval
+judged by a model other than the writer.</p>
+<p>No paper describes the project. <code>CITATION.cff</code> cites the
+software. <code>scripts/session_archive.py:6-9</code> cites <a
+href="https://arxiv.org/abs/2610.34073">arXiv:2610.34073</a>, <em>Memory
+Tax: Dissecting the Net Value of Agent Memory</em>, for its reason to
+keep raw chats. The id resolves to that title. I read no further than
+the title.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the background writer's tool list the boundary, not its
+prompt.</strong> <code>--tools "Read,Write,Edit,Glob,Grep"</code> with
+<code>--strict-mcp-config</code> removes Bash, network and MCP from an
+unattended run. The comment explains why <code>--allowedTools</code>
+alone does not.</li>
+<li><strong>Refuse an edit when the file changed since the call read
+it.</strong> One string comparison before the atomic replace turns a
+silent lost update into an error the caller can redo.</li>
+<li><strong>Require two verbatim quotes before resolving a
+contradiction.</strong> A script that finds each quoted line in its note
+stops a model from "fixing" a disagreement it invented.</li>
+<li><strong>Read the supersession edge in both directions.</strong> A
+note that another candidate claims to supersede is demoted even when its
+own status was never updated.</li>
+<li><strong>Abstain on weak recall.</strong> An injected brief that
+needs one shared term with the prompt, caps at four notes and logs each
+decision is cheap to run on every prompt.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Spending a rejection as a weight.</strong> Once a status
+says a note does not hold, a read that wants current truth should drop
+it and a forensic read should ask for it.</li>
+<li><strong>An audit log the audited tools can write.</strong> Put it
+under the same protection as raw sources, or outside the vault, and log
+edits to it.</li>
+<li><strong>A human gate the agent can type.</strong> If only a person
+may keep a lesson, check for an interactive terminal or move the verb
+off the agent's rules block.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who keeps an Obsidian vault, works across
+several agent CLIs, and wants every agent to read and write the same
+plain notes under strong conventions. The cost is a token-heavy write
+path, since saving is a multi-agent model run. Correctness rests on the
+model following 616 lines of rules and on the user reading the vault.
+Walk away if memory must be correctable by mechanism rather than by
+convention: a retracted fact keeps ranking, nothing stops it being
+re-saved, and every guard is either advice or a verb the agent
+holds.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often a rejected or superseded note is the top hit on a real
+vault, and whether the 0.6 fade was measured against an exclusion
+arm.</li>
+<li>How many installations arm the PostCompact agent, and how often its
+unattended writes are later corrected by hand.</li>
+<li>Whether Crew's <code>keep</code> is meant to be agent-reachable,
+given that the rules block teaches the command to every agent.</li>
+<li>How <code>mcp&lt;2</code> resolution at every launch has behaved
+across 1.x releases, beyond the <code>from __future__</code> incident
+the server's header records.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and rules: <code>references/ai-first-rules.md</code>,
+<code>references/write-rules.md</code>,
+<code>references/freshness-policy.md</code>,
+<code>references/crew.md</code></li>
+<li>Commands: <code>commands/obsidian-save.md</code>,
+<code>commands/obsidian-reconcile.md</code>,
+<code>commands/obsidian-merge.md</code>,
+<code>commands/crew.md</code></li>
+<li>MCP server and search:
+<code>integrations/obsidian-mcp-server/server.py</code>,
+<code>integrations/obsidian-mcp-server/vault_ops.py</code></li>
+<li>Hooks: <code>hooks/hooks.json</code>,
+<code>hooks/load_vault_context.sh</code>,
+<code>hooks/load_vault_context.py</code>,
+<code>hooks/validate-ai-first.sh</code>,
+<code>hooks/obsidian-bg-agent.sh</code>,
+<code>hooks/obsidian-recall.py</code>,
+<code>hooks/obsidian-hermes-session-end.sh</code></li>
+<li>Maintenance: <code>scripts/verify_quotes.py</code>,
+<code>scripts/merge_notes.py</code>,
+<code>scripts/freshness_lint.py</code>, <code>scripts/checkin.py</code>,
+<code>scripts/link_graph.py</code>,
+<code>scripts/vault_health.py</code>,
+<code>scripts/session_archive.py</code></li>
+<li>Crew: <code>scripts/crew.py</code></li>
+<li>Install and update: <code>.claude-plugin/plugin.json</code>,
+<code>install.sh</code>, <code>scripts/setup.sh</code>,
+<code>update.sh</code>, <code>adapters/</code></li>
+<li>Eval and tests: <code>scripts/eval/</code>, <code>tests/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Status is read only as a weight on search.</strong>
+<code>git grep -n -E '_STALE_STATUSES' -- '*.py' ':!tests'</code>
+returns the definition, the two multiplications at
+<code>vault_ops.py:183</code> and <code>:451</code>, and the
+<code>faded</code> report at <code>:1031-1033</code>.
+<code>git grep -n -E 'status' -- scripts/checkin.py scripts/export_okf.py scripts/vault_stats.py</code>
+returns the check-in skip, the OKF mapping and the stats counter, none
+on a retrieval path.</li>
+<li><strong>No code reads <code>confidence</code>.</strong>
+<code>git grep -n 'confidence' -- '*.py' ':!tests' ':!scripts/research'</code>
+returns the recall hook's abstention wording, the Telegram journal's own
+routing field, a bootstrap template and Crew's preamble.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|event_time|occurred_at' -- '*.py' '*.sh' '*.ts' ':!tests'</code>
+returns nothing; adding <code>last-checked</code> to the pattern returns
+seven hits in <code>scripts/checkin.py</code>.</li>
+<li><strong>No code deletes a note.</strong>
+<code>git grep -n -E 'unlink\(|rmtree|os\.remove' -- '*.py' ':!tests'</code>
+returns 13 lines: temporary files, the research cache,
+<code>move_note</code>, and <code>session_archive.py:324</code>, which
+removes an archived chat's superseded parts.</li>
+<li><strong>No MCP delete.</strong>
+<code>git grep -n -E 'unlink|rmtree|os\.remove' -- integrations/obsidian-mcp-server/</code>
+returns <code>move_note</code>'s source and rollback unlinks and
+<code>_write_atomic</code>'s temporary-file cleanup.</li>
+<li><strong>Archived files are searched.</strong>
+<code>git grep -n -E '_archived_' -- integrations scripts/eval hooks</code>
+returns nothing; the same search over
+<code>scripts/bootstrap_vault.py</code> returns the convention at
+<code>:494</code> and <code>:610</code>.</li>
+<li><strong>Crew keep checks no terminal.</strong>
+<code>git grep -n -E 'isatty' -- scripts/crew.py</code> returns the
+interactive setup prompt at <code>:586</code> only.</li>
+<li><strong>No dropped-lesson check on write.</strong>
+<code>git grep -n -E 'dropped' -- scripts/crew.py</code> returns the
+legacy row regex and <code>decide</code>.</li>
+<li><strong>No test of the lesson recipient filter.</strong>
+<code>git grep -n -E 'target=' -- tests/test_crew.py</code> returns four
+<code>lesson(...)</code> calls; none is followed by a <code>show</code>
+for a different agent asserting the lesson absent.</li>
+<li><strong>The recall hook is not registered.</strong>
+<code>git grep -n -E 'obsidian-recall' -- hooks/hooks.json .claude-plugin scripts/setup.sh install.sh</code>
+returns nothing; <code>hooks/recall.hook.example.json</code> names
+it.</li>
+<li><strong>Setup never arms the background agent.</strong>
+<code>git grep -n -E 'OBSIDIAN_BG_AGENT_ENABLED' -- scripts/setup.sh install.sh</code>
+returns one <code>echo</code> telling the user how to set it.</li>
+<li><strong>No populated exclusion of a corrected item.</strong>
+<code>git grep -n -E '(superseded|rejected|dropped|archived).*(not in|not any)|(not in|not any).*(superseded|rejected|dropped|archived)' -- tests</code>
+returns an export field check and a redacted-chat check; the four words
+occur 44 times under <code>tests/</code>.</li>
+<li><strong>No committed benchmark output.</strong>
+<code>git ls-files scripts/eval '*.jsonl' '*results*'</code> returns the
+eval scripts, three markdown files and two <code>.example.jsonl</code>
+case files.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md CITATION.cff architecture.md</code>
+returns README lines naming arXiv as a research source.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/eugeniughelbur/obsidian-second-brain/commit/deff215377f0ecae68deed1074046f883425388e"><code class="commit-id" title="deff215377f0ecae68deed1074046f883425388e">deff2153…</code></a>.
+First reading, from a depth-1 clone at the head of <code>main</code>.
+Screened first: four auto-run surfaces, all the plugin's own (the
+marketplace and plugin manifests, <code>hooks/</code>, and
+<code>hooks/hooks.json</code> registering SessionStart, PostToolUse and
+an opt-in PostCompact command); the manifest also starts the MCP server
+through <code>uv</code>. The screen's "Stop" match is the manifest's
+description text. Three dependency files changed on 4 November 2026,
+inside the cooldown. MIT, no rider. Nothing installed, built or run. No
+marks: every stale status ranks rather than filters, and every
+correction verb is the agent's (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

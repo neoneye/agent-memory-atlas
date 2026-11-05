@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 778 reports.</strong></p>
+<p><strong>This page covers all 779 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32391,6 +32391,47 @@ harnesses captured into one graph with no model on the write path, and
 per-user recall over it.</li>
 <li>Do not copy when: forgetting must mean erasure, memory must be
 reviewed before it lands, or you will not run Memgraph.</li>
+</ul>
+<h3 id="obsidian-second-brain"><a
+href="../systems/obsidian-second-brain/"><code>obsidian-second-brain</code></a></h3>
+<ul>
+<li>Best idea: <strong>an unattended writer whose tool list is the
+boundary.</strong> The PostCompact agent runs <code>claude -p</code>
+with <code>--tools "Read,Write,Edit,Glob,Grep"</code> and
+<code>--strict-mcp-config</code>, so a compaction summary carrying web
+text cannot reach Bash, the network or an MCP server, and the hook ships
+inert behind two environment flags.</li>
+<li>Second idea: deterministic checks around a model that writes. MCP
+edits refuse a note that changed since they read it, and the reconcile
+command drops any contradiction whose two quotes
+<code>verify_quotes.py</code> cannot find verbatim in the named
+notes.</li>
+<li>Biggest risk: <strong>a rejected note is ranked down and
+returned.</strong> Ten stale <code>status</code> values and a
+<code>supersedes:</code> link from another hit each multiply a note's
+score by 0.6, and no search read excludes on status, so a retracted
+decision that is the strongest match comes back first.</li>
+<li>Second risk: the MCP operation log is <code>log.md</code> or a
+<code>Logs/</code> day file, which <code>obsidian_replace_text</code>
+can rewrite without writing a log line; Crew's human-only
+<code>keep</code> is a CLI verb with no terminal check, spelled out in
+every agent's installed rules.</li>
+<li>Most reusable component: the tool-restricted headless run in
+<code>hooks/obsidian-bg-agent.sh:224-244</code>, with
+<code>_write_atomic</code> and <code>_unchanged_since</code> in
+<code>integrations/obsidian-mcp-server/vault_ops.py:1470-1525</code>.</li>
+<li>Maturity impression: MIT; 20,043 lines of Python outside tests, a
+quarter of it the research toolkit, plus 4,464 of shell and 2,554 of
+command prompts; 653 commits, 24 March – 4 November 2026, 480 of them
+the maintainer's; 908 pytest functions run in CI on Ubuntu and Windows,
+not run here. No marks. The retrieval benchmark table does not recompute
+from the tree, since no run output is committed.</li>
+<li>Study when: several agent CLIs should share one plain-markdown
+vault, with conventions enforced by hooks, lints and guarded edits
+rather than by a database.</li>
+<li>Do not copy when: a retracted fact must stop being returned, the
+audit trail must be out of the agent's reach, or a person's decision
+must be one the agent cannot make.</li>
 </ul>
         </article>
       </div>

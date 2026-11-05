@@ -429,6 +429,8 @@ visible only in the data.
 
 **[OmniMem](../../systems/omnimem/) puts belief on its own column beside a visibility lifecycle.** `state` is active, deprioritised, archived or deleted; `trust` is `candidate`, `accepted`, `disputed`, `superseded` or `rejected`, a generated column whose default makes an extracted fact a candidate (`crates/omnimem-store/src/schema.rs:18-25`). Every recall search excludes `rejected` in SQL, a superseded memory appears only inside its winner's hit, and the briefing and the skill compiler take only `accepted` (`crates/omnimem-engine/src/recall.rs:725-783`, `skills.rs:155-162`). Only a person confirms a candidate, through the settings window or the CLI, and only a model-confirmed contradiction disputes; a heuristic link disputes nothing. The weights on `candidate` and `disputed` reorder and never filter, and the graveyard behind its recall warnings and pre-tool-use hook ignores trust altogether.
 
+**[obsidian-second-brain](../../systems/obsidian-second-brain/) has a status vocabulary and spends every value of it as a weight.** Ten values, `superseded` and `rejected` among them, multiply a note's search score by 0.6 in the cached scan and again in the post-fusion rerank, and a `supersedes:` link from another candidate does the same (`integrations/obsidian-mcp-server/vault_ops.py:127-139`, `:158-193`, `:445-452`). The update tool tells the model that setting one fades the note in all future search. No search read excludes a note on status, so the one strong match for a query is returned first whatever its status says. Crew's lesson status gates a copy into a rules file and is not filtered on read.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

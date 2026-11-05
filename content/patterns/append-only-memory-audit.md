@@ -548,6 +548,8 @@ report withholds `audit_log` on that ground.
 
 **[Bot Board](../../systems/bot-board/) makes the store its own log.** `knowledge_docs` has no current-value table: a document is the row with the highest revision for its path, and both mutations only insert — a write at `MAX(revision)+1` behind a compare-and-set, a delete as a revision with `deleted = 1` and an empty body — with `author_id` taken from the token and a reason and sources on every row (`app/workspaces.py:53-66`, `:717-719`, `:760-791`). No path in the tree updates a row, so the log cannot be skipped. What it cannot do is forget: a deleted document's earlier bodies stay readable through `/history` and `?revision=N`, and the only removal is deleting the whole workspace, which drops its knowledge rows and the separate `workspace_audit` rows with no receipt (`:568-589`).
 
+**[obsidian-second-brain](../../systems/obsidian-second-brain/) appends the log line and leaves the log inside the tool's reach.** Every MCP save, update, replace and move appends one dated `action | description` line to `Logs/<day>.md` or `log.md` (`integrations/obsidian-mcp-server/vault_ops.py:794-809`, `:880-895`). To the same server the log is an ordinary vault note: `obsidian_replace_text` accepts it, and an edit to a bookkeeping surface skips bookkeeping, so rewriting the log leaves no line (`:50`, `:788-791`). Writes made with the agent's own file tools, which is how the commands write, are logged only when the model follows the prompt. The report withholds the mark.
+
 
 ## Tests to require
 

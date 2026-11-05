@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 778 reports.**
+**This page covers all 779 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7122,3 +7122,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 33,926 lines of Python in `context-graph/` outside tests, 204 commits there from one author, 23 April – 5 November 2026; 1,202 pytest functions, mostly against a live Memgraph in CI, not run here. Two marks, both on recall. The LongMemEval-S 87.4% and BEAM 100K 63.1% headlines recompute from the committed per-question rows.
 - Study when: you want every coding-agent session across several harnesses captured into one graph with no model on the write path, and per-user recall over it.
 - Do not copy when: forgetting must mean erasure, memory must be reviewed before it lands, or you will not run Memgraph.
+
+### [`obsidian-second-brain`](../systems/obsidian-second-brain/)
+- Best idea: **an unattended writer whose tool list is the boundary.** The PostCompact agent runs `claude -p` with `--tools "Read,Write,Edit,Glob,Grep"` and `--strict-mcp-config`, so a compaction summary carrying web text cannot reach Bash, the network or an MCP server, and the hook ships inert behind two environment flags.
+- Second idea: deterministic checks around a model that writes. MCP edits refuse a note that changed since they read it, and the reconcile command drops any contradiction whose two quotes `verify_quotes.py` cannot find verbatim in the named notes.
+- Biggest risk: **a rejected note is ranked down and returned.** Ten stale `status` values and a `supersedes:` link from another hit each multiply a note's score by 0.6, and no search read excludes on status, so a retracted decision that is the strongest match comes back first.
+- Second risk: the MCP operation log is `log.md` or a `Logs/` day file, which `obsidian_replace_text` can rewrite without writing a log line; Crew's human-only `keep` is a CLI verb with no terminal check, spelled out in every agent's installed rules.
+- Most reusable component: the tool-restricted headless run in `hooks/obsidian-bg-agent.sh:224-244`, with `_write_atomic` and `_unchanged_since` in `integrations/obsidian-mcp-server/vault_ops.py:1470-1525`.
+- Maturity impression: MIT; 20,043 lines of Python outside tests, a quarter of it the research toolkit, plus 4,464 of shell and 2,554 of command prompts; 653 commits, 24 March – 4 November 2026, 480 of them the maintainer's; 908 pytest functions run in CI on Ubuntu and Windows, not run here. No marks. The retrieval benchmark table does not recompute from the tree, since no run output is committed.
+- Study when: several agent CLIs should share one plain-markdown vault, with conventions enforced by hooks, lints and guarded edits rather than by a database.
+- Do not copy when: a retracted fact must stop being returned, the audit trail must be out of the agent's reach, or a person's decision must be one the agent cannot make.
