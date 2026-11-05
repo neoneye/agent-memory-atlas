@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 774 of 774 screened at the report's current pin.**
+**Progress: 775 of 775 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 365 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 337 |
+| Repositories with an auto-run surface (`RUNS`) | 366 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 338 |
 | Repositories with build-time execution (`EXEC`) | 563 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
@@ -352,6 +352,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`silverbullet`](../../content/systems/silverbullet.md) | `.vscode/settings.json` |
 | [`slowave`](../../content/systems/slowave.md) | `server.json` |
 | [`smythos-sre`](../../content/systems/smythos-sre.md) | `.claude/settings.local.json`, `.cursor/rules/` |
+| [`sqlite-graph-memory`](../../content/systems/sqlite-graph-memory.md) | `server.json` |
 | [`sqlite-memory-mcp`](../../content/systems/sqlite-memory-mcp.md) | `hooks/` |
 | [`state-memory-mcp`](../../content/systems/state-memory-mcp.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `server.json` |
 | [`stella`](../../content/systems/stella.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/` |

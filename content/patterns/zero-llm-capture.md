@@ -300,6 +300,8 @@ is the thing a deletion request has to survive.
 
 [ReFind](../../systems/refind/) moves the model to the read side entirely. Add commits raw messages to SQLite before HTTP 200, with a payload hash that makes a retry free and a conflicting replay a 409, and no model, extraction or index work on the write (`app/store.py:131-174`). Search rebuilds a BM25 index per request and spends up to four GPT-4o-mini actions choosing evidence, and it fails with a 502 rather than falling back to BM25 when the declared agent mode has no model. The trade is the one this page predicts in reverse: nothing is lost to a provider outage at write time, and every question pays a full re-tokenization of the user's history plus the model calls.
 
+[sqlite-graph-memory](../../systems/sqlite-graph-memory/) is capture with no reader. A Claude Code Stop hook parses the new transcript bytes after each turn and appends one row with the ask, the assistant text, files written, tools, commands and lines matching a bilingual decision regex, with no model and no output (`src/sqlite_graph_memory/turnstate_hook.py:131-235`). Only a terminal viewer reads it; the MCP tool recalls from the user's notes and never from the ledger. Two details generalise. The hook advances its byte offset before the insert, so a locked database loses the turn rather than retrying it (`:160`). And the crash guard that makes it safe sits under `__main__`, while the console script the settings snippet installs calls `main` directly (`pyproject.toml:81`); its tests exercise `python -m`, the guarded path.
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.

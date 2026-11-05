@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 774 reports.**
+**This page covers all 775 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7082,3 +7082,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 13,461 lines of Python in `app/`, 833 commits from 3 September to 4 November 2026, most of them authored by the project's own bots, tagged v1.0.251; 532 unittest functions in 74 files, not run here. Three marks, `scope_enforced`, `audit_log` and `negative_eval`.
 - Study when: several agents share durable project notes and must not overwrite each other, and you want history and attribution without a forge or a model in the write path.
 - Do not copy when: the agents sharing the store are not all trusted by one person, a single sentence must be erasable, or memory must carry a verdict beside its text.
+
+### [`sqlite-graph-memory`](../systems/sqlite-graph-memory/)
+- Best idea: **the graph is the links the user wrote, read from the live files at query time.** One hop from the top 15 vector hits adds up to 40 neighbours to the reranker's pool, so there is no extraction pass and no edge table to drift from the notes.
+- Second idea: a bench whose result files carry every per-question output, rescored by CI and rerun from a clean index with no question allowed to change, beside a CI step that breaks nDCG on purpose and fails if the eval suite stays green.
+- Biggest risk: **a note that declares itself superseded is retrieved first anyway.** Nothing under `src/` reads `superseded_by`, and on the bench's six current-deadline questions both modes rank and cite the replaced decision in all six.
+- Second risk: the agent cannot write, correct or forget, and an edit reaches recall only at the next manual `sgm-index`; the Stop-hook ledger reaches no recall path, and its installed entry point skips the crash guard its tests exercise.
+- Most reusable component: `bench/` — the scorer in `bench_core.py` with the rescore, thirteen-way forgery self-test and zero-tolerance reproduce gate in `validate.py`.
+- Maturity impression: MIT; 2,310 lines in the package and 3,175 in the bench, eval and scripts; 133 commits, 3 July – 4 November 2026, mostly the maintainer's; 202 pytest functions run in CI on five Python versions, not run here. No marks. Recall@5 of 0.85 with the hop and 0.88 without recomputes from the committed outputs.
+- Study when: you have a well-linked markdown vault and want to measure whether following links helps recall on it before building anything heavier.
+- Do not copy when: the agent must write its own memory, a replaced fact must stop being returned, or several projects or people share one index.

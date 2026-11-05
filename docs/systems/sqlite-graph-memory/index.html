@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Graph RAG recall layer over a
+folder of markdown notes: dense retrieval, one hop along hand-written
+wikilinks and a cross-encoder rerank, served over MCP.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="sqlite-graph-memory — Agent Memory Atlas">
+    <meta property="og:description" content="A Graph RAG recall layer
+over a folder of markdown notes: dense retrieval, one hop along
+hand-written wikilinks and a cross-encoder rerank, served over MCP.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="sqlite-graph-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Graph RAG recall layer
+over a folder of markdown notes: dense retrieval, one hop along
+hand-written wikilinks and a cross-encoder rerank, served over MCP.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>sqlite-graph-memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "sqlite-graph-memory",
+      "description": "A Graph RAG recall layer over a folder of markdown notes: dense retrieval, one hop along hand-written wikilinks and a cross-encoder rerank, served over MCP.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Wikilinks as the graph, and a ledger
+nothing reads back</p>
+          <h1>sqlite-graph-memory</h1>
+          <p class="document-deck">A Graph RAG recall layer over a
+folder of markdown notes: dense retrieval, one hop along hand-written
+wikilinks and a cross-encoder rerank, served over MCP.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/tonydzi/sqlite-graph-memory">
+              <span>Source</span>
+              <strong>tonydzi/sqlite-graph-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/tonydzi/sqlite-graph-memory/commit/a22da114bb714b75281ae86b0bd8c3ece274ec8c" title="a22da114bb714b75281ae86b0bd8c3ece274ec8c">
+              <span>Analyzed revision</span>
+              <code>a22da114…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/tonydzi--sqlite-graph-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>tonydzi--sqlite-graph-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>2,310
+lines in the package (2,265 Python, 45 SQL), plus 3,175 lines of Python
+in the bench harness, eval and scripts</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>133
+commits, 3 July – 4 November 2026; 114 under the maintainer's names and
+the lab's account, 19 from ten other contributors</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>202
+pytest functions in 22 files, 3,290 lines, run in CI on Python 3.9–3.13
+with a mutation gate on the eval metric; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>sqlite-graph-memory is a recall layer for coding agents over a folder
+of markdown notes. Dense retrieval finds entry points, one hop along the
+user's own <code>[[wikilinks]]</code> adds neighbours, and a
+cross-encoder decides what survives. The design question it is built to
+answer is whether the hop earns its place, and its committed bench
+answers no on that vault, which the project publishes. The weak point is
+correction: a note that declares itself replaced is retrieved first
+anyway, and the per-turn ledger the Stop hook writes reaches no recall
+path.</p>
+<p>The memory is whatever the user wrote. Nothing extracts, summarises
+or rewrites it, and the only machine-written store is the ledger, which
+only a terminal viewer reads. That makes it a small, auditable retrieval
+pipeline rather than a memory system with a lifecycle. No capability
+mark is earned. The near-misses are a supersession field present in the
+bench vault that no reader consults and two indexer tests that keep
+material out of the index rather than out of a result.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>note</strong>: a markdown file under the folder
+<code>sgm-index</code> was pointed at, minus dot-files, dot-directories
+and Syncthing conflict copies (<code>index_notes.py:83-99</code>). It is
+chunked into 1,200-character windows with 200 characters of overlap,
+each embedded with the <code>passage:</code> prefix. A chunk keeps the
+note's path, its file stem as title, the first 600 characters as snippet
+and a frontmatter <code>date</code>
+(<code>index_notes.py:124-139</code>).</p>
+<p>There is no state machine. A note becomes retrievable when the
+indexer embeds it, and stops being retrievable when the indexer next
+runs after the file is deleted (<code>index_notes.py:219-225</code>).
+Between those two runs, an edited note is retrieved with its old snippet
+and its new links, because the graph hop reads the live file
+(<code>brain_ask.py:140-146</code>) while text comes from the pickled
+index.</p>
+<p>Nothing is verified, ranked by trust or superseded. The bench vault
+encodes supersession the way an Obsidian user would,
+<code>status: superseded</code> and
+<code>superseded_by: "[[decision-2025-08-16-heron-deadline]]"</code> in
+frontmatter
+(<code>bench/vault/decision-2025-02-07-heron-deadline.md:6-7</code>).
+The indexer reads only <code>date</code> from frontmatter
+(<code>index_notes.py:70-72</code>), so both decisions are equal
+candidates and the reranker picks between them on wording.</p>
+<p>The second store is the <strong>turns ledger</strong>. After every
+assistant turn a Claude Code Stop hook parses the new transcript bytes
+and appends one row: last user ask, assistant text, files written,
+tools, commands and lines matching a bilingual decision regex
+(<code>turnstate_hook.py:51-55</code>, <code>:131-235</code>). It is a
+record of what happened, so nothing in it can turn out to be false. It
+is read by <code>sgm-turnstate-show</code> and by nothing the agent
+calls.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — notes reach recall only through a manual index run; the supersession a note declares and the ledger the hook writes never reach the agent</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: notes reach recall only through a manual index run; the supersession a note declares and the ledger the hook writes never reach the agent
+flowchart TD
+  subgraph writers[&quot;Who writes&quot;]
+    direction TB
+    USER[&quot;person edits markdown&lt;br/&gt;in Obsidian or any editor&quot;]
+    AGENT[&quot;agent writes a note&lt;br/&gt;with its own file tools&quot;]
+    USER ~~~ AGENT
+  end
+  writers --&gt; NOTES[&quot;notes folder&lt;br/&gt;frontmatter may say&lt;br/&gt;superseded_by&quot;]
+  NOTES --&gt; IDX[&quot;sgm-index, run by hand&lt;br/&gt;re-embed by SHA-256&lt;br/&gt;drop deleted files&quot;]
+  IDX --&gt; STORE[&quot;.npy vectors&lt;br/&gt;meta.pkl, manifest&quot;]
+  STORE --&gt; MCP[&quot;memory_recall&lt;br/&gt;subprocess per call&quot;]
+  MCP --&gt; DENSE[&quot;cosine, best chunk&lt;br/&gt;per file, top 60&quot;]
+  DENSE --&gt; GATE{&quot;name-shaped query?&quot;}
+  GATE --&gt;|&quot;no&quot;| HOP[&quot;1 hop from top 15&lt;br/&gt;links read live&lt;br/&gt;up to 40 added&quot;]
+  GATE --&gt;|&quot;yes&quot;| RR
+  HOP --&gt; RR[&quot;cross-encoder&lt;br/&gt;rerank to 12&quot;]
+  RR --&gt; OUT[&quot;8 snippets&lt;br/&gt;to the agent&quot;]
+  NOTES -.-&gt;|&quot;never read&quot;| SUP[&quot;superseded_by&quot;]
+  SUP ~~~ HOOK[&quot;Stop hook&lt;br/&gt;regex over transcript&quot;]
+  HOOK --&gt; TURNS[&quot;turns ledger&lt;br/&gt;append only&quot;]
+  TURNS --&gt; SHOW[&quot;sgm-turnstate-show&lt;br/&gt;a person&#39;s terminal&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything is Python 3.9+ in <code>src/sqlite_graph_memory/</code>,
+with numpy as the only base dependency. The models need an extra:
+<code>[lite]</code> runs both on ONNX Runtime, and
+<code>[embeddings]</code> brings torch
+(<code>pyproject.toml:42-69</code>).</p>
+<ul>
+<li><strong>Indexer.</strong> <code>sgm-index &lt;dir&gt;</code> writes
+<code>_brain_e5.npy</code>, <code>_brain_e5_meta.pkl</code> and
+<code>_brain_e5_manifest.json</code> into <code>BRAIN_INDEX_DIR</code>
+(<code>index_notes.py:158-252</code>). The manifest fingerprints the
+chunking settings and the model name, and a mismatch forces a full
+rebuild (<code>:119-121</code>, <code>:187-188</code>).</li>
+<li><strong>Recall.</strong> <code>sgm-ask</code> loads the whole matrix
+and computes one dot product per chunk per query
+(<code>brain_ask.py:216-220</code>). There is no ANN index and no vector
+table in SQLite.</li>
+<li><strong>MCP server.</strong> <code>sgm-mcp</code>, or
+<code>sqlite-graph-memory</code> under <code>uvx</code>, is a stdlib
+JSON-RPC loop with one tool. Each call spawns <code>brain_ask.py</code>
+in a child process with a 180-second default deadline, so a model crash
+kills the child and not the server (<code>mcp_server.py:26-29</code>,
+<code>:98-172</code>).</li>
+<li><strong>SQLite.</strong> <code>turns</code> and
+<code>ab_recall</code> are created on first write
+(<code>turnstate_hook.py:119-128</code>,
+<code>brain_ask.py:509-522</code>). <code>schema.sql</code> documents
+both and says it is not a migration (<code>schema.sql:1-4</code>). A
+third table, <code>gold_eval</code>, is appended by
+<code>eval/run_eval.py --sqlite</code>
+(<code>run_eval.py:224-245</code>).</li>
+</ul>
+<p>The README calls this "one SQLite file" (<code>README.md:15</code>).
+The vectors and chunk list are numpy and pickle files beside it. The two
+tables share a file only when both processes see the same
+<code>TURNSTATE_DB</code>. The hook defaults to
+<code>~/.claude/turnstate/turnstate.db</code>
+(<code>turnstate_hook.py:29-38</code>). <code>brain_ask</code> defaults
+to <code>./turnstate.db</code> in its working directory
+(<code>brain_ask.py:36</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run between calls. Install is one <code>uvx</code>
+line pinned to Python 3.12, because onnxruntime has no wheels for 3.14
+on an Intel Mac (<code>README.md:23-31</code>). The first index run
+downloads <code>intfloat/multilingual-e5-base</code> and the reranker
+from the Hugging Face Hub at the repository's default branch with no
+revision pin (<code>onnx_backend.py:27-49</code>). After that it runs
+offline on CPU, and no API key is used anywhere. The notes stay
+human-readable and are the source of truth; the index is disposable and
+rebuilds from them. Indexing stores each note's path as given on the
+command line (<code>index_notes.py:203</code>), and nothing resolves it,
+so a relative path is valid only in the directory it was indexed
+from.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture into the index.</strong> <code>build_index</code>
+(<code>index_notes.py:158-252</code>) lists notes, takes size and mtime
+as a fast path and SHA-256 as truth (<code>:201-214</code>), keeps rows
+of unchanged notes, re-chunks new and changed ones
+(<code>:227-232</code>), and writes the three files in sequence with no
+temporary file or rename (<code>:246-249</code>).</li>
+<li><strong>Recall.</strong> <code>main</code>
+(<code>brain_ask.py:434-566</code>): <code>load_index</code>
+(<code>:155-159</code>), <code>query_sims</code>
+(<code>:216-220</code>), <code>retrieve_candidates</code> keeping the
+best chunk per path to 60 files (<code>:223-231</code>),
+<code>expand_1hop</code> (<code>:305-332</code>),
+<code>rerank_candidates</code> on title plus snippet
+(<code>:335-340</code>).</li>
+<li><strong>Entity gate.</strong> <code>looks_like_entity</code> returns
+true for a query of at most five tokens holding a capitalised or
+CamelCase word, a snake_case token or one of six tool names, and the hop
+is then skipped (<code>brain_ask.py:109-133</code>,
+<code>:545-548</code>).</li>
+<li><strong>PageRank lane.</strong> Off unless <code>SGM_PPR=1</code> or
+<code>--ppr</code>. <code>ppr_file_order</code> seeds personalized
+PageRank with the dense hits (<code>ppr.py:156-189</code>), and
+<code>fuse_after_rerank</code> fuses it with the reranker order by RRF,
+leaving the first five positions untouched
+(<code>ppr.py:205-234</code>). It is never applied under
+<code>--ab</code> (<code>brain_ask.py:476-477</code>).</li>
+<li><strong>Context assembly.</strong> In <code>--ask</code> mode the
+top eight hits are written as a header and the 600-character snippet
+each, to <code>BRAIN_ANSWER_OUT</code>
+(<code>brain_ask.py:552-566</code>). The MCP server points that variable
+at a temporary file and returns its contents
+(<code>mcp_server.py:132-162</code>).</li>
+<li><strong>A/B telemetry.</strong> <code>--ab</code>, or MCP mode
+<code>ab</code>, reranks both pools and inserts one
+<code>ab_recall</code> row with the counts and promoted titles,
+swallowing any error (<code>brain_ask.py:490-522</code>).</li>
+<li><strong>Ledger.</strong> <code>turnstate_hook.main</code>
+(<code>turnstate_hook.py:131-235</code>), viewer
+<code>turnstate_show.main</code>
+(<code>turnstate_show.py:33-89</code>).</li>
+<li><strong>Correction and deletion.</strong> Edit or delete the
+markdown, then rerun <code>sgm-index</code>. There is no other
+path.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A chunk's metadata is exactly
+<code>{path, title, snippet, date}</code>
+(<code>index_notes.py:136-137</code>). The manifest maps each path to
+<code>{size, mtime, hash}</code> (<code>:214</code>). There is no id
+beyond the path, no version, no source agent and no timestamp of
+indexing.</p>
+<p><code>turns</code> has <code>session_id</code>, wall-clock
+<code>ts</code>, <code>cwd</code>, <code>project</code> (the basename of
+<code>cwd</code>), clipped <code>ask</code> and <code>summary</code>,
+four JSON arrays, and <code>evidence</code> with <code>byte_start</code>
+and <code>byte_end</code> pointing back into the transcript the row was
+derived from (<code>schema.sql:8-23</code>). The evidence pointer is the
+one piece of provenance in the system. <code>ab_recall</code> holds a
+query and three counts per A/B run (<code>schema.sql:30-39</code>).</p>
+<p>Scope does not exist on the note index. Isolation is by directory:
+one <code>BRAIN_INDEX_DIR</code> per vault. The ledger's
+<code>session_id</code> and <code>project</code> are filtered only by
+the viewer's <code>--session</code> flag
+(<code>turnstate_show.py:66-67</code>).</p>
+<p>The only temporal field on a note is the frontmatter
+<code>date</code>, shown in the context bundle header and used nowhere
+in ranking (<code>brain_ask.py:556</code>).
+<code>docs/bitemporal.md</code> and <code>BITEMPORAL.md</code> specify
+<code>valid_from</code>, <code>valid_to</code> and
+<code>observed_at</code> for a materialized edge table that the package
+does not have.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is a fixed pipeline with no query rewriting: e5
+<code>query:</code> prefix, exact cosine over every chunk, deduplicate
+to one chunk per file, then the optional hop, then the reranker. The hop
+follows <strong>outgoing</strong> links only from the top 15 files. It
+resolves each target by file stem, preferring exact vault-relative paths
+over suffix matches, adds the neighbour's best chunk for this query, and
+stops at 40 (<code>brain_ask.py:273-302</code>, <code>:305-332</code>).
+Any exception in the hop returns an empty list and recall proceeds on
+vector hits alone (<code>:329-331</code>).</p>
+<p>The MCP tool defaults to <code>associative</code>, which is
+<code>--graph --ask</code>, so the entity gate applies;
+<code>direct</code> is <code>--ask</code>; <code>ab</code> returns the
+comparison table (<code>mcp_server.py:120-130</code>). The agent
+receives at most eight snippets of 600 characters with headers, roughly
+5 KB, on every call.</p>
+<p>The package has three readers of the link graph, and they parse
+targets two ways. The hop and <code>sgm-stats</code> normalise
+<code>[[folder/note]]</code> and <code>[[note.md]]</code> through
+<code>_normalize_target</code> (<code>brain_ask.py:234-239</code>,
+<code>vault_stats.py:73</code>). The PageRank lane looks a target up as
+<code>tgt.strip().lower()</code> against file stems
+(<code>ppr.py:144</code>), so a folder-qualified or
+<code>.md</code>-suffixed link is no edge there. Its graph cache key
+also hashes a <code>sha</code> field that the indexer never writes
+(<code>ppr.py:106-114</code>), so the key covers paths only. The cache
+lives one process, and each MCP call is a fresh process.</p>
+<p>Each hop reads the neighbour's file from the path stored at index
+time (<code>brain_ask.py:142</code>). The MCP server starts the child in
+its own working directory (<code>mcp_server.py:140-148</code>). An index
+built from <code>sgm-index ./notes</code>, the form the README's
+three-command quickstart uses (<code>README.md:96-98</code>), therefore
+resolves no file from a server started in another directory.
+<code>_links_in</code> returns an empty list on the failed read
+(<code>brain_ask.py:142-143</code>), and associative recall degrades to
+vector recall with no message.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The system writes no memory of its own. A note is written by a person
+in an editor, or by an agent through whatever file tool its harness
+gives it; no MCP verb writes. The indexer is a derivation, re-run by
+hand. Its incremental path re-embeds only notes whose hash changed and
+drops rows of deleted files, so a re-run after one edit embeds one note
+(<code>index_notes.py:216-232</code>). There is no deduplication across
+notes, no consolidation and no conflict handling: two notes that
+disagree are both candidates.</p>
+<p>The ledger is the only automatic write. It is deterministic and costs
+no tokens. It reads at most 4 MB of new transcript per turn and skips
+the turn outright when more has arrived
+(<code>turnstate_hook.py:151-153</code>). It records the offset before
+it inserts the row (<code>:160</code>), so a failed insert loses that
+turn rather than retrying it. Commands are stored clipped to 200
+characters with no redaction of secrets in them (<code>:189-192</code>).
+No code updates, prunes or deletes a ledger row.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks the agent on a write. A note is retrievable after the
+next <code>sgm-index</code> run and not before; the package schedules
+none, and the README describes a nightly rebuild in the maintainer's own
+setup (<code>README.md:153</code>). Each recall loads the full matrix
+and both models in a fresh process. The README reports 7.0 seconds per
+MCP recall on the bench vault with ONNX and 33.8 with torch on one
+machine (<code>README.md:84-86</code>); I did not measure it. The Stop
+hook is one file read and one SQLite insert per turn. No pass rewrites
+the store. The index writes are three sequential overwrites, so a recall
+that starts between them can load a matrix and a chunk list of different
+lengths.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent has one verb, <code>memory_recall(query, mode)</code>
+(<code>mcp_server.py:67-95</code>). It cannot save, correct or forget
+through the server. Retrieval is tool-mediated; nothing injects context
+at session start. Installation snippets exist for Claude Code, Cursor,
+VS Code and Codex (<code>README.md:37-79</code>).
+<code>server.json</code> registers the package in the MCP Registry as a
+<code>uvx</code> launch of
+<code>sqlite-graph-memory[lite]==0.3.6</code>.</p>
+<p>The Stop hook is opt-in:
+<code>examples/claude-code-stop-hook.json</code> is a snippet for
+<code>~/.claude/settings.json</code> that runs
+<code>sgm-turnstate-hook</code> with a 20-second timeout, and nothing in
+the repository installs it. The hook prints nothing on any path, so it
+cannot steer Claude Code's control flow. Its crash guard does not travel
+with it, though. The module catches every exception and exits 0 only
+under <code>if __name__ == "__main__"</code>
+(<code>turnstate_hook.py:238-243</code>). The console script the snippet
+names is <code>sqlite_graph_memory.turnstate_hook:main</code>
+(<code>pyproject.toml:81</code>), which calls <code>main</code>
+directly. Malformed stdin or a locked database then exits 1 with a
+traceback, which Claude Code reports as a non-blocking hook error.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-replaced-decision-wins">The replaced decision wins</h3>
+<p>On the six bench questions asking for a project's current deadline,
+both committed sqlite-graph-memory result files rank the superseded
+decision first and cite it, in graph and in vector mode. I recomputed
+this from <code>bench/results/sqlite-graph-memory.json</code> and
+<code>sqlite-graph-memory-vector.json</code> against the vault's
+<code>superseded_by</code> fields without running the project's code.
+The old note is first in 6 of 6, both decisions are in the top five in 6
+of 6, and the answer is correct in 0 of 6. The extractor keeps the first
+note on an overlap tie (<code>bench/adapters/_extract.py:49-53</code>),
+so the cited value is the higher-ranked one. The committed BM25 row
+cites the replacement in all six.</p>
+<p>The fix is in the tree, in the wrong directory. The TangleClaw
+reference adapter stores frontmatter <code>status</code> and
+<code>superseded_by</code> in a <code>notes_meta</code> table and
+promotes an active successor over a superseded hit
+(<code>bench/adapters/tangleclaw.py:20-24</code>,
+<code>:106-136</code>). <code>src/</code> holds no reader of either
+field.</p>
+<h3 id="correction-is-a-file-operation">Correction is a file
+operation</h3>
+<p>A person corrects memory by editing the note, which is authoritative
+and immediate in the vault and invisible to recall until the next index
+run. A deleted note keeps returning its old snippet until then. No
+record says what changed, when or by whom; the vault's own git history,
+if it has one, is the only audit. The ledger records the paths an agent
+wrote through <code>Write</code> or <code>Edit</code>, not the change,
+and records nothing a person does.</p>
+<h3 id="what-enters-the-store">What enters the store</h3>
+<p>Notes are the user's own writing, so prompt injection reaches memory
+only through a note someone wrote or an agent was told to write. The
+ledger stores assistant text and shell commands verbatim, clipped, under
+<code>~/.claude/turnstate/</code> with no retention.
+<code>load_index</code> unpickles <code>_brain_e5_meta.pkl</code>
+(<code>brain_ask.py:157</code>), so anyone who can write the index
+directory can run code in the next recall.</p>
+<h3 id="marks">Marks</h3>
+<p>None is carried.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — no rejected value is
+recorded; deletion is file removal.</li>
+<li><strong><code>trust_state</code></strong> —
+<code>status: superseded</code> exists in the bench vault's frontmatter
+and no code under <code>src/</code> reads it.</li>
+<li><strong><code>bitemporal</code></strong> — the one note-level time
+is a frontmatter <code>date</code> used for display; validity windows
+are a design note.</li>
+<li><strong><code>scope_enforced</code></strong> — the note index has no
+scope key. The ledger's <code>session_id</code> filter is a viewer
+option a person types, not a boundary on any read the agent makes.</li>
+<li><strong><code>audit_log</code></strong> — <code>turns</code> is
+append-only, but it records agent turns, not mutations of the note
+store. Re-indexing writes no record.</li>
+<li><strong><code>human_review</code></strong> — the person authors
+notes directly. Editing is authoring, and no memory waits for
+anyone.</li>
+<li><strong><code>negative_eval</code></strong> — see section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is 202 pytest functions in 22 files. CI runs it on Python
+3.9 to 3.13 and then reruns <code>tests/test_eval.py</code> with
+<code>EVAL_MUTANT=1</code>, which makes nDCG return 1.0, and fails the
+build if that run stays green
+(<code>.github/workflows/tests.yml:38-47</code>). I did not run the
+suite.</p>
+<p>Coverage is strongest on the indexer and the MCP transport. Fourteen
+cases in <code>test_incremental_index.py</code> pin hashing, the fast
+path, deletion and the forced-rebuild conditions.
+<code>test_turnstate_hook.py:93-126</code> asserts exit code 0 on bad
+input and a missing transcript. Both cases run
+<code>python -m sqlite_graph_memory.turnstate_hook</code>, which takes
+the guarded path, and neither runs the console script the hook snippet
+installs. <code>tests/test_ppr.py</code> has no folder-qualified
+link.</p>
+<p><code>negative_eval</code> is withheld because no case asserts on a
+retrieval result. Two come close and both are populated:</p>
+<ul>
+<li><code>test_index_notes_dotfiles.py:54-59</code> asserts
+<code>.drafts/inside.md</code> is not enumerated while
+<code>ok.md</code> is;</li>
+<li><code>test_incremental_index.py:129-145</code> asserts a deleted
+note's rows are gone while two others remain.</li>
+</ul>
+<p>Both keep material out of the index rather than out of what recall
+returns. A <code>retrieve_candidates</code> call over the rebuilt index,
+with a query that matched the deleted note before, would close the
+gap.</p>
+<p><strong>memory-bench v0.1</strong> is the project's own: 202
+generated notes, 91 questions in seven classes, 22 of them unanswerable
+(<code>bench/README.md:9-27</code>). Each result file carries every
+per-question output, and <code>validate.py</code> rescores it with the
+shared scorer and rejects any claimed number that differs
+(<code>bench/validate.py:41-62</code>,
+<code>bench/bench_core.py:105-170</code>, <code>:181</code>). I
+recomputed recall@5 from the committed outputs with my own script. It
+matches the files: 0.8478 in graph mode and 0.8841 vector-only over 69
+answerable questions. Graph mode gains on <code>bridge</code> (1.00
+against 0.97) and loses on <code>paraphrase</code> (0.50 against 0.80).
+The answers come from an extractive adapter, so answer metrics measure
+<code>_extract.py</code> as much as the library.</p>
+<p>The <code>reproduce</code> job reruns both sqlite-graph-memory rows
+from a clean index and allows no per-question change
+(<code>validate.py:175-197</code>). Its hosted run on <a
+href="https://github.com/tonydzi/sqlite-graph-memory/commit/e4f31b9ae5c1dea6ceb5838d3a0ccb80a1737f06"><code class="commit-id" title="e4f31b9ae5c1dea6ceb5838d3a0ccb80a1737f06">e4f31b9a…</code></a>,
+whose <code>src/</code> and <code>bench/</code> trees equal the pin's,
+reports both jobs successful. I read the job conclusions, not the logs.
+The result files are labelled 0.3.0 and dated 10 October 2026; the
+package at the pin is 0.3.6.</p>
+<p>The paper is a Zenodo preprint of 7 September 2026, <a
+href="https://doi.org/10.5281/zenodo.22639718">DOI
+10.5281/zenodo.22639718</a>. Its abstract reports a production A/B over
+10 logged queries, in which the hop changed the top 12 in five, and
+names the stratified evaluation protocol as the contribution. I read the
+abstract and metadata, not the PDF. The README's home-vault table and
+rejected-swap list (<code>README.md:409-475</code>) come from a private
+corpus and are claims, not artifacts in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Use the links people have written as the graph, and read
+them live.</strong> No extraction pass, no edge table to keep in sync,
+and an edit to a link reaches the next query without a rebuild.</li>
+<li><strong>Let the graph propose and the reranker decide.</strong>
+Neighbours enter the same pool as vector hits, so a hop that drags in
+noise is buried rather than promoted.</li>
+<li><strong>Make a benchmark row an output file, not a number.</strong>
+Ranked ids, answer and quotes per question, rescored in CI and rerun
+from a clean index with zero tolerance per question, leave a typed-in
+figure nowhere to go.</li>
+<li><strong>Gate the metric with a mutant.</strong> A CI step that
+breaks nDCG on purpose and fails if the suite stays green proves the
+suite reads the metric.</li>
+<li><strong>Run the model in a child process per call.</strong> A
+segfault or out-of-memory becomes a tool error instead of a dead
+server.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Asking the corpus to declare supersession and then not
+reading it.</strong> A frontmatter field the user maintains is the
+cheapest correction signal there is; a ranker that ignores it returns
+the replaced value with confidence.</li>
+<li><strong>Testing the guarded wrapper instead of the shipped entry
+point.</strong> A console script that calls <code>main</code> skips
+everything under <code>__main__</code>.</li>
+<li><strong>Storing paths as typed.</strong> Resolve at write time, or
+every reader that runs in another directory silently sees nothing.</li>
+<li><strong>Three parsers for one link syntax.</strong> A fix that lands
+in two of them leaves the third disagreeing about what an edge is.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person with a large, carefully linked Obsidian vault
+who wants an agent to read it and is content to keep writing it by hand.
+It needs no service and little maintenance, and its bench makes the
+graph's value something to measure on your own notes. Walk away if the
+agent must remember on its own, if old decisions sit beside new ones
+without being deleted, or if more than one person or project shares a
+machine. The package has no write path, no supersession and no
+scope.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the maintainer's home pipeline, with superseded-note
+demotion behind a flag, closes the 6 of 6 on this vault; the README says
+that code is not published.</li>
+<li>How often a relative-path index meets a server started in another
+directory in practice, and whether <code>sgm-doctor</code> should check
+for it.</li>
+<li>Whether the <code>ab_recall</code> rows are queried anywhere outside
+the tree; no code in it reads them.</li>
+<li>Recall latency on a 28,000-note index, which the README cites and
+the tree cannot reproduce.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>src/sqlite_graph_memory/schema.sql</code>,
+<code>index_notes.py</code> (<code>build_index</code>)</li>
+<li>Retrieval: <code>brain_ask.py</code>, <code>ppr.py</code>,
+<code>onnx_backend.py</code></li>
+<li>MCP: <code>mcp_server.py</code>, <code>server.json</code>,
+<code>examples/mcp-config.json</code></li>
+<li>Ledger: <code>turnstate_hook.py</code>,
+<code>turnstate_show.py</code>,
+<code>examples/claude-code-stop-hook.json</code></li>
+<li>Graph health and install checks: <code>vault_stats.py</code>,
+<code>doctor.py</code></li>
+<li>Bench: <code>bench/bench_core.py</code>,
+<code>bench/validate.py</code>, <code>bench/adapters/</code>,
+<code>bench/results/</code>, <code>bench/questions.jsonl</code>,
+<code>bench/make_vault.py</code></li>
+<li>Eval: <code>eval/build_gold.py</code>,
+<code>eval/run_eval.py</code>, <code>eval/run_ablation.py</code></li>
+<li>Tests: <code>tests/</code>,
+<code>.github/workflows/tests.yml</code>,
+<code>.github/workflows/bench.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No reader of supersession or validity in the
+package.</strong>
+<code>git grep -n -i -E 'valid_?(from|to)|observed_at|as_of|superseded|status:' -- src eval/run_eval.py bench/adapters/sgm.py</code>
+returns nothing;
+<code>git grep -n -i superseded_by -- bench/adapters</code> matches
+<code>tangleclaw.py</code> nine times.</li>
+<li><strong>The ledger is read only by the viewer.</strong>
+<code>git grep -n -E 'from turns|FROM turns' -- src</code> returns
+<code>turnstate_show.py</code> only; <code>INSERT INTO turns</code>
+matches <code>turnstate_hook.py:230</code>.</li>
+<li><strong>Nothing reads <code>ab_recall</code>.</strong>
+<code>git grep -n ab_recall -- src eval</code> returns the create and
+insert in <code>brain_ask.py</code>, the schema and comments.</li>
+<li><strong>No delete, prune or retention.</strong>
+<code>git grep -n -i -E 'delete from|drop table|vacuum|unlink|retention|prune' -- src</code>
+returns two temporary-file unlinks and a docstring.</li>
+<li><strong>No atomic index write.</strong>
+<code>git grep -n -E 'os\.replace|os\.rename|\.replace\(|tmp' -- src/sqlite_graph_memory/index_notes.py</code>
+returns nothing; the same pattern over <code>mcp_server.py</code>
+matches its temporary answer file.</li>
+<li><strong>No path resolution at index time.</strong>
+<code>git grep -n -E 'resolve\(\)|is_absolute|abspath|absolute\(\)' -- src</code>
+returns <code>doctor.py</code> messages and
+<code>mcp_server.py:30</code> only.</li>
+<li><strong>One link normaliser, two callers.</strong>
+<code>git grep -n -E '_normalize_target|_resolve_target_chunks' -- src</code>
+returns <code>brain_ask.py</code> and <code>vault_stats.py</code>, not
+<code>ppr.py</code>.</li>
+<li><strong>No redaction in the hook.</strong>
+<code>git grep -n -i -E 'redact|secret|token|password' -- src/sqlite_graph_memory/turnstate_hook.py</code>
+returns the docstring's "0 LLM tokens" only.</li>
+<li><strong>No scheduler.</strong>
+<code>git grep -n -i -E 'watch|inotify|watchdog|cron|schedule' -- src</code>
+returns a comment in <code>brain_ask.py</code> and the
+<code>vault_stats.py</code> docstring.</li>
+<li><strong>No entity lane.</strong>
+<code>git grep -n -i entity -- src</code> returns
+<code>looks_like_entity</code>, <code>ENTITY_TOOLS</code> and the gate's
+comments only.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/tonydzi/sqlite-graph-memory/commit/a22da114bb714b75281ae86b0bd8c3ece274ec8c"><code class="commit-id" title="a22da114bb714b75281ae86b0bd8c3ece274ec8c">a22da114…</code></a>.
+First reading, from a full clone, 52 commits past the nominated <a
+href="https://github.com/tonydzi/sqlite-graph-memory/commit/378baf0c5d3a91b0dddad231339ec7084dfcb045"><code class="commit-id" title="378baf0c5d3a91b0dddad231339ec7084dfcb045">378baf0c…</code></a>;
+incremental indexing, the PageRank lane, the ONNX backend and the
+TangleClaw bench adapter landed between them. Screened first: one
+auto-run surface, <code>server.json</code> launching the PyPI package
+through <code>uvx</code>; <code>pyproject.toml</code> inside the
+seven-day cooldown; three unpinned surfaces. The Stop hook is an example
+snippet, not registered in the tree. MIT, no rider. Nothing installed,
+built or run; the bench figures were recomputed from committed outputs.
+No marks: nothing reads the declared supersession, and no case asserts
+on a result (<a href="#9-reliability-safety-and-trust">section
+9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

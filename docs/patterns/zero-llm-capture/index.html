@@ -489,6 +489,20 @@ agent mode has no model. The trade is the one this page predicts in
 reverse: nothing is lost to a provider outage at write time, and every
 question pays a full re-tokenization of the user's history plus the
 model calls.</p>
+<p><a href="../../systems/sqlite-graph-memory/">sqlite-graph-memory</a>
+is capture with no reader. A Claude Code Stop hook parses the new
+transcript bytes after each turn and appends one row with the ask, the
+assistant text, files written, tools, commands and lines matching a
+bilingual decision regex, with no model and no output
+(<code>src/sqlite_graph_memory/turnstate_hook.py:131-235</code>). Only a
+terminal viewer reads it; the MCP tool recalls from the user's notes and
+never from the ledger. Two details generalise. The hook advances its
+byte offset before the insert, so a locked database loses the turn
+rather than retrying it (<code>:160</code>). And the crash guard that
+makes it safe sits under <code>__main__</code>, while the console script
+the settings snippet installs calls <code>main</code> directly
+(<code>pyproject.toml:81</code>); its tests exercise
+<code>python -m</code>, the guarded path.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

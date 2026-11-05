@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 774 reports.</strong></p>
+<p><strong>This page covers all 775 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32232,6 +32232,42 @@ forge or a model in the write path.</li>
 <li>Do not copy when: the agents sharing the store are not all trusted
 by one person, a single sentence must be erasable, or memory must carry
 a verdict beside its text.</li>
+</ul>
+<h3 id="sqlite-graph-memory"><a
+href="../systems/sqlite-graph-memory/"><code>sqlite-graph-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>the graph is the links the user wrote, read from
+the live files at query time.</strong> One hop from the top 15 vector
+hits adds up to 40 neighbours to the reranker's pool, so there is no
+extraction pass and no edge table to drift from the notes.</li>
+<li>Second idea: a bench whose result files carry every per-question
+output, rescored by CI and rerun from a clean index with no question
+allowed to change, beside a CI step that breaks nDCG on purpose and
+fails if the eval suite stays green.</li>
+<li>Biggest risk: <strong>a note that declares itself superseded is
+retrieved first anyway.</strong> Nothing under <code>src/</code> reads
+<code>superseded_by</code>, and on the bench's six current-deadline
+questions both modes rank and cite the replaced decision in all
+six.</li>
+<li>Second risk: the agent cannot write, correct or forget, and an edit
+reaches recall only at the next manual <code>sgm-index</code>; the
+Stop-hook ledger reaches no recall path, and its installed entry point
+skips the crash guard its tests exercise.</li>
+<li>Most reusable component: <code>bench/</code> — the scorer in
+<code>bench_core.py</code> with the rescore, thirteen-way forgery
+self-test and zero-tolerance reproduce gate in
+<code>validate.py</code>.</li>
+<li>Maturity impression: MIT; 2,310 lines in the package and 3,175 in
+the bench, eval and scripts; 133 commits, 3 July – 4 November 2026,
+mostly the maintainer's; 202 pytest functions run in CI on five Python
+versions, not run here. No marks. Recall@5 of 0.85 with the hop and 0.88
+without recomputes from the committed outputs.</li>
+<li>Study when: you have a well-linked markdown vault and want to
+measure whether following links helps recall on it before building
+anything heavier.</li>
+<li>Do not copy when: the agent must write its own memory, a replaced
+fact must stop being returned, or several projects or people share one
+index.</li>
 </ul>
         </article>
       </div>
